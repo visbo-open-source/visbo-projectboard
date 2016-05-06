@@ -12,6 +12,8 @@ Imports System.IO
 Public Module testModule
 
 
+
+
     ''' <summary>
     ''' erzeugt den Report aller selektieren Projekte auf Grundlage des Templates templatedossier.pptx
     ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten Projekte steht 
@@ -681,11 +683,18 @@ Public Module testModule
                         height = .Height
                         width = .Width
 
-                        Try
+                        ' ur:27.04.2016
+                        ' ''Try
+                        ' ''    boxName = .TextFrame2.TextRange.Text
+                        ' ''Catch ex As Exception
+                        ' ''    boxName = " "
+                        ' ''End Try
+
+                        If .TextFrame2.HasText Then
                             boxName = .TextFrame2.TextRange.Text
-                        Catch ex As Exception
-                            boxName = " "
-                        End Try
+                        Else
+                            boxName = ""
+                        End If
 
 
                         notYetDone = False
@@ -974,7 +983,8 @@ Public Module testModule
                                 Dim nameList As New SortedList(Of Date, String)
                                 Dim listOfItems As New Collection
 
-                                boxName = "Meilenstein Trendanalyse"
+                                'boxName = "Meilenstein Trendanalyse"
+                                boxName = repMessages.getmsg(21)
 
                                 Try
                                     ' Aufruf 
@@ -1045,12 +1055,14 @@ Public Module testModule
                                             reportObj = obj
                                             notYetDone = True
                                         Catch ex As Exception
-                                            .TextFrame2.TextRange.Text = "zum Projekt" & hproj.name & vbLf & "gibt es noch keine Trend-Analyse," & vbLf & _
-                                                                        "da es noch nicht begonnen hat"
+                                            '.TextFrame2.TextRange.Text = "zum Projekt" & hproj.name & vbLf & "gibt es noch keine Trend-Analyse," & vbLf & _
+                                            '                            "da es noch nicht begonnen hat"
+                                            .TextFrame2.TextRange.Text = hproj.name & repMessages.getmsg(22)
                                         End Try
 
                                     Else
-                                        .TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
+                                        '.TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(23) & vbLf & hproj.name
                                     End If
 
                                 Catch ex As Exception
@@ -1058,6 +1070,10 @@ Public Module testModule
                                 End Try
 
                             Case "Projektphasen"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(239)
+                                End If
 
                                 Dim scale As Integer
                                 Dim continueWork As Boolean = True
@@ -1072,7 +1088,8 @@ Public Module testModule
                                         auswahl = 1
                                         vproj = Projektvorlagen.getProject(hproj.VorlagenName)
                                         If IsNothing(vproj) Then
-                                            .TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
+                                            '.TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
+                                            .TextFrame2.TextRange.Text = repMessages.getmsg(24) & hproj.VorlagenName
                                             continueWork = False
                                         Else
                                             vproj.copyTo(cproj)
@@ -1104,6 +1121,7 @@ Public Module testModule
 
                                     Dim noColorCollection As New Collection
                                     reportObj = Nothing
+
                                     Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, auswahl)
 
 
@@ -1112,6 +1130,11 @@ Public Module testModule
 
 
                             Case "Vergleich mit Vorlage"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(238)
+                                End If
+
 
                                 Dim vproj As clsProjektvorlage
                                 Dim cproj As New clsProjekt
@@ -1127,7 +1150,8 @@ Public Module testModule
 
                                     vproj = Projektvorlagen.getProject(hproj.VorlagenName)
                                     If IsNothing(vproj) Then
-                                        .TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
+                                        '.TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(24) & hproj.VorlagenName
                                         continueWork = False
                                     Else
                                         cproj = New clsProjekt
@@ -1136,7 +1160,8 @@ Public Module testModule
                                     End If
 
                                 Catch ex As Exception
-                                    Throw New Exception("Vorlage konnte nicht bestimmt werden")
+                                    'Throw New Exception("Vorlage konnte nicht bestimmt werden")
+                                    Throw New Exception(repMessages.getmsg(24))
                                 End Try
 
                                 If continueWork Then
@@ -1237,6 +1262,10 @@ Public Module testModule
 
                             Case "Vergleich mit Beauftragung"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(237)
+                                End If
+
 
                                 Dim cproj As clsProjekt
                                 Dim scale As Double
@@ -1249,7 +1278,8 @@ Public Module testModule
 
 
                                 If bproj Is Nothing Then
-                                    Throw New Exception("es gibt keine Beauftragung")
+                                    'Throw New Exception("es gibt keine Beauftragung")
+                                    Throw New Exception(repMessages.getmsg(26))
                                 End If
 
                                 cproj = bproj
@@ -1341,6 +1371,10 @@ Public Module testModule
 
                             Case "Vergleich mit letztem Stand"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(236)
+                                End If
+
 
                                 Dim cproj As clsProjekt
                                 Dim scale As Double
@@ -1352,7 +1386,8 @@ Public Module testModule
                                 ' jetzt die Aktion durchführen ...
 
                                 If lastproj Is Nothing Then
-                                    Throw New Exception("es gibt keinen letzten Strand")
+                                    'Throw New Exception("es gibt keinen letzten Stand")
+                                    Throw New Exception(repMessages.getmsg(27))
                                 End If
 
                                 cproj = lastproj
@@ -1476,6 +1511,7 @@ Public Module testModule
 
                             Case "Tabelle OneGlance Beauftragung"
 
+
                                 Try
                                     Call zeichneProjektTabelleOneGlance(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, bproj)
                                 Catch ex As Exception
@@ -1484,13 +1520,19 @@ Public Module testModule
 
                             Case "Tabelle Veränderungen"
 
+                            
                                 Try
+
+
+
+                                    ' Für englische Version muss Template auf Englisch sein
                                     Call zeichneProjektTerminAenderungen(pptShape, hproj, bproj, lproj)
                                 Catch ex As Exception
 
                                 End Try
 
                             Case "Tabelle Projektstatus"
+
 
                                 Try
                                     Call zeichneProjektTabelleStatus(pptShape, hproj)
@@ -1500,16 +1542,27 @@ Public Module testModule
 
                             Case "Soll-Ist & Prognose"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(235)
+                                End If
+
                                 If istWerteexistieren Then
                                 Else
-                                    .TextFrame2.TextRange.Text = "Prognose"
+                                    '.TextFrame2.TextRange.Text = "Prognose"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(38)
                                 End If
 
                             Case "Ergebnis"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(212)
+                                End If
+
+
 
                                 Try
                                     If qualifier = "letzter Stand" Then
+
                                         Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand)
 
                                     ElseIf qualifier = "Beauftragung" Then
@@ -1538,6 +1591,11 @@ Public Module testModule
 
                             Case "Strategie/Risiko"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(234)
+                                End If
+
+
                                 Dim mycollection As New Collection
 
                                 'deleteStack.Add(.Name, .Name)
@@ -1551,6 +1609,11 @@ Public Module testModule
                                 End Try
 
                             Case "Strategie/Risiko/Ausstrahlung"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(214)
+                                End If
+
 
                                 Dim mycollection As New Collection
 
@@ -1566,6 +1629,11 @@ Public Module testModule
 
 
                             Case "Personalbedarf"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(159)
+                                End If
+
 
                                 Try
                                     auswahl = 1
@@ -1583,11 +1651,16 @@ Public Module testModule
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(233)
                                 End Try
 
 
                             Case "Personalkosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(164)
+                                End If
+
 
                                 Try
                                     auswahl = 2
@@ -1609,12 +1682,15 @@ Public Module testModule
                                     notYetDone = True
 
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
+                                    '.TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(162)
                                 End Try
 
                             Case "Sonstige Kosten"
 
-
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(165)
+                                End If
 
                                 Try
                                     auswahl = 1
@@ -1637,12 +1713,18 @@ Public Module testModule
                                     notYetDone = True
                                 Catch ex As Exception
 
-                                    .TextFrame2.TextRange.Text = "Sonstige Kosten sind Null"
+                                    '.TextFrame2.TextRange.Text = "Sonstige Kosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(163)
 
                                 End Try
 
 
                             Case "Gesamtkosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(166)
+                                End If
+
 
                                 'htop = 100
                                 'hleft = 100
@@ -1656,11 +1738,16 @@ Public Module testModule
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
+                                    '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(168)
                                 End Try
 
 
                             Case "Trend Strategischer Fit/Risiko"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(232)
+                                End If
 
                                 Dim nrSnapshots As Integer = projekthistorie.Count
 
@@ -1672,12 +1759,17 @@ Public Module testModule
                                     notYetDone = True
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
 
 
 
                             Case "Trend Kennzahlen"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(231)
+                                End If
 
                                 Dim nrSnapshots As Integer = projekthistorie.Count
 
@@ -1693,10 +1785,15 @@ Public Module testModule
                                     notYetDone = True
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
 
                             Case "Fortschritt Personalkosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(205)
+                                End If
 
                                 Dim nrSnapshots As Integer = projekthistorie.Count
                                 Dim PListe As New Collection
@@ -1719,21 +1816,29 @@ Public Module testModule
                                                 .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
                                             End With
                                         Else
-                                            .TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
                                         End If
 
 
                                     ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                        .TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
                                     Else
-                                        .TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
                                     End If
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
 
                             Case "Fortschritt Sonstige Kosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(206)
+                                End If
                                 Dim nrSnapshots As Integer = projekthistorie.Count
                                 Dim PListe As New Collection
                                 compareToID = 1
@@ -1755,20 +1860,28 @@ Public Module testModule
                                                 .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
                                             End With
                                         Else
-                                            .TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
                                         End If
 
                                     ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                        .TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
                                     Else
-                                        .TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
                                     End If
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
 
                             Case "Fortschritt Gesamtkosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(207)
+                                End If
                                 Dim nrSnapshots As Integer = projekthistorie.Count
                                 Dim PListe As New Collection
                                 compareToID = 1
@@ -1790,17 +1903,21 @@ Public Module testModule
                                                 .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
                                             End With
                                         Else
-                                            .TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
                                         End If
 
                                     ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                        .TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
                                     Else
-                                        .TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
                                     End If
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
 
                             Case "Fortschritt Rolle"
@@ -1817,7 +1934,8 @@ Public Module testModule
                                         PListe.Add(hproj.name, hproj.name)
                                         Call awinCreateStatusDiagram1(PListe, obj, compareToID, auswahl, qualifier, False, False, htop, hleft, hwidth, hheight)
 
-                                        boxName = "Fortschritt " & qualifier
+                                        'boxName = "Fortschritt " & qualifier
+                                        boxName = repMessages.getmsg(176) & qualifier
 
                                         If Not obj Is Nothing Then
                                             reportObj = obj
@@ -1828,17 +1946,21 @@ Public Module testModule
                                                 .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
                                             End With
                                         Else
-                                            .TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
                                         End If
 
                                     ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                        .TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
                                     Else
-                                        .TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
                                     End If
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
 
                             Case "Fortschritt Kostenart"
@@ -1855,7 +1977,8 @@ Public Module testModule
                                         PListe.Add(hproj.name, hproj.name)
                                         Call awinCreateStatusDiagram1(PListe, obj, compareToID, auswahl, qualifier, False, False, htop, hleft, hwidth, hheight)
 
-                                        boxName = "Fortschritt " & qualifier
+                                        'boxName = "Fortschritt " & qualifier
+                                        boxName = repMessages.getmsg(176) & qualifier
 
                                         If Not obj Is Nothing Then
                                             reportObj = obj
@@ -1866,19 +1989,22 @@ Public Module testModule
                                                 .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
                                             End With
                                         Else
-                                            .TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
                                         End If
 
                                     ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                        .TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
                                     Else
-                                        .TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
                                     End If
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
-
 
                             Case "Soll-Ist1 Personalkosten"
 
@@ -1888,10 +2014,12 @@ Public Module testModule
 
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Personalkosten" & ke
+                                    'boxName = "Personalkosten" & ke
+                                    boxName = repMessages.getmsg(164) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(181)
                                 End Try
 
 
@@ -1905,11 +2033,14 @@ Public Module testModule
 
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Personalkosten" & ke
+                                    'boxName = "Personalkosten" & ke
+                                    boxName = repMessages.getmsg(164) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(181)
                                 End Try
+
 
 
                             Case "Soll-Ist1C Personalkosten"
@@ -1920,11 +2051,14 @@ Public Module testModule
 
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Personalkosten" & ke
+                                    'boxName = "Personalkosten" & ke
+                                    boxName = repMessages.getmsg(164) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(181)
                                 End Try
+
 
 
                             Case "Soll-Ist2C Personalkosten"
@@ -1935,10 +2069,12 @@ Public Module testModule
 
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Personalkosten" & ke
+                                    'boxName = "Personalkosten" & ke
+                                    boxName = repMessages.getmsg(164) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(181)
                                 End Try
 
 
@@ -1952,7 +2088,8 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Sonstige Kosten" & ke
+                                    'boxName = "Sonstige Kosten" & ke
+                                    boxName = repMessages.getmsg(165) & ke
                                     notYetDone = True
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
@@ -1968,10 +2105,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Sonstige Kosten" & ke
+                                    'boxName = "Sonstige Kosten" & ke
+                                    boxName = repMessages.getmsg(165) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(182)
                                 End Try
 
 
@@ -1985,11 +2124,14 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Sonstige Kosten" & ke
+                                    'boxName = "Sonstige Kosten" & ke
+                                    boxName = repMessages.getmsg(165) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(182)
                                 End Try
+
 
 
                             Case "Soll-Ist2C Sonstige Kosten"
@@ -2002,11 +2144,14 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Sonstige Kosten" & ke
+                                    'boxName = "Sonstige Kosten" & ke
+                                    boxName = repMessages.getmsg(165) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(182)
                                 End Try
+
 
 
                             Case "Soll-Ist1 Gesamtkosten"
@@ -2018,10 +2163,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Gesamtkosten" & ke
+                                    'boxName = "Gesamtkosten" & ke
+                                    boxName = repMessages.getmsg(166) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(183)
                                 End Try
 
 
@@ -2034,10 +2181,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Gesamtkosten" & ke
+                                    'boxName = "Gesamtkosten" & ke
+                                    boxName = repMessages.getmsg(166) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(183)
                                 End Try
 
 
@@ -2050,10 +2199,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Gesamtkosten" & ke
+                                    'boxName = "Gesamtkosten" & ke
+                                    boxName = repMessages.getmsg(166) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(183)
                                 End Try
 
 
@@ -2066,10 +2217,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Gesamtkosten" & ke
+                                    'boxName = "Gesamtkosten" & ke
+                                    boxName = repMessages.getmsg(166) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(183)
                                 End Try
 
 
@@ -2083,10 +2236,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Rolle " & qualifier & ze
+                                    'boxName = "Rolle " & qualifier & ze
+                                    boxName = repMessages.getmsg(200) & qualifier & ze
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier & repMessages.getmsg(202)
                                 End Try
 
 
@@ -2099,10 +2254,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Rolle " & qualifier & ze
+                                    'boxName = "Rolle " & qualifier & ze
+                                    boxName = repMessages.getmsg(200) & qualifier & ze
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier & repMessages.getmsg(202)
                                 End Try
 
 
@@ -2116,12 +2273,13 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Rolle " & qualifier & ze
+                                    'boxName = "Rolle " & qualifier & ze
+                                    boxName = repMessages.getmsg(200) & qualifier & ze
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier & repMessages.getmsg(202)
                                 End Try
-
 
                             Case "Soll-Ist2C Rolle"
 
@@ -2133,10 +2291,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Rolle " & qualifier & ze
+                                    'boxName = "Rolle " & qualifier & ze
+                                    boxName = repMessages.getmsg(200) & qualifier & ze
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier & repMessages.getmsg(202)
                                 End Try
 
 
@@ -2149,10 +2309,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Kostenart " & qualifier & ke
+                                    'boxName = "Kostenart " & qualifier & ke
+                                    boxName = repMessages.getmsg(203) & qualifier & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier & repMessages.getmsg(202)
                                 End Try
 
 
@@ -2165,10 +2327,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Kostenart " & qualifier & ke
+                                    'boxName = "Kostenart " & qualifier & ke
+                                    boxName = repMessages.getmsg(203) & qualifier & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier & repMessages.getmsg(202)
                                 End Try
 
 
@@ -2181,11 +2345,12 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Kostenart " & qualifier & ke
+                                    'boxName = "Kostenart " & qualifier & ke
+                                    boxName = repMessages.getmsg(203) & qualifier & ke
                                     notYetDone = True
-
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier & repMessages.getmsg(202)
                                 End Try
 
 
@@ -2198,14 +2363,20 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Kostenart " & qualifier & ke
+                                    'boxName = "Kostenart " & qualifier & ke
+                                    boxName = repMessages.getmsg(203) & qualifier & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier & repMessages.getmsg(202)
                                 End Try
 
 
                             Case "Ampel-Farbe"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(230)
+                                End If
 
                                 Select Case hproj.ampelStatus
                                     Case 0
@@ -2220,21 +2391,45 @@ Public Module testModule
                                 End Select
 
                             Case "Ampel-Text"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(225)
+                                End If
                                 .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
 
                             Case "Business-Unit:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(226)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.businessUnit
 
                             Case "Beschreibung"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(227)
+                                End If
                                 .TextFrame2.TextRange.Text = hproj.description
 
                             Case "Stand:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(223)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToShortDateString
 
                             Case "Laufzeit:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(228)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.Start, hproj.Start + hproj.anzahlRasterElemente - 1)
 
                             Case "Verantwortlich:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(229)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.leadPerson
                             Case Else
                         End Select
@@ -2272,7 +2467,8 @@ Public Module testModule
                                 End Try
                             Else
                                 Try
-                                    .TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                    '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                                    .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
                                 Catch ex As Exception
 
                                 End Try
@@ -2931,7 +3127,8 @@ Public Module testModule
 
 
                             Else
-                                .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
+                                '.TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(136)
                             End If
 
 
@@ -2947,7 +3144,8 @@ Public Module testModule
                             von = showRangeLeft
                             bis = showRangeRight
                             If von < 0 Or bis < 0 Then
-                                .TextFrame2.TextRange.Text = " bitte geben Sie einen Zeitraum an ..."
+                                '.TextFrame2.TextRange.Text = " bitte geben Sie einen Zeitraum an ..."
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(137)
                             Else
                                 myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
@@ -3059,12 +3257,14 @@ Public Module testModule
 
                                         End With
                                     Else
-                                        .TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
+                                        '.TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
+                                        .TextFrame2.TextRange.Text = repMessages.getmsg(138)
                                     End If
 
 
                                 Else
-                                    .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
+                                    '.TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(136)
                                 End If
                             End If
 
@@ -3115,6 +3315,10 @@ Public Module testModule
                             Dim compareToID As Integer = 1
                             Dim auswahl As Integer = 1
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(205)
+                            End If
+
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
 
@@ -3122,6 +3326,10 @@ Public Module testModule
 
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 2 ' Sonstige Kosten 
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(206)
+                            End If
 
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
@@ -3131,6 +3339,10 @@ Public Module testModule
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 3 ' Gesamt Kosten 
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(207)
+                            End If
+
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
 
@@ -3138,6 +3350,10 @@ Public Module testModule
 
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 4 ' Rolle ; in qualifier steht welche Rolle  
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(208)
+                            End If
 
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
@@ -3147,11 +3363,19 @@ Public Module testModule
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 5 ' Kostenart ; in qualifier steht welche Kostenart  
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(209)
+                            End If
+
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
 
                         Case "Ergebnis Verbesserungspotential"
 
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(210)
+                            End If
 
                             boxName = boxName & " (T€)"
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -3190,6 +3414,11 @@ Public Module testModule
 
                         Case "Übersicht Budget"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(211)
+                            End If
+
+
                             boxName = boxName & " (T€)"
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3226,6 +3455,11 @@ Public Module testModule
                             End Try
 
                         Case "Ergebnis"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(212)
+                            End If
+
 
                             boxName = boxName & " (T€)"
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -3264,6 +3498,10 @@ Public Module testModule
 
 
                         Case "Strategie/Risiko/Marge"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(213)
+                            End If
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3315,6 +3553,11 @@ Public Module testModule
                             End Try
 
                         Case "Strategie/Risiko/Ausstrahlung"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(214)
+                            End If
+
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3412,6 +3655,11 @@ Public Module testModule
 
                         Case "Zeit/Risiko/Volumen"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(215)
+                            End If
+
+
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3458,6 +3706,11 @@ Public Module testModule
 
 
                         Case "Übersicht Besser/Schlechter"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(216)
+                            End If
+
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3572,7 +3825,11 @@ Public Module testModule
 
                         Case "Übersicht Auslastung"
 
-                            boxName = boxName & " (PT)"
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(217)
+                            End If
+
+                            boxName = boxName & repMessages.getmsg(218)
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3612,7 +3869,12 @@ Public Module testModule
 
                         Case "Details Unterauslastung"
 
-                            boxName = boxName & " (PT)"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(219)
+                            End If
+
+                            boxName = boxName & repMessages.getmsg(218)
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3652,7 +3914,12 @@ Public Module testModule
 
                         Case "Details Überauslastung"
 
-                            boxName = boxName & " (PT)"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(220)
+                            End If
+
+                            boxName = boxName & repMessages.getmsg(218)
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3692,6 +3959,12 @@ Public Module testModule
 
 
                         Case "Bisherige Zielerreichung"
+
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(221)
+                            End If
+
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3743,6 +4016,11 @@ Public Module testModule
 
                         Case "Prognose Zielerreichung"
 
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(222)
+                            End If
+
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3792,6 +4070,10 @@ Public Module testModule
 
                         Case "Phase"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(110)
+                            End If
+
 
                             myCollection.Clear()
 
@@ -3814,9 +4096,11 @@ Public Module testModule
 
                                 With reportObj
                                     If myCollection.Count > 1 Then
-                                        .Chart.ChartTitle.Text = "Phasen Übersicht"
+                                        '.Chart.ChartTitle.Text = "Phasen Übersicht"
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(58)
                                     ElseIf myCollection.Count = 1 Then
-                                        .Chart.ChartTitle.Text = "Phase " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        '.Chart.ChartTitle.Text = "Phase " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & CStr(myCollection.Item(1)).Replace("#", "-")
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -3845,12 +4129,17 @@ Public Module testModule
                                 End Try
 
                             Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
 
 
                         Case "Meilenstein"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(121)
+                            End If
+
 
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Meilenstein, qualifier, selectedMilestones)
@@ -3872,9 +4161,11 @@ Public Module testModule
 
                                 With reportObj
                                     If myCollection.Count > 1 Then
-                                        .Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                        '.Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(120)
                                     ElseIf myCollection.Count = 1 Then
-                                        .Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & CStr(myCollection.Item(1)).Replace("#", "-")
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -3900,13 +4191,16 @@ Public Module testModule
                                 End Try
 
                             Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
 
 
                         Case "Rolle"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(200)
+                            End If
 
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
@@ -3950,14 +4244,16 @@ Public Module testModule
                                 End Try
 
                             Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
 
 
                         Case "Kostenart"
 
-
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(203)
+                            End If
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Kosten, qualifier, selectedCosts)
 
@@ -4001,15 +4297,23 @@ Public Module testModule
                                 End Try
 
                             Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
 
                         Case "Stand:"
-                            .TextFrame2.TextRange.Text = Date.Now.ToString("d")
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(223)
+                            End If
+                            .TextFrame2.TextRange.Text = Date.Now.ToString("d", repCult)
 
 
                         Case "Zeitraum:"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(224)
+                            End If
                             .TextFrame2.TextRange.Text = textZeitraum(showRangeLeft, showRangeRight)
 
                         Case Else
@@ -4044,7 +4348,7 @@ Public Module testModule
 
                             End Try
                         Else
-                            .TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(122)
                         End If
 
                         notYetDone = False
@@ -4575,7 +4879,8 @@ Public Module testModule
 
 
 
-        diagramTitle = "Fortschritt"
+        'diagramTitle = "Fortschritt"
+        diagramTitle = repMessages.getmsg(176)
         kennung = "Fortschritt"
 
 
@@ -4678,17 +4983,20 @@ Public Module testModule
                         Case 1
                             werteH = hproj.getAllPersonalKosten
                             werteV = vglProj.getAllPersonalKosten
-                            diagramTitle = diagramTitle & " Personalkosten"
+                            'diagramTitle = diagramTitle & " Personalkosten"
+                            diagramTitle = diagramTitle & " " & repMessages.getmsg(164)
                             kennzeichnung = "Personalkosten"
                         Case 2
                             werteH = hproj.getGesamtAndereKosten
                             werteV = vglProj.getGesamtAndereKosten
-                            diagramTitle = diagramTitle & " Sonstige Kosten"
+                            'diagramTitle = diagramTitle & " Sonstige Kosten"
+                            diagramTitle = diagramTitle & " " & repMessages.getmsg(165)
                             kennzeichnung = "Sonstige Kosten"
                         Case 3
                             werteH = hproj.getGesamtKostenBedarf
                             werteV = vglProj.getGesamtKostenBedarf
-                            diagramTitle = diagramTitle & " Gesamtkosten"
+                            'diagramTitle = diagramTitle & " Gesamtkosten"
+                            diagramTitle = diagramTitle & " " & repMessages.getmsg(166)
                             kennzeichnung = "Gesamtkosten"
                         Case 4
                             If RoleDefinitions.Contains(qualifier) Then
@@ -4708,7 +5016,8 @@ Public Module testModule
                             ' wie Gesamtkosten
                             werteH = hproj.getGesamtKostenBedarf
                             werteV = vglProj.getGesamtKostenBedarf
-                            diagramTitle = diagramTitle & " Gesamtkosten"
+                            'diagramTitle = diagramTitle & " Gesamtkosten"
+                            diagramTitle = diagramTitle & " " & repMessages.getmsg(166)
                             kennzeichnung = "Gesamtkosten"
                     End Select
 
@@ -4907,7 +5216,8 @@ Public Module testModule
                         End Try
 
                         With .AxisTitle
-                            .Characters.Text = "geplant"
+                            '.Characters.Text = "geplant"
+                            .Characters.Text = repMessages.getmsg(177)
                             .Characters.Font.Size = titlefontsize
                             .Characters.Font.Bold = False
                         End With
@@ -4935,7 +5245,8 @@ Public Module testModule
                         End Try
 
                         With .AxisTitle
-                            .Characters.Text = "tatsächlich"
+                            '.Characters.Text = "tatsächlich"
+                            .Characters.Text = repMessages.getmsg(178)
                             .Characters.Font.Size = titlefontsize
                             .Characters.Font.Bold = False
                         End With
@@ -5271,14 +5582,16 @@ Public Module testModule
             Else
 
                 If pptShape.TextFrame2.HasText Then
-                    pptShape.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                    'pptShape.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                    pptShape.TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
                 End If
 
             End If
 
         Else
             If pptShape.TextFrame2.HasText Then
-                pptShape.TextFrame2.TextRange.Text = "es gibt keine laufenden Projekte im betrachteten Zeitraum ... "
+                'pptShape.TextFrame2.TextRange.Text = "es gibt keine laufenden Projekte im betrachteten Zeitraum ... "
+                pptShape.TextFrame2.TextRange.Text = repMessages.getmsg(140)
             End If
 
         End If
@@ -5395,7 +5708,9 @@ Public Module testModule
             Next i
             ' Zellenhöhe auf eine Minimum setzen, so dass Font.Size hineinpasst
         Catch ex As Exception
-            Throw New Exception("Shape für Legenden-Liste hat keine Tabelle")
+            Dim fehler As String = repMessages.getmsg(1)
+            Throw New Exception(repMessages.getmsg(1))
+            ''Throw New Exception("Shape für Legenden-Liste hat keine Tabelle")
         End Try
 
         anzSpalten = tabelle.Columns.Count
@@ -5403,11 +5718,13 @@ Public Module testModule
         anzTabellenElements = System.Math.DivRem(anzSpalten, 3, modRest)
 
         If modRest <> 0 Then
+            Throw New Exception(repMessages.getmsg(2))
             Throw New Exception("Tabelle hat keine durch 3 teilbare Anzahl Spalten" & vbLf & "Symbol, Short- und Long-Name")
         End If
 
         If anzZeilen < 2 Then
-            Throw New Exception("Tabelle muss mindestens 2 Zeilen haben .... ")
+            Throw New Exception(repMessages.getmsg(3))
+            ''Throw New Exception("Tabelle muss mindestens 2 Zeilen haben .... ")
         End If
 
         zeilenHoehe = tabelle.Rows(tabelle.Rows.Count).Height
@@ -5448,7 +5765,8 @@ Public Module testModule
                     .Fill.ForeColor.RGB = tmpBU.color
                 End With
                 ' jetzt den Business Unit Name eintragen 
-                CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
+                'CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
+                CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(240) & tmpBU.name
 
                 curSpalte = curSpalte + 3
                 If curSpalte > anzSpalten Then
@@ -5474,7 +5792,9 @@ Public Module testModule
                 .Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
             End With
             ' jetzt den Business Unit Name eintragen 
-            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie ist undefiniert"
+
+            ''CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie ist undefiniert"
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(4)
 
             curSpalte = curSpalte + 3
             If curSpalte > anzSpalten Then
@@ -5492,7 +5812,8 @@ Public Module testModule
         ' Überprüfung, ob die restlichen Zeilen für die Legende ausreichen
 
         If anzMaxZeilen - (curZeile - 1) < toDraw / anzTabellenElements Then
-            Throw New Exception("Anzahl Zeilen in der Tabelle sind nicht ausreichend." & vbLf & "Tabelle muss anders definiert werden .... ")
+            ''Throw New Exception("Anzahl Zeilen in der Tabelle sind nicht ausreichend." & vbLf & "Tabelle muss anders definiert werden .... ")
+            Throw New Exception(repMessages.getmsg(5))
         End If
 
 
@@ -5523,7 +5844,8 @@ Public Module testModule
                 .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
 
                 If .Top > pptslide.CustomLayout.Height Then
-                    Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
+                    ''Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
+                    Throw New Exception(repMessages.getmsg(6))
                 End If
             End With
 
@@ -5574,7 +5896,8 @@ Public Module testModule
                 .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
 
                 If .Top > pptslide.CustomLayout.Height Then
-                    Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
+                    '' Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
+                    Throw New Exception(repMessages.getmsg(6))
                 End If
             End With
 
@@ -5627,11 +5950,13 @@ Public Module testModule
 
 
         If showRangeRight = 0 Or showRangeLeft = 0 Or showRangeRight - showRangeLeft < 0 Then
-            Throw New Exception("kein Zeitraum in Tabelle Anzeigen der Elemente angegeben ")
+            'Throw New Exception("kein Zeitraum in Tabelle Anzeigen der Elemente angegeben ")
+            Throw New Exception(repMessages.getmsg(125))
         End If
 
         If myCollection.Count = 0 Then
-            Throw New Exception("keine Elemente angegeben ... ")
+            'Throw New Exception("keine Elemente angegeben ... ")
+            Throw New Exception(repMessages.getmsg(126))
         End If
 
 
@@ -5681,7 +6006,7 @@ Public Module testModule
         Try
             tabelle = pptshape.Table
         Catch ex As Exception
-            Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(127))
         End Try
 
         Dim anzSpalten As Integer
@@ -5777,7 +6102,7 @@ Public Module testModule
         For m As Integer = showRangeLeft To showRangeRight
             With tabelle
                 CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                            startDate.AddMonths(m).ToString("MMM yy")
+                            startDate.AddMonths(m).ToString("MMM yy", repCult)
             End With
         Next m
 
@@ -5811,23 +6136,31 @@ Public Module testModule
         Dim headerzeile As String = ""
         If myCollection.Count = 1 Then
             If prcTyp = DiagrammTypen(5) Then
-                headerzeile = "alle Projekte mit Meilenstein "
+                'headerzeile = "alle Projekte mit Meilenstein "
+                headerzeile = repMessages.getmsg(128)
             ElseIf prcTyp = DiagrammTypen(0) Then
-                headerzeile = "alle Projekte mit Phase "
+                'headerzeile = "alle Projekte mit Phase "
+                headerzeile = repMessages.getmsg(129)
             ElseIf prcTyp = DiagrammTypen(1) Then
-                headerzeile = "alle Projekte mit Rolle "
+                'headerzeile = "alle Projekte mit Rolle "
+                headerzeile = repMessages.getmsg(130)
             ElseIf prcTyp = DiagrammTypen(2) Then
-                headerzeile = "alle Projekte mit Kostenart "
+                'headerzeile = "alle Projekte mit Kostenart "
+                headerzeile = repMessages.getmsg(131)
             End If
         Else
             If prcTyp = DiagrammTypen(5) Then
-                headerzeile = "alle Projekte mit Meilensteinen "
+                'headerzeile = "alle Projekte mit Meilensteinen "
+                headerzeile = repMessages.getmsg(132)
             ElseIf prcTyp = DiagrammTypen(0) Then
-                headerzeile = "alle Projekte mit Phasen "
+                'headerzeile = "alle Projekte mit Phasen "
+                headerzeile = repMessages.getmsg(133)
             ElseIf prcTyp = DiagrammTypen(1) Then
-                headerzeile = "alle Projekte mit Rollen "
+                'headerzeile = "alle Projekte mit Rollen "
+                headerzeile = repMessages.getmsg(134)
             ElseIf prcTyp = DiagrammTypen(2) Then
-                headerzeile = "alle Projekte mit Kostenarten "
+                'headerzeile = "alle Projekte mit Kostenarten "
+                headerzeile = repMessages.getmsg(135)
             End If
 
         End If
@@ -5909,7 +6242,8 @@ Public Module testModule
         Try
             tabelle = pptShape.Table
         Catch ex As Exception
-            Throw New Exception("Shape für Szenario-Liste hat keine Tabelle")
+            'Throw New Exception("Shape für Szenario-Liste hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(123))
         End Try
 
         anzSpalten = tabelle.Columns.Count
@@ -5929,8 +6263,10 @@ Public Module testModule
                 CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
                 CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & currentConstellation
             Else
+                'CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                '    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " <nicht benannt>"
                 CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " <nicht benannt>"
+                  CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & repMessages.getmsg(124)
             End If
 
 
@@ -5973,7 +6309,8 @@ Public Module testModule
         Try
             tabelle = pptShape.Table
         Catch ex As Exception
-            Throw New Exception("Shape hat keine Tabelle")
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(28))
         End Try
 
 
@@ -6229,7 +6566,8 @@ Public Module testModule
         Try
             tabelle = pptShape.Table
         Catch ex As Exception
-            Throw New Exception("Shape hat keine Tabelle")
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(28))
         End Try
 
         pptShape.Title = ""
@@ -6461,7 +6799,8 @@ Public Module testModule
             End Try
 
         Catch ex As Exception
-            Throw New Exception("Tabelle Projektänderungen hat evtl unzulässige Anzahl Zeilen / Spalten ...")
+            'Throw New Exception("Tabelle Projektänderungen hat evtl unzulässige Anzahl Zeilen / Spalten ...")
+            Throw New Exception(repMessages.getmsg(36))
         End Try
 
 
@@ -6527,7 +6866,6 @@ Public Module testModule
         Catch ex As Exception
 
 
-
         End Try
 
         If CBool(pptShape.HasTable) Then
@@ -6538,7 +6876,9 @@ Public Module testModule
                 ' jetzt wird die Überschrift aktualisiert 
                 With tabelle
 
-                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.getShapeText
+                    'CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.getShapeText
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(31) & vbLf & hproj.getShapeText
+
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
@@ -6559,13 +6899,16 @@ Public Module testModule
 
                             Case "Ergebnis"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(212)
+
                                 aktvalue = aktErgebnis
                                 vglValue = vglErgebnis
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -6586,13 +6929,16 @@ Public Module testModule
 
                             Case "Budget"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(173)
+
                                 aktvalue = aktBudget
                                 vglValue = vglBudget
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -6613,13 +6959,16 @@ Public Module testModule
 
                             Case "Personalkosten"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(164)
+
                                 aktvalue = aktPersCost
                                 vglValue = vglPersCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -6640,13 +6989,16 @@ Public Module testModule
 
                             Case "Sonstige Kosten"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(165)
+
                                 aktvalue = aktSonstCost
                                 vglValue = vglSonstCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -6667,11 +7019,15 @@ Public Module testModule
 
                             Case "Termine Phasen"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(241)
+
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
-                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                    'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(33)
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If unterschiede.Contains(CInt(PThcc.phasen).ToString) Then
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
@@ -6709,12 +7065,16 @@ Public Module testModule
                                         End If
 
                                         'Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
-                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
-                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(33)
+                                        'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(33)
                                     Else
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
-                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
-                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(34)
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(34)
                                     End If
                                 End If
 
@@ -6722,11 +7082,14 @@ Public Module testModule
 
                             Case "Termine Meilensteine"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(242)
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
-                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                    'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(33)
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If unterschiede.Contains(CInt(PThcc.resultdates).ToString) Or unterschiede.Contains(CInt(PThcc.resultampel).ToString) Then
 
@@ -6765,12 +7128,16 @@ Public Module testModule
                                         End If
 
                                         'Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
-                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
-                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(33)
+                                        'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(33)
                                     Else
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
-                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
-                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(34)
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(34)
                                     End If
                                 End If
 
@@ -6778,13 +7145,16 @@ Public Module testModule
 
                             Case "Einschätzung strategischer Fit"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(243)
+
                                 aktvalue = hproj.StrategicFit
                                 vglValue = vglproj.StrategicFit
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -6805,13 +7175,16 @@ Public Module testModule
 
                             Case "Einschätzung Risiko"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(244)
+
                                 aktvalue = hproj.Risiko
                                 vglValue = vglproj.Risiko
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -6832,6 +7205,8 @@ Public Module testModule
 
                             Case "Projekt-Ampel"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(245)
+
                                 aktvalue = hproj.ampelStatus
                                 vglValue = vglproj.ampelStatus
                                 Dim tmpFarbe As Long
@@ -6850,7 +7225,8 @@ Public Module testModule
                                     End If
 
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, tmpFarbe)
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
 
                                     Dim aktFarbe As Long, vglFarbe As Long
@@ -6903,6 +7279,8 @@ Public Module testModule
 
 
                             Case "Projekt-Ampel Erläuterung"
+
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(246)
 
                                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
                                 CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
@@ -6994,7 +7372,8 @@ Public Module testModule
                 ' jetzt wird die Überschrift aktualisiert 
                 With tabelle
 
-                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.getShapeText
+                    'CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.getShapeText
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(31) & vbLf & hproj.getShapeText
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
@@ -7015,13 +7394,16 @@ Public Module testModule
 
                             Case "Gesamtkosten"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(166)
+
                                 aktvalue = aktPersCost + aktSonstCost
                                 vglValue = vglPersCost + aktSonstCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7045,11 +7427,14 @@ Public Module testModule
 
                             Case "Termine"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(247)
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
-                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
-                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                    'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(33)
+                                    'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
                                     If unterschiede.Contains(CInt(PThcc.phasen).ToString) Or unterschiede.Contains(CInt(PThcc.resultdates).ToString) Then
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
@@ -7087,17 +7472,23 @@ Public Module testModule
                                         End If
 
                                         'Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
-                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & hproj.endeDate.ToShortDateString
-                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & vglproj.endeDate.ToShortDateString
+                                        'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & hproj.endeDate.ToShortDateString
+                                        'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & vglproj.endeDate.ToShortDateString
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(35) & hproj.endeDate.ToShortDateString
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(35) & vglproj.endeDate.ToShortDateString
                                     Else
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
-                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & hproj.endeDate.ToShortDateString
-                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & vglproj.endeDate.ToShortDateString
+                                        'CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & hproj.endeDate.ToShortDateString
+                                        'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & vglproj.endeDate.ToShortDateString
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(35) & hproj.endeDate.ToShortDateString
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(35) & vglproj.endeDate.ToShortDateString
                                     End If
                                 End If
 
 
                             Case "Erläuterung"
+
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(248)
 
                                 aktvalue = hproj.ampelStatus
                                 vglValue = vglproj.ampelStatus
@@ -7293,11 +7684,13 @@ Public Module testModule
             anzSpalten = tabelle.Columns.Count
 
         Catch ex As Exception
-            Throw New Exception("Shape hat keine Tabelle")
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(28))
         End Try
 
         If anzSpalten < 4 Then
             Throw New Exception("Shape hat zu wenige Spalten (min 4) ")
+            Throw New Exception(repMessages.getmsg(29))
         Else
             pptShape.Title = ""
 
@@ -7342,7 +7735,8 @@ Public Module testModule
                 End Try
 
             Catch ex As Exception
-                Throw New Exception("Tabelle Projektziele hat evtl unzulässige Anzahl Zeilen / Spalten ...")
+                'Throw New Exception("Tabelle Projektziele hat evtl unzulässige Anzahl Zeilen / Spalten ...")
+                Throw New Exception(repMessages.getmsg(30))
             End Try
 
         End If
@@ -7366,7 +7760,8 @@ Public Module testModule
         Try
             tabelle = pptshape.Table
         Catch ex As Exception
-            Throw New Exception("Shape hat keine Tabelle")
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(28))
         End Try
 
 
@@ -7443,7 +7838,8 @@ Public Module testModule
         Try
             tabelle = pptshape.Table
         Catch ex As Exception
-            Throw New Exception("Shape hat keine Tabelle")
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(28))
         End Try
 
 
@@ -7509,7 +7905,8 @@ Public Module testModule
         Try
             tabelle = pptshape.Table
         Catch ex As Exception
-            Throw New Exception("Shape hat keine Tabelle")
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(28))
         End Try
 
         pptshape.Title = ""
@@ -7536,7 +7933,8 @@ Public Module testModule
 
             End With
         Catch ex As Exception
-            Throw New Exception("Anzahl der Zeilen oder Spalten in der Projektstatus Tabelle passt nicht ...")
+            'Throw New Exception("Anzahl der Zeilen oder Spalten in der Projektstatus Tabelle passt nicht ...")
+            Throw New Exception(repMessages.getmsg(37))
         End Try
 
 
@@ -7673,10 +8071,15 @@ Public Module testModule
         Dim yAchsenNames(1) As String
         Dim anzkeinVproj As Integer = 0
 
-        xAchsenNames(0) = "langsamer"
-        xAchsenNames(1) = "schneller"
-        yAchsenNames(0) = "teurer"
-        yAchsenNames(1) = "günstiger"
+        'xAchsenNames(0) = "langsamer"
+        xAchsenNames(0) = repMessages.getmsg(155)
+        'xAchsenNames(1) = "schneller"
+        xAchsenNames(1) = repMessages.getmsg(156)
+        'yAchsenNames(0) = "teurer"
+        yAchsenNames(0) = repMessages.getmsg(157)
+        'yAchsenNames(1) = "günstiger"
+        yAchsenNames(1) = repMessages.getmsg(158)
+
         minTime = 10000
         minTC = 10000
 
@@ -7710,9 +8113,11 @@ Public Module testModule
 
                 compareToLast = True
                 If showAbsoluteDiff Then
-                    diagramTitle = "Absolute " & portfolioDiagrammtitel(PTpfdk.betterWorseL)
+                    'diagramTitle = "Absolute " & portfolioDiagrammtitel(PTpfdk.betterWorseL)
+                    diagramTitle = repMessages.getmsg(79) & portfolioDiagrammtitel(PTpfdk.betterWorseL)
                 Else
-                    diagramTitle = "Prozentuale " & portfolioDiagrammtitel(PTpfdk.betterWorseL)
+                    'diagramTitle = "Prozentuale " & portfolioDiagrammtitel(PTpfdk.betterWorseL)
+                    diagramTitle = repMessages.getmsg(80) & portfolioDiagrammtitel(PTpfdk.betterWorseL)
                 End If
 
 
@@ -7720,9 +8125,11 @@ Public Module testModule
 
                 compareToLast = False
                 If showAbsoluteDiff Then
-                    diagramTitle = "Absolute " & portfolioDiagrammtitel(PTpfdk.betterWorseB)
+                    'diagramTitle = "Absolute " & portfolioDiagrammtitel(PTpfdk.betterWorseB)
+                    diagramTitle = repMessages.getmsg(79) & portfolioDiagrammtitel(PTpfdk.betterWorseB)
                 Else
-                    diagramTitle = "Prozentuale " & portfolioDiagrammtitel(PTpfdk.betterWorseB)
+                    'diagramTitle = "Prozentuale " & portfolioDiagrammtitel(PTpfdk.betterWorseB)
+                    diagramTitle = repMessages.getmsg(80) & portfolioDiagrammtitel(PTpfdk.betterWorseB)
                 End If
 
         End Select
@@ -7752,7 +8159,8 @@ Public Module testModule
                         End If
                     End If
                 Else
-                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
+                    'Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
+                    Call MsgBox(repMessages.getmsg(81))
                 End If
 
 
@@ -7894,7 +8302,8 @@ Public Module testModule
             ReDim positionValues(outOfToleranceProjekte.Count - 1)
         Catch ex As Exception
 
-            Throw New ArgumentException("Fehler in CreateBetterWorsePortfolio " & ex.Message)
+            'Throw New ArgumentException("Fehler in CreateBetterWorsePortfolio " & ex.Message)
+            Throw New ArgumentException(repMessages.getmsg(82) & ex.Message)
 
         End Try
 
@@ -7908,26 +8317,38 @@ Public Module testModule
 
             If isTimeTimeVgl Then
                 If showAbsoluteDiff Then
-                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
-                                    "Zeit-Toleranz Projekt-Ende: +/-" & absTimeTolerance & " Tage" & vbLf & _
-                                    "Zeit-Toleranz nächster Meilenstein: +/-" & absTimeTolerance & " Tage"
+                    'logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                    '                "Zeit-Toleranz Projekt-Ende: +/-" & absTimeTolerance & " Tage" & vbLf & _
+                    '                "Zeit-Toleranz nächster Meilenstein: +/-" & absTimeTolerance & " Tage"
+                    logMessage = repMessages.getmsg(83) & vbLf & _
+                                 repMessages.getmsg(84) & absTimeTolerance & repMessages.getmsg(45) & vbLf & _
+                                 repMessages.getmsg(85) & absTimeTolerance & repMessages.getmsg(45)
                 Else
                     tmpValue1 = relTimeTolerance * 100
-                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
-                                    "Zeit-Toleranz Projekt-Ende: +/-" & tmpValue1.ToString("##0.#") & "%" & vbLf & _
-                                    "Zeit-Toleranz nächster Meilenstein: +/-" & tmpValue1.ToString("##0.#") & "%"
+                    'logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                    '                "Zeit-Toleranz Projekt-Ende: +/-" & tmpValue1.ToString("##0.#") & "%" & vbLf & _
+                    '                "Zeit-Toleranz nächster Meilenstein: +/-" & tmpValue1.ToString("##0.#") & "%"
+                    logMessage = repMessages.getmsg(83) & vbLf & _
+                                 repMessages.getmsg(84) & tmpValue1.ToString("##0.#") & "%" & vbLf & _
+                                 repMessages.getmsg(85) & tmpValue1.ToString("##0.#") & "%"
                 End If
             Else
                 If showAbsoluteDiff Then
-                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
-                                    "Zeit-Toleranz: +/-" & absTimeTolerance & " Tage" & vbLf & _
-                                    "Kosten-Toleranz: +/-" & absCostTolerance & " T€"
+                    'logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                    '                "Zeit-Toleranz: +/-" & absTimeTolerance & " Tage" & vbLf & _
+                    '                "Kosten-Toleranz: +/-" & absCostTolerance & " T€"
+                    logMessage = repMessages.getmsg(83) & vbLf & _
+                                 repMessages.getmsg(86) & absTimeTolerance & repMessages.getmsg(45) & vbLf & _
+                                 repMessages.getmsg(87) & absCostTolerance & " T€"
                 Else
                     tmpValue1 = relTimeTolerance * 100
                     tmpValue2 = relCostTolerance * 100
-                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
-                                    "Zeit-Toleranz: +/-" & tmpValue1.ToString("##0.#") & "%" & vbLf & _
-                                    "Kosten-Toleranz: +/-" & tmpValue2.ToString("##0.#") & "%"
+                    'logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                    '                "Zeit-Toleranz: +/-" & tmpValue1.ToString("##0.#") & "%" & vbLf & _
+                    '                "Kosten-Toleranz: +/-" & tmpValue2.ToString("##0.#") & "%"
+                    logMessage = repMessages.getmsg(83) & vbLf & _
+                                 repMessages.getmsg(86) & tmpValue1.ToString("##0.#") & "%" & vbLf & _
+                                 repMessages.getmsg(87) & tmpValue2.ToString("##0.#") & "%"
 
                 End If
 
@@ -8188,9 +8609,11 @@ Public Module testModule
 
                     With .AxisTitle
                         If isTimeTimeVgl Then
-                            .Characters.Text = "Zeit-Abweichung bis nächster Meilenstein"
+                            '.Characters.Text = "Zeit-Abweichung bis nächster Meilenstein"
+                            .Characters.Text = repMessages.getmsg(88)
                         Else
-                            .Characters.Text = "Zeit-Abweichung bis nächster Meilenstein"
+                            '.Characters.Text = "Zeit-Abweichung bis nächster Meilenstein"
+                            .Characters.Text = repMessages.getmsg(88)
                         End If
 
                         .Characters.Font.Size = titlefontsize
@@ -8250,9 +8673,11 @@ Public Module testModule
                         ' Achsen schneiden sich bei 1
                         '.Characters.text = "Kosten"
                         If isTimeTimeVgl Then
-                            .Characters.Text = "Zeitabweichung Projektende"
+                            '.Characters.Text = "Zeitabweichung Projektende"
+                            .Characters.Text = repMessages.getmsg(89)
                         Else
-                            .Characters.Text = "Kosten-Abweichung"
+                            '.Characters.Text = "Kosten-Abweichung"
+                            .Characters.Text = repMessages.getmsg(90)
                         End If
 
                         .Characters.Font.Size = titlefontsize
@@ -8306,27 +8731,39 @@ Public Module testModule
                     If showAbsoluteDiff Then
 
                         If isTimeTimeVgl Then
+                            'diagramTitle = diagramTitle & vbLf & _
+                            'anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)" & _
+                            'anzkeinVproj & " Projekte ohne letzten Stand"
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)" & _
-                            anzkeinVproj & " Projekte ohne letzten Stand"
+                           anzOK.ToString & repMessages.getmsg(91) & absTimeTolerance & repMessages.getmsg(45) & ")" & _
+                           anzkeinVproj & repMessages.getmsg(92)
                         Else
+                            'diagramTitle = diagramTitle & vbLf & _
+                            'anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), " & _
+                            'anzkeinVproj & " Projekte ohne letzten Stand"
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), " & _
-                            anzkeinVproj & " Projekte ohne letzten Stand"
+                          anzOK.ToString & repMessages.getmsg(91) & absTimeTolerance & repMessages.getmsg(45) & ", +/-" & absCostTolerance & " T€), " & _
+                          anzkeinVproj & repMessages.getmsg(92)
                         End If
 
                     Else
                         If isTimeTimeVgl Then
                             Dim tmpValue1 As Double = relTimeTolerance * 100
+                            'diagramTitle = diagramTitle & vbLf & _
+                            'anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)" & _
+                            'anzkeinVproj & " Projekte ohne letzten Stand"
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)" & _
-                            anzkeinVproj & " Projekte ohne letzten Stand"
+                          anzOK.ToString & repMessages.getmsg(91) & tmpValue1.ToString("##0.#") & "%)" & _
+                          anzkeinVproj & repMessages.getmsg(92)
                         Else
                             Dim tmpValue1 As Double = relTimeTolerance * 100
                             Dim tmpvalue2 As Double = relCostTolerance * 100
+                            'diagramTitle = diagramTitle & vbLf & _
+                            'anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), " & _
+                            'anzkeinVproj & " Projekte ohne letzten Stand"
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), " & _
-                            anzkeinVproj & " Projekte ohne letzten Stand"
+                            anzOK.ToString & repMessages.getmsg(91) & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), " & _
+                            anzkeinVproj & repMessages.getmsg(92)
                         End If
                     End If
 
@@ -8334,23 +8771,32 @@ Public Module testModule
                     If showAbsoluteDiff Then
 
                         If isTimeTimeVgl Then
+                            '    diagramTitle = diagramTitle & vbLf & _
+                            '    anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)"
+                            'Else
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)"
+                            anzOK.ToString & repMessages.getmsg(91) & absTimeTolerance & repMessages.getmsg(45) & ")"
                         Else
+                            'diagramTitle = diagramTitle & vbLf & _
+                            'anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), "
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), "
+                            anzOK.ToString & repMessages.getmsg(91) & absTimeTolerance & repMessages.getmsg(45) & ", +/-" & absCostTolerance & " T€), "
                         End If
 
                     Else
                         If isTimeTimeVgl Then
                             Dim tmpValue1 As Double = relTimeTolerance * 100
+                            'diagramTitle = diagramTitle & vbLf & _
+                            'anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)"
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)"
+                            anzOK.ToString & repMessages.getmsg(91) & tmpValue1.ToString("##0.#") & "%)"
                         Else
                             Dim tmpValue1 As Double = relTimeTolerance * 100
                             Dim tmpvalue2 As Double = relCostTolerance * 100
+                            'diagramTitle = diagramTitle & vbLf & _
+                            'anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), "
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), "
+                            anzOK.ToString & repMessages.getmsg(91) & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), "
                         End If
                     End If
                 End If
@@ -8382,7 +8828,6 @@ Public Module testModule
                 .Height = height
                 .Name = chtobjName
             End With
-
 
 
             With appInstance.ActiveSheet
@@ -9995,23 +10440,18 @@ Public Module testModule
                 .TextFrame2.WordWrap = MsoTriState.msoTrue
                 .Width = x1 - .Left
             End If
+        End With
+        ' Änderung 20.4.16 
+        'If .Left + .Width > x1 Then
 
-            ' Änderung 20.4.16 
-            'If .Left + .Width > x1 Then
 
-            '    ' jetzt muss der Name entsprechend gekürzt werden 
-            '    Dim longName As String = .TextFrame2.TextRange.Text
-            '    Dim shortName As String = ""
-
-            '    .TextFrame2.TextRange.Text = shortName
-            '    Dim stringIX As Integer = 0
-            '    Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
-            '        shortName = shortName & longName.Chars(stringIX)
-            '        stringIX = stringIX + 1
-            '        .TextFrame2.TextRange.Text = shortName
-            '    Loop
-
-            'End If
+        With copiedShape.Item(1)
+            .Top = CSng(curYPosition) + rds.YprojectName
+            .Left = rds.drawingAreaLeft
+            '.TextFrame2.TextRange.Text = " ... existiert in diesem Projekt nicht ..."
+            .TextFrame2.TextRange.Text = repMessages.getmsg(20)
+            .Name = .Name & .Id
+            .AlternativeText = "Swimlane " & elemNameOfElemID(swimlaneNameID)
         End With
 
         If awinSettings.mppShowProjectLine Then
@@ -10219,7 +10659,7 @@ Public Module testModule
                         Catch ex As Exception
                             'Dim a As Integer = 1
                         End Try
-                        
+
                         'lastEndDate = curPhase.getEndDate
                     End If
 
@@ -10256,7 +10696,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     Dim a As Integer = 1
                                 End Try
-                                
+
 
                             End If
 
@@ -10305,7 +10745,7 @@ Public Module testModule
             Catch ex As Exception
 
             End Try
-            
+
 
         ElseIf anzElements = 1 Then
             Try
@@ -10426,7 +10866,8 @@ Public Module testModule
 
         Dim anzahlTage As Integer = DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1
         If anzahlTage <= 0 Then
-            Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
+            ''Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
+            Throw New ArgumentException(repMessages.getmsg(9))
         End If
 
 
@@ -10510,7 +10951,8 @@ Public Module testModule
                         ' trotzdem muss das Projekt weitergezählt werden, damit das nächste zu zeichnende Projekt angegangen wird
                         projDone = projDone + 1
                         ' zuwenig Platz auf der Seite
-                        Throw New ArgumentException("Für Projekt '" & fullName & "' ist zuwenig Platz auf einer Seite")
+                        ''Throw New ArgumentException("Für Projekt '" & fullName & "' ist zuwenig Platz auf einer Seite")
+                        Throw New ArgumentException(repMessages.getmsg(10) & fullName)
 
                     Else
 
@@ -11494,10 +11936,11 @@ Public Module testModule
         End If
 
         If currentProjektIndex < projectCollection.Count And awinSettings.mppOnePage Then
-            Throw New ArgumentException("es konnten nur " & _
-                                        currentProjektIndex.ToString & " von " & projectsToDraw.ToString & _
-                                        " Projekten gezeichnet werden ... " & vbLf & _
-                                        "bitte verwenden Sie ein anderes Vorlagen-Format")
+            'Throw New ArgumentException("es konnten nur " & _
+            '                            currentProjektIndex.ToString & " von " & projectsToDraw.ToString & _
+            '                            " Projekten gezeichnet werden ... " & vbLf & _
+            '                            "bitte verwenden Sie ein anderes Vorlagen-Format")
+            Throw New ArgumentException(repMessages.getmsg(12) & currentProjektIndex.ToString & repMessages.getmsg(13) & projectsToDraw.ToString)
         End If
 
 
@@ -12301,7 +12744,8 @@ Public Module testModule
                 End If
 
             Next
-            buName = "ohne Name"
+            'buName = "ohne Name"
+            buName = repMessages.getmsg(14)
             buColor = awinSettings.AmpelNichtBewertet
 
             ' jetzt das Shape eintragen 
@@ -12352,7 +12796,8 @@ Public Module testModule
             legendTextVorlagenShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
-                .TextFrame2.TextRange.Text = "Projekt, ggf. mit" & vbLf & "Anfangs- und Ende-Markierung"
+                '.TextFrame2.TextRange.Text = "Projekt, ggf. mit" & vbLf & "Anfangs- und Ende-Markierung"
+                .TextFrame2.TextRange.Text = repMessages.getmsg(15)
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + legendPhaseVorlagenShape.Width + 3
                 xCursor = .Left + copiedShape(1).Width + 15
@@ -12441,9 +12886,10 @@ Public Module testModule
             End With
 
             If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
+
                 xCursor = xCursor + maxBreite
                 If xCursor > legendAreaRight Then
-                    Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                    Throw New ArgumentException(repMessages.getmsg(16))
                 End If
                 maxBreite = 0.0
                 yCursor = legendAreaTop
@@ -12542,9 +12988,10 @@ Public Module testModule
             End With
 
             If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
+
                 xCursor = xCursor + maxBreite
                 If xCursor > legendAreaRight Then
-                    Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                    Throw New ArgumentException(repMessages.getmsg(16))
                 End If
                 yCursor = legendAreaTop
                 maxBreite = 0.0
@@ -12568,7 +13015,8 @@ Public Module testModule
         If uniqueElemClasses.Count > 0 Then
             xCursor = xCursor + maxBreite - 5
             If xCursor >= legendAreaRight Then
-                Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                Throw New ArgumentException(repMessages.getmsg(16))
             End If
         End If
         yCursor = legendAreaTop
@@ -12610,8 +13058,8 @@ Public Module testModule
             legendTextVorlagenShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
-
-                .TextFrame2.TextRange.Text = "Projekt-Ampeln"
+                '.TextFrame2.TextRange.Text = "Projekt-Ampeln"
+                .TextFrame2.TextRange.Text = repMessages.getmsg(17)
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
 
@@ -12651,7 +13099,8 @@ Public Module testModule
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
 
-                .TextFrame2.TextRange.Text = "Meilenstein-Ampeln"
+                '.TextFrame2.TextRange.Text = "Meilenstein-Ampeln"
+                .TextFrame2.TextRange.Text = repMessages.getmsg(18)
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
 
@@ -13304,7 +13753,8 @@ Public Module testModule
                     dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
 
                 Else
-                    Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    ''Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    Call MsgBox(repMessages.getmsg(8))
                     'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
                 End If
 
@@ -13674,7 +14124,8 @@ Public Module testModule
                 .TextFrame2.TextRange.Text = missingShapes
             End With
         Else
-            Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
+            'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
+            Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
         End If
 
         ' jetzt werden alle Shapes gelöscht ... 
@@ -13843,7 +14294,8 @@ Public Module testModule
                     dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
 
                 Else
-                    Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    'Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    Call MsgBox(repMessages.getmsg(8))
                     'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
                 End If
 
@@ -14438,7 +14890,8 @@ Public Module testModule
             errorVorlagenShape.Copy()
             errorShape = pptslide.Shapes.Paste
             With errorShape(1)
-                .TextFrame2.TextRange.Text = "die Legenden Symbole Phase oder Meilenstein fehlen "
+                ''.TextFrame2.TextRange.Text = "die Legenden Symbole Phase oder Meilenstein fehlen "
+                .TextFrame2.TextRange.Text = repMessages.getmsg(7)
             End With
 
 

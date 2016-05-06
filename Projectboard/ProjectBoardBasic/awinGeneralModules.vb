@@ -17,6 +17,8 @@ Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
 Imports System.Drawing
+Imports System.Globalization
+
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports System.Security.Principal
@@ -786,6 +788,11 @@ Public Module awinGeneralModules
         ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
         ProjektStatus(4) = "abgeschlossen"
 
+        ''ReportLang(PTSprache.deutsch) = "de"
+        ''ReportLang(PTSprache.englisch) = "en"
+        ''ReportLang(PTSprache.französisch) = "fr"
+        ''ReportLang(PTSprache.spanisch) = "es"
+        
 
         DiagrammTypen(0) = "Phase"
         DiagrammTypen(1) = "Rolle"
@@ -795,34 +802,78 @@ Public Module awinGeneralModules
         DiagrammTypen(5) = "Meilenstein"
         DiagrammTypen(6) = "Meilenstein Trendanalyse"
 
-        ergebnisChartName(0) = "Earned Value"
-        ergebnisChartName(1) = "Earned Value - gewichtet"
-        ergebnisChartName(2) = "Verbesserungs-Potential"
-        ergebnisChartName(3) = "Risiko-Abschlag"
+        Try
+            repCult = CultureInfo.CurrentCulture
+            ''repCult = ReportLang(PTSprache.englisch)
 
-        ReDim portfolioDiagrammtitel(21)
-        portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
-        portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
-        portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
-        portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
-        portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
-        portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
-        portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
-        portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
-        portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
-        portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
-        portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
-        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
-        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
-        portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
-        portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
+            repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
 
+
+
+            ' ''Dim Datum As Date = DateAdd(DateInterval.Month, 6, Date.Now)
+            ' ''Dim hstr As String = Datum.ToString("MMM yy", repCult)
+
+
+
+            'ergebnisChartName(0) = "Earned Value"
+            'ergebnisChartName(1) = "Earned Value - gewichtet"
+            'ergebnisChartName(2) = "Verbesserungs-Potential"
+            'ergebnisChartName(3) = "Risiko-Abschlag"
+
+            ergebnisChartName(0) = repMessages.getmsg(54)
+            'Call MsgBox(ergebnisChartName(0))
+            ergebnisChartName(1) = repMessages.getmsg(55)
+            ergebnisChartName(2) = repMessages.getmsg(56)
+            ergebnisChartName(3) = repMessages.getmsg(57)
+
+            ReDim portfolioDiagrammtitel(21)
+            'portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+            'portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+            'portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+            'portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+            'portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+            'portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+            'portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+            'portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
+            'portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+            'portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+            'portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+            'portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
+            'portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
+            'portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
+            'portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
+            'portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
+
+            portfolioDiagrammtitel(PTpfdk.Phasen) = repMessages.getmsg(58)
+            portfolioDiagrammtitel(PTpfdk.Rollen) = repMessages.getmsg(59)
+            portfolioDiagrammtitel(PTpfdk.Kosten) = repMessages.getmsg(60)
+            portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+            portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+            portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+            portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+            portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+            portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+            portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+            portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = repMessages.getmsg(61)
+            portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = repMessages.getmsg(62)
+            portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+            portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+            portfolioDiagrammtitel(PTpfdk.Meilenstein) = repMessages.getmsg(63)
+            portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = repMessages.getmsg(64)
+            portfolioDiagrammtitel(PTpfdk.Dependencies) = repMessages.getmsg(65)
+            portfolioDiagrammtitel(PTpfdk.betterWorseL) = repMessages.getmsg(66)
+            portfolioDiagrammtitel(PTpfdk.betterWorseB) = repMessages.getmsg(67)
+            portfolioDiagrammtitel(PTpfdk.Budget) = repMessages.getmsg(69)
+            portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = repMessages.getmsg(69)
+
+        Catch ex As Exception
+
+        End Try
 
         autoSzenarioNamen(0) = "vor Optimierung"
         autoSzenarioNamen(1) = "1. Optimum"
@@ -922,6 +973,9 @@ Public Module awinGeneralModules
         Dim myUser As New WindowsIdentity(accountToken)
         myWindowsName = myUser.Name
         Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+
+
+
 
 
         ' hier muss jetzt das Customization File aufgemacht werden ...
@@ -1036,7 +1090,7 @@ Public Module awinGeneralModules
                         End Try
 
 
-                       
+
                     Catch ex As Exception
 
                     End Try
@@ -1455,7 +1509,9 @@ Public Module awinGeneralModules
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
 
+
                 For i = 2 To anzZeilen - 1
+
                     c = CType(rolesRange.Cells(i, 1), Excel.Range)
 
                     If CStr(c.Value) <> "" Then
@@ -13563,4 +13619,57 @@ Public Module awinGeneralModules
         End Try
 
     End Function
+
+    Public Function XMLImportReportMsg(ByVal repMsgfile As String, ByVal language As String) As clsReportMessages
+
+        Dim reportMessages As New clsReportMessages
+
+        Dim serializer = New DataContractSerializer(GetType(clsReportMessages))
+        Dim xmlfilename As String = awinPath & requirementsOrdner & repMsgfile & "_" & language & ".xml"
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            reportMessages = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportReportMsg = reportMessages
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportReportMsg = Nothing
+        End Try
+
+    End Function
+
+    Public Sub XMLExportReportMsg(ByVal reportMsg As clsReportMessages, ByVal repMsgfile As String, ByVal language As String)
+
+
+
+        Dim xmlfilename As String = awinPath & requirementsOrdner & repMsgfile & "_" & language & ".xml"
+        Try
+            Dim serializer = New DataContractSerializer(GetType(clsReportMessages))
+
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, lic)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, reportMsg)
+            writer.Flush()
+            writer.Close()
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+    End Sub
 End Module

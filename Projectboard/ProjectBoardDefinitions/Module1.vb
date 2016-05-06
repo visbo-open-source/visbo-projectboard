@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports System.Globalization
 Imports System.Collections.Generic
 Imports System.Math
 Imports Microsoft.Office.Interop.Excel
@@ -34,6 +35,10 @@ Public Module Module1
     Public myCustomizationFile As String
     Public myLogfile As String
 
+    'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
+    Public repMessages As clsReportMessages
+   
+    
     'Definitionen zum Schreiben eines Logfiles
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
@@ -364,6 +369,14 @@ Public Module Module1
         height = 3
     End Enum
 
+    ' Sprachen für die ReportMessages
+    Public Enum PTSprache
+        deutsch = 0
+        englisch = 1
+        französisch = 2
+        spanisch = 3
+    End Enum
+
     ' wird in der Treeview für Laden, Löschen, Aktivieren von TreeView Formularen benötigt 
     Public Enum PTTvActions
         delFromDB = 0
@@ -413,7 +426,18 @@ Public Module Module1
     ' beauftragt
     ' abgeschlossen
     Public ProjektStatus(4) As String
+    '
+    'ReportSprache kann sein:
+    ' deutsch
+    ' englisch
+    ' französisch
+    ' spanisch
+    Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"), _
+                                         New CultureInfo("en-US"), _
+                                         New CultureInfo("fr-FR"), _
+                                         New CultureInfo("es-ES")}
 
+    Public repCult As CultureInfo
 
     '
     '
@@ -466,6 +490,7 @@ Public Module Module1
     Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
     Public licFileName As String = requirementsOrdner & "License.xml"
+    Public repMsgFileName As String = "ReportTexte"
     Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
