@@ -6,21 +6,21 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\Telair</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Mahle IT\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">telairdemo</Value>
+      <Value Profile="(Default)">Mahle16</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\telair\</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>
     </Setting>
-    <Setting Name="VISBOAbbreviation" Type="System.String" Scope="User">
-      <Value Profile="(Default)">VISBO Abbreviation</Value>
+    <Setting Name="VISBOAbbreviation" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">VISBO Alias</Value>
     </Setting>
-    <Setting Name="VISBOAmpel" Type="System.String" Scope="User">
+    <Setting Name="VISBOAmpel" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Ampel</Value>
     </Setting>
   </Settings>

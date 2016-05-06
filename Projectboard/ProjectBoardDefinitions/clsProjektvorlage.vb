@@ -7,6 +7,8 @@
     ' Änderung tk 31.3.15 Hierachie Klasse ergänzt 
     Public hierarchy As clsHierarchy
 
+    
+
     Private relStart As Integer
     Private uuid As Long
     ' als Friend deklariert, damit sie aus der Klasse clsProjekt, die von clsProjektvorlage erbt , erreichbar ist
@@ -15,6 +17,310 @@
     Private _latestStart As Integer
     Private _budgetWerte() As Double
 
+
+    ' Hinzufügen von Custom Feldern beliebiger Anzahl 
+    ' ein CustomFeld eines bestimmten Typs darf nur einmal vorkommen 
+    Private _customDblFields As SortedList(Of Integer, Double)
+    Private _customStringFields As SortedList(Of Integer, String)
+    Private _customBoolFields As SortedList(Of Integer, Boolean)
+
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der Double Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customDblFields As SortedList(Of Integer, Double)
+        Get
+
+            If IsNothing(_customDblFields) Then
+                _customDblFields = New SortedList(Of Integer, Double)
+            End If
+
+            customDblFields = _customDblFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der String Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customStringFields As SortedList(Of Integer, String)
+        Get
+
+            If IsNothing(_customStringFields) Then
+                _customStringFields = New SortedList(Of Integer, String)
+            End If
+
+            customStringFields = _customStringFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der bool'schen Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customBoolFields As SortedList(Of Integer, Boolean)
+        Get
+
+            If IsNothing(_customBoolFields) Then
+                _customBoolFields = New SortedList(Of Integer, Boolean)
+            End If
+
+            customBoolFields = _customBoolFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Wert für das Double Custom-Field mit Identifier UID zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomDField(ByVal uid As Integer) As Double
+        Get
+            Dim tmpValue As Double = Nothing
+
+            If _customDblFields.ContainsKey(uid) Then
+                tmpValue = _customDblFields.Item(uid)
+            End If
+
+            getCustomDField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Wert des Double Custom-Fields mit NAme cfName zurück; Nothing, wenn es nicht existiert 
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomDField(ByVal cfName As String) As Double
+        Get
+            Dim tmpValue As Double = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.Dbl)
+
+            If _customDblFields.ContainsKey(uid) Then
+                tmpValue = _customDblFields.Item(uid)
+            End If
+
+            getCustomDField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an Double CustomFields ein neues hinzu
+    ''' wenn das CustomField gar nicht definiert ist: Exception
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default 0.0  angenommen 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomDField(ByVal uid As Integer, ByVal value As Double)
+
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
+
+        If IsNothing(value) Then
+            value = 0.0
+        End If
+
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.Dbl Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customDblFields.ContainsKey(uid) Then
+                    _customDblFields.Item(uid) = value
+                Else
+                    _customDblFields.Add(uid, value)
+                End If
+            End If
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht Dbl):" & uid.ToString)
+        End If
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' gibt den Wert für das String Custom-Field mit Identifier UID zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomSField(ByVal uid As Integer) As String
+        Get
+            Dim tmpValue As String = Nothing
+
+            If _customStringFields.ContainsKey(uid) Then
+                tmpValue = _customStringFields.Item(uid)
+            End If
+
+            getCustomSField = tmpValue
+
+        End Get
+    End Property
+
+
+    
+    ''' <summary>
+    ''' gibt den Wert des String Custom-Fields mit Name cfName zurück; Nothing, wenn es nicht existiert
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomSField(ByVal cfName As String) As String
+        Get
+            Dim tmpValue As String = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.Str)
+
+            If _customStringFields.ContainsKey(UID) Then
+                tmpValue = _customStringFields.Item(UID)
+            End If
+
+            getCustomSField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an String CustomFields ein neues hinzu
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default "?"  angenommen 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomSField(ByVal uid As Integer, ByVal value As String)
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
+
+        If IsNothing(value) Then
+            value = ""
+        End If
+
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.Str Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customStringFields.ContainsKey(uid) Then
+                    _customStringFields.Item(uid) = value
+                Else
+                    _customStringFields.Add(uid, value)
+                End If
+            End If
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht String):" & uid.ToString)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt den Wert für das Bool Custom-Field mit  Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomBField(ByVal uid As Integer) As Boolean
+        Get
+            Dim tmpValue As Boolean = Nothing
+
+            If _customBoolFields.ContainsKey(uid) Then
+                tmpValue = _customBoolFields.Item(uid)
+            End If
+
+            getCustomBField = tmpValue
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt den Wert des Bool Custom-Fields mit NAme cfName zurück; Nothing, wenn es nicht existiert 
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomBField(ByVal cfName As String) As Boolean
+        Get
+            Dim tmpValue As Boolean = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.bool)
+
+            If _customBoolFields.ContainsKey(uid) Then
+                tmpValue = _customBoolFields.Item(uid)
+            End If
+
+            getCustomBField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an bool'schen CustomFields ein neues hinzu
+    ''' wenn das CustomField gar nicht definiert ist: Exception
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default Wert false angenommen 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomBField(ByVal uid As Integer, ByVal value As Boolean)
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
+
+        If IsNothing(value) Then
+            value = False
+        End If
+
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.bool Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customBoolFields.ContainsKey(uid) Then
+                    _customBoolFields.Item(uid) = value
+                Else
+                    _customBoolFields.Add(uid, value)
+                End If
+            End If
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht bool):" & uid.ToString)
+        End If
+
+
+    End Sub
 
     ''' <summary>
     ''' gibt die Budgetwerte des Projekts zurück
@@ -307,7 +613,7 @@
 
         ' in der Meilenstein-Liste der Phase löschen 
         cPhase.removeMilestoneAt(indexInMilestoneList - 1)
-        
+
         ' jetzt in der Hierarchie alle Meilenstein-Verweise, die größer als indexInMilestoneList sind, um eins erniedrigen 
         Me.hierarchy.updateMeilensteinVerweise(indexInMilestoneList, parentID, -1)
 
@@ -670,7 +976,7 @@
             Catch ex As Exception
                 Dim a = 2
             End Try
-            
+
 
 
 
@@ -1122,6 +1428,76 @@
     End Function
 
     ''' <summary>
+    ''' gibt true zurück, wenn es sich um eine Phase der Gliederungsebene 1 handelt, also Kind-Phase der rootphase ist
+    ''' gibt false sonst zurück
+    ''' wenn BHTC Schema = true, dann muss es ein Kind der ersten oder zweiten Hierarchie Ebene handeln   
+    ''' </summary>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="isBHTCSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isSwimlaneOrSegment(ByVal elemName As String, Optional ByVal isBHTCSchema As Boolean = False) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+            Dim itemNameID As String
+            Dim childNameID As String
+            Dim fullBC As String
+            Dim fullChildBC As String
+
+            elemName = elemName & "#"
+
+            If isBHTCSchema Then
+                ' noch nicht implementiert 
+                Dim found As Boolean = False
+                Dim ix As Integer = 1
+
+                Do While ix <= ChildCollection.Count And Not found
+                    itemNameID = CStr(ChildCollection.Item(ix))
+                    fullBC = Me.getBcElemName(itemNameID)
+
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        found = True
+                    Else
+                        If Not elemIDIstMeilenstein(itemNameID) Then
+                            Dim childChildCollection As Collection = Me.hierarchy.getChildIDsOf(itemNameID, False)
+                            ' Schleife über das KindesKin
+                            For Each childNameID In childChildCollection
+                                fullChildBC = Me.getBcElemName(childNameID)
+                                If fullChildBC.EndsWith(elemName) Then
+                                    tmpResult = True
+                                    found = True
+                                    Exit For
+                                End If
+                            Next
+
+                        End If
+
+                    End If
+                    ix = ix + 1
+                Loop
+
+
+            Else
+
+                For Each itemNameID In ChildCollection
+                    fullBC = Me.getBcElemName(itemNameID)
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        Exit For
+                    End If
+                Next
+
+            End If
+
+            isSwimlaneOrSegment = tmpResult
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 
     ''' dabei wird unterschieden, ob es sich um das BHTC Schema handelt oder um eine freie Swimlane Definition handelt  
     ''' </summary>
@@ -1306,7 +1682,7 @@
 
         End Get
     End Property
-    
+
 
     ''' <summary>
     ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück; index läuft von 1..Anzahl 
@@ -1929,7 +2305,8 @@
                 Next p
 
             Else
-                Throw New Exception("es gibt keine Meilensteine")
+                ReDim tmpvalues(0)
+                tmpvalues(0) = 0
             End If
 
             getMilestoneColors = tmpvalues
@@ -2611,7 +2988,7 @@
 
     End Property
 
-  
+
 
     Public Sub New()
 
@@ -2628,8 +3005,15 @@
         '_Status = ProjektStatus(0)
         Schrift = 12
         Schriftfarbe = RGB(0, 0, 0)
+
+        ' die CustomFields initialisieren 
+        _customDblFields = New SortedList(Of Integer, Double)
+        _customStringFields = New SortedList(Of Integer, String)
+        _customBoolFields = New SortedList(Of Integer, Boolean)
+
+
     End Sub
 
- 
+
 
 End Class

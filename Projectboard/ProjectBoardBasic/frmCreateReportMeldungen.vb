@@ -9,6 +9,8 @@ Public Class frmCreateReportMeldungen
     Private report_fr_messages As New clsReportMessages
     Private report_es_messages As New clsReportMessages
 
+    Private path As String
+
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
@@ -88,13 +90,21 @@ Public Class frmCreateReportMeldungen
         ' Eingabefile wieder schließen
         ReportMessagesFile.Close(SaveChanges:=False)
 
-        Call XMLExportReportMsg(report_DE_messages, repMsgFileName, ReportLang(PTSprache.deutsch).Name)
-        Call XMLExportReportMsg(report_en_messages, repMsgFileName, ReportLang(PTSprache.englisch).Name)
-        Call XMLExportReportMsg(report_fr_messages, repMsgFileName, ReportLang(PTSprache.französisch).Name)
-        Call XMLExportReportMsg(report_es_messages, repMsgFileName, ReportLang(PTSprache.spanisch).Name)
+        Try
+            Call XMLExportReportMsg(report_DE_messages, repMsgFileName, ReportLang(PTSprache.deutsch).Name)
+            Call XMLExportReportMsg(report_en_messages, repMsgFileName, ReportLang(PTSprache.englisch).Name)
+            Call XMLExportReportMsg(report_fr_messages, repMsgFileName, ReportLang(PTSprache.französisch).Name)
+            Call XMLExportReportMsg(report_es_messages, repMsgFileName, ReportLang(PTSprache.spanisch).Name)
 
-        Call MsgBox(" Die Message der Datei '" & FileReportMessages.Text & "' wurden eingelesen " & vbLf & _
-                    " und übersetzt!")
+            Call MsgBox(" Die Message der Datei '" & FileReportMessages.Text & "' wurden eingelesen " & vbLf & _
+                        " und übersetzt!")
+
+            My.Computer.FileSystem.DeleteFile(FileReportMessages.Text)
+
+        Catch ex As Exception
+            Call MsgBox("es gab Probleme beim Erstellen der Language Dateien: " & ex.Message)
+        End Try
+        
 
         Me.Close()
 
@@ -106,7 +116,7 @@ Public Class frmCreateReportMeldungen
 
     Private Sub frmCreateReportMeldungen_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
-            FileReportMessages.Text = "C:\Users\tom\Documents\Visual Studio 2013\Projects\ProjectBoard\Projectboard\ClassLibrary1\My Project\ReportTexte.xlsx"
+            FileReportMessages.Text = awinPath & requirementsOrdner & "ReportTexte.xlsx"
         Catch ex As Exception
 
         End Try

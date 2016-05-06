@@ -3225,6 +3225,13 @@ Public Class clsProjekt
                         x = Me.hierarchy.getParentIDOfID(msnameID)
                         'While Not (x = rootPhaseName Or found)
                         Dim zaehler As Integer = 0
+
+                        ' -------------------------------------------
+                        ' Änderung tk 9.4.16 wenn found hier nicht auf False gesetzt wird, dann kann der nächste msNAmeID nicht mehr aufgenommen werden ... 
+                        ' das found = false hat vorher gefehlt ... 
+                        found = False
+                        ' Ende Änderung tk 9.4.16 -------------------
+
                         While Not found
                             zaehler = zaehler + 1
                             ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
