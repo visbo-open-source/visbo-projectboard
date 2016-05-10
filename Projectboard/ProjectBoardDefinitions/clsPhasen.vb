@@ -126,6 +126,23 @@ Public Class clsPhasen
 
             End If
 
+            ' ''Dim ok As Boolean = False
+            ' ''While Not ok
+            ' ''    Try
+            ' ''        ' jetzt ist in der AppearanceID was drin ... 
+            ' ''        getShape = appearanceDefinitions.Item(appearanceID).form
+            ' ''        If Not IsNothing(getShape) Then
+            ' ''            ok = True
+            ' ''        Else
+            ' ''            Call MsgBox("nothing")
+            ' ''        End If
+            ' ''    Catch ex As Exception
+            ' ''        Call MsgBox("getshape fehlerhaft")
+            ' ''        getShape = Nothing
+            ' ''    End Try
+
+            ' ''End While
+
             ' jetzt ist in der AppearanceID was drin ... 
             getShape = appearanceDefinitions.Item(appearanceID).form
 

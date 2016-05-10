@@ -11422,9 +11422,24 @@ Public Module testModule
 
                                 End If
 
-                                ' jetzt das Shape zeichnen 
-                                phaseShape.Copy()
-                                copiedShape = pptslide.Shapes.Paste()
+                                '' ''????
+                                ' ''copiedShape = Nothing
+                                ' ''Dim ok As Boolean = False
+                                ' ''While Not ok
+
+                                ' ''    Try
+                                ' ''        ' Erst jetzt wird der Meilenstein gezeichnet 
+                                ' ''        phaseShape.Copy()
+                                ' ''        copiedShape = pptslide.Shapes.Paste()
+                                ' ''        ok = True
+                                ' ''    Catch ex As Exception
+                                ' ''        Call MsgBox("Phase catch")
+                                ' ''        copiedShape = Nothing
+                                ' ''    End Try
+
+                                ' ''End While
+
+                                copiedShape = pptCopyPaste(phaseShape, pptslide)
 
                                 With copiedShape(1)
                                     .Top = CSng(phasenGrafikYPos)
@@ -11853,7 +11868,6 @@ Public Module testModule
                     dauerInM = 12 * dauerInTagen / 365
 
                     durationTextShape.Copy()
-
                     copiedShape = pptslide.Shapes.Paste()
 
                     With copiedShape(1)
@@ -12072,12 +12086,25 @@ Public Module testModule
 
         End If
 
+        '' ''????
+        ' ''copiedShape = Nothing
+        ' ''Dim ok As Boolean = False
+        ' ''While Not ok
+
+        ' ''    Try
+        ' ''        ' Erst jetzt wird der Meilenstein gezeichnet 
+        ' ''        milestoneTypShape.Copy()
+        ' ''        copiedShape = pptslide.Shapes.Paste()
+        ' ''        ok = True
+        ' ''    Catch ex As Exception
+        ' ''        Call MsgBox("Meilenstein catch")
+        ' ''        copiedShape = Nothing
+        ' ''    End Try
+
+        ' ''End While
 
         ' Erst jetzt wird der Meilenstein gezeichnet 
-        milestoneTypShape.Copy()
-        copiedShape = pptslide.Shapes.Paste()
-
-
+        copiedShape = pptCopyPaste(milestoneTypShape, pptslide)
 
         With copiedShape.Item(1)
             .Top = CSng(milestoneGrafikYPos)
@@ -12468,8 +12495,9 @@ Public Module testModule
 
 
             ' Erst jetzt wird der Meilenstein gezeichnet 
-            milestoneTypShape.Copy()
-            copiedShape = rds.pptSlide.Shapes.Paste()
+            '' ''milestoneTypShape.Copy()
+            '' ''copiedShape = rds.pptSlide.Shapes.Paste()
+            copiedShape = pptCopyPaste(milestoneTypShape, rds.pptSlide)
 
             With copiedShape.Item(1)
                 .Height = sizeFaktor * .Height
@@ -14906,6 +14934,31 @@ Public Module testModule
         End Try
 
     End Sub
+    ''' <summary>
+    ''' copiert ein Excel-Shape in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcShape"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pptCopyPaste(ByVal srcShape As xlNS.Shape, ByRef pptslide As pptNS.Slide) As pptNS.Shape
+
+        pptCopyPaste = Nothing
+        Dim ok As Boolean = False
+        While Not ok
+
+            Try
+                ' Erst jetzt wird der Meilenstein gezeichnet 
+                srcShape.Copy()
+                pptCopyPaste = pptslide.Shapes.Paste()
+                ok = True
+            Catch ex As Exception
+                Call MsgBox("pptCopyPaste catch")
+                pptCopyPaste = Nothing
+            End Try
+
+        End While
+    End Function
 
 
 

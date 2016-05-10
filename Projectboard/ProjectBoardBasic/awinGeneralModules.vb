@@ -803,8 +803,9 @@ Public Module awinGeneralModules
         DiagrammTypen(6) = "Meilenstein Trendanalyse"
 
         Try
-            repCult = CultureInfo.CurrentCulture
-            ''repCult = ReportLang(PTSprache.englisch)
+            ''repCult = CultureInfo.CurrentCulture
+            repCult = ReportLang(PTSprache.englisch)
+
 
             repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
 
@@ -2062,13 +2063,19 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar
                     CType(.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(1)
                     rng = .Range(.Cells(1, 1), .Cells(1, 2))
-                    rng.NumberFormat = "mmm-yy"
+                    '' Deutsches Format:
+                    'rng.NumberFormat = "[$-407]mmm yy;@"
+                    ' Englische Format:
+                    rng.NumberFormat = "[$-409]mmm yy;@"
 
                     Dim destinationRange As Excel.Range = .Range(.Cells(1, 1), .Cells(1, 720))
                     With destinationRange
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                        .NumberFormat = "mmm-yy"
+                        '' Deutsches Format: 
+                        'rng.NumberFormat = "[$-407]mmm yy;@"
+                        ' Englische Format:
+                        .NumberFormat = "[$-409]mmm yy;@"
                         .WrapText = False
                         .Orientation = 90
                         .AddIndent = False
