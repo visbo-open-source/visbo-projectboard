@@ -151,17 +151,32 @@ Public Module Module1
     Public Const einrückTiefe As Integer = 2
 
     ' diese Konstanten werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
-    Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
-    Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
-    Public Const summentitel3 As String = "Personal-Kosten intern/extern"
-    Public Const summentitel4 As String = "Personal Kosten Struktur"
-    Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
-    Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
-    Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
-    Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
-    Public Const summentitel9 As String = "Auslastungs-Übersicht"
-    Public Const summentitel10 As String = "Details zur Über-Auslastung"
-    Public Const summentitel11 As String = "Details zur Unter-Auslastung"
+    '' ''Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
+    '' ''Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
+    '' ''Public Const summentitel3 As String = "Personal-Kosten intern/extern"
+    '' ''Public Const summentitel4 As String = "Personal Kosten Struktur"
+    '' ''Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
+    '' ''Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
+    '' ''Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel9 As String = "Auslastungs-Übersicht"
+    '' ''Public Const summentitel10 As String = "Details zur Über-Auslastung"
+    '' ''Public Const summentitel11 As String = "Details zur Unter-Auslastung"
+
+    ' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+    Public summentitel1 As String
+    Public summentitel2 As String
+    Public summentitel3 As String
+    Public summentitel4 As String
+    Public summentitel5 As String
+    Public summentitel6 As String
+    Public summentitel7 As String
+    Public summentitel8 As String
+    Public summentitel9 As String
+    Public summentitel10 As String
+    Public summentitel11 As String
+
+   
     Public Const maxProjektdauer As Integer = 60
 
     ' welche Art von CustomFields gibt es 
