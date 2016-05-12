@@ -2867,6 +2867,43 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
+    ''' fügt 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                    ByVal type As String, _
+                                    ByVal drawingAreaLeft As Double, _
+                                    ByVal drawingAreaRight As Double, _
+                                    ByVal drawingAreaBottom As Double, _
+                                    ByVal drawingAreaTop As Double, _
+                                    ByVal calendarLeft As Date, _
+                                    ByVal calendarRight As Date)
+
+        If Not IsNothing(pptSlide) Then
+            With pptSlide
+
+                If Not IsNothing(type) Then
+                    .Tags.Add("SMART", type)
+                    .Tags.Add("DAL", drawingAreaLeft.ToString)
+                    .Tags.Add("DAR", drawingAreaRight.ToString)
+                    .Tags.Add("DAB", drawingAreaBottom.ToString)
+                    .Tags.Add("DAT", drawingAreaTop.ToString)
+                    .Tags.Add("CALL", calendarLeft.ToShortDateString)
+                    .Tags.Add("CALR", calendarRight.ToShortDateString)
+                End If
+
+            End With
+        End If
+
+
+
+
+    End Sub
+
+
+    ''' <summary>
     ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können
     ''' </summary>
     ''' <param name="pptShape"></param>

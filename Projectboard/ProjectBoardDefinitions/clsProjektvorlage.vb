@@ -7,7 +7,7 @@
     ' Änderung tk 31.3.15 Hierachie Klasse ergänzt 
     Public hierarchy As clsHierarchy
 
-    
+
 
     Private relStart As Integer
     Private uuid As Long

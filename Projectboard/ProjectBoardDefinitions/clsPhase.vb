@@ -20,11 +20,64 @@ Public Class clsPhase
     Private _Parent As clsProjekt
     Private _vorlagenParent As clsProjektvorlage
 
+    ' in Phasen werden jetzt auch optional Ampel-Erläuterung und Ampel Farbe aufgenommen 
+    Private _ampelStatus As Integer = 0
+    Private _ampelErlaeuterung As String = ""
+
     ' Erweiterung tk 18.2.16
     ' das wird verwendet . um eine Farbe Meilensteins, der nicht zur Liste der bekannten gehört 
     ' aufzunehmen 
     Private _alternativeColor As Long
 
+
+    ''' <summary>
+    ''' liest schreibt den Ampel-Status
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property ampelStatus As Integer
+        Get
+            ampelStatus = _ampelStatus
+        End Get
+
+        Set(value As Integer)
+            If Not (IsNothing(value)) Then
+                If IsNumeric(value) Then
+                    If value >= 0 And value <= 3 Then
+                        _ampelStatus = value
+                    Else
+                        Throw New ArgumentException("unzulässiger Ampel-Wert")
+                    End If
+                Else
+                    Throw New ArgumentException("nicht-numerischer Ampel-Wert")
+                End If
+            Else
+                ' ohne Bewertung
+                _ampelStatus = 0
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liest/schreibt die Ampel-Erläuterung
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property ampelErlaeuterung As String
+        Get
+            ampelErlaeuterung = _ampelErlaeuterung
+        End Get
+        Set(value As String)
+            If Not (IsNothing(value)) Then
+                _ampelErlaeuterung = CStr(value)
+            Else
+                _ampelErlaeuterung = " "
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' prüft ob die Phase in ihren Werten Dauer in Monaten konsistent zu den Xwert-Dimensionen der Rollen und Kosten ist 
@@ -1377,6 +1430,9 @@ Public Class clsPhase
 
         _alternativeColor = XlRgbColor.rgbGrey
 
+        _ampelStatus = 0
+        _ampelErlaeuterung = ""
+
 
     End Sub
 
@@ -1398,7 +1454,8 @@ Public Class clsPhase
 
         _alternativeColor = XlRgbColor.rgbGrey
 
-
+        _ampelStatus = 0
+        _ampelErlaeuterung = ""
 
 
     End Sub

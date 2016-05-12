@@ -343,6 +343,8 @@
         Public AllCosts As List(Of clsKostenartDB)
         Public AllResults As List(Of clsResultDB)
 
+        Public ampelStatus As Integer
+        Public ampelErlaeuterung As String
 
         Public earliestStart As Integer
         Public latestStart As Integer
@@ -377,6 +379,10 @@
                 Me.startOffsetinDays = .startOffsetinDays
                 Me.dauerInDays = .dauerInDays
                 Me.name = .nameID
+
+                Me.ampelErlaeuterung = .ampelErlaeuterung
+                Me.ampelStatus = .ampelStatus
+
                 Dim dimension As Integer
 
                 ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
@@ -429,6 +435,10 @@
                 .latestStart = Me.latestStart
                 .minDauer = Me.minDauer
                 .maxDauer = Me.maxDauer
+
+                ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
+                .ampelStatus = Me.ampelStatus
+                .ampelErlaeuterung = Me.ampelErlaeuterung
 
                 Try
                     .setFarbe = CLng(Me.farbe)
@@ -516,6 +526,10 @@
             AllRoles = New List(Of clsRolleDB)
             AllCosts = New List(Of clsKostenartDB)
             AllResults = New List(Of clsResultDB)
+
+            ampelStatus = 0
+            ampelErlaeuterung = ""
+
         End Sub
     End Class
 

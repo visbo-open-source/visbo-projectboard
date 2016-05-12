@@ -875,7 +875,7 @@ Public Module testModule
                                     End If
 
 
-
+                                    ' die Slide mit Tag kennzeichnen ... 
 
                                     Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                   objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
@@ -10391,9 +10391,7 @@ Public Module testModule
             .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
             '.Name = .Name & .Id
             .Name = swlShapeName & PTpptAnnotationType.text
-            '.Title = "Beschriftung"
-            '.AlternativeText = ""
-
+            
 
             ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
             shapeNameCollection.Add(.Name)
@@ -10441,18 +10439,7 @@ Public Module testModule
                 .Width = x1 - .Left
             End If
         End With
-        ' Änderung 20.4.16 
-        'If .Left + .Width > x1 Then
 
-
-        With copiedShape.Item(1)
-            .Top = CSng(curYPosition) + rds.YprojectName
-            .Left = rds.drawingAreaLeft
-            '.TextFrame2.TextRange.Text = " ... existiert in diesem Projekt nicht ..."
-            .TextFrame2.TextRange.Text = repMessages.getmsg(20)
-            .Name = .Name & .Id
-            .AlternativeText = "Swimlane " & elemNameOfElemID(swimlaneNameID)
-        End With
 
         If awinSettings.mppShowProjectLine Then
 
@@ -14043,8 +14030,11 @@ Public Module testModule
 
 
             ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
-
             ' zeichne die Projekte 
+
+            ' jetzt wird das Slide gekennzeichnet als Smart Slide 
+            Call addSmartPPTSlideInfo(pptslide, "TimeComponent", rds.drawingAreaLeft, rds.drawingAreaRight, rds.drawingAreaBottom, _
+                                      rds.drawingAreaTop, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
 
             Try
 
@@ -14262,7 +14252,7 @@ Public Module testModule
 
             If pptFirstTime Then
 
-                
+
                 If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
 
                     If querFormat Then
@@ -14590,9 +14580,9 @@ Public Module testModule
 
                                         End If
                                     End If
-                                    
 
-                                   
+
+
 
                                 Next
 
@@ -14617,7 +14607,7 @@ Public Module testModule
 
                             End Try
                             ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
-                            
+
                         Else
 
                             For Each phaseItem As String In selectedPhases
@@ -14656,6 +14646,12 @@ Public Module testModule
                     End Try
 
                 End If
+
+
+                ' 
+                ' jetzt wird das Slide gekennzeichnet als Smart Slide 
+                Call addSmartPPTSlideInfo(rds.pptSlide, "TimeComponent", rds.drawingAreaLeft, rds.drawingAreaRight, rds.drawingAreaBottom, _
+                                          rds.drawingAreaTop, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
 
                 'ur: 25.03.2015: sichern der im Format veränderten Folie
                 rds.pptSlide.Copy()
@@ -14701,8 +14697,8 @@ Public Module testModule
                         segmentChanged = False
                     End If
                 End If
-                
-                
+
+
 
 
                 ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
@@ -14755,7 +14751,7 @@ Public Module testModule
                                         hproj.hierarchy.getParentIDOfID(curSwl.nameID)
 
                         End If
-                        
+
                         swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
                                                                                  awinSettings.mppExtendedMode, _
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
@@ -14770,7 +14766,7 @@ Public Module testModule
                                 segmentChanged = False
                             End If
                         End If
-                        
+
                     Else
                         segmentChanged = False
                     End If
