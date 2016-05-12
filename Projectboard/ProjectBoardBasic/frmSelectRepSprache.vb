@@ -47,6 +47,9 @@ Public Class frmSelectRepSprache
 
         End Select
         repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+
+        Call setLanguageMessages()
+
         statusLabel.Text = "Spracheinstellung aktuell auf " & repCult.DisplayName & " gesetzt!!"
 
         'Me.Close()
