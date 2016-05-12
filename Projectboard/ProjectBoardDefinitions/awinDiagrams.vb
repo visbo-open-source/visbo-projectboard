@@ -193,7 +193,8 @@ Public Module awinDiagrams
 
 
         If myCollection.Count = 0 Then
-            MsgBox("keine Phase / Rolle / Kostenart / Ergebnisart / Meilenstein ausgewählt ...")
+            'Call MsgBox("keine Phase / Rolle / Kostenart / Ergebnisart / Meilenstein ausgewählt ...")
+            Call MsgBox(repMessages.getmsg(112))
             Exit Sub
         End If
 
@@ -201,7 +202,7 @@ Public Module awinDiagrams
         startdate = StartofCalendar.AddMonths(diff)
 
         For m = von To bis
-            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy")
+            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy", repCult)
         Next m
 
 
@@ -240,8 +241,11 @@ Public Module awinDiagrams
 
 
         ElseIf prcTyp = DiagrammTypen(4) Then
-            chtobjName = "Ergebnis-Übersicht"
-            diagramTitle = "Ergebnis-Übersicht"
+            'chtobjName = "Ergebnis-Übersicht"
+            'diagramTitle = "Ergebnis-Übersicht"
+            chtobjName = repMessages.getmsg(113)
+            diagramTitle = repMessages.getmsg(113)
+
 
         ElseIf prcTyp = DiagrammTypen(5) Then
             chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
@@ -253,8 +257,10 @@ Public Module awinDiagrams
             End If
 
         Else
-            chtobjName = "Übersicht"
-            diagramTitle = "Übersicht"
+            'chtobjName = "Übersicht"
+            'diagramTitle = "Übersicht"
+            chtobjName = repMessages.getmsg(114)
+            diagramTitle = repMessages.getmsg(114)
         End If
 
         ' jetzt den Namen aus optischen Gründen ändern 
@@ -470,8 +476,8 @@ Public Module awinDiagrams
 
                         If isPersCost Then
                             With .SeriesCollection.NewSeries
-
-                                .name = prcName & " intern "
+                                '.name = prcName & " intern "
+                                .name = prcName & repMessages.getmsg(115)
                                 .Interior.color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
@@ -479,8 +485,8 @@ Public Module awinDiagrams
                                 .HasDataLabels = False
                             End With
                             With .SeriesCollection.NewSeries
-
-                                .name = "externe Dienstleister "
+                                '.name = "externe Dienstleister "
+                                .name = repMessages.getmsg(116)
                                 .Interior.color = farbeExterne
                                 .Values = edatenreihe
                                 .XValues = Xdatenreihe
@@ -580,7 +586,8 @@ Public Module awinDiagrams
                     If isWeightedValues Then
                         With .SeriesCollection.NewSeries
                             .HasDataLabels = False
-                            .name = "Risiko Abschlag"
+                            '.name = "Risiko Abschlag"
+                            .name = repMessages.getmsg(117)
                             .Interior.color = ergebnisfarbe2
                             .Values = edatenreihe
                             .XValues = Xdatenreihe
@@ -681,7 +688,8 @@ Public Module awinDiagrams
                             ' es gibt geplante externe Ressourcen ... 
                             With .SeriesCollection.NewSeries
                                 .HasDataLabels = False
-                                .name = "Kapazität incl. Externe"
+                                '.name = "Kapazität incl. Externe"
+                                .name = repMessages.getmsg(118)
 
                                 .Values = kdatenreihePlus
                                 .XValues = Xdatenreihe
@@ -697,6 +705,9 @@ Public Module awinDiagrams
                     End If
 
 
+
+
+
                     If prcTyp = DiagrammTypen(1) Or _
                         (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
                         (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
@@ -704,9 +715,11 @@ Public Module awinDiagrams
                             .HasDataLabels = False
 
                             If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                                .name = "Leistbarkeitsgrenze"
+                                '.name = "Leistbarkeitsgrenze"
+                                .name = repMessages.getmsg(119)
                             Else
-                                .name = "Interne Kapazität"
+                                '.name = "Interne Kapazität"
+                                .name = repMessages.getmsg(120)
                             End If
 
                             .Border.color = rollenKapaFarbe
@@ -1008,7 +1021,7 @@ Public Module awinDiagrams
 
 
         For m = von To bis
-            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy")
+            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy", repCult)
         Next m
 
         If myCollection.Count > 1 Then
@@ -1905,9 +1918,12 @@ Public Module awinDiagrams
         ReDim Xdatenreihe(2)
         ReDim datenreihe(2)
 
-        Xdatenreihe(0) = "Auslastung"
-        Xdatenreihe(1) = "Über-Auslastung"
-        Xdatenreihe(2) = "Unter-Auslastung"
+        'Xdatenreihe(0) = "Auslastung"
+        'Xdatenreihe(1) = "Über-Auslastung"
+        'Xdatenreihe(2) = "Unter-Auslastung"
+        Xdatenreihe(0) = repMessages.getmsg(93)
+        Xdatenreihe(1) = repMessages.getmsg(94)
+        Xdatenreihe(2) = repMessages.getmsg(95)
 
 
         datenreihe(0) = ShowProjekte.getAuslastungsValues(0).Sum
@@ -2118,12 +2134,17 @@ Public Module awinDiagrams
             If showRangeLeft <= heuteColumn Then
                 titelTeile(0) = summentitel6
                 titelTeile(1) = textZeitraum(showRangeLeft, heuteColumn)
-                Xdatenreihe(0) = "keine Information"
-                Xdatenreihe(1) = "erreicht"
-                Xdatenreihe(2) = "mit Einschränkungen"
-                Xdatenreihe(3) = "nicht erreicht"
+                'Xdatenreihe(0) = "keine Information"
+                'Xdatenreihe(1) = "erreicht"
+                'Xdatenreihe(2) = "mit Einschränkungen"
+                'Xdatenreihe(3) = "nicht erreicht"
+                Xdatenreihe(0) = repMessages.getmsg(97)
+                Xdatenreihe(1) = repMessages.getmsg(98)
+                Xdatenreihe(2) = repMessages.getmsg(99)
+                Xdatenreihe(3) = repMessages.getmsg(100)
             Else
-                Throw New ArgumentException("der betrachtete Bereich liegt vollständig in der Zukunft ... es gibt keine erreichten Ziele")
+                'Throw New ArgumentException("der betrachtete Bereich liegt vollständig in der Zukunft ... es gibt keine erreichten Ziele")
+                Throw New ArgumentException(repMessages.getmsg(101))
             End If
 
 
@@ -2134,12 +2155,17 @@ Public Module awinDiagrams
             If heuteColumn + 1 <= showRangeRight Then
                 titelTeile(0) = summentitel7
                 titelTeile(1) = textZeitraum(getColumnOfDate(Date.Now) + 1, showRangeRight)
-                Xdatenreihe(0) = "keine Information"
-                Xdatenreihe(1) = "wird erreicht"
-                Xdatenreihe(2) = "Unsicherheiten"
-                Xdatenreihe(3) = "erhebliche Risiken"
+                'Xdatenreihe(0) = "keine Information"
+                'Xdatenreihe(1) = "wird erreicht"
+                'Xdatenreihe(2) = "Unsicherheiten"
+                'Xdatenreihe(3) = "erhebliche Risiken"
+                Xdatenreihe(0) = repMessages.getmsg(97)
+                Xdatenreihe(1) = repMessages.getmsg(102)
+                Xdatenreihe(2) = repMessages.getmsg(103)
+                Xdatenreihe(3) = repMessages.getmsg(104)
             Else
-                Throw New ArgumentException("der betrachtete Bereich liegt vollständig in der Vergangenheit ... es gibt keine Prognose Werte")
+                'Throw New ArgumentException("der betrachtete Bereich liegt vollständig in der Vergangenheit ... es gibt keine Prognose Werte")
+                Throw New ArgumentException(repMessages.getmsg(105))
             End If
 
         Else
@@ -2149,7 +2175,8 @@ Public Module awinDiagrams
             'Xdatenreihe(1) = "wurde/wird erreicht"
             'Xdatenreihe(2) = "mit Einschränkungen/Unsicherheiten"
             'Xdatenreihe(3) = "nicht erreicht/erhebliche Risiken"
-            Throw New ArgumentException("keine Angabe in Zielerreichungsdiagramm, ob Vergangenheit oder Zukunft betrachtet werden soll ")
+            'Throw New ArgumentException("keine Angabe in Zielerreichungsdiagramm, ob Vergangenheit oder Zukunft betrachtet werden soll ")
+            Throw New ArgumentException(repMessages.getmsg(106))
         End If
 
 
@@ -2194,12 +2221,15 @@ Public Module awinDiagrams
         If datenreihe.Sum = 0 Then
 
             If future < 0 Then
-                Throw New Exception("es gibt im betrachteten Zeitraum keine Ergebnisse aus der Vergangenheit ...")
+                'Throw New Exception("es gibt im betrachteten Zeitraum keine Ergebnisse aus der Vergangenheit ...")
+                Throw New Exception(repMessages.getmsg(107))
 
             ElseIf future > 0 Then
-                Throw New Exception("es gibt im betrachteten Zeitraum keine geplanten, zukünftigen Ergebnisse ...")
+                'Throw New Exception("es gibt im betrachteten Zeitraum keine geplanten, zukünftigen Ergebnisse ...")
+                Throw New Exception(repMessages.getmsg(108))
             Else
-                Throw New Exception("es gibt im betrachteten Zeitraum keine vergangenen oder zukünftigen Ergebnisse ...")
+                'Throw New Exception("es gibt im betrachteten Zeitraum keine vergangenen oder zukünftigen Ergebnisse ...")
+                Throw New Exception(repMessages.getmsg(109))
             End If
 
         Else
@@ -2434,9 +2464,12 @@ Public Module awinDiagrams
         ReDim Xdatenreihe(2)
         ReDim datenreihe(2)
 
-        Xdatenreihe(0) = "Auslastung"
-        Xdatenreihe(1) = "Über-Auslastung"
-        Xdatenreihe(2) = "Unter-Auslastung"
+        'Xdatenreihe(0) = "Auslastung"
+        'Xdatenreihe(1) = "Über-Auslastung"
+        'Xdatenreihe(2) = "Unter-Auslastung"
+        Xdatenreihe(0) = repMessages.getmsg(93)
+        Xdatenreihe(1) = repMessages.getmsg(94)
+        Xdatenreihe(2) = repMessages.getmsg(95)
 
 
         datenreihe(0) = ShowProjekte.getAuslastungsValues(0).Sum
@@ -2859,11 +2892,17 @@ Public Module awinDiagrams
 
 
 
-        Xdatenreihe(0) = "Summe Projekt-Ergebnisse (Risiko-gewichtet)"
+        'Xdatenreihe(0) = "Summe Projekt-Ergebnisse (Risiko-gewichtet)"
+        ''Xdatenreihe(1) = "Risiko-Abschlag"
+        'Xdatenreihe(1) = "Mehrkosten wegen Überauslastung"
+        'Xdatenreihe(2) = "Opportunitätskosten durch Unterauslastung"
+        'Xdatenreihe(3) = "Ergebnis-Kennzahl"
+
+        Xdatenreihe(0) = repMessages.getmsg(151)
         'Xdatenreihe(1) = "Risiko-Abschlag"
-        Xdatenreihe(1) = "Mehrkosten wegen Überauslastung"
-        Xdatenreihe(2) = "Opportunitätskosten durch Unterauslastung"
-        Xdatenreihe(3) = "Ergebnis-Kennzahl"
+        Xdatenreihe(1) = repMessages.getmsg(152)
+        Xdatenreihe(2) = repMessages.getmsg(153)
+        Xdatenreihe(3) = repMessages.getmsg(154)
 
         Dim positiv As Boolean = True
 
@@ -3005,7 +3044,8 @@ Public Module awinDiagrams
 
                     'series
                     With .SeriesCollection.NewSeries
-                        .name = "Bottom"
+                        '.name = "Bottom"
+                        .name = repMessages.getmsg(149)
                         .HasDataLabels = False
                         .Interior.colorindex = -4142
                         .Values = valueDatenreihe1
@@ -3021,7 +3061,8 @@ Public Module awinDiagrams
                     End With
 
                     With .SeriesCollection.NewSeries
-                        .name = "Top"
+                        '.name = "Top"
+                        .name = repMessages.getmsg(150)
                         .HasDataLabels = True
                         .Values = valueDatenreihe2
                         .XValues = Xdatenreihe
@@ -3228,22 +3269,40 @@ Public Module awinDiagrams
 
 
 
-        Xdatenreihe(0) = "Budget Summe"
+        'Xdatenreihe(0) = "Budget Summe"
+        'If heuteColumn >= minColumn + 1 And heuteColumn <= maxColumn Then
+        '    Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, heuteColumn - 1)
+        '    Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(heuteColumn, maxColumn)
+        'ElseIf heuteColumn > maxColumn Then
+        '    future = False
+        '    Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
+        '    Xdatenreihe(3) = "Prognose Kosten" & vbLf & "existieren nicht"
+        'ElseIf heuteColumn <= minColumn Then
+        '    future = True
+        '    Xdatenreihe(2) = "bisherige Kosten" & vbLf & "existieren nicht"
+        '    Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
+        'End If
+
+        'Xdatenreihe(1) = "Risiko-Abschlag"
+        'Xdatenreihe(4) = "Ergebnis"
+
+
+        Xdatenreihe(0) = repMessages.getmsg(144)
         If heuteColumn >= minColumn + 1 And heuteColumn <= maxColumn Then
-            Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, heuteColumn - 1)
-            Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(heuteColumn, maxColumn)
+            Xdatenreihe(2) = repMessages.getmsg(145) & vbLf & textZeitraum(minColumn, heuteColumn - 1)
+            Xdatenreihe(3) = repMessages.getmsg(146) & vbLf & textZeitraum(heuteColumn, maxColumn)
         ElseIf heuteColumn > maxColumn Then
             future = False
-            Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
-            Xdatenreihe(3) = "Prognose Kosten" & vbLf & "existieren nicht"
+            Xdatenreihe(2) = repMessages.getmsg(145) & vbLf & textZeitraum(minColumn, maxColumn)
+            Xdatenreihe(3) = repMessages.getmsg(146) & vbLf & repMessages.getmsg(147)
         ElseIf heuteColumn <= minColumn Then
             future = True
-            Xdatenreihe(2) = "bisherige Kosten" & vbLf & "existieren nicht"
-            Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
+            Xdatenreihe(2) = repMessages.getmsg(145) & vbLf & repMessages.getmsg(147)
+            Xdatenreihe(3) = repMessages.getmsg(146) & vbLf & textZeitraum(minColumn, maxColumn)
         End If
 
-        Xdatenreihe(1) = "Risiko-Abschlag"
-        Xdatenreihe(4) = "Ergebnis"
+        Xdatenreihe(1) = repMessages.getmsg(50)
+        Xdatenreihe(4) = repMessages.getmsg(148)
 
         Dim positiv As Boolean = True
 
@@ -3404,7 +3463,8 @@ Public Module awinDiagrams
 
                     'series
                     With .SeriesCollection.NewSeries
-                        .name = "Bottom"
+                        '.name = "Bottom"
+                        .name = repMessages.getmsg(149)
                         .HasDataLabels = False
                         .Interior.colorindex = -4142
                         .Values = valueDatenreihe1
@@ -3420,7 +3480,8 @@ Public Module awinDiagrams
                     End With
 
                     With .SeriesCollection.NewSeries
-                        .name = "Top"
+                        '.name = "Top"
+                        .name = repMessages.getmsg(150)
                         .HasDataLabels = True
                         .Values = valueDatenreihe2
                         .XValues = Xdatenreihe
@@ -3577,8 +3638,10 @@ Public Module awinDiagrams
 
 
 
-        Xdatenreihe(0) = "Mehrkosten wegen Überauslastung"
-        Xdatenreihe(1) = "Opportunitätskosten durch Unterauslastung"
+        'Xdatenreihe(0) = "Mehrkosten wegen Überauslastung"
+        'Xdatenreihe(1) = "Opportunitätskosten durch Unterauslastung"
+        Xdatenreihe(0) = repMessages.getmsg(141)
+        Xdatenreihe(1) = repMessages.getmsg(142)
 
 
         Dim positiv As Boolean = True
@@ -3597,8 +3660,8 @@ Public Module awinDiagrams
         itemColor(1) = awinSettings.AmpelGelb
 
 
-        diagramTitle = summentitel5 & " (T€) " & vbLf & StartofCalendar.AddMonths(showRangeLeft - 1).ToString("MMM yy") & " - " & _
-                                                 StartofCalendar.AddMonths(showRangeRight - 1).ToString("MMM yy")
+        diagramTitle = summentitel5 & " (T€) " & vbLf & StartofCalendar.AddMonths(showRangeLeft - 1).ToString("MMM yy", repCult) & " - " & _
+                                                 StartofCalendar.AddMonths(showRangeRight - 1).ToString("MMM yy", repCult)
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -3649,7 +3712,8 @@ Public Module awinDiagrams
 
                     'series
                     With .SeriesCollection.NewSeries
-                        .name = "Potentiale"
+                        '.name = "Potentiale"
+                        .name = repMessages.getmsg(143)
                         .HasDataLabels = True
                         .Datalabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
                         .Values = itemValue

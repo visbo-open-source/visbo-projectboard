@@ -1,4 +1,5 @@
 ﻿Imports Microsoft.Office.Interop.Excel
+Imports System.Globalization
 
 Public Class clsawinSettings
     ' Chart Settings 
@@ -139,6 +140,9 @@ Public Class clsawinSettings
     Public Property mppSmartTxtPositioning As Boolean
     ' enable Smart Powerpoint
     Public Property mppEnableSmartPPT As Boolean
+
+    ' Settings für Report-Message-Language
+    Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
     ' Settings für MSProject-AddIn und ImportMSProject
     Public Property visboTaskClass As String

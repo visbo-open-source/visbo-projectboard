@@ -306,7 +306,6 @@ Public Class frmNameSelection
 
                         backgroundRunning = True
 
-
                         BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
                     Catch ex As Exception

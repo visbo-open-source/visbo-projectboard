@@ -6,9 +6,9 @@
     Public StrategicFit As Double
 
     ' Änderung tk: die CustomFields ergänzt ...
-    Public customDblFields As SortedList(Of String, Double)
-    Public customStringFields As SortedList(Of String, String)
-    Public customBoolFields As SortedList(Of String, Boolean)
+    Public customDblFields As SortedList(Of Integer, Double)
+    Public customStringFields As SortedList(Of Integer, String)
+    Public customBoolFields As SortedList(Of Integer, Boolean)
 
     Public Erloes As Double
     Public leadPerson As String
@@ -99,15 +99,15 @@
             Next
 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
-            For Each kvp As KeyValuePair(Of String, String) In projekt.customStringFields
+            For Each kvp As KeyValuePair(Of Integer, String) In projekt.customStringFields
                 Me.customStringFields.Add(kvp.Key, kvp.Value)
             Next
 
-            For Each kvp As KeyValuePair(Of String, Double) In projekt.customDblFields
+            For Each kvp As KeyValuePair(Of Integer, Double) In projekt.customDblFields
                 Me.customDblFields.Add(kvp.Key, kvp.Value)
             Next
 
-            For Each kvp As KeyValuePair(Of String, Boolean) In projekt.customBoolFields
+            For Each kvp As KeyValuePair(Of Integer, Boolean) In projekt.customBoolFields
                 Me.customBoolFields.Add(kvp.Key, kvp.Value)
             Next
 
@@ -198,21 +198,21 @@
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
 
             If Not IsNothing(Me.customStringFields) Then
-                For Each kvp As KeyValuePair(Of String, String) In Me.customStringFields
+                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
                     projekt.customStringFields.Add(kvp.Key, kvp.Value)
                 Next
             End If
             
 
             If Not IsNothing(Me.customDblFields) Then
-                For Each kvp As KeyValuePair(Of String, Double) In Me.customDblFields
+                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
                     projekt.customDblFields.Add(kvp.Key, kvp.Value)
                 Next
             End If
             
 
             If Not IsNothing(Me.customBoolFields) Then
-                For Each kvp As KeyValuePair(Of String, Boolean) In Me.customBoolFields
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
                     projekt.customBoolFields.Add(kvp.Key, kvp.Value)
                 Next
             End If
@@ -343,6 +343,8 @@
         Public AllCosts As List(Of clsKostenartDB)
         Public AllResults As List(Of clsResultDB)
 
+        Public ampelStatus As Integer
+        Public ampelErlaeuterung As String
 
         Public earliestStart As Integer
         Public latestStart As Integer
@@ -377,6 +379,10 @@
                 Me.startOffsetinDays = .startOffsetinDays
                 Me.dauerInDays = .dauerInDays
                 Me.name = .nameID
+
+                Me.ampelErlaeuterung = .ampelErlaeuterung
+                Me.ampelStatus = .ampelStatus
+
                 Dim dimension As Integer
 
                 ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
@@ -429,6 +435,10 @@
                 .latestStart = Me.latestStart
                 .minDauer = Me.minDauer
                 .maxDauer = Me.maxDauer
+
+                ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
+                .ampelStatus = Me.ampelStatus
+                .ampelErlaeuterung = Me.ampelErlaeuterung
 
                 Try
                     .setFarbe = CLng(Me.farbe)
@@ -516,6 +526,10 @@
             AllRoles = New List(Of clsRolleDB)
             AllCosts = New List(Of clsKostenartDB)
             AllResults = New List(Of clsResultDB)
+
+            ampelStatus = 0
+            ampelErlaeuterung = ""
+
         End Sub
     End Class
 
@@ -814,9 +828,9 @@
         AllPhases = New List(Of clsPhaseDB)
         hierarchy = New clsHierarchyDB
 
-        customDblFields = New SortedList(Of String, Double)
-        customStringFields = New SortedList(Of String, String)
-        customBoolFields = New SortedList(Of String, Boolean)
+        customDblFields = New SortedList(Of Integer, Double)
+        customStringFields = New SortedList(Of Integer, String)
+        customBoolFields = New SortedList(Of Integer, Boolean)
 
     End Sub
 

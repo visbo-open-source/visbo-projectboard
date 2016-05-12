@@ -17,6 +17,8 @@ Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
 Imports System.Drawing
+Imports System.Globalization
+
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports System.Security.Principal
@@ -37,10 +39,9 @@ Public Module awinGeneralModules
         Budget = 7
         Risiko = 8
         Strategie = 9
-        Volumen = 10
-        Komplexitaet = 11
-        Businessunit = 12
-        Beschreibung = 13
+        Kapazitaet = 10
+        Businessunit = 11
+        Beschreibung = 12
     End Enum
 
     Private Enum ptModuleSpalten
@@ -787,6 +788,11 @@ Public Module awinGeneralModules
         ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
         ProjektStatus(4) = "abgeschlossen"
 
+        ''ReportLang(PTSprache.deutsch) = "de"
+        ''ReportLang(PTSprache.englisch) = "en"
+        ''ReportLang(PTSprache.französisch) = "fr"
+        ''ReportLang(PTSprache.spanisch) = "es"
+        
 
         DiagrammTypen(0) = "Phase"
         DiagrammTypen(1) = "Rolle"
@@ -796,34 +802,18 @@ Public Module awinGeneralModules
         DiagrammTypen(5) = "Meilenstein"
         DiagrammTypen(6) = "Meilenstein Trendanalyse"
 
-        ergebnisChartName(0) = "Earned Value"
-        ergebnisChartName(1) = "Earned Value - gewichtet"
-        ergebnisChartName(2) = "Verbesserungs-Potential"
-        ergebnisChartName(3) = "Risiko-Abschlag"
+        Try
+            ''repCult = CultureInfo.CurrentCulture
+            repCult = ReportLang(PTSprache.englisch)
 
-        ReDim portfolioDiagrammtitel(21)
-        portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
-        portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
-        portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
-        portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
-        portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
-        portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
-        portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
-        portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
-        portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
-        portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
-        portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
-        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
-        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
-        portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
-        portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
 
+            repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+
+            Call setLanguageMessages()
+
+        Catch ex As Exception
+
+        End Try
 
         autoSzenarioNamen(0) = "vor Optimierung"
         autoSzenarioNamen(1) = "1. Optimum"
@@ -925,6 +915,9 @@ Public Module awinGeneralModules
         Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
 
+
+
+
         ' hier muss jetzt das Customization File aufgemacht werden ...
         Try
             xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
@@ -991,6 +984,14 @@ Public Module awinGeneralModules
                 ' Auslesen der Kosten Definitionen 
                 Call readCostDefinitions(wsName4)
 
+                ' Auslesen der Custom Field Definitions
+                Try
+                    Call readCustomFieldDefinitions(wsName4)
+                Catch ex As Exception
+
+                End Try
+
+
                 ' auslesen der anderen Informationen 
                 Call readOtherDefinitions(wsName4)
 
@@ -1029,7 +1030,7 @@ Public Module awinGeneralModules
                         End Try
 
 
-                       
+
                     Catch ex As Exception
 
                     End Try
@@ -1107,6 +1108,97 @@ Public Module awinGeneralModules
 
     End Sub
 
+
+    ''' <summary>
+    ''' setzt die Messages je nach Sprache 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub setLanguageMessages()
+        'ergebnisChartName(0) = "Earned Value"
+        'ergebnisChartName(1) = "Earned Value - gewichtet"
+        'ergebnisChartName(2) = "Verbesserungs-Potential"
+        'ergebnisChartName(3) = "Risiko-Abschlag"
+
+        ergebnisChartName(0) = repMessages.getmsg(54)
+        'Call MsgBox(ergebnisChartName(0))
+        ergebnisChartName(1) = repMessages.getmsg(55)
+        ergebnisChartName(2) = repMessages.getmsg(56)
+        ergebnisChartName(3) = repMessages.getmsg(57)
+
+        ' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+        summentitel1 = repMessages.getmsg(249)
+        summentitel2 = repMessages.getmsg(250)
+        summentitel3 = repMessages.getmsg(251)
+        summentitel4 = repMessages.getmsg(252)
+        summentitel5 = repMessages.getmsg(253)
+        summentitel6 = repMessages.getmsg(254)
+        summentitel7 = repMessages.getmsg(255)
+        summentitel8 = repMessages.getmsg(256)
+        summentitel9 = repMessages.getmsg(257)
+        summentitel10 = repMessages.getmsg(258)
+        summentitel11 = repMessages.getmsg(259)
+
+        '' '' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+        ' ''Public summentitel1 As String = repMessages.getmsg(249)
+        ' ''Public summentitel2 As String = repMessages.getmsg(250)
+        ' ''Public summentitel3 As String = repMessages.getmsg(251)
+        ' ''Public summentitel4 As String = repMessages.getmsg(252)
+        ' ''Public summentitel5 As String = repMessages.getmsg(253)
+        ' ''Public summentitel6 As String = repMessages.getmsg(254)
+        ' ''Public summentitel7 As String = repMessages.getmsg(255)
+        ' ''Public summentitel8 As String = repMessages.getmsg(256)
+        ' ''Public summentitel9 As String = repMessages.getmsg(257)
+        ' ''Public summentitel10 As String = repMessages.getmsg(258)
+        ' ''Public summentitel11 As String = repMessages.getmsg(259)
+
+
+
+        ReDim portfolioDiagrammtitel(21)
+        'portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+        'portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+        'portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+        'portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+        'portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+        'portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+        'portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+        'portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
+        'portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+        'portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+        'portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+        'portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
+        'portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
+        'portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
+        'portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
+        'portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
+
+        portfolioDiagrammtitel(PTpfdk.Phasen) = repMessages.getmsg(58)
+        portfolioDiagrammtitel(PTpfdk.Rollen) = repMessages.getmsg(59)
+        portfolioDiagrammtitel(PTpfdk.Kosten) = repMessages.getmsg(60)
+        portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+        portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+        portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+        portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+        portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+        portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+        portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+        portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = repMessages.getmsg(61)
+        portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = repMessages.getmsg(62)
+        portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+        portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+        portfolioDiagrammtitel(PTpfdk.Meilenstein) = repMessages.getmsg(63)
+        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = repMessages.getmsg(64)
+        portfolioDiagrammtitel(PTpfdk.Dependencies) = repMessages.getmsg(65)
+        portfolioDiagrammtitel(PTpfdk.betterWorseL) = repMessages.getmsg(66)
+        portfolioDiagrammtitel(PTpfdk.betterWorseB) = repMessages.getmsg(67)
+        portfolioDiagrammtitel(PTpfdk.Budget) = repMessages.getmsg(68)
+        portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = repMessages.getmsg(69)
+
+    End Sub
     ''' <summary>
     ''' liest die Business Unit Definitionen aus der awinsetTypen
     ''' die globale Variable businessUnitDefinitions wird dabei befüllt
@@ -1448,7 +1540,9 @@ Public Module awinGeneralModules
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
 
+
                 For i = 2 To anzZeilen - 1
+
                     c = CType(rolesRange.Cells(i, 1), Excel.Range)
 
                     If CStr(c.Value) <> "" Then
@@ -1506,6 +1600,86 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+
+    ''' <summary>
+    ''' liest die optional vorhandenen Custom Field Definitionen aus 
+    ''' </summary>
+    ''' <param name="wsname"></param>
+    ''' <remarks></remarks>
+    Private Sub readCustomFieldDefinitions(wsname As Excel.Worksheet)
+
+        '
+        ' Custom Field Definitions Definitionen auslesen - im bereich awin_CustomField_Definitions
+        '
+
+        Try
+
+
+            With wsname
+
+                Dim customFieldRange As Excel.Range = .Range("awin_CustomField_Definitions")
+                Dim anzZeilen As Integer = customFieldRange.Rows.Count
+                Dim c As Excel.Range
+
+
+                For i = 2 To anzZeilen - 1
+                    c = CType(customFieldRange.Cells(i, 1), Excel.Range)
+
+                    Dim uid As Integer = i - 1
+                    Dim cfType As Integer = -1
+                    Dim cfName As String = ""
+                    Dim ok As Boolean = False
+                    Try
+                        cfName = CStr(CType(customFieldRange.Cells(i, 1), Excel.Range).Value)
+                        cfType = CInt(CType(customFieldRange.Cells(i, 2), Excel.Range).Value)
+                        ok = True
+                    Catch ex As Exception
+
+                    End Try
+
+                    If ok And cfName <> "" And isValidCustomField(cfType) Then
+
+                        ' jetzt die CustomField Definition hinzufügen 
+                        Try
+                            customFieldDefinitions.add(cfName, cfType, uid)
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+                    End If
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Customization-File: Custom Field Definitions")
+        End Try
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt zurück, ob die übergebene Zahl ein gültiger CustomField Typ ist
+    ''' </summary>
+    ''' <param name="id"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidCustomField(ByVal id As Integer) As Boolean
+
+        If id = ptCustomFields.bool Or _
+            id = ptCustomFields.Str Or
+            id = ptCustomFields.Dbl Then
+            isValidCustomField = True
+        Else
+            isValidCustomField = False
+        End If
+
+    End Function
 
 
     ''' <summary>
@@ -1919,13 +2093,19 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar
                     CType(.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(1)
                     rng = .Range(.Cells(1, 1), .Cells(1, 2))
-                    rng.NumberFormat = "mmm-yy"
+                    '' Deutsches Format:
+                    'rng.NumberFormat = "[$-407]mmm yy;@"
+                    ' Englische Format:
+                    rng.NumberFormat = "[$-409]mmm yy;@"
 
                     Dim destinationRange As Excel.Range = .Range(.Cells(1, 1), .Cells(1, 720))
                     With destinationRange
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                        .NumberFormat = "mmm-yy"
+                        '' Deutsches Format: 
+                        'rng.NumberFormat = "[$-407]mmm yy;@"
+                        ' Englische Format:
+                        .NumberFormat = "[$-409]mmm yy;@"
                         .WrapText = False
                         .Orientation = 90
                         .AddIndent = False
@@ -3420,6 +3600,7 @@ Public Module awinGeneralModules
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
+        Dim variantName As String = ""
         Dim vorlageName As String = ""
         Dim start As Date, inputStart As Date
         Dim startElem As String = ""
@@ -3428,10 +3609,17 @@ Public Module awinGeneralModules
         Dim budget As Double
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
-        Dim volume As Double, complexity As Double
+        Dim capacityNeeded As String = ""
+        'Dim volume As Double, complexity As Double
         Dim description As String = ""
         Dim businessUnit As String = ""
+
+        Dim custFields As New Collection
+        ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
+        Dim nrOfStdColumns As Integer = 13
+
         Dim lastRow As Integer
+        Dim lastColumn As Integer
         'Dim startSpalte As Integer
         Dim vglName As String = ""
         Dim hproj As clsProjekt
@@ -3451,7 +3639,7 @@ Public Module awinGeneralModules
         Dim scenarioName As String = appInstance.ActiveWorkbook.Name
         Dim tmpName As String = ""
 
-        ' bestimme den Namen des Szenarios - das ist gleich der NAme der Excel Datei 
+        ' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
         Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
         tmpName = ""
         For ih As Integer = 0 To positionIX
@@ -3465,7 +3653,7 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(13) As String
+        Dim suchstr(12) As String
         suchstr(ptInventurSpalten.Name) = "Name"
         suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
         suchstr(ptInventurSpalten.Start) = "Start-Datum"
@@ -3476,14 +3664,14 @@ Public Module awinGeneralModules
         suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
         suchstr(ptInventurSpalten.Risiko) = "Risiko"
         suchstr(ptInventurSpalten.Strategie) = "Strategie"
-        suchstr(ptInventurSpalten.Volumen) = "Volumen"
-        suchstr(ptInventurSpalten.Komplexitaet) = "Komplexität"
+        suchstr(ptInventurSpalten.Kapazitaet) = "benötigte Kapazität"
         suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
         suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
 
 
         Dim inputColumns(11) As Integer
 
+       
 
 
         Try
@@ -3502,7 +3690,10 @@ Public Module awinGeneralModules
 
                 End Try
 
-
+                'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
+                lastColumn = firstZeile.Columns.Count
+                lastColumn = CType(firstZeile, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+                lastColumn = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
                 lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 While zeile <= lastRow
@@ -3510,7 +3701,24 @@ Public Module awinGeneralModules
                     Dim sMilestone As clsMeilenstein = Nothing
                     Dim eMilestone As clsMeilenstein = Nothing
 
+                    ' hier muss jetzt alles zurückgesetzt werden 
+                    ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    variantName = ""
+                    custFields.Clear()
+                    capacityNeeded = ""
+
+                    ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
+                    Try
+                        Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
+                        If tmpStr.Length > 1 Then
+                            pName = tmpStr(0)
+                            variantName = tmpStr(1).Trim
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
                     vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                     If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
@@ -3528,14 +3736,56 @@ Public Module awinGeneralModules
                             endElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            risk = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            sfit = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            'vglName = pName.Trim & "#" & ""
-                            vglName = calcProjektKey(pName.Trim, scenarioName)
+                            capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            risk = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            sfit = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            'volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            'complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            businessUnit = CStr(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            description = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            If lastColumn > nrOfStdColumns Then
+                                ' es gibt evtl Custom fields 
+                                For i As Integer = nrOfStdColumns To lastColumn - 1
+
+                                    Try
+                                        Dim cfName As String = CStr(CType(.Cells(1, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
+                                        
+                                        If uniqueID > 0 Then
+                                            ' es ist eine Custom Field
+
+                                            Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+                                            Dim cfValue As Object = Nothing
+                                            Dim tstStr As String
+
+                                            Select Case cfType
+                                                Case ptCustomFields.Str
+                                                    cfValue = CStr(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                Case ptCustomFields.Dbl
+                                                    cfValue = CDbl(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                Case ptCustomFields.bool
+                                                    cfValue = CBool(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                            End Select
+
+                                            Dim cfObj As New clsCustomField
+                                            With cfObj
+                                                .uid = uniqueID
+                                                .wert = cfValue
+                                                tstStr = CStr(.wert)
+                                            End With
+                                            custFields.Add(cfObj)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Next
+                            End If
+
+                            vglName = calcProjektKey(pName.Trim, variantName)
                             inputStart = start
                             inputEnde = ende
 
@@ -3587,8 +3837,10 @@ Public Module awinGeneralModules
                             End If
 
                         Catch ex As Exception
-                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
+
                             ok = False
+                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
+
                         End Try
 
                         ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
@@ -3661,15 +3913,9 @@ Public Module awinGeneralModules
                             'Projekt anlegen ,Verschiebung um 
                             hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                            Dim variantName As String
-                            If scenarioName = "Init" Then
-                                variantName = ""
-                            Else
-                                variantName = scenarioName
-                            End If
                             Call erstelleInventurProjekt(hproj, pName, vorlageName, variantName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         volume, complexity, businessUnit, description)
+                                                         capacityNeeded, businessUnit, description, custFields)
 
                             'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
                             If Not IsNothing(sMilestone) Then
@@ -3711,7 +3957,7 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-            Throw New Exception("Fehler in Szenario-Datei")
+            Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
         End Try
 
         ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
@@ -3938,9 +4184,10 @@ Public Module awinGeneralModules
                             'Projekt anlegen ,Verschiebung um 
                             hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
+                            Dim capacityNeeded As String = ""
                             Call erstelleInventurProjekt(hproj, pName, vorlagenName, scenarioName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         volume, complexity, businessUnit, description)
+                                                         capacityNeeded, businessUnit, description)
                             projectStartDate = start
                             projectEndDate = ende
 
@@ -13409,4 +13656,57 @@ Public Module awinGeneralModules
         End Try
 
     End Function
+
+    Public Function XMLImportReportMsg(ByVal repMsgfile As String, ByVal language As String) As clsReportMessages
+
+        Dim reportMessages As New clsReportMessages
+
+        Dim serializer = New DataContractSerializer(GetType(clsReportMessages))
+        Dim xmlfilename As String = awinPath & requirementsOrdner & repMsgfile & "_" & language & ".xml"
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            reportMessages = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportReportMsg = reportMessages
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportReportMsg = Nothing
+        End Try
+
+    End Function
+
+    Public Sub XMLExportReportMsg(ByVal reportMsg As clsReportMessages, ByVal repMsgfile As String, ByVal language As String)
+
+
+
+        Dim xmlfilename As String = awinPath & requirementsOrdner & repMsgfile & "_" & language & ".xml"
+        Try
+            Dim serializer = New DataContractSerializer(GetType(clsReportMessages))
+
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, lic)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, reportMsg)
+            writer.Flush()
+            writer.Close()
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+    End Sub
 End Module

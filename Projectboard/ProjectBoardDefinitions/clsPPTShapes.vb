@@ -169,6 +169,9 @@ Public Class clsPPTShapes
                         Case "Multivariantensicht"
                             containerShape = pptShape
 
+                        Case "Einzelprojektsicht"
+                            containerShape = pptShape
+
                         Case "AllePlanElemente"
                             containerShape = pptShape
 

@@ -21,7 +21,7 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_ActivateEvent() Handles Me.ActivateEvent
 
         Application.DisplayFormulaBar = False
-        'Application.Worksheets(arrWsNames(3)).Activate()
+
 
     End Sub
 
@@ -38,6 +38,7 @@ Public Class ThisWorkbook
             .SplitRow = 0
             .DisplayWorkbookTabs = True
             .GridlineColor = RGB(220, 220, 220)
+
             Try
                 .FreezePanes = False
             Catch ex As Exception
