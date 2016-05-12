@@ -96,6 +96,7 @@ Public Class frmSelectPPTTempl
                 RepVorlagenDropbox.Enabled = False
                 Me.Cursor = Cursors.WaitCursor
 
+
                 BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
             Catch ex As Exception
@@ -119,6 +120,7 @@ Public Class frmSelectPPTTempl
                 createReport.Enabled = False
                 RepVorlagenDropbox.Enabled = False
                 Me.Cursor = Cursors.WaitCursor
+
 
                 BackgroundWorker2.RunWorkerAsync(vorlagenDateiName)
 

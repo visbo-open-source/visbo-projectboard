@@ -803,8 +803,9 @@ Public Module awinGeneralModules
         DiagrammTypen(6) = "Meilenstein Trendanalyse"
 
         Try
-            repCult = CultureInfo.CurrentCulture
-            ''repCult = ReportLang(PTSprache.englisch)
+            ''repCult = CultureInfo.CurrentCulture
+            repCult = ReportLang(PTSprache.englisch)
+
 
             repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
 
@@ -825,6 +826,34 @@ Public Module awinGeneralModules
             ergebnisChartName(1) = repMessages.getmsg(55)
             ergebnisChartName(2) = repMessages.getmsg(56)
             ergebnisChartName(3) = repMessages.getmsg(57)
+
+            ' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+            summentitel1 = repMessages.getmsg(249)
+            summentitel2 = repMessages.getmsg(250)
+            summentitel3 = repMessages.getmsg(251)
+            summentitel4 = repMessages.getmsg(252)
+            summentitel5 = repMessages.getmsg(253)
+            summentitel6 = repMessages.getmsg(254)
+            summentitel7 = repMessages.getmsg(255)
+            summentitel8 = repMessages.getmsg(256)
+            summentitel9 = repMessages.getmsg(257)
+            summentitel10 = repMessages.getmsg(258)
+            summentitel11 = repMessages.getmsg(259)
+
+            '' '' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+            ' ''Public summentitel1 As String = repMessages.getmsg(249)
+            ' ''Public summentitel2 As String = repMessages.getmsg(250)
+            ' ''Public summentitel3 As String = repMessages.getmsg(251)
+            ' ''Public summentitel4 As String = repMessages.getmsg(252)
+            ' ''Public summentitel5 As String = repMessages.getmsg(253)
+            ' ''Public summentitel6 As String = repMessages.getmsg(254)
+            ' ''Public summentitel7 As String = repMessages.getmsg(255)
+            ' ''Public summentitel8 As String = repMessages.getmsg(256)
+            ' ''Public summentitel9 As String = repMessages.getmsg(257)
+            ' ''Public summentitel10 As String = repMessages.getmsg(258)
+            ' ''Public summentitel11 As String = repMessages.getmsg(259)
+
+
 
             ReDim portfolioDiagrammtitel(21)
             'portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
@@ -2062,13 +2091,19 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar
                     CType(.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(1)
                     rng = .Range(.Cells(1, 1), .Cells(1, 2))
-                    rng.NumberFormat = "mmm-yy"
+                    '' Deutsches Format:
+                    'rng.NumberFormat = "[$-407]mmm yy;@"
+                    ' Englische Format:
+                    rng.NumberFormat = "[$-409]mmm yy;@"
 
                     Dim destinationRange As Excel.Range = .Range(.Cells(1, 1), .Cells(1, 720))
                     With destinationRange
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                        .NumberFormat = "mmm-yy"
+                        '' Deutsches Format: 
+                        'rng.NumberFormat = "[$-407]mmm yy;@"
+                        ' Englische Format:
+                        .NumberFormat = "[$-409]mmm yy;@"
                         .WrapText = False
                         .Orientation = 90
                         .AddIndent = False
