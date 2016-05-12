@@ -1195,7 +1195,7 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.Dependencies) = repMessages.getmsg(65)
         portfolioDiagrammtitel(PTpfdk.betterWorseL) = repMessages.getmsg(66)
         portfolioDiagrammtitel(PTpfdk.betterWorseB) = repMessages.getmsg(67)
-        portfolioDiagrammtitel(PTpfdk.Budget) = repMessages.getmsg(69)
+        portfolioDiagrammtitel(PTpfdk.Budget) = repMessages.getmsg(68)
         portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = repMessages.getmsg(69)
 
     End Sub
