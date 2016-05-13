@@ -154,7 +154,8 @@ Public Module awinGUI
         Catch ex As Exception
 
             appInstance.ScreenUpdating = True
-            Throw New ArgumentException("Fehler in CreatePortfolioDiagramm " & ex.Message)
+            'Throw New ArgumentException("Fehler in CreatePortfolioDiagramm " & ex.Message)
+            Throw New ArgumentException(repMessages.getmsg(70) & ex.Message)
 
         End Try
 
@@ -256,8 +257,10 @@ Public Module awinGUI
                             If singleProject Then
                                 PfChartBubbleNames(anzBubbles) = " "
                             Else
+                                'PfChartBubbleNames(anzBubbles) = .name & _
+                                '    " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & " Abh.)"
                                 PfChartBubbleNames(anzBubbles) = .name & _
-                                    " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & " Abh.)"
+                                    " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & repMessages.getmsg(71)
                             End If
 
                         Case PTpfdk.FitRisikoVol
@@ -503,7 +506,8 @@ Public Module awinGUI
                             .MinimumScale = 0
                             .MaximumScale = 11
                             With .AxisTitle
-                                .Characters.text = "strategischer Fit"
+                                '.Characters.text = "strategischer Fit"
+                                .Characters.text = repMessages.getmsg(72)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -522,7 +526,8 @@ Public Module awinGUI
                             .MinimumScale = 0
                             .MaximumScale = 11
                             With .AxisTitle
-                                .Characters.text = "strategischer Fit"
+                                '.Characters.text = "strategischer Fit"
+                                .Characters.text = repMessages.getmsg(72)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -542,7 +547,8 @@ Public Module awinGUI
                             .MinimumScale = 0
                             .MaximumScale = 11
                             With .AxisTitle
-                                .Characters.text = "strategischer Fit"
+                                '.Characters.text = "strategischer Fit"
+                                .Characters.text = repMessages.getmsg(72)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -562,7 +568,8 @@ Public Module awinGUI
                             .MinimumScale = 15.0
                             .MaximumScale = System.Math.Round(xAchsenValues.Max / 10 + 0.5) * 10
                             With .AxisTitle
-                                .Characters.text = "Projekt-Dauer"
+                                '.Characters.text = "Projekt-Dauer"
+                                .Characters.text = repMessages.getmsg(73)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -581,7 +588,8 @@ Public Module awinGUI
                             .MinimumScale = 0
                             .MaximumScale = 1.1
                             With .AxisTitle
-                                .Characters.text = "Komplexität"
+                                '.Characters.text = "Komplexität"
+                                .Characters.text = repMessages.getmsg(74)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -601,7 +609,8 @@ Public Module awinGUI
                             .MaximumScale = passiveMax + 1
 
                             With .AxisTitle
-                                .Characters.text = "Abhängigkeit"
+                                '.Characters.text = "Abhängigkeit"
+                                .Characters.text = repMessages.getmsg(75)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -628,7 +637,8 @@ Public Module awinGUI
 
                             ' .ReversePlotOrder = True
                             With .AxisTitle
-                                .Characters.Text = "Ausstrahlung"
+                                '.Characters.Text = "Ausstrahlung"
+                                .Characters.Text = repMessages.getmsg(76)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -647,7 +657,8 @@ Public Module awinGUI
                             .MaximumScale = 11
                             ' .ReversePlotOrder = True
                             With .AxisTitle
-                                .Characters.text = "Risiko"
+                                '.Characters.text = "Risiko"
+                                .Characters.text = repMessages.getmsg(77)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -851,7 +862,8 @@ Public Module awinGUI
             ReDim PfChartBubbleNames(ShowProjekte.Count - 1)
             ReDim positionValues(ShowProjekte.Count - 1)
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in UpdatePortfolioDiagramm " & ex.Message)
+            'Throw New ArgumentException("Fehler in UpdatePortfolioDiagramm " & ex.Message)
+            Throw New ArgumentException(repMessages.getmsg(78) & ex.Message)
         End Try
 
 
@@ -968,8 +980,10 @@ Public Module awinGUI
                             bubbleValues(anzBubbles) = allDependencies.activeNumber(pname, PTdpndncyType.inhalt) + 1
                             nameValues(anzBubbles) = .name
                             
+                            'PfChartBubbleNames(anzBubbles) = .name & _
+                            '        " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & " Abh.)"
                             PfChartBubbleNames(anzBubbles) = .name & _
-                                    " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & " Abh.)"
+                                   " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & repMessages.getmsg(71)
                             
                         Case PTpfdk.FitRisikoVol
 

@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports System.Globalization
 Imports System.Collections.Generic
 Imports System.Math
 Imports Microsoft.Office.Interop.Excel
@@ -34,6 +35,10 @@ Public Module Module1
     Public myCustomizationFile As String
     Public myLogfile As String
 
+    'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
+    Public repMessages As clsReportMessages
+   
+    
     'Definitionen zum Schreiben eines Logfiles
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
@@ -92,7 +97,10 @@ Public Module Module1
 
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
-    Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
+    Public businessUnitDefinitions As New SortedList(Of Integer, clsBusinessUnit)
+
+    ' welche CustomFields gibt es ? 
+    Public customFieldDefinitions As New clsCustomFieldDefinitions
 
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
@@ -143,18 +151,42 @@ Public Module Module1
     Public Const einrückTiefe As Integer = 2
 
     ' diese Konstanten werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
-    Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
-    Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
-    Public Const summentitel3 As String = "Personal-Kosten intern/extern"
-    Public Const summentitel4 As String = "Personal Kosten Struktur"
-    Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
-    Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
-    Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
-    Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
-    Public Const summentitel9 As String = "Auslastungs-Übersicht"
-    Public Const summentitel10 As String = "Details zur Über-Auslastung"
-    Public Const summentitel11 As String = "Details zur Unter-Auslastung"
+    '' ''Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
+    '' ''Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
+    '' ''Public Const summentitel3 As String = "Personal-Kosten intern/extern"
+    '' ''Public Const summentitel4 As String = "Personal Kosten Struktur"
+    '' ''Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
+    '' ''Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
+    '' ''Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel9 As String = "Auslastungs-Übersicht"
+    '' ''Public Const summentitel10 As String = "Details zur Über-Auslastung"
+    '' ''Public Const summentitel11 As String = "Details zur Unter-Auslastung"
+
+    ' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+    Public summentitel1 As String
+    Public summentitel2 As String
+    Public summentitel3 As String
+    Public summentitel4 As String
+    Public summentitel5 As String
+    Public summentitel6 As String
+    Public summentitel7 As String
+    Public summentitel8 As String
+    Public summentitel9 As String
+    Public summentitel10 As String
+    Public summentitel11 As String
+
+   
     Public Const maxProjektdauer As Integer = 60
+
+    ' welche Art von CustomFields gibt es 
+    ' kann später ggf erweitert werden auf StrArray, DblArray, etc
+    ' muss dann auch in clsProjektVorlage und clsCustomField angepasst werden  
+    Public Enum ptCustomFields
+        Str = 0
+        Dbl = 1
+        bool = 2
+    End Enum
 
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
@@ -352,6 +384,14 @@ Public Module Module1
         height = 3
     End Enum
 
+    ' Sprachen für die ReportMessages
+    Public Enum PTSprache
+        deutsch = 0
+        englisch = 1
+        französisch = 2
+        spanisch = 3
+    End Enum
+
     ' wird in der Treeview für Laden, Löschen, Aktivieren von TreeView Formularen benötigt 
     Public Enum PTTvActions
         delFromDB = 0
@@ -401,7 +441,18 @@ Public Module Module1
     ' beauftragt
     ' abgeschlossen
     Public ProjektStatus(4) As String
+    '
+    'ReportSprache kann sein:
+    ' deutsch
+    ' englisch
+    ' französisch
+    ' spanisch
+    Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"), _
+                                         New CultureInfo("en-US"), _
+                                         New CultureInfo("fr-FR"), _
+                                         New CultureInfo("es-ES")}
 
+    Public repCult As CultureInfo
 
     '
     '
@@ -437,7 +488,9 @@ Public Module Module1
     Public nrOfDaysMonth As Double
 
     ' so werden in Visual Basic die Worksheets der aktuell geladenen Excel Applikation zugänglich gemacht   
-    Public appInstance As _Application
+    'Public appInstance As _Application
+    Public appInstance As Microsoft.Office.Interop.Excel.Application
+
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
     Public globalPath As String
@@ -453,6 +506,7 @@ Public Module Module1
     Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
     Public licFileName As String = requirementsOrdner & "License.xml"
+    Public repMsgFileName As String = "ReportTexte"
     Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
@@ -2827,6 +2881,43 @@ Public Module Module1
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
+    ''' fügt 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                    ByVal type As String, _
+                                    ByVal drawingAreaLeft As Double, _
+                                    ByVal drawingAreaRight As Double, _
+                                    ByVal drawingAreaBottom As Double, _
+                                    ByVal drawingAreaTop As Double, _
+                                    ByVal calendarLeft As Date, _
+                                    ByVal calendarRight As Date)
+
+        If Not IsNothing(pptSlide) Then
+            With pptSlide
+
+                If Not IsNothing(type) Then
+                    .Tags.Add("SMART", type)
+                    .Tags.Add("DAL", drawingAreaLeft.ToString)
+                    .Tags.Add("DAR", drawingAreaRight.ToString)
+                    .Tags.Add("DAB", drawingAreaBottom.ToString)
+                    .Tags.Add("DAT", drawingAreaTop.ToString)
+                    .Tags.Add("CALL", calendarLeft.ToShortDateString)
+                    .Tags.Add("CALR", calendarRight.ToShortDateString)
+                End If
+
+            End With
+        End If
+
+
+
+
+    End Sub
+
 
     ''' <summary>
     ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können

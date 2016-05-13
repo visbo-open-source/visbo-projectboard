@@ -49,6 +49,9 @@
     <Reference Include="Microsoft.Office.Interop.MSProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -65,6 +68,7 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
@@ -93,10 +97,22 @@
     <Compile Include="frmCreateLicences.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmCreateReportMeldungen.Designer.vb">
+      <DependentUpon>frmCreateReportMeldungen.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateReportMeldungen.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmReportProfil.Designer.vb">
       <DependentUpon>frmReportProfil.vb</DependentUpon>
     </Compile>
     <Compile Include="frmReportProfil.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSelectRepSprache.Designer.vb">
+      <DependentUpon>frmSelectRepSprache.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectRepSprache.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmTestLicences.Designer.vb">
@@ -264,6 +280,9 @@
     <EmbeddedResource Include="frmCreateNewVariant.resx">
       <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmCreateReportMeldungen.resx">
+      <DependentUpon>frmCreateReportMeldungen.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmCreateRolloutProject.resx">
       <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>
     </EmbeddedResource>
@@ -279,6 +298,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmHierarchySelection.resx">
       <DependentUpon>frmHierarchySelection.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmLoadCockpit.resx">
       <DependentUpon>frmLoadCockpit.vb</DependentUpon>
@@ -302,6 +322,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmSelectPPTTempl.resx">
       <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectRepSprache.resx">
+      <DependentUpon>frmSelectRepSprache.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSelectRPlanImport.resx">
       <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>

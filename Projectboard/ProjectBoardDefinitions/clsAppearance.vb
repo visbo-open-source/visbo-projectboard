@@ -1,4 +1,5 @@
 ﻿Imports xlNS = Microsoft.Office.Interop.Excel
+
 ''' <summary>
 ''' beschreibt, wie ein Element dieser Darstellungsklasse beschrieben werden soll  
 ''' </summary>

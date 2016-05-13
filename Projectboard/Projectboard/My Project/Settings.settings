@@ -6,13 +6,13 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Perlen\</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\Telair\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Perlen</Value>
+      <Value Profile="(Default)">telairdemo</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\telair\</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>

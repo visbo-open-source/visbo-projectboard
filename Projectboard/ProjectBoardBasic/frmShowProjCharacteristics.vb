@@ -244,12 +244,14 @@ Public Class frmShowProjCharacteristics
 
         Dim tmpProj As clsProjekt
 
-        Try
-            tmpProj = projekthistorie.beauftragung
-            valueBeauftragung = nrSnapshots - projekthistorie.currentIndex
-        Catch ex As Exception
+
+        tmpProj = projekthistorie.beauftragung
+        If IsNothing(tmpProj) Then
             valueBeauftragung = -1
-        End Try
+        Else
+            valueBeauftragung = nrSnapshots - projekthistorie.currentIndex
+        End If
+
 
 
 
@@ -318,7 +320,7 @@ Public Class frmShowProjCharacteristics
             Dim tmpValues() As Double
             ReDim tmpValues(kvp.Value.anzahlRasterElemente - 1)
 
-            
+
             ' Phasen Darstellung
 
             If necessary(0) Then
