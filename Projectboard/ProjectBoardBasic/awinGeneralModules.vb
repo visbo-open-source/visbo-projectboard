@@ -42,6 +42,7 @@ Public Module awinGeneralModules
         Kapazitaet = 10
         Businessunit = 11
         Beschreibung = 12
+        KostenExtern = 13
     End Enum
 
     Private Enum ptModuleSpalten
@@ -3610,13 +3611,15 @@ Public Module awinGeneralModules
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
         Dim capacityNeeded As String = ""
+        Dim externCostInput As String = ""
+        Dim externCost As Double = 0.0
         'Dim volume As Double, complexity As Double
         Dim description As String = ""
         Dim businessUnit As String = ""
 
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
-        Dim nrOfStdColumns As Integer = 13
+        Dim nrOfStdColumns As Integer = 14
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
@@ -3653,23 +3656,24 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(12) As String
-        suchstr(ptInventurSpalten.Name) = "Name"
-        suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
-        suchstr(ptInventurSpalten.Start) = "Start-Datum"
-        suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
-        suchstr(ptInventurSpalten.startElement) = "Bezug Start"
-        suchstr(ptInventurSpalten.endElement) = "Bezug Ende"
-        suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
-        suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
-        suchstr(ptInventurSpalten.Risiko) = "Risiko"
-        suchstr(ptInventurSpalten.Strategie) = "Strategie"
-        suchstr(ptInventurSpalten.Kapazitaet) = "benötigte Kapazität"
-        suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
-        suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
+        ' später, um mal das Einlesen einigermaßen intelligent zu machen .... 
+        'Dim suchstr(1) As String
+        'suchstr(ptInventurSpalten.Name) = "Name"
+        'suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
+        'suchstr(ptInventurSpalten.Start) = "Start-Datum"
+        'suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
+        'suchstr(ptInventurSpalten.startElement) = "Bezug Start"
+        'suchstr(ptInventurSpalten.endElement) = "Bezug Ende"
+        'suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
+        'suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
+        'suchstr(ptInventurSpalten.Risiko) = "Risiko"
+        'suchstr(ptInventurSpalten.Strategie) = "Strategie"
+        'suchstr(ptInventurSpalten.Kapazitaet) = "benötigte Kapazität"
+        'suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
+        'suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
 
 
-        Dim inputColumns(11) As Integer
+        'Dim inputColumns(11) As Integer
 
        
 
@@ -3681,14 +3685,15 @@ Public Module awinGeneralModules
 
                 firstZeile = CType(.Rows(1), Excel.Range)
 
-                ' jetzt werden die Spalten bestimmt 
-                Try
-                    For i As Integer = 0 To 13
-                        inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
-                    Next
-                Catch ex As Exception
+                ' für später ... siehe oben, intelligent ...
+                '' jetzt werden die Spalten bestimmt 
+                'Try
+                '    For i As Integer = 0 To 13
+                '        inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
+                '    Next
+                'Catch ex As Exception
 
-                End Try
+                'End Try
 
                 'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
                 lastColumn = firstZeile.Columns.Count
@@ -3737,14 +3742,15 @@ Public Module awinGeneralModules
                             dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            risk = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            sfit = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            externCostInput = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            risk = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            sfit = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                             'volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             'complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                            businessUnit = CStr(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            description = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                             If lastColumn > nrOfStdColumns Then
                                 ' es gibt evtl Custom fields 
@@ -3915,7 +3921,7 @@ Public Module awinGeneralModules
 
                             Call erstelleInventurProjekt(hproj, pName, vorlageName, variantName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         capacityNeeded, businessUnit, description, custFields)
+                                                         capacityNeeded, externCostInput, businessUnit, description, custFields)
 
                             'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
                             If Not IsNothing(sMilestone) Then
@@ -4187,7 +4193,7 @@ Public Module awinGeneralModules
                             Dim capacityNeeded As String = ""
                             Call erstelleInventurProjekt(hproj, pName, vorlagenName, scenarioName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         capacityNeeded, businessUnit, description)
+                                                         capacityNeeded, Nothing, businessUnit, description)
                             projectStartDate = start
                             projectEndDate = ende
 

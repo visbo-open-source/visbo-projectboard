@@ -6663,12 +6663,24 @@ Imports System.Windows
 
                 Dim dummyObj As Excel.ChartObject = Nothing
                 Dim hproj As clsProjekt
+
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
+
+                    Try
+
+                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
+                    Catch ex1 As Exception
+                        Call MsgBox("Fehler bei Diagramm erzeugen: " & ex1.Message)
+                    End Try
+
                 Catch ex As Exception
+
                     Call MsgBox("Name nicht gefunden : " & singleShp.Name)
+
                 End Try
+
+                
 
                 appInstance.ScreenUpdating = formerSU
                 appInstance.EnableEvents = formerEE

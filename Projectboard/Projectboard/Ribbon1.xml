@@ -291,8 +291,8 @@
           <checkBox id="PT6G4B5" label="Projekt-Linie anzeigen" getPressed="PT6ProjectLinePressed" onAction ="PT6SetShowProjectLine"/>
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
-        </group>-->
-        <!--<group id ="PT6G5" label ="Testfunktionen">
+        </group>
+        <group id ="PT6G5" label ="Testfunktionen">
           <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Test-Funktionen"  onAction ="PTTestFunktion3" />

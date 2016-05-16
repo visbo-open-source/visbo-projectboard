@@ -555,6 +555,12 @@ Public Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' eingefügt, um eine Warteschleife relisieren zu können ... 
+    ''' </summary>
+    ''' <param name="dwMilliseconds"></param>
+    ''' <remarks></remarks>
+    Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
     'Sub awinLoescheProjekt(pname As String)
     '    '
