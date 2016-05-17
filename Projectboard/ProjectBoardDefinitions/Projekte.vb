@@ -2642,10 +2642,12 @@ Public Module Projekte
                     If projekthistorie.Count >= 1 Then
                         beauftragung = projekthistorie.First
                     Else
+                        'Throw New ArgumentException("es gibt keine Beauftragung")
                         Throw New ArgumentException(repMessages.getmsg(184))
                     End If
                 End If
             Catch ex As Exception
+                'Throw New ArgumentException("es gibt keine Beauftragung")
                 Throw New ArgumentException(repMessages.getmsg(184))
             End Try
 
