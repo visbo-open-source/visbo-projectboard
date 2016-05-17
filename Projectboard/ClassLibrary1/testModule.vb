@@ -53,7 +53,7 @@ Public Module testModule
             ' Der Report dieses Projektes soll dann zuerst erstellt werden, denn somit wird das Format der PowerPointPräsentation danach ausgewählt.
 
             Dim maxProj As clsProjekt = Nothing
-            Dim maxZeilen As Integer = 1
+            Dim maxZeilen As Integer = 0
 
             For Each singleShp In awinSelection
 
@@ -1648,6 +1648,11 @@ Public Module testModule
                                         Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
 
+
+                                    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & _
+                                        " " & awinSettings.kapaEinheit & ")"
+
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
@@ -1678,6 +1683,9 @@ Public Module testModule
                                     End If
 
 
+                                    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+
                                     reportObj = obj
                                     notYetDone = True
 
@@ -1707,7 +1715,8 @@ Public Module testModule
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
 
-
+                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
 
                                     reportObj = obj
                                     notYetDone = True
@@ -1734,6 +1743,10 @@ Public Module testModule
                                 Try
                                     auswahl = 2
                                     Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+
+
+                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
 
                                     reportObj = obj
                                     notYetDone = True
@@ -2395,7 +2408,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(225)
                                 End If
-                                .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                                .TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
 
                             Case "Business-Unit:"
 
@@ -2409,7 +2422,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(227)
                                 End If
-                                .TextFrame2.TextRange.Text = hproj.description
+                                .TextFrame2.TextRange.Text = boxName & ": " & hproj.description
 
                             Case "Stand:"
 
@@ -14081,7 +14094,7 @@ Public Module testModule
                     neededSpace = maxZeilen * zeilenhoehe
                 End If
             Else
-                neededSpace = (projCollection.Count + 1) * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
+                neededSpace = projCollection.Count * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
             End If
 
 

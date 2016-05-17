@@ -3883,29 +3883,6 @@ Public Module Projekte
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
-        If auswahl = 1 Then
-            'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalbedarf"
-        ElseIf auswahl = 2 Then
-            'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(160) & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalkosten"
-        Else
-            diagramTitle = "--- (T€)" & vbLf & pname
-            'kennung = "Gesamtkosten"
-        End If
-
-
 
         '
         ' hole die Projektdauer
@@ -3992,7 +3969,7 @@ Public Module Projekte
                     With .Axes(Excel.XlAxisType.xlValue)
                         .HasTitle = False
                         '.MaximumScale = maxscale
-                        '.MinimumScale = 0
+                        .MinimumScale = 0
 
                         'With .AxisTitle
                         '    .Characters.text = "Kosten"
@@ -4070,6 +4047,34 @@ Public Module Projekte
 
             End With
 
+
+            ' tk: an diese Stelle bewegt, damit die Gesamt Summe im Titel ausgegeben werden kann
+            If auswahl = 1 Then
+                'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+                ' tk 17.5. titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalbedarf"
+            ElseIf auswahl = 2 Then
+                'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalkosten"
+            Else
+                diagramTitle = "--- (T€)" & vbLf & pname
+                'kennung = "Gesamtkosten"
+            End If
+
+            chtobj.Chart.ChartTitle.Text = diagramTitle
+
+
             ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
             With chtobj
                 .Top = top
@@ -4139,7 +4144,7 @@ Public Module Projekte
         Dim pstart As Integer
         Dim ErgebnisListeR As New Collection
         Dim roleName As String
-        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
         Dim tmpCollection As New Collection
@@ -4151,26 +4156,6 @@ Public Module Projekte
 
         tmpCollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
-
-        If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalbedarf"
-        ElseIf auswahl = 2 Then
-            titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalkosten"
-        Else
-            diagramTitle = "--- (T€)" & vbLf & pname
-            'kennung = "Gesamtkosten"
-        End If
-
 
 
         '
@@ -4269,6 +4254,35 @@ Public Module Projekte
 
             End If
 
+            Dim gesamt_Summe As Double = sumdatenreihe.Sum
+
+            ' tk: an diese Stelle bewegt, damit die Gesamt Summe im Titel ausgegeben werden kann
+            If auswahl = 1 Then
+                'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+                ' tk 17.5. titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalbedarf"
+            ElseIf auswahl = 2 Then
+                'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalkosten"
+            Else
+                diagramTitle = "--- (T€)" & vbLf & pname
+                'kennung = "Gesamtkosten"
+            End If
+
+            chtobj.Chart.ChartTitle.Text = diagramTitle
+
+
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
@@ -4291,21 +4305,21 @@ Public Module Projekte
 
 
     End Sub
-    '
-    ' Prozedur zeigt die Kosten Struktur des Projektes an (Balken-Diagramm)
-    '
-    ' Auswahl = 1 : Diagramm zeigt nur sonstige Kosten 
-    ' Auswahl = 2 : Diagramm zeigt alle Kosten, inkl Personalkosten 
-    ' kennziffer = 0 : Phasen Diagramm
-    '            = 1 : Personal-Bedarfe (Balken)
-    '            = 2 : Personal-Bedarfe (PIE)
-    '            = 3 : Kosten (Balken)
-    '            = 4 : Kosten (Pie)
-    '            = 5 : Strategie / Risiko 
-    '            = 6 : Ergebnis
 
+    ''' <summary>
+    ''' auswahl = 1: sonstige Kosten werden gezeigt 
+    ''' auswahl = 2: Gesamtkosten werden gezeigt 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="repObj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="height"></param>
+    ''' <param name="width"></param>
+    ''' <remarks></remarks>
     Public Sub createCostBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                        ByVal top As Double, left As Double, height As Double, width As Double)
+                                            ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim kennung As String
         Dim diagramTitle As String
@@ -4453,7 +4467,7 @@ Public Module Projekte
                     With .Axes(Excel.XlAxisType.xlValue)
                         .HasTitle = False
                         '.MaximumScale = maxscale
-                        '.MinimumScale = 0
+                        .MinimumScale = 0
 
                         'With .AxisTitle
                         '    .Characters.text = "Kosten"
@@ -5181,21 +5195,20 @@ Public Module Projekte
 
 
 
-    '
-    ' Prozedur zeigt die Kosten Struktur des Projektes an (Balken-Diagramm)
-    '
-    ' Auswahl = 1 : Diagramm zeigt nur sonstige Kosten 
-    ' Auswahl = 2 : Diagramm zeigt alle Kosten, inkl Personalkosten 
-    ' kennziffer = 0 : Phasen Diagramm
-    '            = 1 : Personal-Bedarfe (Balken)
-    '            = 2 : Personal-Bedarfe (PIE)
-    '            = 3 : Kosten (Balken)
-    '            = 4 : Kosten (Pie)
-    '            = 5 : Strategie / Risiko 
-    '            = 6 : Ergebnis
-
+    ''' <summary>
+    ''' auswahl = 1: Ressourcenbedarf in PT
+    ''' auswahl = 2: PErsonalkosten
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="repObj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="height"></param>
+    ''' <param name="width"></param>
+    ''' <remarks></remarks>
     Public Sub createRessPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                        ByVal top As Double, left As Double, height As Double, width As Double)
+                                            ByVal top As Double, left As Double, height As Double, width As Double)
 
         'Dim kennziffer As Integer = 4
         Dim diagramTitle As String
@@ -7766,8 +7779,9 @@ Public Module Projekte
 
         If Not IsNothing(externCostInput) And CostDefinitions.Contains(extCost) Then
             ' es soll ausgerechnet werden, was denn an externen Kosten anfällt 
-            ' Mahle Spezial ...
-            Dim summeExtCost As Double = Math.Truncate(hproj.Erloes - hproj.getGesamtKostenBedarf.Sum)
+            ' getriggert durch Mahle ...
+            'Dim summeExtCost As Double = Math.Truncate(hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)
+            Dim summeExtCost As Double = Math.Truncate(100 * (hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)) / 100
 
             ' wenn jetzt noch ein Restbetrag übrig ist .... 
             If summeExtCost > 0 Then
