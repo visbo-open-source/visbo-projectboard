@@ -1139,19 +1139,6 @@ Public Module awinGeneralModules
         summentitel10 = repMessages.getmsg(258)
         summentitel11 = repMessages.getmsg(259)
 
-        '' '' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
-        ' ''Public summentitel1 As String = repMessages.getmsg(249)
-        ' ''Public summentitel2 As String = repMessages.getmsg(250)
-        ' ''Public summentitel3 As String = repMessages.getmsg(251)
-        ' ''Public summentitel4 As String = repMessages.getmsg(252)
-        ' ''Public summentitel5 As String = repMessages.getmsg(253)
-        ' ''Public summentitel6 As String = repMessages.getmsg(254)
-        ' ''Public summentitel7 As String = repMessages.getmsg(255)
-        ' ''Public summentitel8 As String = repMessages.getmsg(256)
-        ' ''Public summentitel9 As String = repMessages.getmsg(257)
-        ' ''Public summentitel10 As String = repMessages.getmsg(258)
-        ' ''Public summentitel11 As String = repMessages.getmsg(259)
-
 
 
         ReDim portfolioDiagrammtitel(21)

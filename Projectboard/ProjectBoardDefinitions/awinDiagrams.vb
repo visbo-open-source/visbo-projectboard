@@ -719,7 +719,7 @@ Public Module awinDiagrams
                                 .name = repMessages.getmsg(119)
                             Else
                                 '.name = "Interne Kapazität"
-                                .name = repMessages.getmsg(120)
+                                .name = repMessages.getmsg(260)
                             End If
 
                             .Border.color = rollenKapaFarbe
@@ -3380,9 +3380,6 @@ Public Module awinDiagrams
         '    Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
         'End If
 
-        'Xdatenreihe(1) = "Risiko-Abschlag"
-        'Xdatenreihe(4) = "Ergebnis"
-
 
         Xdatenreihe(0) = repMessages.getmsg(144)
         If heuteColumn >= minColumn + 1 And heuteColumn <= maxColumn Then
@@ -3398,6 +3395,8 @@ Public Module awinDiagrams
             Xdatenreihe(3) = repMessages.getmsg(146) & vbLf & textZeitraum(minColumn, maxColumn)
         End If
 
+        'Xdatenreihe(1) = "Risiko-Abschlag"
+        'Xdatenreihe(4) = "Ergebnis"
         Xdatenreihe(1) = repMessages.getmsg(50)
         Xdatenreihe(4) = repMessages.getmsg(148)
 

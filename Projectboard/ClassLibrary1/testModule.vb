@@ -1161,7 +1161,7 @@ Public Module testModule
 
                                 Catch ex As Exception
                                     'Throw New Exception("Vorlage konnte nicht bestimmt werden")
-                                    Throw New Exception(repMessages.getmsg(24))
+                                    Throw New Exception(repMessages.getmsg(25))
                                 End Try
 
                                 If continueWork Then
@@ -1656,6 +1656,7 @@ Public Module testModule
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(233)
                                 End Try
 
@@ -2105,7 +2106,8 @@ Public Module testModule
                                     boxName = repMessages.getmsg(165) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(182)
                                 End Try
 
 
@@ -6055,6 +6057,7 @@ Public Module testModule
         Try
             tabelle = pptshape.Table
         Catch ex As Exception
+            'Throw New Exception("Shape hat keine Tabelle")
             Throw New Exception(repMessages.getmsg(127))
         End Try
 
@@ -7740,7 +7743,7 @@ Public Module testModule
         End Try
 
         If anzSpalten < 4 Then
-            Throw New Exception("Shape hat zu wenige Spalten (min 4) ")
+            ''Throw New Exception("Shape hat zu wenige Spalten (min 4) ")
             Throw New Exception(repMessages.getmsg(29))
         Else
             pptShape.Title = ""
@@ -13101,6 +13104,7 @@ Public Module testModule
 
                 xCursor = xCursor + maxBreite
                 If xCursor > legendAreaRight Then
+                    'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                     Throw New ArgumentException(repMessages.getmsg(16))
                 End If
                 maxBreite = 0.0
@@ -13112,7 +13116,8 @@ Public Module testModule
                     xCursor = xCursor + maxBreite
                     maxBreite = 0.0
                     If xCursor > legendAreaRight Then
-                        Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        Throw New ArgumentException(repMessages.getmsg(16))
                     End If
 
                 End If
@@ -13208,6 +13213,7 @@ Public Module testModule
 
                 xCursor = xCursor + maxBreite
                 If xCursor > legendAreaRight Then
+                    ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                     Throw New ArgumentException(repMessages.getmsg(16))
                 End If
                 yCursor = legendAreaTop
@@ -13219,7 +13225,8 @@ Public Module testModule
                     xCursor = xCursor + maxBreite
                     maxBreite = 0.0
                     If xCursor > legendAreaRight Then
-                        Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        Throw New ArgumentException(repMessages.getmsg(16))
                     End If
 
                 End If
