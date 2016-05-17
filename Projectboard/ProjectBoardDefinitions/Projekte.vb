@@ -3999,14 +3999,16 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " " & zE & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         ElseIf auswahl = 2 Then
-            titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(160) & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4186,14 +4188,16 @@ Public Module Projekte
 
         If auswahl = 1 Then
 
-            titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Sonstige Kosten"
         Else
-            titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4335,7 +4339,8 @@ Public Module Projekte
 
                 If auswahl = 2 Then
                     ik = 0
-                    costname = "Personal-Kosten"
+                    'costname = "Personal-Kosten"
+                    costname = repMessages.getmsg(164)
                     tdatenreihe = hproj.getAllPersonalKosten
                     hsum(ik) = 0
                     For i = 0 To plen - 1
@@ -4587,14 +4592,16 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
         Else
-            titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4650,7 +4657,8 @@ Public Module Projekte
 
             If auswahl = 2 Then
                 ik = 0
-                costname = "Personalkosten"
+                'costname = "Personalkosten"
+                costname = repMessages.getmsg(164)
                 tdatenreihe = hproj.getAllPersonalKosten
                 For i = 0 To plen - 1
                     sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
@@ -5068,19 +5076,20 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         Else
-            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
-
             'kennung = "Personalkosten"
         End If
 
@@ -5260,7 +5269,8 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpCollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5268,7 +5278,8 @@ Public Module Projekte
 
             'kennung = "Personalbedarf"
         Else
-            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5647,19 +5658,22 @@ Public Module Projekte
         Next k
 
         If auswahl = 2 Then
-            Xdatenreihe(anzKostenarten) = "Personal-Kosten"
+            'Xdatenreihe(anzKostenarten) = "Personal-Kosten"
+            Xdatenreihe(anzKostenarten) = repMessages.getmsg(164)
             tdatenreihe(anzKostenarten) = hproj.getAllPersonalKosten.Sum
         End If
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
         Else
-            titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
