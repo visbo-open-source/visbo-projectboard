@@ -1804,6 +1804,15 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
 
+            ' gibt es die Einstellung für ProjectWithNoMPmayPass
+
+            Try
+                awinSettings.mppProjectsWithNoMPmayPass = CBool(.Range("passFilterWithNoMPs").Value)
+            Catch ex As Exception
+                awinSettings.mppProjectsWithNoMPmayPass = True
+            End Try
+
+
             ' ist Einstellung für volles Protokoll vorhanden ? 
             Try
 
@@ -5745,6 +5754,62 @@ Public Module awinGeneralModules
 
                         ' Strategic Fit
                         hproj.StrategicFit = CDbl(.Range("Strategischer_Fit").Value)
+
+
+                        ' Ergänzung tk 19.5 es können hier auch sogenannte Custom Fields eingelesen werden ...
+                        Try
+                            Dim cfRange As Excel.Range = CType(.Range("IndivName2"), Excel.Range)
+                            Dim startzeile As Integer = cfRange.Row
+                            Dim cfValueColumn As Integer = cfRange.Column
+                            Dim lastZeile As Integer = CInt(CType(.Cells(10000, 2), Excel.Range).End(XlDirection.xlUp).Row)
+
+                            ' jetzt die Custom-Fields einlesen 
+                            For i As Integer = startzeile To lastZeile
+
+                                Try
+
+                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value)
+                                    Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
+
+                                    If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
+                                        Dim cfType As Integer = customFieldDefinitions.getTyp(cfUid)
+
+                                        If Not IsNothing(cfType) Then
+                                            Select Case cfType
+                                                Case ptCustomFields.Str
+                                                    Dim cfvalue As String = CStr(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomSField(cfUid, cfvalue)
+                                                Case ptCustomFields.Dbl
+                                                    Dim cfvalue As Double = CDbl(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomDField(cfUid, cfvalue)
+                                                Case ptCustomFields.bool
+                                                    Dim cfvalue As Boolean = CBool(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomBField(cfUid, cfvalue)
+                                                Case Else
+                                                    ' Custom Field Type nicht bekannt ...
+                                                    Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
+                                            End Select
+                                        Else
+                                            ' Custom Field UID nicht existent ...
+                                            Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                        End If
+                                    Else
+                                        ' Custom Field Definition nicht bekannt ...
+                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
+                               
+                            Next
+
+
+                        Catch ex As Exception
+
+                        End Try
+
+
 
 
                         '' Komplexitätszahl - kein Problem, wenn nicht da  --- BMW---

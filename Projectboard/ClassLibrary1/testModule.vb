@@ -12058,11 +12058,12 @@ Public Module testModule
 
 
         '
-        ' wenn Texte gezeichnet wurden, müssen jetzt die Phasen, dann die Meilensteine in den Vordergrund geholt werden 
+        ' wenn  Texte gezeichnet wurden, müssen jetzt die Phasen in den Vordergrund geholt werden, danach auf alle Fälle auch die Meilensteine 
+        Dim anzElements As Integer
         If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or _
             awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
             ' Phasen vorholen 
-            Dim anzElements As Integer
+
             anzElements = phShapeNames.Count
 
             If anzElements > 0 Then
@@ -12080,24 +12081,27 @@ Public Module testModule
 
             End If
 
-            anzElements = msShapeNames.Count
-
-            If anzElements > 0 Then
-
-                ReDim arrayOfNames(anzElements - 1)
-                For ix = 1 To anzElements
-                    arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
-                Next
-
-                Try
-                    CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
-                Catch ex As Exception
-
-                End Try
-
-            End If
 
         End If
+
+        ' jetzt die Meilensteine in Vordergrund holen ...
+        anzElements = msShapeNames.Count
+
+        If anzElements > 0 Then
+
+            ReDim arrayOfNames(anzElements - 1)
+            For ix = 1 To anzElements
+                arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
+            Next
+
+            Try
+                CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
 
         If currentProjektIndex < projectCollection.Count And awinSettings.mppOnePage Then
             'Throw New ArgumentException("es konnten nur " & _

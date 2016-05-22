@@ -313,7 +313,11 @@
                     ' da bisher nur über die positive Schnittmenge entschieden wird; 
                     ' ggf muss das noch über eine separate Variable entschieden werden ... das könnte eigentlich über die Projektlinie gemacht werden 
 
-                    If filterMilestone.Count = 0 Then
+                    If hproj.hierarchy.count = 1 And awinSettings.mppProjectsWithNoMPmayPass Then
+                        ' nur dann kann es sich ggf um ein leeres Projekt handeln 
+                        containsMS = True
+
+                    ElseIf filterMilestone.Count = 0 Then
 
                         If filterPhase.Count = 0 Then
                             containsMS = True

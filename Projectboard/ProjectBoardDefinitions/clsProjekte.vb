@@ -1807,52 +1807,87 @@ Public Class clsProjekte
     Public ReadOnly Property getTotalCostValuesInMonth() As Double()
         Get
             Dim costValues() As Double
-            Dim Dauer As Integer
             Dim zeitraum As Integer
-            Dim i As Integer
-            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
-            Dim hproj As clsProjekt
             Dim tempArray() As Double
-            Dim prAnfang As Integer, prEnde As Integer
-
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
-
-
 
             zeitraum = showRangeRight - showRangeLeft
             ReDim costValues(zeitraum)
 
+            Dim anzCosts As Integer = CostDefinitions.Count
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
-                hproj = kvp.Value
-
-                Dauer = hproj.anzahlRasterElemente
-
-                ReDim tempArray(Dauer - 1)
-
-                With hproj
-                    prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                End With
-
-                anzLoops = 0
-                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
-
-                If anzLoops > 0 Then
-
-                    tempArray = hproj.getGesamtKostenBedarf
-
-                    For i = 0 To anzLoops - 1
-                        costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
-                    Next i
+            For k As Integer = 1 To anzCosts
+                tempArray = Me.getCostValuesInMonth(k)
+                For l As Integer = 0 To tempArray.Length - 1
+                    costValues(l) = costValues(l) + tempArray(l)
+                Next
+            Next
 
 
-                End If
-                'hproj = Nothing
-            Next kvp
+            ' Änderung tk 19.5.16 
+            ' alt und falsch: weil die Überstundenkosten nicht berücksichtigt werden ... 
+            ''For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            ''    hproj = kvp.Value
+
+            ''    Dauer = hproj.anzahlRasterElemente
+
+            ''    ReDim tempArray(Dauer - 1)
+
+            ''    With hproj
+            ''        prAnfang = .Start + .StartOffset
+            ''        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+            ''    End With
+
+            ''    anzLoops = 0
+            ''    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+            ''    If anzLoops > 0 Then
+
+            ''        tempArray = hproj.getGesamtKostenBedarf
+
+            ''        For i = 0 To anzLoops - 1
+            ''            costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
+            ''        Next i
+
+
+            ''    End If
+            ''    'hproj = Nothing
+            ''Next kvp
 
             getTotalCostValuesInMonth = costValues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Sonstigen Kosten zurück, also alle Kosten minus die Personalkosten
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getOtherCostValuesInMonth() As Double()
+        Get
+            Dim costValues() As Double
+            Dim zeitraum As Integer
+            Dim tempArray() As Double
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim costValues(zeitraum)
+
+            Dim anzCosts As Integer = CostDefinitions.Count
+            '
+            ' die Personalkosten sind immer die letzte Kostenart ...
+            For k As Integer = 1 To anzCosts - 1
+                tempArray = Me.getCostValuesInMonth(k)
+                For l As Integer = 0 To tempArray.Length - 1
+                    costValues(l) = costValues(l) + tempArray(l)
+                Next
+            Next
+
+            getOtherCostValuesInMonth = costValues
 
         End Get
     End Property
@@ -1862,6 +1897,7 @@ Public Class clsProjekte
     '
     ''' <summary>
     ''' gibt die Gesamtkosten , Personalkosten und alle sonstigen Kosten im betrachteten Zeitraum zurück 
+    ''' bei den Personalkosten sind die Überstundensätze bzw. externen Tagessätze entsprechend berücksichtigt 
     ''' </summary>
     ''' <param name="CostID"></param>
     ''' <value></value>
@@ -1880,12 +1916,10 @@ Public Class clsProjekte
             Dim isPersCost As Boolean
             Dim tempArray() As Double
             Dim prAnfang As Integer, prEnde As Integer
-            Dim persCost As Boolean
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
 
             lookforIndex = IsNumeric(CostID)
-            persCost = False
 
             If lookforIndex Then
                 If CostID = CostDefinitions.Count Then
@@ -1901,37 +1935,42 @@ Public Class clsProjekte
             ReDim costValues(zeitraum)
 
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
-                hproj = kvp.Value
+            If isPersCost Then
+                costValues = Me.getCostGpValuesInMonth
+            Else
 
-                Dauer = hproj.anzahlRasterElemente
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                    hproj = kvp.Value
 
-                ReDim tempArray(Dauer - 1)
+                    Dauer = hproj.anzahlRasterElemente
 
-                With hproj
-                    prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                End With
+                    ReDim tempArray(Dauer - 1)
 
-                anzLoops = 0
-                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+                    With hproj
+                        prAnfang = .Start + .StartOffset
+                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                    End With
 
-                If anzLoops > 0 Then
+                    anzLoops = 0
+                    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
 
-                    If isPersCost Then
-                        tempArray = hproj.getAllPersonalKosten
-                    Else
+                    If anzLoops > 0 Then
+
                         tempArray = hproj.getKostenBedarf(CostID)
+
+                        For i = 0 To anzLoops - 1
+                            costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
+                        Next i
+
+
                     End If
+                    'hproj = Nothing
+                Next kvp
 
-                    For i = 0 To anzLoops - 1
-                        costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
-                    Next i
+            End If
 
 
-                End If
-                'hproj = Nothing
-            Next kvp
+
 
             getCostValuesInMonth = costValues
 
@@ -2234,6 +2273,72 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
+    ''' gibt die Personalkosten im Zeitraum zurück, dabei werden die Überstundensätze entsprechend des optionalen Parameters berücksichtigt 
+    ''' 
+    ''' der optionale Parameter bestimmt, ob die Überlast-Situationen berücksichtigt werden sollen oder nicht ... 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCostGpValuesInMonth(Optional ByVal includesOverloadCost As Boolean = False) As Double()
+
+        Get
+            Dim costValues() As Double
+            Dim roleValues() As Double
+            Dim kapaValues() As Double
+            Dim roleName As String
+            Dim myCollection As New Collection
+            Dim i As Integer, ix As Integer
+            Dim zeitraum As Integer
+            Dim faktor As Double = nrOfDaysMonth
+
+            If awinSettings.kapaEinheit = "PM" Then
+                faktor = nrOfDaysMonth
+            ElseIf awinSettings.kapaEinheit = "PW" Then
+                faktor = 5
+            ElseIf awinSettings.kapaEinheit = "PT" Then
+                faktor = 1
+            Else
+                faktor = 1
+            End If
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim costValues(zeitraum)
+            ReDim roleValues(zeitraum)
+            ReDim kapaValues(zeitraum)
+
+            For i = 1 To RoleDefinitions.Count
+                roleName = RoleDefinitions.getRoledef(i).name
+                myCollection.Add(roleName)
+                roleValues = Me.getRoleValuesInMonth(roleName)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                myCollection.Clear()
+
+                For ix = 0 To zeitraum
+                    If roleValues(ix) > kapaValues(ix) And includesOverloadCost Then
+                        ' externe Ressourcen müssen hinzugezogen werden
+                        costValues(ix) = costValues(ix) + _
+                                         kapaValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                        costValues(ix) = costValues(ix) + _
+                                         (roleValues(ix) - kapaValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzExtern * faktor / 1000
+                    Else
+                        ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
+                        costValues(ix) = costValues(ix) + _
+                                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+
+                    End If
+                Next ix
+
+            Next i
+
+
+            getCostGpValuesInMonth = costValues
+
+        End Get
+
+    End Property
+
+    ''' <summary>
     ''' gibt die Mehrkosten, die im Zeitraum durch den Einsatz von Externen verursacht werden , zurück 
     ''' der Wert repräsentiert dabei den Unterschied zu den Kosten, die durch den Einsatz von Internen anfallen würden
     ''' </summary>
@@ -2330,7 +2435,7 @@ Public Class clsProjekte
             earnedValue = zeitraumBudget - (zeitraumCost + zeitraumRisiko)
 
 
-            ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
+            ' das sind die Zusatzkosten, die durch Externe bzw. Überstunden (wg Überauslastung) verursacht werden
             additionalCostExt = System.Math.Round(ShowProjekte.getadditionalECostinMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
 
             ' das sind die durch Unterauslastung verursachten Kosten , also Personal-Kosten von Leuten, die in keinem Projekt sind
