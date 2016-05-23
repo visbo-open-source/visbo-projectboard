@@ -126,8 +126,8 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <param name="prcTyp"></param>
-    ''' <remarks></remarks>
-    Sub awinCreateprcCollectionDiagram(ByRef myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    ''' <remarks>myCollection am 23.5 per byval übergeben, damit im Falle der Rollen myCollection ausgeweitet werden kann ...</remarks>
+    Sub awinCreateprcCollectionDiagram(ByVal myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
                                        ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean)
 
         Dim von As Integer, bis As Integer
@@ -161,6 +161,7 @@ Public Module awinDiagrams
         Dim chtobjName As String
         Dim breadcrumb As String = ""
 
+        Dim realCollection As New Collection
 
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
@@ -299,7 +300,7 @@ Public Module awinDiagrams
             ' Änderung tk 26.3.15 
             ' wenn die Koordinaten ausserhalb des aktuell sichtbaren Windows sind, dann sollen sie 
             ' ins Sichtbare gerückt werden 
-            
+
             With CType(appInstance.ActiveWindow, Excel.Window)
 
                 If top < CDbl(.VisibleRange.Top) Or top + height > CDbl(.VisibleRange.Top + .VisibleRange.Height) Then
@@ -374,7 +375,12 @@ Public Module awinDiagrams
 
                         'prcName = CStr(myCollection.Item(r))
                         ' wird jetzt über das folgende bestimmt
-                        Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+                        If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
+                            Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+                        Else
+                            prcName = CStr(myCollection.Item(r))
+                        End If
+
 
                         If prcTyp = DiagrammTypen(0) Then
                             einheit = " "
@@ -428,7 +434,7 @@ Public Module awinDiagrams
                             ' jetzt müssen die - theoretischen Earned Values um die externen Kosten bereinigt werden, die abfallen, weil aufgrund 
                             ' bestimmter überlasteter Rollen externe , teurere Kräfte reingeholt werden müssen 
 
-                            edatenreihe = ShowProjekte.getadditionalECostinMonth
+                            edatenreihe = ShowProjekte.getCosteValuesInMonth(True)
                             For i = 0 To bis - von
                                 datenreihe(i) = datenreihe(i) - edatenreihe(i)
                             Next
@@ -484,15 +490,18 @@ Public Module awinDiagrams
                                 .ChartType = Excel.XlChartType.xlColumnStacked
                                 .HasDataLabels = False
                             End With
-                            With .SeriesCollection.NewSeries
-                                '.name = "externe Dienstleister "
-                                .name = repMessages.getmsg(116)
-                                .Interior.color = farbeExterne
-                                .Values = edatenreihe
-                                .XValues = Xdatenreihe
-                                .ChartType = Excel.XlChartType.xlColumnStacked
-                                .HasDataLabels = False
-                            End With
+                            If edatenreihe.Sum > 0 Then
+                                With .SeriesCollection.NewSeries
+                                    '.name = "Kosten durch Überlastung "
+                                    .name = repMessages.getmsg(152)
+                                    .Interior.color = farbeExterne
+                                    .Values = edatenreihe
+                                    .XValues = Xdatenreihe
+                                    .ChartType = Excel.XlChartType.xlColumnStacked
+                                    .HasDataLabels = False
+                                End With
+                            End If
+                            
                         Else
 
                             If prcTyp = DiagrammTypen(5) Then
@@ -863,7 +872,14 @@ Public Module awinDiagrams
                     With prcDiagram
                         .DiagrammTitel = diagramTitle
                         .diagrammTyp = prcTyp
-                        .gsCollection = myCollection
+                        For ik As Integer = 1 To myCollection.Count
+                            Dim tmpName As String = CStr(myCollection.Item(ik))
+                            If Not .gsCollection.Contains(tmpName) Then
+                                .gsCollection.Add(tmpName, tmpName)
+                            End If
+                        Next
+                        ' das obige wurde gemacht, um myCollection nicht per Ref übergeben zu müssen ... 
+                        '.gsCollection = myCollection
                         .isCockpitChart = isCockpitChart
                         .top = top
                         .left = left
@@ -1046,13 +1062,17 @@ Public Module awinDiagrams
 
         If myCollection.Count > 1 Then
             If prcTyp = DiagrammTypen(0) Then
-                diagramTitle = "Phasen-Übersicht"
+                'diagramTitle = "Phasen-Übersicht"
+                diagramTitle = portfolioDiagrammtitel(PTpfdk.Phasen)
             ElseIf prcTyp = DiagrammTypen(1) Then
-                diagramTitle = "Rollen-Übersicht"
+                'diagramTitle = "Rollen-Übersicht"
+                diagramTitle = portfolioDiagrammtitel(PTpfdk.Rollen)
             ElseIf prcTyp = DiagrammTypen(2) Then
-                diagramTitle = "Kosten-Übersicht"
+                'diagramTitle = "Kosten-Übersicht"
+                diagramTitle = portfolioDiagrammtitel(PTpfdk.Kosten)
             ElseIf prcTyp = DiagrammTypen(4) Then
-                diagramTitle = "Ergebnis-Übersicht"
+                'diagramTitle = "Ergebnis-Übersicht"
+                diagramTitle = repMessages.getmsg(113)
             ElseIf prcTyp = DiagrammTypen(5) Then
                 chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
 
@@ -1062,7 +1082,8 @@ Public Module awinDiagrams
                     diagramTitle = CStr(myCollection.Item(1))
                 End If
             Else
-                diagramTitle = "Übersicht"
+                'diagramTitle = "Übersicht"
+                diagramTitle = repMessages.getmsg(114)
             End If
         Else
             diagramTitle = CStr(myCollection.Item(1))
@@ -1107,8 +1128,13 @@ Public Module awinDiagrams
 
                 For r = 1 To myCollection.Count
 
-                    'prcName = CStr(myCollection.Item(r))
-                    Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+
+                    If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
+                        Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+                    Else
+                        prcName = CStr(myCollection.Item(r))
+                    End If
+
 
                     If prcTyp = DiagrammTypen(0) Then
                         einheit = " "
@@ -1195,7 +1221,7 @@ Public Module awinDiagrams
                         ' jetzt müssen die - theoretischen Earned Values um die externen Kosten bereinigt werden, die abfallen, weil aufgrund 
                         ' bestimmter überlasteter Rollen externe , teurere Kräfte reingeholt werden müssen 
 
-                        edatenreihe = ShowProjekte.getadditionalECostinMonth
+                        edatenreihe = ShowProjekte.getCosteValuesInMonth(True)
                         For i = 0 To bis - von
                             datenreihe(i) = datenreihe(i) - edatenreihe(i)
                         Next
@@ -1241,22 +1267,27 @@ Public Module awinDiagrams
                     If isPersCost Then
                         With .SeriesCollection.NewSeries
 
-                            .name = prcName & " intern "
+                            '.name = prcName & " intern "
+                            .name = prcName & repMessages.getmsg(115)
                             .Interior.color = objektFarbe
                             .Values = datenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlColumnStacked
                             .HasDataLabels = False
                         End With
-                        With .SeriesCollection.NewSeries
 
-                            .name = "externe Dienstleister "
-                            .Interior.color = farbeExterne
-                            .Values = edatenreihe
-                            .XValues = Xdatenreihe
-                            .ChartType = Excel.XlChartType.xlColumnStacked
-                            .HasDataLabels = False
-                        End With
+                        If edatenreihe.Sum > 0 Then
+                            With .SeriesCollection.NewSeries
+                                '.name = "Kosten durch Überlastung "
+                                .name = repMessages.getmsg(152)
+                                .Interior.color = farbeExterne
+                                .Values = edatenreihe
+                                .XValues = Xdatenreihe
+                                .ChartType = Excel.XlChartType.xlColumnStacked
+                                .HasDataLabels = False
+                            End With
+                        End If
+                        
                     Else
                         If prcTyp = DiagrammTypen(5) Then
 
@@ -1321,7 +1352,8 @@ Public Module awinDiagrams
                 If isWeightedValues Then
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
-                        .name = "Risiko Abschlag"
+                        '.name = "Risiko Abschlag"
+                        .name = repMessages.getmsg(117)
                         .Interior.color = ergebnisfarbe2
                         .Values = edatenreihe
                         .XValues = Xdatenreihe
@@ -1439,7 +1471,8 @@ Public Module awinDiagrams
                         ' es gibt geplante externe Ressourcen ... 
                         With .SeriesCollection.NewSeries
                             .HasDataLabels = False
-                            .name = "Kapazität incl. Externe"
+                            '.name = "Kapazität incl. Externe"
+                            .name = repMessages.getmsg(118)
 
                             .Values = kdatenreihePlus
                             .XValues = Xdatenreihe
@@ -1464,9 +1497,11 @@ Public Module awinDiagrams
                         .HasDataLabels = False
 
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                            .name = "Leistbarkeitsgrenze"
+                            '.name = "Leistbarkeitsgrenze"
+                            .name = repMessages.getmsg(119)
                         Else
-                            .name = "Interne Kapazität"
+                            '.name = "Interne Kapazität"
+                            .name = repMessages.getmsg(260)
                         End If
 
                         .Border.color = rollenKapaFarbe
@@ -1587,7 +1622,6 @@ Public Module awinDiagrams
     Sub awinUpdateBudgetErgebnisDiagramm(ByRef chtObj As Excel.ChartObject)
 
         Dim diagramTitle As String
-        Dim i As Integer
         Dim minScale As Double
         Dim Xdatenreihe(4) As String
         Dim valueDatenreihe1(4) As Double
@@ -2696,7 +2730,7 @@ Public Module awinDiagrams
 
 
         ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
-        additionalCostExt = System.Math.Round(ShowProjekte.getadditionalECostinMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum / 10, mode:=MidpointRounding.ToEven) * 10
         itemValue(1) = additionalCostExt
         itemColor(1) = farbeExterne
 
@@ -2965,7 +2999,12 @@ Public Module awinDiagrams
 
         ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
         zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+        Dim pCost As Double = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        Dim oCost As Double = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        'zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumCost = pCost + oCost
+
 
         ' das ist der Risiko Abschlag  
         zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
@@ -2973,6 +3012,7 @@ Public Module awinDiagrams
 
         ' das ist der Earned Value 
         earnedValue = zeitraumBudget - (zeitraumCost + zeitraumRisiko)
+
 
         itemValue(0) = earnedValue
 
@@ -2985,8 +3025,8 @@ Public Module awinDiagrams
         Dim currentWert As Double = itemValue(0)
 
 
-        ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
-        additionalCostExt = System.Math.Round(ShowProjekte.getadditionalECostinMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        ' das sind die Zusatzkosten, die durch Überauslastung) verursacht werden
+        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum / 10, mode:=MidpointRounding.ToEven) * 10
         itemValue(1) = additionalCostExt
         itemColor(1) = farbeExterne
 
@@ -4141,7 +4181,7 @@ Public Module awinDiagrams
 
 
         ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
-        additionalCostExt = System.Math.Round(ShowProjekte.getadditionalECostinMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum / 10, mode:=MidpointRounding.ToEven) * 10
 
         itemValue(0) = additionalCostExt
         itemColor(0) = awinSettings.AmpelRot

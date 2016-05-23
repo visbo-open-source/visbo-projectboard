@@ -3092,7 +3092,7 @@ Public Module awinGeneralModules
                                             Dim r As Integer = 0
 
 
-                                            If RoleDefinitions.Contains(ass.ResourceName) Then
+                                            If RoleDefinitions.containsName(ass.ResourceName) Then
                                                 r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
                                             Else
                                                 ' Rolle existiert noch nicht
@@ -3114,7 +3114,7 @@ Public Module awinGeneralModules
                                                 newRoleDef.tagessatzIntern = CType(hstdstr(1), Double) * msproj.HoursPerDay
 
                                                 newRoleDef.UID = RoleDefinitions.Count + 1
-                                                If Not missingRoleDefinitions.Contains(newRoleDef.name) Then
+                                                If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
                                                     missingRoleDefinitions.Add(newRoleDef)
                                                 End If
 
@@ -3125,7 +3125,7 @@ Public Module awinGeneralModules
                                                 r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
                                             End If
 
-                                        
+
 
                                             Dim work As Double = CType(ass.Work, Double)
                                             'Dim duration As Double = CType(ass.Duration, Double)
@@ -3196,7 +3196,7 @@ Public Module awinGeneralModules
                                                 .addRole(crole)
                                             End With
                                         Catch ex As Exception
-            
+
                                         End Try
 
                                         'Call MsgBox("Work = " & ass.ResourceName & " mit " & CStr(ass.Work) & "Arbeit")
@@ -3586,14 +3586,14 @@ Public Module awinGeneralModules
         End Try
 
         isRemovable = result
-        
+
     End Function
 
-        ''' <summary>
-        ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
-        ''' </summary>
-        ''' <param name="myCollection"></param>
-        ''' <remarks></remarks>
+    ''' <summary>
+    ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <remarks></remarks>
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
@@ -3671,7 +3671,7 @@ Public Module awinGeneralModules
 
         'Dim inputColumns(11) As Integer
 
-       
+
 
 
         Try
@@ -3755,7 +3755,7 @@ Public Module awinGeneralModules
                                     Try
                                         Dim cfName As String = CStr(CType(.Cells(1, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                         Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
-                                        
+
                                         If uniqueID > 0 Then
                                             ' es ist eine Custom Field
 
@@ -4096,7 +4096,7 @@ Public Module awinGeneralModules
                                 projectEndDate = tmpDate
                             End If
                         End If
-                        
+
                     Next
 
 
@@ -4361,7 +4361,7 @@ Public Module awinGeneralModules
             Dim anzRules As Integer = currentElem.count
             Dim currentRule As clsAddElementRuleItem
             Dim found As Boolean = False
-            
+
             Dim i As Integer = 1
 
             Do While i <= currentElem.count And Not found
@@ -5123,7 +5123,7 @@ Public Module awinGeneralModules
                                         '
                                         ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
                                         '
-                                        If RoleDefinitions.Contains(hname) Then
+                                        If RoleDefinitions.containsName(hname) Then
                                             Try
                                                 r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -5801,7 +5801,7 @@ Public Module awinGeneralModules
                                 Catch ex As Exception
 
                                 End Try
-                               
+
                             Next
 
 
@@ -6551,7 +6551,7 @@ Public Module awinGeneralModules
                                             tmpIX = tmpIX + 1
                                         End While
                                     End If
-                                    
+
 
                                     If Not rightOneFound Then
 
@@ -6579,7 +6579,7 @@ Public Module awinGeneralModules
                                             '
                                             ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
                                             '
-                                            If RoleDefinitions.Contains(hname) Then
+                                            If RoleDefinitions.containsName(hname) Then
                                                 Try
                                                     r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -7219,7 +7219,7 @@ Public Module awinGeneralModules
                                         '
                                         ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
                                         '
-                                        If RoleDefinitions.Contains(hname) Then
+                                        If RoleDefinitions.containsName(hname) Then
                                             Try
                                                 r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -8312,7 +8312,7 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-            
+
 
 
         ElseIf kennung = PTTvActions.delFromSession Or _
@@ -9073,6 +9073,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' liest die im Diretory ../ressource manager liegenden detaillierten Kapa files zu den Rollen aus
     ''' und hinterlegt es an entsprechender Stelle im hrole.kapazitaet
+    ''' wenn die Details als Rollen angelegt sind, dann werden diese Rollen gleich mitausgelesen 
     ''' </summary>
     ''' <param name="hrole"></param>
     ''' <remarks></remarks>
@@ -9089,6 +9090,8 @@ Public Module awinGeneralModules
         Dim tmpDate As Date
         Dim tmpKapa As Double
         Dim extTmpKapa As Double
+        Dim lastSpalte As Integer
+
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -9114,6 +9117,69 @@ Public Module awinGeneralModules
 
                     currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
                     summenZeile = currentWS.Range("intern_sum").Row
+                    lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+
+                    ' bevor jetzt die eigentliche Kapa dieser Rolle aus intern_sum ausgelesen wird, wird geschaut, ob 
+                    ' es eine zusammengesetzte Rolle ist
+                    ' das wird dadurch entschieden, ob bis zur summenzeile bekannte Rollen auftauchen. Das sind dann die Sub-Roles 
+
+
+                    Dim atleastOneSubRole As Boolean = False
+                    Dim aktzeile As Integer = 2
+                    Do While aktzeile < summenZeile
+
+                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, spalte - 1), Excel.Range).Value)
+
+                        If Not IsNothing(subRoleName) Then
+                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                                Try
+                                    atleastOneSubRole = True
+                                    ' es ist eine Sub-Rolle
+
+                                    hrole.addSubRole(subRole.UID, subRoleName, RoleDefinitions.Count)
+
+                                    spalte = 2
+                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+
+                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
+                                            spalte < 241 And spalte <= lastSpalte
+                                        index = getColumnOfDate(tmpDate)
+                                        tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                            subRole.kapazitaet(index) = tmpKapa
+                                        End If
+
+                                        spalte = spalte + 1
+                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                    Loop
+
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End If
+
+                        End If
+
+                        aktzeile = aktzeile + 1
+                        ' jetzt spalte wieder auf 2 setzen 
+                        spalte = 2
+                    Loop
+
+                    ' die internen Kapas einer Sammelrolle sind NULL 
+                    If atleastOneSubRole Then
+                        For i As Integer = 1 To 240
+                            hrole.kapazitaet(i) = 0
+                        Next
+                    End If
+                    
+
+
                     Try
                         extSummenZeile = currentWS.Range("extern_sum").Row
                     Catch ex As Exception
@@ -9123,18 +9189,32 @@ Public Module awinGeneralModules
                     tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
                     Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
-                            spalte < 241
+                            spalte < 241 And spalte <= lastSpalte
                         index = getColumnOfDate(tmpDate)
                         tmpKapa = CDbl(CType(currentWS.Cells(summenZeile, spalte), Excel.Range).Value)
+
+
                         If extSummenZeile > 0 Then
                             extTmpKapa = CDbl(CType(currentWS.Cells(extSummenZeile, spalte), Excel.Range).Value)
                         Else
                             extTmpKapa = 0.0
                         End If
 
-                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                            hrole.kapazitaet(index) = tmpKapa
-                            hrole.externeKapazitaet(index) = extTmpKapa
+                        If index <= 240 And index > 0 Then
+
+                            If atleastOneSubRole Then
+                                ' alles ist Null , wird erst später aufgrund der Sub-Rollen berechnet 
+                            Else
+                                If tmpKapa >= 0 Then
+                                    hrole.kapazitaet(index) = tmpKapa
+                                End If
+                            End If
+
+                            If extTmpKapa >= 0 Then
+                                hrole.externeKapazitaet(index) = extTmpKapa
+                            End If
+
+
                         End If
 
                         spalte = spalte + 1

@@ -5021,7 +5021,7 @@ Public Module testModule
                             diagramTitle = diagramTitle & " " & repMessages.getmsg(166)
                             kennzeichnung = "Gesamtkosten"
                         Case 4
-                            If RoleDefinitions.Contains(qualifier) Then
+                            If RoleDefinitions.containsName(qualifier) Then
                                 werteH = hproj.getRessourcenBedarf(qualifier)
                                 werteV = vglProj.getRessourcenBedarf(qualifier)
                                 diagramTitle = diagramTitle & " " & qualifier
@@ -5509,7 +5509,7 @@ Public Module testModule
                     formerValues = vglProj.getGesamtKostenBedarf
 
                 Case 4
-                    If RoleDefinitions.Contains(qualifier) Then
+                    If RoleDefinitions.containsName(qualifier) Then
                         currentValues = hproj.getRessourcenBedarf(qualifier)
                         formerValues = vglProj.getRessourcenBedarf(qualifier)
                     End If
@@ -13836,7 +13836,7 @@ Public Module testModule
                             End If
 
                         Case PTpfdk.Rollen
-                            If RoleDefinitions.Contains(tmpName) Then
+                            If RoleDefinitions.containsName(tmpName) Then
                                 tmpCollection.Add(tmpName, tmpName)
                             End If
 

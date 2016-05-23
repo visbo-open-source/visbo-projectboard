@@ -4991,11 +4991,23 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
+        ' es müssen jetzt alle Rollen in eine Collection geholt werden, die keine SammelRolle sind ... 
+        Dim basicRolesCollection As New Collection
+
+        For r = 1 To RoleDefinitions.Count
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(r)
+            If Not tmpRole.isCombinedRole Then
+                basicRolesCollection.Add(tmpRole.name, tmpRole.name)
+            End If
+        Next
+
 
         '
         ' hole die Anzahl Rollen
         '
-        anzRollen = RoleDefinitions.Count
+        'anzRollen = RoleDefinitions.Count
+        anzRollen = basicRolesCollection.Count
+
 
         If anzRollen = 0 Then
             'Call MsgBox("keine Rollen-Bedarfe definiert")
@@ -5010,7 +5022,8 @@ Public Module Projekte
 
 
         For r = 1 To anzRollen
-            roleName = RoleDefinitions.getRoledef(r).name
+            'roleName = RoleDefinitions.getRoledef(r).name
+            roleName = CStr(basicRolesCollection.Item(r))
             tdatenreihe(r - 1) = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
             Xdatenreihe(r - 1) = roleName
         Next r
@@ -5088,7 +5101,8 @@ Public Module Projekte
 
                     For r = 1 To anzRollen
 
-                        roleName = RoleDefinitions.getRoledef(r).name
+                        'roleName = RoleDefinitions.getRoledef(r).name
+                        roleName = CStr(basicRolesCollection.Item(r))
                         With .SeriesCollection(1).Points(r)
                             .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
                             .DataLabel.Font.Size = awinSettings.fontsizeItems
@@ -7728,7 +7742,7 @@ Public Module Projekte
 
                     If roleCostStr.Length > 1 Then
                         Try
-                            If RoleDefinitions.Contains(roleCostStr(0)) Then
+                            If RoleDefinitions.containsName(roleCostStr(0)) Then
                                 isRole = True
                                 rk = CInt(RoleDefinitions.getRoledef(roleCostStr(0)).UID)
 
@@ -16685,7 +16699,7 @@ Public Module Projekte
                             '
                             ' handelt es sich um die Ressourcen Definition?
                             '
-                            If RoleDefinitions.Contains(hname) Then
+                            If RoleDefinitions.containsName(hname) Then
                                 Try
                                     r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -16857,7 +16871,7 @@ Public Module Projekte
                             '
                             ' handelt es sich um die Ressourcen Definition?
                             '
-                            If RoleDefinitions.Contains(hname) Then
+                            If RoleDefinitions.containsName(hname) Then
 
                                 roleNr = roleNr + 1
 
