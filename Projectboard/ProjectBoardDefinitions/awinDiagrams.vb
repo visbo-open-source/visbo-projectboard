@@ -411,8 +411,10 @@ Public Module awinDiagrams
                                 ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                                 isPersCost = True
                                 objektFarbe = CostDefinitions.getCostdef(prcName).farbe
-                                datenreihe = ShowProjekte.getCostiValuesInMonth
-                                edatenreihe = ShowProjekte.getCosteValuesInMonth
+                                'datenreihe = ShowProjekte.getCostiValuesInMonth
+                                'edatenreihe = ShowProjekte.getCosteValuesInMonth
+                                datenreihe = ShowProjekte.getCostGpValuesInMonth
+                                
                                 For i = 0 To bis - von
                                     seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
                                 Next i
@@ -1187,8 +1189,11 @@ Public Module awinDiagrams
                             ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                             isPersCost = True
                             objektFarbe = CostDefinitions.getCostdef(prcName).farbe
-                            datenreihe = ShowProjekte.getCostiValuesInMonth
-                            edatenreihe = ShowProjekte.getCosteValuesInMonth
+                            'datenreihe = ShowProjekte.getCostiValuesInMonth
+                            'edatenreihe = ShowProjekte.getCosteValuesInMonth
+                            datenreihe = ShowProjekte.getCostGpValuesInMonth
+
+
                             For i = 0 To bis - von
                                 seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
                                 hmxWert = Max(hmxWert, datenreihe(i) + edatenreihe(i))
