@@ -528,7 +528,8 @@ Public Module testModule
                     Try
 
                         If .Title <> "" Then
-                            kennzeichnung = .Title
+                            tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                            kennzeichnung = tmpStr(0).Trim
                         Else
                             tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
@@ -642,38 +643,18 @@ Public Module testModule
                         .Name = "Shape" & .Id.ToString
 
                         If .Title <> "" Then
-                            kennzeichnung = .Title
-                            qualifier = .AlternativeText
+
+                            Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
+                      
+
                         Else
                             ' Start neu
-                            Dim tmpStr(10) As String
-                            Try
 
-                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
-                                kennzeichnung = tmpStr(0).Trim
+                            Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
+                            boxName = kennzeichnung
 
-                            Catch ex As Exception
-                                kennzeichnung = "nicht identifizierbar"
-                                tmpStr(0) = " "
-                            End Try
-
-                            Try
-                                If tmpStr.Length < 2 Then
-                                    qualifier = ""
-                                    qualifier2 = ""
-                                ElseIf tmpStr.Length = 2 Then
-                                    qualifier = tmpStr(1).Trim
-                                ElseIf tmpStr.Length >= 3 Then
-                                    qualifier = tmpStr(1).Trim
-                                    qualifier2 = tmpStr(2).Trim
-                                End If
-
-                            Catch ex As Exception
-                                qualifier = ""
-                                qualifier2 = ""
-                            End Try
-                            ' Ende neu 
+                   
                         End If
 
 
@@ -957,7 +938,7 @@ Public Module testModule
 
                                     'awinSettings.mppExtendedMode = True
 
-                                    
+
                                     Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
@@ -1206,8 +1187,9 @@ Public Module testModule
 
                                     If Not repObj1 Is Nothing Then
                                         Try
-                                            repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                            newShapeRange = pptSlide.Shapes.Paste
+                                            ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                            ''newShapeRange = pptSlide.Shapes.Paste
+                                            newShapeRange = pictCopypptPaste(repObj1, pptSlide)
 
                                             With newShapeRange(1)
                                                 .Top = CSng(top + 0.02 * height)
@@ -1221,8 +1203,9 @@ Public Module testModule
 
                                             If Not repObj2 Is Nothing Then
                                                 Try
-                                                    repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                                    newShapeRange2 = pptSlide.Shapes.Paste
+                                                    ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                    ''newShapeRange2 = pptSlide.Shapes.Paste
+                                                    newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
 
                                                     With newShapeRange2(1)
                                                         .Top = CSng(topNext)
@@ -1321,8 +1304,9 @@ Public Module testModule
 
                                 If Not repObj1 Is Nothing Then
                                     Try
-                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                        newShapeRange = pptSlide.Shapes.Paste
+                                        ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        ''newShapeRange = pptSlide.Shapes.Paste
+                                        newShapeRange = pictCopypptPaste(repObj1, pptSlide)
 
                                         With newShapeRange(1)
                                             .Top = CSng(top + 0.02 * height)
@@ -1336,8 +1320,9 @@ Public Module testModule
 
                                         If Not repObj2 Is Nothing Then
                                             Try
-                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                                newShapeRange2 = pptSlide.Shapes.Paste
+                                                ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                ''newShapeRang2 = pptSlide.Shapes.Paste
+                                                newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
 
                                                 With newShapeRange2(1)
                                                     .Top = CSng(topNext)
@@ -1427,8 +1412,9 @@ Public Module testModule
 
                                 If Not repObj1 Is Nothing Then
                                     Try
-                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                        newShapeRange = pptSlide.Shapes.Paste
+                                        ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        ''newShapeRange = pptSlide.Shapes.Paste
+                                        newShapeRange = pictCopypptPaste(repObj1, pptSlide)
 
                                         With newShapeRange(1)
                                             .Top = CSng(top + 0.02 * height)
@@ -1442,8 +1428,9 @@ Public Module testModule
 
                                         If Not repObj2 Is Nothing Then
                                             Try
-                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                                newShapeRange2 = pptSlide.Shapes.Paste
+                                                ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                ''newShapeRange2 = pptSlide.Shapes.Paste                                             
+                                                newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
 
                                                 With newShapeRange2(1)
                                                     .Top = CSng(topNext)
@@ -1520,7 +1507,7 @@ Public Module testModule
 
                             Case "Tabelle Veränderungen"
 
-                            
+
                                 Try
 
 
@@ -1734,10 +1721,22 @@ Public Module testModule
 
                                 Try
                                     auswahl = 2
-                                    Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Else
+                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        End If
+
+                                    Else
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                    End If
 
                                     reportObj = obj
                                     notYetDone = True
+
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(168)
@@ -2452,8 +2451,10 @@ Public Module testModule
                                         .Chart.ChartTitle.Font.Size = pptSize
                                     End With
 
-                                    reportObj.Copy()
-                                    newShapeRange = pptSlide.Shapes.Paste
+                                    ''reportObj.Copy()
+                                    ''newShapeRange = pptSlide.Shapes.Paste
+                                    newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
                                     newShape = newShapeRange.Item(1)
 
                                     With newShape
@@ -2706,6 +2707,7 @@ Public Module testModule
         Dim obj As xlNS.ChartObject = Nothing
         Dim kennzeichnung As String = ""
         Dim qualifier As String = ""
+        Dim qualifier2 As String = ""
         Dim anzShapes As Integer
         Dim tatsErstellt As Integer = 0
         Dim folieIX As Integer = 1
@@ -2778,12 +2780,12 @@ Public Module testModule
                     Try
 
                         If .Title <> "" Then
-                            kennzeichnung = .Title
+                            tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                            kennzeichnung = tmpStr(0).Trim
                         Else
                             tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
                         End If
-
 
                     Catch ex As Exception
                         kennzeichnung = "nicht identifizierbar"
@@ -2850,28 +2852,47 @@ Public Module testModule
                 Dim tmpanz As Integer = listofShapes.Count
                 pptShape = tmpShape
                 qualifier = ""
+                qualifier2 = ""
                 kennzeichnung = ""
                 With pptShape
                     .Name = "Shape" & .Id.ToString
                     Dim tmpStr(3) As String
                     Try
 
-                        If .Title <> "" Then
-                            kennzeichnung = .Title
-                            qualifier = .AlternativeText
-                            boxName = kennzeichnung
-                        Else
-                            tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
-                            kennzeichnung = tmpStr(0).Trim
 
-                            If tmpStr.Length > 1 Then
-                                Try
-                                    qualifier = tmpStr(1)
-                                Catch ex2 As Exception
-                                    qualifier = ""
-                                End Try
-                            End If
+                        If .Title <> "" Then
+
+                            Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
+                            boxName = kennzeichnung
+
+
+                        Else
+                            ' Start neu
+
+                            Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
+                            boxName = kennzeichnung
+
+
                         End If
+
+
+
+                        '' ''If .Title <> "" Then
+                        '' ''    kennzeichnung = .Title
+                        '' ''    qualifier = .AlternativeText
+                        '' ''    boxName = kennzeichnung
+                        '' ''Else
+                        '' ''    tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                        '' ''    kennzeichnung = tmpStr(0).Trim
+
+                        '' ''    If tmpStr.Length > 1 Then
+                        '' ''        Try
+                        '' ''            qualifier = tmpStr(1)
+                        '' ''        Catch ex2 As Exception
+                        '' ''            qualifier = ""
+                        '' ''        End Try
+                        '' ''    End If
+                        '' ''End If
 
                     Catch ex As Exception
                         kennzeichnung = "nicht identifizierbar"
@@ -3085,8 +3106,10 @@ Public Module testModule
                                     End If
 
 
-                                    rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                    newShapeRange = pptSlide.Shapes.Paste
+                                    ''rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                    ''newShapeRange = pptSlide.Shapes.Paste
+                                    newShapeRange = rngPictCopypptPaste(rng, pptSlide)
+
                                     newShape = newShapeRange.Item(1)
 
                                     If Not awinSettings.showTimeSpanInPT Then
@@ -3213,6 +3236,7 @@ Public Module testModule
 
                                             Call awinZeichnePhasen(phNameCollection, False, True)
                                             rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                           
 
                                             If Not awinSettings.showTimeSpanInPT Then
 
@@ -3241,7 +3265,9 @@ Public Module testModule
                                     End With
 
                                     If ok Then
-                                        newShapeRange = pptSlide.Shapes.Paste
+                                        'newShapeRange = pptSlide.Shapes.Paste
+                                        newShapeRange = pictPaste(pptSlide)
+
 
                                         Dim ratio As Double
                                         ratio = height / width
@@ -3404,8 +3430,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3446,8 +3473,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3488,8 +3516,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3542,8 +3571,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3598,8 +3628,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3643,8 +3674,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3694,8 +3726,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3807,8 +3840,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -3857,8 +3891,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3901,8 +3936,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3946,8 +3982,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3996,8 +4033,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4051,8 +4089,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4117,8 +4156,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4182,8 +4222,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4233,8 +4274,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4285,8 +4327,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4342,8 +4385,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -6511,8 +6555,10 @@ Public Module testModule
 
             rng = .Range(.Cells(newzeile, minColumn), .Cells(newzeile + 1, maxColumn))
             'rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-            rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-            newshapeRange = pptslide.Shapes.Paste
+            ''rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+            ''newshapeRange = pptslide.Shapes.Paste
+            newshapeRange = rngPictCopypptPaste(rng, pptslide)
+
             newShape = newshapeRange.Item(1)
 
             Call awinDeleteProjectChildShapes(0)
@@ -15117,14 +15163,32 @@ Public Module testModule
     Public Function xlnsCopypptPaste(ByVal srcShape As xlNS.Shape, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
 
         xlnsCopypptPaste = Nothing
-        Dim ok As Boolean = False
+        Dim ok1 As Boolean = False
         Dim i As Integer = 1
-        While Not ok And i < 1000
+        Dim ok2 As Boolean = False
+        Dim j As Integer = 1
+        While Not ok1 And i < 100
 
             Try
-                srcShape.Copy()
+                'srcShape.Copy()
+                While Not ok2 And j < 10
+                    Try
+                        srcShape.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("xlnsCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("xlnsCopy timeout")
+                    End If
+                End If
+
                 xlnsCopypptPaste = pptslide.Shapes.Paste()
-                ok = True
+                ok1 = True
             Catch ex As Exception
                 'Call MsgBox("xlnsCopypptPaste catch")
                 xlnsCopypptPaste = Nothing
@@ -15132,8 +15196,8 @@ Public Module testModule
             i = i + 1
 
         End While
-        If Not ok Then
-            Call MsgBox("xlnsCopypptPaste Timeout")
+        If Not ok1 Then
+            Call MsgBox("xlnsCopypptPaste Timeout oder i = " & i.ToString)
         Else
             'Call MsgBox("xlnsCopypptPaste erfolgreich")
         End If
@@ -15149,14 +15213,32 @@ Public Module testModule
     Public Function pptCopypptPaste(ByVal srcShape As pptNS.Shape, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
 
         pptCopypptPaste = Nothing
-        Dim ok As Boolean = False
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
         Dim i As Integer = 1
-        While Not ok And i < 1000
+        Dim j As Integer = 1
 
+        While Not ok1 And i < 100
             Try
-                srcShape.Copy()
+                'srcShape.Copy()
+                While Not ok2 And j < 10
+                    Try
+                        srcShape.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("pptCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("pptCopy timeout")
+                    End If
+                End If
+
                 pptCopypptPaste = pptslide.Shapes.Paste()
-                ok = True
+                ok1 = True
             Catch ex As Exception
                 'Call MsgBox("pptCopypptPaste catch")
                 pptCopypptPaste = Nothing
@@ -15164,12 +15246,231 @@ Public Module testModule
             i = i + 1
 
         End While
-        If Not ok Then
-            Call MsgBox("pptCopypptPaste Timeout")
+        If Not ok1 Then
+            Call MsgBox("pptCopypptPaste Timeout oder i=" & i.ToString)
         Else
             'Call MsgBox("pptCopypptPaste erfolgreich")
         End If
     End Function
+
+
+    ''' <summary>
+    ''' copiert ein Excel-Chartobj in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcChartobj"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function chartCopypptPaste(ByVal srcChartobj As xlNS.ChartObject, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        chartCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+                'srcChartobj.Copy()
+                While Not ok2 And j < 10
+                    Try
+                        srcChartobj.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("chartCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("chartCopy timeout")
+                    End If
+                End If
+
+                chartCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("chartCopypptPaste catch")
+                chartCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("chartCopypptPaste Timeout oder i = " & i.ToString)
+        Else
+            'Call MsgBox("chartCopypptPaste erfolgreich")
+        End If
+    End Function
+    ''' <summary>
+    ''' copiert ein Excel-ChartobjPicture in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcChartobj"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pictCopypptPaste(ByVal srcChartobj As xlNS.ChartObject, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        pictCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+
+                While Not ok2 And j < 10
+                    Try
+                        srcChartobj.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("pictCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("pictCopy timeout")
+                    End If
+                End If
+
+                pictCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("chartCopypptPaste catch")
+                pictCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("pictCopypptPaste Timeout oder i = " & i.ToString)
+        Else
+            'Call MsgBox("pictCopypptPaste erfolgreich")
+        End If
+    End Function
+    ''' <summary>
+    ''' copiert ein Excel-RangePicture in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcrng"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function rngPictCopypptPaste(ByVal srcrng As xlNS.Range, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        rngPictCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+
+                While Not ok2 And j < 10
+                    Try
+                        srcrng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("rngPictCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("rngPictCopy timeout")
+                    End If
+                End If
+
+                rngPictCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("chartCopypptPaste catch")
+                rngPictCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("rngPictCopypptPaste Timeout oder i = " & i.ToString)
+        Else
+            'Call MsgBox("pictCopypptPaste erfolgreich")
+        End If
+    End Function
+
+    ''' <summary>
+    ''' Pastet Clipboard in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pictPaste(ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+        pictPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim i As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+                pictPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("pictPaste catch")
+                pictPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("pictPaste Timeout oder i = " & i.ToString)
+        Else
+            'Call MsgBox("pictPaste erfolgreich")
+        End If
+
+    End Function
+    ''' <summary>
+    ''' title wir zerlegt in kennzeichung und qualifier
+    ''' </summary>
+    ''' <param name="title"></param>
+    ''' <param name="kennz"></param>
+    ''' <param name="qualifier"></param>
+    ''' <param name="quali2"></param>
+    ''' <remarks></remarks>
+    Public Sub title2kennzQualifier(ByVal title As String, ByRef kennz As String, ByRef qualifier As String, ByRef quali2 As String)
+        ' Start neu
+        Dim tmpStr(10) As String
+        Try
+
+            tmpStr = title.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
+            kennz = tmpStr(0).Trim
+
+        Catch ex As Exception
+            kennz = "nicht identifizierbar"
+            tmpStr(0) = " "
+        End Try
+
+        Try
+            If tmpStr.Length < 2 Then
+                qualifier = ""
+                quali2 = ""
+            ElseIf tmpStr.Length = 2 Then
+                qualifier = tmpStr(1).Trim
+            ElseIf tmpStr.Length >= 3 Then
+                qualifier = tmpStr(1).Trim
+                quali2 = tmpStr(2).Trim
+            End If
+
+        Catch ex As Exception
+            qualifier = ""
+            quali2 = ""
+        End Try
+        ' Ende neu 
+
+    End Sub
+
 
 
 
