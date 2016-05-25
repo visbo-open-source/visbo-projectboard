@@ -186,12 +186,15 @@ Public Class clsPhase
                 ' dieser Aufruf korrigiert notfalls die intern gehaltene
 
                 Try
-                    If Me.nameID <> Me.Parent.getPhase(1).nameID Then
-                        ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
-                        Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
+                    If Not IsNothing(Me.Parent.getPhase(1)) Then
+                        If Me.nameID <> Me.Parent.getPhase(1).nameID Then
+                            ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
+                            Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
+                        End If
                     End If
+                    
                 Catch ex As Exception
-
+                    Dim b As Integer = 0
                 End Try
 
 

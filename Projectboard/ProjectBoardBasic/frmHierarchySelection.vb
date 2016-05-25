@@ -162,7 +162,10 @@ Public Class frmHierarchySelection
         Dim element As String
 
 
+        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
+
+        Dim formerEoU As Boolean = enableOnUpdate
         enableOnUpdate = False
 
         statusLabel.Text = ""
@@ -367,8 +370,8 @@ Public Class frmHierarchySelection
                             tmpCollection, tmpCollection, Me.chkbxOneChart.Checked, lastfilter)
         End If
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formerEoU
 
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 
         'If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Or Me.menuOption = PTmenue.reportBHTC Then

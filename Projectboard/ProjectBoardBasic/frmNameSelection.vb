@@ -146,7 +146,11 @@ Public Class frmNameSelection
 
         Dim filterName As String = ""
         Dim lastFilter As String = "Last"
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
+
+        Dim formerEoU As Boolean = enableOnUpdate
         enableOnUpdate = False
 
         statusLabel.Text = ""
@@ -348,8 +352,8 @@ Public Class frmNameSelection
 
 
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formerEoU
 
 
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 

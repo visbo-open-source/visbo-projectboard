@@ -26,6 +26,7 @@ Public Class Tabelle1
 
                 .GridlineColor = RGB(220, 220, 220)
                 a = Application.ActiveWindow.Panes.Count
+
                 .FreezePanes = True
 
             End With
