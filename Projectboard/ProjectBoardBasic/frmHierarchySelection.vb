@@ -325,17 +325,22 @@ Public Class frmHierarchySelection
 
                                 repProfil.PPTTemplate = repVorlagenDropbox.Text
 
+                                'Call PPTstarten()
+
                                 BackgroundWorker3.RunWorkerAsync(repProfil)
 
                             Else
-                               
+
+                                'Call PPTstarten()
 
                                 BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
                             End If
 
                         Else
-                           
+
+                            'Call PPTstarten()
+
                             BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
                         End If
 
