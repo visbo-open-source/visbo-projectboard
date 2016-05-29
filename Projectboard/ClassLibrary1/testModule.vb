@@ -646,7 +646,6 @@ Public Module testModule
 
                             Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
-                      
 
                         Else
                             ' Start neu
@@ -654,7 +653,6 @@ Public Module testModule
                             Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
 
-                   
                         End If
 
 
@@ -1743,9 +1741,9 @@ Public Module testModule
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
 
-
                                     Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
                                     boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+
 
                                     reportObj = obj
                                     notYetDone = True
@@ -3552,6 +3550,8 @@ Public Module testModule
 
                             If boxName = kennzeichnung Then
                                 boxName = repMessages.getmsg(213)
+
+
                             End If
 
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -15230,7 +15230,8 @@ Public Module testModule
 
             Try
                 'srcShape.Copy()
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcShape.Copy()
                         ok2 = True
@@ -15257,6 +15258,7 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("xlnsCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("xlnsCopypptPaste timeout")
         Else
             'Call MsgBox("xlnsCopypptPaste erfolgreich")
         End If
@@ -15280,7 +15282,8 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
                 'srcShape.Copy()
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcShape.Copy()
                         ok2 = True
@@ -15307,6 +15310,8 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("pptCopypptPaste Timeout oder i=" & i.ToString)
+            Throw New ArgumentException("pptCopypptPaste timeout")
+
         Else
             'Call MsgBox("pptCopypptPaste erfolgreich")
         End If
@@ -15331,7 +15336,8 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
                 'srcChartobj.Copy()
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcChartobj.Copy()
                         ok2 = True
@@ -15358,6 +15364,8 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("chartCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("chartCopypptPaste timeout")
+
         Else
             'Call MsgBox("chartCopypptPaste erfolgreich")
         End If
@@ -15380,7 +15388,9 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
 
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
+
                     Try
                         srcChartobj.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
                         ok2 = True
@@ -15407,6 +15417,8 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("pictCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("pictCopypptPaste timeout")
+
         Else
             'Call MsgBox("pictCopypptPaste erfolgreich")
         End If
@@ -15429,7 +15441,8 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
 
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcrng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
                         ok2 = True
@@ -15456,6 +15469,7 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("rngPictCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("rngPictCopypptPaste timeout")
         Else
             'Call MsgBox("pictCopypptPaste erfolgreich")
         End If
@@ -15485,13 +15499,16 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("pictPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("pictPaste timeout")
         Else
             'Call MsgBox("pictPaste erfolgreich")
         End If
 
     End Function
     ''' <summary>
-    ''' title wir zerlegt in kennzeichung und qualifier
+
+    ''' title wird zerlegt in kennzeichung und qualifier
+
     ''' </summary>
     ''' <param name="title"></param>
     ''' <param name="kennz"></param>

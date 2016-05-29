@@ -5,6 +5,7 @@ Imports System.Math
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
+Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports System.Xml.Serialization
 
 
@@ -490,6 +491,8 @@ Public Module Module1
     ' so werden in Visual Basic die Worksheets der aktuell geladenen Excel Applikation zugänglich gemacht   
     'Public appInstance As _Application
     Public appInstance As Microsoft.Office.Interop.Excel.Application
+
+    Public pptApp As Microsoft.Office.Interop.PowerPoint.Application
 
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
@@ -3000,4 +3003,18 @@ Public Module Module1
 
     End Sub
 
+    Public Sub PPTstarten()
+        Try
+            ' prüft, ob bereits Powerpoint geöffnet ist 
+            pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
+        Catch ex As Exception
+            Try
+                pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
+            Catch ex1 As Exception
+                Throw New ArgumentException("Powerpoint konnte nicht gestartet werden ...", ex1.Message)
+                'Exit Sub
+            End Try
+
+        End Try
+    End Sub
 End Module
