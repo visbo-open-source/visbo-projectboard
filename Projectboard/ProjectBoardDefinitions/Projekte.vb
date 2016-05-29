@@ -12596,7 +12596,7 @@ Public Module Projekte
 
         If formMilestone.Visible Then
 
-            milestoneNameID = formMilestone.milestoneNameID
+            milestoneNameID = formMilestone.milestone.nameID
             Call updateMilestoneInformation(hproj, milestoneNameID)
 
         End If
@@ -15488,16 +15488,17 @@ Public Module Projekte
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
                     ' Änderung tk 2.11 Ergänzung um Deliverables 
-                    .Cells(rowOffset + zeile, columnOffset + 6).value = cBewertung.deliverables
+                    Dim tmpDeliverables As String = cResult.getAllDeliverables
+                    .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
 
                     '
                     ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
                     Try
-                        If Not IsNothing(cBewertung.description) Or Not IsNothing(cBewertung.deliverables) Then
-                            If cBewertung.description.Length > 0 Or cBewertung.deliverables.Length > 0 Then
+                        If Not IsNothing(cBewertung.description) Or Not IsNothing(tmpDeliverables) Then
+                            If cBewertung.description.Length > 0 Or tmpDeliverables.Length > 0 Then
                                 If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Or _
-                                    cBewertung.deliverables.Contains(vbLf) Or cBewertung.deliverables.Contains(vbCr) Then
+                                    tmpDeliverables.Contains(vbLf) Or tmpDeliverables.Contains(vbCr) Then
                                     CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
                                 End If
                             End If
@@ -16193,7 +16194,7 @@ Public Module Projekte
 
 
                                     .changeStartandDauer(startOffset, dauerIndays)
-                                    .Offset = 0
+                                    .offset = 0
                                 End With
 
                             End If
@@ -17106,17 +17107,17 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' errechnet den für Projekt-Varinte in der MongoDB verwendeten Schlüssel
-    ''' ist aus historischen Gründen etwas anders als der Schlüssel in AlleProjekte 
+    ''' berechnet die ID für die Datenbank, bestehend aus Projektname, Variant-Name und TimeStamp
     ''' </summary>
     ''' <param name="hproj"></param>
+    ''' <param name="datum"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function calcProjektKeyDB(ByVal hproj As clsProjekt) As String
+    Public Function calcProjektUidDB(ByVal hproj As clsProjekt, ByVal datum As Date) As String
 
-        Dim tmpName As String
+        Dim trennzeichen As String = "#"
+
         With hproj
-
 
             ' Konsistenzbedingungen gewährleisten
             If IsNothing(.name) Then
@@ -17127,18 +17128,17 @@ Public Module Projekte
                 .variantName = ""
             End If
 
-            If hproj.variantName <> "" And hproj.variantName.Trim.Length > 0 Then
-                tmpName = calcProjektKey(hproj)
-            Else
-                tmpName = .name
+            If IsNothing(datum) Then
+                datum = Date.Now
             End If
 
-            calcProjektKeyDB = tmpName
+            calcProjektUidDB = .name & trennzeichen & .variantName & trennzeichen & datum.ToString
 
         End With
 
 
     End Function
+
 
     Public Function calcProjektKeyDB(ByVal pName As String, ByVal vName As String) As String
 
@@ -17533,11 +17533,10 @@ Public Module Projekte
     ''' <summary>
     ''' aktualisiert die Meilenstein Information; 
     ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <param name="milestoneNameID"></param>
+    ''' <param name="hproj">das Projekt</param>
+    ''' <param name="milestoneNameID">ID des Meilensteins</param>
     ''' <remarks></remarks>
     Public Sub updateMilestoneInformation(ByVal hproj As clsProjekt, ByVal milestoneNameID As String)
-
 
         Dim cMilestone As clsMeilenstein = Nothing
         Dim bewertung As New clsBewertung
@@ -17602,7 +17601,7 @@ Public Module Projekte
 
                     milestoneName = cMilestone.originalName
                 Else
-                    milestoneName = elemNameOfElemID(milestoneNameID)
+                    milestoneName = cMilestone.name
                 End If
 
                 breadCrumb = hproj.hierarchy.getBreadCrumb(milestoneNameID).Replace("#", "-")
@@ -17685,7 +17684,7 @@ Public Module Projekte
                 farbe = System.Drawing.Color.FromArgb(CInt(hb.color))
 
                 explanation = hb.description
-                deliverables = hb.deliverables
+                deliverables = cMilestone.getAllDeliverables
 
 
             Else
@@ -17704,7 +17703,7 @@ Public Module Projekte
 
         With formMilestone
 
-            .milestoneNameID = milestoneNameID
+            .milestone = cMilestone
             .curProject = hproj
 
             .projectName.Text = hproj.getShapeText
@@ -17715,24 +17714,29 @@ Public Module Projekte
 
             '
             ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+
+            '' tk 29.5.16 das braucht man doch jetzt nicht mehr ..? 
+            ''Dim tmpstr() As String
+            ''If .rdbDeliverables.Checked Then
+            ''    tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            ''Else
+            ''    tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            ''End If
+
+            ''Dim newString As String = ""
+            ''If tmpstr.Length > 0 Then
+            ''    .bewertungsText.Lines = tmpstr
+            ''Else
             Dim tmpstr() As String
+
             If .rdbDeliverables.Checked Then
                 tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
             Else
                 tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
             End If
 
-            Dim newString As String = ""
-            If tmpstr.Length > 0 Then
-                .bewertungsText.Lines = tmpstr
-            Else
-                If .rdbDeliverables.Checked Then
-                    .bewertungsText.Text = deliverables
-                Else
-                    .bewertungsText.Text = explanation
-                End If
-
-            End If
+            .bewertungsText.Lines = tmpstr
+            ''End If
 
 
             If .Visible Then
@@ -19618,13 +19622,15 @@ Public Module Projekte
                                             b = New clsBewertung
                                             b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
                                                 "Gründe:  ... " & vbLf & "Massnahmen: ...."
-                                            b.color = awinSettings.AmpelRot
+                                            'b.color = awinSettings.AmpelRot
+                                            b.colorIndex = PTfarbe.red
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
                                             b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
                                                 "Gründe:  ... " & vbLf & "Massnahmen: ...."
-                                            b.color = awinSettings.AmpelRot
+                                            'b.color = awinSettings.AmpelRot
+                                            b.colorIndex = PTfarbe.red
                                         End If
 
 
@@ -19641,13 +19647,15 @@ Public Module Projekte
                                             b = New clsBewertung
                                             b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
                                                 "Risiken: ... " & vbLf & "Massnahmen: ..."
-                                            b.color = awinSettings.AmpelGelb
+                                            'b.color = awinSettings.AmpelGelb
+                                            b.colorIndex = PTfarbe.yellow
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
                                             b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
                                                 "Risiken: ... " & vbLf & "Massnahmen: ..."
-                                            b.color = awinSettings.AmpelGelb
+                                            'b.color = awinSettings.AmpelGelb
+                                            b.colorIndex = PTfarbe.yellow
                                         End If
 
 
@@ -19661,12 +19669,14 @@ Public Module Projekte
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
                                             b.description = "Forecast für Termin / Qualität aktuell grün"
-                                            b.color = awinSettings.AmpelGruen
+                                            'b.color = awinSettings.AmpelGruen
+                                            b.colorIndex = PTfarbe.green
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
                                             b.description = "Forecast für Termin / Qualität aktuell grün"
-                                            b.color = awinSettings.AmpelGruen
+                                            'b.color = awinSettings.AmpelGruen
+                                            b.colorIndex = PTfarbe.green
                                         End If
 
 
@@ -19702,11 +19712,13 @@ Public Module Projekte
 
                                             If .bewertungsCount = 0 Then
                                                 b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
-                                                b.color = awinSettings.AmpelRot
+                                                'b.color = awinSettings.AmpelRot
+                                                b.colorIndex = PTfarbe.red
                                                 .addBewertung(b)
                                             Else
                                                 b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
-                                                b.color = awinSettings.AmpelRot
+                                                'b.color = awinSettings.AmpelRot
+                                                b.colorIndex = PTfarbe.red
                                             End If
 
 
@@ -19715,12 +19727,14 @@ Public Module Projekte
 
                                             If .bewertungsCount = 0 Then
                                                 b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
-                                                b.color = awinSettings.AmpelGelb
+                                                'b.color = awinSettings.AmpelGelb
+                                                b.colorIndex = PTfarbe.yellow
                                                 .addBewertung(b)
                                             Else
                                                 b = .getBewertung(1)
                                                 b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
-                                                b.color = awinSettings.AmpelGelb
+                                                'b.color = awinSettings.AmpelGelb
+                                                b.colorIndex = PTfarbe.yellow
                                             End If
 
 
@@ -19729,12 +19743,14 @@ Public Module Projekte
 
                                             If .bewertungsCount = 0 Then
                                                 b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
-                                                b.color = awinSettings.AmpelGruen
+                                                'b.color = awinSettings.AmpelGruen
+                                                b.colorIndex = PTfarbe.green
                                                 .addBewertung(b)
                                             Else
                                                 b = .getBewertung(1)
                                                 b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
-                                                b.color = awinSettings.AmpelGruen
+                                                'b.color = awinSettings.AmpelGruen
+                                                b.colorIndex = PTfarbe.green
                                             End If
 
 

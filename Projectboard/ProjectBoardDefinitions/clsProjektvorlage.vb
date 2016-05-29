@@ -785,7 +785,7 @@
     End Property
 
 
-    Public Property farbe() As Object
+    Public Property farbe() As Integer
 
     Public Property Schrift() As Integer
 
@@ -837,7 +837,7 @@
 
             'parentID = Me.hierarchy.getParentIDOfID(oldPhase.nameID)
 
-            oldPhase.CopyTo(newphase)
+            oldPhase.copyTo(newphase)
             newproject.AddPhase(newphase)
             'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
         Next p

@@ -23,7 +23,7 @@
     Public status As String
     Public ampelStatus As Integer
     Public ampelErlaeuterung As String
-    Public farbe As Object
+    Public farbe As Integer
     Public Schrift As Integer
     Public Schriftfarbe As Object
     Public VorlagenName As String
@@ -61,7 +61,7 @@
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
 
-            Me.name = calcProjektKeyDB(projekt)
+            Me.name = calcProjektKey(projekt)
 
             Me.variantName = .variantName
             Me.Risiko = .Risiko
@@ -355,7 +355,7 @@
         Public startOffsetinDays As Integer
         Public dauerInDays As Integer
         Public name As String
-        Public farbe As Object
+        Public farbe As Integer
 
         Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultDB
 
@@ -366,14 +366,15 @@
         End Property
 
 
-        Sub copyFrom(ByVal phase As clsPhase, ByVal hfarbe As Object)
+        Sub copyFrom(ByVal phase As clsPhase, ByVal hfarbe As Integer)
+
             Dim r As Integer, k As Integer
 
             With phase
                 Me.earliestStart = .earliestStart
                 Me.latestStart = .latestStart
-                Me.minDauer = .minDauer
-                Me.maxDauer = .maxDauer
+                'Me.minDauer = .minDauer
+                'Me.maxDauer = .maxDauer
                 Me.relStart = .relStart
                 Me.relEnde = .relEnde
                 Me.startOffsetinDays = .startOffsetinDays
@@ -433,15 +434,15 @@
             With phase
                 .earliestStart = Me.earliestStart
                 .latestStart = Me.latestStart
-                .minDauer = Me.minDauer
-                .maxDauer = Me.maxDauer
+                '.minDauer = Me.minDauer
+                '.maxDauer = Me.maxDauer
 
                 ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
                 .ampelStatus = Me.ampelStatus
                 .ampelErlaeuterung = Me.ampelErlaeuterung
 
                 Try
-                    .setFarbe = CLng(Me.farbe)
+                    .farbe = Me.farbe
                 Catch ex As Exception
 
                 End Try
@@ -667,9 +668,9 @@
 
                     Try
                         If Not IsNothing(Me.alternativeColor) Then
-                            .setFarbe = Me.alternativeColor
+                            .farbe = CInt(Me.alternativeColor)
                         Else
-                            .setFarbe = awinSettings.AmpelNichtBewertet
+                            .farbe = CInt(awinSettings.AmpelNichtBewertet)
                         End If
                     Catch ex As Exception
 
@@ -701,7 +702,7 @@
 
         Friend Sub CopyFrom(ByVal newResult As clsMeilenstein)
             Dim i As Integer
-            Dim newb As New clsBewertungDB
+
 
             With newResult
 
@@ -712,6 +713,7 @@
 
                 Try
                     For i = 1 To .bewertungsCount
+                        Dim newb As New clsBewertungDB
                         newb.copyfrom(.getBewertung(i))
                         Me.addBewertung(newb)
                     Next
@@ -786,7 +788,6 @@
 
         Public color As Integer
         Public description As String
-        Public deliverables As String
         Public bewerterName As String
         Public datum As Date
 
@@ -795,7 +796,6 @@
             With newB
                 .colorIndex = Me.color
                 .description = Me.description
-                .deliverables = Me.deliverables
                 .datum = Me.datum
                 .bewerterName = Me.bewerterName
             End With
@@ -806,7 +806,6 @@
 
             Me.color = b.colorIndex
             Me.description = b.description
-            Me.deliverables = b.deliverables
             Me.bewerterName = b.bewerterName
             Me.datum = b.datum
 
@@ -817,7 +816,6 @@
             datum = Nothing
             color = 0
             description = ""
-            deliverables = ""
         End Sub
 
     End Class

@@ -1,10 +1,9 @@
 ﻿Public Class clsBewertung
-    ' Änderung tk 2.11.15
-    ' Property deliverables eingeführt 
+    
 
-    Private _color As Integer
+    Private _colorIndex As Integer
     Private _description As String = ""
-    Private _deliverables As String = ""
+
 
     Public Property bewerterName As String
     Public Property datum As Date
@@ -27,26 +26,6 @@
             End If
         End Set
     End Property
-    ''' <summary>
-    ''' liest/schreibt deliverables
-    ''' es muss abgefangen werden, dass in deliverables ein Nothing Wert stehen kann 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Property deliverables As String
-        Get
-            deliverables = _deliverables
-        End Get
-        Set(value As String)
-            If IsNothing(value) Then
-                _deliverables = ""
-            Else
-                _deliverables = value
-            End If
-        End Set
-    End Property
-    
 
 
     ''' <summary>
@@ -57,15 +36,15 @@
     ''' <remarks></remarks>
     Public Property colorIndex As Integer
         Get
-            colorIndex = _color
+            colorIndex = _colorIndex
         End Get
 
         Set(value As Integer)
 
             If value >= 0 And value <= 3 Then
-                _color = value
+                _colorIndex = value
             Else
-                _color = 0
+                _colorIndex = 0
             End If
 
         End Set
@@ -80,35 +59,21 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property color As Long
+    Public ReadOnly Property color As Long
         Get
-            If _color = 0 Then
+            If _colorIndex = 0 Then
                 color = awinSettings.AmpelNichtBewertet
-            ElseIf _color = 1 Then
+            ElseIf _colorIndex = 1 Then
                 color = awinSettings.AmpelGruen
-            ElseIf _color = 2 Then
+            ElseIf _colorIndex = 2 Then
                 color = awinSettings.AmpelGelb
-            ElseIf _color = 3 Then
+            ElseIf _colorIndex = 3 Then
                 color = awinSettings.AmpelRot
             Else
                 color = awinSettings.AmpelNichtBewertet
             End If
         End Get
-        Set(value As Long)
-
-            If value = 0 Or value = awinSettings.AmpelNichtBewertet Then
-                _color = 0
-            ElseIf value = 1 Or value = awinSettings.AmpelGruen Then
-                _color = 1
-            ElseIf value = 2 Or value = awinSettings.AmpelGelb Then
-                _color = 2
-            ElseIf value = 3 Or value = awinSettings.AmpelRot Then
-                _color = 3
-            Else
-                _color = 0
-            End If
-
-        End Set
+        
     End Property
 
 
@@ -117,8 +82,7 @@
 
         With newb
             .description = Me.description
-            .deliverables = Me.deliverables
-            .color = Me.color
+            .colorIndex = Me.colorIndex
             .bewerterName = Me.bewerterName
             .datum = Me.datum
         End With
@@ -129,8 +93,7 @@
 
         With newb
             Me.description = .description
-            Me.deliverables = .deliverables
-            Me.color = .color
+            Me.colorIndex = .colorIndex
             Me.bewerterName = .bewerterName
             Me.datum = .datum
         End With
@@ -141,9 +104,8 @@
     Public Sub New()
         bewerterName = ""
         datum = Nothing
-        color = awinSettings.AmpelNichtBewertet
+        _colorIndex = 0
         _description = ""
-        _deliverables = ""
     End Sub
 
 End Class

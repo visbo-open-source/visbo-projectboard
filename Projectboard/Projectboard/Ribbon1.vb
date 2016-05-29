@@ -2557,123 +2557,123 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
     End Sub
-    Public Sub Tom2G4M1ImportOLD(control As IRibbonControl)
+    ' ''Public Sub Tom2G4M1ImportOLD(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim hproj As New clsProjekt
-        Dim cproj As New clsProjekt
-        Dim vglName As String = " "
-        Dim outputString As String = ""
-        Dim dirName As String
-        Dim dateiName As String
-        Dim pname As String
-        Dim importDate As Date = Date.Now
-        'Dim importDate As Date = "31.10.2013"
-        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
-        Dim projektInventurFile As String = "ProjektInventur.xlsm"
+    ' ''    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+    ' ''    Dim hproj As New clsProjekt
+    ' ''    Dim cproj As New clsProjekt
+    ' ''    Dim vglName As String = " "
+    ' ''    Dim outputString As String = ""
+    ' ''    Dim dirName As String
+    ' ''    Dim dateiName As String
+    ' ''    Dim pname As String
+    ' ''    Dim importDate As Date = Date.Now
+    ' ''    'Dim importDate As Date = "31.10.2013"
+    ' ''    Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+    ' ''    Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
-        ' öffnen des LogFiles
-        Call logfileOpen()
+    ' ''    ' öffnen des LogFiles
+    ' ''    Call logfileOpen()
 
-        ' '' '' ProjektTafel wieder Aktiv setzen
-        '' ''appInstance.Workbooks(myProjektTafel).Activate()
-
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-        Dim myCollection As New Collection
+    ' ''    ' '' '' ProjektTafel wieder Aktiv setzen
+    ' ''    '' ''appInstance.Workbooks(myProjektTafel).Activate()
 
 
+    ' ''    Call projektTafelInit()
 
+    ' ''    appInstance.EnableEvents = False
+    ' ''    appInstance.ScreenUpdating = False
+    ' ''    enableOnUpdate = False
 
-        'dirName = awinPath & projektFilesOrdner
-        dirName = importOrdnerNames(PTImpExp.visbo)
-        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
-
-        ' alle Import Projekte erstmal löschen
-        ImportProjekte.Clear()
-
-
-        ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-        Dim i As Integer
-        For i = 1 To listOfVorlagen.Count
-            dateiName = listOfVorlagen.Item(i - 1)
-
-            If dateiName = projektInventurFile Then
-
-                ' nichts machen 
-
-            Else
-                Dim skip As Boolean = False
-
-
-                Try
-                    appInstance.Workbooks.Open(dateiName)
-                    Call logfileSchreiben("Beginn Import ", dateiName, -1)
-
-                Catch ex1 As Exception
-                    Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
-                    skip = True
-                End Try
-
-                If Not skip Then
-                    pname = ""
-                    hproj = New clsProjekt
-                    Try
-                        Call awinImportProjectmitHrchy_beforePT113(hproj, Nothing, False, importDate)
-
-                        Try
-                            Dim keyStr As String = calcProjektKey(hproj)
-                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                            myCollection.Add(calcProjektKey(hproj))
-                        Catch ex2 As Exception
-                            Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
-                        End Try
-
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-
-                    Catch ex1 As Exception
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                        Call logfileSchreiben(ex1.Message, "", anzFehler)
-                        Call MsgBox(ex1.Message)
-                        'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
-                    End Try
-
-
-
-                End If
-
-
-
-            End If
-
-
-        Next i
-
-
-
-        Try
-            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
+    ' ''    Dim myCollection As New Collection
 
 
 
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
+    ' ''    'dirName = awinPath & projektFilesOrdner
+    ' ''    dirName = importOrdnerNames(PTImpExp.visbo)
+    ' ''    listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
+
+    ' ''    ' alle Import Projekte erstmal löschen
+    ' ''    ImportProjekte.Clear()
 
 
-        ' Schließen des LogFiles
-        Call logfileSchliessen()
+    ' ''    ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+    ' ''    Dim i As Integer
+    ' ''    For i = 1 To listOfVorlagen.Count
+    ' ''        dateiName = listOfVorlagen.Item(i - 1)
 
-    End Sub
+    ' ''        If dateiName = projektInventurFile Then
+
+    ' ''            ' nichts machen 
+
+    ' ''        Else
+    ' ''            Dim skip As Boolean = False
+
+
+    ' ''            Try
+    ' ''                appInstance.Workbooks.Open(dateiName)
+    ' ''                Call logfileSchreiben("Beginn Import ", dateiName, -1)
+
+    ' ''            Catch ex1 As Exception
+    ' ''                Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
+    ' ''                skip = True
+    ' ''            End Try
+
+    ' ''            If Not skip Then
+    ' ''                pname = ""
+    ' ''                hproj = New clsProjekt
+    ' ''                Try
+    ' ''                    Call awinImportProjectmitHrchy_beforePT113(hproj, Nothing, False, importDate)
+
+    ' ''                    Try
+    ' ''                        Dim keyStr As String = calcProjektKey(hproj)
+    ' ''                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+    ' ''                        myCollection.Add(calcProjektKey(hproj))
+    ' ''                    Catch ex2 As Exception
+    ' ''                        Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+    ' ''                    End Try
+
+    ' ''                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+    ' ''                Catch ex1 As Exception
+    ' ''                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+    ' ''                    Call logfileSchreiben(ex1.Message, "", anzFehler)
+    ' ''                    Call MsgBox(ex1.Message)
+    ' ''                    'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
+    ' ''                End Try
+
+
+
+    ' ''            End If
+
+
+
+    ' ''        End If
+
+
+    ' ''    Next i
+
+
+
+    ' ''    Try
+    ' ''        Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+    ' ''    Catch ex As Exception
+    ' ''        Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+    ' ''    End Try
+
+
+
+
+    ' ''    enableOnUpdate = True
+    ' ''    appInstance.EnableEvents = True
+    ' ''    appInstance.ScreenUpdating = True
+
+
+    ' ''    ' Schließen des LogFiles
+    ' ''    Call logfileSchliessen()
+
+    ' ''End Sub
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
@@ -7779,7 +7779,9 @@ Imports System.Windows
     Sub PTTestFunktion1(control As IRibbonControl)
 
         Call MsgBox("Enable Events ist " & appInstance.EnableEvents.ToString)
+        Call MsgBox("Screen Updating " & appInstance.ScreenUpdating.ToString)
         appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
 
     End Sub
@@ -7789,7 +7791,7 @@ Imports System.Windows
         Dim hproj As clsProjekt
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
-        Dim tstCollection As SortedList(Of Date, String)
+        ''Dim tstCollection As SortedList(Of Date, String)
         Dim anzElements As Integer
 
         Dim awinSelection As Excel.ShapeRange
@@ -7815,7 +7817,7 @@ Imports System.Windows
 
         If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count > 1 Then
+            If awinSelection.Count >= 1 Then
                 anzElements = awinSelection.Count
 
                 For i = 1 To anzElements
@@ -7823,41 +7825,59 @@ Imports System.Windows
                     singleShp = awinSelection.Item(i)
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
 
-                    If i = 1 Then
-                        schluessel = calcProjektKey(hproj)
+                    Dim openXMLproj As New clsOpenXML
+                    Call openXMLproj.copyFrom(hproj)
+
+                    Dim vglProj As New clsProjekt
+                    Call openXMLproj.copyTo(vglProj)
+
+                    vglProj.variantName = "OpenXML"
+                    AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+
+                    Dim unterschiede As New Collection
+                    ' jetzt wird festgestellt, ob es Unterschiede gibt 
+                    ' 
+                    unterschiede = hproj.listOfDifferences(vglProj, True, 0)
+                    If unterschiede.Count > 0 Then
+                        Call MsgBox("What is the difference")
                     End If
 
-                    If request.pingMongoDb() Then
-                        ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                                                                           storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                        projekthistorie.clear()
-                    End If
 
-                    If projekthistorie.Count > 0 Then
-                        ' Aufbau der Listen 
-                        projektHistorien.Add(projekthistorie)
+                    'If i = 1 Then
+                    '    schluessel = calcProjektKey(hproj)
+                    'End If
+
+                    ''If request.pingMongoDb() Then
+                    ''    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                    ''    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                    ''                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                    ''Else
+                    ''    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+                    ''    projekthistorie.clear()
+                    ''End If
+
+                    ''If projekthistorie.Count > 0 Then
+                    ''    ' Aufbau der Listen 
+                    ''    projektHistorien.Add(projekthistorie)
 
 
-                    End If
+                    ''End If
 
                 Next
             End If
         End If
 
-        Dim ts As Date
 
 
-        tstCollection = projektHistorien.getTimeStamps(schluessel)
-        anzElements = tstCollection.Count
 
-        For i = 1 To anzElements
-            ts = tstCollection.ElementAt(0).Key
-            projektHistorien.Remove(schluessel, ts)
-            todoListe.Add(schluessel, ts)
-        Next
+        ''tstCollection = projektHistorien.getTimeStamps(schluessel)
+        ''anzElements = tstCollection.Count
+
+        ''For i = 1 To anzElements
+        ''    ts = tstCollection.ElementAt(0).Key
+        ''    projektHistorien.Remove(schluessel, ts)
+        ''    todoListe.Add(schluessel, ts)
+        ''Next
 
 
         enableOnUpdate = True

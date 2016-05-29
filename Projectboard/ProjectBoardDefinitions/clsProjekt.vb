@@ -1799,7 +1799,7 @@ Public Class clsProjekt
                 ' wenn gefunden dann alle Results kopieren 
                 For r = 1 To cphase.countMilestones
                     newresult = New clsMeilenstein(parent:=newphase)
-                    cphase.getMilestone(r).CopyTo(newresult)
+                    cphase.getMilestone(r).copyTo(newresult)
 
                     Try
                         newphase.addMilestone(newresult)
@@ -1834,7 +1834,7 @@ Public Class clsProjekt
 
             'parentID = Me.hierarchy.getParentIDOfID(hphase.nameID)
 
-            hphase.CopyTo(newphase)
+            hphase.copyTo(newphase)
             newproject.AddPhase(newphase)
             'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
         Next

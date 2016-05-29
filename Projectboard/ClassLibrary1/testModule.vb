@@ -7779,7 +7779,7 @@ Public Module testModule
 
                         CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
                         CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
-                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.deliverables
+                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getAllDeliverables
                         If anzSpalten >= 5 Then
                             CType(.Cell(tabellenzeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.description
                         End If

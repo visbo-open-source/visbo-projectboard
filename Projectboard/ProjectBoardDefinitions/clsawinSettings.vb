@@ -117,6 +117,10 @@ Public Class clsawinSettings
     Public Property costToleranzRel As Double
     Public Property costToleranzAbs As Double
 
+    ' Settings für Default Meilenstein bzw Phasen Settings 
+    Public Property defaultMilestoneClass As String
+    Public Property defaultPhaseClass As String
+
     ' Settings für Multiprojekt-Sichten
     Public Property mppShowAllIfOne As Boolean
     Public Property mppShowMsDate As Boolean
@@ -232,6 +236,10 @@ Public Class clsawinSettings
         _timeToleranzAbs = 3
         _costToleranzRel = 0.02
         _costToleranzAbs = 2
+
+        ' Settings fürp Default Meilenstein bzw. Phasen-Klassen Namen
+        _defaultMilestoneClass = ""
+        _defaultPhaseClass = ""
 
         ' Settings für Einzel- und Multiprojekt Sichten 
         _mppShowAllIfOne = False
