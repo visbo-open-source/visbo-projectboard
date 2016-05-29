@@ -53,7 +53,7 @@ Public Module testModule
             ' Der Report dieses Projektes soll dann zuerst erstellt werden, denn somit wird das Format der PowerPointPräsentation danach ausgewählt.
 
             Dim maxProj As clsProjekt = Nothing
-            Dim maxZeilen As Integer = 1
+            Dim maxZeilen As Integer = 0
 
             For Each singleShp In awinSelection
 
@@ -646,7 +646,6 @@ Public Module testModule
 
                             Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
-                      
 
                         Else
                             ' Start neu
@@ -654,7 +653,6 @@ Public Module testModule
                             Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
 
-                   
                         End If
 
 
@@ -1635,6 +1633,11 @@ Public Module testModule
                                         Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
 
+
+                                    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & _
+                                        " " & awinSettings.kapaEinheit & ")"
+
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
@@ -1666,6 +1669,9 @@ Public Module testModule
                                     End If
 
 
+                                    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+
                                     reportObj = obj
                                     notYetDone = True
 
@@ -1695,7 +1701,8 @@ Public Module testModule
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
 
-
+                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
 
                                     reportObj = obj
                                     notYetDone = True
@@ -1733,6 +1740,10 @@ Public Module testModule
                                     Else
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
+
+                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+
 
                                     reportObj = obj
                                     notYetDone = True
@@ -2396,7 +2407,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(225)
                                 End If
-                                .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                                .TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
 
                             Case "Business-Unit:"
 
@@ -2410,7 +2421,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(227)
                                 End If
-                                .TextFrame2.TextRange.Text = hproj.description
+                                .TextFrame2.TextRange.Text = boxName & ": " & hproj.description
 
                             Case "Stand:"
 
@@ -3539,6 +3550,8 @@ Public Module testModule
 
                             If boxName = kennzeichnung Then
                                 boxName = repMessages.getmsg(213)
+
+
                             End If
 
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -5052,7 +5065,7 @@ Public Module testModule
                             diagramTitle = diagramTitle & " " & repMessages.getmsg(166)
                             kennzeichnung = "Gesamtkosten"
                         Case 4
-                            If RoleDefinitions.Contains(qualifier) Then
+                            If RoleDefinitions.containsName(qualifier) Then
                                 werteH = hproj.getRessourcenBedarf(qualifier)
                                 werteV = vglProj.getRessourcenBedarf(qualifier)
                                 diagramTitle = diagramTitle & " " & qualifier
@@ -5314,8 +5327,29 @@ Public Module testModule
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Characters.Font.Size = awinSettings.fontsizeTitle
-                    .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
+                                  Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+
                 End With
 
 
@@ -5519,7 +5553,7 @@ Public Module testModule
                     formerValues = vglProj.getGesamtKostenBedarf
 
                 Case 4
-                    If RoleDefinitions.Contains(qualifier) Then
+                    If RoleDefinitions.containsName(qualifier) Then
                         currentValues = hproj.getRessourcenBedarf(qualifier)
                         formerValues = vglProj.getRessourcenBedarf(qualifier)
                     End If
@@ -8877,8 +8911,29 @@ Public Module testModule
 
                 ' Events disablen, wegen Report erstellen
                 appInstance.EnableEvents = False
-                .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
+
+                Dim achieved As Boolean = False
+                Dim anzahlVersuche As Integer = 0
+                Dim errmsg As String = ""
+                Do While Not achieved And anzahlVersuche < 10
+                    Try
+                        Call Sleep(100)
+                        .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
                           Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                        achieved = True
+                    Catch ex As Exception
+                        errmsg = ex.Message
+                        Call Sleep(100)
+                        anzahlVersuche = anzahlVersuche + 1
+                    End Try
+                Loop
+
+                If Not achieved Then
+                    Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                End If
+
+
+                
                 appInstance.EnableEvents = formerEE
                 ' Events sind wieder zurückgesetzt
             End With
@@ -12049,11 +12104,12 @@ Public Module testModule
 
 
         '
-        ' wenn Texte gezeichnet wurden, müssen jetzt die Phasen, dann die Meilensteine in den Vordergrund geholt werden 
+        ' wenn  Texte gezeichnet wurden, müssen jetzt die Phasen in den Vordergrund geholt werden, danach auf alle Fälle auch die Meilensteine 
+        Dim anzElements As Integer
         If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or _
             awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
             ' Phasen vorholen 
-            Dim anzElements As Integer
+
             anzElements = phShapeNames.Count
 
             If anzElements > 0 Then
@@ -12071,24 +12127,27 @@ Public Module testModule
 
             End If
 
-            anzElements = msShapeNames.Count
-
-            If anzElements > 0 Then
-
-                ReDim arrayOfNames(anzElements - 1)
-                For ix = 1 To anzElements
-                    arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
-                Next
-
-                Try
-                    CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
-                Catch ex As Exception
-
-                End Try
-
-            End If
 
         End If
+
+        ' jetzt die Meilensteine in Vordergrund holen ...
+        anzElements = msShapeNames.Count
+
+        If anzElements > 0 Then
+
+            ReDim arrayOfNames(anzElements - 1)
+            For ix = 1 To anzElements
+                arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
+            Next
+
+            Try
+                CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
 
         If currentProjektIndex < projectCollection.Count And awinSettings.mppOnePage Then
             'Throw New ArgumentException("es konnten nur " & _
@@ -13823,7 +13882,7 @@ Public Module testModule
                             End If
 
                         Case PTpfdk.Rollen
-                            If RoleDefinitions.Contains(tmpName) Then
+                            If RoleDefinitions.containsName(tmpName) Then
                                 tmpCollection.Add(tmpName, tmpName)
                             End If
 
@@ -14092,7 +14151,7 @@ Public Module testModule
                     neededSpace = maxZeilen * zeilenhoehe
                 End If
             Else
-                neededSpace = (projCollection.Count + 1) * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
+                neededSpace = projCollection.Count * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
             End If
 
 
@@ -15171,7 +15230,8 @@ Public Module testModule
 
             Try
                 'srcShape.Copy()
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcShape.Copy()
                         ok2 = True
@@ -15198,6 +15258,7 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("xlnsCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("xlnsCopypptPaste timeout")
         Else
             'Call MsgBox("xlnsCopypptPaste erfolgreich")
         End If
@@ -15221,7 +15282,8 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
                 'srcShape.Copy()
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcShape.Copy()
                         ok2 = True
@@ -15248,6 +15310,8 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("pptCopypptPaste Timeout oder i=" & i.ToString)
+            Throw New ArgumentException("pptCopypptPaste timeout")
+
         Else
             'Call MsgBox("pptCopypptPaste erfolgreich")
         End If
@@ -15272,7 +15336,8 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
                 'srcChartobj.Copy()
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcChartobj.Copy()
                         ok2 = True
@@ -15299,6 +15364,8 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("chartCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("chartCopypptPaste timeout")
+
         Else
             'Call MsgBox("chartCopypptPaste erfolgreich")
         End If
@@ -15321,7 +15388,9 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
 
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
+
                     Try
                         srcChartobj.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
                         ok2 = True
@@ -15348,6 +15417,8 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("pictCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("pictCopypptPaste timeout")
+
         Else
             'Call MsgBox("pictCopypptPaste erfolgreich")
         End If
@@ -15370,7 +15441,8 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
 
-                While Not ok2 And j < 10
+
+                While Not ok2 And j < 100
                     Try
                         srcrng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
                         ok2 = True
@@ -15397,6 +15469,7 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("rngPictCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("rngPictCopypptPaste timeout")
         Else
             'Call MsgBox("pictCopypptPaste erfolgreich")
         End If
@@ -15426,13 +15499,16 @@ Public Module testModule
         End While
         If Not ok1 Then
             Call MsgBox("pictPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("pictPaste timeout")
         Else
             'Call MsgBox("pictPaste erfolgreich")
         End If
 
     End Function
     ''' <summary>
-    ''' title wir zerlegt in kennzeichung und qualifier
+
+    ''' title wird zerlegt in kennzeichung und qualifier
+
     ''' </summary>
     ''' <param name="title"></param>
     ''' <param name="kennz"></param>

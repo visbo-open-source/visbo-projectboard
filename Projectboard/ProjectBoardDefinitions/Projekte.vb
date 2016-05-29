@@ -239,7 +239,27 @@ Public Module Projekte
                         '.Font.Size = MsoAutoSize.msoAutoSizeTextToFitShape
                     End With
 
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -508,7 +528,25 @@ Public Module Projekte
                         '.Font.Size = MsoAutoSize.msoAutoSizeTextToFitShape
                     End With
 
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -739,7 +777,27 @@ Public Module Projekte
                         .Font.Size = 10
                     End With
 
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+
                 End With
 
                 With CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
@@ -1084,7 +1142,30 @@ Public Module Projekte
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                     .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                                                                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+
+
+
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -2426,7 +2507,26 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
 
                 End With
 
@@ -3096,7 +3196,26 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
 
                 End With
 
@@ -3357,7 +3476,26 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
 
                 End With
 
@@ -3747,29 +3885,6 @@ Public Module Projekte
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
-        If auswahl = 1 Then
-            'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalbedarf"
-        ElseIf auswahl = 2 Then
-            'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(160) & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalkosten"
-        Else
-            diagramTitle = "--- (T€)" & vbLf & pname
-            'kennung = "Gesamtkosten"
-        End If
-
-
 
         '
         ' hole die Projektdauer
@@ -3856,7 +3971,7 @@ Public Module Projekte
                     With .Axes(Excel.XlAxisType.xlValue)
                         .HasTitle = False
                         '.MaximumScale = maxscale
-                        '.MinimumScale = 0
+                        .MinimumScale = 0
 
                         'With .AxisTitle
                         '    .Characters.text = "Kosten"
@@ -3872,7 +3987,25 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
 
                 End With
 
@@ -3915,6 +4048,34 @@ Public Module Projekte
 
 
             End With
+
+
+            ' tk: an diese Stelle bewegt, damit die Gesamt Summe im Titel ausgegeben werden kann
+            If auswahl = 1 Then
+                'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+                ' tk 17.5. titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalbedarf"
+            ElseIf auswahl = 2 Then
+                'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalkosten"
+            Else
+                diagramTitle = "--- (T€)" & vbLf & pname
+                'kennung = "Gesamtkosten"
+            End If
+
+            chtobj.Chart.ChartTitle.Text = diagramTitle
+
 
             ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
             With chtobj
@@ -3985,7 +4146,7 @@ Public Module Projekte
         Dim pstart As Integer
         Dim ErgebnisListeR As New Collection
         Dim roleName As String
-        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
         Dim tmpCollection As New Collection
@@ -3997,28 +4158,6 @@ Public Module Projekte
 
         tmpCollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
-
-        If auswahl = 1 Then
-            'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & " " & zE & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalbedarf"
-        ElseIf auswahl = 2 Then
-            'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(160) & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalkosten"
-        Else
-            diagramTitle = "--- (T€)" & vbLf & pname
-            'kennung = "Gesamtkosten"
-        End If
-
 
 
         '
@@ -4117,6 +4256,35 @@ Public Module Projekte
 
             End If
 
+            Dim gesamt_Summe As Double = sumdatenreihe.Sum
+
+            ' tk: an diese Stelle bewegt, damit die Gesamt Summe im Titel ausgegeben werden kann
+            If auswahl = 1 Then
+                'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+                ' tk 17.5. titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalbedarf"
+            ElseIf auswahl = 2 Then
+                'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Personalkosten"
+            Else
+                diagramTitle = "--- (T€)" & vbLf & pname
+                'kennung = "Gesamtkosten"
+            End If
+
+            chtobj.Chart.ChartTitle.Text = diagramTitle
+
+
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
@@ -4139,21 +4307,21 @@ Public Module Projekte
 
 
     End Sub
-    '
-    ' Prozedur zeigt die Kosten Struktur des Projektes an (Balken-Diagramm)
-    '
-    ' Auswahl = 1 : Diagramm zeigt nur sonstige Kosten 
-    ' Auswahl = 2 : Diagramm zeigt alle Kosten, inkl Personalkosten 
-    ' kennziffer = 0 : Phasen Diagramm
-    '            = 1 : Personal-Bedarfe (Balken)
-    '            = 2 : Personal-Bedarfe (PIE)
-    '            = 3 : Kosten (Balken)
-    '            = 4 : Kosten (Pie)
-    '            = 5 : Strategie / Risiko 
-    '            = 6 : Ergebnis
 
+    ''' <summary>
+    ''' auswahl = 1: sonstige Kosten werden gezeigt 
+    ''' auswahl = 2: Gesamtkosten werden gezeigt 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="repObj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="height"></param>
+    ''' <param name="width"></param>
+    ''' <remarks></remarks>
     Public Sub createCostBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                        ByVal top As Double, left As Double, height As Double, width As Double)
+                                            ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim kennung As String
         Dim diagramTitle As String
@@ -4303,7 +4471,7 @@ Public Module Projekte
                     With .Axes(Excel.XlAxisType.xlValue)
                         .HasTitle = False
                         '.MaximumScale = maxscale
-                        '.MinimumScale = 0
+                        .MinimumScale = 0
 
                         'With .AxisTitle
                         '    .Characters.text = "Kosten"
@@ -4323,7 +4491,26 @@ Public Module Projekte
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
 
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -4804,11 +4991,23 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
+        ' es müssen jetzt alle Rollen in eine Collection geholt werden, die keine SammelRolle sind ... 
+        Dim basicRolesCollection As New Collection
+
+        For r = 1 To RoleDefinitions.Count
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(r)
+            If Not tmpRole.isCombinedRole Then
+                basicRolesCollection.Add(tmpRole.name, tmpRole.name)
+            End If
+        Next
+
 
         '
         ' hole die Anzahl Rollen
         '
-        anzRollen = RoleDefinitions.Count
+        'anzRollen = RoleDefinitions.Count
+        anzRollen = basicRolesCollection.Count
+
 
         If anzRollen = 0 Then
             'Call MsgBox("keine Rollen-Bedarfe definiert")
@@ -4823,7 +5022,8 @@ Public Module Projekte
 
 
         For r = 1 To anzRollen
-            roleName = RoleDefinitions.getRoledef(r).name
+            'roleName = RoleDefinitions.getRoledef(r).name
+            roleName = CStr(basicRolesCollection.Item(r))
             tdatenreihe(r - 1) = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
             Xdatenreihe(r - 1) = roleName
         Next r
@@ -4901,7 +5101,8 @@ Public Module Projekte
 
                     For r = 1 To anzRollen
 
-                        roleName = RoleDefinitions.getRoledef(r).name
+                        'roleName = RoleDefinitions.getRoledef(r).name
+                        roleName = CStr(basicRolesCollection.Item(r))
                         With .SeriesCollection(1).Points(r)
                             .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
                             .DataLabel.Font.Size = awinSettings.fontsizeItems
@@ -4921,7 +5122,28 @@ Public Module Projekte
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                     .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
                 End With
 
 
@@ -4995,21 +5217,20 @@ Public Module Projekte
 
 
 
-    '
-    ' Prozedur zeigt die Kosten Struktur des Projektes an (Balken-Diagramm)
-    '
-    ' Auswahl = 1 : Diagramm zeigt nur sonstige Kosten 
-    ' Auswahl = 2 : Diagramm zeigt alle Kosten, inkl Personalkosten 
-    ' kennziffer = 0 : Phasen Diagramm
-    '            = 1 : Personal-Bedarfe (Balken)
-    '            = 2 : Personal-Bedarfe (PIE)
-    '            = 3 : Kosten (Balken)
-    '            = 4 : Kosten (Pie)
-    '            = 5 : Strategie / Risiko 
-    '            = 6 : Ergebnis
-
+    ''' <summary>
+    ''' auswahl = 1: Ressourcenbedarf in PT
+    ''' auswahl = 2: PErsonalkosten
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="repObj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="height"></param>
+    ''' <param name="width"></param>
+    ''' <remarks></remarks>
     Public Sub createRessPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                        ByVal top As Double, left As Double, height As Double, width As Double)
+                                            ByVal top As Double, left As Double, height As Double, width As Double)
 
         'Dim kennziffer As Integer = 4
         Dim diagramTitle As String
@@ -5158,7 +5379,27 @@ Public Module Projekte
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                     .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
                 End With
 
                 With .ChartObjects(anzDiagrams + 1)
@@ -5533,7 +5774,28 @@ Public Module Projekte
                         .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                         .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                                 titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
-                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                        Dim achieved As Boolean = False
+                        Dim anzahlVersuche As Integer = 0
+                        Dim errmsg As String = ""
+                        Do While Not achieved And anzahlVersuche < 10
+                            Try
+                                Call Sleep(100)
+                                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                achieved = True
+                            Catch ex As Exception
+                                errmsg = ex.Message
+                                Call Sleep(100)
+                                anzahlVersuche = anzahlVersuche + 1
+                            End Try
+                        Loop
+
+                        If Not achieved Then
+                            Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                        End If
+
+
+                        '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
                     End With
 
                     With .ChartObjects(anzDiagrams + 1)
@@ -5899,7 +6161,28 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle + 8
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -6187,7 +6470,27 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle + 8
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -6486,7 +6789,26 @@ Public Module Projekte
                     diagramTitle = diagramTitle & " " & Format(hsum(0), "##,##0") & " T€" & vbLf & pname
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.font.size = 10
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -6684,7 +7006,27 @@ Public Module Projekte
 
                 Dim valueCrossesNull As Boolean = False
 
-                With appInstance.Charts.Add
+
+                Dim newChart As Microsoft.Office.Interop.Excel.Chart = Nothing
+
+                Dim achieved As Boolean = False
+                Dim anzahlVersuche As Integer = 0
+
+                Do While Not achieved And anzahlVersuche < 10
+                    Try
+                        newChart = CType(appInstance.Charts.Add, Microsoft.Office.Interop.Excel.Chart)
+                        achieved = True
+                    Catch ex As Exception
+                        Call Sleep(100)
+                        anzahlVersuche = anzahlVersuche + 1
+                    End Try
+                Loop
+                
+                If Not achieved Then
+                    Throw New ArgumentException("Chart konnte nicht erzeugt werden ...")
+                End If
+
+                With newChart
                     ' remove extra series
                     Do Until .SeriesCollection.Count = 0
                         .SeriesCollection(1).Delete()
@@ -6825,7 +7167,26 @@ Public Module Projekte
                     .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    achieved = False
+                    anzahlVersuche = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException(errmsg)
+                    End If
+
+
                 End With
 
 
@@ -7302,7 +7663,7 @@ Public Module Projekte
     Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
                                        ByVal startdate As Date, ByVal endedate As Date, _
                                        ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
-                                       ByVal capacityNeeded As String, ByVal businessUnit As String, ByVal description As String, _
+                                       ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
                                        Optional ByVal listOfCustomFields As Collection = Nothing)
 
         Dim newprojekt As Boolean
@@ -7311,6 +7672,8 @@ Public Module Projekte
         Dim spalte As Integer = getColumnOfDate(startdate)
         Dim heute As Date = Now
         Dim key As String = pname & "#"
+
+        Const extCost As String = "Kosten Externe"
 
         newprojekt = True
 
@@ -7357,15 +7720,18 @@ Public Module Projekte
         '
         ' wenn benötigte Kapas angegeben sind, dann müssen die jetzt der phase(1) zugewiesen werden 
         '
+
+        Dim rk As Integer = 0
+        Dim Xwerte() As Double
+        Dim oldXwerte() As Double
+
+        Dim cphase As clsPhase = hproj.getPhase(1)
+
         If Not IsNothing(capacityNeeded) Then
             If capacityNeeded.Trim.Length > 0 Then
 
                 Dim completeStr() As String = capacityNeeded.Split(New Char() {CType("#", Char)}, 100)
-                Dim rk As Integer = 0
-                Dim Xwerte() As Double
-                Dim oldXwerte() As Double
-
-                Dim cphase As clsPhase = hproj.getPhase(1)
+                
 
                 ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
                 For i As Integer = 1 To completeStr.Length
@@ -7376,7 +7742,7 @@ Public Module Projekte
 
                     If roleCostStr.Length > 1 Then
                         Try
-                            If RoleDefinitions.Contains(roleCostStr(0)) Then
+                            If RoleDefinitions.containsName(roleCostStr(0)) Then
                                 isRole = True
                                 rk = CInt(RoleDefinitions.getRoledef(roleCostStr(0)).UID)
 
@@ -7439,6 +7805,51 @@ Public Module Projekte
             End If
         End If
 
+        If Not IsNothing(externCostInput) And CostDefinitions.Contains(extCost) Then
+            ' es soll ausgerechnet werden, was denn an externen Kosten anfällt 
+            ' getriggert durch Mahle ...
+            'Dim summeExtCost As Double = Math.Truncate(hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)
+            Dim summeExtCost As Double = Math.Truncate(100 * (hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)) / 100
+
+            ' wenn jetzt noch ein Restbetrag übrig ist .... 
+            If summeExtCost > 0 Then
+                rk = CInt(CostDefinitions.getCostdef(extCost).UID)
+
+
+                Try
+                    ReDim oldXwerte(0)
+                    oldXwerte(0) = summeExtCost
+
+                    Dim anfang As Integer, ende As Integer
+
+                    With cphase
+
+                        anfang = .relStart
+                        ende = .relEnde
+                        ReDim Xwerte(ende - anfang)
+
+                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+
+                    End With
+
+                    Dim ccost As New clsKostenart(ende - anfang + 1)
+                    With ccost
+                        .KostenTyp = rk
+                        .Xwerte = Xwerte
+                    End With
+
+                    With cphase
+                        .AddCost(ccost)
+                    End With
+
+
+                Catch ex As Exception
+
+                End Try
+
+            End If
+        End If
+
         ' jetzt ggf die Custom Fields eintragen 
         If Not IsNothing(listOfCustomFields) Then
 
@@ -7464,13 +7875,13 @@ Public Module Projekte
                     Catch ex As Exception
 
                     End Try
-                    
+
                 Next
 
             End If
 
         End If
-        
+
 
 
         '
@@ -8810,7 +9221,27 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.font.size = 10
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -9102,7 +9533,28 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.font.size = awinSettings.fontsizeTitle
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -9187,7 +9639,26 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.text = diagramTitle
                     .ChartTitle.font.size = 10
-                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
                 End With
                 With .ChartObjects(anzDiagrams + 2)
                     .top = top
@@ -12146,9 +12617,19 @@ Public Module Projekte
                 End If
                 pNameShape.Top = projectTop - diff
 
-                If pNameShape.Width > projectWidth Then
+                Try
+                    If pNameShape.Width > projectWidth Then
+                        Dim newName As String = pNameShape.TextFrame2.TextRange.Text
+                        Dim anzZeichen As Integer = newName.Length
+                        Do Until pNameShape.Width < projectWidth And anzZeichen > 3
+                            pNameShape.TextFrame2.TextRange.Text = newName.Substring(0, anzZeichen - 2)
+                            anzZeichen = anzZeichen - 1
+                        Loop
+                    End If
+                Catch ex As Exception
                     pNameShape.TextFrame2.TextRange.Text = ""
-                End If
+                End Try
+                
 
                 ' jetzt wird das Shape aufgenommen 
                 listOFShapes.Add(pNameShape.Name)
@@ -16219,7 +16700,7 @@ Public Module Projekte
                             '
                             ' handelt es sich um die Ressourcen Definition?
                             '
-                            If RoleDefinitions.Contains(hname) Then
+                            If RoleDefinitions.containsName(hname) Then
                                 Try
                                     r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -16391,7 +16872,7 @@ Public Module Projekte
                             '
                             ' handelt es sich um die Ressourcen Definition?
                             '
-                            If RoleDefinitions.Contains(hname) Then
+                            If RoleDefinitions.containsName(hname) Then
 
                                 roleNr = roleNr + 1
 

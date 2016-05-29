@@ -1265,16 +1265,28 @@ Public Class clsProjekt
 
 
 
+    ''' <summary>
+    ''' stellt sicher, dass die Phase1 immer das gesamte Projekt umfasst 
+    ''' und dass die Projektlaenge richtig kalkuliert ist 
+    ''' Me.dauerindays setzt die interne privat Variable 
+    ''' </summary>
+    ''' <param name="phasenEnde"></param>
+    ''' <remarks></remarks>
     Public Sub keepPhase1consistent(ByVal phasenEnde As Integer)
 
+        Try
+            Dim phase1 As clsPhase = Me.getPhase(1)
+            If Not IsNothing(phase1) Then
+                If phase1.dauerInDays < phasenEnde Then
+                    phase1.changeStartandDauerPhase1(0, phasenEnde)
+                    ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
+                    Dim projektLaengeInDays As Integer = Me.dauerInDays
+                End If
+            End If
 
-        If Me.getPhase(1).dauerInDays < phasenEnde Then
-            Me.getPhase(1).changeStartandDauerPhase1(0, phasenEnde)
-            ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
-            Dim projektLaengeInDays As Integer = Me.dauerInDays
-        End If
+        Catch ex As Exception
 
-
+        End Try
 
 
 

@@ -42,6 +42,7 @@ Public Module awinGeneralModules
         Kapazitaet = 10
         Businessunit = 11
         Beschreibung = 12
+        KostenExtern = 13
     End Enum
 
     Private Enum ptModuleSpalten
@@ -1803,6 +1804,15 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
 
+            ' gibt es die Einstellung für ProjectWithNoMPmayPass
+
+            Try
+                awinSettings.mppProjectsWithNoMPmayPass = CBool(.Range("passFilterWithNoMPs").Value)
+            Catch ex As Exception
+                awinSettings.mppProjectsWithNoMPmayPass = True
+            End Try
+
+
             ' ist Einstellung für volles Protokoll vorhanden ? 
             Try
 
@@ -3082,7 +3092,7 @@ Public Module awinGeneralModules
                                             Dim r As Integer = 0
 
 
-                                            If RoleDefinitions.Contains(ass.ResourceName) Then
+                                            If RoleDefinitions.containsName(ass.ResourceName) Then
                                                 r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
                                             Else
                                                 ' Rolle existiert noch nicht
@@ -3104,7 +3114,7 @@ Public Module awinGeneralModules
                                                 newRoleDef.tagessatzIntern = CType(hstdstr(1), Double) * msproj.HoursPerDay
 
                                                 newRoleDef.UID = RoleDefinitions.Count + 1
-                                                If Not missingRoleDefinitions.Contains(newRoleDef.name) Then
+                                                If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
                                                     missingRoleDefinitions.Add(newRoleDef)
                                                 End If
 
@@ -3597,13 +3607,15 @@ Public Module awinGeneralModules
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
         Dim capacityNeeded As String = ""
+        Dim externCostInput As String = ""
+        Dim externCost As Double = 0.0
         'Dim volume As Double, complexity As Double
         Dim description As String = ""
         Dim businessUnit As String = ""
 
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
-        Dim nrOfStdColumns As Integer = 13
+        Dim nrOfStdColumns As Integer = 14
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
@@ -3640,24 +3652,24 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(12) As String
-        suchstr(ptInventurSpalten.Name) = "Name"
-        suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
-        suchstr(ptInventurSpalten.Start) = "Start-Datum"
-        suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
-        suchstr(ptInventurSpalten.startElement) = "Bezug Start"
-        suchstr(ptInventurSpalten.endElement) = "Bezug Ende"
-        suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
-        suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
-        suchstr(ptInventurSpalten.Risiko) = "Risiko"
-        suchstr(ptInventurSpalten.Strategie) = "Strategie"
-        suchstr(ptInventurSpalten.Kapazitaet) = "benötigte Kapazität"
-        suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
-        suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
+        ' später, um mal das Einlesen einigermaßen intelligent zu machen .... 
+        'Dim suchstr(1) As String
+        'suchstr(ptInventurSpalten.Name) = "Name"
+        'suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
+        'suchstr(ptInventurSpalten.Start) = "Start-Datum"
+        'suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
+        'suchstr(ptInventurSpalten.startElement) = "Bezug Start"
+        'suchstr(ptInventurSpalten.endElement) = "Bezug Ende"
+        'suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
+        'suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
+        'suchstr(ptInventurSpalten.Risiko) = "Risiko"
+        'suchstr(ptInventurSpalten.Strategie) = "Strategie"
+        'suchstr(ptInventurSpalten.Kapazitaet) = "benötigte Kapazität"
+        'suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
+        'suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
 
 
-        Dim inputColumns(11) As Integer
-
+        'Dim inputColumns(11) As Integer
 
 
 
@@ -3668,14 +3680,15 @@ Public Module awinGeneralModules
 
                 firstZeile = CType(.Rows(1), Excel.Range)
 
-                ' jetzt werden die Spalten bestimmt 
-                Try
-                    For i As Integer = 0 To 13
-                        inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
-                    Next
-                Catch ex As Exception
+                ' für später ... siehe oben, intelligent ...
+                '' jetzt werden die Spalten bestimmt 
+                'Try
+                '    For i As Integer = 0 To 13
+                '        inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
+                '    Next
+                'Catch ex As Exception
 
-                End Try
+                'End Try
 
                 'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
                 lastColumn = firstZeile.Columns.Count
@@ -3724,14 +3737,15 @@ Public Module awinGeneralModules
                             dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            risk = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            sfit = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            externCostInput = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            risk = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            sfit = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                             'volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             'complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                            businessUnit = CStr(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            description = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                             If lastColumn > nrOfStdColumns Then
                                 ' es gibt evtl Custom fields 
@@ -3902,7 +3916,7 @@ Public Module awinGeneralModules
 
                             Call erstelleInventurProjekt(hproj, pName, vorlageName, variantName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         capacityNeeded, businessUnit, description, custFields)
+                                                         capacityNeeded, externCostInput, businessUnit, description, custFields)
 
                             'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
                             If Not IsNothing(sMilestone) Then
@@ -4174,7 +4188,7 @@ Public Module awinGeneralModules
                             Dim capacityNeeded As String = ""
                             Call erstelleInventurProjekt(hproj, pName, vorlagenName, scenarioName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         capacityNeeded, businessUnit, description)
+                                                         capacityNeeded, Nothing, businessUnit, description)
                             projectStartDate = start
                             projectEndDate = ende
 
@@ -5109,7 +5123,7 @@ Public Module awinGeneralModules
                                         '
                                         ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
                                         '
-                                        If RoleDefinitions.Contains(hname) Then
+                                        If RoleDefinitions.containsName(hname) Then
                                             Try
                                                 r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -5742,7 +5756,59 @@ Public Module awinGeneralModules
                         hproj.StrategicFit = CDbl(.Range("Strategischer_Fit").Value)
 
 
-                        
+                        ' Ergänzung tk 19.5 es können hier auch sogenannte Custom Fields eingelesen werden ...
+                        Try
+                            Dim cfRange As Excel.Range = CType(.Range("IndivName2"), Excel.Range)
+                            Dim startzeile As Integer = cfRange.Row
+                            Dim cfValueColumn As Integer = cfRange.Column
+                            Dim lastZeile As Integer = CInt(CType(.Cells(10000, 2), Excel.Range).End(XlDirection.xlUp).Row)
+
+                            ' jetzt die Custom-Fields einlesen 
+                            For i As Integer = startzeile To lastZeile
+
+                                Try
+
+                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value)
+                                    Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
+
+                                    If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
+                                        Dim cfType As Integer = customFieldDefinitions.getTyp(cfUid)
+
+                                        If Not IsNothing(cfType) Then
+                                            Select Case cfType
+                                                Case ptCustomFields.Str
+                                                    Dim cfvalue As String = CStr(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomSField(cfUid, cfvalue)
+                                                Case ptCustomFields.Dbl
+                                                    Dim cfvalue As Double = CDbl(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomDField(cfUid, cfvalue)
+                                                Case ptCustomFields.bool
+                                                    Dim cfvalue As Boolean = CBool(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomBField(cfUid, cfvalue)
+                                                Case Else
+                                                    ' Custom Field Type nicht bekannt ...
+                                                    Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
+                                            End Select
+                                        Else
+                                            ' Custom Field UID nicht existent ...
+                                            Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                        End If
+                                    Else
+                                        ' Custom Field Definition nicht bekannt ...
+                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
+
+                            Next
+
+
+                        Catch ex As Exception
+
+                        End Try
+
 
 
                     End With
@@ -6507,7 +6573,7 @@ Public Module awinGeneralModules
                                             '
                                             ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
                                             '
-                                            If RoleDefinitions.Contains(hname) Then
+                                            If RoleDefinitions.containsName(hname) Then
                                                 Try
                                                     r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -8240,7 +8306,7 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-            
+
 
 
         ElseIf kennung = PTTvActions.delFromSession Or _
@@ -9001,6 +9067,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' liest die im Diretory ../ressource manager liegenden detaillierten Kapa files zu den Rollen aus
     ''' und hinterlegt es an entsprechender Stelle im hrole.kapazitaet
+    ''' wenn die Details als Rollen angelegt sind, dann werden diese Rollen gleich mitausgelesen 
     ''' </summary>
     ''' <param name="hrole"></param>
     ''' <remarks></remarks>
@@ -9017,6 +9084,8 @@ Public Module awinGeneralModules
         Dim tmpDate As Date
         Dim tmpKapa As Double
         Dim extTmpKapa As Double
+        Dim lastSpalte As Integer
+
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -9042,6 +9111,69 @@ Public Module awinGeneralModules
 
                     currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
                     summenZeile = currentWS.Range("intern_sum").Row
+                    lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+
+                    ' bevor jetzt die eigentliche Kapa dieser Rolle aus intern_sum ausgelesen wird, wird geschaut, ob 
+                    ' es eine zusammengesetzte Rolle ist
+                    ' das wird dadurch entschieden, ob bis zur summenzeile bekannte Rollen auftauchen. Das sind dann die Sub-Roles 
+
+
+                    Dim atleastOneSubRole As Boolean = False
+                    Dim aktzeile As Integer = 2
+                    Do While aktzeile < summenZeile
+
+                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, spalte - 1), Excel.Range).Value)
+
+                        If Not IsNothing(subRoleName) Then
+                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                                Try
+                                    atleastOneSubRole = True
+                                    ' es ist eine Sub-Rolle
+
+                                    hrole.addSubRole(subRole.UID, subRoleName, RoleDefinitions.Count)
+
+                                    spalte = 2
+                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+
+                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
+                                            spalte < 241 And spalte <= lastSpalte
+                                        index = getColumnOfDate(tmpDate)
+                                        tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                            subRole.kapazitaet(index) = tmpKapa
+                                        End If
+
+                                        spalte = spalte + 1
+                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                    Loop
+
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End If
+
+                        End If
+
+                        aktzeile = aktzeile + 1
+                        ' jetzt spalte wieder auf 2 setzen 
+                        spalte = 2
+                    Loop
+
+                    ' die internen Kapas einer Sammelrolle sind NULL 
+                    If atleastOneSubRole Then
+                        For i As Integer = 1 To 240
+                            hrole.kapazitaet(i) = 0
+                        Next
+                    End If
+                    
+
+
                     Try
                         extSummenZeile = currentWS.Range("extern_sum").Row
                     Catch ex As Exception
@@ -9051,18 +9183,32 @@ Public Module awinGeneralModules
                     tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
                     Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
-                            spalte < 241
+                            spalte < 241 And spalte <= lastSpalte
                         index = getColumnOfDate(tmpDate)
                         tmpKapa = CDbl(CType(currentWS.Cells(summenZeile, spalte), Excel.Range).Value)
+
+
                         If extSummenZeile > 0 Then
                             extTmpKapa = CDbl(CType(currentWS.Cells(extSummenZeile, spalte), Excel.Range).Value)
                         Else
                             extTmpKapa = 0.0
                         End If
 
-                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                            hrole.kapazitaet(index) = tmpKapa
-                            hrole.externeKapazitaet(index) = extTmpKapa
+                        If index <= 240 And index > 0 Then
+
+                            If atleastOneSubRole Then
+                                ' alles ist Null , wird erst später aufgrund der Sub-Rollen berechnet 
+                            Else
+                                If tmpKapa >= 0 Then
+                                    hrole.kapazitaet(index) = tmpKapa
+                                End If
+                            End If
+
+                            If extTmpKapa >= 0 Then
+                                hrole.externeKapazitaet(index) = extTmpKapa
+                            End If
+
+
                         End If
 
                         spalte = spalte + 1

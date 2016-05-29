@@ -145,6 +145,10 @@ Public Class clsawinSettings
     ' enable Smart Powerpoint
     Public Property mppEnableSmartPPT As Boolean
 
+    ' steuert in der Methode clsFilter.doesnotBlock, ob ein Projekt, das keine Phasen/Meilensteine enthält, vom 
+    ' Milestone/Phasen Filter für die Multiprojektsicht blockiert wird oder nicht 
+    Public Property mppProjectsWithNoMPmayPass As Boolean
+
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
@@ -262,6 +266,8 @@ Public Class clsawinSettings
         _mppUseInnerText = False
         _mppSmartTxtPositioning = True
         _mppEnableSmartPPT = True
+
+        _mppProjectsWithNoMPmayPass = True
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True

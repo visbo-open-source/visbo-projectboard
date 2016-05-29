@@ -2154,11 +2154,11 @@
 
                             With role
                                 If lookforIndex Then
-                                    If .RollenTyp = roleID Then
+                                    If .RollenTyp = CInt(roleID) Then
                                         found = True
                                     End If
                                 Else
-                                    If .name = roleID Then
+                                    If .name = CStr(roleID) Then
                                         found = True
                                     End If
                                 End If
