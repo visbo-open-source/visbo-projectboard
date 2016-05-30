@@ -5072,7 +5072,7 @@ Public Module testModule
                                 kennzeichnung = "Rolle"
                             End If
                         Case 5
-                            If CostDefinitions.Contains(qualifier) Then
+                            If CostDefinitions.containsName(qualifier) Then
                                 werteH = hproj.getKostenBedarf(qualifier)
                                 werteV = vglProj.getKostenBedarf(qualifier)
                                 diagramTitle = diagramTitle & " " & qualifier
@@ -5558,7 +5558,7 @@ Public Module testModule
                         formerValues = vglProj.getRessourcenBedarf(qualifier)
                     End If
                 Case 5
-                    If CostDefinitions.Contains(qualifier) Then
+                    If CostDefinitions.containsName(qualifier) Then
                         currentValues = hproj.getKostenBedarf(qualifier)
                         formerValues = vglProj.getKostenBedarf(qualifier)
                     End If
@@ -11465,7 +11465,7 @@ Public Module testModule
                                 'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
                                 ' erhänzt tk
                                 Dim phShortname As String = ""
-                                phShortname = hproj.hierarchy.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames, _
+                                phShortname = hproj.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames, _
                                                                               awinSettings.mppUseAbbreviation)
 
                                 Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
@@ -12201,7 +12201,7 @@ Public Module testModule
         Dim copiedShape As pptNS.ShapeRange
 
         Dim msShapeName As String = calcPPTShapeName(hproj, MS.nameID)
-        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
+        Dim msBeschriftung As String = hproj.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
                                                              awinSettings.mppUseAbbreviation)
 
         Dim x1 As Double
@@ -12423,7 +12423,7 @@ Public Module testModule
         Dim x2 As Double
 
 
-        Dim phDescription As String = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
+        Dim phDescription As String = hproj.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
 
         If PhaseDefinitions.Contains(phaseName) Then
@@ -12623,7 +12623,7 @@ Public Module testModule
         Dim x2 As Double
 
         Dim msShapeName As String = calcPPTShapeName(hproj, milestoneID)
-        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
+        Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
                                                              awinSettings.mppUseAbbreviation)
 
         If MilestoneDefinitions.Contains(milestoneName) Then
@@ -13887,7 +13887,7 @@ Public Module testModule
                             End If
 
                         Case PTpfdk.Kosten
-                            If CostDefinitions.Contains(tmpName) Then
+                            If CostDefinitions.containsName(tmpName) Then
                                 tmpCollection.Add(tmpName, tmpName)
                             End If
 
@@ -15505,10 +15505,12 @@ Public Module testModule
         End If
 
     End Function
+    
+    ' title wird zerlegt in kennzeichung und qualifier
+
+    
     ''' <summary>
-
-    ''' title wird zerlegt in kennzeichung und qualifier
-
+    ''' 
     ''' </summary>
     ''' <param name="title"></param>
     ''' <param name="kennz"></param>

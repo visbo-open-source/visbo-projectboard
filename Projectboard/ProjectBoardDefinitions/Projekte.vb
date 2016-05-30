@@ -7746,7 +7746,7 @@ Public Module Projekte
                                 isRole = True
                                 rk = CInt(RoleDefinitions.getRoledef(roleCostStr(0)).UID)
 
-                            ElseIf CostDefinitions.Contains(roleCostStr(0)) Then
+                            ElseIf CostDefinitions.containsName(roleCostStr(0)) Then
                                 isCost = True
                                 rk = CInt(CostDefinitions.getCostdef(roleCostStr(0)).UID)
                             End If
@@ -7805,7 +7805,7 @@ Public Module Projekte
             End If
         End If
 
-        If Not IsNothing(externCostInput) And CostDefinitions.Contains(extCost) Then
+        If Not IsNothing(externCostInput) And CostDefinitions.containsName(extCost) Then
             ' es soll ausgerechnet werden, was denn an externen Kosten anfällt 
             ' getriggert durch Mahle ...
             'Dim summeExtCost As Double = Math.Truncate(hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)
@@ -16731,7 +16731,7 @@ Public Module Projekte
 
                                 End Try
 
-                            ElseIf CostDefinitions.Contains(hname) Then
+                            ElseIf CostDefinitions.containsName(hname) Then
 
                                 Try
 
@@ -16903,7 +16903,7 @@ Public Module Projekte
 
                                 End Try
 
-                            ElseIf CostDefinitions.Contains(hname) Then
+                            ElseIf CostDefinitions.containsName(hname) Then
 
                                 costNr = costNr + 1
 
@@ -17792,7 +17792,7 @@ Public Module Projekte
                     If ok Then
                         ' nur, wenn es entweder ein Meilenstein oder eine Phase war ... 
 
-                        description = hproj.hierarchy.getBestNameOfID(nameID, showStdNames, showAbbrev)
+                        description = hproj.getBestNameOfID(nameID, showStdNames, showAbbrev)
 
                         top = elemShape.Top
                         left = elemShape.Left
@@ -19785,7 +19785,7 @@ Public Module Projekte
                 .elemName = elemNameOfElemID(rootPhaseName)
                 .indexOfElem = 1 'eigentlich nicht relevant , wird einfach immer auf 1 gesetzt
                 .parentNodeKey = ""
-                .origName = .elemName
+                '.origName = .elemName
             End With
 
             superHry.addNode(superNode, rootPhaseName)
@@ -20012,7 +20012,7 @@ Public Module Projekte
                 With superNode
                     .elemName = tmpElemName
                     .parentNodeKey = parentNodeID
-                    .origName = ""
+                    ''.origName = ""
                     .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
                 End With
                 curElemID = superHry.findUniqueElemKey(tmpElemName, False)
@@ -20027,7 +20027,7 @@ Public Module Projekte
             With superNode
                 .elemName = curElemName
                 .parentNodeKey = parentNodeID
-                .origName = ""
+                ''.origName = ""
                 .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
             End With
             curElemID = superHry.findUniqueElemKey(curElemName, isMilestone)

@@ -324,8 +324,8 @@ Public Class clsPhase
 
         Try
 
-            projektStartdate = Me.Parent.startDate
-            projektstartColumn = Me.Parent.Start
+            projektStartdate = Me.parentProject.startDate
+            projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
 
@@ -366,13 +366,13 @@ Public Class clsPhase
                 ' dieser Aufruf korrigiert notfalls die intern gehaltene
 
                 Try
-                    If Not IsNothing(Me.Parent.getPhase(1)) Then
-                        If Me.nameID <> Me.Parent.getPhase(1).nameID Then
+                    If Not IsNothing(Me.parentProject.getPhase(1)) Then
+                        If Me.nameID <> Me.parentProject.getPhase(1).nameID Then
                             ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
-                            Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
+                            Me.parentProject.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
                         End If
                     End If
-                    
+
                 Catch ex As Exception
                     Dim b As Integer = 0
                 End Try
@@ -465,8 +465,8 @@ Public Class clsPhase
 
         Try
 
-            projektStartdate = Me.Parent.startDate
-            projektstartColumn = Me.Parent.Start
+            projektStartdate = Me.parentProject.startDate
+            projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
 
@@ -665,7 +665,7 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public ReadOnly Property getStartDate As Date
         Get
-            getStartDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
+            getStartDate = Me.parentProject.startDate.AddDays(_startOffsetinDays)
         End Get
     End Property
 
@@ -679,10 +679,10 @@ Public Class clsPhase
 
         Get
             If _dauerInDays > 0 Then
-                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
+                getEndDate = Me.parentProject.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
             Else
                 'Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
-                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
+                getEndDate = Me.parentProject.startDate.AddDays(_startOffsetinDays)
             End If
 
         End Get
@@ -858,7 +858,7 @@ Public Class clsPhase
 
             Try
 
-                If Me.Parent Is Nothing Then
+                If Me.parentProject Is Nothing Then
                     isVorlage = True
                 Else
                     isVorlage = False
@@ -870,7 +870,7 @@ Public Class clsPhase
             If isVorlage Then
                 tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
             Else
-                tmpValue = getColumnOfDate(Me.Parent.startDate.AddDays(Me.startOffsetinDays)) - Me.Parent.Start + 1
+                tmpValue = getColumnOfDate(Me.parentProject.startDate.AddDays(Me.startOffsetinDays)) - Me.parentProject.Start + 1
             End If
 
             'If checkValue <> tmpValue Then 
@@ -901,7 +901,7 @@ Public Class clsPhase
 
             Try
 
-                If Me.Parent Is Nothing Then
+                If Me.parentProject Is Nothing Then
                     isVorlage = True
                 Else
                     isVorlage = False
@@ -913,7 +913,7 @@ Public Class clsPhase
             If isVorlage Then
                 tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
             Else
-                tmpValue = getColumnOfDate(Me.Parent.startDate.AddDays(Me.startOffsetinDays + Me.dauerInDays - 1)) - Me.Parent.Start + 1
+                tmpValue = getColumnOfDate(Me.parentProject.startDate.AddDays(Me.startOffsetinDays + Me.dauerInDays - 1)) - Me.parentProject.Start + 1
             End If
 
             ' kann später eliminiert werden - vorläufig bleibt das zur Sicherheit noch drin ... 
@@ -979,8 +979,8 @@ Public Class clsPhase
 
         Try
 
-            Dim projektStartdate As Date = Me.Parent.startDate
-            Dim tfzeile As Integer = Me.Parent.tfZeile
+            Dim projektStartdate As Date = Me.parentProject.startDate
+            Dim tfzeile As Integer = Me.parentProject.tfZeile
             Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
 
@@ -1103,6 +1103,13 @@ Public Class clsPhase
 
         Dim elemName As String = elemNameOfElemID(milestone.nameID)
 
+        ' wenn der Origname gesetzt werden soll ...
+        If origName <> "" Then
+            If milestone.originalName <> origName Then
+                milestone.originalName = origName
+            End If
+        End If
+
         Do While ix <= anzElements And Not found
             If _allMilestones.Item(ix).nameID = milestone.nameID Then
                 found = True
@@ -1131,7 +1138,7 @@ Public Class clsPhase
             elemID = vproj.hierarchy.findUniqueElemKey(elemName, True)
         End If
 
-        If IsNothing(Me.Parent) Then
+        If IsNothing(Me.parentProject) Then
             parentIsVorlage = True
             vproj = Me.VorlagenParent
             If vproj.hierarchy.containsKey(phaseID) Then
@@ -1140,7 +1147,7 @@ Public Class clsPhase
             End If
         Else
             parentIsVorlage = False
-            hproj = Me.Parent
+            hproj = Me.parentProject
             If hproj.hierarchy.containsKey(phaseID) Then
                 ' Phase ist bereits in der Projekt-Hierarchie eingetragen
                 ok = True
@@ -1153,11 +1160,12 @@ Public Class clsPhase
 
                 .elemName = elemName
 
-                If origName = "" Then
-                    .origName = .elemName
-                Else
-                    .origName = origName
-                End If
+                ' '' Änderung tk 29.5.16 : Origname ist nicht mehr Bestandteil von hierarchyNode ... 
+                ''If origName = "" Then
+                ''    .origName = .elemName
+                ''Else
+                ''    .origName = origName
+                ''End If
 
                 .indexOfElem = milestoneIndex
                 .parentNodeKey = phaseID
@@ -1420,7 +1428,7 @@ Public Class clsPhase
                 If newPhaseNameID = "" Then
                     Me.getMilestone(r).copyTo(newresult)
                 Else
-                    Dim newMSNameID As String = newphase.Parent.hierarchy.findUniqueElemKey(Me.getMilestone(r).name, True)
+                    Dim newMSNameID As String = newphase.parentProject.hierarchy.findUniqueElemKey(Me.getMilestone(r).name, True)
                     Me.getMilestone(r).copyTo(newresult, newMSNameID)
                 End If
 
@@ -1531,7 +1539,7 @@ Public Class clsPhase
 
             If istElemID(key) Then
 
-                hryNode = Me.Parent.hierarchy.nodeItem(key)
+                hryNode = Me.parentProject.hierarchy.nodeItem(key)
                 If Not IsNothing(hryNode) Then
 
                     ' prüfen, ob der Meilenstein überhaupt zu dieser Phase gehört 
@@ -1626,9 +1634,9 @@ Public Class clsPhase
 
     End Property
 
-    Public ReadOnly Property Parent() As clsProjekt
+    Public ReadOnly Property parentProject() As clsProjekt
         Get
-            Parent = _parentProject
+            parentProject = _parentProject
         End Get
     End Property
 

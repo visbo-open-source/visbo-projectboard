@@ -298,7 +298,8 @@
             Dim childID As String
             With hryNode
                 Me.elemName = .elemName
-                Me.origName = .origName
+                ' ist seit 29.5 niht mehr Bestandteil eines Hierarchie Knotens
+                'Me.origName = .origName
                 Me.indexOfElem = .indexOfElem
                 Me.parentNodeKey = .parentNodeKey
                 For i As Integer = 1 To .childCount
@@ -319,7 +320,8 @@
             Dim childID As String
             With hryNode
                 .elemName = Me.elemName
-                .origName = Me.origName
+                ' ist seit 29.5 nicht mehr Bestandteil eines Hierarchie-Knotens 
+                '.origName = Me.origName
                 .indexOfElem = Me.indexOfElem
                 .parentNodeKey = Me.parentNodeKey
                 For i As Integer = 1 To Me.childNodeKeys.Count
@@ -357,6 +359,10 @@
         Public name As String
         Public farbe As Integer
 
+        Public shortName As String
+        Public originalName As String
+        Public appearance As String
+
         Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultDB
 
             Get
@@ -381,14 +387,18 @@
                 Me.dauerInDays = .dauerInDays
                 Me.name = .nameID
 
+                Me.shortName = .shortName
+                Me.originalName = .originalName
+                Me.appearance = .appearance
+
                 Me.ampelErlaeuterung = .ampelErlaeuterung
                 Me.ampelStatus = .ampelStatus
 
                 Dim dimension As Integer
 
-                ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
+                ' Änderung 18.6 , ab 29.5 .16 kann jeder Phase auch eine Farbe zugewiesen werden 
                 Try
-                    Me.farbe = .farbe
+                    Me.farbe = .individualColor
                 Catch ex As Exception
                     Me.farbe = hfarbe
                 End Try
@@ -437,6 +447,19 @@
                 '.minDauer = Me.minDauer
                 '.maxDauer = Me.maxDauer
 
+                If Not IsNothing(Me.shortName) Then
+                    .shortName = Me.shortName
+                End If
+
+                If Not IsNothing(Me.originalName) Then
+                    .originalName = Me.originalName
+                End If
+
+                If Not IsNothing(Me.appearance) Then
+                    .appearance = Me.appearance
+                End If
+
+
                 ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
                 .ampelStatus = Me.ampelStatus
                 .ampelErlaeuterung = Me.ampelErlaeuterung
@@ -466,9 +489,9 @@
                 ' nicht aber der Wert für dauerindays oder startoffset
                 If Me.dauerInDays = 0 Then
                     ' nutze 
-                    startoffset = CInt(DateDiff(DateInterval.Day, .Parent.startDate, .Parent.startDate.AddMonths(Me.relStart - 1)))
+                    startoffset = CInt(DateDiff(DateInterval.Day, .parentProject.startDate, .parentProject.startDate.AddMonths(Me.relStart - 1)))
                     'dauer = DateDiff(DateInterval.Day, .Parent.startDate.AddMonths(Me.relStart - 1), .Parent.startDate.AddMonths(Me.relEnde).AddDays(-1)) + 1
-                    dauer = calcDauerIndays(.Parent.startDate.AddDays(startoffset), Me.relEnde - Me.relStart + 1, True)
+                    dauer = calcDauerIndays(.parentProject.startDate.AddDays(startoffset), Me.relEnde - Me.relStart + 1, True)
                 Else
                     startoffset = Me.startOffsetinDays
                     dauer = Me.dauerInDays
@@ -530,6 +553,10 @@
 
             ampelStatus = 0
             ampelErlaeuterung = ""
+
+            shortName = ""
+            originalName = ""
+            appearance = ""
 
         End Sub
     End Class
@@ -633,6 +660,10 @@
         Public offset As Long
         Public alternativeColor As Long
 
+        Public shortName As String
+        Public originalName As String
+        Public appearance As String
+
         'Friend Property fileLink As Uri
 
         Friend ReadOnly Property bewertungsCount As Integer
@@ -665,6 +696,18 @@
 
                     .verantwortlich = Me.verantwortlich
                     .offset = Me.offset
+
+                    If Not IsNothing(Me.shortName) Then
+                        .shortName = Me.shortName
+                    End If
+
+                    If Not IsNothing(Me.originalName) Then
+                        .originalName = Me.originalName
+                    End If
+
+                    If Not IsNothing(Me.appearance) Then
+                        .appearance = Me.appearance
+                    End If
 
                     Try
                         If Not IsNothing(Me.alternativeColor) Then
@@ -709,7 +752,12 @@
                 Me.name = .nameID
                 Me.verantwortlich = .verantwortlich
                 Me.offset = .offset
-                Me.alternativeColor = .farbe
+
+                Me.shortName = .shortName
+                Me.originalName = .originalName
+                Me.appearance = .appearance
+
+                Me.alternativeColor = .individualColor
 
                 Try
                     For i = 1 To .bewertungsCount

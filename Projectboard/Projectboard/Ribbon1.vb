@@ -7851,7 +7851,7 @@ Imports System.Windows
                     ' 
                     unterschiede = hproj.listOfDifferences(vglProj, True, 0)
                     If unterschiede.Count > 0 Then
-                        Call MsgBox("What is the difference")
+                        Call MsgBox("What is the difference: " & unterschiede.Item(1))
                     End If
 
 

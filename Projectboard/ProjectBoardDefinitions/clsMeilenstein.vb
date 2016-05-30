@@ -432,7 +432,7 @@ Public Class clsMeilenstein
             Dim projektStartDate As Date
             ' das Folgende ist notwendig, um auch im Fall einer Projektvorlage ein Ergebnis zu bekommen 
             Try
-                projektStartDate = Me.Parent.Parent.startDate
+                projektStartDate = Me.Parent.parentProject.startDate
             Catch ex As Exception
                 projektStartDate = StartofCalendar
             End Try
@@ -455,7 +455,7 @@ Public Class clsMeilenstein
 
         Set(value As Date)
 
-            Dim projektStartDate As Date = Me.Parent.Parent.startDate
+            Dim projektStartDate As Date = Me.Parent.parentProject.startDate
             Dim phasenOffset As Integer = Me.Parent.startOffsetinDays
 
             If DateDiff(DateInterval.Day, projektStartDate, value) < 0 Then

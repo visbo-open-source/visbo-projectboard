@@ -21,6 +21,9 @@ Public Class clsOpenXML
     Public currency As String
 
     Public projectTitle As String
+    Public status As String
+    Public businessUnit As String
+
     Public strategicFit As Double
     Public risk As Double
 
@@ -36,7 +39,7 @@ Public Class clsOpenXML
 
 
         With projekt
-            Me.projectName = calcProjektKey(projekt)
+            Me.projectName = .name
             Me.variantName = .variantName
 
             If Not IsNothing(.timeStamp) Then
@@ -45,7 +48,7 @@ Public Class clsOpenXML
                 Me.timeStamp = Date.UtcNow
             End If
 
-            ' die folgenden Infors werden noch nicht besetzt 
+            ' die folgenden Infos werden noch nicht besetzt 
             Me.sourceDBURL = ""
             Me.sourceDBName = ""
 
@@ -59,6 +62,8 @@ Public Class clsOpenXML
             Me.currency = "€"
 
             Me.projectTitle = ""
+            Me.status = .Status
+            Me.businessUnit = .businessUnit
 
             Me.strategicFit = .StrategicFit
             Me.risk = .Risiko
@@ -99,6 +104,8 @@ Public Class clsOpenXML
                     newPhase.copyFrom(.getPhase(i))
                 End If
 
+                tasks.Add(newPhase)
+
             Next
 
 
@@ -107,7 +114,109 @@ Public Class clsOpenXML
 
     End Sub
 
-    Public Sub copyTo(ByRef hproj As clsProjekt)
+    Public Sub copyTo(ByRef projekt As clsProjekt)
+
+        Dim i As Integer
+        Dim tmpstr(5) As String
+
+
+        With projekt
+
+            Dim task0 As clsOpenTask = Me.tasks.Item(0)
+
+            .name = Me.projectName
+            .variantName = Me.variantName
+            .timeStamp = Me.timeStamp.ToLocalTime
+            .Id = Me.ID
+            .Risiko = Me.risk
+            .StrategicFit = Me.strategicFit
+            .Erloes = Me.budget
+            .leadPerson = task0.responsible
+            .tfZeile = 0
+            .startDate = task0.startDate.ToLocalTime
+
+            .earliestStart = task0.earliestStartOffset
+            .latestStart = task0.latestStartOffset
+
+            If .earliestStart < 0 Then
+                .earliestStartDate = .startDate.AddMonths(.earliestStart)
+            Else
+                .earliestStart = 0
+            End If
+
+            If .latestStart > 0 Then
+                .latestStartDate = .startDate.AddMonths(.latestStart)
+            Else
+                .latestStart = 0
+            End If
+
+            ' .projekttitle = Me.projekttitle
+            .Status = Me.status
+            .businessUnit = Me.businessUnit
+            .description = task0.description
+
+            .VorlagenName = Me.projectType
+            Try
+                Dim pvorlage As clsProjektvorlage
+                If Projektvorlagen.Contains(.VorlagenName) Then
+                    pvorlage = Projektvorlagen.getProject(.VorlagenName)
+
+                Else
+                    pvorlage = Projektvorlagen.getProject(0)
+                    .Schrift = pvorlage.Schrift
+                    .Schriftfarbe = pvorlage.Schriftfarbe
+                    .farbe = pvorlage.farbe
+                End If
+                .Schrift = pvorlage.Schrift
+                .Schriftfarbe = pvorlage.Schriftfarbe
+                .farbe = pvorlage.farbe
+
+            Catch ex As Exception
+                .Schrift = 10
+                .Schriftfarbe = RGB(0, 0, 0)
+                .farbe = RGB(110, 110, 100)
+            End Try
+
+
+            ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
+
+            If Not IsNothing(Me.customStringFields) Then
+                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
+                    projekt.customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+
+
+            If Not IsNothing(Me.customDblFields) Then
+                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
+                    projekt.customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+
+
+            If Not IsNothing(Me.customBoolFields) Then
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
+                    projekt.customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+
+            For i = 1 To Me.tasks.Count
+                Dim newPhase As New clsPhase(parent:=projekt)
+                tasks.Item(i - 1).copyTo(newPhase, task0.startDate, i)
+                .AddPhase(newPhase)
+            Next
+
+
+            ' jetzt muss die Ampel und Erläuterung noch geschrieben werden 
+            Try
+                .ampelStatus = .getPhase(1).ampelStatus
+                .ampelErlaeuterung = .getPhase(1).ampelErlaeuterung
+            Catch ex As Exception
+
+            End Try
+            
+
+        End With
 
     End Sub
 
@@ -120,6 +229,8 @@ Public Class clsOpenXML
         projectName = "Testproject"
         variantName = ""
         timeStamp = Date.Now
+        ID = ""
+
         projectType = ""
         sourceDBURL = ""
         sourceDBName = ""
@@ -131,25 +242,35 @@ Public Class clsOpenXML
         currency = "€"
 
         projectTitle = ""
+        status = ""
+        businessUnit = ""
+
         strategicFit = 5
         risk = 5
+
+        customDblFields = New SortedList(Of Integer, Double)
+        customStringFields = New SortedList(Of Integer, String)
+        customBoolFields = New SortedList(Of Integer, Boolean)
+
 
         tasks = New List(Of clsOpenTask)
 
     End Sub
+    '
     ' ############################ Klasse clsOpenTask
+    '
     ''' <summary>
     ''' Klasse Phase
     ''' </summary>
     ''' <remarks></remarks>
     Public Class clsOpenTask
 
-        Public categorizedName As String
+        Public name As String
         Public originalName As String
         Public abbreviation As String
         Public appearance As String
         Public color As Integer
-        Public wbsCode As String
+        Public breadCrumb As String
 
         Public sourceUID As String
 
@@ -165,10 +286,6 @@ Public Class clsOpenXML
 
         Public ratings As List(Of clsOpenRating)
 
-        Public sCustomFields As SortedList(Of String, String)
-        Public dCustomFields As SortedList(Of String, Double)
-        Public bCustomFields As SortedList(Of String, Boolean)
-
         Public costNeeds As List(Of clsOpenCostNeed)
         Public resourceNeeds As List(Of clsOpenResourceNeed)
 
@@ -182,12 +299,12 @@ Public Class clsOpenXML
             Dim dimension As Integer
 
             With cPhase
-                Me.categorizedName = .name
+                Me.name = .name
                 Me.originalName = .originalName
                 Me.abbreviation = .shortName
                 Me.appearance = .appearance
                 Me.color = .farbe
-                'Me.wbsCode = ""
+                Me.breadCrumb = .parentProject.hierarchy.getBreadCrumb(.nameID)
 
                 'Me.sourceUID = ""
 
@@ -228,6 +345,13 @@ Public Class clsOpenXML
                     resourceNeeds.Add(newOpenRole)
                 Next
 
+                For k = 1 To .countCosts
+                    dimension = .getCost(k).getDimension
+                    Dim newCost As New clsOpenCostNeed(dimension)
+                    newCost.copyFrom(.getCost(k))
+                    costNeeds.Add(newCost)
+                Next
+
                 For r = 1 To .countMilestones
                     Dim newOpenMilestone As New clsOpenMilestone
 
@@ -240,12 +364,195 @@ Public Class clsOpenXML
 
                 Next
 
-                For k = 1 To .countCosts
-                    dimension = .getCost(k).getDimension
-                    Dim newCost As New clsOpenCostNeed(dimension)
-                    newCost.copyFrom(.getCost(k))
-                    costNeeds.Add(newCost)
+
+
+            End With
+
+
+        End Sub
+
+        Public Sub copyTo(ByRef phase As clsPhase, ByVal projectStart As Date, _
+                          Optional phaseNr As Integer = 100)
+
+
+            Dim r As Integer, k As Integer
+            'Dim dauer As Integer, startoffset As Integer
+
+            With phase
+                .earliestStart = Me.earliestStartOffset
+                .latestStart = Me.latestStartOffset
+
+                ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
+                For i = 1 To Me.ratings.Count
+                    Dim newb As New clsBewertung
+                    Me.ratings.Item(i - 1).copyTo(newb)
+                    .addBewertung(newb)
                 Next
+
+
+                Try
+                    .farbe = Me.color
+                Catch ex As Exception
+
+                End Try
+
+                Dim tmpDauer As Long = 0
+                Dim phaseStartOffset As Long = 0
+
+
+                If phaseNr = 1 Then
+                    .nameID = rootPhaseName
+                    phaseStartOffset = 0
+                    tmpDauer = calcDauerIndays(Me.startDate, Me.finishDate)
+
+                Else
+                    .nameID = .parentProject.hierarchy.findUniqueElemKey(Me.name, False)
+                    phaseStartOffset = DateDiff(DateInterval.Day, projectStart, Me.startDate)
+                    tmpDauer = calcDauerIndays(Me.startDate, Me.finishDate)
+
+                End If
+
+
+                Dim anzahlMonate As Integer = getColumnOfDate(Me.finishDate) - getColumnOfDate(Me.startDate) + 1
+
+
+                ' jetzt wird ausgelesen: stimmt die Dimension ? 
+                ' wenn nein, wird einfach die Summe hergenommen und verteilt ... 
+                Dim Xwerte() As Double
+                Dim oldWerte() As Double
+                Dim roleUID As Integer
+
+
+                ' die Rollen und Ressourcenbedarfe aufnehmen ...
+                For r = 1 To Me.resourceNeeds.Count
+                    Dim roleXML As clsOpenResourceNeed = Me.resourceNeeds.Item(r - 1)
+
+                    Dim dimension As Integer = roleXML.monthlyNeeds.Length - 1
+                    Dim newRole As New clsRolle(anzahlMonate - 1)
+
+                    If dimension = anzahlMonate - 1 And roleXML.monthlyNeeds.Sum > 0 Then
+                        ' alles in Ordnung , die Länge passt ...
+                    Else
+                        ' einfach die Summe hernehmen und verteilen ...
+                        ReDim oldWerte(0)
+                        oldWerte(0) = roleXML.sum
+                        ReDim Xwerte(anzahlMonate - 1)
+                        Call .berechneBedarfe(Me.startDate, Me.finishDate, oldWerte, 1.0, Xwerte)
+                        roleXML.monthlyNeeds = Xwerte
+                    End If
+
+                    If RoleDefinitions.containsName(roleXML.resourceName) Then
+                        roleUID = CInt(RoleDefinitions.getRoledef(roleXML.resourceName).UID)
+                    Else
+                        ' Rolle existiert noch nicht
+                        ' wird hier neu aufgenommen
+
+                        Dim newRoleDef As New clsRollenDefinition
+                        newRoleDef.name = roleXML.resourceName
+                        newRoleDef.farbe = RGB(120, 120, 120)
+                        newRoleDef.Startkapa = 20
+
+                        ' OvertimeRate in Tagessatz umrechnen
+                        newRoleDef.tagessatzExtern = 780
+
+                        ' StandardRate in Tagessatz umrechnen
+                        newRoleDef.tagessatzIntern = 780
+
+                        newRoleDef.UID = RoleDefinitions.Count + 1
+                        If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
+                            missingRoleDefinitions.Add(newRoleDef)
+                        End If
+
+                        RoleDefinitions.Add(newRoleDef)
+
+                        roleUID = newRoleDef.UID
+                    End If
+
+
+                    newRole.RollenTyp = roleUID
+                    newRole.Xwerte = roleXML.monthlyNeeds
+
+                    ' jetzt zur Phase dazu tun 
+                    .addRole(newRole)
+
+                Next
+
+                Dim costUID As Integer
+
+                ' die Kostenbedarfe aufnehmen ...
+                For k = 1 To Me.costNeeds.Count
+                    Dim costXML As clsOpenCostNeed = Me.costNeeds.Item(k - 1)
+
+                    Dim dimension As Integer = costXML.monthlyNeeds.Length - 1
+                    Dim newCost As New clsKostenart(anzahlMonate - 1)
+
+                    If dimension = anzahlMonate - 1 And costXML.monthlyNeeds.Sum > 0 Then
+                        ' alles in Ordnung , die Länge passt ...
+                    Else
+                        ' einfach die Summe hernehmen und verteilen ...
+                        ReDim oldWerte(0)
+                        oldWerte(0) = costXML.sum
+                        ReDim Xwerte(anzahlMonate - 1)
+                        Call .berechneBedarfe(Me.startDate, Me.finishDate, oldWerte, 1.0, Xwerte)
+                        costXML.monthlyNeeds = Xwerte
+                    End If
+
+                    If CostDefinitions.containsName(costXML.costName) Then
+                        costUID = CInt(CostDefinitions.getCostdef(costXML.costName).UID)
+                    Else
+                        ' Kostenart existiert noch nicht
+                        ' wird hier neu aufgenommen
+
+                        Dim newCostDef As New clsKostenartDefinition
+                        newCostDef.name = costXML.costName
+                        newCostDef.farbe = RGB(120, 120, 120)
+
+                        newCostDef.UID = CostDefinitions.Count + 1
+                        If Not missingCostDefinitions.containsName(newCostDef.name) Then
+                            missingCostDefinitions.Add(newCostDef)
+                        End If
+
+                        CostDefinitions.Add(newCostDef)
+
+                        costUID = newCostDef.UID
+                    End If
+
+
+                    newCost.KostenTyp = costUID
+                    newCost.Xwerte = costXML.monthlyNeeds
+
+                    ' jetzt zur Phase dazu tun 
+                    .AddCost(newCost)
+
+                Next
+
+
+                .changeStartandDauer(phaseStartOffset, tmpDauer)
+
+                '
+                ' jetzt die Meilensteine aufnehmen ...
+                '
+                Try
+                    Dim msAnzahl As Integer = Me.milestones.Count
+                    For m = 1 To msAnzahl
+
+                        Dim newresult As New clsMeilenstein(parent:=phase)
+
+                        Try
+                            Me.milestones.Item(m - 1).copyTo(newresult)
+                            .addMilestone(newresult)
+                        Catch ex As Exception
+
+                        End Try
+
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+
+
+
 
             End With
 
@@ -253,6 +560,33 @@ Public Class clsOpenXML
         End Sub
 
         Sub New()
+
+            name = ""
+            originalName = ""
+            abbreviation = ""
+            appearance = ""
+
+            color = 0
+            breadCrumb = ""
+
+            sourceUID = ""
+
+            description = ""
+            risks = New List(Of clsOpenRiskChance)
+
+            startDate = Nothing
+            finishDate = Nothing
+            earliestStartOffset = 0
+            latestStartOffset = 0
+
+            responsible = ""
+
+            ratings = New List(Of clsOpenRating)
+
+            costNeeds = New List(Of clsOpenCostNeed)
+            resourceNeeds = New List(Of clsOpenResourceNeed)
+
+            milestones = New List(Of clsOpenMilestone)
 
         End Sub
 
@@ -420,12 +754,12 @@ Public Class clsOpenXML
     ''' <remarks></remarks>
     Public Class clsOpenMilestone
 
-        Public categorizedName As String
+        Public name As String
         Public originalName As String
         Public abbreviation As String
         Public appearance As String
         Public color As Integer
-        Public wbsCode As String
+        Public breadcrumb As String
 
         Public sourceUID As String
 
@@ -439,8 +773,6 @@ Public Class clsOpenXML
         Public responsible As String
 
         Public ratings As List(Of clsOpenRating)
-        
-
         Public deliverables As List(Of String)
 
         ''' <summary>
@@ -451,13 +783,13 @@ Public Class clsOpenXML
         Public Sub copyFrom(ByVal hspMS As clsMeilenstein)
 
             With hspMS
-                Me.categorizedName = .name
+                Me.name = .name
                 Me.originalName = .originalName
                 Me.abbreviation = .shortName
                 Me.appearance = ""
                 Me.color = .farbe
 
-                'Me.wbsCode = ""
+                Me.breadcrumb = .Parent.parentProject.hierarchy.getBreadCrumb(.nameID)
                 'Me.sourceUID = ""
                 'Me.description = ""
                 '' die Liste der Risiken ...
@@ -502,9 +834,73 @@ Public Class clsOpenXML
         ''' <remarks></remarks>
         Public Sub copyTo(ByRef ms As clsMeilenstein)
 
+            Dim i As Integer
+
+            Try
+                With ms
+
+
+                    .nameID = .Parent.parentProject.hierarchy.findUniqueElemKey(Me.name, True)
+
+                    .shortName = Me.abbreviation
+                    .originalName = Me.originalName
+                    .appearance = Me.appearance
+                    .farbe = Me.color
+
+                    .verantwortlich = Me.responsible
+                    .offset = DateDiff(DateInterval.Day, .Parent.getStartDate, Me.finishDate) + 1
+
+                    ' die Deliverables übertragen 
+                    For i = 1 To Me.deliverables.Count
+                        Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
+                        .addDeliverable(tmpDeliverable)
+                    Next
+
+
+                    For i = 1 To Me.ratings.Count
+
+                        Dim newb As New clsBewertung
+                        Try
+                            Me.ratings.Item(i - 1).copyTo(newb)
+                            .addBewertung(newb)
+                        Catch ex1 As Exception
+
+                        End Try
+
+                    Next
+
+                End With
+
+            Catch ex As Exception
+
+            End Try
+
+
+
         End Sub
 
         Sub New()
+            name = ""
+            originalName = ""
+            abbreviation = ""
+            appearance = ""
+            color = 0
+            breadcrumb = ""
+
+            sourceUID = ""
+
+            description = ""
+
+            risks = New List(Of clsOpenRiskChance)
+
+            finishDate = Nothing
+            earliestFinishOffset = 0
+            latestFinishOffset = 0
+
+            responsible = ""
+
+            ratings = New List(Of clsOpenRating)
+            deliverables = New List(Of String)
 
         End Sub
     End Class
@@ -528,6 +924,17 @@ Public Class clsOpenXML
                 Me.description = .description
                 Me.rater = .bewerterName
                 Me.ratingDate = .datum
+            End With
+
+        End Sub
+
+        Public Sub copyTo(ByRef bewertung As clsBewertung)
+
+            With bewertung
+                .colorIndex = Me.color
+                .description = Me.description
+                .bewerterName = Me.rater
+                .datum = Me.ratingDate
             End With
 
         End Sub

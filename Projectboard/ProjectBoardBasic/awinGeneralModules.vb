@@ -3016,7 +3016,7 @@ Public Module awinGeneralModules
 
                                             Dim k As Integer = 0
 
-                                            If CostDefinitions.Contains(ass.ResourceName) Then
+                                            If CostDefinitions.containsName(ass.ResourceName) Then
                                                 k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
                                             Else
                                                 ' Kostenart existiert noch nicht
@@ -3025,7 +3025,7 @@ Public Module awinGeneralModules
                                                 newCostDef.name = ass.ResourceName
                                                 newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
                                                 newCostDef.UID = CostDefinitions.Count + 1
-                                                If Not missingCostDefinitions.Contains(newCostDef.name) Then
+                                                If Not missingCostDefinitions.containsName(newCostDef.name) Then
                                                     missingCostDefinitions.Add(newCostDef)
                                                 End If
 
@@ -5156,7 +5156,7 @@ Public Module awinGeneralModules
                                                 '
                                             End Try
 
-                                        ElseIf CostDefinitions.Contains(hname) Then
+                                        ElseIf CostDefinitions.containsName(hname) Then
 
                                             Try
 
@@ -6654,7 +6654,7 @@ Public Module awinGeneralModules
                                                     Throw New Exception(ex.Message)
                                                 End Try
 
-                                            ElseIf CostDefinitions.Contains(hname) Then
+                                            ElseIf CostDefinitions.containsName(hname) Then
 
                                                 Try
 
@@ -9848,7 +9848,7 @@ Public Module awinGeneralModules
                     If Not IsNothing(cphase) Then
                         Try
 
-                            phaseName = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                            phaseName = kvp.Value.getBestNameOfID(cphase.nameID, True, False)
                             startDate = cphase.getStartDate
                             endDate = cphase.getEndDate
 

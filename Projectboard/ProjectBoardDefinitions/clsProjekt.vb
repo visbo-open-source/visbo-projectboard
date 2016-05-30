@@ -366,6 +366,13 @@ Public Class clsProjekt
         Dim phaseEnde As Double
         Dim maxM As Integer
 
+        ' wenn der Origname gesetzt werden soll ...
+        If origName <> "" Then
+            If phase.originalName <> origName Then
+                phase.originalName = origName
+            End If
+        End If
+
         With phase
 
             phaseEnde = .startOffsetinDays + .dauerInDays - 1
@@ -400,11 +407,12 @@ Public Class clsProjekt
                 .elemName = phase.name
             End If
 
-            If origName = "" Then
-                .origName = .elemName
-            Else
-                .origName = origName
-            End If
+            ' Änderung tk 29.5.16 origName ist nicht mehr Bestandteil von HierarchyNode, 
+            ''If origName = "" Then
+            ''    .origName = .elemName
+            ''Else
+            ''    .origName = origName
+            ''End If
 
             .indexOfElem = Me.CountPhases
 
@@ -432,7 +440,7 @@ Public Class clsProjekt
             With currentElementNode
 
                 .elemName = elemNameOfElemID(cmilestone.nameID)
-                .origName = .elemName
+                '.origName = .elemName
                 .indexOfElem = m
                 .parentNodeKey = phase.nameID
 
