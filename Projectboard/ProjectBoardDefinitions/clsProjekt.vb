@@ -21,8 +21,9 @@ Public Class clsProjekt
     Private _earliestStartDate As Date
     Private _startDate As Date
     Private _latestStartDate As Date
-    Private _ampelStatus As Integer
-    Private _ampelErlaeuterung As String
+    ' Änderung tk: ist jetzt in der Phase 1 , Bewertung (1) abgespeichert 
+    'Private _ampelStatus As Integer
+    'Private _ampelErlaeuterung As String
     Private _name As String
     Private _variantName As String
 
@@ -1010,16 +1011,30 @@ Public Class clsProjekt
         End Get
     End Property
 
+    ''' <summary>
+    ''' ist für das Projekt jetzt in der Rootphase gespeichert 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property ampelStatus As Integer
         Get
-            ampelStatus = _ampelStatus
+            'ampelStatus = _ampelStatus
+            If Me.CountPhases > 0 Then
+                ampelStatus = Me.getPhase(1).ampelStatus
+            Else
+                ampelStatus = 0
+            End If
+
         End Get
 
         Set(value As Integer)
             If Not (IsNothing(value)) Then
                 If IsNumeric(value) Then
                     If value >= 0 And value <= 3 Then
-                        _ampelStatus = value
+                        If Me.CountPhases > 0 Then
+                            Me.getPhase(1).ampelStatus = value
+                        End If
                     Else
                         Throw New ArgumentException("unzulässiger Ampel-Wert")
                     End If
@@ -1028,21 +1043,33 @@ Public Class clsProjekt
                 End If
             Else
                 ' ohne Bewertung
-                _ampelStatus = 0
             End If
 
         End Set
     End Property
 
+    ''' <summary>
+    ''' ist für das Projekt jetzt in der RootPhase gespeichert 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property ampelErlaeuterung As String
         Get
-            ampelErlaeuterung = _ampelErlaeuterung
+            'ampelErlaeuterung = _ampelErlaeuterung
+            If Me.CountPhases > 0 Then
+                ampelErlaeuterung = Me.getPhase(1).ampelErlaeuterung
+            Else
+                ampelErlaeuterung = ""
+            End If
         End Get
         Set(value As String)
             If Not (IsNothing(value)) Then
-                _ampelErlaeuterung = CStr(value)
+                If Me.CountPhases > 0 Then
+                    Me.getPhase(1).ampelErlaeuterung = value
+                End If
             Else
-                _ampelErlaeuterung = " "
+                ' nichts tun 
             End If
         End Set
     End Property
@@ -3388,8 +3415,8 @@ Public Class clsProjekt
 
         _variantName = ""
 
-        _ampelErlaeuterung = ""
-        _ampelStatus = 0
+        '_ampelErlaeuterung = ""
+        '_ampelStatus = 0
 
         _description = ""
         _businessUnit = ""

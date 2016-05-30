@@ -7844,7 +7844,10 @@ Imports System.Windows
                     Call openXMLproj.copyTo(vglProj)
 
                     vglProj.variantName = "OpenXML"
-                    AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+                    If Not AlleProjekte.Containskey(calcProjektKey(vglProj)) Then
+                        AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+                    End If
+
 
                     Dim unterschiede As New Collection
                     ' jetzt wird festgestellt, ob es Unterschiede gibt 

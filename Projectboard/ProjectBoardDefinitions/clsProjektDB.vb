@@ -61,7 +61,7 @@
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
 
-            Me.name = calcProjektKey(projekt)
+            Me.name = calcProjektKeyDB(projekt.name, projekt.variantName)
 
             Me.variantName = .variantName
             Me.Risiko = .Risiko
@@ -155,8 +155,7 @@
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
             .Status = Me.status
-            .ampelStatus = Me.ampelStatus
-            .ampelErlaeuterung = Me.ampelErlaeuterung
+            
             .farbe = Me.farbe
             .Schrift = Me.Schrift
 
@@ -194,6 +193,10 @@
                 .AddPhase(newPhase)
             Next
 
+            ' jetzt werden Ampel Status und Beschreibung gesetzt 
+            ' da das jetzt in der Phase(1) abgespeichert ist, darf das erst gemacht werden, wenn die Phasen alle kopiert sind ... 
+            .ampelStatus = Me.ampelStatus
+            .ampelErlaeuterung = Me.ampelErlaeuterung
 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
 
@@ -664,6 +667,8 @@
         Public originalName As String
         Public appearance As String
 
+        Public deliverables As List(Of String)
+
         'Friend Property fileLink As Uri
 
         Friend ReadOnly Property bewertungsCount As Integer
@@ -718,7 +723,29 @@
                     Catch ex As Exception
 
                     End Try
-                    
+
+                    If Me.deliverables.Count > 0 Then
+                        For i = 1 To Me.deliverables.Count
+                            Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
+                            .addDeliverable(tmpDeliverable)
+                        Next
+                    Else
+                        ' evtl sind die noch in der Bewertung vergraben ... 
+                        If Me.bewertungsCount > 0 Then
+                            If Not IsNothing(Me.getBewertung(1).deliverables) Then
+                                Dim allDeliverables As String = Me.getBewertung(1).deliverables
+
+                                If allDeliverables.Trim.Length > 0 Then
+                                    Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                                    For i = 1 To tmpstr.Length
+                                        .addDeliverable(tmpstr(i - 1))
+                                    Next
+                                End If
+                                
+                            End If
+                        End If
+                    End If
+
 
 
                     For i = 1 To Me.bewertungsCount
@@ -758,6 +785,11 @@
                 Me.appearance = .appearance
 
                 Me.alternativeColor = .individualColor
+
+                For i = 1 To .countDeliverables
+                    Dim tmpDeliverable As String = .getDeliverable(i)
+                    Me.deliverables.Add(tmpDeliverable)
+                Next
 
                 Try
                     For i = 1 To .bewertungsCount
@@ -825,17 +857,20 @@
         Sub New()
 
             bewertungen = New SortedList(Of String, clsBewertungDB)
+            deliverables = New List(Of String)
 
         End Sub
 
 
     End Class
 
+
     Public Class clsBewertungDB
         ' Änderung tk: 2.11 deliverables / Ergebnisse hinzugefügt 
 
         Public color As Integer
         Public description As String
+        Public deliverables As String
         Public bewerterName As String
         Public datum As Date
 
@@ -844,6 +879,7 @@
             With newB
                 .colorIndex = Me.color
                 .description = Me.description
+                '.deliverables = Me.deliverables
                 .datum = Me.datum
                 .bewerterName = Me.bewerterName
             End With
@@ -854,6 +890,7 @@
 
             Me.color = b.colorIndex
             Me.description = b.description
+            'Me.deliverables = b.deliverables
             Me.bewerterName = b.bewerterName
             Me.datum = b.datum
 
@@ -864,6 +901,7 @@
             datum = Nothing
             color = 0
             description = ""
+            deliverables = ""
         End Sub
 
     End Class

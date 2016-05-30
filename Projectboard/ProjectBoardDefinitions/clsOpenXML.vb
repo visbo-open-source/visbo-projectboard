@@ -202,7 +202,7 @@ Public Class clsOpenXML
 
             For i = 1 To Me.tasks.Count
                 Dim newPhase As New clsPhase(parent:=projekt)
-                tasks.Item(i - 1).copyTo(newPhase, task0.startDate, i)
+                tasks.Item(i - 1).copyTo(newPhase, task0.startDate.ToLocalTime, i)
                 .AddPhase(newPhase)
             Next
 
@@ -345,7 +345,7 @@ Public Class clsOpenXML
                     resourceNeeds.Add(newOpenRole)
                 Next
 
-                For k = 1 To .countCosts
+                For k = 1 To .countCosts - 1
                     dimension = .getCost(k).getDimension
                     Dim newCost As New clsOpenCostNeed(dimension)
                     newCost.copyFrom(.getCost(k))
@@ -403,23 +403,24 @@ Public Class clsOpenXML
                 If phaseNr = 1 Then
                     .nameID = rootPhaseName
                     phaseStartOffset = 0
-                    tmpDauer = calcDauerIndays(Me.startDate, Me.finishDate)
+                    tmpDauer = calcDauerIndays(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime)
 
                 Else
                     .nameID = .parentProject.hierarchy.findUniqueElemKey(Me.name, False)
-                    phaseStartOffset = DateDiff(DateInterval.Day, projectStart, Me.startDate)
-                    tmpDauer = calcDauerIndays(Me.startDate, Me.finishDate)
+                    phaseStartOffset = DateDiff(DateInterval.Day, projectStart, Me.startDate.ToLocalTime)
+                    tmpDauer = calcDauerIndays(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime)
 
                 End If
 
+                .changeStartandDauer(phaseStartOffset, tmpDauer)
 
-                Dim anzahlMonate As Integer = getColumnOfDate(Me.finishDate) - getColumnOfDate(Me.startDate) + 1
+                Dim anzahlMonate As Integer = getColumnOfDate(Me.finishDate.ToLocalTime) - getColumnOfDate(Me.startDate.ToLocalTime) + 1
 
 
                 ' jetzt wird ausgelesen: stimmt die Dimension ? 
                 ' wenn nein, wird einfach die Summe hergenommen und verteilt ... 
                 Dim Xwerte() As Double
-                Dim oldWerte() As Double
+                'Dim oldWerte() As Double
                 Dim roleUID As Integer
 
 
@@ -434,10 +435,10 @@ Public Class clsOpenXML
                         ' alles in Ordnung , die Länge passt ...
                     Else
                         ' einfach die Summe hernehmen und verteilen ...
-                        ReDim oldWerte(0)
-                        oldWerte(0) = roleXML.sum
+                        'ReDim oldWerte(0)
+                        'oldWerte(0) = roleXML.sum
                         ReDim Xwerte(anzahlMonate - 1)
-                        Call .berechneBedarfe(Me.startDate, Me.finishDate, oldWerte, 1.0, Xwerte)
+                        Call .berechneBedarfe(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime, roleXML.monthlyNeeds, 1.0, Xwerte)
                         roleXML.monthlyNeeds = Xwerte
                     End If
 
@@ -490,10 +491,10 @@ Public Class clsOpenXML
                         ' alles in Ordnung , die Länge passt ...
                     Else
                         ' einfach die Summe hernehmen und verteilen ...
-                        ReDim oldWerte(0)
-                        oldWerte(0) = costXML.sum
+                        'ReDim oldWerte(0)
+                        'oldWerte(0) = costXML.sum
                         ReDim Xwerte(anzahlMonate - 1)
-                        Call .berechneBedarfe(Me.startDate, Me.finishDate, oldWerte, 1.0, Xwerte)
+                        Call .berechneBedarfe(Me.startDate.ToLocalTime, Me.finishDate.ToLocalTime, costXML.monthlyNeeds, 1.0, Xwerte)
                         costXML.monthlyNeeds = Xwerte
                     End If
 
@@ -527,7 +528,7 @@ Public Class clsOpenXML
                 Next
 
 
-                .changeStartandDauer(phaseStartOffset, tmpDauer)
+                '.changeStartandDauer(phaseStartOffset, tmpDauer)
 
                 '
                 ' jetzt die Meilensteine aufnehmen ...
@@ -848,7 +849,7 @@ Public Class clsOpenXML
                     .farbe = Me.color
 
                     .verantwortlich = Me.responsible
-                    .offset = DateDiff(DateInterval.Day, .Parent.getStartDate, Me.finishDate) + 1
+                    .offset = DateDiff(DateInterval.Day, .Parent.getStartDate, Me.finishDate.ToLocalTime)
 
                     ' die Deliverables übertragen 
                     For i = 1 To Me.deliverables.Count
