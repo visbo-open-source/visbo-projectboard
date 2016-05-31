@@ -6155,23 +6155,51 @@ Public Module awinGeneralModules
                                             End If
 
                                             ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                                            bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
-                                            explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                            Try
+                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                                If IsNothing(bewertungsAmpel) Then
+                                                    bewertungsAmpel = 0
+                                                End If
+                                            Catch ex As Exception
+                                                bewertungsAmpel = 0
+                                            End Try
 
-                                            ' Ergänzung tk 2.11 deliverables ergänzt 
-                                            deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                            Try
+                                                explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                                If IsNothing(explanation) Then
+                                                    explanation = ""
+                                                End If
+                                            Catch ex As Exception
+                                                explanation = ""
+                                            End Try
+
+                                            Try
+                                                ' Ergänzung tk 2.11 deliverables ergänzt 
+                                                deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                                If IsNothing(deliverables) Then
+                                                    deliverables = ""
+                                                End If
+                                            Catch ex As Exception
+                                                deliverables = ""
+                                            End Try
+                                           
 
 
                                             ' tk 29.5.16
                                             ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
-                                            Dim tmpDeliverables As New List(Of String)
-                                            Dim splitStr() As String = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                                            Try
+                                                If deliverables.Trim.Length > 0 Then
+                                                    Dim splitStr() As String = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
 
-                                            ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
-                                            For ix As Integer = 1 To splitStr.Length
-                                                cMilestone.addDeliverable(splitStr(ix - 1))
-                                            Next
+                                                    ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
+                                                    For ix As Integer = 1 To splitStr.Length
+                                                        cMilestone.addDeliverable(splitStr(ix - 1))
+                                                    Next
+                                                End If
+                                            Catch ex As Exception
 
+                                            End Try
+                                            
                                             If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
                                                 ' es gibt keine Bewertung
                                                 bewertungsAmpel = 0

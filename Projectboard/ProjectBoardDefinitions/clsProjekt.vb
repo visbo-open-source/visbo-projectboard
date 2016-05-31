@@ -3035,9 +3035,15 @@ Public Class clsProjekt
             ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
             Dim dimension As Integer = endNr - startNr
             Dim lastEndDates(dimension) As Date
+            ' list of Phases dient dazu, die IDs der Phasen, die in dieser Zeile gezeichnet wurden aufzunehmen
+            ' damit wird ein Cap eingeführt, das heisst keine Phase wird in der Swimlane über ihrer Eltern-Phase gezeichnet 
+            Dim listOfPhases(dimension) As Collection
+
             For i As Integer = 0 To dimension
                 lastEndDates(i) = StartofCalendar.AddDays(-1)
+                listOfPhases(i) = New Collection
             Next
+
             Dim maxOffsetZeile As Integer = 1
             Dim curOffsetZeile As Integer = 1
 
@@ -3094,31 +3100,53 @@ Public Class clsProjekt
                                                                                            extended, _
                                                                                            considerTimespace, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                            considerAll)
+
+                                    Dim bestStart As Integer = 0
+                                    ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
+                                    ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
+
+                                    Dim parentFound As Boolean = False
+                                    Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
+                                    Dim ix As Integer = maxOffsetZeile
+
+                                    While ix > 0 And Not parentFound
+
+                                        If listOfPhases(ix - 1).Count > 0 Then
+                                            Dim kx As Integer = 1
+                                            While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                                Dim vglBreadCrumb As String = Me.hierarchy.getBreadCrumb(CStr(listOfPhases(ix - 1).Item(kx)))
+                                                If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                                    parentFound = True
+                                                Else
+                                                    kx = kx + 1
+                                                End If
+                                            End While
+
+                                            If Not parentFound Then
+                                                ix = ix - 1
+                                            End If
+
+                                        Else
+                                            ix = ix - 1
+                                        End If
+                                    End While
+
+                                    If parentFound Then
+                                        bestStart = ix
+                                    Else
+                                        bestStart = 0
+                                    End If
+
                                     With cPhase
 
-                                        'If (zeilenOffset = 1) And (maxOffsetZeile = 1) Then
-                                        '    ' er muss sich so verhalten wie es bisher war 
-                                        '    ' old stuff
 
-
-                                        '    'phasenName = .name
-                                        '    If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getStartDate) < 0 Then
-                                        '        zeilenOffset = zeilenOffset + 1
-                                        '        maxOffsetZeile = System.Math.Max(zeilenOffset, maxOffsetZeile)
-                                        '        lastEndDates(zeilenOffset - 1) = StartofCalendar.AddDays(-1)
-                                        '    End If
-
-                                        '    If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
-                                        '        lastEndDates(zeilenOffset - 1) = .getEndDate
-                                        '    End If
-
-
-
-                                        'Else
-                                        ' man ist in der zweiten, dritten etc Zeile 
-                                        ' das im Folgenden gilt ebenso, wenn zeilenoffset = 1 and maxoffsetZeile = 1 
-                                        zeilenOffset = findeBesteZeile(lastEndDates, maxOffsetZeile, .getStartDate, requiredZeilen)
+                                        zeilenOffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
                                         maxOffsetZeile = System.Math.Max(zeilenOffset + requiredZeilen - 1, maxOffsetZeile)
+
+                                        ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
+                                        If Not listOfPhases(zeilenOffset - 1).Contains(cPhase.nameID) Then
+                                            listOfPhases(zeilenOffset - 1).Add(cPhase.nameID, cPhase.nameID)
+                                        End If
 
                                         If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
                                             lastEndDates(zeilenOffset - 1) = .getEndDate

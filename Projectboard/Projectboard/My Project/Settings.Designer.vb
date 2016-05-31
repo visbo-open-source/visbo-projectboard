@@ -64,8 +64,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Engineering Demo 201"& _ 
-        "6\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\AutoDemo 2016 engl\")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -74,7 +73,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("EngineeringDemo")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("autoDemoEngl2016")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)

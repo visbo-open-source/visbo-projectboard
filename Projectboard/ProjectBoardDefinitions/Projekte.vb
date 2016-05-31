@@ -20416,16 +20416,19 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="matrix">ist so dimensioniert, dass es die maximale Anzahl Zeilen, die in einer Swimlane überhaupt vorkommen können, darstellen kann; 
     ''' matrix(i) enthält das letzte Datum, das in Zeile i vorkam; i läuft von 0 an</param>
+    ''' <param name="bestStart" >enthält die Zeile, bis zu der nach oben gegangen werden kann; 0: die Swimlane selber; 
+    ''' x: di ezeile, in der die (Groß-)Eltern Phase ist ... es soll keine 
+    ''' keine Phase über ihrer Eltern-Phase gezeichnet werden </param>
     ''' <param name="maxZeile">das ist die bisher maximal aufgetretene Anzahl Zeilen, die notwendig war</param>
     ''' <param name="startdate">das Startdatum der neuen Phase</param>
     ''' <param name="requiredZeilen">die Anzahl Zeilen, die die Phase inkl ihrer Kinder benötigt</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function findeBesteZeile(ByVal matrix() As Date, ByVal maxZeile As Integer, _
+    Public Function findeBesteZeile(ByVal matrix() As Date, ByVal bestStart As Integer, ByVal maxZeile As Integer, _
                                         ByVal startdate As Date, _
                                         ByVal requiredZeilen As Integer) As Integer
 
-        Dim bestStart As Integer = 0
+
         Dim dimension As Integer = matrix.Length - 1
         Dim found As Boolean
 

@@ -10736,8 +10736,13 @@ Public Module testModule
         ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
         Dim dimension As Integer = endNr - startNr
         Dim lastEndDates(dimension) As Date
+        ' list of Phases dient dazu, die IDs der Phasen, die in dieser Zeile gezeichnet wurden aufzunehmen
+        ' damit wird ein Cap eingeführt, das heisst keine Phase wird in der Swimlane über ihrer Eltern-Phase gezeichnet 
+        Dim listOfPhases(dimension) As Collection
+
         For i As Integer = 0 To dimension
             lastEndDates(i) = StartofCalendar.AddDays(-1)
+            listOfPhases(i) = New Collection
         Next
 
         Dim maxOffsetZeile As Integer = 1
@@ -10801,12 +10806,7 @@ Public Module testModule
                                 (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
                                                                             zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
-                        Dim requiredZeilen As Integer = hproj.calcNeededLinesSwl(curPhase.nameID, _
-                                                                                           selectedPhaseIDs, _
-                                                                                           selectedMilestoneIDs, _
-                                                                                           extended, _
-                                                                                           considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
-                                                                                           considerAll)
+                        Dim requiredZeilen As Integer
 
                         ' ermittle den Zeilenoffset
                         If extended Then
@@ -10816,7 +10816,44 @@ Public Module testModule
                                                                                     extended, _
                                                                                     considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                     considerAll)
-                            zeilenoffset = findeBesteZeile(lastEndDates, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+
+                            Dim bestStart As Integer = 0
+                            ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
+                            ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
+
+                            Dim parentFound As Boolean = False
+                            Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
+                            Dim ix As Integer = maxOffsetZeile
+
+                            While ix > 0 And Not parentFound
+                                If listOfPhases(ix - 1).Count > 0 Then
+                                    Dim kx As Integer = 1
+
+                                    While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                        Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
+                                        If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                            parentFound = True
+                                        Else
+                                            kx = kx + 1
+                                        End If
+                                    End While
+
+                                    If Not parentFound Then
+                                        ix = ix - 1
+                                    End If
+
+                                Else
+                                    ix = ix - 1
+                                End If
+                            End While
+
+                            If parentFound Then
+                                bestStart = ix
+                            Else
+                                bestStart = 0
+                            End If
+
+                            zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
                         Else
                             requiredZeilen = 1
                             zeilenoffset = 1
@@ -10826,6 +10863,12 @@ Public Module testModule
                         ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
                         maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
 
+                        ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
+                        If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
+                            listOfPhases(zeilenoffset - 1).Add(curPhase.nameID, curPhase.nameID)
+                        End If
+
+                        ' merken, bis wohin in dieser Zeile bereits gezeichnet wurde 
                         If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
                             lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
                         End If
