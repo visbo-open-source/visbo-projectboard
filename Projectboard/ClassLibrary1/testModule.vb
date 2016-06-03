@@ -6,6 +6,8 @@ Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports Microsoft.Office.Interop
+Imports System.Xml.Serialization
+Imports System.IO
 
 Public Module testModule
 
@@ -428,7 +430,14 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen")
+
+            e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+
+            Exit Sub
+
         End Try
 
         Dim reportObj As xlNS.ChartObject
@@ -519,7 +528,8 @@ Public Module testModule
                     Try
 
                         If .Title <> "" Then
-                            kennzeichnung = .Title
+                            tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                            kennzeichnung = tmpStr(0).Trim
                         Else
                             tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
@@ -531,8 +541,10 @@ Public Module testModule
                     End Try
 
                     If kennzeichnung = "Projekt-Name" Or _
+                        kennzeichnung = "Custom-Field" Or _
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Multivariantensicht" Or _
+                        kennzeichnung = "Einzelprojektsicht" Or _
                         kennzeichnung = "AllePlanElemente" Or _
                         kennzeichnung = "Swimlanes" Or _
                         kennzeichnung = "Swimlanes2" Or _
@@ -631,38 +643,18 @@ Public Module testModule
                         .Name = "Shape" & .Id.ToString
 
                         If .Title <> "" Then
-                            kennzeichnung = .Title
-                            qualifier = .AlternativeText
+
+                            Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
+
+
                         Else
                             ' Start neu
-                            Dim tmpStr(10) As String
-                            Try
 
-                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
-                                kennzeichnung = tmpStr(0).Trim
+                            Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
+                            boxName = kennzeichnung
 
-                            Catch ex As Exception
-                                kennzeichnung = "nicht identifizierbar"
-                                tmpStr(0) = " "
-                            End Try
 
-                            Try
-                                If tmpStr.Length < 2 Then
-                                    qualifier = ""
-                                    qualifier2 = ""
-                                ElseIf tmpStr.Length = 2 Then
-                                    qualifier = tmpStr(1).Trim
-                                ElseIf tmpStr.Length >= 3 Then
-                                    qualifier = tmpStr(1).Trim
-                                    qualifier2 = tmpStr(2).Trim
-                                End If
-
-                            Catch ex As Exception
-                                qualifier = ""
-                                qualifier2 = ""
-                            End Try
-                            ' Ende neu 
                         End If
 
 
@@ -702,6 +694,58 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = fullName & ": " & qualifier
                                 Else
                                     .TextFrame2.TextRange.Text = fullName
+                                End If
+
+                            Case "Custom-Field"
+                                If qualifier.Length > 0 Then
+                                    ' existiert der überhaupt 
+                                    Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
+
+                                    If uid <> -1 Then
+                                        Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
+
+                                        Select Case cftype
+                                            Case ptCustomFields.Str
+                                                Dim wert As String = hproj.getCustomSField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    .TextFrame2.TextRange.Text = qualifier & ": " & wert
+                                                Else
+                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
+                                            Case ptCustomFields.Dbl
+                                                Dim wert As Double = hproj.getCustomDField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    .TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
+                                                Else
+                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
+                                            Case ptCustomFields.bool
+                                                Dim wert As Boolean = hproj.getCustomBField(uid)
+
+                                                If Not IsNothing(wert) Then
+                                                    If wert Then
+                                                        ' Sprache !
+                                                        .TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                                    Else
+                                                        ' Sprache !
+                                                        .TextFrame2.TextRange.Text = qualifier & ": No"
+                                                    End If
+
+                                                Else
+                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
+                                        End Select
+                                    Else
+                                        .TextFrame2.TextRange.Text = "Custom-Field " & qualifier & _
+                                            " existiert nicht !"
+                                    End If
+
+                                Else
+                                    ' n.a"
+                                    .TextFrame2.TextRange.Text = "Custom-Field ohne Namen.."
                                 End If
 
                             Case "Projekt-Grafik"
@@ -811,12 +855,15 @@ Public Module testModule
                                         Next
                                     End If
 
+
+                                    ' die Slide mit Tag kennzeichnen ... 
+
                                     Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                   objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                   tmpphases, tmpMilestones, _
                                                                   selectedRoles, selectedCosts, _
                                                                   selectedBUs, selectedTyps, _
-                                                                  worker, e, False, hproj, kennzeichnung)
+                                                                  worker, e, False, False, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
@@ -825,6 +872,22 @@ Public Module testModule
 
                                 End Try
 
+                            Case "Einzelprojektsicht"
+
+                                Try
+
+                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      selectedPhases, selectedMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTyps, _
+                                                                      worker, e, False, False, hproj, kennzeichnung)
+                                    .TextFrame2.TextRange.Text = ""
+                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+                                End Try
 
                             Case "Multivariantensicht"
 
@@ -836,7 +899,7 @@ Public Module testModule
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
-                                                                      worker, e, False, hproj, kennzeichnung)
+                                                                      worker, e, False, True, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
@@ -875,7 +938,7 @@ Public Module testModule
 
                                     'awinSettings.mppExtendedMode = True
 
-                                    
+
                                     Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
@@ -1079,7 +1142,7 @@ Public Module testModule
 
                                 Catch ex As Exception
                                     'Throw New Exception("Vorlage konnte nicht bestimmt werden")
-                                    Throw New Exception(repMessages.getmsg(24))
+                                    Throw New Exception(repMessages.getmsg(25))
                                 End Try
 
                                 If continueWork Then
@@ -1124,8 +1187,9 @@ Public Module testModule
 
                                     If Not repObj1 Is Nothing Then
                                         Try
-                                            repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                            newShapeRange = pptSlide.Shapes.Paste
+                                            ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                            ''newShapeRange = pptSlide.Shapes.Paste
+                                            newShapeRange = pictCopypptPaste(repObj1, pptSlide)
 
                                             With newShapeRange(1)
                                                 .Top = CSng(top + 0.02 * height)
@@ -1139,8 +1203,9 @@ Public Module testModule
 
                                             If Not repObj2 Is Nothing Then
                                                 Try
-                                                    repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                                    newShapeRange2 = pptSlide.Shapes.Paste
+                                                    ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                    ''newShapeRange2 = pptSlide.Shapes.Paste
+                                                    newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
 
                                                     With newShapeRange2(1)
                                                         .Top = CSng(topNext)
@@ -1239,8 +1304,9 @@ Public Module testModule
 
                                 If Not repObj1 Is Nothing Then
                                     Try
-                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                        newShapeRange = pptSlide.Shapes.Paste
+                                        ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        ''newShapeRange = pptSlide.Shapes.Paste
+                                        newShapeRange = pictCopypptPaste(repObj1, pptSlide)
 
                                         With newShapeRange(1)
                                             .Top = CSng(top + 0.02 * height)
@@ -1254,8 +1320,9 @@ Public Module testModule
 
                                         If Not repObj2 Is Nothing Then
                                             Try
-                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                                newShapeRange2 = pptSlide.Shapes.Paste
+                                                ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                ''newShapeRang2 = pptSlide.Shapes.Paste
+                                                newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
 
                                                 With newShapeRange2(1)
                                                     .Top = CSng(topNext)
@@ -1345,8 +1412,9 @@ Public Module testModule
 
                                 If Not repObj1 Is Nothing Then
                                     Try
-                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                        newShapeRange = pptSlide.Shapes.Paste
+                                        ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        ''newShapeRange = pptSlide.Shapes.Paste
+                                        newShapeRange = pictCopypptPaste(repObj1, pptSlide)
 
                                         With newShapeRange(1)
                                             .Top = CSng(top + 0.02 * height)
@@ -1360,8 +1428,9 @@ Public Module testModule
 
                                         If Not repObj2 Is Nothing Then
                                             Try
-                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                                newShapeRange2 = pptSlide.Shapes.Paste
+                                                ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                ''newShapeRange2 = pptSlide.Shapes.Paste                                             
+                                                newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
 
                                                 With newShapeRange2(1)
                                                     .Top = CSng(topNext)
@@ -1438,7 +1507,7 @@ Public Module testModule
 
                             Case "Tabelle Veränderungen"
 
-                            
+
                                 Try
 
 
@@ -1569,6 +1638,7 @@ Public Module testModule
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(233)
                                 End Try
 
@@ -1651,10 +1721,22 @@ Public Module testModule
 
                                 Try
                                     auswahl = 2
-                                    Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Else
+                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        End If
+
+                                    Else
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                    End If
 
                                     reportObj = obj
                                     notYetDone = True
+
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(168)
@@ -2010,7 +2092,8 @@ Public Module testModule
                                     boxName = repMessages.getmsg(165) & ke
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(182)
                                 End Try
 
 
@@ -2368,8 +2451,10 @@ Public Module testModule
                                         .Chart.ChartTitle.Font.Size = pptSize
                                     End With
 
-                                    reportObj.Copy()
-                                    newShapeRange = pptSlide.Shapes.Paste
+                                    ''reportObj.Copy()
+                                    ''newShapeRange = pptSlide.Shapes.Paste
+                                    newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
                                     newShape = newShapeRange.Item(1)
 
                                     With newShape
@@ -2622,6 +2707,7 @@ Public Module testModule
         Dim obj As xlNS.ChartObject = Nothing
         Dim kennzeichnung As String = ""
         Dim qualifier As String = ""
+        Dim qualifier2 As String = ""
         Dim anzShapes As Integer
         Dim tatsErstellt As Integer = 0
         Dim folieIX As Integer = 1
@@ -2694,12 +2780,12 @@ Public Module testModule
                     Try
 
                         If .Title <> "" Then
-                            kennzeichnung = .Title
+                            tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                            kennzeichnung = tmpStr(0).Trim
                         Else
                             tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
                         End If
-
 
                     Catch ex As Exception
                         kennzeichnung = "nicht identifizierbar"
@@ -2766,33 +2852,59 @@ Public Module testModule
                 Dim tmpanz As Integer = listofShapes.Count
                 pptShape = tmpShape
                 qualifier = ""
+                qualifier2 = ""
                 kennzeichnung = ""
                 With pptShape
                     .Name = "Shape" & .Id.ToString
                     Dim tmpStr(3) As String
                     Try
 
+
                         If .Title <> "" Then
-                            kennzeichnung = .Title
-                            qualifier = .AlternativeText
+
+                            Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
+
+
                         Else
-                            tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
-                            kennzeichnung = tmpStr(0).Trim
-                            boxName = .TextFrame2.TextRange.Text
-                            If tmpStr.Length > 1 Then
-                                Try
-                                    qualifier = tmpStr(1)
-                                Catch ex2 As Exception
-                                    qualifier = ""
-                                End Try
-                            End If
+                            ' Start neu
+
+                            Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
+                            boxName = kennzeichnung
+
+
                         End If
+
+
+
+                        '' ''If .Title <> "" Then
+                        '' ''    kennzeichnung = .Title
+                        '' ''    qualifier = .AlternativeText
+                        '' ''    boxName = kennzeichnung
+                        '' ''Else
+                        '' ''    tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                        '' ''    kennzeichnung = tmpStr(0).Trim
+
+                        '' ''    If tmpStr.Length > 1 Then
+                        '' ''        Try
+                        '' ''            qualifier = tmpStr(1)
+                        '' ''        Catch ex2 As Exception
+                        '' ''            qualifier = ""
+                        '' ''        End Try
+                        '' ''    End If
+                        '' ''End If
 
                     Catch ex As Exception
                         kennzeichnung = "nicht identifizierbar"
                         boxName = " "
                     End Try
+
+                    If .TextFrame2.HasText Then
+                        boxName = .TextFrame2.TextRange.Text
+                    Else
+                        boxName = ""
+                    End If
+
 
                     ' Fortschrittsmeldung im Formular SelectPPTTempl
 
@@ -2832,7 +2944,7 @@ Public Module testModule
                                                               selectedPhases, selectedMilestones, _
                                                               selectedRoles, selectedCosts, _
                                                               selectedBUs, selectedTyps, _
-                                                              worker, e, True, tmpProjekt, kennzeichnung)
+                                                              worker, e, True, False, tmpProjekt, kennzeichnung)
                                 .TextFrame2.TextRange.Text = ""
                                 .ZOrder(MsoZOrderCmd.msoSendToBack)
                             Catch ex As Exception
@@ -2994,8 +3106,10 @@ Public Module testModule
                                     End If
 
 
-                                    rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                    newShapeRange = pptSlide.Shapes.Paste
+                                    ''rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                    ''newShapeRange = pptSlide.Shapes.Paste
+                                    newShapeRange = rngPictCopypptPaste(rng, pptSlide)
+
                                     newShape = newShapeRange.Item(1)
 
                                     If Not awinSettings.showTimeSpanInPT Then
@@ -3122,6 +3236,7 @@ Public Module testModule
 
                                             Call awinZeichnePhasen(phNameCollection, False, True)
                                             rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                           
 
                                             If Not awinSettings.showTimeSpanInPT Then
 
@@ -3150,7 +3265,9 @@ Public Module testModule
                                     End With
 
                                     If ok Then
-                                        newShapeRange = pptSlide.Shapes.Paste
+                                        'newShapeRange = pptSlide.Shapes.Paste
+                                        newShapeRange = pictPaste(pptSlide)
+
 
                                         Dim ratio As Double
                                         ratio = height / width
@@ -3313,8 +3430,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3355,8 +3473,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3397,8 +3516,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3419,6 +3539,8 @@ Public Module testModule
 
                             If boxName = kennzeichnung Then
                                 boxName = repMessages.getmsg(213)
+
+
                             End If
 
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -3451,8 +3573,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3507,8 +3630,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3552,8 +3676,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3603,8 +3728,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3716,8 +3842,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -3766,8 +3893,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3810,8 +3938,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3855,8 +3984,9 @@ Public Module testModule
                                 .Chart.ChartTitle.Font.Size = pptSize
                             End With
 
-                            reportObj.Copy()
-                            newShapeRange = pptSlide.Shapes.Paste
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                             With newShapeRange.Item(1)
                                 .Top = CSng(top + 0.02 * height)
@@ -3905,8 +4035,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -3960,8 +4091,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4026,8 +4158,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4091,8 +4224,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4142,8 +4276,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4194,8 +4329,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4251,8 +4387,9 @@ Public Module testModule
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
-                                reportObj.Copy()
-                                newShapeRange = pptSlide.Shapes.Paste
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
                                 With newShapeRange.Item(1)
                                     .Top = CSng(top + 0.02 * height)
@@ -4874,6 +5011,9 @@ Public Module testModule
                             ' mit Beauftragung vergleichen 
 
                             vglProj = projekthistorie.beauftragung
+                            If IsNothing(vglProj) Then
+                                vglProj = projekthistorie.ElementAt(0)
+                            End If
 
                         Case 2
                             ' mit letzter Freigabe vergleichen
@@ -5340,11 +5480,12 @@ Public Module testModule
 
                 Case 1
                     ' mit Beauftragung vergleichen 
-                    Try
-                        vglProj = projekthistorie.beauftragung
-                    Catch ex As Exception
+
+                    vglProj = projekthistorie.beauftragung
+                    If IsNothing(vglProj) Then
                         vglProj = projekthistorie.ElementAt(0)
-                    End Try
+                    End If
+                    
 
 
                 Case 2
@@ -5670,8 +5811,10 @@ Public Module testModule
             For i = 1 To businessUnitDefinitions.Count
                 tmpBU = businessUnitDefinitions.ElementAt(i - 1).Value
                 ' jetzt das Shape eintragen 
-                legendBuColorShape.Copy()
-                copiedShape = pptslide.Shapes.Paste()
+                ''legendBuColorShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(legendBuColorShape, pptslide)
+
                 With copiedShape(1)
                     .Height = zeilenHoehe * 0.8
                     .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
@@ -5697,8 +5840,10 @@ Public Module testModule
             ' jetzt die undefinierte Produktlinie noch zeichnen ...
 
             ' jetzt das Shape eintragen 
-            legendBuColorShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''legendBuColorShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(legendBuColorShape, pptslide)
+
             With copiedShape(1)
                 .Height = zeilenHoehe * 0.8
                 .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
@@ -5748,8 +5893,10 @@ Public Module testModule
 
 
             ' Phasen-Shape 
-            phaseShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''phaseShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
+
             With copiedShape(1)
 
                 .Height = legendPhaseVorlage.Height
@@ -5799,9 +5946,11 @@ Public Module testModule
 
             factor = milestoneShape.Width / milestoneShape.Height
             shortName = MilestoneDefinitions.getAbbrev(milestoneName)
-            ' Phasen-Shape 
-            milestoneShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ' Meilenstein-Shape 
+            ''milestoneShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = xlnsCopypptPaste(milestoneShape, pptslide)
+
             With copiedShape(1)
 
                 .Height = legendMilestoneVorlage.Height
@@ -6116,8 +6265,11 @@ Public Module testModule
 
                 For ize As Integer = 1 To nrOfZeilen(isp - 1)
 
-                    CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                                    ergebnisListe(isp - 1, ize - 1)
+                    If Not IsNothing(ergebnisListe(isp - 1, ize - 1)) Then
+                        CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                                                            ergebnisListe(isp - 1, ize - 1)
+                    End If
+                    
 
                 Next
 
@@ -6405,8 +6557,10 @@ Public Module testModule
 
             rng = .Range(.Cells(newzeile, minColumn), .Cells(newzeile + 1, maxColumn))
             'rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-            rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-            newshapeRange = pptslide.Shapes.Paste
+            ''rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+            ''newshapeRange = pptslide.Shapes.Paste
+            newshapeRange = rngPictCopypptPaste(rng, pptslide)
+
             newShape = newshapeRange.Item(1)
 
             Call awinDeleteProjectChildShapes(0)
@@ -7461,8 +7615,9 @@ Public Module testModule
         Dim korrFaktor As Double = 1.0
         Dim newZeichen As pptNS.ShapeRange
 
-        zeichen.Copy()
-        newZeichen = pptslide.Shapes.Paste
+        ''zeichen.Copy()
+        ''newZeichen = pptslide.Shapes.Paste
+        newZeichen = pptCopypptPaste(zeichen, pptslide)
 
         ' ist der Pfeil größer als die Zelle ? 
         If tabelle.Cell(tbZeile, tbSpalte).Shape.Width < newZeichen(1).Width Or _
@@ -7522,8 +7677,9 @@ Public Module testModule
         Dim korrFaktor As Double = 1.0
         Dim newZeichen As pptNS.ShapeRange
 
-        zeichen.Copy()
-        newZeichen = pptslide.Shapes.Paste
+        ''zeichen.Copy()
+        ''newZeichen = pptslide.Shapes.Paste
+        newZeichen = pptCopypptPaste(zeichen, pptslide)
 
         ' ist der Pfeil größer als die Zelle ? 
         If tabelle.Cell(tbZeile, tbSpalte).Shape.Width < newZeichen(1).Width Or _
@@ -7601,7 +7757,7 @@ Public Module testModule
         End Try
 
         If anzSpalten < 4 Then
-            Throw New Exception("Shape hat zu wenige Spalten (min 4) ")
+            ''Throw New Exception("Shape hat zu wenige Spalten (min 4) ")
             Throw New Exception(repMessages.getmsg(29))
         Else
             pptShape.Title = ""
@@ -8064,6 +8220,11 @@ Public Module testModule
                         vproj = projekthistorie.Last
                     Else
                         vproj = projekthistorie.beauftragung
+                        If IsNothing(vproj) Then
+                            If projekthistorie.liste.Count > 0 Then
+                                vproj = projekthistorie.First
+                            End If
+                        End If
                     End If
                 Else
                     'Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
@@ -8797,7 +8958,8 @@ Public Module testModule
                                               ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                               ByVal von As Integer, ByVal bis As Integer, ByVal sortiertNachDauer As Boolean, _
                                                   ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date, _
-                                                  ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt)
+                                                  ByVal isMultiprojektSicht As Boolean, _
+                                                  ByVal isMultivariantenSicht As Boolean, ByVal projMitVariants As clsProjekt)
 
         Dim tmpMinimum As Date
         Dim tmpMaximum As Date
@@ -8859,7 +9021,7 @@ Public Module testModule
 
             Next
         Else
-            ' Multivarianten Sicht 
+            ' Multivarianten Sicht oder Einzelprojektsicht 
             ' in diesem Fall soll der selektierte Zeitraum nicht betrachtet werden 
 
 
@@ -8867,22 +9029,35 @@ Public Module testModule
             ' auch in den Einzelprojekt-Sichten soll der gewählte Zeitraum betrachtet werden 
             ' das ist insbesondere für die Swimlanes wichtig ... 
             If noTimespanDefined Then
-                von = 0
-                bis = 0
-                tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
-                tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+                If isMultivariantenSicht Then
+                    von = 0
+                    bis = 0
+                    tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
+                    tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+                Else
+                    von = 0
+                    bis = 0
+                    tmpMinimum = projMitVariants.startDate
+                    tmpMaximum = projMitVariants.endeDate
+                End If
+                
             Else
                 tmpMinimum = StartofCalendar.AddMonths(von - 1)
                 tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
             End If
 
-            
 
-            Dim variantNames As Collection = AlleProjekte.getVariantNames(projMitVariants.name, False)
-            For i As Integer = 1 To variantNames.Count
-                key = i
-                projektListe.Add(key, calcProjektKey(projMitVariants.name, CStr(variantNames.Item(i))))
-            Next
+            If isMultivariantenSicht Then
+                Dim variantNames As Collection = AlleProjekte.getVariantNames(projMitVariants.name, False)
+                For i As Integer = 1 To variantNames.Count
+                    key = i
+                    projektListe.Add(key, calcProjektKey(projMitVariants.name, CStr(variantNames.Item(i))))
+                Next
+            Else
+                key = 1
+                projektListe.Add(key, calcProjektKey(projMitVariants.name, projMitVariants.variantName))
+            End If
+            
         End If
 
 
@@ -9126,8 +9301,10 @@ Public Module testModule
 
 
         ' den unteren Rand des Kalenders zeichnen 
-        calendarLineShape.Copy()
-        newShapes = pptslide.Shapes.Paste
+        ''calendarLineShape.Copy()
+        ''newShapes = pptslide.Shapes.Paste
+        newShapes = pptCopypptPaste(calendarLineShape, pptslide)
+
         With newShapes.Item(1)
             .Left = calendarLineShape.Left
             .Top = calendarLineShape.Top
@@ -9137,8 +9314,10 @@ Public Module testModule
         End With
 
         If Not IsNothing(calendarMark) Then
-            calendarMark.Copy()
-            newShapes = pptslide.Shapes.Paste
+            ''calendarMark.Copy()
+            ''newShapes = pptslide.Shapes.Paste
+            newShapes = pptCopypptPaste(calendarMark, pptslide)
+
             With newShapes.Item(1)
                 .Left = calendarLineShape.Left + startOfZeitraum * monthWidth
                 .Top = calendarLineShape.Top - calendarHeightShape.Height
@@ -9168,8 +9347,10 @@ Public Module testModule
 
                     If i Mod 12 <> 0 Then
 
-                        calendarStepShape.Copy()
-                        newShapes = pptslide.Shapes.Paste
+                        ''calendarStepShape.Copy()
+                        ''newShapes = pptslide.Shapes.Paste
+                        newShapes = pptCopypptPaste(calendarStepShape, pptslide)
+
                         With newShapes.Item(1)
                             .Left = textXPosition + monthWidth - 0.5 * .Width
                             If i Mod 3 = 0 Then
@@ -9213,8 +9394,10 @@ Public Module testModule
                 lfdNr = StartofPPTCalendar.Month
 
                 For i As Integer = 1 To anzQMs
-                    qmShape.Copy()
-                    newShapes = pptslide.Shapes.Paste
+                    ''qmShape.Copy()
+                    ''newShapes = pptslide.Shapes.Paste
+                    newShapes = pptCopypptPaste(qmShape, pptslide)
+
                     With newShapes.Item(1)
                         .TextFrame2.TextRange.Text = lfdNr.ToString
                         .Left = textXPosition + (qmWidth - .Width) * 0.5
@@ -9235,8 +9418,10 @@ Public Module testModule
                 ' Quartale zeichnen 
                 lfdNr = (StartofPPTCalendar.Month - 1) \ 3 + 1
                 For i As Integer = 1 To anzQMs / 3
-                    qmShape.Copy()
-                    newShapes = pptslide.Shapes.Paste
+                    ''qmShape.Copy()
+                    ''newShapes = pptslide.Shapes.Paste
+                    newShapes = pptCopypptPaste(qmShape, pptslide)
+
                     With newShapes.Item(1)
                         .TextFrame2.TextRange.Text = "Q" & lfdNr.ToString
                         .Left = textXPosition + (qmWidth - .Width) * 0.5
@@ -9256,8 +9441,10 @@ Public Module testModule
             End If
 
             ' Jetzt die horizontale Line zeichnen , die die M bzw Q von den Jahren trennt
-            calendarLineShape.Copy()
-            newShapes = pptslide.Shapes.Paste
+            ''calendarLineShape.Copy()
+            ''newShapes = pptslide.Shapes.Paste
+            newShapes = pptCopypptPaste(calendarLineShape, pptslide)
+
             With newShapes.Item(1)
                 .Left = calendarLineShape.Left
                 .Top = calendarLineShape.Top - qmHeightfaktor * calendarHeightShape.Height
@@ -9284,8 +9471,10 @@ Public Module testModule
         lfdNr = StartofPPTCalendar.Year
 
         ' den linken Rand des Kalenders zeichnen 
-        calendarHeightShape.Copy()
-        newShapes = pptslide.Shapes.Paste
+        ''calendarHeightShape.Copy()
+        ''newShapes = pptslide.Shapes.Paste
+        newShapes = pptCopypptPaste(calendarHeightShape, pptslide)
+
         With newShapes.Item(1)
             .Left = calendarLineShape.Left
             .Top = calendarLineShape.Top - calendarHeightShape.Height
@@ -9306,8 +9495,10 @@ Public Module testModule
             ' den Jahrestext schreiben 
             If ix < 7 Then
 
-                yearShape.Copy()
-                newShapes = pptslide.Shapes.Paste
+                ''yearShape.Copy()
+                ''newShapes = pptslide.Shapes.Paste
+                newShapes = pptCopypptPaste(yearShape, pptslide)
+
 
                 ' hier wird nur ein ganzes Jahr dargestellt
                 With newShapes.Item(1)
@@ -9334,8 +9525,10 @@ Public Module testModule
             End If
 
 
-            calendarHeightShape.Copy()
-            newShapes = pptslide.Shapes.Paste
+            ''calendarHeightShape.Copy()
+            ''newShapes = pptslide.Shapes.Paste
+            newShapes = pptCopypptPaste(calendarHeightShape, pptslide)
+
             With newShapes.Item(1)
 
                 If partYear Then
@@ -9376,8 +9569,10 @@ Public Module testModule
 
 
         ' und jetzt noch die oberste Linie zeichnen  
-        calendarLineShape.Copy()
-        newShapes = pptslide.Shapes.Paste
+        ''calendarLineShape.Copy()
+        ''newShapes = pptslide.Shapes.Paste
+        newShapes = pptCopypptPaste(calendarLineShape, pptslide)
+
         With newShapes.Item(1)
             .Left = calendarLineShape.Left
             .Top = calendarLineShape.Top - calendarHeightShape.Height
@@ -9406,12 +9601,14 @@ Public Module testModule
 
                 If i Mod CInt(12 / divisor) = 0 Then
                     ' es handelt sich um eine JAhreslinie
-                    yearSeparatorLine.Copy()
+                    ''yearSeparatorLine.Copy()
+                    newShapes = pptCopypptPaste(yearSeparatorLine, pptslide)
                 Else
-                    quartalSeparatorLine.Copy()
+                    ''quartalSeparatorLine.Copy()
+                    newShapes = pptCopypptPaste(quartalSeparatorLine, pptslide)
                 End If
 
-                newShapes = pptslide.Shapes.Paste
+                ''newShapes = pptslide.Shapes.Paste
                 With newShapes.Item(1)
                     .Left = textXPosition
                     .Top = calendarLineShape.Top
@@ -9506,6 +9703,10 @@ Public Module testModule
         Dim yyHeightfaktor As Double = rds.yearVorlagenShape.Height / KalenderHoehe
         Dim qmHeightfaktor As Double = rds.quarterMonthVorlagenShape.Height / KalenderHoehe
 
+        ' jetzt muss calendartop neu gesetzt werden 
+        rds.setCalendarTop = rds.calendarLineShape.Top + KalenderHoehe
+
+
         Dim drawKWs As Boolean
         Dim drawQuartale As Boolean
         If rds.calendarLineShape.Width >= (1 + anzahlTage / 7) * 2 * rds.quarterMonthVorlagenShape.Width Then
@@ -9519,8 +9720,10 @@ Public Module testModule
         ' ####---------------------------------------
         ' jetzt wird der Aussen-Rand gezeichnet
         ' ... die unterste horizontale Line zeichnen
-        rds.calendarLineShape.Copy()
-        newShapes = rds.pptSlide.Shapes.Paste
+        ''rds.calendarLineShape.Copy()
+        ''newShapes = rds.pptSlide.Shapes.Paste
+        newShapes = pptCopypptPaste(rds.calendarLineShape, rds.pptSlide)
+
         With newShapes.Item(1)
             .Left = rds.calendarLineShape.Left
             .Top = rds.calendarLineShape.Top
@@ -9531,8 +9734,10 @@ Public Module testModule
         End With
 
         ' ... die oberste horizontale Line zeichnen
-        rds.calendarLineShape.Copy()
-        newShapes = rds.pptSlide.Shapes.Paste
+        ''rds.calendarLineShape.Copy()
+        ''newShapes = rds.pptSlide.Shapes.Paste
+        newShapes = pptCopypptPaste(rds.calendarLineShape, rds.pptSlide)
+
         With newShapes.Item(1)
             .Left = rds.calendarLineShape.Left
             .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2)
@@ -9543,8 +9748,10 @@ Public Module testModule
         End With
 
         ' ... die Trennlinie1 (Jahre) zeichnen
-        rds.calendarLineShape.Copy()
-        newShapes = rds.pptSlide.Shapes.Paste
+        ''rds.calendarLineShape.Copy()
+        ''newShapes = rds.pptSlide.Shapes.Paste
+        newShapes = pptCopypptPaste(rds.calendarLineShape, rds.pptSlide)
+
         With newShapes.Item(1)
             .Left = rds.calendarLineShape.Left
             .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2) + _
@@ -9561,8 +9768,10 @@ Public Module testModule
         End With
 
         ' ... die Trennlinie2 (Q/M) zeichnen
-        rds.calendarLineShape.Copy()
-        newShapes = rds.pptSlide.Shapes.Paste
+        ''rds.calendarLineShape.Copy()
+        ''newShapes = rds.pptSlide.Shapes.Paste
+        newShapes = pptCopypptPaste(rds.calendarLineShape, rds.pptSlide)
+
         With newShapes.Item(1)
             .Left = rds.calendarLineShape.Left
             .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2) + _
@@ -9579,8 +9788,10 @@ Public Module testModule
         End With
 
         ' den linken und den rechten Rand zeichnen 
-        rds.calendarHeightShape.Copy()
-        newShapes = rds.pptSlide.Shapes.Paste
+        ''rds.calendarHeightShape.Copy()
+        ''newShapes = rds.pptSlide.Shapes.Paste
+        newShapes = pptCopypptPaste(rds.calendarHeightShape, rds.pptSlide)
+
         With newShapes.Item(1)
             .Left = rds.calendarLineShape.Left
             .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2)
@@ -9592,8 +9803,10 @@ Public Module testModule
             nameCollection.Add(.Name, .Name)
         End With
 
-        rds.calendarHeightShape.Copy()
-        newShapes = rds.pptSlide.Shapes.Paste
+        ''rds.calendarHeightShape.Copy()
+        ''newShapes = rds.pptSlide.Shapes.Paste
+        newShapes = pptCopypptPaste(rds.calendarHeightShape, rds.pptSlide)
+
         With newShapes.Item(1)
             '.Left = calendarLineShape.Left + calendarLineShape.Width - .Width / 2
             .Left = rds.calendarLineShape.Left + rds.calendarLineShape.Width
@@ -9638,8 +9851,10 @@ Public Module testModule
             positionY(positionYPtr) = curRight
             positionYPtr = positionYPtr + 1
 
-            rds.calendarStepShape.Copy()
-            newShapes = rds.pptSlide.Shapes.Paste
+            ''rds.calendarStepShape.Copy()
+            ''newShapes = rds.pptSlide.Shapes.Paste
+            newShapes = pptCopypptPaste(rds.calendarStepShape, rds.pptSlide)
+
             With newShapes.Item(1)
                 .Left = curRight
                 .Top = curTop
@@ -9655,8 +9870,10 @@ Public Module testModule
             If curRight - curLeft >= rds.yearVorlagenShape.Width Then
 
                 beschriftung = curDatePtr.AddMonths(-1).Year.ToString
-                rds.yearVorlagenShape.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.yearVorlagenShape.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.yearVorlagenShape, rds.pptSlide)
+
                 With newShapes.Item(1)
                     .Left = curLeft + (curRight - curLeft - rds.yearVorlagenShape.Width) / 2
                     .Top = curTop + (rowHeight - rds.yearVorlagenShape.Height) / 2
@@ -9680,8 +9897,10 @@ Public Module testModule
         If curRight - curLeft > 2 * rds.yearVorlagenShape.Width Then
 
             beschriftung = curDatePtr.AddMonths(-1).Year.ToString
-            rds.yearVorlagenShape.Copy()
-            newShapes = rds.pptSlide.Shapes.Paste
+            ''rds.yearVorlagenShape.Copy()
+            ''newShapes = rds.pptSlide.Shapes.Paste
+            newShapes = pptCopypptPaste(rds.yearVorlagenShape, rds.pptSlide)
+
             With newShapes.Item(1)
                 .Left = curLeft + (curRight - curLeft - rds.yearVorlagenShape.Width) / 2
                 .Top = curTop + (rowHeight - rds.yearVorlagenShape.Height) / 2
@@ -9763,8 +9982,10 @@ Public Module testModule
                 position2Ptr = position2Ptr + 1
             End If
 
-            rds.calendarStepShape.Copy()
-            newShapes = rds.pptSlide.Shapes.Paste
+            ''rds.calendarStepShape.Copy()
+            ''newShapes = rds.pptSlide.Shapes.Paste
+            newShapes = pptCopypptPaste(rds.calendarStepShape, rds.pptSlide)
+
             With newShapes.Item(1)
                 .Left = curRight
                 .Top = curTop
@@ -9777,9 +9998,6 @@ Public Module testModule
             End With
 
 
-
-
-
             ' jetzt die Quartals- bzw. Monatszahl  schreiben 
             If beschrifteLevel2 Then
 
@@ -9789,8 +10007,10 @@ Public Module testModule
                     beschriftung = monthName(curDatePtr.Month - 1)
                 End If
 
-                rds.quarterMonthVorlagenShape.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.quarterMonthVorlagenShape.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
+
                 With newShapes.Item(1)
                     .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
                     .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
@@ -9839,8 +10059,10 @@ Public Module testModule
                     beschriftung = monthName(curDatePtr.Month - 1)
                 End If
 
-                rds.quarterMonthVorlagenShape.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.quarterMonthVorlagenShape.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
+
                 With newShapes.Item(1)
                     .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
                     .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
@@ -9911,8 +10133,10 @@ Public Module testModule
 
             ' auch das StepShape muss nur gezeichnet werden, wenn kleiner als endofPPTCalendar
             If curDatePtr < rds.PPTEndOFCalendar Then
-                rds.calendarStepShape.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.calendarStepShape.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.calendarStepShape, rds.pptSlide)
+
                 With newShapes.Item(1)
                     .Left = curRight
                     .Top = curTop
@@ -9943,8 +10167,10 @@ Public Module testModule
                 End If
 
 
-                rds.quarterMonthVorlagenShape.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.quarterMonthVorlagenShape.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
+
                 With newShapes.Item(1)
                     .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
                     .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
@@ -9990,8 +10216,10 @@ Public Module testModule
                     beschriftung = monthName(curDatePtr.Month - 1)
                 End If
 
-                rds.quarterMonthVorlagenShape.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.quarterMonthVorlagenShape.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
+
                 With newShapes.Item(1)
                     .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
                     .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
@@ -10015,8 +10243,9 @@ Public Module testModule
 
             If Not IsNothing(rds.calendarMarkShape) Then
 
-                rds.calendarMarkShape.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.calendarMarkShape.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.calendarMarkShape, rds.pptSlide)
 
                 With newShapes.Item(1)
                     .Left = rds.calendarLineShape.Left + _
@@ -10044,8 +10273,10 @@ Public Module testModule
 
             ' als erstes wird die linke Begrenzung gezeichnet
 
-            rds.calendarQuartalSeparator.Copy()
-            newShapes = rds.pptSlide.Shapes.Paste
+            ''rds.calendarQuartalSeparator.Copy()
+            ''newShapes = rds.pptSlide.Shapes.Paste
+            newShapes = pptCopypptPaste(rds.calendarQuartalSeparator, rds.pptSlide)
+
             With newShapes.Item(1)
                 '.Left = position(i) - .Width / 2
                 .Left = rds.calendarLineShape.Left
@@ -10060,8 +10291,10 @@ Public Module testModule
 
 
             ' dann wird die rechte Begrenzung gezeichnet
-            rds.calendarQuartalSeparator.Copy()
-            newShapes = rds.pptSlide.Shapes.Paste
+            ''rds.calendarQuartalSeparator.Copy()
+            ''newShapes = rds.pptSlide.Shapes.Paste
+            newShapes = pptCopypptPaste(rds.calendarQuartalSeparator, rds.pptSlide)
+
             With newShapes.Item(1)
                 '.Left = position(i) - .Width / 2
                 .Left = rds.calendarLineShape.Left + rds.calendarLineShape.Width
@@ -10078,8 +10311,10 @@ Public Module testModule
             If beschrifteLevel3 Then
                 For i As Integer = 0 To positionPtr - 1
 
-                    rds.calendarQuartalSeparator.Copy()
-                    newShapes = rds.pptSlide.Shapes.Paste
+                    ''rds.calendarQuartalSeparator.Copy()
+                    ''newShapes = rds.pptSlide.Shapes.Paste
+                    newShapes = pptCopypptPaste(rds.calendarQuartalSeparator, rds.pptSlide)
+
                     With newShapes.Item(1)
                         '.Left = position(i) - .Width / 2
                         .Left = position(i)
@@ -10097,8 +10332,10 @@ Public Module testModule
 
                 For i As Integer = 0 To position2Ptr - 1
 
-                    rds.calendarQuartalSeparator.Copy()
-                    newShapes = rds.pptSlide.Shapes.Paste
+                    ''rds.calendarQuartalSeparator.Copy()
+                    ''newShapes = rds.pptSlide.Shapes.Paste
+                    newShapes = pptCopypptPaste(rds.calendarQuartalSeparator, rds.pptSlide)
+
                     With newShapes.Item(1)
                         '.Left = position(i) - .Width / 2
                         .Left = position2(i)
@@ -10119,8 +10356,10 @@ Public Module testModule
             ' zeichne die Jahres Linien - die werden auf alle fälle gezeichnet
             For i As Integer = 0 To positionYPtr - 1
 
-                rds.calendarYearSeparator.Copy()
-                newShapes = rds.pptSlide.Shapes.Paste
+                ''rds.calendarYearSeparator.Copy()
+                ''newShapes = rds.pptSlide.Shapes.Paste
+                newShapes = pptCopypptPaste(rds.calendarYearSeparator, rds.pptSlide)
+
                 With newShapes.Item(1)
                     '.Left = positionY(i) - .Width / 2
                     .Left = positionY(i)
@@ -10144,8 +10383,10 @@ Public Module testModule
             Date.Now.Date >= rds.PPTStartOFCalendar And _
             Date.Now.Date <= rds.PPTEndOFCalendar Then
 
-            rds.todayLineShape.Copy()
-            newShapes = rds.pptSlide.Shapes.Paste
+            ''rds.todayLineShape.Copy()
+            ''newShapes = rds.pptSlide.Shapes.Paste
+            newShapes = pptCopypptPaste(rds.todayLineShape, rds.pptSlide)
+
             With newShapes.Item(1)
                 .Left = rds.calendarLineShape.Left + _
                         DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, Date.Now.Date) * rasterDayWidth - rds.todayLineShape.Width / 2
@@ -10237,6 +10478,15 @@ Public Module testModule
         Dim startNr As Integer = 0
         Dim endNr As Integer = 0
 
+        ' ###########################################################
+        ' wenn diese Phase nicht existiert , dann Exit   
+        '
+        Dim cphase As clsPhase = hproj.getPhaseByID(swimlaneNameID)
+        If IsNothing(cphase) Then
+            Exit Sub
+        End If
+
+
         ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
         Dim aktuelleYPosition As Double = curYPosition
 
@@ -10261,124 +10511,145 @@ Public Module testModule
         ' ###########################################################
         ' zeichnen des Swimlane-Namens
         '
-        rds.projectNameVorlagenShape.Copy()
-        copiedShape = rds.pptSlide.Shapes.Paste()
+        ''rds.projectNameVorlagenShape.Copy()
+        ''copiedShape = rds.pptSlide.Shapes.Paste()
+        copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, rds.pptSlide)
 
         Dim swlNameShape As pptNS.Shape = copiedShape.Item(1)
+        ' Ergänzung 19.4.16
+        Dim swlShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
 
         With copiedShape.Item(1)
             .Top = CSng(curYPosition) + rds.YprojectName
             .Left = rds.projectListLeft
             .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
-            .Name = .Name & .Id
-            .AlternativeText = elemNameOfElemID(swimlaneNameID)
+            '.Name = .Name & .Id
+            .Name = swlShapeName & PTpptAnnotationType.text
+            
 
-            shapeNameCollection.Add(.Name, .Name)
+            ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
+            shapeNameCollection.Add(.Name)
+            
+
+            If awinSettings.mppEnableSmartPPT Then
+
+                'Dim fullBreadCrumb As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                Dim shortText As String = cphase.shortName
+                Dim originalName As String = cphase.originalName
+
+
+                If originalName = cphase.name Then
+                    originalName = Nothing
+                End If
+
+                Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                            fullBreadCrumb, cphase.name, shortText, originalName, _
+                                            cphase.getStartDate, cphase.getEndDate, _
+                                            Nothing, Nothing)
+
+            End If
+
+
         End With
 
 
+
+
+        ' weiter mit Zeichnen der Swimlane ...
+
         ' ###########################################################
-        ' wenn diese Phase nicht existiert , dann Fehler schreiben ...  
+        ' optionales Zeichnen der Swimlane-Linie 
         '
-        Dim cphase As clsPhase = hproj.getPhaseByID(swimlaneNameID)
 
-        If IsNothing(cphase) Then
+        Call rds.calculatePPTx1x2(cphase.getStartDate, cphase.getEndDate, x1, x2)
 
-            rds.projectNameVorlagenShape.Copy()
-            copiedShape = rds.pptSlide.Shapes.Paste()
+        With swlNameShape
+            ' jetzt muss überprüft werden, ob SwimlaneName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+            If .Left + .Width > x1 Then
+                ' jetzt muss der Name entsprechend gekürzt werden 
+                .TextFrame2.WordWrap = MsoTriState.msoTrue
+                .Width = x1 - .Left
+            End If
+        End With
 
 
-            With copiedShape.Item(1)
-                .Top = CSng(curYPosition) + rds.YprojectName
-                .Left = rds.drawingAreaLeft
-                '.TextFrame2.TextRange.Text = " ... existiert in diesem Projekt nicht ..."
-                .TextFrame2.TextRange.Text = repMessages.getmsg(20)
+        If awinSettings.mppShowProjectLine Then
+
+            ''rds.projectVorlagenShape.Copy()
+            ''copiedShape = rds.pptSlide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, rds.pptSlide)
+
+            With copiedShape(1)
+                .Top = CSng(curYPosition) + rds.YProjectLine
+                .Left = CSng(x1)
+                .Width = CSng(x2 - x1)
                 .Name = .Name & .Id
-                .AlternativeText = "Swimlane " & elemNameOfElemID(swimlaneNameID)
 
-                shapeNameCollection.Add(.Name, .Name)
+                shapeNameCollection.Add(.Name)
+
+                If awinSettings.mppEnableSmartPPT Then
+
+                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                    'Dim originalName As String = cphase.originalName
+
+                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                    Dim shortText As String = cphase.shortName
+                    Dim originalName As String = cphase.originalName
+
+
+                    If originalName = cphase.name Then
+                        originalName = Nothing
+                    End If
+
+                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                                fullBreadCrumb, cphase.name, shortText, originalName, _
+                                                cphase.getStartDate, cphase.getEndDate, _
+                                                Nothing, Nothing)
+
+                End If
+
+
+                ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+                If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
+                    .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                End If
+
+                ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+                If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
+                    .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                End If
+
+
             End With
-        Else
-            ' weiter mit Zeichnen der Swimlane ...
-
-            ' ###########################################################
-            ' optionales Zeichnen der Swimlane-Linie 
-            '
-            If awinSettings.mppShowProjectLine Then
-
-                Call rds.calculatePPTx1x2(cphase.getStartDate, cphase.getEndDate, x1, x2)
-
-                ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
-                With swlNameShape
-                    If .Left + .Width > x1 Then
-                        ' jetzt muss der Name entsprechend gekürzt werden 
-                        Dim longName As String = .TextFrame2.TextRange.Text
-                        Dim shortName As String = ""
-
-                        .TextFrame2.TextRange.Text = shortName
-                        Dim stringIX As Integer = 0
-                        Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
-                            shortName = shortName & longName.Chars(stringIX)
-                            stringIX = stringIX + 1
-                            .TextFrame2.TextRange.Text = shortName
-                        Loop
-
-                    End If
-                End With
-
-                rds.projectVorlagenShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
-                With copiedShape(1)
-                    .Top = CSng(curYPosition) + rds.YProjectLine
-                    .Left = CSng(x1)
-                    .Width = CSng(x2 - x1)
-                    .Name = .Name & .Id
-                    .AlternativeText = cphase.name & " von " & cphase.getStartDate.ToShortDateString & " bis " & _
-                                            cphase.getEndDate.ToShortDateString
-                    ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
-                    If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
-                        .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
-                    End If
-
-                    ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
-                    If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
-                        .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
-                    End If
 
 
-                    shapeNameCollection.Add(.Name, .Name)
-                End With
-
-
-
-            End If
-
-
-            ' ###########################################################
-            ' optionales zeichnen der horizontalen Zeilen - es wird immer nur die Zeile oben gezeichnet ... andernfalls hätte man 
-            ' Doppelzeichnungen 
-            ' bei der ersten Swimlane auf einer Seite wird die horizontale nicht gezeichnet ... 
-            '
-            If awinSettings.mppShowHorizontals Then
-
-                rds.horizontalLineShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
-
-                With copiedShape.Item(1)
-                    .Top = CSng(curYPosition)
-                    .Left = rds.drawingAreaLeft
-                    .Width = rds.drawingAreaWidth
-                    .Name = .Name & .Id
-                    .AlternativeText = "horizontal line" & elemNameOfElemID(swimlaneNameID)
-
-                    shapeNameCollection.Add(.Name, .Name)
-                End With
-
-            End If
 
         End If
 
 
+        ' ###########################################################
+        ' optionales zeichnen der horizontalen Zeilen - es wird immer nur die Zeile oben gezeichnet ... andernfalls hätte man 
+        ' Doppelzeichnungen 
+        ' bei der ersten Swimlane auf einer Seite wird die horizontale nicht gezeichnet ... 
+        '
+        If awinSettings.mppShowHorizontals Then
+
+            ''rds.horizontalLineShape.Copy()
+            ''copiedShape = rds.pptSlide.Shapes.Paste() 
+            copiedShape = pptCopypptPaste(rds.horizontalLineShape, rds.pptSlide)
+
+            With copiedShape.Item(1)
+                .Top = CSng(curYPosition)
+                .Left = rds.drawingAreaLeft
+                .Width = rds.drawingAreaWidth
+                .Name = .Name & .Id
+                shapeNameCollection.Add(.Name)
+            End With
+
+        End If
 
 
         ' ###########################################################
@@ -10386,19 +10657,20 @@ Public Module testModule
         '
         If (Not IsNothing(rds.rowDifferentiatorShape)) And toggleRowDifferentiator Then
             ' zeichnen des RowDifferentiators 
-            rds.rowDifferentiatorShape.Copy()
-            copiedShape = rds.pptSlide.Shapes.Paste()
+            ''rds.rowDifferentiatorShape.Copy()
+            ''copiedShape = rds.pptSlide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(rds.rowDifferentiatorShape, rds.pptSlide)
+
             With copiedShape.Item(1)
                 .Top = CSng(curYPosition)
                 .Left = rds.projectListLeft
                 .Height = kontrolleAnzZeilen * rds.zeilenHoehe
                 .Width = rds.drawingAreaRight - .Left
                 .Name = .Name & .Id
-                .AlternativeText = ""
-                .Title = ""
+                shapeNameCollection.Add(.Name)
 
                 .ZOrder(MsoZOrderCmd.msoSendToBack)
-                shapeNameCollection.Add(.Name, .Name)
+
             End With
         End If
 
@@ -10445,9 +10717,12 @@ Public Module testModule
 
                             ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
                             For Each tmpName As String In tmpCollection
-                                shapeNameCollection.Add(tmpName, tmpName)
+
+                                shapeNameCollection.Add(tmpName)
+
                                 ' die Milestones werden nachher alle in den Vordergrund geholt ...
-                                swlMilestoneCollection.Add(tmpName, tmpName)
+                                swlMilestoneCollection.Add(tmpName)
+
                             Next
                         End If
 
@@ -10480,8 +10755,20 @@ Public Module testModule
                                                                                            considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                            considerAll)
 
-                        ' zeichne die Phase
-                        zeilenoffset = findeBesteZeile(lastEndDates, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+                        ' ermittle den Zeilenoffset
+                        If extended Then
+                            requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID, _
+                                                                                    selectedPhaseIDs, _
+                                                                                    selectedMilestoneIDs, _
+                                                                                    extended, _
+                                                                                    considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                    considerAll)
+                            zeilenoffset = findeBesteZeile(lastEndDates, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+                        Else
+                            requiredZeilen = 1
+                            zeilenoffset = 1
+                        End If
+
                         'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
                         ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
                         maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
@@ -10492,8 +10779,13 @@ Public Module testModule
 
                         aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
 
-                        Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
+                        Try
+                            Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
                                                     curPhase.nameID, aktuelleYPosition)
+                        Catch ex As Exception
+                            'Dim a As Integer = 1
+                        End Try
+
                         'lastEndDate = curPhase.getEndDate
                     End If
 
@@ -10521,11 +10813,16 @@ Public Module testModule
                                                                   swimlaneNameID, curMs.nameID, aktuelleYPosition)
 
                                 ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
-                                For Each tmpName As String In tmpCollection
-                                    shapeNameCollection.Add(tmpName, tmpName)
-                                    ' die Milestones werden nachher alle in den Vordergrund geholt ...
-                                    swlMilestoneCollection.Add(tmpName, tmpName)
-                                Next
+                                Try
+                                    For Each tmpName As String In tmpCollection
+                                        shapeNameCollection.Add(tmpName)
+                                        ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                                        swlMilestoneCollection.Add(tmpName)
+                                    Next
+                                Catch ex As Exception
+                                    Dim a As Integer = 1
+                                End Try
+
 
                             End If
 
@@ -10538,9 +10835,6 @@ Public Module testModule
             End If
 
         Next
-
-        
-
 
 
 
@@ -10571,8 +10865,13 @@ Public Module testModule
                 arrayOFNames(i - 1) = CStr(swlMilestoneCollection.Item(i))
             Next
 
-            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
-            shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Try
+                shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+                shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
 
         ElseIf anzElements = 1 Then
             Try
@@ -10590,23 +10889,22 @@ Public Module testModule
         ' Zusammenfassen aller shapes in einer Gruppe 
         ' jetzt sollen alle gezeichneten Shapes gruppiert werden 
         '
-        
 
 
+        ' Änderung tk: wird jetzt nicht mehr in einer Gruppe zusammengefasst, damit InfoPPT wirken kann
+        'anzElements = shapeNameCollection.Count
+        'If anzElements > 1 Then
 
-        anzElements = shapeNameCollection.Count
-        If anzElements > 1 Then
+        '    ReDim arrayOFNames(anzElements - 1)
 
-            ReDim arrayOFNames(anzElements - 1)
+        '    For i = 1 To anzElements
+        '        arrayOFNames(i - 1) = CStr(shapeNameCollection.Item(i))
+        '    Next
 
-            For i = 1 To anzElements
-                arrayOFNames(i - 1) = CStr(shapeNameCollection.Item(i))
-            Next
+        '    shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+        '    shapeGruppe.Group()
 
-            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
-            shapeGruppe.Group()
-
-        End If
+        'End If
 
 
 
@@ -10809,23 +11107,34 @@ Public Module testModule
 
                 '
                 ' zeichne den Projekt-Namen
-                projectNameVorlagenShape.Copy()
-                copiedShape = pptslide.Shapes.Paste()
+                ''projectNameVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(projectNameVorlagenShape, pptslide)
+
                 Dim projectNameShape As pptNS.Shape = copiedShape.Item(1)
+
+
 
                 With copiedShape(1)
                     .Top = CSng(projektNamenYPos)
                     .Left = CSng(projektNamenXPos)
                     If currentProjektIndex > 1 And lastProjectName = hproj.name Then
-                        '.TextFrame2.TextRange.Text = "... " & hproj.variantName & " " & hproj.VorlagenName
-                        ''.TextFrame2.TextRange.Text = "... " & hproj.variantName
                         .TextFrame2.TextRange.Text = "... " & hproj.variantName
                     Else
-                        '.TextFrame2.TextRange.Text = hproj.getShapeText & " " & hproj.VorlagenName
                         .TextFrame2.TextRange.Text = hproj.getShapeText
                     End If
                     lastProjectName = hproj.name
                     .Name = .Name & .Id
+
+                    If awinSettings.mppEnableSmartPPT Then
+
+                        Call addSmartPPTShapeInfo(copiedShape(1), _
+                                                    Nothing, hproj.getShapeText, Nothing, Nothing, _
+                                                    hproj.startDate, hproj.endeDate, _
+                                                    hproj.ampelStatus, hproj.ampelErlaeuterung)
+
+                    End If
+
                 End With
 
                 projektNamenYPos = projektNamenYPos + zeilenhoehe
@@ -10846,8 +11155,9 @@ Public Module testModule
                         End If
                     End With
 
-                    ampelVorlagenShape.Copy()
-                    copiedShape = pptslide.Shapes.Paste()
+                    ''ampelVorlagenShape.Copy()
+                    ''copiedShape = pptslide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(ampelVorlagenShape, pptslide)
 
                     With copiedShape(1)
                         .Top = CSng(ampelGrafikYPos)
@@ -10870,20 +11180,28 @@ Public Module testModule
 
                 ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
                 With projectNameShape
+                    ' alternative Behandlung: der Projekt-Name wird umgebrochen 
                     If .Left + .Width > x1 Then
                         ' jetzt muss der Name entsprechend gekürzt werden 
-                        Dim longName As String = .TextFrame2.TextRange.Text
-                        Dim shortName As String = ""
-
-                        .TextFrame2.TextRange.Text = shortName
-                        Dim stringIX As Integer = 0
-                        Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
-                            shortName = shortName & longName.Chars(stringIX)
-                            stringIX = stringIX + 1
-                            .TextFrame2.TextRange.Text = shortName
-                        Loop
-
+                        .TextFrame2.WordWrap = MsoTriState.msoTrue
+                        .Width = x1 - .Left
                     End If
+
+
+                    'If .Left + .Width > x1 Then
+                    '    ' jetzt muss der Name entsprechend gekürzt werden 
+                    '    Dim longName As String = .TextFrame2.TextRange.Text
+                    '    Dim shortName As String = ""
+
+                    '    .TextFrame2.TextRange.Text = shortName
+                    '    Dim stringIX As Integer = 0
+                    '    Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
+                    '        shortName = shortName & longName.Chars(stringIX)
+                    '        stringIX = stringIX + 1
+                    '        .TextFrame2.TextRange.Text = shortName
+                    '    Loop
+
+                    'End If
                 End With
 
 
@@ -10891,13 +11209,29 @@ Public Module testModule
 
                 If awinSettings.mppShowProjectLine Then
 
-                    projectVorlagenForm.Copy()
-                    copiedShape = pptslide.Shapes.Paste()
+                    ''projectVorlagenForm.Copy()
+                    ''copiedShape = pptslide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(projectVorlagenForm, pptslide)
+
                     With copiedShape(1)
                         .Top = CSng(projektGrafikYPos)
                         .Left = CSng(x1)
                         .Width = CSng(x2 - x1)
                         .Name = .Name & .Id
+
+                        '.Title = hproj.getShapeText
+                        '.AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+
+                        If awinSettings.mppEnableSmartPPT Then
+
+                            Call addSmartPPTShapeInfo(copiedShape(1), _
+                                                   Nothing, hproj.getShapeText, Nothing, Nothing, _
+                                                   hproj.startDate, hproj.endeDate, _
+                                                   hproj.ampelStatus, hproj.ampelErlaeuterung)
+
+                        End If
+
+
                         ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
                         If DateDiff(DateInterval.Day, hproj.startDate, StartofPPTCalendar) > 0 Then
                             .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
@@ -11069,6 +11403,9 @@ Public Module testModule
                                     phaseShape = missingPhaseDefinitions.getShape(phaseName)
                                 End If
 
+                                ' Ergänzung 19.4.16
+                                Dim phShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
+
 
                                 Dim phaseStart As Date = cphase.getStartDate
                                 Dim phaseEnd As Date = cphase.getEndDate
@@ -11098,11 +11435,17 @@ Public Module testModule
                                         phShortname = phaseName
                                     End If
 
-                                    PhDescVorlagenShape.Copy()
-                                    copiedShape = pptslide.Shapes.Paste()
+                                    ''PhDescVorlagenShape.Copy()
+                                    ''copiedShape = pptslide.Shapes.Paste()
+                                    copiedShape = pptCopypptPaste(PhDescVorlagenShape, pptslide)
+
                                     With copiedShape(1)
 
-                                        .Name = .Name & .Id
+                                        '.Name = .Name & .Id
+                                        .Name = phShapeName & PTpptAnnotationType.text
+                                        .Title = "Beschriftung"
+                                        .AlternativeText = ""
+
                                         .TextFrame2.TextRange.Text = phShortname
                                         .TextFrame2.MarginLeft = 0.0
                                         .TextFrame2.MarginRight = 0.0
@@ -11119,17 +11462,26 @@ Public Module testModule
 
                                 End If
 
+                                Dim phDateText As String = ""
                                 ' jetzt muss ggf das Datum angebracht werden 
                                 If awinSettings.mppShowPhDate Then
                                     'Dim phDateText As String = phaseStart.ToShortDateString
-                                    Dim phDateText As String = phaseStart.Day.ToString & "." & phaseStart.Month.ToString
+                                    phDateText = phaseStart.Day.ToString & "." & phaseStart.Month.ToString & " - " & _
+                                                                phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
                                     Dim rightX As Double, addHeight As Double
 
-                                    PhDateVorlagenShape.Copy()
-                                    copiedShape = pptslide.Shapes.Paste()
+                                    ''PhDateVorlagenShape.Copy()
+                                    ''copiedShape = pptslide.Shapes.Paste()
+                                    copiedShape = pptCopypptPaste(PhDateVorlagenShape, pptslide)
+
                                     With copiedShape(1)
 
-                                        .Name = .Name & .Id
+                                        '.Name = .Name & .Id
+
+                                        .Name = phShapeName & PTpptAnnotationType.datum
+                                        .Title = "Datum"
+                                        .AlternativeText = ""
+
                                         .TextFrame2.TextRange.Text = phDateText
                                         .TextFrame2.MarginLeft = 0.0
                                         .TextFrame2.MarginRight = 0.0
@@ -11147,29 +11499,30 @@ Public Module testModule
                                     End With
 
 
-                                    ' Änderung tk 14.3.15 kein Voranstellen des Phasen Namens mehr ... 
-                                    phDateText = phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
+                                    ' Änderung tk 19.4.16 das wird jetzt in einem geschrieben 
 
-                                    PhDateVorlagenShape.Copy()
-                                    copiedShape = pptslide.Shapes.Paste()
-                                    With copiedShape(1)
+                                    'phDateText = phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
 
-                                        .Name = .Name & .Id
-                                        .TextFrame2.TextRange.Text = phDateText
-                                        .TextFrame2.MarginLeft = 0.0
-                                        .TextFrame2.MarginRight = 0.0
-                                        .Top = CSng(phasenGrafikYPos) + CSng(yOffsetPhToDate) + 1
-                                        .Left = CSng(x2) - .Width - 1
-                                        If .Left + .Width > drawingAreaRight Then
-                                            .Left = drawingAreaRight - (.Width + 1)
-                                        End If
-                                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
+                                    'PhDateVorlagenShape.Copy()
+                                    'copiedShape = pptslide.Shapes.Paste()
+                                    'With copiedShape(1)
 
-                                        If rightX >= .Left Then
-                                            .Top = .Top + addHeight
-                                        End If
+                                    '    .Name = .Name & .Id
+                                    '    .TextFrame2.TextRange.Text = phDateText
+                                    '    .TextFrame2.MarginLeft = 0.0
+                                    '    .TextFrame2.MarginRight = 0.0
+                                    '    .Top = CSng(phasenGrafikYPos) + CSng(yOffsetPhToDate) + 1
+                                    '    .Left = CSng(x2) - .Width - 1
+                                    '    If .Left + .Width > drawingAreaRight Then
+                                    '        .Left = drawingAreaRight - (.Width + 1)
+                                    '    End If
+                                    '    .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
 
-                                    End With
+                                    '    If rightX >= .Left Then
+                                    '        .Top = .Top + addHeight
+                                    '    End If
+
+                                    'End With
 
                                 End If
 
@@ -11177,8 +11530,9 @@ Public Module testModule
                                 If Not IsNothing(phasedelimiterShape) And selectedPhases.Count > 1 Then
 
                                     ' linker Delimiter 
-                                    phasedelimiterShape.Copy()
-                                    copiedShape = pptslide.Shapes.Paste()
+                                    ''phasedelimiterShape.Copy()
+                                    ''copiedShape = pptslide.Shapes.Paste()
+                                    copiedShape = pptCopypptPaste(phasedelimiterShape, pptslide)
 
                                     With copiedShape(1)
 
@@ -11190,8 +11544,9 @@ Public Module testModule
                                     End With
 
                                     ' rechter Delimiter 
-                                    phasedelimiterShape.Copy()
-                                    copiedShape = pptslide.Shapes.Paste()
+                                    ''phasedelimiterShape.Copy()
+                                    ''copiedShape = pptslide.Shapes.Paste()
+                                    copiedShape = pptCopypptPaste(phasedelimiterShape, pptslide)
 
                                     With copiedShape(1)
 
@@ -11204,16 +11559,35 @@ Public Module testModule
 
                                 End If
 
-                                ' jetzt das Shape zeichnen 
-                                phaseShape.Copy()
-                                copiedShape = pptslide.Shapes.Paste()
+                                '' ''????
+                                ' ''copiedShape = Nothing
+                                ' ''Dim ok As Boolean = False
+                                ' ''While Not ok
+
+                                ' ''    Try
+                                ' ''        ' Erst jetzt wird der Meilenstein gezeichnet 
+                                ' ''        phaseShape.Copy()
+                                ' ''        copiedShape = pptslide.Shapes.Paste()
+                                ' ''        ok = True
+                                ' ''    Catch ex As Exception
+                                ' ''        Call MsgBox("Phase catch")
+                                ' ''        copiedShape = Nothing
+                                ' ''    End Try
+
+                                ' ''End While
+
+                                copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
 
                                 With copiedShape(1)
                                     .Top = CSng(phasenGrafikYPos)
                                     .Left = CSng(x1)
                                     .Width = CSng(x2 - x1)
                                     .Height = phaseVorlagenShape.Height
-                                    .Name = .Name & .Id
+                                    '.Name = .Name & .Id
+
+                                    .Name = phShapeName
+                                    '.Title = phaseName
+                                    '.AlternativeText = phDateText
 
                                     If missingPhaseDefinition Then
                                         .Fill.ForeColor.RGB = cphase.farbe
@@ -11221,7 +11595,28 @@ Public Module testModule
 
                                 End With
 
-                                phShapeNames.Add(copiedShape.Name)
+                                If awinSettings.mppEnableSmartPPT Then
+                                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                    '                                          True)
+                                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                    '                                       False)
+                                    'Dim originalName As String = cphase.originalName
+
+                                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    Dim shortText As String = cphase.shortName
+                                    Dim originalName As String = cphase.originalName
+
+                                    If originalName = cphase.name Then
+                                        originalName = Nothing
+                                    End If
+
+                                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                                                fullBreadCrumb, cphase.name, shortText, originalName, _
+                                                                phaseStart, phaseEnd, _
+                                                                Nothing, Nothing)
+                                End If
+
+                                phShapeNames.Add(copiedShape(1).Name)
 
                                 '  Phase merken, damit bei der nächsten zu zeichnenden Phase nachgesehen werden
                                 '  kann, ob diese überlappt
@@ -11550,8 +11945,10 @@ Public Module testModule
                     End If
 
 
-                    buColorShape.Copy()
-                    copiedShape = pptslide.Shapes.Paste()
+                    ''buColorShape.Copy()
+                    ''copiedShape = pptslide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(buColorShape, pptslide)
+
                     With copiedShape(1)
                         .Top = CSng(rowYPos)
                         .Left = CSng(projectListLeft)
@@ -11569,8 +11966,10 @@ Public Module testModule
                 ' optionales zeichnen der Zeilen-Markierung
                 If drawRowDifferentiator And toggleRowDifferentiator Then
                     ' zeichnen des RowDifferentiators 
-                    rowDifferentiatorShape.Copy()
-                    copiedShape = pptslide.Shapes.Paste()
+                    ''rowDifferentiatorShape.Copy()
+                    ''copiedShape = pptslide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(rowDifferentiatorShape, pptslide)
+
                     With copiedShape(1)
                         .Top = CSng(rowYPos)
                         .Left = CSng(projectListLeft)
@@ -11589,8 +11988,9 @@ Public Module testModule
                 If Not IsNothing(durationArrowShape) And Not IsNothing(durationTextShape) Then
 
                     ' Pfeil mit Länge der Dauer zeichnen 
-                    durationArrowShape.Copy()
-                    copiedShape = pptslide.Shapes.Paste()
+                    ''durationArrowShape.Copy()
+                    ''copiedShape = pptslide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(durationArrowShape, pptslide)
 
                     Dim pfeilbreite As Double = maxX2 - minX1
 
@@ -11609,9 +12009,9 @@ Public Module testModule
                     Call hproj.getMinMaxDatesAndDuration(selectedPhases, selectedMilestones, tmpDate1, tmpDate2, dauerInTagen)
                     dauerInM = 12 * dauerInTagen / 365
 
-                    durationTextShape.Copy()
-
-                    copiedShape = pptslide.Shapes.Paste()
+                    ''durationTextShape.Copy()
+                    ''copiedShape = pptslide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(durationTextShape, pptslide)
 
                     With copiedShape(1)
                         .TextFrame2.TextRange.Text = dauerInM.ToString("0.0") & " M"
@@ -11743,6 +12143,9 @@ Public Module testModule
         Dim milestoneTypShape As xlNS.Shape
         Dim copiedShape As pptNS.ShapeRange
 
+        Dim msShapeName As String = calcPPTShapeName(hproj, MS.nameID)
+        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
+                                                             awinSettings.mppUseAbbreviation)
 
         Dim x1 As Double
         Dim x2 As Double
@@ -11781,59 +12184,82 @@ Public Module testModule
         ' jetzt muss ggf die Beschriftung angebracht werden 
         ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
         ' überdeckt werden soll 
+
         If awinSettings.mppShowMsName Then
 
-            Dim msBeschriftung As String
-            msBeschriftung = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
-                                                             awinSettings.mppUseAbbreviation)
+            ''MsDescVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(MsDescVorlagenShape, pptslide)
 
-            MsDescVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
 
                 .TextFrame2.TextRange.Text = msBeschriftung
                 .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
                 '.Left = CSng(x1) - .Width / 2
                 .Left = CSng(x1) - .Width / 2
-                .Name = .Name & .Id
-
+                '.Name = .Name & .Id
+                .Name = msShapeName & PTpptAnnotationType.text
+                .Title = "Beschriftung"
+                .AlternativeText = ""
             End With
 
 
         End If
 
         ' jetzt muss ggf das Datum angebracht werden 
+
+        Dim msDateText As String
+
         If awinSettings.mppShowMsDate Then
-            'Dim msDateText As String = msDate.ToShortDateString
-            Dim msDateText As String
+
+
             msDateText = msdate.Day.ToString & "." & msdate.Month.ToString
 
-            MsDateVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''MsDateVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(MsDateVorlagenShape, pptslide)
+
             With copiedShape(1)
 
                 .TextFrame2.TextRange.Text = msDateText
                 .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToDate)
                 .Left = CSng(x1) - .Width / 2
-                .Name = .Name & .Id
+                '.Name = .Name & .Id
+                .Name = msShapeName & PTpptAnnotationType.datum
+                .Title = "Datum"
+                .AlternativeText = ""
 
             End With
 
         End If
 
+        '' ''????
+        ' ''copiedShape = Nothing
+        ' ''Dim ok As Boolean = False
+        ' ''While Not ok
+
+        ' ''    Try
+        ' ''        ' Erst jetzt wird der Meilenstein gezeichnet 
+        ' ''        milestoneTypShape.Copy()
+        ' ''        copiedShape = pptslide.Shapes.Paste()
+        ' ''        ok = True
+        ' ''    Catch ex As Exception
+        ' ''        Call MsgBox("Meilenstein catch")
+        ' ''        copiedShape = Nothing
+        ' ''    End Try
+
+        ' ''End While
 
         ' Erst jetzt wird der Meilenstein gezeichnet 
-        milestoneTypShape.Copy()
-        copiedShape = pptslide.Shapes.Paste()
-
-
+        copiedShape = xlnsCopypptPaste(milestoneTypShape, pptslide)
 
         With copiedShape.Item(1)
             .Top = CSng(milestoneGrafikYPos)
             .Height = milestoneVorlagenShape.Height
             .Width = .Height / seitenverhaeltnis
             .Left = CSng(x1) - .Width / 2
-            .Name = .Name & .Id
+            '.Name = .Name & .Id
+
             If awinSettings.mppShowAmpel Then
                 .Glow.Color.RGB = CInt(MS.getBewertung(1).color)
                 If .Glow.Radius = 0 Then
@@ -11841,10 +12267,33 @@ Public Module testModule
                 End If
             End If
 
+            .Name = msShapeName
+            '.Title = MS.name
+            '.AlternativeText = MS.getDate.ToShortDateString
+
 
         End With
 
-        msShapeNames.Add(copiedShape.Name)
+        If awinSettings.mppEnableSmartPPT Then
+            'Dim longText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, False)
+            'Dim shortText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, True)
+            'Dim originalName As String = MS.originalName
+
+            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(MS.nameID)
+            Dim shortText As String = MS.shortName
+            Dim originalName As String = MS.originalName
+
+            If originalName = MS.name Then
+                originalName = Nothing
+            End If
+
+            Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                        fullBreadCrumb, MS.name, shortText, originalName, _
+                                        Nothing, msdate, _
+                                        MS.getBewertung(1).colorIndex, MS.getBewertung(1).description)
+        End If
+
+        msShapeNames.Add(copiedShape.Item(1).Name)
 
 
     End Sub
@@ -11861,8 +12310,9 @@ Public Module testModule
 
         Dim copiedShape As pptNS.ShapeRange
 
-        rds.segmentVorlagenShape.Copy()
-        copiedShape = rds.pptSlide.Shapes.Paste()
+        ''rds.segmentVorlagenShape.Copy()
+        ''copiedShape = rds.pptSlide.Shapes.Paste()
+        copiedShape = pptCopypptPaste(rds.segmentVorlagenShape, rds.pptSlide)
 
         If modus = 0 Then
             With copiedShape.Item(1)
@@ -11871,7 +12321,7 @@ Public Module testModule
                 .Width = CSng(rds.drawingAreaWidth)
                 .TextFrame2.TextRange.Text = elemNameOfElemID(segmentPhaseID)
                 .Name = .Name & .Id
-                .AlternativeText = "Segment " & elemNameOfElemID(segmentPhaseID)
+                '.AlternativeText = "Segment " & elemNameOfElemID(segmentPhaseID)
 
                 ' Current Y-Position aktualisieren 
                 curYPosition = curYPosition + .Height
@@ -11883,7 +12333,7 @@ Public Module testModule
 
 
 
-    
+
     ''' <summary>
     ''' zeichnet eine Phase in der aktuellen Swimlane 
     ''' </summary>
@@ -11898,6 +12348,8 @@ Public Module testModule
                                            ByVal swimlaneID As String, _
                                            ByVal phaseID As String, _
                                            ByVal yPosition As Double)
+
+        Dim phShapeName As String = calcPPTShapeName(hproj, phaseID)
 
         Dim phaseTypShape As xlNS.Shape
         Dim copiedShape As pptNS.ShapeRange
@@ -11929,8 +12381,9 @@ Public Module testModule
 
         If awinSettings.mppUseInnerText Then
 
-            phaseTypShape.Copy()
-            copiedShape = rds.pptSlide.Shapes.Paste()
+            ' ''phaseTypShape.Copy()
+            ' ''copiedShape = rds.pptSlide.Shapes.Paste()
+            copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
 
             With copiedShape
                 If .Height > 0.0 Then
@@ -11940,7 +12393,7 @@ Public Module testModule
             End With
 
         End If
-        
+
 
 
 
@@ -11961,8 +12414,10 @@ Public Module testModule
             ' überdeckt werden soll 
             If awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText) Then
 
-                rds.PhDescVorlagenShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
+                ''rds.PhDescVorlagenShape.Copy()
+                ''copiedShape = rds.pptSlide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(rds.PhDescVorlagenShape, rds.pptSlide)
+
                 With copiedShape(1)
 
                     .TextFrame2.TextRange.Text = phDescription
@@ -11971,9 +12426,18 @@ Public Module testModule
                     If .Left + .Width > rds.drawingAreaRight + 2 Then
                         .Left = rds.drawingAreaRight - .Width + 2
                     End If
-                    .Name = .Name & .Id
 
-                    shapeNames.Add(.Name, .Name)
+                    '.Name = .Name & .Id
+
+                    .Name = phShapeName & PTpptAnnotationType.text
+                    .Title = "Beschriftung"
+                    .AlternativeText = ""
+
+
+                    shapeNames.Add(.Name)
+
+
+
                 End With
 
 
@@ -11982,8 +12446,10 @@ Public Module testModule
             ' jetzt muss ggf das Datum angebracht werden 
             If awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText) Then
 
-                rds.PhDateVorlagenShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
+                ''rds.PhDateVorlagenShape.Copy()
+                ''copiedShape = rds.pptSlide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(rds.PhDateVorlagenShape, rds.pptSlide)
+
                 With copiedShape(1)
 
                     .TextFrame2.TextRange.Text = phDateText
@@ -11993,26 +12459,35 @@ Public Module testModule
                         .Left = rds.drawingAreaRight - .Width + 2
                     End If
 
-                    .Name = .Name & .Id
+                    '.Name = .Name & .Id
+                    .Name = phShapeName & PTpptAnnotationType.datum
+                    .Title = "Datum"
+                    .AlternativeText = ""
 
-                    shapeNames.Add(.Name, .Name)
+
+                    shapeNames.Add(.Name)
+
+
                 End With
 
             End If
 
 
             ' Erst jetzt wird die Phase gezeichnet 
-            phaseTypShape.Copy()
-            copiedShape = rds.pptSlide.Shapes.Paste()
+            ' ''phaseTypShape.Copy()
+            ' ''copiedShape = rds.pptSlide.Shapes.Paste()
+            copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
 
             With copiedShape.Item(1)
                 .Top = CSng(yPosition + rds.YPhase)
                 .Height = rds.phaseVorlagenShape.Height
                 .Width = CSng(x2 - x1)
                 .Left = CSng(x1)
-                .Name = .Name & .Id
-                .Title = phaseName
-                .AlternativeText = phStartDate.ToShortDateString & " - " & phEndDate.ToShortDateString
+                '.Name = .Name & .Id
+
+                .Name = phShapeName
+                '.Title = phaseName
+                '.AlternativeText = phDateText
 
                 ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
                 If awinSettings.mppUseInnerText Then
@@ -12027,9 +12502,32 @@ Public Module testModule
                     End If
                 End If
 
-                shapeNames.Add(.Name, .Name)
+
+                shapeNames.Add(.Name)
+
+
             End With
 
+            If awinSettings.mppEnableSmartPPT Then
+                'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                '                                          True)
+                'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                '                                       False)
+                'Dim originalName As String = cphase.originalName
+
+                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                Dim shortText As String = cphase.shortName
+                Dim originalName As String = cphase.originalName
+
+                If originalName = cphase.name Then
+                    originalName = Nothing
+                End If
+
+                Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                            fullBreadCrumb, cphase.name, shortText, originalName, _
+                                            phStartDate, phEndDate, _
+                                            Nothing, Nothing)
+            End If
 
         End If
 
@@ -12067,8 +12565,9 @@ Public Module testModule
         Dim x1 As Double
         Dim x2 As Double
 
-
-        Dim msBeschriftung As String
+        Dim msShapeName As String = calcPPTShapeName(hproj, milestoneID)
+        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
+                                                             awinSettings.mppUseAbbreviation)
 
         If MilestoneDefinitions.Contains(milestoneName) Then
             milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
@@ -12077,8 +12576,10 @@ Public Module testModule
         End If
 
         Dim sizeFaktor As Double
-        milestoneTypShape.Copy()
-        copiedShape = rds.pptSlide.Shapes.Paste()
+
+        ' ''milestoneTypShape.Copy()
+        ' ''copiedShape = rds.pptSlide.Shapes.Paste()
+        copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
 
         With copiedShape
             If .Height <= 0.0 Then
@@ -12106,21 +12607,22 @@ Public Module testModule
             If awinSettings.mppShowMsName Then
 
 
-                ' im Einzeile Modus fehlt der Kontext, deswegen die etwas aufwändigere Beschriftung  
-                msBeschriftung = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
-                                                                 awinSettings.mppUseAbbreviation, _
-                                                                 swimlaneID)
+                ''rds.MsDescVorlagenShape.Copy()
+                ''copiedShape = rds.pptSlide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(rds.MsDescVorlagenShape, rds.pptSlide)
 
-                rds.MsDescVorlagenShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
                 With copiedShape(1)
 
                     .TextFrame2.TextRange.Text = msBeschriftung
                     .Top = CSng(yPosition + rds.YMilestoneText)
                     .Left = CSng(x1) - .Width / 2
-                    .Name = .Name & .Id
+                    '.Name = .Name & .Id
+                    .Name = msShapeName & PTpptAnnotationType.text
+                    .Title = "Beschriftung"
+                    .AlternativeText = ""
 
-                    shapeNames.Add(.Name, .Name)
+                    shapeNames.Add(.Name)
+
                 End With
 
 
@@ -12132,33 +12634,44 @@ Public Module testModule
 
                 msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
 
-                rds.MsDateVorlagenShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
+                ''rds.MsDateVorlagenShape.Copy()
+                ''copiedShape = rds.pptSlide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(rds.MsDateVorlagenShape, rds.pptSlide)
+
                 With copiedShape(1)
 
                     .TextFrame2.TextRange.Text = msDateText
                     .Top = CSng(yPosition + rds.YMilestoneDate)
                     .Left = CSng(x1) - .Width / 2
-                    .Name = .Name & .Id
+                    '.Name = .Name & .Id
+                    .Name = msShapeName & PTpptAnnotationType.datum
+                    .Title = "Datum"
+                    .AlternativeText = ""
 
-                    shapeNames.Add(.Name, .Name)
+                    shapeNames.Add(.Name)
                 End With
 
             End If
 
 
             ' Erst jetzt wird der Meilenstein gezeichnet 
-            milestoneTypShape.Copy()
-            copiedShape = rds.pptSlide.Shapes.Paste()
+            '' ''milestoneTypShape.Copy()
+            '' ''copiedShape = rds.pptSlide.Shapes.Paste()
+            copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
 
             With copiedShape.Item(1)
                 .Height = sizeFaktor * .Height
                 .Width = sizeFaktor * .Width
                 .Top = CSng(yPosition + rds.YMilestone)
                 .Left = CSng(x1) - .Width / 2
-                .Name = .Name & .Id
-                .Title = milestoneName
-                .AlternativeText = msDate.ToShortDateString
+
+                '.Name = .Name & .Id
+                '.Title = milestoneName
+                '.AlternativeText = msDate.ToShortDateString
+
+                .Name = msShapeName
+                '.Title = milestoneName
+                '.AlternativeText = msDate.ToShortDateString
 
                 If awinSettings.mppShowAmpel Then
                     .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
@@ -12178,7 +12691,26 @@ Public Module testModule
 
                 End If
 
-                shapeNames.Add(.Name, .Name)
+                If awinSettings.mppEnableSmartPPT Then
+                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
+                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
+                    'Dim originalName As String = cMilestone.originalName
+
+                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestoneID)
+                    Dim shortText As String = cMilestone.shortName
+                    Dim originalName As String = cMilestone.originalName
+
+                    If originalName = cMilestone.name Then
+                        originalName = Nothing
+                    End If
+
+                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                                fullBreadCrumb, cMilestone.name, shortText, originalName, _
+                                                Nothing, msDate, _
+                                                cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description)
+                End If
+
+                shapeNames.Add(.Name)
             End With
 
 
@@ -12310,7 +12842,8 @@ Public Module testModule
                                 ByVal legendAreaTop As Double, ByVal legendAreaLeft As Double, legendAreaRight As Double, legendAreaBottom As Double, _
                                 ByVal legendLineShape As pptNS.Shape, ByVal legendStartShape As pptNS.Shape, _
                                 ByVal legendTextVorlagenShape As pptNS.Shape, ByVal legendPhaseVorlagenShape As pptNS.Shape, ByVal legendMilestoneVorlagenShape As pptNS.Shape, _
-                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, ByVal buColorVorlagenShape As pptNS.Shape)
+                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, ByVal buColorVorlagenShape As pptNS.Shape, _
+                                Optional istEinzelprojektLegende As Boolean = False)
 
         Dim maxZeilen As Integer
         Dim mindestNettoHoehe As Double = System.Math.Max(legendMilestoneVorlagenShape.Height, legendPhaseVorlagenShape.Height)
@@ -12346,31 +12879,37 @@ Public Module testModule
         yCursor = legendAreaTop
 
         ' jetzt das LegendlineShape eintragen 
-        legendLineShape.Copy()
-        copiedShape = pptslide.Shapes.Paste()
+        ''legendLineShape.Copy()
+        ''copiedShape = pptslide.Shapes.Paste()
+        copiedShape = pptCopypptPaste(legendLineShape, pptslide)
+
         With copiedShape.Item(1)
             .Top = legendLineShape.Top
             .Left = legendLineShape.Left
         End With
 
         ' jetzt das LegendlineShape eintragen 
-        legendStartShape.Copy()
-        copiedShape = pptslide.Shapes.Paste()
+        ''legendStartShape.Copy()
+        ''copiedShape = pptslide.Shapes.Paste()
+        copiedShape = pptCopypptPaste(legendStartShape, pptslide)
+
         With copiedShape.Item(1)
             .Top = legendStartShape.Top
             .Left = legendStartShape.Left
         End With
 
 
-        If Not IsNothing(buColorVorlagenShape) Then
+        If Not IsNothing(buColorVorlagenShape) And Not istEinzelprojektLegende Then
 
             For i = 1 To businessUnitDefinitions.Count
                 buName = businessUnitDefinitions.ElementAt(i - 1).Value.name
                 buColor = businessUnitDefinitions.ElementAt(i - 1).Value.color
 
                 ' jetzt das Shape eintragen 
-                buColorVorlagenShape.Copy()
-                copiedShape = pptslide.Shapes.Paste()
+                ''buColorVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(buColorVorlagenShape, pptslide)
+
                 With copiedShape(1)
                     .Top = yCursor
                     .Height = zeilenHoehe
@@ -12380,8 +12919,10 @@ Public Module testModule
 
                 ' jetzt den Business Unit Name eintragen 
                 ' Text
-                legendTextVorlagenShape.Copy()
-                copiedShape = pptslide.Shapes.Paste()
+                ''legendTextVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
                 With copiedShape(1)
                     .TextFrame2.TextRange.Text = buName
                     .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
@@ -12404,8 +12945,10 @@ Public Module testModule
             buColor = awinSettings.AmpelNichtBewertet
 
             ' jetzt das Shape eintragen 
-            buColorVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''buColorVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(buColorVorlagenShape, pptslide)
+
             With copiedShape(1)
                 .Top = yCursor
                 .Height = zeilenHoehe
@@ -12415,8 +12958,10 @@ Public Module testModule
 
             ' jetzt den Business Unit Name eintragen 
             ' Text
-            legendTextVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''legendTextVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
             With copiedShape(1)
                 .TextFrame2.TextRange.Text = buName
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
@@ -12436,8 +12981,10 @@ Public Module testModule
         If awinSettings.mppShowProjectLine Then
 
             ' Grafik
-            projectVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''projectVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(projectVorlagenShape, pptslide)
+
             With copiedShape(1)
 
                 .Height = System.Math.Min(projectVorlagenShape.Height, legendPhaseVorlagenShape.Height)
@@ -12448,8 +12995,10 @@ Public Module testModule
             End With
 
             ' Text
-            legendTextVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''legendTextVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
             With copiedShape(1)
                 '.TextFrame2.TextRange.Text = "Projekt, ggf. mit" & vbLf & "Anfangs- und Ende-Markierung"
                 .TextFrame2.TextRange.Text = repMessages.getmsg(15)
@@ -12503,8 +13052,10 @@ Public Module testModule
             End If
 
             ' Phasen-Shape 
-            phaseShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''phaseShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
+
             With copiedShape(1)
 
                 .Height = legendPhaseVorlagenShape.Height
@@ -12515,14 +13066,27 @@ Public Module testModule
             End With
 
             ' Phasen-Text
-            legendTextVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''legendTextVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
             With copiedShape(1)
 
                 .TextFrame2.TextRange.Text = phShortname & " (=" & phaseName & ")"
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + legendPhaseVorlagenShape.Width + 3
 
+                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                If .Left + .Width > legendAreaRight Then
+                    Dim tmpWidth As Double = legendAreaRight - .Left
+                    If tmpWidth > 0.3 * .Width Then
+                        .TextFrame.WordWrap = MsoTriState.msoTrue
+                        .Width = tmpWidth
+                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                        yCursor = yCursor + .Height - zeilenHoehe + 2
+
+                    End If
+                End If
 
                 If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
                     maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
@@ -12530,8 +13094,9 @@ Public Module testModule
             End With
 
             If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
-                xCursor = xCursor + maxBreite + 10
-                If xCursor >= legendAreaRight Then
+
+                xCursor = xCursor + maxBreite
+                If xCursor > legendAreaRight Then
                     'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                     Throw New ArgumentException(repMessages.getmsg(16))
                 End If
@@ -12539,6 +13104,17 @@ Public Module testModule
                 yCursor = legendAreaTop
             Else
                 yCursor = yCursor + zeilenHoehe
+                If yCursor > legendAreaBottom + 5 Then
+                    yCursor = legendAreaTop
+                    xCursor = xCursor + maxBreite
+                    maxBreite = 0.0
+                    If xCursor > legendAreaRight Then
+                        ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        Throw New ArgumentException(repMessages.getmsg(16))
+                    End If
+
+                End If
+
             End If
 
 
@@ -12587,8 +13163,10 @@ Public Module testModule
 
 
             ' Meilenstein-Shape 
-            meilensteinShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''meilensteinShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
+
             With copiedShape(1)
                 .Left = xCursor
                 .Height = legendMilestoneVorlagenShape.Height
@@ -12597,13 +13175,27 @@ Public Module testModule
             End With
 
             ' Meilenstein-Text
-            legendTextVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''legendTextVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
+
             With copiedShape(1)
 
                 .TextFrame2.TextRange.Text = msShortname & " (=" & msName & ")"
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
+
+                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                If .Left + .Width > legendAreaRight Then
+                    Dim tmpWidth As Double = legendAreaRight - .Left
+                    If tmpWidth > 0.3 * .Width Then
+                        .TextFrame2.WordWrap = MsoTriState.msoTrue
+                        .Width = tmpWidth
+                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                        yCursor = yCursor + .Height - zeilenHoehe + 2
+                    End If
+                End If
 
                 If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
                     maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
@@ -12611,15 +13203,26 @@ Public Module testModule
             End With
 
             If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
-                xCursor = xCursor + maxBreite + 10
-                If xCursor >= legendAreaRight Then
-                    'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+
+                xCursor = xCursor + maxBreite
+                If xCursor > legendAreaRight Then
+                    ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                     Throw New ArgumentException(repMessages.getmsg(16))
                 End If
                 yCursor = legendAreaTop
                 maxBreite = 0.0
             Else
                 yCursor = yCursor + zeilenHoehe
+                If yCursor > legendAreaBottom + 5 Then
+                    yCursor = legendAreaTop
+                    xCursor = xCursor + maxBreite
+                    maxBreite = 0.0
+                    If xCursor > legendAreaRight Then
+                        ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        Throw New ArgumentException(repMessages.getmsg(16))
+                    End If
+
+                End If
             End If
 
 
@@ -12627,7 +13230,7 @@ Public Module testModule
         Next
 
         If uniqueElemClasses.Count > 0 Then
-            xCursor = xCursor + maxBreite + 15
+            xCursor = xCursor + maxBreite - 5
             If xCursor >= legendAreaRight Then
                 'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                 Throw New ArgumentException(repMessages.getmsg(16))
@@ -12644,8 +13247,10 @@ Public Module testModule
 
             For i = 1 To 4
 
-                ampelVorlagenShape.Copy()
-                copiedShape = pptslide.Shapes.Paste()
+                ''ampelVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(ampelVorlagenShape, pptslide)
+
 
                 With copiedShape(1)
 
@@ -12669,8 +13274,11 @@ Public Module testModule
 
 
             ' Projekt-Ampel-Text
-            legendTextVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''legendTextVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
+
             With copiedShape(1)
                 '.TextFrame2.TextRange.Text = "Projekt-Ampeln"
                 .TextFrame2.TextRange.Text = repMessages.getmsg(17)
@@ -12684,8 +13292,9 @@ Public Module testModule
 
             For i = 1 To 4
 
-                legendMilestoneVorlagenShape.Copy()
-                copiedShape = pptslide.Shapes.Paste()
+                ''legendMilestoneVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(legendMilestoneVorlagenShape, pptslide)
 
                 With copiedShape(1)
                     .Height = legendMilestoneVorlagenShape.Height
@@ -12709,8 +13318,11 @@ Public Module testModule
 
 
             ' Projekt-Ampel-Text
-            legendTextVorlagenShape.Copy()
-            copiedShape = pptslide.Shapes.Paste()
+            ''legendTextVorlagenShape.Copy()
+            ''copiedShape = pptslide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
+
             With copiedShape(1)
 
                 '.TextFrame2.TextRange.Text = "Meilenstein-Ampeln"
@@ -13257,6 +13869,8 @@ Public Module testModule
     ''' <param name="e"></param>
     ''' <param name="isMultiprojektSicht">gibt an, ob es sich um eine Einzelprojekt/Varianten Sicht oder 
     ''' um eine Multiprojektsicht handelt </param>
+    ''' <param name="isMultivariantenSicht">nur relevant, wenn multiprojektsicht = false; gibt an ob es sich um eine Multivariantensicht oder 
+    ''' eine Einzelprojeksicht handelt </param>
     ''' <param name="projMitVariants">das Projekt, dessen Varianten alle dargestellt werden sollen; nur besetzt wenn isMultiprojektSicht = false</param>
     ''' <remarks></remarks>
     Private Sub zeichneMultiprojektSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
@@ -13266,7 +13880,8 @@ Public Module testModule
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                              ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                              ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
-                                             ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt, _
+                                             ByVal isMultiprojektSicht As Boolean, _
+                                             ByVal isMultivariantenSicht As Boolean, ByVal projMitVariants As clsProjekt, _
                                              ByVal kennzeichnung As String)
 
         ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
@@ -13396,14 +14011,14 @@ Public Module testModule
                                                 selectedBUs, selectedTyps, _
                                                 showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
                                                 projCollection, minDate, maxDate, _
-                                                isMultiprojektSicht, projMitVariants)
+                                                isMultiprojektSicht, isMultivariantenSicht, projMitVariants)
 
 
-            
+
             If objectsToDo <> projCollection.Count Then
                 objectsToDo = projCollection.Count
             End If
-            
+
 
             '
             ' bestimme das Start und Ende Datum des PPT Kalenders
@@ -13654,25 +14269,28 @@ Public Module testModule
 
 
             ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
-
             ' zeichne die Projekte 
+
+            ' jetzt wird das Slide gekennzeichnet als Smart Slide 
+            Call addSmartPPTSlideInfo(pptslide, "TimeComponent", rds.drawingAreaLeft, rds.drawingAreaRight, rds.drawingAreaBottom, _
+                                      rds.drawingAreaTop, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
 
             Try
 
                 With rds
-                    
-                        Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
-                                        pptStartofCalendar, pptEndOfCalendar, _
-                                        .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
-                                        zeilenhoehe, .projectListLeft, _
-                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                        .projectNameVorlagenShape, .MsDescVorlagenShape, .MsDateVorlagenShape, _
-                                        .PhDescVorlagenShape, .PhDateVorlagenShape, _
-                                        .phaseVorlagenShape, .milestoneVorlagenShape, .projectVorlagenShape, .ampelVorlagenShape,
-                                        .rowDifferentiatorShape, .buColorShape, .phaseDelimiterShape, _
-                                        .durationArrowShape, .durationTextShape, _
-                                        .yOffsetMsToText, .yOffsetMsToDate, .yOffsetPhToText, .yOffsetPhToDate, _
-                                        worker, e)
+
+                    Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
+                                    pptStartofCalendar, pptEndOfCalendar, _
+                                    .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
+                                    zeilenhoehe, .projectListLeft, _
+                                    selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                    .projectNameVorlagenShape, .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                    .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                    .phaseVorlagenShape, .milestoneVorlagenShape, .projectVorlagenShape, .ampelVorlagenShape,
+                                    .rowDifferentiatorShape, .buColorShape, .phaseDelimiterShape, _
+                                    .durationArrowShape, .durationTextShape, _
+                                    .yOffsetMsToText, .yOffsetMsToDate, .yOffsetPhToText, .yOffsetPhToDate, _
+                                    worker, e)
 
                 End With
 
@@ -13683,8 +14301,10 @@ Public Module testModule
             Catch ex As Exception
 
                 If Not IsNothing(rds.errorVorlagenShape) Then
-                    rds.errorVorlagenShape.Copy()
-                    errorShape = pptslide.Shapes.Paste
+                    ''rds.errorVorlagenShape.Copy()
+                    ''errorShape = pptslide.Shapes.Paste
+                    errorShape = pptCopypptPaste(rds.errorVorlagenShape, rds.pptSlide)
+
                     With errorShape.Item(1)
                         .TextFrame2.TextRange.Text = ex.Message
                     End With
@@ -13714,8 +14334,10 @@ Public Module testModule
                 Catch ex As Exception
 
                     If Not IsNothing(rds.errorVorlagenShape) Then
-                        rds.errorVorlagenShape.Copy()
-                        errorShape = pptslide.Shapes.Paste
+                        ''rds.errorVorlagenShape.Copy()
+                        ''errorShape = pptslide.Shapes.Paste
+                        errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
                         With errorShape.Item(1)
                             .TextFrame2.TextRange.Text = ex.Message
                         End With
@@ -13729,8 +14351,10 @@ Public Module testModule
 
 
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
-            rds.errorVorlagenShape.Copy()
-            errorShape = pptslide.Shapes.Paste
+            ''rds.errorVorlagenShape.Copy()
+            ''errorShape = pptslide.Shapes.Paste
+            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
             End With
@@ -13873,7 +14497,7 @@ Public Module testModule
 
             If pptFirstTime Then
 
-                
+
                 If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
 
                     If querFormat Then
@@ -13935,7 +14559,7 @@ Public Module testModule
                                                 selectedBUs, selectedTyps, _
                                                 showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
                                                 projCollection, minDate, maxDate, _
-                                                isMultiprojektSicht, hproj)
+                                                isMultiprojektSicht, False, hproj)
 
 
             ' wird benötigt für die Bestimmung der Anzahl zielen und das Zeichnen der Swimlane Phase / Meilensteine
@@ -14189,14 +14813,20 @@ Public Module testModule
                             Try
                                 For Each cphase In hproj.AllPhases
 
-                                    Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                                    If tmpstr <> "" Then
-                                        tmpstr = tmpstr & "#" & cphase.name
-                                        If Not tmpphases.Contains(tmpstr) Then
-                                            tmpphases.Add(tmpstr, tmpstr)
-                                        End If
+                                    If Not hproj.isSwimlaneOrSegment(cphase.name) Then
 
+                                        Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                        If tmpstr <> "" Then
+                                            tmpstr = tmpstr & "#" & cphase.name
+
+                                            If Not tmpphases.Contains(tmpstr) Then
+                                                tmpphases.Add(tmpstr, tmpstr)
+                                            End If
+
+                                        End If
                                     End If
+
+
 
 
                                 Next
@@ -14222,9 +14852,17 @@ Public Module testModule
 
                             End Try
                             ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
-                            
+
                         Else
-                            tmpphases = selectedPhases
+
+                            For Each phaseItem As String In selectedPhases
+                                If Not hproj.isSwimlaneOrSegment(CStr(phaseItem)) Then
+                                    If Not tmpphases.Contains(CStr(phaseItem)) Then
+                                        tmpphases.Add(CStr(phaseItem), CStr(phaseItem))
+                                    End If
+                                End If
+                            Next
+
                             tmpMilestones = selectedMilestones
                         End If
 
@@ -14234,7 +14872,7 @@ Public Module testModule
                                             .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
                                             .legendLineShape, .legendStartShape, _
                                             .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
-                                            .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape)
+                                            .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape, True)
 
                         End With
 
@@ -14242,8 +14880,10 @@ Public Module testModule
                     Catch ex As Exception
 
                         If Not IsNothing(rds.errorVorlagenShape) Then
-                            rds.errorVorlagenShape.Copy()
-                            errorShape = pptslide.Shapes.Paste
+                            ''rds.errorVorlagenShape.Copy()
+                            ''errorShape = pptslide.Shapes.Paste
+                            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
                             With errorShape.Item(1)
                                 .Top = rds.legendLineShape.Top + 10
                                 .TextFrame2.TextRange.Text = ex.Message
@@ -14253,6 +14893,12 @@ Public Module testModule
                     End Try
 
                 End If
+
+
+                ' 
+                ' jetzt wird das Slide gekennzeichnet als Smart Slide 
+                Call addSmartPPTSlideInfo(rds.pptSlide, "TimeComponent", rds.drawingAreaLeft, rds.drawingAreaRight, rds.drawingAreaBottom, _
+                                          rds.drawingAreaTop, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
 
                 'ur: 25.03.2015: sichern der im Format veränderten Folie
                 rds.pptSlide.Copy()
@@ -14298,8 +14944,8 @@ Public Module testModule
                         segmentChanged = False
                     End If
                 End If
-                
-                
+
+
 
 
                 ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
@@ -14352,7 +14998,7 @@ Public Module testModule
                                         hproj.hierarchy.getParentIDOfID(curSwl.nameID)
 
                         End If
-                        
+
                         swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
                                                                                  awinSettings.mppExtendedMode, _
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
@@ -14367,7 +15013,7 @@ Public Module testModule
                                 segmentChanged = False
                             End If
                         End If
-                        
+
                     Else
                         segmentChanged = False
                     End If
@@ -14381,8 +15027,10 @@ Public Module testModule
             End If
 
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
-            rds.errorVorlagenShape.Copy()
-            errorShape = pptslide.Shapes.Paste
+            ''rds.errorVorlagenShape.Copy()
+            ''errorShape = pptslide.Shapes.Paste
+            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
             End With
@@ -14468,8 +15116,10 @@ Public Module testModule
                                             legendBuColorShape)
 
             Catch ex As Exception
-                errorVorlagenShape.Copy()
-                errorShape = pptslide.Shapes.Paste
+                ''errorVorlagenShape.Copy()
+                ''errorShape = pptslide.Shapes.Paste
+                errorShape = pptCopypptPaste(errorVorlagenShape, pptslide)
+
                 With errorShape(1)
                     '.TextFrame2.TextRange.Text = "Fehler beim Zeichnen  Legenden Symbole Phase oder Meilenstein fehlen "
                     .TextFrame2.TextRange.Text = ex.Message
@@ -14484,8 +15134,10 @@ Public Module testModule
             legendMilestoneVorlagenShape.Delete()
 
         ElseIf Not IsNothing(errorVorlagenShape) Then
-            errorVorlagenShape.Copy()
-            errorShape = pptslide.Shapes.Paste
+            ''errorVorlagenShape.Copy()
+            ''errorShape = pptslide.Shapes.Paste
+            errorShape = pptCopypptPaste(errorVorlagenShape, pptslide)
+
             With errorShape(1)
                 ''.TextFrame2.TextRange.Text = "die Legenden Symbole Phase oder Meilenstein fehlen "
                 .TextFrame2.TextRange.Text = repMessages.getmsg(7)
@@ -14503,6 +15155,330 @@ Public Module testModule
         End Try
 
     End Sub
+    ''' <summary>
+    ''' copiert ein Excel-Shape in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcShape"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function xlnsCopypptPaste(ByVal srcShape As xlNS.Shape, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        xlnsCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim i As Integer = 1
+        Dim ok2 As Boolean = False
+        Dim j As Integer = 1
+        While Not ok1 And i < 100
+
+            Try
+                'srcShape.Copy()
+                While Not ok2 And j < 100
+                    Try
+                        srcShape.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("xlnsCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("xlnsCopy timeout")
+                    End If
+                End If
+
+                xlnsCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("xlnsCopypptPaste catch")
+                xlnsCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("xlnsCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("xlnsCopypptPaste timeout")
+        Else
+            'Call MsgBox("xlnsCopypptPaste erfolgreich")
+        End If
+    End Function
+
+    ''' <summary>
+    ''' copiert ein Excel-Shape in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcShape"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pptCopypptPaste(ByVal srcShape As pptNS.Shape, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        pptCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+                'srcShape.Copy()
+                While Not ok2 And j < 100
+                    Try
+                        srcShape.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("pptCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("pptCopy timeout")
+                    End If
+                End If
+
+                pptCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("pptCopypptPaste catch")
+                pptCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("pptCopypptPaste Timeout oder i=" & i.ToString)
+            Throw New ArgumentException("pptCopypptPaste timeout")
+        Else
+            'Call MsgBox("pptCopypptPaste erfolgreich")
+        End If
+    End Function
+
+
+    ''' <summary>
+    ''' copiert ein Excel-Chartobj in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcChartobj"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function chartCopypptPaste(ByVal srcChartobj As xlNS.ChartObject, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        chartCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+                'srcChartobj.Copy()
+                While Not ok2 And j < 100
+                    Try
+                        srcChartobj.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("chartCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("chartCopy timeout")
+                    End If
+                End If
+
+                chartCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("chartCopypptPaste catch")
+                chartCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("chartCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("chartCopypptPaste timeout")
+        Else
+            'Call MsgBox("chartCopypptPaste erfolgreich")
+        End If
+    End Function
+    ''' <summary>
+    ''' copiert ein Excel-ChartobjPicture in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcChartobj"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pictCopypptPaste(ByVal srcChartobj As xlNS.ChartObject, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        pictCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+
+                While Not ok2 And j < 100
+                    Try
+                        srcChartobj.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("pictCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("pictCopy timeout")
+                    End If
+                End If
+
+                pictCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("chartCopypptPaste catch")
+                pictCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("pictCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("pictCopypptPaste timeout")
+        Else
+            'Call MsgBox("pictCopypptPaste erfolgreich")
+        End If
+    End Function
+    ''' <summary>
+    ''' copiert ein Excel-RangePicture in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcrng"></param>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function rngPictCopypptPaste(ByVal srcrng As xlNS.Range, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+
+        rngPictCopypptPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+
+                While Not ok2 And j < 100
+                    Try
+                        srcrng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("rngPictCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("rngPictCopy timeout")
+                    End If
+                End If
+
+                rngPictCopypptPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("chartCopypptPaste catch")
+                rngPictCopypptPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("rngPictCopypptPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("rngPictCopypptPaste timeout")
+        Else
+            'Call MsgBox("pictCopypptPaste erfolgreich")
+        End If
+    End Function
+
+    ''' <summary>
+    ''' Pastet Clipboard in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="pptslide"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pictPaste(ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
+        pictPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim i As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+                pictPaste = pptslide.Shapes.Paste()
+                ok1 = True
+            Catch ex As Exception
+                'Call MsgBox("pictPaste catch")
+                pictPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("pictPaste Timeout oder i = " & i.ToString)
+            Throw New ArgumentException("pictPaste timeout")
+        Else
+            'Call MsgBox("pictPaste erfolgreich")
+        End If
+
+    End Function
+    ''' <summary>
+    ''' title wird zerlegt in kennzeichung und qualifier
+    ''' </summary>
+    ''' <param name="title"></param>
+    ''' <param name="kennz"></param>
+    ''' <param name="qualifier"></param>
+    ''' <param name="quali2"></param>
+    ''' <remarks></remarks>
+    Public Sub title2kennzQualifier(ByVal title As String, ByRef kennz As String, ByRef qualifier As String, ByRef quali2 As String)
+        ' Start neu
+        Dim tmpStr(10) As String
+        Try
+
+            tmpStr = title.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
+            kennz = tmpStr(0).Trim
+
+        Catch ex As Exception
+            kennz = "nicht identifizierbar"
+            tmpStr(0) = " "
+        End Try
+
+        Try
+            If tmpStr.Length < 2 Then
+                qualifier = ""
+                quali2 = ""
+            ElseIf tmpStr.Length = 2 Then
+                qualifier = tmpStr(1).Trim
+            ElseIf tmpStr.Length >= 3 Then
+                qualifier = tmpStr(1).Trim
+                quali2 = tmpStr(2).Trim
+            End If
+
+        Catch ex As Exception
+            qualifier = ""
+            quali2 = ""
+        End Try
+        ' Ende neu 
+
+    End Sub
+
 
 
 

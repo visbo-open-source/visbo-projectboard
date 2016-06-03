@@ -20,11 +20,64 @@ Public Class clsPhase
     Private _Parent As clsProjekt
     Private _vorlagenParent As clsProjektvorlage
 
+    ' in Phasen werden jetzt auch optional Ampel-Erläuterung und Ampel Farbe aufgenommen 
+    Private _ampelStatus As Integer = 0
+    Private _ampelErlaeuterung As String = ""
+
     ' Erweiterung tk 18.2.16
     ' das wird verwendet . um eine Farbe Meilensteins, der nicht zur Liste der bekannten gehört 
     ' aufzunehmen 
     Private _alternativeColor As Long
 
+
+    ''' <summary>
+    ''' liest schreibt den Ampel-Status
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property ampelStatus As Integer
+        Get
+            ampelStatus = _ampelStatus
+        End Get
+
+        Set(value As Integer)
+            If Not (IsNothing(value)) Then
+                If IsNumeric(value) Then
+                    If value >= 0 And value <= 3 Then
+                        _ampelStatus = value
+                    Else
+                        Throw New ArgumentException("unzulässiger Ampel-Wert")
+                    End If
+                Else
+                    Throw New ArgumentException("nicht-numerischer Ampel-Wert")
+                End If
+            Else
+                ' ohne Bewertung
+                _ampelStatus = 0
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liest/schreibt die Ampel-Erläuterung
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property ampelErlaeuterung As String
+        Get
+            ampelErlaeuterung = _ampelErlaeuterung
+        End Get
+        Set(value As String)
+            If Not (IsNothing(value)) Then
+                _ampelErlaeuterung = CStr(value)
+            Else
+                _ampelErlaeuterung = " "
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' prüft ob die Phase in ihren Werten Dauer in Monaten konsistent zu den Xwert-Dimensionen der Rollen und Kosten ist 
@@ -388,6 +441,29 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' gibt die Abkürzung der Phase zurück 
+    ''' entweder als Abkürzung der phaseDefinitions, als Abkürzung der missingphaseDefinitions oder der leere String
+    ''' Später: alternativeAbbrev
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property shortName As String
+        Get
+            Dim abbrev As String = ""
+            Dim tmpName As String = Me.name
+            If PhaseDefinitions.Contains(tmpName) Then
+                abbrev = PhaseDefinitions.getAbbrev(tmpName)
+            ElseIf missingPhaseDefinitions.Contains(tmpName) Then
+                abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
+            End If
+
+            shortName = abbrev
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liefert das StartDatum der Phase
     ''' </summary>
     ''' <value></value>
@@ -454,8 +530,8 @@ Public Class clsPhase
 
 
     ''' <summary>
-    ''' setzt die Farbe eines Meilensteins; macht  dann Sinn, wenn der Meilenstein nicht zur 
-    ''' Liste der bekannten Meilensteine gehört 
+    ''' setzt die Farbe einer Phase; macht  dann Sinn, wenn die Phase nicht zur 
+    ''' Liste der bekannten/missing Phasen gehört 
     ''' </summary>
     ''' <value></value>
     ''' <remarks></remarks>
@@ -1354,6 +1430,9 @@ Public Class clsPhase
 
         _alternativeColor = XlRgbColor.rgbGrey
 
+        _ampelStatus = 0
+        _ampelErlaeuterung = ""
+
 
     End Sub
 
@@ -1375,7 +1454,8 @@ Public Class clsPhase
 
         _alternativeColor = XlRgbColor.rgbGrey
 
-
+        _ampelStatus = 0
+        _ampelErlaeuterung = ""
 
 
     End Sub
@@ -1417,7 +1497,8 @@ Public Class clsPhase
     ''' <param name="corrFakt"></param>
     ''' <param name="newValues"></param>
     ''' <remarks></remarks>
-    Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+    Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
+                               ByVal corrFakt As Double, ByRef newValues() As Double)
         Dim k As Integer
         Dim newXwerte() As Double
         Dim gesBedarf As Double
@@ -1473,28 +1554,38 @@ Public Class clsPhase
 
             Else
 
-
+                Dim tmpSum As Double = 0
                 For k = 0 To newXwerte.Length - 1
 
                     If k = 0 Then
                         ' damit ist 00:00 des Startdates gemeint 
                         hDatum = startdate
-                        anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-                        anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+                        'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                        'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
 
                     ElseIf k = newXwerte.Length - 1 Then
                         ' damit hDatum das End-Datum um 23.00 Uhr
-                        hDatum = endedate.AddHours(23)
-                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                        anzDaysthisMonth = endedate.Day
+                        'hDatum = endedate.AddHours(23)
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
 
                     Else
                         hDatum = startdate
-                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
                     End If
 
                     newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
-
+                    tmpSum = tmpSum + anzDaysthisMonth
                 Next k
+
+                ' Kontrolle für Test ... aChck muss immer Null sein !
+                'Dim aChck As Double = Me.dauerInDays - tmpSum
+
 
                 ' Rest wird auf alle newXwerte verteilt
 

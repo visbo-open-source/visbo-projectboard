@@ -4,7 +4,12 @@
     Public variantName As String
     Public Risiko As Double
     Public StrategicFit As Double
-    
+
+    ' Änderung tk: die CustomFields ergänzt ...
+    Public customDblFields As SortedList(Of Integer, Double)
+    Public customStringFields As SortedList(Of Integer, String)
+    Public customBoolFields As SortedList(Of Integer, Boolean)
+
     Public Erloes As Double
     Public leadPerson As String
     Public tfSpalte As Integer
@@ -93,6 +98,18 @@
                 AllPhases.Add(newPhase)
             Next
 
+            ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
+            For Each kvp As KeyValuePair(Of Integer, String) In projekt.customStringFields
+                Me.customStringFields.Add(kvp.Key, kvp.Value)
+            Next
+
+            For Each kvp As KeyValuePair(Of Integer, Double) In projekt.customDblFields
+                Me.customDblFields.Add(kvp.Key, kvp.Value)
+            Next
+
+            For Each kvp As KeyValuePair(Of Integer, Boolean) In projekt.customBoolFields
+                Me.customBoolFields.Add(kvp.Key, kvp.Value)
+            Next
 
 
         End With
@@ -178,7 +195,28 @@
             Next
 
 
+            ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
 
+            If Not IsNothing(Me.customStringFields) Then
+                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
+                    projekt.customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+            
+
+            If Not IsNothing(Me.customDblFields) Then
+                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
+                    projekt.customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+            
+
+            If Not IsNothing(Me.customBoolFields) Then
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
+                    projekt.customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+            
 
         End With
 
@@ -311,6 +349,8 @@
         Public AllCosts As List(Of clsKostenartDB)
         Public AllResults As List(Of clsResultDB)
 
+        Public ampelStatus As Integer
+        Public ampelErlaeuterung As String
 
         Public earliestStart As Integer
         Public latestStart As Integer
@@ -345,6 +385,10 @@
                 Me.startOffsetinDays = .startOffsetinDays
                 Me.dauerInDays = .dauerInDays
                 Me.name = .nameID
+
+                Me.ampelErlaeuterung = .ampelErlaeuterung
+                Me.ampelStatus = .ampelStatus
+
                 Dim dimension As Integer
 
                 ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
@@ -397,11 +441,18 @@
                 .latestStart = Me.latestStart
                 .minDauer = Me.minDauer
                 .maxDauer = Me.maxDauer
-                .setFarbe = CLng(Me.farbe)
-                ' Änderung 28.11. relstart , relende ist nur noch readonly ; jetzt wird exaktes Datum mitgeführt
-                '.relStart = Me.relStart
-                '.relEnde = Me.relEnde
 
+                ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
+                .ampelStatus = Me.ampelStatus
+                .ampelErlaeuterung = Me.ampelErlaeuterung
+
+                Try
+                    .setFarbe = CLng(Me.farbe)
+                Catch ex As Exception
+
+                End Try
+
+                
                 ' Änderung tk 20.4.2015
                 ' damit alte Datenbank Einträge ohne Hierarchie auch noch gelesen werden können ..
                 If Not istElemID(Me.name) Then
@@ -481,6 +532,10 @@
             AllRoles = New List(Of clsRolleDB)
             AllCosts = New List(Of clsKostenartDB)
             AllResults = New List(Of clsResultDB)
+
+            ampelStatus = 0
+            ampelErlaeuterung = ""
+
         End Sub
     End Class
 
@@ -615,11 +670,17 @@
 
                     .verantwortlich = Me.verantwortlich
                     .offset = Me.offset
-                    If Not IsNothing(Me.alternativeColor) Then
-                        .setFarbe = Me.alternativeColor
-                    Else
-                        .setFarbe = awinSettings.AmpelNichtBewertet
-                    End If
+
+                    Try
+                        If Not IsNothing(Me.alternativeColor) Then
+                            .setFarbe = Me.alternativeColor
+                        Else
+                            .setFarbe = awinSettings.AmpelNichtBewertet
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+                    
 
 
                     For i = 1 To Me.bewertungsCount
@@ -772,6 +833,10 @@
 
         AllPhases = New List(Of clsPhaseDB)
         hierarchy = New clsHierarchyDB
+
+        customDblFields = New SortedList(Of Integer, Double)
+        customStringFields = New SortedList(Of Integer, String)
+        customBoolFields = New SortedList(Of Integer, Boolean)
 
     End Sub
 

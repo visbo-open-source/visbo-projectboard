@@ -5,6 +5,8 @@ Imports System.Math
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
+Imports pptNS = Microsoft.Office.Interop.PowerPoint
+Imports System.Xml.Serialization
 
 
 
@@ -96,7 +98,10 @@ Public Module Module1
 
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
-    Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
+    Public businessUnitDefinitions As New SortedList(Of Integer, clsBusinessUnit)
+
+    ' welche CustomFields gibt es ? 
+    Public customFieldDefinitions As New clsCustomFieldDefinitions
 
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
@@ -152,19 +157,55 @@ Public Module Module1
     Public Const einrückTiefe As Integer = 2
 
     ' diese Konstanten werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
-    Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
-    Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
-    Public Const summentitel3 As String = "Personal-Kosten intern/extern"
-    Public Const summentitel4 As String = "Personal Kosten Struktur"
-    Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
-    Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
-    Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
-    Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
-    Public Const summentitel9 As String = "Auslastungs-Übersicht"
-    Public Const summentitel10 As String = "Details zur Über-Auslastung"
-    Public Const summentitel11 As String = "Details zur Unter-Auslastung"
+    '' ''Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
+    '' ''Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
+    '' ''Public Const summentitel3 As String = "Personal-Kosten intern/extern"
+    '' ''Public Const summentitel4 As String = "Personal Kosten Struktur"
+    '' ''Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
+    '' ''Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
+    '' ''Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel9 As String = "Auslastungs-Übersicht"
+    '' ''Public Const summentitel10 As String = "Details zur Über-Auslastung"
+    '' ''Public Const summentitel11 As String = "Details zur Unter-Auslastung"
+
+    ' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+    Public summentitel1 As String
+    Public summentitel2 As String
+    Public summentitel3 As String
+    Public summentitel4 As String
+    Public summentitel5 As String
+    Public summentitel6 As String
+    Public summentitel7 As String
+    Public summentitel8 As String
+    Public summentitel9 As String
+    Public summentitel10 As String
+    Public summentitel11 As String
+
+   
     Public Const maxProjektdauer As Integer = 60
 
+    ' welche Art von CustomFields gibt es 
+    ' kann später ggf erweitert werden auf StrArray, DblArray, etc
+    ' muss dann auch in clsProjektVorlage und clsCustomField angepasst werden  
+    Public Enum ptCustomFields
+        Str = 0
+        Dbl = 1
+        bool = 2
+    End Enum
+
+
+    ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
+    Public Enum ptRplanNamen
+        Name = 0
+        Anfang = 1
+        Ende = 2
+        Beschreibung = 3
+        Vorgangsklasse = 4
+        Produktlinie = 5
+        Protocol = 6
+        Dauer = 7
+    End Enum
 
 
     Public Enum PTbubble
@@ -297,6 +338,11 @@ Public Module Module1
     Public Enum PTlicense
         swimlanes = 0
        
+    End Enum
+
+    Public Enum PTpptAnnotationType
+        text = 0
+        datum = 1
     End Enum
 
 
@@ -448,7 +494,11 @@ Public Module Module1
     Public nrOfDaysMonth As Double
 
     ' so werden in Visual Basic die Worksheets der aktuell geladenen Excel Applikation zugänglich gemacht   
-    Public appInstance As _Application
+    'Public appInstance As _Application
+    Public appInstance As Microsoft.Office.Interop.Excel.Application
+
+    Public pptApp As Microsoft.Office.Interop.PowerPoint.Application
+
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
     Public globalPath As String
@@ -2283,6 +2333,24 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstin oder eine Phase 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcPPTShapeName(ByVal hproj As clsProjekt, elemID As String) As String
+
+        Dim tmpName As String = elemID
+        If Not IsNothing(hproj) Then
+            tmpName = "(" & hproj.name & "#" & hproj.variantName & ")" & elemID
+        End If
+
+        calcPPTShapeName = tmpName
+
+    End Function
+
+    ''' <summary>
     ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
     ''' </summary>
     ''' <param name="fullname"></param>
@@ -2821,6 +2889,131 @@ Public Module Module1
         End If
 
     End Sub
-   
 
+    ''' <summary>
+    ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
+    ''' fügt 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                    ByVal type As String, _
+                                    ByVal drawingAreaLeft As Double, _
+                                    ByVal drawingAreaRight As Double, _
+                                    ByVal drawingAreaBottom As Double, _
+                                    ByVal drawingAreaTop As Double, _
+                                    ByVal calendarLeft As Date, _
+                                    ByVal calendarRight As Date)
+
+        If Not IsNothing(pptSlide) Then
+            With pptSlide
+
+                If Not IsNothing(type) Then
+                    .Tags.Add("SMART", type)
+                    .Tags.Add("DAL", drawingAreaLeft.ToString)
+                    .Tags.Add("DAR", drawingAreaRight.ToString)
+                    .Tags.Add("DAB", drawingAreaBottom.ToString)
+                    .Tags.Add("DAT", drawingAreaTop.ToString)
+                    .Tags.Add("CALL", calendarLeft.ToShortDateString)
+                    .Tags.Add("CALR", calendarRight.ToShortDateString)
+                End If
+
+            End With
+        End If
+
+
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="fullBreadCrumb"></param>
+    ''' <param name="classifiedName"></param>
+    ''' <param name="shortName"></param>
+    ''' <param name="originalName"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="endDate"></param>
+    ''' <param name="ampelColor"></param>
+    ''' <param name="ampelErlaeuterung"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
+                                          ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
+                                          ByVal startDate As Date, ByVal endDate As Date, _
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+
+        Dim nullDate As Date = Nothing
+
+        If Not IsNothing(pptShape) Then
+            With pptShape
+
+                If Not IsNothing(fullBreadCrumb) Then
+                    .Tags.Add("BC", fullBreadCrumb)
+                End If
+
+                If Not IsNothing(classifiedName) Then
+                    .Tags.Add("CN", classifiedName)
+                End If
+
+                If Not IsNothing(shortName) Then
+                    If shortName <> classifiedName And shortName <> "" Then
+                        .Tags.Add("SN", shortName)
+                    End If
+                End If
+
+                If Not IsNothing(originalName) Then
+                    If originalName <> classifiedName And originalName <> "" Then
+                        .Tags.Add("ON", originalName)
+                    End If
+                End If
+
+                If Not IsNothing(startDate) Then
+                    If Not startDate = nullDate Then
+                        .Tags.Add("SD", startDate.ToShortDateString)
+                    End If
+                End If
+
+                If Not IsNothing(endDate) Then
+                    If Not endDate = nullDate Then
+                        .Tags.Add("ED", endDate.ToShortDateString)
+                    End If
+
+                End If
+
+                If Not IsNothing(ampelColor) Then
+                    If ampelColor >= 0 And ampelColor <= 3 Then
+                        .Tags.Add("AC", ampelColor.ToString)
+                    Else
+                        .Tags.Add("AC", "0")
+                    End If
+                End If
+
+                If Not IsNothing(ampelErlaeuterung) Then
+                    .Tags.Add("AE", ampelErlaeuterung)
+                End If
+
+            End With
+        End If
+
+
+
+    End Sub
+
+    Public Sub PPTstarten()
+        Try
+            ' prüft, ob bereits Powerpoint geöffnet ist 
+            pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
+        Catch ex As Exception
+            Try
+                pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
+            Catch ex1 As Exception
+                Throw New ArgumentException("Powerpoint konnte nicht gestartet werden ...", ex1.Message)
+                'Exit Sub
+            End Try
+
+        End Try
+    End Sub
 End Module

@@ -136,6 +136,10 @@ Public Class clsawinSettings
     Public Property mppUseOriginalNames As Boolean
     Public Property mppKwInMilestone As Boolean
     Public Property mppUseInnerText As Boolean ' steuert, ob der Beschriftungstext im Balken stattfinden soll 
+    ' steuert, ob die Texte smart positioniert werden sollen oder nicht
+    Public Property mppSmartTxtPositioning As Boolean
+    ' enable Smart Powerpoint
+    Public Property mppEnableSmartPPT As Boolean
 
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
@@ -229,7 +233,7 @@ Public Class clsawinSettings
         _costToleranzRel = 0.02
         _costToleranzAbs = 2
 
-        ' Settings für Multiprojekt Sichten 
+        ' Settings für Einzel- und Multiprojekt Sichten 
         _mppShowAllIfOne = False
         _mppShowMsDate = True
         _mppShowMsName = True
@@ -248,6 +252,8 @@ Public Class clsawinSettings
         _mppUseOriginalNames = False
         _mppKwInMilestone = False
         _mppUseInnerText = False
+        _mppSmartTxtPositioning = True
+        _mppEnableSmartPPT = True
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True

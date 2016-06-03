@@ -639,10 +639,6 @@ Public Class frmProjPortfolioAdmin
 
                         ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
-                            If anzahlVarianten = 1 Then
-                                variantName = ""
-                                Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
-                            Else
 
                                 For v = 1 To anzahlVarianten
 
@@ -652,17 +648,11 @@ Public Class frmProjPortfolioAdmin
                                     Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
 
                                 Next
-                            End If
-
+                            
 
                         ElseIf aKtionskennung = PTTvActions.loadPV Then
 
-                            If anzahlVarianten = 1 Then
-                                variantName = ""
-
-                                Call loadProjectfromDB(pname, variantName, True)
-
-                            Else
+                           
                                 For v = 1 To anzahlVarianten
 
                                     'variantNode = projektNode.Nodes.Item(v - 1)
@@ -677,7 +667,6 @@ Public Class frmProjPortfolioAdmin
 
 
                                 Next
-                            End If
 
 
 

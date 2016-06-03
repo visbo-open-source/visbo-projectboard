@@ -259,6 +259,7 @@ Public Class frmReportProfil
                         Me.statusLabel.Visible = True
                         Me.statusLabel.Text = "...started"
 
+                        'Call PPTstarten()
 
                         BGworkerReportBHTC.RunWorkerAsync(reportProfil)
 
@@ -427,18 +428,19 @@ Public Class frmReportProfil
         selectedTypes = copySortedListtoColl(reportProfil.Typs)
 
         ' für BHTC immer true
-        reportProfil.ExtendedMode = True
-        ' für BHTC immer false
-        reportProfil.Ampeln = False
-        reportProfil.AllIfOne = False
-        reportProfil.FullyContained = False
-        reportProfil.SortedDauer = False
-        reportProfil.ProjectLine = False
-        reportProfil.UseOriginalNames = False
+        'reportProfil.ExtendedMode = True
+        '' für BHTC immer false
+        'reportProfil.Ampeln = False
+        'reportProfil.AllIfOne = False
+        'reportProfil.FullyContained = False
+        'reportProfil.SortedDauer = False
+        'reportProfil.ProjectLine = False
+        'reportProfil.UseOriginalNames = False
 
         With awinSettings
 
-            .drawProjectLine = True
+            ' tk Änderung 5.4. wird für Darstellung Projekt auf Multiprojekt-Tafel benötigt; hier nicht setzen 
+            '.drawProjectLine = True
             .mppExtendedMode = reportProfil.ExtendedMode
             .mppOnePage = reportProfil.OnePage
             .mppShowAllIfOne = reportProfil.AllIfOne

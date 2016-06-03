@@ -304,8 +304,9 @@ Public Class frmNameSelection
                         Me.Cursor = Cursors.WaitCursor
                         AbbrButton.Text = "Abbrechen"
 
-                        backgroundRunning = True
+                        'Call PPTstarten()
 
+                        backgroundRunning = True
 
                         BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 

@@ -81,6 +81,9 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsCustomField.vb" />
+    <Compile Include="clsCustomFieldDefinition.vb" />
+    <Compile Include="clsCustomFieldDefinitions.vb" />
     <Compile Include="clsLicences.vb" />
     <Compile Include="clsPPTShapes.vb" />
     <Compile Include="clsAddElementRules.vb" />

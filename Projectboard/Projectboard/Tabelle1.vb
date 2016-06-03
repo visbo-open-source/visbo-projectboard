@@ -11,23 +11,30 @@ Public Class Tabelle1
     Dim projektfarbe As Object, projektschrift As Integer
 
     Private Sub Tabelle1_ActivateEvent() Handles Me.ActivateEvent
+        Dim a As Integer
+
+        Try
+            Application.DisplayFormulaBar = False
+
+            With Application.ActiveWindow
+
+                .DisplayWorkbookTabs = False
+                .DisplayHeadings = False
+
+                .SplitColumn = 0
+                .SplitRow = 1
+
+                .GridlineColor = RGB(220, 220, 220)
+                a = Application.ActiveWindow.Panes.Count
+                .FreezePanes = True
+
+            End With
 
 
-        Application.DisplayFormulaBar = False
-
-        With Application.ActiveWindow
-
-            .DisplayWorkbookTabs = False
-            .DisplayHeadings = False
-
-            .SplitColumn = 0
-            .SplitRow = 1
-
-            .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = True
-
-        End With
-
+        Catch ex As Exception
+            ' nur eine Dummy Zuweisung, um ggf später hier einen Haltepunkt setzen zu können
+            Dim b As Integer = a
+        End Try
         
 
 

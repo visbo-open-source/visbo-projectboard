@@ -1932,11 +1932,15 @@ Public Module Projekte
             ' Soll-Ist Vergleich
             isMinMax = False
 
-            Try
-                beauftragung = projekthistorie.beauftragung
-            Catch ex As Exception
-                Throw New ArgumentException("es gibt keine Beauftragung")
-            End Try
+
+            beauftragung = projekthistorie.beauftragung
+            If IsNothing(beauftragung) Then
+                If projekthistorie.Count >= 1 Then
+                    beauftragung = projekthistorie.First
+                Else
+                    Throw New ArgumentException("es gibt weder Beauftragung noch ersten Stand")
+                End If
+            End If
 
 
             ' finde in der Projekt-Historie das Projekt, das direkt vor hproj gespeichert wurde
@@ -2634,6 +2638,14 @@ Public Module Projekte
 
             Try
                 beauftragung = projekthistorie.beauftragung
+                If IsNothing(beauftragung) Then
+                    If projekthistorie.Count >= 1 Then
+                        beauftragung = projekthistorie.First
+                    Else
+                        'Throw New ArgumentException("es gibt keine Beauftragung")
+                        Throw New ArgumentException(repMessages.getmsg(184))
+                    End If
+                End If
             Catch ex As Exception
                 'Throw New ArgumentException("es gibt keine Beauftragung")
                 Throw New ArgumentException(repMessages.getmsg(184))
@@ -3251,13 +3263,14 @@ Public Module Projekte
         '
         ' bestimme den seit Beauftragung frühesten Start-Monat 
         '
-        Try
+
+
+        If IsNothing(projekthistorie.beauftragung) Then
+            earliestStart = projekthistorie.First.timeStamp
+        Else
             earliestStart = projekthistorie.beauftragung.startDate
-        Catch ex As Exception
-            ' wenn es noch keine Beauftragung gibt, wird das erste Element der Liste verwendet 
-            earliestStart = projekthistorie.ElementAt(0).timeStamp
-            projekthistorie.currentIndex = 0
-        End Try
+        End If
+
 
 
         ' es beginnt entweder mit dem Monat, wo die Aufzeichnung begann oder mit dem Projekt-Start : nimm das größere von beidem 
@@ -3986,14 +3999,16 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " " & zE & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         ElseIf auswahl = 2 Then
-            titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(160) & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4173,14 +4188,16 @@ Public Module Projekte
 
         If auswahl = 1 Then
 
-            titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Sonstige Kosten"
         Else
-            titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4322,7 +4339,8 @@ Public Module Projekte
 
                 If auswahl = 2 Then
                     ik = 0
-                    costname = "Personal-Kosten"
+                    'costname = "Personal-Kosten"
+                    costname = repMessages.getmsg(164)
                     tdatenreihe = hproj.getAllPersonalKosten
                     hsum(ik) = 0
                     For i = 0 To plen - 1
@@ -4574,14 +4592,16 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
         Else
-            titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4637,7 +4657,8 @@ Public Module Projekte
 
             If auswahl = 2 Then
                 ik = 0
-                costname = "Personalkosten"
+                'costname = "Personalkosten"
+                costname = repMessages.getmsg(164)
                 tdatenreihe = hproj.getAllPersonalKosten
                 For i = 0 To plen - 1
                     sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
@@ -5055,19 +5076,20 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         Else
-            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
-
             'kennung = "Personalkosten"
         End If
 
@@ -5247,7 +5269,8 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpCollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5255,7 +5278,8 @@ Public Module Projekte
 
             'kennung = "Personalbedarf"
         Else
-            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5634,19 +5658,22 @@ Public Module Projekte
         Next k
 
         If auswahl = 2 Then
-            Xdatenreihe(anzKostenarten) = "Personal-Kosten"
+            'Xdatenreihe(anzKostenarten) = "Personal-Kosten"
+            Xdatenreihe(anzKostenarten) = repMessages.getmsg(164)
             tdatenreihe(anzKostenarten) = hproj.getAllPersonalKosten.Sum
         End If
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
         Else
-            titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -7275,7 +7302,8 @@ Public Module Projekte
     Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
                                        ByVal startdate As Date, ByVal endedate As Date, _
                                        ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
-                                       ByVal volume As Double, ByVal complexity As Double, ByVal businessUnit As String, ByVal description As String)
+                                       ByVal capacityNeeded As String, ByVal businessUnit As String, ByVal description As String, _
+                                       Optional ByVal listOfCustomFields As Collection = Nothing)
 
         Dim newprojekt As Boolean
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
@@ -7316,18 +7344,6 @@ Public Module Projekte
                 .StrategicFit = sfit
                 .Risiko = risk
 
-                If Not IsNothing(volume) Then
-                    .volume = volume
-                Else
-                    .volume = 0.0
-                End If
-
-                If Not IsNothing(complexity) Then
-                    .complexity = complexity
-                Else
-                    .complexity = 0.0
-                End If
-
                 .businessUnit = businessUnit
                 .description = description
                 .tfZeile = tafelZeile
@@ -7338,6 +7354,123 @@ Public Module Projekte
             Throw New Exception("in erstelle InventurProjekte: " & ex.Message)
         End Try
 
+        '
+        ' wenn benötigte Kapas angegeben sind, dann müssen die jetzt der phase(1) zugewiesen werden 
+        '
+        If Not IsNothing(capacityNeeded) Then
+            If capacityNeeded.Trim.Length > 0 Then
+
+                Dim completeStr() As String = capacityNeeded.Split(New Char() {CType("#", Char)}, 100)
+                Dim rk As Integer = 0
+                Dim Xwerte() As Double
+                Dim oldXwerte() As Double
+
+                Dim cphase As clsPhase = hproj.getPhase(1)
+
+                ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
+                For i As Integer = 1 To completeStr.Length
+
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim isRole As Boolean = False
+                    Dim isCost As Boolean = False
+
+                    If roleCostStr.Length > 1 Then
+                        Try
+                            If RoleDefinitions.Contains(roleCostStr(0)) Then
+                                isRole = True
+                                rk = CInt(RoleDefinitions.getRoledef(roleCostStr(0)).UID)
+
+                            ElseIf CostDefinitions.Contains(roleCostStr(0)) Then
+                                isCost = True
+                                rk = CInt(CostDefinitions.getCostdef(roleCostStr(0)).UID)
+                            End If
+
+                            Dim summeBedarfe As Double = CDbl(roleCostStr(1))
+
+                            If summeBedarfe > 0.0 Then
+
+                                ReDim oldXwerte(0)
+                                oldXwerte(0) = summeBedarfe
+
+                                Dim anfang As Integer, ende As Integer
+
+                                With cphase
+
+                                    anfang = .relStart
+                                    ende = .relEnde
+                                    ReDim Xwerte(ende - anfang)
+
+                                    .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+
+                                End With
+
+                                If isRole Then
+                                    Dim crole As New clsRolle(ende - anfang + 1)
+                                    With crole
+                                        .RollenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
+
+                                    With cphase
+                                        .addRole(crole)
+                                    End With
+
+                                ElseIf isCost Then
+                                    Dim ccost As New clsKostenart(ende - anfang + 1)
+                                    With ccost
+                                        .KostenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
+
+                                    With cphase
+                                        .AddCost(ccost)
+                                    End With
+
+                                End If
+
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
+                Next
+
+            End If
+        End If
+
+        ' jetzt ggf die Custom Fields eintragen 
+        If Not IsNothing(listOfCustomFields) Then
+
+            If listOfCustomFields.Count > 0 Then
+
+                For Each cfObj As clsCustomField In listOfCustomFields
+
+                    Try
+                        Dim uniqueID As Integer = CInt(cfObj.uid)
+                        Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+
+                        Select Case cfType
+
+                            Case ptCustomFields.Str
+                                hproj.addSetCustomSField(uniqueID, CStr(cfObj.wert))
+                            Case ptCustomFields.Dbl
+                                hproj.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
+                            Case ptCustomFields.bool
+                                hproj.addSetCustomBField(uniqueID, CBool(cfObj.wert))
+                            Case Else
+
+                        End Select
+                    Catch ex As Exception
+
+                    End Try
+                    
+                Next
+
+            End If
+
+        End If
+        
 
 
         '
@@ -13889,8 +14022,13 @@ Public Module Projekte
                 .range("Projektleiter").value = hproj.leadPerson
 
                 ' Budget
-
+                rng = CType(.range("Budget"), Excel.Range)
                 .range("Budget").value = hproj.Erloes.ToString("#####.#")
+                Try
+
+                Catch ex As Exception
+
+                End Try
 
                 'Kurzbeschreibung'
 
@@ -14162,7 +14300,7 @@ Public Module Projekte
                 ' ----------------------------------------- 
                 ' Schreiben der Projektvorlagen
                 '
-                .cells(zeile, spalte).value = "Project-Vorlagen"
+                .cells(zeile, spalte).value = "Projekt-Vorlagen"
                 .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
 
                 zeile = zeile + 1
@@ -14909,7 +15047,7 @@ Public Module Projekte
                 ' ----------------------------------------- 
                 ' Schreiben der Projektvorlagen
                 '
-                .cells(zeile, spalte).value = "Project-Vorlagen"
+                .cells(zeile, spalte).value = "Projekt-Vorlagen"
                 .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
 
                 zeile = zeile + 1
@@ -14936,6 +15074,65 @@ Public Module Projekte
                 ' Schreiben des Delimiters
                 .cells(zeile, spalte).value = delimiter
                 zeile = zeile + 1
+
+
+                ' -----------------------------------------
+                ' Schreiben der Business Units 
+                '
+                .cells(zeile, spalte).value = "Business Units"
+                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+                zeile = zeile + 1
+                startZeile = zeile
+
+                For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                    .cells(zeile, spalte).value = kvp.Value.name
+                    zeile = zeile + 1
+                Next
+
+                endZeile = zeile - 1
+
+                If endZeile >= startZeile Then
+
+                    If endZeile = startZeile Then
+                        rng = CType(.cells(startZeile, spalte), Excel.Range)
+                    Else
+                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+                    End If
+                    appInstance.ActiveWorkbook.Names.Add(Name:="BusinessUnits", RefersTo:=rng)
+
+                End If
+
+
+                ' -----------------------------------------
+                ' Schreiben der Projekt-Stati 
+                '
+                .cells(zeile, spalte).value = "Projekt-Stati"
+                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+                zeile = zeile + 1
+                startZeile = zeile
+
+                Dim anzahlS As Integer = ProjektStatus.Length
+                For i = 1 To ProjektStatus.Length
+                    .cells(zeile, spalte).value = ProjektStatus(i - 1)
+                    zeile = zeile + 1
+                Next
+
+                endZeile = zeile - 1
+
+                If endZeile >= startZeile Then
+
+                    If endZeile = startZeile Then
+                        rng = CType(.cells(startZeile, spalte), Excel.Range)
+                    Else
+                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+                    End If
+                    appInstance.ActiveWorkbook.Names.Add(Name:="ProjektStatus", RefersTo:=rng)
+
+                End If
+
+
 
                 ' ----------------------------------------- 
                 ' Schreiben der Phasen
@@ -15095,6 +15292,37 @@ Public Module Projekte
                 If endZeile >= startZeile Then
                     rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
                     appInstance.ActiveWorkbook.Names.Add(Name:="AmpelFarben", RefersTo:=rng)
+
+                End If
+
+                ' Schreiben des Delimiters
+                .cells(zeile, spalte).value = delimiter
+                zeile = zeile + 1
+
+                ' ----------------------------------------- 
+                ' Schreiben der Custom Field Namen
+                '
+                .cells(zeile, spalte).value = "Custom Fields"
+                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+                zeile = zeile + 1
+                startZeile = zeile
+
+                For Each kvp As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
+                    .cells(zeile, spalte).value = kvp.Value.name
+                    zeile = zeile + 1
+                Next
+                endZeile = zeile - 1
+
+                If endZeile >= startZeile Then
+
+                    If endZeile = startZeile Then
+                        rng = CType(.cells(startZeile, spalte), Excel.Range)
+                    Else
+                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+                    End If
+
+                    appInstance.ActiveWorkbook.Names.Add(Name:="Custom_Fields", RefersTo:=rng)
 
                 End If
 
@@ -15313,7 +15541,20 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=ProjektVorlagen")
+                        .Validation.InputMessage = "bitte nicht ändern! Dient nur als Hinweis, mit welcher Vorlage das Projekt verglichen werden soll."
+                    Catch ex As Exception
+
+                    End Try
+                   
                 End With
+
+
+
 
                 ' Status
 
@@ -15323,6 +15564,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=ProjektStatus")
+                        .Validation.InputMessage = ""
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' Business_Unit
@@ -15333,6 +15584,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=BusinessUnits")
+                        .Validation.InputMessage = ""
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' Strategischer Fit
@@ -15343,6 +15604,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=XlFormatConditionOperator.xlBetween)
+                        .Validation.InputMessage = "Werte zwischen 0.1 und 9.9"
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' Risiko
@@ -15353,6 +15624,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=XlFormatConditionOperator.xlBetween)
+                        .Validation.InputMessage = "Werte zwischen 0.1 und 9.9"
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' ur: 13.01.2015: Varianten_Name wird hier in das Tabellenblatt Attribute des Projekt-Steckbriefes eingetragen
@@ -15369,8 +15650,93 @@ Public Module Projekte
 
                 End If
 
+                ' jetzt werden die weiteren Custom Fields weggeschrieben ....
+                ' und zwar immer in der Form <name> <Wert> <type>
+
+                rng = .Range("IndivName2")
+                Dim startZeileOfCFs As Integer = rng.Row
+                Dim zeilenoffset As Integer = 0
+
+                If customFieldDefinitions.count > 0 Then
+                    ' nur dann kann es Custom Fields geben 
+
+
+
+                    With hproj
+
+                        ' jetzt alle String Fields rausschreiben 
+                        For i As Integer = 1 To .customStringFields.Count
+                            Dim uid As Integer = .customStringFields.ElementAt(i - 1).Key
+                            Dim cfValue As String = .customStringFields.ElementAt(i - 1).Value
+
+                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                            Dim cfName As String = customFieldDefinitions.getName(uid)
+                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                            rng.Offset(zeilenoffset, -1).Value = cfName
+                            rng.Offset(zeilenoffset, 0).Value = cfValue
+                            rng.Offset(zeilenoffset, 0).NumberFormat = "@"
+                            rng.Offset(zeilenoffset, 2).Value = "String"
+
+
+                            zeilenoffset = zeilenoffset + 1
+                        Next
+
+                        ' jetzt alle Double Fields rausschreiben 
+                        For i As Integer = 1 To .customDblFields.Count
+                            Dim uid As Integer = .customDblFields.ElementAt(i - 1).Key
+                            Dim cfValue As Double = .customDblFields.ElementAt(i - 1).Value
+
+                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                            Dim cfName As String = customFieldDefinitions.getName(uid)
+                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                            rng.Offset(zeilenoffset, -1).Value = cfName
+                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                            rng.Offset(zeilenoffset, 0).NumberFormat = "#0.00"
+                            rng.Offset(zeilenoffset, 2).Value = "Zahl"
+
+                            zeilenoffset = zeilenoffset + 1
+                        Next
+
+                        ' jetzt alle Flag Fields rausschreiben 
+                        For i As Integer = 1 To .customBoolFields.Count
+                            Dim uid As Integer = .customBoolFields.ElementAt(i - 1).Key
+                            Dim cfValue As Boolean = .customBoolFields.ElementAt(i - 1).Value
+
+                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                            Dim cfName As String = customFieldDefinitions.getName(uid)
+                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                            rng.Offset(zeilenoffset, -1).Value = cfName
+                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                            rng.Offset(zeilenoffset, 2).Value = "Flag"
+
+                            zeilenoffset = zeilenoffset + 1
+                        Next
+
+                    End With
+                    
+
+                End If
+
+                ' jetzt werden noch die Validation. also Auswahl aus Liste gesetzt ...
+                For iz As Integer = startZeileOfCFs To startZeileOfCFs + zeilenoffset + customFieldDefinitions.count
+                    Try
+                        rng.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                       Formula1:="=Custom_Fields")
+                    Catch ex As Exception
+
+                    End Try
+                Next
+                
+
+
                 '' Blattschutz setzen
                 '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+
+
 
             End With
         Catch ex As Exception
@@ -19188,6 +19554,8 @@ Public Module Projekte
 
     ''' <summary>
     ''' wird nur zum Aufsetzen von zufälligen Bewertungen in Demo-Szenarien benötigt ... 
+    ''' alle nach dem übergebenen Datum liegenden Meilensteine werden neu auf Zufallsbasis bewertet 
+    ''' alle vor dem Datum liegenden nur dann, wenn sie noch keine Bewertung haben 
     ''' 
     ''' </summary>
     ''' <param name="yellowPercentage">gibt an wieviele Meilensteine gelb bewertet werden sollen</param>
@@ -19235,7 +19603,7 @@ Public Module Projekte
 
                             Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
 
-                            If msColumn <= heuteColumn + 6 Then
+                            If msColumn > heuteColumn Then
 
 
 
@@ -19248,18 +19616,20 @@ Public Module Projekte
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
+                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
                                             b.color = awinSettings.AmpelRot
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
+                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
                                             b.color = awinSettings.AmpelRot
                                         End If
 
-                                        If msColumn > heuteColumn Then
-                                            redMilestones = redMilestones + 1
-                                        End If
+
+                                        redMilestones = redMilestones + 1
+
 
 
 
@@ -19269,19 +19639,20 @@ Public Module Projekte
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
+                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
                                             b.color = awinSettings.AmpelGelb
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
+                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
                                             b.color = awinSettings.AmpelGelb
                                         End If
 
-                                        If msColumn > heuteColumn Then
-                                            yellowMilestones = yellowMilestones + 1
-                                        End If
 
+                                        yellowMilestones = yellowMilestones + 1
+                                    
 
 
                                     Else
@@ -19289,25 +19660,93 @@ Public Module Projekte
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "aktuell alles i.O.  ..."
+                                            b.description = "Forecast für Termin / Qualität aktuell grün"
                                             b.color = awinSettings.AmpelGruen
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "aktuell alles i.O.  ..."
+                                            b.description = "Forecast für Termin / Qualität aktuell grün"
                                             b.color = awinSettings.AmpelGruen
                                         End If
 
-                                        If msColumn > heuteColumn Then
-                                            greenMilestones = greenMilestones + 1
-                                        End If
+
+                                        greenMilestones = greenMilestones + 1
+
 
                                     End If
 
 
                                 End With
                             Else
-                                ' nichts tun, alles unverändert lassen 
+                                ' hier sind wir in der Vergangenheit : nur dann etwas tun, wenn der Meilenstein noch keine Bewertung hat 
+                                ' oder aber eine graue Bewertung hat 
+                                Dim b As clsBewertung
+                                Dim notYetDone As Boolean = False
+                                If milestone.bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    notYetDone = True
+                                Else
+                                    b = milestone.getBewertung(1)
+                                    If b.color = awinSettings.AmpelNichtBewertet Then
+                                        notYetDone = True
+                                    End If
+                                End If
+
+                                If notYetDone Then
+                                    ' jetzt muss eine zufallsgesteuerte Bewertung her ...
+                                    currentValue = zufall.NextDouble
+
+                                    With milestone
+                                        If currentValue >= redBaseValue And _
+                                            currentValue <= redBaseValue + redPercentage Then
+
+                                            If .bewertungsCount = 0 Then
+                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.color = awinSettings.AmpelRot
+                                                .addBewertung(b)
+                                            Else
+                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.color = awinSettings.AmpelRot
+                                            End If
+
+
+                                        ElseIf currentValue >= yellowBaseValue And _
+                                            currentValue <= yellowBaseValue + yellowPercentage Then
+
+                                            If .bewertungsCount = 0 Then
+                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.color = awinSettings.AmpelGelb
+                                                .addBewertung(b)
+                                            Else
+                                                b = .getBewertung(1)
+                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.color = awinSettings.AmpelGelb
+                                            End If
+
+
+
+                                        Else
+
+                                            If .bewertungsCount = 0 Then
+                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.color = awinSettings.AmpelGruen
+                                                .addBewertung(b)
+                                            Else
+                                                b = .getBewertung(1)
+                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.color = awinSettings.AmpelGruen
+                                            End If
+
+
+                                            greenMilestones = greenMilestones + 1
+
+
+                                        End If
+
+
+                                    End With
+                                End If
+
                             End If
                         Else
                             ' Test-Stelle/Break Punkt setzen für Debug , hat sonst keine Bedeutung 
@@ -19322,30 +19761,48 @@ Public Module Projekte
 
                 ' jetzt noch die Ampel-Farbe setzen 
                 If redMilestones > 0 Then
-                    If redMilestones / greenMilestones > 0.02 Then
-                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
-                        .ampelStatus = 3
+
+                    If greenMilestones > 0 Then
+                        If redMilestones / greenMilestones > 0.02 Then
+                            .ampelErlaeuterung = "aktuell sehr kritische Lage des Projektes" & vbLf & _
+                                "Gründe: ...." & _
+                                "Massnahmen: ...."
+                            .ampelStatus = 3
+                        Else
+                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                                "Risiken: ...." & _
+                                "Massnahmen: ...."
+                            .ampelStatus = 2
+                        End If
                     Else
-                        .ampelErlaeuterung = "Erläuterung für gelbe Bewertung (u.a mind. eine rote Ampel) ..."
+                        ' in diesem Fall wird es unmittelbar vor Projekt-Abschluss sein ... 
+                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                                "Risiken: ...." & _
+                                "Massnahmen: ...."
                         .ampelStatus = 2
                     End If
+                    
 
                 ElseIf yellowMilestones > 0 Then
                     If greenMilestones > 0 Then
 
                         If yellowMilestones / greenMilestones > 0.05 Then
-                            .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                            "Risiken: ...." & _
+                            "Massnahmen: ...."
                             .ampelStatus = 2
                         Else
-                            .ampelErlaeuterung = "aktuell alles i.O ..."
+                            .ampelErlaeuterung = "aktuell alles plangemäß"
                             .ampelStatus = 1
                         End If
                     Else
-                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                            "Risiken: ...." & _
+                            "Massnahmen: ...."
                         .ampelStatus = 2
                     End If
                 Else
-                    .ampelErlaeuterung = "aktuell alles i.O ..."
+                    .ampelErlaeuterung = "aktuell alles plangemäß"
                     .ampelStatus = 1
                 End If
 

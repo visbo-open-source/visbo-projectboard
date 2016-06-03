@@ -24,7 +24,7 @@ Public Class clsReportMessages
             Dim hmsg As String
             Dim ergmsg As String = ""
             Dim i As Integer = 0
-            If nr > 0 And _allReportMsg.Count > nr Then
+            If nr > 0 And _allReportMsg.Count >= nr Then
 
                 hmsg = _allReportMsg.Item(nr)
                 hstr = Split(hmsg, "& vblf &", -1)

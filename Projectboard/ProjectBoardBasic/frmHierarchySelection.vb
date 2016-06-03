@@ -3,6 +3,7 @@ Imports ClassLibrary1
 Imports System.Windows.Forms
 Imports System.ComponentModel
 
+
 Public Class frmHierarchySelection
 
     Private hry As clsHierarchy
@@ -324,14 +325,22 @@ Public Class frmHierarchySelection
 
                                 repProfil.PPTTemplate = repVorlagenDropbox.Text
 
+                                'Call PPTstarten()
+
                                 BackgroundWorker3.RunWorkerAsync(repProfil)
 
                             Else
+
+                                'Call PPTstarten()
+
                                 BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
                             End If
 
                         Else
+
+                            'Call PPTstarten()
+
                             BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
                         End If
 
@@ -395,8 +404,8 @@ Public Class frmHierarchySelection
             With awinSettings
 
                 If Not IsNothing(repProfil) Then
-
-                    .drawProjectLine = True
+                    ' tk Änderung 5.4. wird für Darstellung Projekt auf Multiprojekt-Tafel benötigt; hier nicht setzen 
+                    '.drawProjectLine = True
                     .mppOnePage = repProfil.OnePage
                     .mppShowLegend = repProfil.Legend
                     .mppShowMsDate = repProfil.MSDate
@@ -435,7 +444,8 @@ Public Class frmHierarchySelection
 
             With awinSettings
 
-                .drawProjectLine = True
+                ' tk Änderung 5.4. wird für Darstellung Projekt auf Multiprojekt-Tafel benötigt; hier nicht setzen 
+                '.drawProjectLine = True
 
                 If Not IsNothing(repProfil) Then
 
@@ -944,22 +954,29 @@ Public Class frmHierarchySelection
         Else
 
 
-            Dim fName As String = filterDropbox.SelectedItem.ToString
-            ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
+            Dim fName As String
 
-            ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
-            Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
-                                    selectedPhases, selectedMilestones, _
-                                    selectedRoles, selectedCosts)
+            Try
+                fName = filterDropbox.SelectedItem.ToString
+                ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
 
-            Call buildHryTreeView()
+                ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
+                Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
+                                        selectedPhases, selectedMilestones, _
+                                        selectedRoles, selectedCosts)
 
-            ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-            If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                hryTreeView.ExpandAll()
-            End If
+                Call buildHryTreeView()
 
-            Cursor = Cursors.Default
+                ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                    hryTreeView.ExpandAll()
+                End If
+
+                Cursor = Cursors.Default
+            Catch ex As Exception
+
+            End Try
+            
 
         End If
 
@@ -1198,18 +1215,19 @@ Public Class frmHierarchySelection
    
 
         ' für BHTC immer true
-        reportProfil.ExtendedMode = True
-        ' für BHTC immer false
-        reportProfil.Ampeln = False
-        reportProfil.AllIfOne = False
-        reportProfil.FullyContained = False
-        reportProfil.SortedDauer = False
-        reportProfil.ProjectLine = False
-        reportProfil.UseOriginalNames = False
+        'reportProfil.ExtendedMode = True
+        '' für BHTC immer false
+        'reportProfil.Ampeln = False
+        'reportProfil.AllIfOne = False
+        'reportProfil.FullyContained = False
+        'reportProfil.SortedDauer = False
+        'reportProfil.ProjectLine = False
+        'reportProfil.UseOriginalNames = False
 
         With awinSettings
 
-            .drawProjectLine = True
+            ' tk Änderung 5.4. wird für Darstellung Projekt auf Multiprojekt-Tafel benötigt; hier nicht setzen 
+            '.drawProjectLine = True
             .mppExtendedMode = reportProfil.ExtendedMode
             .mppOnePage = reportProfil.OnePage
             .mppShowAllIfOne = reportProfil.AllIfOne
