@@ -71,16 +71,12 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-<<<<<<< HEAD
-     Global.System.Configuration.DefaultSettingValueAttribute("visbomahle")>  _
-=======
-     Global.System.Configuration.DefaultSettingValueAttribute("EngineeringDemo2016")>  _
->>>>>>> master
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+     Global.System.Configuration.DefaultSettingValueAttribute("visbomahle")> _
     Public ReadOnly Property mongoDBname() As String
         Get
-            Return CType(Me("mongoDBname"),String)
+            Return CType(Me("mongoDBname"), String)
         End Get
     End Property
     
