@@ -447,7 +447,9 @@ Public Class clsProjekte
             Dim shapes As xlNS.Shapes
             Dim projectShape As xlNS.ShapeRange
 
-            With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+
+            'With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
                 shapes = .Shapes
                 Try
                     projectShape = shapes.Range(pName)
