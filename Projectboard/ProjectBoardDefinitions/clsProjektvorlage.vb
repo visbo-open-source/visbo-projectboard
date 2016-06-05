@@ -2674,6 +2674,93 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zum betreffenden Projekt eine nach dem Offset aufsteigend sortierte Liste der Meilensteine zurück 
+    ''' bei Gleichheit wird ein Koorktur Faktor kleiner 1 addiert, so dass es immer eindeutige Werte gibt  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneOffsets As SortedList(Of Double, String)
+        Get
+            Dim tmpValues As New SortedList(Of Double, String)
+            Dim tmpOffset As Double
+            Dim cphase As clsPhase
+            Dim cresult As clsMeilenstein
+
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+
+                For r = 1 To cphase.countMilestones
+                    cresult = cphase.getMilestone(r)
+                    tmpOffset = cphase.startOffsetinDays + cresult.offset
+
+                    Dim korrFaktor As Double = 0.5
+                    Do While tmpValues.ContainsKey(tmpOffset)
+                        tmpOffset = tmpOffset + korrFaktor
+                        korrFaktor = (1 - korrFaktor) * 0.5
+                    Loop
+                    ' jetzt gibt es tmpOffset noch nicht in der Liste ...
+                    tmpValues.Add(tmpOffset, cresult.nameID)
+                Next r
+
+            Next p
+
+            getMilestoneOffsets = tmpValues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine sortierte Liste an Deliverables zurück; 
+    ''' sortier-Kriterium ist der Name des Deliverables, value ist die nameID
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getDeliverables As SortedList(Of String, String)
+        Get
+            Dim tmpValues As New SortedList(Of String, String)
+            Dim tmpDeliverable As String
+            Dim tmpNameID As String
+            Dim cphase As clsPhase
+            Dim cresult As clsMeilenstein
+
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+
+                For r = 1 To cphase.countMilestones
+                    cresult = cphase.getMilestone(r)
+                    tmpNameID = cresult.nameID
+
+                    For d = 1 To cresult.countDeliverables
+                        tmpDeliverable = cresult.getDeliverable(d)
+                        If tmpValues.ContainsKey(tmpDeliverable) Then
+                            tmpDeliverable = tmpDeliverable & "(" & tmpNameID & ")"
+                        Else
+                            ' nichts tun, Deliverable existiert noch nicht ...
+                        End If
+
+                        ' jetzt ist sichergestellt, dass das Deliverable noch nicht existiert 
+                        ' bzw. das Deliverable dieser NameID bereits aufgenommen ist 
+                        If Not tmpValues.ContainsKey(tmpDeliverable) Then
+                            tmpValues.Add(tmpDeliverable, tmpNameID)
+                        Else
+                            ' nichts mehr tun - Deliverable dieser NameID ist schon drin 
+
+                        End If
+                    Next d
+
+                Next r
+
+            Next p
+
+            getDeliverables = tmpValues
+
+        End Get
+    End Property
+
     '
     ' übergibt in getPersonalKosten die Personal Kosten der Rolle <roleid> über den Projektzeitraum
     '

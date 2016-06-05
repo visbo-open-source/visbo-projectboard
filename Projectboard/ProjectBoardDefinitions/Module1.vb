@@ -288,6 +288,10 @@ Public Module Module1
         resultampel = 8
         phasen = 9
         startdatum = 10
+        deliverables = 11
+        customfields = 12
+        projecttype = 13
+        endedatum = 14
     End Enum
 
     Public Enum PThis
@@ -3001,6 +3005,45 @@ Public Module Module1
 
 
 
+    End Sub
+
+    ''' <summary>
+    ''' setzt die komplette Session zurück 
+    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearCompleteSession()
+
+        Dim allShapes As Excel.Shapes
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' jetzt: Löschen der Session 
+
+        Try
+
+            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+            For Each element As Excel.Shape In allShapes
+                element.Delete()
+            Next
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen der Shapes ...")
+        End Try
+
+        ShowProjekte.Clear()
+        AlleProjekte.Clear()
+        selectedProjekte.Clear()
+        ImportProjekte.Clear()
+        DiagramList.Clear()
+        awinButtonEvents.Clear()
+
+        allDependencies.Clear()
+        projectboardShapes.clear()
+        ' Session gelöscht
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
     End Sub
 
     Public Sub PPTstarten()

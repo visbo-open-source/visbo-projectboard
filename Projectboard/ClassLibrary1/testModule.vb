@@ -4472,7 +4472,7 @@ Public Module testModule
         enableOnUpdate = False
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
-        Call storeSessionConstellation(ShowProjekte, "Last")
+        Call storeSessionConstellation("Last")
 
         If request.pingMongoDb() Then
 
@@ -9736,7 +9736,7 @@ Public Module testModule
         monthName(10) = "Nov"
         monthName(11) = "Dec"
 
-        Dim QuartalsName() As String = {"QI", "QII", "QIII", "QIV"}
+        Dim QuartalsName() As String = {"Q1", "Q2", "Q3", "Q4"}
 
 
         Dim newShapes As pptNS.ShapeRange
@@ -9899,7 +9899,7 @@ Public Module testModule
 
         curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfYear).AddYears(1)
 
-        Do While curDatePtr < rds.PPTEndOFCalendar
+        Do While curDatePtr <= rds.PPTEndOFCalendar
             curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
             positionY(positionYPtr) = curRight
             positionYPtr = positionYPtr + 1

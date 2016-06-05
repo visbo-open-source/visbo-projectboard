@@ -7660,13 +7660,13 @@ Public Module Projekte
     '
     ' Sub trägt ein individuelles Projekt ein
     '
-    Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
+    Public Function erstelleInventurProjekt(ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
                                        ByVal startdate As Date, ByVal endedate As Date, _
                                        ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
                                        ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
-                                       Optional ByVal listOfCustomFields As Collection = Nothing)
+                                       Optional ByVal listOfCustomFields As Collection = Nothing) As clsProjekt
 
-        Dim newprojekt As Boolean
+        Dim newprojekt As New clsProjekt
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
         Dim zeile As Integer = tafelZeile
         Dim spalte As Integer = getColumnOfDate(startdate)
@@ -7675,7 +7675,6 @@ Public Module Projekte
 
         Const extCost As String = "Kosten Externe"
 
-        newprojekt = True
 
         '
         ' ein neues Projekt wird als Objekt angelegt ....
@@ -7685,15 +7684,16 @@ Public Module Projekte
         End If
 
         Try
-            Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
+            Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate)
             'Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")
-            Exit Sub
+            erstelleInventurProjekt = Nothing
+            Exit Function
         End Try
 
         Try
-            With hproj
+            With newprojekt
                 .name = pname
                 .variantName = variantName
                 '.getPhase(1).name = pname
@@ -7725,13 +7725,15 @@ Public Module Projekte
         Dim Xwerte() As Double
         Dim oldXwerte() As Double
 
-        Dim cphase As clsPhase = hproj.getPhase(1)
+        Dim summeCost As Double = 0.0
+
+        Dim cphase As clsPhase = newprojekt.getPhase(1)
 
         If Not IsNothing(capacityNeeded) Then
             If capacityNeeded.Trim.Length > 0 Then
 
                 Dim completeStr() As String = capacityNeeded.Split(New Char() {CType("#", Char)}, 100)
-                
+
 
                 ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
                 For i As Integer = 1 To completeStr.Length
@@ -7739,62 +7741,82 @@ Public Module Projekte
                     Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
                     Dim isRole As Boolean = False
                     Dim isCost As Boolean = False
+                    Dim tagessatz As Double = 0.0
 
                     If roleCostStr.Length > 1 Then
+
                         Try
                             If RoleDefinitions.containsName(roleCostStr(0)) Then
                                 isRole = True
                                 rk = CInt(RoleDefinitions.getRoledef(roleCostStr(0)).UID)
+                                tagessatz = RoleDefinitions.getRoledef(roleCostStr(0)).tagessatzIntern
 
                             ElseIf CostDefinitions.containsName(roleCostStr(0)) Then
                                 isCost = True
                                 rk = CInt(CostDefinitions.getCostdef(roleCostStr(0)).UID)
+
+                            Else
+                                rk = -1
+
                             End If
 
-                            Dim summeBedarfe As Double = CDbl(roleCostStr(1))
+                            If rk > -1 Then
 
-                            If summeBedarfe > 0.0 Then
+                                Dim summeBedarfe As Double = CDbl(roleCostStr(1))
 
-                                ReDim oldXwerte(0)
-                                oldXwerte(0) = summeBedarfe
+                                If summeBedarfe > 0.0 Then
 
-                                Dim anfang As Integer, ende As Integer
+                                    ReDim oldXwerte(0)
+                                    oldXwerte(0) = summeBedarfe
 
-                                With cphase
-
-                                    anfang = .relStart
-                                    ende = .relEnde
-                                    ReDim Xwerte(ende - anfang)
-
-                                    .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-
-                                End With
-
-                                If isRole Then
-                                    Dim crole As New clsRolle(ende - anfang + 1)
-                                    With crole
-                                        .RollenTyp = rk
-                                        .Xwerte = Xwerte
-                                    End With
+                                    Dim anfang As Integer, ende As Integer
 
                                     With cphase
-                                        .addRole(crole)
+
+                                        anfang = .relStart
+                                        ende = .relEnde
+                                        ReDim Xwerte(ende - anfang)
+
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+
                                     End With
 
-                                ElseIf isCost Then
-                                    Dim ccost As New clsKostenart(ende - anfang + 1)
-                                    With ccost
-                                        .KostenTyp = rk
-                                        .Xwerte = Xwerte
-                                    End With
+                                    ' dabei jetzt auch die Kosten schon mal berechnen  
 
-                                    With cphase
-                                        .AddCost(ccost)
-                                    End With
+
+                                    If isRole Then
+                                        Dim crole As New clsRolle(ende - anfang + 1)
+                                        With crole
+                                            .RollenTyp = rk
+                                            .Xwerte = Xwerte
+                                        End With
+
+                                        With cphase
+                                            .addRole(crole)
+                                        End With
+
+                                        summeCost = summeCost + crole.Xwerte.Sum * tagessatz
+
+
+                                    ElseIf isCost Then
+                                        Dim ccost As New clsKostenart(ende - anfang + 1)
+                                        With ccost
+                                            .KostenTyp = rk
+                                            .Xwerte = Xwerte
+                                        End With
+
+                                        With cphase
+                                            .AddCost(ccost)
+                                        End With
+
+                                        summeCost = summeCost + ccost.Xwerte.Sum
+
+                                    End If
 
                                 End If
 
                             End If
+
                         Catch ex As Exception
 
                         End Try
@@ -7806,10 +7828,23 @@ Public Module Projekte
         End If
 
         If Not IsNothing(externCostInput) And CostDefinitions.containsName(extCost) Then
+
+            Dim summeExtCost As Double = 0.0
+
+            If externCostInput.Trim = "filltobudget" Then
+                summeExtCost = Math.Truncate(100 * (newprojekt.Erloes * (1 - newprojekt.risikoKostenfaktor) - newprojekt.getGesamtKostenBedarf.Sum)) / 100
+
+            ElseIf IsNumeric(externCostInput) Then
+                If CDbl(externCostInput) > 0 Then
+                    summeExtCost = CDbl(externCostInput)
+                End If
+
+            End If
+
             ' es soll ausgerechnet werden, was denn an externen Kosten anfällt 
             ' getriggert durch Mahle ...
             'Dim summeExtCost As Double = Math.Truncate(hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)
-            Dim summeExtCost As Double = Math.Truncate(100 * (hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)) / 100
+
 
             ' wenn jetzt noch ein Restbetrag übrig ist .... 
             If summeExtCost > 0 Then
@@ -7864,11 +7899,11 @@ Public Module Projekte
                         Select Case cfType
 
                             Case ptCustomFields.Str
-                                hproj.addSetCustomSField(uniqueID, CStr(cfObj.wert))
+                                newprojekt.addSetCustomSField(uniqueID, CStr(cfObj.wert))
                             Case ptCustomFields.Dbl
-                                hproj.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
+                                newprojekt.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
                             Case ptCustomFields.bool
-                                hproj.addSetCustomBField(uniqueID, CBool(cfObj.wert))
+                                newprojekt.addSetCustomBField(uniqueID, CBool(cfObj.wert))
                             Case Else
 
                         End Select
@@ -7883,13 +7918,13 @@ Public Module Projekte
         End If
 
 
-
+        erstelleInventurProjekt = newprojekt
         '
         ' Ende Objekt Anlage
         '
 
 
-    End Sub
+    End Function
 
 
     ''' <summary>
@@ -9351,6 +9386,420 @@ Public Module Projekte
 
     End Function
 
+    ''' <summary>
+    ''' prüft, ob zwei sortierte Listen (string, string) in Ihren Keys identisch sind 
+    ''' </summary>
+    ''' <param name="type" >0: Deliverables
+    ''' 1: String Custom Fields
+    ''' 2: Double Custom Fields
+    ''' 3: Bool Custom Fields</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function sortedListsAreDifferent(ByVal slist1 As SortedList(Of String, String), _
+                                                    ByVal slist2 As SortedList(Of String, String), _
+                                                    ByVal type As Integer, _
+                                                    Optional ByVal istVorlage As Boolean = False) As Boolean
+
+        Dim istIdentisch As Boolean = True
+        Dim i As Integer
+        Dim ok As Boolean = True
+        Dim alsoCompareValues As Boolean
+
+        Try
+            Select Case type
+                Case 0
+                    ' sortedlist of String, string, Deliverables
+                    alsoCompareValues = False
+                Case 1
+                    ' Custom String Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 2
+                    ' Custom Double Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 3
+                    ' Custom Boolean 
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+                Case Else
+                    ok = False
+                    slist1 = New SortedList(Of String, String)
+                    slist2 = New SortedList(Of String, String)
+                    alsoCompareValues = True
+
+            End Select
+        Catch ex As Exception
+            istIdentisch = False
+            ok = False
+        End Try
+
+
+        Try
+
+            If CBool(slist1.Count <> slist2.Count) Or Not ok Then
+                istIdentisch = False
+
+            Else
+                i = 0
+                While CBool(i <= slist1.Count - 1) And istIdentisch
+
+                    Try
+                        If alsoCompareValues Then
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or _
+                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        Else
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        End If
+                    Catch ex As Exception
+                        istIdentisch = False
+                    End Try
+
+
+                End While
+            End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message & " in sortedListsAreDifferent")
+        End Try
+
+        sortedListsAreDifferent = Not istIdentisch
+
+    End Function
+
+    ''' <summary>
+    ''' prüft ob zwei sortierte Listen (integer, String) in ihren Werte identisch sind
+    ''' es wird auf Identität der keys geprüft, je nach type wird auch auch auf Identität values geprüft
+    ''' </summary>
+    ''' <param name="slist1"></param>
+    ''' <param name="slist2"></param>
+    ''' <param name="type"></param>
+    ''' <param name="istVorlage"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function sortedListsAreDifferent(ByVal slist1 As SortedList(Of Integer, String), _
+                                                        ByVal slist2 As SortedList(Of Integer, String), _
+                                                        ByVal type As Integer, _
+                                                        Optional ByVal istVorlage As Boolean = False) As Boolean
+
+        Dim istIdentisch As Boolean = True
+        Dim i As Integer
+        Dim ok As Boolean = True
+        Dim alsoCompareValues As Boolean
+
+
+        Try
+            Select Case type
+                Case 0
+                    ' sortedlist of String, string, Deliverables
+                    alsoCompareValues = False
+                Case 1
+                    ' Custom String Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 2
+                    ' Custom Double Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 3
+                    ' Custom Boolean 
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+                Case Else
+                    ok = False
+                    alsoCompareValues = True
+
+            End Select
+        Catch ex As Exception
+            istIdentisch = False
+            ok = False
+        End Try
+
+
+        Try
+
+            If CBool(slist1.Count <> slist2.Count) Or Not ok Then
+                istIdentisch = False
+
+            Else
+                i = 0
+                While CBool(i <= slist1.Count - 1) And istIdentisch
+
+                    Try
+                        If alsoCompareValues Then
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or _
+                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        Else
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        End If
+                    Catch ex As Exception
+                        istIdentisch = False
+                    End Try
+
+
+                End While
+            End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message & " in sortedListsAreDifferent")
+        End Try
+
+        sortedListsAreDifferent = Not istIdentisch
+
+    End Function
+
+    ''' <summary>
+    ''' prüft ob zwei sortierte Listen (integer, Double) in ihren Werte identisch sind
+    ''' es wird auf Identität der keys geprüft, je nach type wird auch auch auf Identität values geprüft
+    ''' </summary>
+    ''' <param name="slist1"></param>
+    ''' <param name="slist2"></param>
+    ''' <param name="type"></param>
+    ''' <param name="istVorlage"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function sortedListsAreDifferent(ByVal slist1 As SortedList(Of Integer, Double), _
+                                            ByVal slist2 As SortedList(Of Integer, Double), _
+                                                        ByVal type As Integer, _
+                                                        Optional ByVal istVorlage As Boolean = False) As Boolean
+
+        Dim istIdentisch As Boolean = True
+        Dim i As Integer
+        Dim ok As Boolean = True
+        Dim alsoCompareValues As Boolean
+
+
+        Try
+            Select Case type
+                Case 0
+                    ' sortedlist of String, string, Deliverables
+                    alsoCompareValues = False
+                Case 1
+                    ' Custom String Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 2
+                    ' Custom Double Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 3
+                    ' Custom Boolean 
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+                Case Else
+                    ok = False
+                    alsoCompareValues = True
+
+            End Select
+        Catch ex As Exception
+            istIdentisch = False
+            ok = False
+        End Try
+
+
+        Try
+
+            If CBool(slist1.Count <> slist2.Count) Or Not ok Then
+                istIdentisch = False
+
+            Else
+                i = 0
+                While CBool(i <= slist1.Count - 1) And istIdentisch
+
+                    Try
+                        If alsoCompareValues Then
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or _
+                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        Else
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        End If
+                    Catch ex As Exception
+                        istIdentisch = False
+                    End Try
+
+
+                End While
+            End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message & " in sortedListsAreDifferent")
+        End Try
+
+        sortedListsAreDifferent = Not istIdentisch
+
+    End Function
+
+    ''' <summary>
+    ''' prüft ob zwei sortierte Listen (integer, Boolean) in ihren Werte identisch sind
+    ''' es wird auf Identität der keys geprüft, je nach type wird auch auch auf Identität values geprüft
+    ''' </summary>
+    ''' <param name="slist1"></param>
+    ''' <param name="slist2"></param>
+    ''' <param name="type"></param>
+    ''' <param name="istVorlage"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function sortedListsAreDifferent(ByVal slist1 As SortedList(Of Integer, Boolean), _
+                                            ByVal slist2 As SortedList(Of Integer, Boolean), _
+                                                        ByVal type As Integer, _
+                                                        Optional ByVal istVorlage As Boolean = False) As Boolean
+
+        Dim istIdentisch As Boolean = True
+        Dim i As Integer
+        Dim ok As Boolean = True
+        Dim alsoCompareValues As Boolean
+
+
+        Try
+            Select Case type
+                Case 0
+                    ' sortedlist of String, string, Deliverables
+                    alsoCompareValues = False
+                Case 1
+                    ' Custom String Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 2
+                    ' Custom Double Fields
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+
+                Case 3
+                    ' Custom Boolean 
+                    If Not istVorlage Then
+                        alsoCompareValues = True
+                    End If
+                Case Else
+                    ok = False
+                    alsoCompareValues = True
+
+            End Select
+        Catch ex As Exception
+            istIdentisch = False
+            ok = False
+        End Try
+
+
+        Try
+
+            If CBool(slist1.Count <> slist2.Count) Or Not ok Then
+                istIdentisch = False
+
+            Else
+                i = 0
+                While CBool(i <= slist1.Count - 1) And istIdentisch
+
+                    Try
+                        If alsoCompareValues Then
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or _
+                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        Else
+                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                                istIdentisch = False
+                            Else
+                                i = i + 1
+                            End If
+                        End If
+                    Catch ex As Exception
+                        istIdentisch = False
+                    End Try
+
+
+                End While
+            End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message & " in sortedListsAreDifferent")
+        End Try
+
+        sortedListsAreDifferent = Not istIdentisch
+
+    End Function
+    '' braucht man nicht, ist durch andere sortedListsAreDifferent abgelöst ...
+    '' ''' <summary>
+    '' ''' prüft, ob zwei sortierte Listen in Ihren Keys identisch sind 
+    '' ''' </summary>
+    '' ''' <param name="list1"></param>
+    '' ''' <param name="list2"></param>
+    '' ''' <returns></returns>
+    '' ''' <remarks></remarks>
+    ''Public Function sortedListsAreDifferent(ByRef list1 As SortedList(Of String, String), _
+    ''                                            ByRef list2 As SortedList(Of String, String)) As Boolean
+
+    ''    Dim istIdentisch As Boolean = True
+    ''    Dim i As Integer
+
+
+    ''    Try
+
+    ''        If list1.Count <> list2.Count Then
+    ''            istIdentisch = False
+
+    ''        Else
+    ''            i = 0
+    ''            While i <= list1.Count - 1 And istIdentisch
+    ''                If list1.ElementAt(0).Key <> list2.ElementAt(0).Key Then
+    ''                    istIdentisch = False
+    ''                Else
+    ''                    i = i + 1
+    ''                End If
+    ''            End While
+    ''        End If
+
+    ''    Catch ex As Exception
+    ''        Call MsgBox(ex.Message & " in sortedListsAreDifferent")
+    ''    End Try
+
+    ''    sortedListsAreDifferent = Not istIdentisch
+
+    ''End Function
+
 
     ''' <summary>
     ''' Prozedur zeigt die Ressourcen Bedarfe des Projektes an
@@ -9889,7 +10338,7 @@ Public Module Projekte
         ' ggf die aktuelle Konstellation in "Last" speichern 
 
         If storeLast Then
-            Call storeSessionConstellation(ShowProjekte, "Last")
+            Call storeSessionConstellation("Last")
         End If
 
         If Not addProjects And updateProjektTafel Then
@@ -10174,7 +10623,7 @@ Public Module Projekte
             Exit Sub
         Else
             ' speichern der letzten Konstellation
-            Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(0))
+            Call storeSessionConstellation(autoSzenarioNamen(0))
         End If
 
 
@@ -10204,7 +10653,7 @@ Public Module Projekte
 
         ' Start der Rekursion - und die Ausgangs-Konstellation als Vorgabe, als aktuelle "1. Varianten Optimum" behalten 
         firstValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
-        Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(1))
+        Call storeSessionConstellation(autoSzenarioNamen(1))
 
         ' die anderen Szenarien sollen jetzt gelöscht werden 
         If projectConstellations.Contains(autoSzenarioNamen(2)) Then
@@ -10345,7 +10794,7 @@ Public Module Projekte
 
                     End If
 
-                    Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(1))
+                    Call storeSessionConstellation(autoSzenarioNamen(1))
                     'Call awinNeuZeichnenDiagramme(2)
 
                 ElseIf currentValue < secondValue Then
@@ -10367,14 +10816,14 @@ Public Module Projekte
 
                     End If
 
-                    Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(2))
+                    Call storeSessionConstellation(autoSzenarioNamen(2))
 
                 ElseIf currentValue < thirdValue Then
 
                     anzOptimierungen = anzOptimierungen + 1
 
                     thirdValue = currentValue
-                    Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(3))
+                    Call storeSessionConstellation(autoSzenarioNamen(3))
                 End If
 
                 e.Result = anzSchleifen.ToString & " / " & anzKombinationen.ToString & " Berechnungen; " & _
@@ -18754,12 +19203,12 @@ Public Module Projekte
 
     ''' <summary>
     ''' speichert die aktuelle Konstellation in currentProjektListe in eine Konstellation
-    ''' wenn die ImportProjekte vom Typ clsProjekteAlle übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen 
+    ''' wenn die fullProjetNames vom Typ Collection übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen 
     ''' </summary>
     ''' <param name="constellationName"></param>
     ''' <remarks></remarks>
-    Public Sub storeSessionConstellation(ByRef currentProjektListe As clsProjekte, ByVal constellationName As String, _
-                                         Optional ByVal ImportProjekte As clsProjekteAlle = Nothing)
+    Public Sub storeSessionConstellation(ByVal constellationName As String, _
+                                         Optional ByVal fullProjectNames As Collection = Nothing)
 
         'Dim request As New Request(awinSettings.databaseName)
 
@@ -18782,27 +19231,60 @@ Public Module Projekte
 
         Dim newConstellationItem As clsConstellationItem
 
-        If Not IsNothing(ImportProjekte) Then
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
-                newConstellationItem = New clsConstellationItem
-                With newConstellationItem
-                    .projectName = kvp.Value.name
-                    .show = True
-                    .Start = kvp.Value.startDate
-                    .variantName = kvp.Value.variantName
-                    .zeile = kvp.Value.tfZeile
-                End With
-                newC.Add(newConstellationItem)
+        If Not IsNothing(fullProjectNames) Then
+            For Each fullName As String In fullProjectNames
+
+                Dim hproj As clsProjekt = AlleProjekte.getProject(fullName)
+
+                If Not IsNothing(hproj) Then
+                    newConstellationItem = New clsConstellationItem
+
+                    With newConstellationItem
+                        .projectName = hproj.name
+                        .variantName = hproj.variantName
+                        Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
+
+                        If Not IsNothing(shownProject) Then
+                            If shownProject.variantName = hproj.variantName Then
+                                .show = True
+                            Else
+                                .show = False
+                            End If
+                        Else
+                            .show = False
+                        End If
+
+                        .Start = hproj.startDate
+                        .zeile = hproj.tfZeile
+
+                    End With
+                    newC.Add(newConstellationItem)
+                End If
+                
             Next
         Else
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In currentProjektListe.Liste
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+
                 newConstellationItem = New clsConstellationItem
+
                 With newConstellationItem
-                    .projectName = kvp.Key
-                    .show = True
-                    .Start = kvp.Value.startDate
+                    .projectName = kvp.Value.name
                     .variantName = kvp.Value.variantName
+
+                    Dim shownProject As clsProjekt = ShowProjekte.getProject(kvp.Value.name)
+                    If Not IsNothing(shownProject) Then
+                        If shownProject.variantName = kvp.Value.variantName Then
+                            .show = True
+                        Else
+                            .show = False
+                        End If
+                    Else
+                        .show = False
+                    End If
+
+                    .Start = kvp.Value.startDate
                     .zeile = kvp.Value.tfZeile
+
                 End With
                 newC.Add(newConstellationItem)
             Next
@@ -18923,13 +19405,13 @@ Public Module Projekte
     ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
     ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der myCollection aufgeführt sind
     ''' </summary>
-    ''' <param name="myCollection"></param>
     ''' <param name="importDate"></param>
-    ''' <param name="scenarioName">wenn scenarioName einen wert hat, dann werden für bereits existierende Projekte Varianten mit dem Namen des Szenario-Namens erzeugt </param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
-                                       Optional ByVal scenarioName As String = "")
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal pStatus As String)
 
+
+        'Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
+        '                                   Optional ByVal scenarioName As String = "")
         Dim hproj As New clsProjekt, cproj As New clsProjekt
         Dim fullName As String, vglName As String
         Dim pname As String
@@ -18951,9 +19433,13 @@ Public Module Projekte
 
         Dim differentToPrevious As Boolean = False
 
-        If myCollection.Count <> ImportProjekte.Count Then
-            Throw New ArgumentException("keine Übereinstimmung in der Anzahl gültiger/ímportierter Projekte - Abbruch!")
-        End If
+        ' Änderung tk 5.6.16: 
+        'es wird jetzt getrennt zwischen dem was in einer Constellation gespeichert werden soll und dem , 
+        ' was noch in die Session importiert werden muss. 
+
+        ''If myCollection.Count <> ImportProjekte.Count Then
+        ''    Throw New ArgumentException("keine Übereinstimmung in der Anzahl gültiger/ímportierter Projekte - Abbruch!")
+        ''End If
 
 
         anzAktualisierungen = 0
@@ -18961,13 +19447,15 @@ Public Module Projekte
 
         Dim ok As Boolean = True
         ' jetzt werden alle importierten Projekte bearbeitet 
-        For Each fullName In myCollection
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
 
+            fullName = kvp.Key
+            hproj = kvp.Value
 
             ok = True
 
             Try
-                hproj = ImportProjekte.getProject(fullName)
+                'hproj = ImportProjekte.getProject(fullName)
                 pname = hproj.name
 
                 ' Änderung tk: ist Filter aktiv ? wenn ja, muss der überprüft werden 
@@ -19239,7 +19727,8 @@ Public Module Projekte
                 Call awinClearPlanTafel()
             End If
 
-            Call awinZeichnePlanTafel(True)
+            'Call awinZeichnePlanTafel(True)
+            Call awinZeichnePlanTafel(False)
             Call awinNeuZeichnenDiagramme(2)
 
         End If
@@ -19657,7 +20146,7 @@ Public Module Projekte
 
     End Function
 
-    
+
     ''' <summary>
     ''' kopiert eine Collection , die Strings enthält
     ''' </summary>
@@ -20141,7 +20630,7 @@ Public Module Projekte
 
 
                                         yellowMilestones = yellowMilestones + 1
-                                    
+
 
 
                                     Else
@@ -20278,7 +20767,7 @@ Public Module Projekte
                                 "Massnahmen: ...."
                         .ampelStatus = 2
                     End If
-                    
+
 
                 ElseIf yellowMilestones > 0 Then
                     If greenMilestones > 0 Then

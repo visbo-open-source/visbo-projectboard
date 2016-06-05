@@ -76,7 +76,7 @@ Imports System.Windows
                 If ControlID = speichernDatenbank Then
                     storeToDB = True
                 End If
-                Call storeSessionConstellation(ShowProjekte, constellationName)
+                Call storeSessionConstellation(constellationName)
 
               
                 ' speichern der Konstellation mit constellationName in DB
@@ -146,34 +146,61 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
-            If loadConstellationFrm.addToSession.Checked = True Then
-                constellationName = loadConstellationFrm.ListBox1.Text
-                Call awinAddConstellation(constellationName, successMessage)
-            Else
-                constellationName = loadConstellationFrm.ListBox1.Text
-                Call awinLoadConstellation(constellationName, successMessage)
-
-                ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-                currentConstellation = constellationName
-            End If
-
             appInstance.ScreenUpdating = False
-            'Call diagramsVisible(False)
-            Call awinClearPlanTafel()
-            ' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario 
-            'Call awinZeichnePlanTafel(False)
-            Call awinZeichnePlanTafel(True)
-            Call awinNeuZeichnenDiagramme(2)
-            'Call diagramsVisible(True)
+
+            Try
+                Dim boardWasEmpty As Boolean
+
+                If AlleProjekte.Count = 0 Then
+                    boardWasEmpty = True
+                Else
+                    boardWasEmpty = False
+                End If
+
+                If Not boardWasEmpty And Not loadConstellationFrm.addToSession.Checked = True Then
+                    Call awinClearPlanTafel()
+                    Call clearCompleteSession()
+                End If
+
+                For i As Integer = 1 To loadConstellationFrm.ListBox1.SelectedItems.Count
+
+                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
+
+                    If i = 1 And boardWasEmpty Then
+                        Call awinLoadConstellation(constellationName, successMessage)
+                    Else
+                        Call awinAddConstellation(constellationName, successMessage)
+                    End If
+
+
+                Next
+
+                If loadConstellationFrm.ListBox1.SelectedItems.Count = 1 And boardWasEmpty Then
+                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(0))
+                Else
+                    constellationName = "no Name Scenario"
+                End If
+
+                Call awinNeuZeichnenDiagramme(2)
+
+                ' Änderung tk am 2.6 
+                ''Call awinLoadConstellation(constellationName, successMessage)
+
+                ' '' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+                ''currentConstellation = constellationName
+
+
+                ' '' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario
+                ' '' mit fromScratch = false, weil di eReihenfolge erhalten bleiben soll 
+                ' ''Call awinZeichnePlanTafel(False)
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
+            End Try
+
             appInstance.ScreenUpdating = True
 
-            'If successMessage.Length > initMessage.Length Then
-            '    Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
-            'Else
-            '    'Call MsgBox(constellationName & " wurde geladen ...")
-            'End If
-
         End If
+
         enableOnUpdate = True
 
     End Sub
@@ -219,7 +246,7 @@ Imports System.Windows
             If constellationName = currentConstellation Then
 
                 ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                Call storeSessionConstellation(ShowProjekte, "Last")
+                Call storeSessionConstellation("Last")
                 currentConstellation = "Last"
             Else
                 ' aktuelle Konstellation bleibt unverändert
@@ -326,7 +353,6 @@ Imports System.Windows
         ' Bestätigungs-Fenster aufrufen 
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim returnValue As DialogResult
-        Dim allShapes As Excel.Shapes
 
         bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen der kompletten Session"
         returnValue = bestaetigeLoeschen.ShowDialog
@@ -334,35 +360,9 @@ Imports System.Windows
         If returnValue = DialogResult.Cancel Then
             ' nichts tun
         Else
-            appInstance.EnableEvents = False
-            enableOnUpdate = False
 
-            ' jetzt: Löschen der Session 
-
-            Try
-
-                allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
-                For Each element As Excel.Shape In allShapes
-                    element.Delete()
-                Next
-
-            Catch ex As Exception
-                Call MsgBox("Fehler beim Löschen der Shapes ...")
-            End Try
-
-            ShowProjekte.Clear()
-            AlleProjekte.Clear()
-            selectedProjekte.Clear()
-            ImportProjekte.Clear()
-            DiagramList.Clear()
-            awinButtonEvents.Clear()
-
-            allDependencies.Clear()
-            projectboardShapes.clear()
-            ' Session gelöscht
-
-            appInstance.EnableEvents = True
-            enableOnUpdate = True
+            Call clearCompleteSession()
+            
         End If
 
     End Sub
@@ -2220,14 +2220,28 @@ Imports System.Windows
 
                 If My.Computer.FileSystem.FileExists(dateiName) Then
                     appInstance.Workbooks.Open(dateiName)
+                    Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+                    Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+                    Dim tmpName As String = ""
+                    For ih As Integer = 0 To positionIX
+                        tmpName = tmpName & scenarioName.Chars(ih)
+                    Next
+                    scenarioName = tmpName.Trim
 
                     ' alle Import Projekte erstmal löschen
                     ImportProjekte.Clear()
-                    Call awinImportProjektInventur(myCollection)
+                    Call awinImportProjektInventur(myCollection, scenarioName)
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                    ' jetzt noch ein Szenario anlegen, wenn myCollection was enthält 
+                    If myCollection.Count > 0 Then
+                        Call storeSessionConstellation(scenarioName, myCollection)
+                    End If
                 Else
+
                     Call MsgBox("bitte Datei auswählen ...")
                 End If
                 
@@ -2285,7 +2299,8 @@ Imports System.Windows
                 Call awinImportModule(myCollection)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -2460,7 +2475,8 @@ Imports System.Windows
                 Call rplanExcelImport(myCollection, False)
                 'Call bmwImportProjekteITO15(myCollection, False)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                 'Call awinWritePhaseDefinitions()
                 'Call awinWritePhaseMilestoneDefinitions()
@@ -2516,7 +2532,8 @@ Imports System.Windows
 
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -2776,7 +2793,8 @@ Imports System.Windows
 
 
         Try
-            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+            Call importProjekteEintragen(importDate, ProjektStatus(1))
+            'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
         End Try
@@ -2884,7 +2902,8 @@ Imports System.Windows
 
 
         Try
-            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+            'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+            Call importProjekteEintragen(importDate, ProjektStatus(1))
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
         End Try

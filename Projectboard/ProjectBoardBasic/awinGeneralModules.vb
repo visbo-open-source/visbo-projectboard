@@ -3592,9 +3592,9 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
     ''' </summary>
-    ''' <param name="myCollection"></param>
+    ''' <param name="namesForConstellation">hier werden die NAmen zurückgegeben, die alle in der Constellation aufgenommen werden sollen</param>
     ''' <remarks></remarks>
-    Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
+    Public Sub awinImportProjektInventur(ByRef namesForConstellation As Collection, ByVal scenarioName As String)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
         Dim variantName As String = ""
@@ -3612,6 +3612,8 @@ Public Module awinGeneralModules
         'Dim volume As Double, complexity As Double
         Dim description As String = ""
         Dim businessUnit As String = ""
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
@@ -3635,16 +3637,18 @@ Public Module awinGeneralModules
         Dim refProj As New clsProjekt
 
         Dim firstZeile As Excel.Range
-        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
-        Dim tmpName As String = ""
+        ' Änderung tk 5.6.16 wird jetzt an der Aufruf Schnittstelle gemacht 
+        ''Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+        ''Dim tmpName As String = ""
 
-        ' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
-        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
-        tmpName = ""
-        For ih As Integer = 0 To positionIX
-            tmpName = tmpName & scenarioName.Chars(ih)
-        Next
-        scenarioName = tmpName.Trim
+        ' ''Dim namesForConstellation As New Collection
+        ' '' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
+        ''Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+        ''tmpName = ""
+        ''For ih As Integer = 0 To positionIX
+        ''    tmpName = tmpName & scenarioName.Chars(ih)
+        ''Next
+        ''scenarioName = tmpName.Trim
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
@@ -3907,16 +3911,20 @@ Public Module awinGeneralModules
 
                     ' jetzt die Aktion durchführen, wenn alles ok 
                     If ok Then
-                        If AlleProjekte.Containskey(vglName) Then
-                            ' nichts tun ...
-                            Call MsgBox("Projekt aus Batch-Liste existiert bereits - keine Neuanlage")
-                        Else
-                            'Projekt anlegen ,Verschiebung um 
-                            hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                            Call erstelleInventurProjekt(hproj, pName, vorlageName, variantName, _
-                                                         start, ende, budget, zeile, sfit, risk, _
-                                                         capacityNeeded, externCostInput, businessUnit, description, custFields)
+                        Dim vglProj As clsProjekt
+
+                        'Projekt anlegen ,Verschiebung um 
+                        hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
+
+                        ' #####################################################################
+                        ' Erstellen des Projekts nach den Angaben aus der Batch-Datei 
+                        '
+                        hproj = erstelleInventurProjekt(pName, vorlageName, variantName, _
+                                                     start, ende, budget, zeile, sfit, risk, _
+                                                     capacityNeeded, externCostInput, businessUnit, description, custFields)
+
+                        If Not IsNothing(hproj) Then
 
                             'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
                             If Not IsNothing(sMilestone) Then
@@ -3933,10 +3941,138 @@ Public Module awinGeneralModules
                                 End If
                             End If
 
+                            ' ####################################################################
+                            ' prüfen ob das Projekt bereits in Session oder Datenbank existiert 
+                            ' 
+                            If AlleProjekte.Containskey(vglName) Then
+                                ' dann existiert es bereits in der Session
+
+                                vglProj = AlleProjekte.getProject(vglName)
+                                If IsNothing(vglProj) Then
+                                    ' dieser Fall kann eigentlich gar nicht auftreten ... ? 
+                                    Call MsgBox("Fehler mit " & vglName)
+
+                                Else
+                                    ' prüfen, ob es unterschiedlich ist; 
+                                    ' wenn ja , dann wird es unter dem Varianten Namen Datei-Name angelegt
+                                    ' wenn der auch schon existiert, dann Fehler udn nichts anlegen ...
+                                    Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
+
+                                    If unterschiede.Count > 0 Then
+                                        ' es gibt Unterschiede, also muss eine Variante angelegt werden 
+                                        If hproj.variantName <> scenarioNAme Then
+                                            hproj.variantName = scenarioNAme
+                                            vglName = calcProjektKey(hproj.name, hproj.variantName)
+
+                                            ' wenn die Variante bereits in der Session existiert ..
+                                            ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                                            If AlleProjekte.Containskey(vglName) Then
+                                                AlleProjekte.Remove(vglName)
+                                            End If
+
+                                        Else
+                                            ' in diesem Fall wird die Variante über hproj neu angelegt 
+                                            AlleProjekte.Remove(vglName)
+                                        End If
+
+                                        Try
+                                            namesForConstellation.Add(vglName, vglName)
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    Else
+                                        ' Projekt in der Form existiert bereits , keine Neu-Anlage
+                                        ' es muss sichergestellt sein, dass es angezeigt wird und die Portfolio Definition entsprechend angepasst wird 
+                                        ok = False
+                                        hproj = vglProj
+
+                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, hproj.tfZeile)
+
+                                        Try
+                                            namesForConstellation.Add(vglName, vglName)
+                                        Catch ex As Exception
+
+                                        End Try
+                                    End If
+                                End If
+                            Else
+                                '
+                                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+
+                                If request.pingMongoDb() Then
+
+                                    If request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
+
+                                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                        vglProj = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName)
+
+                                        If IsNothing(vglProj) Then
+                                            ok = False
+                                        Else
+                                            Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
+                                            If unterschiede.Count > 0 Then
+
+                                                ' es muss eine Variante angelegt werden 
+                                                If hproj.variantName <> scenarioNAme Then
+                                                    hproj.variantName = scenarioNAme
+                                                    vglName = calcProjektKey(hproj.name, hproj.variantName)
+
+                                                    ' wenn die Variante bereits in der Session existiert ..
+                                                    ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                                                    If AlleProjekte.Containskey(vglName) Then
+                                                        AlleProjekte.Remove(vglName)
+                                                    End If
+
+                                                Else
+                                                    ' in diesem Fall wird die Variante über hproj neu angelegt 
+                                                    AlleProjekte.Remove(vglName)
+                                                End If
+
+                                                Try
+                                                    namesForConstellation.Add(vglName, vglName)
+                                                Catch ex As Exception
+
+                                                End Try
+
+                                            Else
+                                                ' Projekt in der Form existiert bereits , es wird das über die Datei erzeugte hproj verwendet 
+                                                vglName = calcProjektKey(hproj.name, hproj.variantName)
+                                                Try
+                                                    namesForConstellation.Add(vglName, vglName)
+                                                Catch ex As Exception
+
+                                                End Try
+                                            End If
+                                        End If
+
+                                    Else
+                                        ' nichts weiter tun, Projekt existert noch nicht; es kann und soll das bereits angelegte hproj verwendet werden 
+                                        Try
+                                            namesForConstellation.Add(vglName, vglName)
+                                        Catch ex As Exception
+
+                                        End Try
+                                    End If
+                                Else
+                                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & hproj.name & "'konnte nicht geladen werden")
+                                End If
+
+
+
+                            End If
+
+                        Else
+                            ok = False
+                        End If
+
+
+                        If ok Then ' wenn es nicht explizit auf false gesetzt wurde, ist es an dieser Stelle immer noch true 
+
                             If Not hproj Is Nothing Then
                                 Try
                                     ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                                    myCollection.Add(calcProjektKey(hproj))
+                                    'myCollection.Add(calcProjektKey(hproj))
                                 Catch ex As Exception
 
                                 End Try
@@ -3944,16 +4080,12 @@ Public Module awinGeneralModules
                             End If
 
                         End If
+
                     End If
-
-
 
                     zeile = zeile + 1
 
                 End While
-
-
-
 
 
             End With
@@ -3961,10 +4093,6 @@ Public Module awinGeneralModules
             Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
         End Try
 
-        ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
-        If ImportProjekte.Count > 0 Then
-            Call storeSessionConstellation(ShowProjekte, scenarioName, ImportProjekte)
-        End If
 
     End Sub
 
@@ -3991,6 +4119,7 @@ Public Module awinGeneralModules
         Dim ProjektdauerIndays As Integer = 0
         Dim ok As Boolean = False
 
+        Dim fullProjectNames As New Collection
         Dim firstZeile As Excel.Range
 
         Dim scenarioName As String = appInstance.ActiveWorkbook.Name
@@ -4182,119 +4311,134 @@ Public Module awinGeneralModules
                             ' nichts tun ...
                             Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
                         Else
-                            'Projekt anlegen ,Verschiebung um 
-                            hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
+                            Try
+                                fullProjectNames.Add(vglName, vglName)
+                                'Projekt anlegen ,Verschiebung um 
+                                hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                            Dim capacityNeeded As String = ""
-                            Call erstelleInventurProjekt(hproj, pName, vorlagenName, scenarioName, _
-                                                         start, ende, budget, zeile, sfit, risk, _
-                                                         capacityNeeded, Nothing, businessUnit, description)
-                            projectStartDate = start
-                            projectEndDate = ende
+                                Dim capacityNeeded As String = ""
+                                hproj = erstelleInventurProjekt(pName, vorlagenName, scenarioName, _
+                                                             start, ende, budget, zeile, sfit, risk, _
+                                                             capacityNeeded, Nothing, businessUnit, description)
+
+                                If Not IsNothing(hproj) Then
+                                    projectStartDate = start
+                                    projectEndDate = ende
+                                Else
+                                    ok = False
+                                End If
+                                
+                            Catch ex As Exception
+                                ok = False
+                            End Try
+                            
 
                         End If
                     End If
 
-                    Dim phaseName As String = ""
-                    Dim scaleRule As Integer
-                    Dim moduleNames() As String
-                    Dim moduleName As String
-                    Dim allNames As String
-                    Dim planModul As clsProjektvorlage
+                    If ok Then
 
-                    ' jetzt müssen die Module ergänzt werden 
-                    For i As Integer = 1 To anzahlPhasenToAdd
+                        Dim phaseName As String = ""
+                        Dim scaleRule As Integer
+                        Dim moduleNames() As String
+                        Dim moduleName As String
+                        Dim allNames As String
+                        Dim planModul As clsProjektvorlage
 
-                        start = CDate(CType(.Cells(zeile, firstC + 1 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        ende = CDate(CType(.Cells(zeile, firstC + 2 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        ' jetzt müssen die Module ergänzt werden 
+                        For i As Integer = 1 To anzahlPhasenToAdd
 
-
-                        Dim startOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, start))
-                        Dim endOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, ende))
+                            start = CDate(CType(.Cells(zeile, firstC + 1 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            ende = CDate(CType(.Cells(zeile, firstC + 2 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
 
-                        Try
-                            phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
-                            If phaseName = "-" Or endOffset - startOffset = 0 Then
+                            Dim startOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, start))
+                            Dim endOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, ende))
+
+
+                            Try
+                                phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                If phaseName = "-" Or endOffset - startOffset = 0 Then
+                                    allesOK = False
+                                    phaseName = "-"
+                                Else
+                                    allesOK = True
+                                End If
+                            Catch ex As Exception
                                 allesOK = False
-                                phaseName = "-"
-                            Else
-                                allesOK = True
-                            End If
-                        Catch ex As Exception
-                            allesOK = False
-                        End Try
+                            End Try
 
-                        Dim parentPhase As clsPhase = Nothing
+                            Dim parentPhase As clsPhase = Nothing
 
 
 
-                        If allesOK Then
+                            If allesOK Then
 
-                            '
-                            ' jetzt muss die aufnehmende Phase erstmal angelegt werden 
-                            '
-                            If Not IsNothing(phaseName) Then
+                                '
+                                ' jetzt muss die aufnehmende Phase erstmal angelegt werden 
+                                '
+                                If Not IsNothing(phaseName) Then
 
-                                If phaseName.Length > 0 Then
+                                    If phaseName.Length > 0 Then
 
-                                    parentPhase = New clsPhase(parent:=hproj)
-                                    parentPhase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
-                                    parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+                                        parentPhase = New clsPhase(parent:=hproj)
+                                        parentPhase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+                                        parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
 
-                                    hproj.AddPhase(parentPhase, origName:=phaseName, _
-                                           parentID:=rootPhaseName)
+                                        hproj.AddPhase(parentPhase, origName:=phaseName, _
+                                               parentID:=rootPhaseName)
+
+                                    End If
 
                                 End If
 
-                            End If
 
+                                scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                            scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                ' jetzt müssen die einzelnen Module ausgelesen werden 
+                                ' aber nur, wenn überhaupt was drin steht und das auch als Modul existiert ...
+                                '
+                                If Not IsNothing(allNames) Then
 
-                            ' jetzt müssen die einzelnen Module ausgelesen werden 
-                            ' aber nur, wenn überhaupt was drin steht und das auch als Modul existiert ...
-                            '
-                            If Not IsNothing(allNames) Then
+                                    If Not allNames.Trim.Length = 0 Then
 
-                                If Not allNames.Trim.Length = 0 Then
+                                        moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
+                                        Dim anzahl As Integer = moduleNames.Length
 
-                                    moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
-                                    Dim anzahl As Integer = moduleNames.Length
+                                        For ix As Integer = 1 To anzahl
+                                            moduleName = moduleNames(ix - 1)
+                                            If ModulVorlagen.Contains(moduleName) Then
+                                                planModul = ModulVorlagen.getProject(moduleName)
 
-                                    For ix As Integer = 1 To anzahl
-                                        moduleName = moduleNames(ix - 1)
-                                        If ModulVorlagen.Contains(moduleName) Then
-                                            planModul = ModulVorlagen.getProject(moduleName)
+                                                If Not IsNothing(parentPhase) Then
 
-                                            If Not IsNothing(parentPhase) Then
+                                                    planModul.moduleCopyTo(hproj, parentPhase.nameID, moduleName, startOffset, endOffset, True)
 
-                                                planModul.moduleCopyTo(hproj, parentPhase.nameID, moduleName, startOffset, endOffset, True)
-
+                                                End If
                                             End If
-                                        End If
-                                    Next
+                                        Next
+
+                                    End If
 
                                 End If
 
                             End If
+                        Next
+
+                        ' jetzt die Projekt eintragen 
+                        If Not hproj Is Nothing Then
+                            Try
+                                ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                myCollection.Add(calcProjektKey(hproj))
+                            Catch ex As Exception
+
+                            End Try
 
                         End If
-                    Next
-
-                    ' jetzt die Projekt eintragen 
-                    If Not hproj Is Nothing Then
-                        Try
-                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                            myCollection.Add(calcProjektKey(hproj))
-                        Catch ex As Exception
-
-                        End Try
 
                     End If
-
-
+                    
                     zeile = zeile + 1
 
                 End While
@@ -4311,7 +4455,7 @@ Public Module awinGeneralModules
 
         ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
         If ImportProjekte.Count > 0 Then
-            Call storeSessionConstellation(ShowProjekte, scenarioName, ImportProjekte)
+            Call storeSessionConstellation(scenarioName, fullProjectNames)
         End If
 
         currentConstellation = scenarioName
@@ -8031,7 +8175,7 @@ Public Module awinGeneralModules
         End Try
 
         ' die aktuelle Konstellation in "Last" speichern 
-        Call storeSessionConstellation(ShowProjekte, "Last")
+        Call storeSessionConstellation("Last")
 
         ShowProjekte.Clear()
 
@@ -8102,8 +8246,14 @@ Public Module awinGeneralModules
                         Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
                     End Try
 
+                    ' jetzt zeichnen des Projektes 
+                    ' neu zeichnen des Projekts 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
                 End If
 
+                
             End If
 
         Next
@@ -8142,7 +8292,7 @@ Public Module awinGeneralModules
         End Try
 
         ' die aktuelle Konstellation in "Last" speichern 
-        Call storeSessionConstellation(ShowProjekte, "Last")
+        Call storeSessionConstellation("Last")
 
         ' jetzt werden die einzelnen Projekte dazugeholt 
 
