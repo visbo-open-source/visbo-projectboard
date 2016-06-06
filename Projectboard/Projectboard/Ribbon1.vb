@@ -395,7 +395,7 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             anzDiagrams = CInt(CType(.ChartObjects, Excel.ChartObjects).Count)
 
@@ -429,7 +429,7 @@ Imports System.Windows
 
             Call awinDeSelect()
 
-            Dim anzDiagrams As Integer = CType(appInstance.Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
 
 
             If anzDiagrams > 0 Then
@@ -3042,6 +3042,37 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
 
+
+    End Sub
+
+    ''' <summary>
+    ''' exportiert alle angezeigten Projekte in eine Massen-Edit Datei 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub awinWriteProjektBedarfeXLSX(control As IRibbonControl)
+
+        If showRangeLeft <= 0 And Not showRangeRight > showRangeLeft Then
+            Call MsgBox("bitte  einen Zeitraum angeben")
+            Exit Sub
+        End If
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        If control.Id = "PT4G1M3B1" Then
+            Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+        ElseIf control.Id = "PT4G1M3B2" Then
+            Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+        ElseIf control.Id = "PT4G1M3B3" Then
+            Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
     End Sub
 

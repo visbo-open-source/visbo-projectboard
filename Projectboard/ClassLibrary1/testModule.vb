@@ -3062,7 +3062,7 @@ Public Module testModule
                                     .GridlineColor = RGB(255, 255, 255)
                                 End With
 
-                                With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
 
 
@@ -3206,7 +3206,7 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                    With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
                                         rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
                                         colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
@@ -3247,7 +3247,7 @@ Public Module testModule
 
                                             Call awinZeichnePhasen(phNameCollection, False, True)
                                             rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                           
+
 
                                             If Not awinSettings.showTimeSpanInPT Then
 
@@ -5159,7 +5159,7 @@ Public Module testModule
 
 
 
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 '
@@ -5335,7 +5335,7 @@ Public Module testModule
                         Try
                             Call Sleep(100)
                             .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                                  Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                  Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6561,7 +6561,7 @@ Public Module testModule
 
         Call awinDeleteProjectChildShapes(0)
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
             allShapes = .Shapes
             projektShape = allShapes.Item(hproj.name)
@@ -8555,7 +8555,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -8919,7 +8919,7 @@ Public Module testModule
                     Try
                         Call Sleep(100)
                         .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                          Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message
@@ -8933,7 +8933,7 @@ Public Module testModule
                 End If
 
 
-                
+
                 appInstance.EnableEvents = formerEE
                 ' Events sind wieder zurückgesetzt
             End With

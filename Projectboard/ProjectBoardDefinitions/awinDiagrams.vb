@@ -15,7 +15,7 @@ Public Module awinDiagrams
 
         If von > 0 And laenge > 0 Then
 
-            With appInstance.Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
                 If showzone Then
                     '
@@ -25,7 +25,7 @@ Public Module awinDiagrams
                     If awinSettings.showTimeSpanInPT Then
                         .Range(.Cells(2, von), .Cells(5000, von).Offset(0, laenge)).Interior.color = awinSettings.timeSpanColor
                     End If
-                   
+
                 Else
                     '
                     ' die erste Zeile im Bereich einfärben
@@ -34,7 +34,7 @@ Public Module awinDiagrams
                     If awinSettings.showTimeSpanInPT Then
                         .Range(.Cells(2, von), .Cells(5000, von).Offset(0, laenge)).Interior.colorindex = Microsoft.Office.Interop.Excel.XlColorIndex.xlColorIndexNone
                     End If
-                    
+
                 End If
 
             End With
@@ -64,7 +64,7 @@ Public Module awinDiagrams
 
         If mon >= showRangeLeft And mon <= showRangeRight Then
 
-            With appInstance.Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
                 '
                 ' erst den Bereich einfärben  
@@ -332,7 +332,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -414,7 +414,7 @@ Public Module awinDiagrams
                                 'datenreihe = ShowProjekte.getCostiValuesInMonth
                                 'edatenreihe = ShowProjekte.getCosteValuesInMonth
                                 datenreihe = ShowProjekte.getCostGpValuesInMonth
-                                
+
                                 For i = 0 To bis - von
                                     seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
                                 Next i
@@ -503,7 +503,7 @@ Public Module awinDiagrams
                                     .HasDataLabels = False
                                 End With
                             End If
-                            
+
                         Else
 
                             If prcTyp = DiagrammTypen(5) Then
@@ -800,7 +800,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -1118,7 +1118,7 @@ Public Module awinDiagrams
         appInstance.ScreenUpdating = False
 
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
 
             With chtobj.Chart
@@ -1292,7 +1292,7 @@ Public Module awinDiagrams
                                 .HasDataLabels = False
                             End With
                         End If
-                        
+
                     Else
                         If prcTyp = DiagrammTypen(5) Then
 
@@ -1724,7 +1724,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
 
 
@@ -1871,7 +1871,7 @@ Public Module awinDiagrams
                 Do While Not achieved And anzahlVersuche < 10
                     Try
                         Call Sleep(100)
-                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message
@@ -1987,7 +1987,7 @@ Public Module awinDiagrams
         datenreihe(2) = ShowProjekte.getAuslastungsValues(2).Sum
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -2033,24 +2033,24 @@ Public Module awinDiagrams
                         .Points(2).Interior.color = awinSettings.AmpelRot
                         .Points(3).Interior.color = awinSettings.AmpelGelb
 
-                                For i = 1 To 3
-                                    htxt = Format(datenreihe(i - 1), "###,###0")
-                                    With .Points(i)
-                                        .HasDataLabel = True
-                                        .DataLabel.text = htxt
+                        For i = 1 To 3
+                            htxt = Format(datenreihe(i - 1), "###,###0")
+                            With .Points(i)
+                                .HasDataLabel = True
+                                .DataLabel.text = htxt
 
-                                        .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
-
-
-                                        Try
-                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
-                                        Catch ex As Exception
-
-                                        End Try
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
 
 
-                                    End With
-                                Next i
+                                Try
+                                    .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End With
+                        Next i
 
                     End With
 
@@ -2067,7 +2067,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -2082,74 +2082,74 @@ Public Module awinDiagrams
 
 
                 End With
-                    With .ChartObjects(anzDiagrams + 1)
+                With .ChartObjects(anzDiagrams + 1)
+                    .top = top
+                    .left = left
+                    .width = width
+                    .height = awinSettings.ChartHoehe2
+                    .name = chtobjName
+
+                End With
+
+
+                ' myCollection wird jetzt über alle Rollen aufgebaut ..
+                myCollection.Clear()
+
+                For i = 1 To RoleDefinitions.Count
+                    Dim roleName As String
+                    roleName = RoleDefinitions.getRoledef(i).name
+                    Try
+                        myCollection.Add(roleName, roleName)
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+                repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+
+                ' jetzt muss die letzte Position des Diagramms gespeichert werden , wenn es nicht aus der Reporting Engine 
+                ' aufgerufen wurde
+                If Not calledfromReporting Then
+
+                    Dim prcDiagram As New clsDiagramm
+
+                    ' Anfang Event Handling für Chart 
+                    Dim prcChart As New clsEventsPrcCharts
+                    prcChart.PrcChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
+                    prcDiagram.setDiagramEvent = prcChart
+                    ' Ende Event Handling für Chart 
+
+
+                    With prcDiagram
+                        .DiagrammTitel = diagramTitle
+                        .diagrammTyp = DiagrammTypen(4)
+                        .gsCollection = myCollection
+                        .isCockpitChart = False
                         .top = top
                         .left = left
                         .width = width
-                        .height = awinSettings.ChartHoehe2
-                        .name = chtobjName
-
+                        .height = height
+                        .kennung = chtobjName
                     End With
 
+                    ' eintragen in die sortierte Liste mit .kennung als dem Schlüssel 
+                    ' wenn das Diagramm bereits existiert, muss es gelöscht werden, dann neu ergänzt ... 
+                    Try
+                        DiagramList.Add(prcDiagram)
+                    Catch ex As Exception
 
-                    ' myCollection wird jetzt über alle Rollen aufgebaut ..
-                    myCollection.Clear()
-
-                    For i = 1 To RoleDefinitions.Count
-                        Dim roleName As String
-                        roleName = RoleDefinitions.getRoledef(i).name
                         Try
-                            myCollection.Add(roleName, roleName)
-                        Catch ex As Exception
-
-                        End Try
-
-                    Next
-
-                    repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
-
-                    ' jetzt muss die letzte Position des Diagramms gespeichert werden , wenn es nicht aus der Reporting Engine 
-                    ' aufgerufen wurde
-                    If Not calledfromReporting Then
-
-                        Dim prcDiagram As New clsDiagramm
-
-                        ' Anfang Event Handling für Chart 
-                        Dim prcChart As New clsEventsPrcCharts
-                        prcChart.PrcChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
-                        prcDiagram.setDiagramEvent = prcChart
-                        ' Ende Event Handling für Chart 
-
-
-                        With prcDiagram
-                            .DiagrammTitel = diagramTitle
-                            .diagrammTyp = DiagrammTypen(4)
-                            .gsCollection = myCollection
-                            .isCockpitChart = False
-                            .top = top
-                            .left = left
-                            .width = width
-                            .height = height
-                            .kennung = chtobjName
-                        End With
-
-                        ' eintragen in die sortierte Liste mit .kennung als dem Schlüssel 
-                        ' wenn das Diagramm bereits existiert, muss es gelöscht werden, dann neu ergänzt ... 
-                        Try
+                            DiagramList.Remove(prcDiagram.kennung)
                             DiagramList.Add(prcDiagram)
-                        Catch ex As Exception
-
-                            Try
-                                DiagramList.Remove(prcDiagram.kennung)
-                                DiagramList.Add(prcDiagram)
-                            Catch ex1 As Exception
-
-                            End Try
-
+                        Catch ex1 As Exception
 
                         End Try
 
-                    End If
+
+                    End Try
+
+                End If
 
 
 
@@ -2313,7 +2313,7 @@ Public Module awinDiagrams
             appInstance.EnableEvents = False
             appInstance.ScreenUpdating = False
 
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -2402,7 +2402,7 @@ Public Module awinDiagrams
                         Do While Not achieved And anzahlVersuche < 10
                             Try
                                 Call Sleep(100)
-                                .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                                .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                                 achieved = True
                             Catch ex As Exception
                                 errmsg = ex.Message
@@ -2572,7 +2572,7 @@ Public Module awinDiagrams
         datenreihe(2) = ShowProjekte.getAuslastungsValues(2).Sum
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
 
 
@@ -2774,7 +2774,7 @@ Public Module awinDiagrams
         Dim valueCrossesNull As Boolean = False
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             With chtobj.Chart
                 ' remove extra series
@@ -3057,7 +3057,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -3237,7 +3237,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3453,7 +3453,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -3633,7 +3633,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3891,7 +3891,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -4071,7 +4071,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4205,7 +4205,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -4294,7 +4294,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4515,7 +4515,7 @@ Public Module awinDiagrams
 
             ' hier muss jetzt tempArray gesetzt werden
 
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 Dim atleastOne As Boolean = False
                 For m = 1 To l
@@ -4548,9 +4548,9 @@ Public Module awinDiagrams
                     Catch ex As Exception
 
                     End Try
-                    
+
                 End If
-                
+
             End With
 
             appInstance.EnableEvents = formerEE
@@ -4577,7 +4577,7 @@ Public Module awinDiagrams
 
         Try
 
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in NoshowNeedsofProject: keine Shapes Zuordnung möglich ")
@@ -4594,7 +4594,7 @@ Public Module awinDiagrams
 
 
         Try
-            'tmpshapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            'tmpshapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             shpelement = worksheetShapes.Item(projektname)
             With shpelement
 
@@ -4667,7 +4667,7 @@ Public Module awinDiagrams
                 k = .tfspalte
             End With
 
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 appInstance.EnableEvents = False
 
@@ -4688,8 +4688,8 @@ Public Module awinDiagrams
     End Sub
 
 
-   
-    
+
+
     ''' <summary>
     ''' Funktion prüft , ob die Spalte angezeigt werden muss, also ob sie in der Time Zone enthalten ist
     ''' </summary>
@@ -4732,7 +4732,7 @@ Public Module awinDiagrams
     Sub diagramsVisible(ByVal show As Boolean)
 
         Dim anzDiagrams As Integer
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -4769,7 +4769,7 @@ Public Module awinDiagrams
 
         ' Schutz Funktion : wenn showrangeleft = 0 und showrangeright = 0 , dann nichts tun
         If showRangeRight - showRangeLeft >= 5 Then
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
                 anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 For i = 1 To anz_diagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
@@ -4855,7 +4855,7 @@ Public Module awinDiagrams
             End With
         End If
 
-        
+
 
 
 
@@ -4874,7 +4874,7 @@ Public Module awinDiagrams
     '    Dim testWSName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
     '    Dim testEnable As Boolean = appInstance.EnableEvents
     '    Try
-    '        appInstance.Worksheets(arrWsNames(3)).activate()
+    '        appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).activate()
     '        'appInstance.ActiveWorkbook.Windows(windowNames(5)).Activate()
     '    Catch ex As Exception
     '        Call MsgBox("Window " & windowNames(5) & " existiert nicht mehr !")

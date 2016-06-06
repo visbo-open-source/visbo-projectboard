@@ -230,12 +230,17 @@
             <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
             <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
           </menu>
-          <!--<separator id="PT4G1s2"/>
-            <menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
+          <separator id="PT4G1s2"/>
+          <menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="alle angezeigten Projekte werden ausgeleitet ">
+            <button id="PT4G1M3B1" label="Alles" onAction="awinWriteProjektBedarfeXLSX" supertip ="alle Werte sind editierbar"/>
+            <button id="PT4G1M3B2" label="Aktuell" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
+            <button id="PT4G1M3B3" label="Zukunft" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>
+          </menu>
+          <!--<menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
             <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
             <button id="PT4G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Hierarchie"/>
-          </menu>-->
-          <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />
+          </menu>
+          <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />-->
         </group>
         <!---->
        <group id= "PT4G12" label="Datenbank"> 

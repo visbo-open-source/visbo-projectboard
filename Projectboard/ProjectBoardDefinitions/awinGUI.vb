@@ -329,7 +329,7 @@ Public Module awinGUI
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -690,7 +690,7 @@ Public Module awinGUI
                 Do While Not achieved And anzahlVersuche < 10
                     Try
                         Call Sleep(100)
-                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message

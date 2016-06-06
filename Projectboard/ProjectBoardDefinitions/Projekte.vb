@@ -109,7 +109,7 @@ Public Module Projekte
             appInstance.ScreenUpdating = False
         End If
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -246,7 +246,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -403,7 +403,7 @@ Public Module Projekte
             appInstance.ScreenUpdating = False
         End If
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -534,7 +534,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -686,7 +686,7 @@ Public Module Projekte
             appInstance.ScreenUpdating = False
         End If
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -783,7 +783,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -977,7 +977,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -1149,7 +1149,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -2429,7 +2429,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -2514,7 +2514,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3127,7 +3127,7 @@ Public Module Projekte
 
         ' jetzt wird das Diagramm gezeichnet 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -3203,7 +3203,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3435,7 +3435,7 @@ Public Module Projekte
         Next i
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -3483,7 +3483,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3920,7 +3920,7 @@ Public Module Projekte
         Next i
 
         gesamt_summe = 0
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -3994,7 +3994,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4420,7 +4420,7 @@ Public Module Projekte
 
         Dim ik As Integer = 1 ' wird für die Unterscheidung benötigt, ob mit Personal-Kosten oder ohne 
         gesamt_summe = 0
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -4497,7 +4497,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4510,7 +4510,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -4673,7 +4673,7 @@ Public Module Projekte
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
 
             Dim tmpValues(1) As Double
@@ -5043,7 +5043,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -5130,7 +5130,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -5143,7 +5143,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                 End With
 
 
@@ -5315,7 +5315,7 @@ Public Module Projekte
         End If
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -5386,7 +5386,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -5399,7 +5399,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                 End With
 
                 With .ChartObjects(anzDiagrams + 1)
@@ -5699,7 +5699,7 @@ Public Module Projekte
             'Throw New Exception("Summe sonstige Kosten ist Null")
             Throw New Exception(repMessages.getmsg(167))
         Else
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
                 '
@@ -5781,7 +5781,7 @@ Public Module Projekte
                         Do While Not achieved And anzahlVersuche < 10
                             Try
                                 Call Sleep(100)
-                                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                                 achieved = True
                             Catch ex As Exception
                                 errmsg = ex.Message
@@ -5795,7 +5795,7 @@ Public Module Projekte
                         End If
 
 
-                        '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                        '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                     End With
 
                     With .ChartObjects(anzDiagrams + 1)
@@ -6091,7 +6091,7 @@ Public Module Projekte
         End With
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -6168,7 +6168,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6182,7 +6182,7 @@ Public Module Projekte
                     End If
 
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -6394,7 +6394,7 @@ Public Module Projekte
         End With
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -6477,7 +6477,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6490,7 +6490,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -6644,7 +6644,7 @@ Public Module Projekte
 
         gesamtSumme = 0
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -6796,7 +6796,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6808,7 +6808,7 @@ Public Module Projekte
                     If Not achieved Then
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -6972,7 +6972,7 @@ Public Module Projekte
         width = 450
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -7021,7 +7021,7 @@ Public Module Projekte
                         anzahlVersuche = anzahlVersuche + 1
                     End Try
                 Loop
-                
+
                 If Not achieved Then
                     Throw New ArgumentException("Chart konnte nicht erzeugt werden ...")
                 End If
@@ -7173,7 +7173,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -8086,7 +8086,7 @@ Public Module Projekte
                 sichtbarerBereich = .VisibleRange
             End With
 
-            wsPT = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            wsPT = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             With wsPT
                 ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
                 maxRows = .Rows.Count
@@ -8310,7 +8310,7 @@ Public Module Projekte
                 sichtbarerBereich = .VisibleRange
             End With
 
-            currentWS = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            currentWS = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             fileName = awinPath & cockpitsFile
 
@@ -9133,7 +9133,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -9263,7 +9263,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -9891,7 +9891,7 @@ Public Module Projekte
 
         gesamt_summe = 0
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -9989,7 +9989,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10095,7 +10095,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10163,7 +10163,7 @@ Public Module Projekte
 
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
         If roentgenBlick.isOn Then
-            With appInstance.Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
                 .range(.cells(2, 1), .cells(1000, 200)).clearcontents()
             End With
         End If
@@ -11638,14 +11638,14 @@ Public Module Projekte
 
         Try
 
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in bringChartstoFront : keine Shapes Zuordnung möglich ")
         End Try
 
 
-        For Each chtobj In CType(CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
+        For Each chtobj In CType(CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
             Try
                 With chtobj
@@ -11871,7 +11871,7 @@ Public Module Projekte
 
         Try
 
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in ZeichneProjektinPlanTafel : keine Shapes Zuordnung möglich ")
@@ -12428,7 +12428,7 @@ Public Module Projekte
 
         Try
 
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in moveShapesDown : keine Shapes Zuordnung möglich ")
@@ -12504,7 +12504,7 @@ Public Module Projekte
 
             Try
 
-                worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+                worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             Catch ex As Exception
                 Throw New Exception("in moveShapesUp : keine Shapes Zuordnung möglich ")
@@ -12581,7 +12581,7 @@ Public Module Projekte
         Dim timeAtStatus As Date = hproj.timeStamp
         Dim heuteColumn As Integer = getColumnOfDate(timeAtStatus)
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             worksheetShapes = .Shapes
 
             shpName = projectboardShapes.calcStatusShapeName(hproj.name, heuteColumn)
@@ -12750,7 +12750,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             worksheetShapes = .Shapes
             ' Änderung 12.7.14 Alle Milestone Shapes in ein gruppiertes Shape
@@ -12937,7 +12937,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             If currentValue > 0 Then
                 .Cells(currentRow, currentColumn).value = CInt(currentValue)
 
@@ -12969,7 +12969,7 @@ Public Module Projekte
         Dim found As Boolean = True
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             worksheetShapes = .Shapes
             ' Änderung 12.7.14 Alle Milestone Shapes in ein gruppiertes Shape
@@ -13078,7 +13078,7 @@ Public Module Projekte
                 Catch ex As Exception
                     pNameShape.TextFrame2.TextRange.Text = ""
                 End Try
-                
+
 
                 ' jetzt wird das Shape aufgenommen 
                 listOFShapes.Add(pNameShape.Name)
@@ -13147,7 +13147,7 @@ Public Module Projekte
             enableOnUpdate = False
             appInstance.EnableEvents = False
 
-            tmpshapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            tmpshapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             pShape = tmpshapes.Item(pName)
 
             ' outgoing dependencies
@@ -13381,7 +13381,7 @@ Public Module Projekte
     '    End Try
 
 
-    '    With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+    '    With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
     '        worksheetShapes = .Shapes
 
@@ -13562,7 +13562,7 @@ Public Module Projekte
 
         If Not (hproj Is Nothing) Then
 
-            With appInstance.Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
                 Dim tmpArray() As String
                 Dim anzDiagrams As Integer
                 anzDiagrams = CType(.Chartobjects, Excel.ChartObjects).Count
@@ -13750,7 +13750,7 @@ Public Module Projekte
 
         End Try
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             worksheetShapes = .Shapes
 
@@ -14442,7 +14442,7 @@ Public Module Projekte
     '    Dim laenge As Integer
     '    Dim status As String
     '    Dim top As Double, left As Double, width As Double, height As Double
-    '    Dim magicBoardShapes As Excel.Shapes = appInstance.Worksheets(arrWsNames(3)).shapes
+    '    Dim magicBoardShapes As Excel.Shapes = appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).shapes
     '    Dim shpelement As Excel.Shape
 
 
@@ -14472,7 +14472,7 @@ Public Module Projekte
     '    appInstance.EnableEvents = False
     '    appInstance.ScreenUpdating = False
 
-    '    With appInstance.Worksheets(arrWsNames(3))
+    '    With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
     '        Try
     '            shpelement = magicBoardShapes.Item(pname)
     '            Dim myCollection As New Collection
@@ -14518,7 +14518,7 @@ Public Module Projekte
         'Dim XPos As Integer, YPos As Integer
         'Dim laenge As Integer
         'Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
-        Dim tmpshapes As Excel.Shapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+        Dim tmpshapes As Excel.Shapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
         Dim shpelement As Excel.Shape
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -14613,7 +14613,7 @@ Public Module Projekte
             End If
 
             Dim shp As Excel.Shape
-            With appInstance.Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
 
                 fillColor = RGB(255, 255, 255)
@@ -14795,7 +14795,7 @@ Public Module Projekte
         End Try
 
         If anzPts >= 0 Then
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
                 For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                     If chtobj.Chart.ChartTitle.Text = diagramTitle Then
                         found = True
@@ -17705,7 +17705,7 @@ Public Module Projekte
         End If
 
         Try
-            With appInstance.Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
                 von = CDate(.cells(1, start).value)
                 bis = CDate(.cells(1, ende).value)
                 If start < ende Then
@@ -18174,7 +18174,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             worksheetShapes = .Shapes
         End With
 
@@ -18709,7 +18709,7 @@ Public Module Projekte
         Dim sollLeft As Double, sollWidth As Double, sollTop As Double, sollHeight As Double
         Dim istLeft As Double, istWidth As Double
 
-        Dim projectShapes As Excel.Shapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+        Dim projectShapes As Excel.Shapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
         Dim suchstring = phaseShape.Name
 
         Dim projectShape As Excel.ShapeRange, shapeSammlung As Excel.ShapeRange
@@ -19383,7 +19383,7 @@ Public Module Projekte
             If selectIT Then
 
                 Try
-                    CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
+                    CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
                 Catch ex As Exception
 
                 End Try
@@ -20898,6 +20898,46 @@ Public Module Projekte
 
         calcKW = kw
 
+    End Function
+
+    ''' <summary>
+    ''' gibt den Schnittmengen-Array zurück, der Array tmpValues hat die Dimension pEnde-PStart
+    ''' und stellt die Werte dar, die im Monat pStart .. PEnde gelten. 
+    ''' Im Schnittmengen Array sind die Werte der Dimension bis-von
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="pStart"></param>
+    ''' <param name="pEnde"></param>
+    ''' <param name="tmpValues"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcArrayIntersection(ByVal von As Integer, ByVal bis As Integer, _
+                                              ByVal pStart As Integer, ByVal pEnde As Integer, _
+                                              ByVal tmpValues As Double())
+        Dim intersectionArray() As Double
+        ReDim intersectionArray(bis - von)
+        Dim startIX As Integer, endIX As Integer
+
+        If pStart > bis Or von > pEnde Then
+            ' es gibt überhaupt keine Überlappung 
+        ElseIf von = pStart And bis = pEnde Then
+            startIX = 1
+            endIX = tmpValues.Length
+        ElseIf von <= pEnde Then
+            startIX = 1
+            'endIX = bis - von + 1 - (bis - pEnde)
+            endIX = pEnde - von + 1
+        Else
+            endIX = tmpValues.Length
+            startIX = pStart - von + 1
+        End If
+
+        For i As Integer = startIX To endIX
+            intersectionArray(i - startIX) = tmpValues(i - 1)
+        Next
+
+        calcArrayIntersection = intersectionArray
     End Function
 
     ''' <summary>

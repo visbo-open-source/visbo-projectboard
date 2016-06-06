@@ -2074,7 +2074,7 @@ Public Module awinGeneralModules
             CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook).Activate()
         End If
 
-        Dim wsName3 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), _
+        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
         Dim tmpRange As Excel.Range
@@ -14030,5 +14030,224 @@ Public Module awinGeneralModules
             Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
 
         End Try
+    End Sub
+
+    
+    ''' <summary>
+    ''' schreibt eine Datei mit den monatlichen Zuordnungen Rollenbedarfe / Kosten 
+    ''' Diese Datei kann editiert werden , dann wieder importiert werden 
+    ''' in Abhängigkeit vom Typ wird geschrieben: 
+    ''' 0: alles
+    ''' 1: nur Vergangenheit, von bestimmt den Start , Heute-1 das Ende 
+    ''' 2: nur die Zukunft, Heute bestimmt den Start, bis  das Ende  
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub writeProjektBedarfeXLSX(ByVal von As Integer, ByVal bis As Integer, ByVal type As Integer)
+
+
+        appInstance.EnableEvents = False
+
+        Dim newWB As Excel.Workbook
+        Dim rng As Excel.Range
+        Dim ersteZeile As Excel.Range
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+        
+        With newWB.ActiveSheet
+
+            ersteZeile = CType(.Range(.cells(1, 1), .cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 4), Excel.Range).Value = "Ressourcen-Name"
+            CType(.Cells(1, 5), Excel.Range).Value = "Kostenart-Name"
+
+
+            ' jetzt wird die Zeile 1 geschrieben 
+            CType(.Cells(1, 6), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von - 1)
+            CType(.Cells(1, 7), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von)
+            rng = .Range(.Cells(1, 6), .Cells(1, 7))
+
+            '' Deutsches Format:
+            'rng.NumberFormat = "[$-407]mmm yy;@"
+            ' Englisches Format:
+            rng.NumberFormat = "[$-409]mmm yy;@"
+
+            Dim destinationRange As Excel.Range = .Range(.Cells(1, 6), .Cells(1, 6 + bis - von))
+            With destinationRange
+                .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                '' Deutsches Format: 
+                'rng.NumberFormat = "[$-407]mmm yy;@"
+                ' Englische Format:
+                .NumberFormat = "[$-409]mmm yy;@"
+                .WrapText = False
+                .Orientation = 90
+                .AddIndent = False
+                .IndentLevel = 0
+                .ReadingOrder = Excel.Constants.xlContext
+                .MergeCells = False
+            End With
+
+            rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+
+        End With
+
+
+
+        zeile = 2
+
+        Dim tmpName As String = ""
+        Dim tmpValues() As Double
+        Dim schnittmenge() As Double
+        Dim usedRoles As Collection
+        Dim usedCosts As Collection
+        Dim pStart As Integer, pEnde As Integer
+
+        Dim editRange As Excel.Range
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            pStart = getColumnOfDate(kvp.Value.startDate)
+            pEnde = getColumnOfDate(kvp.Value.endeDate)
+
+            usedRoles = kvp.Value.getUsedRollen
+            usedCosts = kvp.Value.getUsedKosten
+
+            For r = 1 To usedRoles.Count
+                tmpName = usedRoles.Item(r)
+                tmpValues = kvp.Value.getRessourcenBedarf(tmpName)
+                schnittmenge = calcArrayIntersection(von, bis, pStart, pEnde, tmpValues)
+
+                ' Schreiben der Projekt-Informationen 
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 1), Excel.Range).Value = kvp.Value.name
+                    CType(.cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
+                    CType(.cells(zeile, 3), Excel.Range).Value = "."
+                End With
+
+
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 4), Excel.Range).Value = tmpName
+                    editRange = CType(.range(.cells(zeile, 6), .cells(zeile, 6 + bis - von)), Excel.Range)
+                End With
+
+                editRange.Value = schnittmenge
+                zeile = zeile + 1
+
+            Next
+
+
+
+            For k As Integer = 1 To usedCosts.Count
+
+                tmpName = usedCosts.Item(k)
+                tmpValues = kvp.Value.getKostenBedarf(tmpName)
+                schnittmenge = calcArrayIntersection(von, bis, pStart, pEnde, tmpValues)
+
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 5), Excel.Range).Value = tmpName
+                    editRange = CType(.range(.cells(zeile, 6), .cells(zeile, 6 + bis - von)), Excel.Range)
+                End With
+
+                editRange.Value = schnittmenge
+                zeile = zeile + 1
+            Next
+
+        Next
+
+
+        ' jetzt den Bereich markieren bzw. schützen 
+        Dim startProtectedArea As Integer
+        Dim endProtectedArea As Integer
+        Dim protectedRange As Excel.Range = Nothing
+        Dim wbName As String
+
+        Select Case type
+            Case 0
+                startProtectedArea = 0
+                endProtectedArea = 0
+                wbName = "all"
+            Case 1
+
+                startProtectedArea = getColumnOfDate(Date.Now)
+                endProtectedArea = bis
+                wbName = "past"
+            Case 2
+                startProtectedArea = von
+                endProtectedArea = getColumnOfDate(Date.Now)
+                wbName = "future"
+            Case Else
+                Call MsgBox("Typ nicht erkannt, muss Werte 0, 1 oder 2 haben: ist aber" & type)
+                appInstance.EnableEvents = True
+                Exit Sub
+        End Select
+
+        Dim generalRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, 1), _
+                                                newWB.ActiveSheet.cells(zeile - 1, 5)),  _
+                                                Excel.Range)
+        Dim valueRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, 6), _
+                                                newWB.ActiveSheet.cells(zeile - 1, 6 + bis - von + 1)),  _
+                                                Excel.Range)
+
+        With generalRange
+            .Columns.AutoFit()
+            .AutoFilter()
+        End With
+
+        With ersteZeile
+            .Interior.Color = awinSettings.AmpelGruen
+        End With
+
+
+
+
+        If type <> 0 Then
+
+            With newWB.ActiveSheet
+                protectedRange = CType(.Range(.cells(1, startProtectedArea), _
+                                                               .cells(zeile - 1, endProtectedArea)),  _
+                                                                Excel.Range)
+
+            End With
+            protectedRange.Interior.Color = awinSettings.AmpelNichtBewertet
+        End If
+
+
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.visbo) & "\EditNeeds_" & _
+            Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Try
+            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
     End Sub
 End Module
