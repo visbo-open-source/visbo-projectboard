@@ -11754,10 +11754,20 @@ Public Module Projekte
             ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                With kvp.Value
-                    key = 10000 * .tfZeile + kvp.Value.Start
-                    todoListe.Add(key, .name)
-                End With
+                Try
+                    With kvp.Value
+                        key = 10000 * .tfZeile + kvp.Value.Start
+                        Do While todoListe.ContainsKey(key)
+                            key = key + 0.000001
+                        Loop
+                        todoListe.Add(key, .name)
+                    End With
+                Catch ex As Exception
+                    
+                    Call MsgBox("Fehler in awinZeichnePlanTafel")
+
+                End Try
+                
 
             Next
 

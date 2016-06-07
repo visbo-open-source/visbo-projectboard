@@ -3975,6 +3975,8 @@ Public Module awinGeneralModules
                                             AlleProjekte.Remove(vglName)
                                         End If
 
+                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
+
                                         Try
                                             namesForConstellation.Add(vglName, vglName)
                                         Catch ex As Exception
@@ -3987,7 +3989,7 @@ Public Module awinGeneralModules
                                         ok = False
                                         hproj = vglProj
 
-                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, hproj.tfZeile)
+                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
 
                                         Try
                                             namesForConstellation.Add(vglName, vglName)
@@ -4012,10 +4014,10 @@ Public Module awinGeneralModules
                                         Else
                                             Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
                                             If unterschiede.Count > 0 Then
-
+                                                ok = True ' das heisst es kommt in ImportProjekte 
                                                 ' es muss eine Variante angelegt werden 
-                                                If hproj.variantName <> scenarioNAme Then
-                                                    hproj.variantName = scenarioNAme
+                                                If hproj.variantName <> scenarioName Then
+                                                    hproj.variantName = scenarioName
                                                     vglName = calcProjektKey(hproj.name, hproj.variantName)
 
                                                     ' wenn die Variante bereits in der Session existiert ..
@@ -4028,6 +4030,8 @@ Public Module awinGeneralModules
                                                     ' in diesem Fall wird die Variante über hproj neu angelegt 
                                                     AlleProjekte.Remove(vglName)
                                                 End If
+
+                                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
 
                                                 Try
                                                     namesForConstellation.Add(vglName, vglName)
@@ -4049,6 +4053,7 @@ Public Module awinGeneralModules
                                     Else
                                         ' nichts weiter tun, Projekt existert noch nicht; es kann und soll das bereits angelegte hproj verwendet werden 
                                         Try
+                                            vglName = calcProjektKey(hproj.name, hproj.variantName)
                                             namesForConstellation.Add(vglName, vglName)
                                         Catch ex As Exception
 
@@ -14207,14 +14212,12 @@ Public Module awinGeneralModules
 
         With generalRange
             .Columns.AutoFit()
-            .AutoFilter()
         End With
+
 
         With ersteZeile
             .Interior.Color = awinSettings.AmpelGruen
         End With
-
-
 
 
         If type <> 0 Then

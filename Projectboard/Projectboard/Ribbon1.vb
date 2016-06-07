@@ -158,15 +158,20 @@ Imports System.Windows
                 End If
 
                 If Not boardWasEmpty And Not loadConstellationFrm.addToSession.Checked = True Then
+
                     Call awinClearPlanTafel()
-                    Call clearCompleteSession()
+
+                    If ControlID = loadFromDatenbank Then
+                        Call clearCompleteSession()
+                    End If
+
                 End If
 
                 For i As Integer = 1 To loadConstellationFrm.ListBox1.SelectedItems.Count
 
                     constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
 
-                    If i = 1 And boardWasEmpty Then
+                    If i = 1 And (boardWasEmpty Or Not (ControlID = loadFromDatenbank)) Then
                         Call awinLoadConstellation(constellationName, successMessage)
                     Else
                         Call awinAddConstellation(constellationName, successMessage)
@@ -2236,9 +2241,15 @@ Imports System.Windows
                     'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                     Call importProjekteEintragen(importDate, ProjektStatus(1))
 
+                    
                     ' jetzt noch ein Szenario anlegen, wenn myCollection was enthält 
                     If myCollection.Count > 0 Then
+                        currentConstellation = scenarioName
                         Call storeSessionConstellation(scenarioName, myCollection)
+                    End If
+
+                    If ImportProjekte.Count > 0 Then
+                        ImportProjekte.Clear()
                     End If
                 Else
 

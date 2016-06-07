@@ -2807,6 +2807,7 @@ Public Module testModule
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Multiprojektsicht" Or _
                         kennzeichnung = "Projekt-Tafel" Or _
+                        kennzeichnung = "Tabelle Projektliste" Or _
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
                         kennzeichnung = "Tabelle Zielerreichung" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
@@ -3351,6 +3352,13 @@ Public Module testModule
 
                             Try
                                 Call zeichneTabelleProjektabhaengigkeiten(pptShape)
+                            Catch ex As Exception
+
+                            End Try
+
+                        Case "Tabelle Projektliste"
+                            Try
+                                Call zeichneTabelleProjektliste(pptShape, PThis.letzterStand, qualifier)
                             Catch ex As Exception
 
                             End Try
@@ -7846,6 +7854,171 @@ Public Module testModule
 
     End Sub
 
+
+    ''' <summary>
+    ''' zeichnet in der Multiprojektsicht eine tabellarische Übersicht aller Projekte inkl ihrer Veränderungen bezogen auf 
+    ''' Ergebnis, Termine, Lieferumfänge 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="vergleichstyp"></param>
+    ''' <remarks></remarks>
+    Sub zeichneTabelleProjektliste(ByVal pptShape As pptNS.Shape, ByVal vergleichstyp As Integer, _
+                                   Optional ByVal qualifier As String = "")
+        Dim tabelle As pptNS.Table
+        Dim zaehler As Integer = 1
+        Dim startItem As Integer, endeItem As Integer
+        Dim tmpStr() As String
+        Dim hproj As clsProjekt
+
+        Dim hErloes As Double, hPersKosten As Double, hSonstKosten As Double, hRisikoKosten As Double, hErgebnis As Double
+        Dim vErloes As Double, vPersKosten As Double, vSonstKosten As Double, vRisikoKosten As Double, vErgebnis As Double
+        Dim hEnddate As Date, vEndDate As Date
+        Dim deltaValue As Double
+
+        Dim vproj As clsProjekt = Nothing
+        Dim zeile As Integer = 2
+
+        Try
+            tabelle = pptShape.Table
+        Catch ex As Exception
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(127))
+            Exit Sub
+        End Try
+
+
+        If tabelle.Columns.Count < 9 Then
+            Throw New Exception(repMessages.getmsg(127))
+        End If
+
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        Try
+            If qualifier.Contains("-") Then
+                tmpStr = qualifier.Split(New Char() {CChar("-")})
+                startItem = CInt(tmpStr(0))
+                endeItem = CInt(tmpStr(1))
+            End If
+        Catch ex As Exception
+            startItem = 1
+            endeItem = 999999
+        End Try
+
+        zaehler = startItem
+        Do While zaehler <= endeItem And zaehler <= ShowProjekte.Count
+
+            hproj = ShowProjekte.getProject(zaehler)
+            ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
+
+            ' Ermitteln der Kennzahlen 
+            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
+
+            With tabelle
+                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
+                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
+                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("0#.#")
+                CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("0#.#")
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("0#.#")
+            End With
+
+
+            ' hat das Projekt bereits eine Historie ? 
+            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+            If vergleichstyp = PThis.letzterStand Then
+                vproj = projekthistorie.Last
+                
+
+
+            ElseIf vergleichstyp = PThis.beauftragung Then
+                vproj = projekthistorie.beauftragung
+
+            End If
+
+
+            If IsNothing(vproj) Then
+                ' dieses Projekt hat noch keine Historie 
+            Else
+                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
+
+
+
+                With tabelle
+                    ' Ergebnis ? 
+                    deltaValue = hErgebnis - vErgebnis
+                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#.#")
+
+                    If deltaValue > 0 Then
+
+                        If deltaValue > 0.05 * hErloes Then
+
+                            CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelGruen
+
+                        End If
+                        
+                    ElseIf deltaValue * -1 > 0.05 * hErloes Then
+
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelRot
+
+                    End If
+
+                    ' Termine ? 
+                    deltaValue = DateDiff(DateInterval.Day, hEnddate, vEndDate)
+                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#.")
+
+
+                    If deltaValue > 0 Then
+
+                        If deltaValue > 14 Then
+
+                            CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelGruen
+
+                        End If
+
+                    ElseIf deltaValue * -1 > 14 Then
+
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelRot
+
+                    End If
+
+
+                    ' Deliverables ?
+                    deltaValue = hproj.getDeliverables.Count - vproj.getDeliverables.Count
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
+
+                    If deltaValue > 0 Then
+
+
+
+                        CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        awinSettings.AmpelGruen
+
+                    Else
+
+                        CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelRot
+
+                    End If
+
+
+                End With
+                
+
+            End If
+
+            zaehler = zaehler + 1
+            zeile = zeile + 1
+
+        Loop
+
+
+    End Sub
     ''' <summary>
     ''' schreibt für jedes Projekt, das Abhängigkeiten hat, diese in eine Tabelle
     ''' </summary>
@@ -9093,7 +9266,7 @@ Public Module testModule
                     tmpMinimum = projMitVariants.startDate
                     tmpMaximum = projMitVariants.endeDate
                 End If
-                
+
             Else
                 tmpMinimum = StartofCalendar.AddMonths(von - 1)
                 tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
@@ -9110,7 +9283,7 @@ Public Module testModule
                 key = 1
                 projektListe.Add(key, calcProjektKey(projMitVariants.name, projMitVariants.variantName))
             End If
-            
+
         End If
 
 
@@ -10578,11 +10751,11 @@ Public Module testModule
             .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
             '.Name = .Name & .Id
             .Name = swlShapeName & PTpptAnnotationType.text
-            
+
 
             ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
             shapeNameCollection.Add(.Name)
-            
+
 
             If awinSettings.mppEnableSmartPPT Then
 
@@ -15548,10 +15721,10 @@ Public Module testModule
         End If
 
     End Function
-    
+
     ' title wird zerlegt in kennzeichung und qualifier
 
-    
+
     ''' <summary>
     ''' 
     ''' </summary>
