@@ -2586,6 +2586,11 @@ Public Module testModule
         Dim presentationFileH As String = awinPath & requirementsOrdner & "boarddossier_Hochformat.pptx"
         Dim newFileName As String = reportOrdnerName & "MP Report.pptx"
 
+        ' das sind Formen , die zur in der Tabelle Vergleich Anzeige der Tendenz verwendet werden 
+        Dim gleichShape As pptNS.Shape = Nothing
+        Dim steigendShape As pptNS.Shape = Nothing
+        Dim fallendShape As pptNS.Shape = Nothing
+
         Dim pptShape As pptNS.Shape
         Dim portfolioName As String = currentConstellation
         Dim top As Double, left As Double, width As Double, height As Double
@@ -2807,7 +2812,8 @@ Public Module testModule
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Multiprojektsicht" Or _
                         kennzeichnung = "Projekt-Tafel" Or _
-                        kennzeichnung = "Tabelle Projektliste" Or _
+                        kennzeichnung = "Tabelle Projektliste1" Or _
+                        kennzeichnung = "Tabelle ProjektlisteN" Or _
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
                         kennzeichnung = "Tabelle Zielerreichung" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
@@ -2844,9 +2850,16 @@ Public Module testModule
 
                         listofShapes.Add(pptShape)
 
+
+                    ElseIf kennzeichnung = "gleich" Then
+                        gleichShape = pptShape
+
+                    ElseIf kennzeichnung = "steigend" Then
+                        steigendShape = pptShape
+
+                    ElseIf kennzeichnung = "fallend" Then
+                        fallendShape = pptShape
                     End If
-
-
 
                 End With
             Next
@@ -3356,9 +3369,72 @@ Public Module testModule
 
                             End Try
 
-                        Case "Tabelle Projektliste"
+                        Case "Tabelle ProjektlisteN"
                             Try
-                                Call zeichneTabelleProjektliste(pptShape, PThis.letzterStand, qualifier)
+                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
+                                                                gleichShape, steigendShape, fallendShape, _
+                                                                PThis.letzterStand, qualifier)
+
+                                ' jetzt die Hilfs-Shapes löschen 
+                                Try
+                                    If Not IsNothing(gleichShape) Then
+                                        gleichShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+                                Try
+                                    If Not IsNothing(steigendShape) Then
+                                        steigendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+                                Try
+                                    If Not IsNothing(fallendShape) Then
+                                        fallendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+                            Catch ex As Exception
+
+                            End Try
+
+                        Case "Tabelle Projektliste1"
+                            Try
+                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
+                                                                gleichShape, steigendShape, fallendShape, _
+                                                                PThis.beauftragung, qualifier)
+
+                                ' jetzt die Hilfs-Shapes löschen 
+                                Try
+                                    If Not IsNothing(gleichShape) Then
+                                        gleichShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(steigendShape) Then
+                                        steigendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(fallendShape) Then
+                                        fallendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
                             Catch ex As Exception
 
                             End Try
@@ -7649,8 +7725,9 @@ Public Module testModule
     ''' <param name="zeichen"></param>
     ''' <param name="farbkennung"></param>
     ''' <remarks></remarks>
-    Sub zeichneTrendSymbol(ByRef pptslide As pptNS.Slide, ByRef tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
-                                ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long)
+    Sub zeichneTrendSymbol(ByVal pptslide As pptNS.Slide, ByVal tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
+                                ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long, _
+                                Optional ByVal rechtsMittig As Boolean = False)
 
         Dim korrFaktor As Double = 1.0
         Dim newZeichen As pptNS.ShapeRange
@@ -7687,13 +7764,27 @@ Public Module testModule
 
         ' jetzt bestimmen der Left , Top Koordinaten des Pfeils und setzen der Farbe
 
-        With newZeichen(1)
 
-            .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
-            .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
-            .Fill.ForeColor.RGB = CInt(farbkennung)
+        If rechtsMittig Then
 
-        End With
+            With newZeichen(1)
+
+                .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
+                .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + tabelle.Cell(tbZeile, tbSpalte).Shape.Width - (.Width + 3)
+                .Fill.ForeColor.RGB = CInt(farbkennung)
+
+            End With
+
+        Else
+            With newZeichen(1)
+
+                .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
+                .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
+                .Fill.ForeColor.RGB = CInt(farbkennung)
+
+            End With
+
+        End If
 
 
 
@@ -7711,8 +7802,9 @@ Public Module testModule
     ''' <param name="farbkennung"></param>
     ''' <param name="lineColor"></param>
     ''' <remarks></remarks>
-    Sub zeichneTrendSymbol(ByRef pptslide As pptNS.Slide, ByRef tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
-                                    ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long, ByVal lineColor As Long)
+    Sub zeichneTrendSymbol(ByVal pptslide As pptNS.Slide, ByVal tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
+                                    ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long, ByVal lineColor As Long, _
+                                    Optional ByVal rechtsMittig As Boolean = False)
 
         Dim korrFaktor As Double = 1.0
         Dim newZeichen As pptNS.ShapeRange
@@ -7856,13 +7948,19 @@ Public Module testModule
 
 
     ''' <summary>
-    ''' zeichnet in der Multiprojektsicht eine tabellarische Übersicht aller Projekte inkl ihrer Veränderungen bezogen auf 
-    ''' Ergebnis, Termine, Lieferumfänge 
+    ''' zeichnet aus der Multiprojektsicht eine tabellarische Übersicht aller Projekte inkl ihrer Veränderungen bezogen auf 
+    ''' Ergebnis, Termine, Lieferumfänge ; im Vergleichstyp kann angegeben werden, ob gegen den ersten oder letzten Stand vergichen werden soll 
     ''' </summary>
+    ''' <param name="pptSlide">die Slide, muss für das Kopieren mit übergeben werden ...</param>
     ''' <param name="pptShape"></param>
+    ''' <param name="gleichShape">das Shape, das für die Darstellung identisch verwendet wird </param>
+    ''' <param name="steigendShape">das Shape, das für Darstellung steigender Werte verwendet wird </param>
+    ''' <param name="fallendShape">das Shape, das zur Darstellung fallender Werte verwendet wird</param>
     ''' <param name="vergleichstyp"></param>
     ''' <remarks></remarks>
-    Sub zeichneTabelleProjektliste(ByVal pptShape As pptNS.Shape, ByVal vergleichstyp As Integer, _
+    Sub zeichneTabelleProjektliste(ByVal pptSlide As pptNS.Slide, ByVal pptShape As pptNS.Shape, _
+                                   ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
+                                   ByVal vergleichstyp As Integer, _
                                    Optional ByVal qualifier As String = "")
         Dim tabelle As pptNS.Table
         Dim zaehler As Integer = 1
@@ -7874,23 +7972,44 @@ Public Module testModule
         Dim vErloes As Double, vPersKosten As Double, vSonstKosten As Double, vRisikoKosten As Double, vErgebnis As Double
         Dim hEnddate As Date, vEndDate As Date
         Dim deltaValue As Double
+        Dim anzahlZeilen As Integer
+
+        Dim farbePositiv As Integer = awinSettings.AmpelGruen
+        Dim farbeNeutral As Integer = awinSettings.AmpelNichtBewertet
+        Dim farbeNegativ As Integer = awinSettings.AmpelRot
 
         Dim vproj As clsProjekt = Nothing
         Dim zeile As Integer = 2
+        Dim spalte As Integer = 9
 
         Try
             tabelle = pptShape.Table
+            anzahlZeilen = tabelle.Rows.Count
         Catch ex As Exception
             'Throw New Exception("Shape hat keine Tabelle")
             Throw New Exception(repMessages.getmsg(127))
             Exit Sub
         End Try
 
-
-        If tabelle.Columns.Count < 9 Then
+        If tabelle.Columns.Count < 12 Then
             Throw New Exception(repMessages.getmsg(127))
         End If
 
+        ' Bestimmen der Standard-Vordergrund-Farbe der potentiell einzufärbenden Felder
+        ' das ist notwendig, weil andernfalls bei einem rows.add die ggf eingefärbten Felder übernommen werden 
+        Dim stdColor As Integer = tabelle.Cell(zeile, 1).Shape.Fill.ForeColor.RGB
+        Dim stdFontFarbe As Integer = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+        Dim isBoldYN As TriState = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Bold
+        Dim rightMargin As Double = tabelle.Cell(zeile, 5).Shape.TextFrame2.MarginRight
+
+
+        ' Bestimmen, ob die Shapes auch vorhanden sind ... 
+        Dim trendShapesAreDefined As Boolean
+        If Not IsNothing(steigendShape) And Not IsNothing(fallendShape) And Not IsNothing(gleichShape) Then
+            trendShapesAreDefined = True
+        Else
+            trendShapesAreDefined = False
+        End If
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -7914,13 +8033,56 @@ Public Module testModule
             ' Ermitteln der Kennzahlen 
             hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
 
+            If zeile > anzahlZeilen Then
+                tabelle.Rows.Add()
+                ' jetzt die potenziell einzufärbenden Felder alle auf noColor setzen 
+                ' ausserdem die Margins auf den entsprechenden Wert setzen 
+                With tabelle
+
+                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
+
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
+
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
+                End With
+                anzahlZeilen = anzahlZeilen + 1
+            End If
+
             With tabelle
-                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
-                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
-                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
-                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("0#.#")
-                CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("0#.#")
-                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("0#.#")
+                Select Case hproj.ampelStatus
+                    Case 0
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelNichtBewertet)
+                    Case 1
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelGruen)
+                    Case 2
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelGelb)
+                    Case 3
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelRot)
+                    Case Else
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelNichtBewertet)
+
+                End Select
+
+                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
+                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
+                
             End With
 
 
@@ -7929,8 +8091,6 @@ Public Module testModule
                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
             If vergleichstyp = PThis.letzterStand Then
                 vproj = projekthistorie.Last
-                
-
 
             ElseIf vergleichstyp = PThis.beauftragung Then
                 vproj = projekthistorie.beauftragung
@@ -7940,75 +8100,207 @@ Public Module testModule
 
             If IsNothing(vproj) Then
                 ' dieses Projekt hat noch keine Historie 
+
+                With tabelle
+                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#")
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#")
+                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
+                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
+
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                    CType(.Cell(zeile, 12), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
+                End With
+
+
             Else
                 vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
+
+                ' hier werden die Symbole gezeichnet, die anzeigen wie sich der jeweilige Wert im Vergleich zum letzten / ersten Stand verändert hat 
+                ' angezeigt werden nur positive oder negative Abweichungen 
+
+                If hErloes - vErloes <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#") & "/" & _
+                                vErloes.ToString("#0.#")
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hErloes > vErloes Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, steigendShape, farbePositiv, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, fallendShape, farbeNegativ, True)
+                        End If
+                    End If
+
+                Else
+                    With tabelle
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#")
+                    End With
+
+                End If
+
+                If hPersKosten - vPersKosten <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#") & "/" & _
+                                vPersKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hPersKosten > vPersKosten Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, steigendShape, farbeNegativ, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, fallendShape, farbePositiv, True)
+                        End If
+                    End If
+                    
+                Else
+
+                    With tabelle
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#")
+                    End With
+
+                End If
+
+                If hSonstKosten - vSonstKosten <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#") & "/" & _
+                                vSonstKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hSonstKosten > vSonstKosten Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, steigendShape, farbeNegativ, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, fallendShape, farbePositiv, True)
+                        End If
+                    End If
+                    
+                Else
+                    With tabelle
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
+                    End With
+                End If
+
+                If hErgebnis - vErgebnis <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#") & "/" & _
+                                vErgebnis.ToString("#0.#")
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hErgebnis > vErgebnis Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, steigendShape, farbePositiv, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, fallendShape, farbeNegativ, True)
+                        End If
+                    End If
+                    
+                Else
+                    With tabelle
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
+                    End With
+                End If
 
 
 
                 With tabelle
-                    ' Ergebnis ? 
+                    ' Ergebnis-Delta ? 
+                    spalte = 9
                     deltaValue = hErgebnis - vErgebnis
-                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#.#")
+
+                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0.#")
 
                     If deltaValue > 0 Then
-
                         If deltaValue > 0.05 * hErloes Then
-
-                            CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                             awinSettings.AmpelGruen
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                         End If
-                        
                     ElseIf deltaValue * -1 > 0.05 * hErloes Then
-
-                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                             awinSettings.AmpelRot
-
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                     End If
 
                     ' Termine ? 
-                    deltaValue = DateDiff(DateInterval.Day, hEnddate, vEndDate)
-                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#.")
+                    spalte = 10
+                    deltaValue = DateDiff(DateInterval.Day, vEndDate, hEnddate)
+                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
 
                     If deltaValue > 0 Then
 
                         If deltaValue > 14 Then
 
-                            CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelGruen
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelRot
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                         End If
 
                     ElseIf deltaValue * -1 > 14 Then
 
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelRot
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelGruen
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                     End If
 
 
                     ' Deliverables ?
+                    spalte = 11
+                    Dim hAnzahl As Integer = hproj.getDeliverables.Count
+                    Dim vAnzahl As Integer = vproj.getDeliverables.Count
                     deltaValue = hproj.getDeliverables.Count - vproj.getDeliverables.Count
-                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
-                    If deltaValue > 0 Then
+                    If hAnzahl > 0 Or vAnzahl > 0 Then
+                        ' nur was ausgeben, wenn wenigstens in einem Projekt Deliverables definiert sind
 
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
-
-                        CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        awinSettings.AmpelGruen
-
-                    Else
-
-                        CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelRot
+                        If deltaValue > 0 Then
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelGruen
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                        Else
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                awinSettings.AmpelRot
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                        End If
 
                     End If
 
 
+                    ' TimeStamp des Vergleichsprojektes 
+                    spalte = 12
+                    Dim timeStamp As Date = vproj.timeStamp
+                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+
                 End With
-                
+
 
             End If
 
