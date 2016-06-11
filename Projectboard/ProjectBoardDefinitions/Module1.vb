@@ -294,6 +294,17 @@ Public Module Module1
         endedatum = 14
     End Enum
 
+    ''' <summary>
+    ''' betimmt bei den combined Rollen, ob nach allen SubRoles, den Platzhaltern und den Real Rollen aufgelöst werden soll 
+    ''' nur nach den Platzhaltern bzw real Rollen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTcbr
+        all = 0
+        placeholders = 1
+        realRoles = 2
+    End Enum
+
     Public Enum PThis
         current = 0
         vorlage = 1

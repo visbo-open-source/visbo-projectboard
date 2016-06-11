@@ -1218,7 +1218,10 @@ Public Class clsProjekte
     ''' <value>String für Rollenbezeichner oder Integer für den Key der Rolle</value>
     ''' <returns>Array, der die Werte der gefragten Rolle pro Monat des betrachteten Zeitraums enthält</returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleValuesInMonth(ByVal roleID As Object, Optional ByVal considerAllSubRoles As Boolean = False) As Double()
+    Public ReadOnly Property getRoleValuesInMonth(ByVal roleID As Object, _
+                                                  Optional ByVal considerAllSubRoles As Boolean = False, _
+                                                  Optional ByVal type As Integer = PTcbr.all, _
+                                                  Optional ByVal excludedNames As Collection = Nothing) As Double()
 
         Get
             Dim roleValues() As Double
@@ -1249,10 +1252,11 @@ Public Class clsProjekte
             ' wenn considerAllSubroles  = true , dann muss 
 
             If considerAllSubRoles Then
-                toDoCollection = RoleDefinitions.getSubRoleNamesOf(roleName)
-                If Not toDoCollection.Contains(roleName) Then
-                    toDoCollection.Add(roleName, roleName)
-                End If
+                toDoCollection = RoleDefinitions.getSubRoleNamesOf(roleName, type:=type, excludedNames:=excludedNames)
+                ' Änderung tk: das Folgende darf nicht mehr drin sein, da ja das Kommando getSubRoleNamesOf jetzt alles erledigt 
+                'If Not toDoCollection.Contains(roleName) Then
+                '    toDoCollection.Add(roleName, roleName)
+                'End If
             Else
                 toDoCollection.Add(roleName, roleName)
             End If
@@ -1295,7 +1299,7 @@ Public Class clsProjekte
 
                         Next k
 
-                        
+
 
                     Catch ex As Exception
 
@@ -1460,32 +1464,52 @@ Public Class clsProjekte
 
             For ix As Integer = 1 To myCollection.Count
                 Dim roleName As String = CStr(myCollection.Item(ix))
-                Dim tmpCollection As Collection = RoleDefinitions.getSubRoleNamesOf(roleName)
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
 
-                If tmpCollection.Count = 0 Then
+                If Not IsNothing(tmpRole) Then
 
-                    If Not realCollection.Contains(roleName) Then
-                        realCollection.Add(roleName, roleName)
-                    End If
+                    If tmpRole.isCombinedRole Then
+                        ' es handelt sich um eine Sammelrolle
+                        ' Kapas sind nur in den realRoles , also den nicht Sammelrollen vorhanden ...
+                        Dim tmpCollection As Collection = RoleDefinitions.getSubRoleNamesOf(roleName:=roleName, _
+                                                                                            type:=PTcbr.realRoles, _
+                                                                                            excludedNames:=myCollection)
 
-                Else
-                    ' jetzt müssen alle Elemente von tmpCollection aufgenommen werden, sofern sie nicht schon eh aufgenommen sind 
-                    ' die Sammelrolle wird nicht betrachtet ... 
+                        If tmpCollection.Count = 0 Then
 
-                    If Not sammelRollenCollection.Contains(roleName) Then
-                        sammelRollenCollection.Add(roleName, roleName)
-                    End If
+                            If Not realCollection.Contains(roleName) Then
+                                realCollection.Add(roleName, roleName)
+                            End If
 
-                    For k As Integer = 1 To tmpCollection.Count
-                        roleName = CStr(tmpCollection.Item(k))
+                        Else
+                            ' jetzt müssen alle Elemente von tmpCollection aufgenommen werden, sofern sie nicht schon eh aufgenommen sind 
+                            ' die Sammelrolle wird nicht betrachtet ... 
+
+                            If Not sammelRollenCollection.Contains(roleName) Then
+                                sammelRollenCollection.Add(roleName, roleName)
+                            End If
+
+                            For k As Integer = 1 To tmpCollection.Count
+                                roleName = CStr(tmpCollection.Item(k))
+
+                                If Not realCollection.Contains(roleName) Then
+                                    realCollection.Add(roleName, roleName)
+                                End If
+
+                            Next
+
+                        End If
+
+                    Else
 
                         If Not realCollection.Contains(roleName) Then
                             realCollection.Add(roleName, roleName)
                         End If
 
-                    Next
-
+                    End If
+                    
                 End If
+                
             Next
 
 
@@ -1552,10 +1576,7 @@ Public Class clsProjekte
                 Next
 
 
-            End If
-            
-
-
+            End If 
 
             getRoleKapasInMonth = kapaValues
         End Get

@@ -572,7 +572,13 @@ Public Class clsProjekt
 
                     End If
                 Else
+                    If hValues.Sum <> cValues.Sum Then
+                        Try
+                            tmpCollection.Add(CInt(PThcc.perscost).ToString, CInt(PThcc.perscost).ToString)
+                        Catch ex As Exception
 
+                        End Try
+                    End If
                 End If
 
 
@@ -580,14 +586,26 @@ Public Class clsProjekt
                 ' muss bei allen Vergleichs-Typen projekt / version ./variante , ./vorlage, ./projekt2 gemacht werden
                 hValues = Me.getGesamtAndereKosten
                 cValues = vglproj.getGesamtAndereKosten
-                If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
-                    Try
-                        tmpCollection.Add(CInt(PThcc.othercost).ToString, CInt(PThcc.othercost).ToString)
-                    Catch ex As Exception
+                If strongCostIdentity Then
+                    If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
+                        Try
+                            tmpCollection.Add(CInt(PThcc.othercost).ToString, CInt(PThcc.othercost).ToString)
+                        Catch ex As Exception
 
-                    End Try
+                        End Try
 
+                    End If
+
+                Else
+                    If hValues.Sum <> cValues.Sum Then
+                        Try
+                            tmpCollection.Add(CInt(PThcc.othercost).ToString, CInt(PThcc.othercost).ToString)
+                        Catch ex As Exception
+
+                        End Try
+                    End If
                 End If
+                
 
                 ' prüfen, ob das Ergebnis identisch ist 
                 ' muss nicht bei Vergleichs-Typ 2 (Vorlage) gemacht werden 

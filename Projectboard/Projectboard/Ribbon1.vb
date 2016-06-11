@@ -182,10 +182,13 @@ Imports System.Windows
 
                 If loadConstellationFrm.ListBox1.SelectedItems.Count = 1 And boardWasEmpty Then
                     constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(0))
+
                 Else
                     constellationName = "no Name Scenario"
+
                 End If
 
+                currentConstellation = constellationName
                 Call awinNeuZeichnenDiagramme(2)
 
                 ' Änderung tk am 2.6 

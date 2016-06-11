@@ -2812,6 +2812,7 @@ Public Module testModule
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Multiprojektsicht" Or _
                         kennzeichnung = "Projekt-Tafel" Or _
+                        kennzeichnung = "Tabelle Projektliste" Or _
                         kennzeichnung = "Tabelle Projektliste1" Or _
                         kennzeichnung = "Tabelle ProjektlisteN" Or _
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
@@ -3365,6 +3366,42 @@ Public Module testModule
 
                             Try
                                 Call zeichneTabelleProjektabhaengigkeiten(pptShape)
+                            Catch ex As Exception
+
+                            End Try
+
+
+                        Case "Tabelle Projektliste"
+                            Try
+                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
+                                                                gleichShape, steigendShape, fallendShape, _
+                                                                PThis.current, qualifier)
+
+                                ' jetzt ggf die Hilfs-Shapes löschen 
+                                Try
+                                    If Not IsNothing(gleichShape) Then
+                                        gleichShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(steigendShape) Then
+                                        steigendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(fallendShape) Then
+                                        fallendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
                             Catch ex As Exception
 
                             End Try
@@ -8003,16 +8040,6 @@ Public Module testModule
         Dim rightMargin As Double = tabelle.Cell(zeile, 5).Shape.TextFrame2.MarginRight
 
 
-        ' Bestimmen, ob die Shapes auch vorhanden sind ... 
-        Dim trendShapesAreDefined As Boolean
-        If Not IsNothing(steigendShape) And Not IsNothing(fallendShape) And Not IsNothing(gleichShape) Then
-            trendShapesAreDefined = True
-        Else
-            trendShapesAreDefined = False
-        End If
-
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
         Try
             If qualifier.Contains("-") Then
                 tmpStr = qualifier.Split(New Char() {CChar("-")})
@@ -8085,17 +8112,36 @@ Public Module testModule
                 
             End With
 
+            Dim trendShapesAreDefined As Boolean
+            If vergleichstyp = PThis.current Then
+                ' es wird nichts verglichen ... 
+                trendShapesAreDefined = False
 
-            ' hat das Projekt bereits eine Historie ? 
-            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
-                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-            If vergleichstyp = PThis.letzterStand Then
-                vproj = projekthistorie.Last
+            Else
 
-            ElseIf vergleichstyp = PThis.beauftragung Then
-                vproj = projekthistorie.beauftragung
+                ' Bestimmen, ob die Shapes auch vorhanden sind ... 
 
+                If Not IsNothing(steigendShape) And Not IsNothing(fallendShape) And Not IsNothing(gleichShape) Then
+                    trendShapesAreDefined = True
+                Else
+                    trendShapesAreDefined = False
+                End If
+
+                ' hat das Projekt bereits eine Historie ? 
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                If vergleichstyp = PThis.letzterStand Then
+                    vproj = projekthistorie.Last
+
+                ElseIf vergleichstyp = PThis.beauftragung Then
+                    vproj = projekthistorie.beauftragung
+
+                End If
             End If
+
+            
 
 
             If IsNothing(vproj) Then
@@ -14316,6 +14362,12 @@ Public Module testModule
         Dim tmpName As String = " "
         Dim explicit As Boolean = True
         Dim trennzeichen As Char = "#"
+
+        ' wenn qualifier leer ist , aber selectedItems etwas enthält ...
+        ' dann wird alles, was in selectedItems liegt, berücksichtigt 
+        If qualifier = "" And selectedItems.Count > 0 Then
+            qualifier = "Alle"
+        End If
 
         If qualifier.Contains("#") Then
             explicit = True

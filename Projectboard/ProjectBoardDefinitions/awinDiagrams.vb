@@ -128,7 +128,8 @@ Public Module awinDiagrams
     ''' <param name="prcTyp"></param>
     ''' <remarks>myCollection am 23.5 per byval übergeben, damit im Falle der Rollen myCollection ausgeweitet werden kann ...</remarks>
     Sub awinCreateprcCollectionDiagram(ByVal myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
-                                       ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean)
+                                       ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean, _
+                                       Optional ByVal substituteCombinedRole As Boolean = False, Optional ByVal showOneCombinedValue As Boolean = False)
 
         Dim von As Integer, bis As Integer
 
@@ -161,7 +162,7 @@ Public Module awinDiagrams
         Dim chtobjName As String
         Dim breadcrumb As String = ""
 
-        Dim realCollection As New Collection
+        
 
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
@@ -370,9 +371,12 @@ Public Module awinDiagrams
                         .SeriesCollection(1).Delete()
                     Loop
 
+                    ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
+                    Dim roleISCombinedRole As Boolean
 
                     For r = 1 To myCollection.Count
 
+                        roleISCombinedRole = False
                         'prcName = CStr(myCollection.Item(r))
                         ' wird jetzt über das folgende bestimmt
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
@@ -400,8 +404,24 @@ Public Module awinDiagrams
 
                         ElseIf prcTyp = DiagrammTypen(1) Then
                             einheit = " " & awinSettings.kapaEinheit
-                            objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
-                            datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(prcName)
+                            objektFarbe = tmpRole.farbe
+
+                            If tmpRole.isCombinedRole Then
+                                roleISCombinedRole = True
+                                datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                               considerAllSubRoles:=True, _
+                                                                               type:=PTcbr.placeholders, _
+                                                                               excludedNames:=myCollection)
+                                edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                               considerAllSubRoles:=True, _
+                                                                               type:=PTcbr.realRoles, _
+                                                                               excludedNames:=myCollection)
+                            Else
+                                datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+                            End If
+
+
 
 
                         ElseIf prcTyp = DiagrammTypen(2) Then
@@ -415,9 +435,10 @@ Public Module awinDiagrams
                                 'edatenreihe = ShowProjekte.getCosteValuesInMonth
                                 datenreihe = ShowProjekte.getCostGpValuesInMonth
 
-                                For i = 0 To bis - von
-                                    seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
-                                Next i
+                                ' Änderung tk: das wird doch hier nicht benötigt, ist eh Null, ausserdem wird das später nochmal gemacht 
+                                'For i = 0 To bis - von
+                                '    seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
+                                'Next i
 
                             Else
 
@@ -477,9 +498,16 @@ Public Module awinDiagrams
 
                         End If
 
-                        For i = 0 To bis - von
-                            seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
-                        Next i
+                        If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                            For i = 0 To bis - von
+                                seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
+                                                            edatenreihe(i)
+                            Next i
+                        Else
+                            For i = 0 To bis - von
+                                seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
+                            Next i
+                        End If
 
 
                         If isPersCost Then
@@ -565,17 +593,26 @@ Public Module awinDiagrams
 
                             Else
 
-                                With .SeriesCollection.NewSeries
-                                    If breadcrumb = "" Then
-                                        .name = prcName
+                                With CType(.SeriesCollection.NewSeries, Excel.Series)
+
+                                    If prcTyp = DiagrammTypen(0) Then
+                                        If breadcrumb = "" Then
+                                            .Name = prcName
+                                        Else
+                                            .Name = breadcrumb & "-" & prcName
+                                        End If
+                                    ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                                        ' repmsg!
+                                        .Name = prcName & " Platzhalter"
                                     Else
-                                        .name = breadcrumb & "-" & prcName
+                                        .Name = prcName
                                     End If
-                                    .Interior.color = objektFarbe
+
+                                    .Interior.Color = objektFarbe
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
                                     If myCollection.Count = 1 Then
-                                        If isWeightedValues Then
+                                        If isWeightedValues Or roleISCombinedRole Then
                                             .ChartType = Excel.XlChartType.xlColumnStacked
                                         Else
                                             .ChartType = Excel.XlChartType.xlColumnClustered
@@ -586,8 +623,22 @@ Public Module awinDiagrams
                                     .HasDataLabels = False
                                 End With
 
-                            End If
+                                If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                                    ' alle anderen zeigen 
+                                    With CType(.SeriesCollection.NewSeries, Excel.Series)
 
+                                        .Name = prcName & " alle anderen"
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        .Values = edatenreihe
+                                        .XValues = Xdatenreihe
+                                        .ChartType = Excel.XlChartType.xlColumnStacked
+                                        .HasDataLabels = False
+
+                                    End With
+
+                                End If
+
+                            End If
 
                         End If
 
@@ -1128,8 +1179,12 @@ Public Module awinDiagrams
                     .SeriesCollection(1).Delete()
                 Loop
 
+                ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
+                Dim roleISCombinedRole As Boolean
+
                 For r = 1 To myCollection.Count
 
+                    roleISCombinedRole = False
 
                     If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                         Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
@@ -1169,16 +1224,49 @@ Public Module awinDiagrams
 
                     ElseIf prcTyp = DiagrammTypen(1) Then
                         einheit = " " & awinSettings.kapaEinheit
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(prcName)
                         objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
-                        datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
-                        hmxWert = datenreihe.Max
 
+                        If tmpRole.isCombinedRole Then
+                            roleISCombinedRole = True
+                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                           considerAllSubRoles:=True, _
+                                                                           type:=PTcbr.placeholders, _
+                                                                           excludedNames:=myCollection)
+                            edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                           considerAllSubRoles:=True, _
+                                                                           type:=PTcbr.realRoles, _
+                                                                           excludedNames:=myCollection)
+                        Else
+                            datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+                        End If
+
+                        hmxWert = datenreihe.Max
 
                         If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                             ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                            tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
+                            If tmpRole.isCombinedRole Then
+                                tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                           considerAllSubRoles:=True, _
+                                                                           type:=PTcbr.all, _
+                                                                           excludedNames:=myCollection)
+                            Else
+                                tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
+                            End If
+
                             For ix = 0 To bis - von
                                 datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+
+                                If tmpRole.isCombinedRole Then
+                                    ' in diesem Fall kann datenreihe(ix) auch negativ werden, muss also auch von edatenreihe abgezogen werden ...
+                                    If datenreihe(ix) < 0 Then
+                                        ' datenreihe(ix) ist negativ, also heisst das abziehen 
+                                        edatenreihe(ix) = edatenreihe(ix) + datenreihe(ix)
+                                        datenreihe(ix) = 0
+                                    End If
+
+                                End If
+
                                 seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
                             Next
                         End If
@@ -1264,9 +1352,16 @@ Public Module awinDiagrams
                         msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
                     End If
 
-                    For i = 0 To bis - von
-                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
-                    Next i
+                    If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                        For i = 0 To bis - von
+                            seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
+                                                        edatenreihe(i)
+                        Next i
+                    Else
+                        For i = 0 To bis - von
+                            seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
+                        Next i
+                    End If
 
 
                     If isPersCost Then
@@ -1326,17 +1421,26 @@ Public Module awinDiagrams
 
                         Else
 
-                            With .SeriesCollection.NewSeries
-                                If breadcrumb = "" Then
-                                    .name = prcName
+                            With CType(.SeriesCollection.NewSeries, Excel.Series)
+
+                                If prcTyp = DiagrammTypen(0) Then
+                                    If breadcrumb = "" Then
+                                        .Name = prcName
+                                    Else
+                                        .Name = breadcrumb & "-" & prcName
+                                    End If
+                                ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                                    ' repmsg!
+                                    .Name = prcName & " Platzhalter"
                                 Else
-                                    .name = breadcrumb & "-" & prcName
+                                    .Name = prcName
                                 End If
-                                .Interior.color = objektFarbe
+
+                                .Interior.Color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
                                 If myCollection.Count = 1 Then
-                                    If isWeightedValues Then
+                                    If isWeightedValues Or roleISCombinedRole Then
                                         .ChartType = Excel.XlChartType.xlColumnStacked
                                     Else
                                         .ChartType = Excel.XlChartType.xlColumnClustered
@@ -1346,6 +1450,21 @@ Public Module awinDiagrams
                                 End If
                                 .HasDataLabels = False
                             End With
+
+                            If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                                ' alle anderen zeigen 
+                                With CType(.SeriesCollection.NewSeries, Excel.Series)
+
+                                    .Name = prcName & " alle anderen"
+                                    .Interior.Color = awinSettings.AmpelNichtBewertet
+                                    .Values = edatenreihe
+                                    .XValues = Xdatenreihe
+                                    .ChartType = Excel.XlChartType.xlColumnStacked
+                                    .HasDataLabels = False
+
+                                End With
+
+                            End If
 
                         End If
 
