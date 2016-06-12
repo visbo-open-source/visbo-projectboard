@@ -7998,7 +7998,8 @@ Public Module testModule
     Sub zeichneTabelleProjektliste(ByVal pptSlide As pptNS.Slide, ByVal pptShape As pptNS.Shape, _
                                    ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
                                    ByVal vergleichstyp As Integer, _
-                                   Optional ByVal qualifier As String = "")
+                                   Optional ByVal qualifier As String = "", _
+                                   Optional ByVal showPersonalBedarf As Boolean = True)
         Dim tabelle As pptNS.Table
         Dim zaehler As Integer = 1
         Dim startItem As Integer, endeItem As Integer
@@ -8007,7 +8008,8 @@ Public Module testModule
 
         Dim hErloes As Double, hPersKosten As Double, hSonstKosten As Double, hRisikoKosten As Double, hErgebnis As Double
         Dim vErloes As Double, vPersKosten As Double, vSonstKosten As Double, vRisikoKosten As Double, vErgebnis As Double
-        Dim hEnddate As Date, vEndDate As Date
+        Dim hpersonalBedarf As Double = 0.0, vPersonalBedarf As Double = 0.0
+
         Dim deltaValue As Double
         Dim anzahlZeilen As Integer
 
@@ -8060,11 +8062,19 @@ Public Module testModule
             ' Ermitteln der Kennzahlen 
             hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
 
+            If showPersonalBedarf Then
+                hpersonalBedarf = hproj.getAlleRessourcen.Sum
+            End If
+
             If zeile > anzahlZeilen Then
                 tabelle.Rows.Add()
                 ' jetzt die potenziell einzufärbenden Felder alle auf noColor setzen 
                 ' ausserdem die Margins auf den entsprechenden Wert setzen 
                 With tabelle
+
+                    stdColor = CType(.Cell(zeile, 2), pptNS.Cell).Shape.Fill.ForeColor.RGB
+                    stdFontFarbe = CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    isBoldYN = CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold
 
                     CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
                     CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
@@ -8109,7 +8119,7 @@ Public Module testModule
                 CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
                 CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
-                
+
             End With
 
             Dim trendShapesAreDefined As Boolean
@@ -8141,7 +8151,7 @@ Public Module testModule
                 End If
             End If
 
-            
+
 
 
             If IsNothing(vproj) Then
@@ -8149,7 +8159,13 @@ Public Module testModule
 
                 With tabelle
                     CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#")
-                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#")
+
+                    If showPersonalBedarf Then
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString("#0.#")
+                    Else
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#")
+                    End If
+
                     CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
                     CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
 
@@ -8163,14 +8179,18 @@ Public Module testModule
             Else
                 vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
 
+                If showPersonalBedarf Then
+                    vPersonalBedarf = vproj.getAlleRessourcen.Sum
+                End If
+
                 ' hier werden die Symbole gezeichnet, die anzeigen wie sich der jeweilige Wert im Vergleich zum letzten / ersten Stand verändert hat 
                 ' angezeigt werden nur positive oder negative Abweichungen 
 
                 If hErloes - vErloes <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#") & "/" & _
-                                vErloes.ToString("#0.#")
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString("#0.#") & "/" & _
+                                hErloes.ToString("#0.#")
                         CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
@@ -8189,11 +8209,21 @@ Public Module testModule
 
                 End If
 
-                If hPersKosten - vPersKosten <> 0 Then
+                Dim hValue As Double, vValue As Double
+
+                If showPersonalBedarf Then
+                    hValue = hpersonalBedarf
+                    vValue = vPersonalBedarf
+                Else
+                    hValue = hPersKosten
+                    vValue = vPersKosten
+                End If
+
+                If hValue - vValue <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#") & "/" & _
-                                vPersKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString("#0.#") & "/" & _
+                                hValue.ToString("#0.#")
                         CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
@@ -8204,11 +8234,11 @@ Public Module testModule
                             Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, fallendShape, farbePositiv, True)
                         End If
                     End If
-                    
+
                 Else
 
                     With tabelle
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString("#0.#")
                     End With
 
                 End If
@@ -8216,8 +8246,8 @@ Public Module testModule
                 If hSonstKosten - vSonstKosten <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#") & "/" & _
-                                vSonstKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString("#0.#") & "/" & _
+                                hSonstKosten.ToString("#0.#")
                         CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
@@ -8228,7 +8258,7 @@ Public Module testModule
                             Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, fallendShape, farbePositiv, True)
                         End If
                     End If
-                    
+
                 Else
                     With tabelle
                         CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
@@ -8238,8 +8268,8 @@ Public Module testModule
                 If hErgebnis - vErgebnis <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#") & "/" & _
-                                vErgebnis.ToString("#0.#")
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString("#0.#") & "/" & _
+                                hErgebnis.ToString("#0.#")
                         CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
@@ -8250,7 +8280,7 @@ Public Module testModule
                             Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, fallendShape, farbeNegativ, True)
                         End If
                     End If
-                    
+
                 Else
                     With tabelle
                         CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
@@ -8285,7 +8315,7 @@ Public Module testModule
 
                     ' Termine ? 
                     spalte = 10
-                    deltaValue = DateDiff(DateInterval.Day, vEndDate, hEnddate)
+                    deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
                     CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
 
@@ -8316,7 +8346,7 @@ Public Module testModule
                     spalte = 11
                     Dim hAnzahl As Integer = hproj.getDeliverables.Count
                     Dim vAnzahl As Integer = vproj.getDeliverables.Count
-                    deltaValue = hproj.getDeliverables.Count - vproj.getDeliverables.Count
+                    deltaValue = hAnzahl - vAnzahl
 
                     If hAnzahl > 0 Or vAnzahl > 0 Then
                         ' nur was ausgeben, wenn wenigstens in einem Projekt Deliverables definiert sind

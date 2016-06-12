@@ -1979,7 +1979,7 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks></remarks>
-    Sub createSollIstOfProject(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean, _
+    Sub createSollIstOfProject(ByVal hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean, _
                                    ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
         Dim chtobj As Excel.ChartObject
         Dim anzDiagrams As Integer
@@ -1998,8 +1998,8 @@ Public Module Projekte
 
         Dim isMinMax As Boolean = False
 
-        Dim beauftragung As clsProjekt
-        Dim lastPlan As clsProjekt
+        Dim ersteVersion As clsProjekt
+        Dim letzteVersion As clsProjekt
         Dim anzSnapshots As Integer = projekthistorie.Count
 
 
@@ -2014,10 +2014,10 @@ Public Module Projekte
             isMinMax = False
 
 
-            beauftragung = projekthistorie.beauftragung
-            If IsNothing(beauftragung) Then
+            ersteVersion = projekthistorie.beauftragung
+            If IsNothing(ersteVersion) Then
                 If projekthistorie.Count >= 1 Then
-                    beauftragung = projekthistorie.First
+                    ersteVersion = projekthistorie.First
                 Else
                     Throw New ArgumentException("es gibt weder Beauftragung noch ersten Stand")
                 End If
@@ -2027,7 +2027,7 @@ Public Module Projekte
             ' finde in der Projekt-Historie das Projekt, das direkt vor hproj gespeichert wurde
             ' 
             vgl = hproj.timeStamp.AddMinutes(-1)
-            lastPlan = projekthistorie.ElementAtorBefore(vgl)
+            letzteVersion = projekthistorie.ElementAtorBefore(vgl)
 
         Else
             ' Min-Max Vergleich 
@@ -2165,8 +2165,8 @@ Public Module Projekte
             End Select
 
             Try
-                beauftragung = projekthistorie.ElementAt(minIndex)
-                lastPlan = projekthistorie.ElementAt(maxIndex)
+                ersteVersion = projekthistorie.ElementAt(minIndex)
+                letzteVersion = projekthistorie.ElementAt(maxIndex)
             Catch ex As Exception
                 Throw New ArgumentException("Fehler in Min-/Max Bestimmung " & ex.Message)
             End Try
@@ -2185,8 +2185,8 @@ Public Module Projekte
         Dim pastAndFuture As Boolean = False
         Dim future As Boolean = True
 
-        Dim werteB(beauftragung.anzahlRasterElemente - 1) As Double
-        Dim werteL(lastPlan.anzahlRasterElemente - 1) As Double
+        Dim werteB(ersteVersion.anzahlRasterElemente - 1) As Double
+        Dim werteL(letzteVersion.anzahlRasterElemente - 1) As Double
         Dim werteC(hproj.anzahlRasterElemente - 1) As Double
 
         Dim Xdatenreihe() As String
@@ -2205,8 +2205,8 @@ Public Module Projekte
                 End If
 
                 kennung = "Soll/Ist Personalkosten"
-                werteB = beauftragung.getAllPersonalKosten
-                werteL = lastPlan.getAllPersonalKosten
+                werteB = ersteVersion.getAllPersonalKosten
+                werteL = letzteVersion.getAllPersonalKosten
                 werteC = hproj.getAllPersonalKosten
             Case 2
                 ' Sonstige Kosten
@@ -2217,8 +2217,8 @@ Public Module Projekte
                 End If
 
                 kennung = "Soll/Ist Sonstige Kosten"
-                werteB = beauftragung.getGesamtAndereKosten
-                werteL = lastPlan.getGesamtAndereKosten
+                werteB = ersteVersion.getGesamtAndereKosten
+                werteL = letzteVersion.getGesamtAndereKosten
                 werteC = hproj.getGesamtAndereKosten
 
             Case 3
@@ -2230,8 +2230,8 @@ Public Module Projekte
                 End If
 
                 kennung = "Soll/Ist Gesamtkosten"
-                werteB = beauftragung.getGesamtKostenBedarf
-                werteL = lastPlan.getGesamtKostenBedarf
+                werteB = ersteVersion.getGesamtKostenBedarf
+                werteL = letzteVersion.getGesamtKostenBedarf
                 werteC = hproj.getGesamtKostenBedarf
             Case 4
                 ' Rollen mit Qualifier
@@ -2243,8 +2243,8 @@ Public Module Projekte
 
                 kennung = "Rolle " & qualifier
                 Try
-                    werteB = beauftragung.getRessourcenBedarf(qualifier)
-                    werteL = lastPlan.getRessourcenBedarf(qualifier)
+                    werteB = ersteVersion.getRessourcenBedarf(qualifier)
+                    werteL = letzteVersion.getRessourcenBedarf(qualifier)
                     werteC = hproj.getRessourcenBedarf(qualifier)
                 Catch ex As Exception
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
@@ -2260,8 +2260,8 @@ Public Module Projekte
 
                 kennung = "Kostenart " & qualifier
                 Try
-                    werteB = beauftragung.getKostenBedarf(qualifier)
-                    werteL = lastPlan.getKostenBedarf(qualifier)
+                    werteB = ersteVersion.getKostenBedarf(qualifier)
+                    werteL = letzteVersion.getKostenBedarf(qualifier)
                     werteC = hproj.getKostenBedarf(qualifier)
                 Catch ex As Exception
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
@@ -2276,8 +2276,8 @@ Public Module Projekte
                 End If
 
                 kennung = "Soll/Ist Gesamtkosten"
-                werteB = beauftragung.getGesamtKostenBedarf
-                werteL = lastPlan.getGesamtKostenBedarf
+                werteB = ersteVersion.getGesamtKostenBedarf
+                werteL = letzteVersion.getGesamtKostenBedarf
                 werteC = hproj.getGesamtKostenBedarf
                 auswahl = 3
 
@@ -2291,12 +2291,12 @@ Public Module Projekte
         diagramTitle = titelTeile(0) & titelTeile(1) & titelTeile(2)
 
         minColumn = 10000
-        If beauftragung.Start < minColumn Then
-            minColumn = beauftragung.Start
+        If ersteVersion.Start < minColumn Then
+            minColumn = ersteVersion.Start
         End If
 
-        If lastPlan.Start < minColumn Then
-            minColumn = lastPlan.Start
+        If letzteVersion.Start < minColumn Then
+            minColumn = letzteVersion.Start
         End If
 
         If hproj.Start < minColumn Then
@@ -2308,13 +2308,13 @@ Public Module Projekte
             maxColumn = .Start + .anzahlRasterElemente - 1
         End With
 
-        With beauftragung
+        With ersteVersion
             If maxColumn < .Start + .anzahlRasterElemente - 1 Then
                 maxColumn = .Start + .anzahlRasterElemente - 1
             End If
         End With
 
-        With lastPlan
+        With letzteVersion
             If maxColumn < .Start + .anzahlRasterElemente - 1 Then
                 maxColumn = .Start + .anzahlRasterElemente - 1
             End If
@@ -2351,7 +2351,7 @@ Public Module Projekte
         Dim hsum As Double = 0.0
         ix = 0
         Dim endeIX As Integer
-        With beauftragung
+        With ersteVersion
 
             'If werteB.Sum >= 100 Then
             '    kontrollWert = Math.Round(werteB.Sum)
@@ -2375,7 +2375,7 @@ Public Module Projekte
         End With
 
         ix = 0
-        With lastPlan
+        With letzteVersion
 
             'If werteL.Sum >= 100 Then
             '    kontrollWert = Math.Round(werteL.Sum / 10) * 10
@@ -2547,7 +2547,7 @@ Public Module Projekte
 
                     With .SeriesCollection.NewSeries
                         If isMinMax Then
-                            .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .name = "Minimum (" & ersteVersion.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
                             .name = "Soll"
@@ -2596,7 +2596,7 @@ Public Module Projekte
                 If isMinMax Or Not vglBaseline Then
                     With .SeriesCollection.NewSeries
                         If isMinMax Then
-                            .name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")"
+                            .name = "Maximum (" & letzteVersion.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
                             .name = "Last"
@@ -4637,26 +4637,51 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
 
+        ' es müssen jetzt alle Rollen in eine Collection geholt werden, die keine SammelRolle sind ... 
+        Dim basicRolesCollection As Collection = RoleDefinitions.getBasicRoles
+
         '
         ' hole die Anzahl Rollen
-        '
-        anzRollen = RoleDefinitions.Count
+        
+        anzRollen = basicRolesCollection.Count
+
 
         If anzRollen = 0 Then
-            MsgBox("keine Rollen-Bedarfe definiert")
+            'Call MsgBox("keine Rollen-Bedarfe definiert")
+            Call MsgBox(repMessages.getmsg(96))
             Exit Sub
         End If
 
-        ReDim tdatenreihe(anzRollen - 1)
-        ReDim Xdatenreihe(anzRollen - 1)
 
 
+        Dim tmpDatenreihe() As Double
+        ReDim tmpDatenreihe(anzRollen - 1)
+
+        Dim tmpNames() As String
+        ReDim tmpNames(anzRollen - 1)
+        Dim realAnzahl As Integer = 0
 
         For r = 1 To anzRollen
-            roleName = RoleDefinitions.getRoledef(r).name
-            tdatenreihe(r - 1) = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
-            Xdatenreihe(r - 1) = roleName
+            'roleName = RoleDefinitions.getRoledef(r).name
+            roleName = CStr(basicRolesCollection.Item(r))
+            Dim tmpValue As Double = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
+            If tmpValue > 0 Then
+                realAnzahl = realAnzahl + 1
+                tmpDatenreihe(realAnzahl - 1) = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
+                tmpNames(realAnzahl - 1) = roleName
+            End If
         Next r
+
+
+        anzRollen = realAnzahl
+        ReDim tdatenreihe(anzRollen - 1)
+        ReDim Xdatenreihe(anzRollen - 1)
+        ' jetzt alle Rollen, die Werte > 0 haben aufnehmen 
+        For r = 1 To realAnzahl
+            tdatenreihe(r - 1) = tmpDatenreihe(r - 1)
+            Xdatenreihe(r - 1) = tmpNames(r - 1)
+        Next
+
 
 
         If auswahl = 1 Then
@@ -4708,9 +4733,10 @@ Public Module Projekte
                 End With
 
 
-                For r = 1 To anzRollen
+                For r = 1 To realAnzahl
 
-                    roleName = RoleDefinitions.getRoledef(r).name
+                    'roleName = RoleDefinitions.getRoledef(r).name
+                    roleName = tmpNames(r - 1)
                     With .SeriesCollection(1).Points(r)
                         .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
                         ' ur: 17.7.2014 fontsize kommt vom existierenden chart
@@ -4992,20 +5018,11 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
         ' es müssen jetzt alle Rollen in eine Collection geholt werden, die keine SammelRolle sind ... 
-        Dim basicRolesCollection As New Collection
-
-        For r = 1 To RoleDefinitions.Count
-            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(r)
-            If Not tmpRole.isCombinedRole Then
-                basicRolesCollection.Add(tmpRole.name, tmpRole.name)
-            End If
-        Next
-
+        Dim basicRolesCollection As Collection = RoleDefinitions.getBasicRoles
 
         '
         ' hole die Anzahl Rollen
-        '
-        'anzRollen = RoleDefinitions.Count
+        
         anzRollen = basicRolesCollection.Count
 
 
@@ -5015,19 +5032,37 @@ Public Module Projekte
             Exit Sub
         End If
 
-        ReDim tdatenreihe(anzRollen - 1)
+        
 
-        ReDim Xdatenreihe(anzRollen - 1)
+        Dim tmpDatenreihe() As Double
+        ReDim tmpDatenreihe(anzRollen - 1)
 
-
+        Dim tmpNames() As String
+        ReDim tmpNames(anzRollen - 1)
+        Dim realAnzahl As Integer = 0
 
         For r = 1 To anzRollen
             'roleName = RoleDefinitions.getRoledef(r).name
             roleName = CStr(basicRolesCollection.Item(r))
-            tdatenreihe(r - 1) = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
-            Xdatenreihe(r - 1) = roleName
+            Dim tmpValue As Double = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
+            If tmpValue > 0 Then
+                realAnzahl = realAnzahl + 1
+                tmpDatenreihe(realAnzahl - 1) = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
+                tmpNames(realAnzahl - 1) = roleName
+            End If
         Next r
 
+
+        anzRollen = realAnzahl
+        ReDim tdatenreihe(anzRollen - 1)
+        ReDim Xdatenreihe(anzRollen - 1)
+        ' jetzt alle Rollen, die Werte > 0 haben aufnehmen 
+        For r = 1 To realAnzahl
+            tdatenreihe(r - 1) = tmpDatenreihe(r - 1)
+            Xdatenreihe(r - 1) = tmpNames(r - 1)
+        Next
+
+        
 
         If auswahl = 1 Then
             titelTeile(0) = portfolioDiagrammtitel(PTpfdk.UeberAuslastung) & " (" & awinSettings.kapaEinheit & ")"
@@ -5099,10 +5134,10 @@ Public Module Projekte
                     End With
 
 
-                    For r = 1 To anzRollen
+                    For r = 1 To realAnzahl
 
                         'roleName = RoleDefinitions.getRoledef(r).name
-                        roleName = CStr(basicRolesCollection.Item(r))
+                        roleName = tmpNames(r - 1)
                         With .SeriesCollection(1).Points(r)
                             .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
                             .DataLabel.Font.Size = awinSettings.fontsizeItems

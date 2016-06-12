@@ -603,7 +603,7 @@ Public Module awinDiagrams
                                         End If
                                     ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
                                         ' repmsg!
-                                        .Name = prcName & " Platzhalter"
+                                        .Name = prcName & ": Platzhalter"
                                     Else
                                         .Name = prcName
                                     End If
@@ -627,7 +627,7 @@ Public Module awinDiagrams
                                     ' alle anderen zeigen 
                                     With CType(.SeriesCollection.NewSeries, Excel.Series)
 
-                                        .Name = prcName & " alle anderen"
+                                        .Name = prcName & ": zugeordnet"
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
                                         .Values = edatenreihe
                                         .XValues = Xdatenreihe
@@ -1431,7 +1431,7 @@ Public Module awinDiagrams
                                     End If
                                 ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
                                     ' repmsg!
-                                    .Name = prcName & " Platzhalter"
+                                    .Name = prcName & ": Platzhalter"
                                 Else
                                     .Name = prcName
                                 End If
@@ -1455,7 +1455,7 @@ Public Module awinDiagrams
                                 ' alle anderen zeigen 
                                 With CType(.SeriesCollection.NewSeries, Excel.Series)
 
-                                    .Name = prcName & " alle anderen"
+                                    .Name = prcName & ": zugeordnet"
                                     .Interior.Color = awinSettings.AmpelNichtBewertet
                                     .Values = edatenreihe
                                     .XValues = Xdatenreihe

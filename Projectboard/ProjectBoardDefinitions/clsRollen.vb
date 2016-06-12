@@ -25,6 +25,95 @@ Public Class clsRollen
     End Sub
 
     ''' <summary>
+    ''' gibt die eindeutige Liste an SammelRollen bzw. EinzelRollen wieder, die keiner Sammelrolle angehören 
+    ''' 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getUniqueRoleList() As Collection
+        Get
+            Dim tmpCollection As New Collection
+            Dim sammelRollen As New Collection
+
+            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+
+                If kvp.Value.isCombinedRole Then
+
+                    If Not sammelRollen.Contains(kvp.Value.name) Then
+                        sammelRollen.Add(kvp.Value.name, kvp.Value.name)
+                    End If
+
+                End If
+
+                ' jetzt die Rolle / Sammelrolle in tmpCollection aufnehmen 
+                If Not tmpCollection.Contains(kvp.Value.name) Then
+                    tmpCollection.Add(kvp.Value.name, kvp.Value.name)
+                End If
+
+            Next
+
+            ' jetzt die Behandlung Sammelrolle machen 
+            For Each sammelRolle As String In sammelRollen
+                Dim subRoleList As Collection = Me.getSubRoleNamesOf(roleName:=sammelRolle, _
+                                                                     type:=PTcbr.realRoles)
+                For Each subRole As String In subRoleList
+                    If tmpCollection.Contains(CStr(subRole)) Then
+                        tmpCollection.Remove(CStr(subRole))
+                    End If
+                Next
+            Next
+
+            getUniqueRoleList = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Collection zurück, die nur die Rollen enthält , die keine Sammelrollen sind
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBasicRoles As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            For r As Integer = 1 To _allRollen.Count
+                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+                If Not tmpRole.isCombinedRole Then
+                    tmpCollection.Add(tmpRole.name, tmpRole.name)
+                End If
+            Next
+
+            getBasicRoles = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Collection zurück, die nur die Rollen enthält , die Sammelrollen sind
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSummaryRoles As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            For r As Integer = 1 To _allRollen.Count
+                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+                If tmpRole.isCombinedRole Then
+                    tmpCollection.Add(tmpRole.name, tmpRole.name)
+                End If
+            Next
+
+            getSummaryRoles = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt in einer eindeutigen Liste die Namen aller vorkommenden SubRoles in einer Collection zurück, das heisst alle Platzhalter und die realen Rollen , oder nur die Platzhalter oder nur die realen Rollen  
     ''' es werden also alle Rollen-Namen zurückgegeben, Platzhalter und reale Rollen-Namen, oder nur eine Kategorie davon 
     ''' wenn die excludedNames angegeben sind, dann werden nur die Rollen aufgenommen, die nicht in den excluded Names drin sind. 
