@@ -43,6 +43,9 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
+        ' Maus auf Wartemodus setzen
+        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
+
 
         ' alle definierten Filter in ComboBox anzeigen
         ' die Filter einlesen 
@@ -60,6 +63,10 @@ Public Class frmProjPortfolioAdmin
         If aktuelleGesamtListe.liste.Count < 1 Then
             DialogResult = Windows.Forms.DialogResult.OK
         End If
+
+        ' Maus auf Normalmodus zurücksetzen
+        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+
 
     End Sub
 

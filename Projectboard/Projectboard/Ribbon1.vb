@@ -146,6 +146,9 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
+            ' Maus auf Wartemodus setzen
+            appInstance.Cursor = XlMousePointer.xlWait
+
             If loadConstellationFrm.addToSession.Checked = True Then
                 constellationName = loadConstellationFrm.ListBox1.Text
                 Call awinAddConstellation(constellationName, successMessage)
@@ -165,6 +168,10 @@ Imports System.Windows
             Call awinZeichnePlanTafel(True)
             Call awinNeuZeichnenDiagramme(2)
             'Call diagramsVisible(True)
+
+            ' Maus auf Wartemodus setzen
+            appInstance.Cursor = XlMousePointer.xlDefault
+
             appInstance.ScreenUpdating = True
 
             'If successMessage.Length > initMessage.Length Then
@@ -249,7 +256,12 @@ Imports System.Windows
                     msgresult = MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
 
                     If msgresult = MsgBoxResult.Ok Then
+                        ' Mouse auf Wartemodus setzen
+                        appInstance.Cursor = XlMousePointer.xlWait
+                        'Projekte speichern
                         Call StoreAllProjectsinDB()
+                        ' Mouse wieder auf Normalmodus setzen
+                        appInstance.Cursor = XlMousePointer.xlDefault
                     End If
                 Else
                     'Call MsgBox("Es wurden " & storedProj & " Projekte gespeichert!")
