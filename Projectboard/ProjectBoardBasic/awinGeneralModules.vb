@@ -14139,6 +14139,10 @@ Public Module awinGeneralModules
                 tmpValues = kvp.Value.getRessourcenBedarf(tmpName)
                 schnittmenge = calcArrayIntersection(von, bis, pStart, pEnde, tmpValues)
 
+                If schnittmenge.Sum <> tmpValues.Sum Then
+                    Dim a As Integer = 99
+                End If
+
                 ' Schreiben der Projekt-Informationen 
                 With newWB.ActiveSheet
                     CType(.cells(zeile, 1), Excel.Range).Value = kvp.Value.name
@@ -14164,6 +14168,17 @@ Public Module awinGeneralModules
                 tmpName = usedCosts.Item(k)
                 tmpValues = kvp.Value.getKostenBedarf(tmpName)
                 schnittmenge = calcArrayIntersection(von, bis, pStart, pEnde, tmpValues)
+
+                If schnittmenge.Sum <> tmpValues.Sum Then
+                    Dim a As Integer = 99
+                End If
+
+                ' Schreiben der Projekt-Informationen 
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 1), Excel.Range).Value = kvp.Value.name
+                    CType(.cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
+                    CType(.cells(zeile, 3), Excel.Range).Value = "."
+                End With
 
                 With newWB.ActiveSheet
                     CType(.cells(zeile, 5), Excel.Range).Value = tmpName

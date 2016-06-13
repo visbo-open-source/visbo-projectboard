@@ -1273,14 +1273,19 @@ Public Class clsProjekt
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
-                currentConstellation = ""
+                If Not currentConstellation.EndsWith("(*)") Then
+                    currentConstellation = currentConstellation & "(*)"
+                End If
+
 
             ElseIf _startDate = NullDatum Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 If differenzInTagen <> 0 Then
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    currentConstellation = ""
+                    If Not currentConstellation.EndsWith("(*)") Then
+                        currentConstellation = currentConstellation & "(*)"
+                    End If
                 End If
             ElseIf _Status <> ProjektStatus(0) Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
@@ -1889,6 +1894,39 @@ Public Class clsProjekt
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt die Summe aller Ressourcen des Projektes im angegebenen Zeitraum zurück  
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAllResBedarfimZeitraum(ByVal von As Integer, ByVal bis As Integer) As Double
+        Get
+            Dim valueArray() As Double
+            Dim ergArray() As Double
+            Dim tmpValue As Double = 0.0
+            Dim projektDauer As Integer = Me.anzahlRasterElemente
+            Dim start As Integer = Me.Start
+
+            
+            If projektDauer > 0 Then
+                ReDim valueArray(projektDauer - 1)
+                valueArray = Me.getAlleRessourcen
+
+                ergArray = calcArrayIntersection(von, bis, start, start + projektDauer - 1, valueArray)
+                tmpValue = ergArray.Sum
+            Else
+                tmpValue = 0.0
+            End If
+
+            getAllResBedarfimZeitraum = tmpValue
+
+        End Get
+    End Property
+
 
     Public ReadOnly Property hasDifferentRoleNeeds(ByVal compareProj As clsProjekt, roleName As String) As Boolean
         Get

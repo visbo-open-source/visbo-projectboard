@@ -2825,6 +2825,7 @@ Public Module testModule
                         kennzeichnung = "Tabelle ProjekteMitPhImMonat" Or _
                         kennzeichnung = "Tabelle ProjekteMitRolleImMonat" Or _
                         kennzeichnung = "Tabelle ProjekteMitKostenartImMonat" Or _
+                        kennzeichnung = "Plan/Forecast" Or _
                         kennzeichnung = "Fortschritt Personalkosten" Or _
                         kennzeichnung = "Fortschritt Sonstige Kosten" Or _
                         kennzeichnung = "Fortschritt Gesamtkosten" Or _
@@ -3579,6 +3580,82 @@ Public Module testModule
                             Catch ex As Exception
 
                             End Try
+
+                        Case "Plan/Forecast"
+
+
+                            Dim vglVersion As Integer = PThis.ersterStand
+                            Dim auswahl As Integer
+
+                            Dim ersterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.DayOfYear + 1)
+                            Dim letzterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.Day + 1)
+
+                            Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
+                            qualifier = tmpQualifierStr(0)
+
+                            If tmpQualifierStr.Length = 3 Then
+
+                                Try
+                                    ersterStandDate = CDate(tmpQualifierStr(1))
+                                    letzterStandDate = CDate(tmpQualifierStr(2))
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+
+                            Select Case qualifier
+                                Case "Personalkosten"
+                                    boxName = repMessages.getmsg(188) & " (T€)"
+                                    auswahl = PThcc.perscost
+                                Case "Sonstige Kosten"
+                                    boxName = repMessages.getmsg(190) & " (T€)"
+                                    auswahl = PThcc.othercost
+                                Case "Personalbedarf"
+                                    boxName = repMessages.getmsg(159) & " (PT)"
+                                    auswahl = PThcc.persbedarf
+                                Case Else
+                            End Select
+
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hwidth = 450
+                            hheight = awinSettings.ChartHoehe1
+                            obj = Nothing
+                            Call createSollIstOfPortfolio(obj, Date.Now, auswahl, qualifier, ersterStandDate, letzterStandDate, _
+                                                           htop, hleft, hheight, hwidth)
+
+                            reportObj = obj
+
+                            With reportObj
+                                '.Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                            With newShapeRange.Item(1)
+                                .Top = CSng(top + 0.02 * height)
+                                .Left = CSng(left + 0.02 * width)
+                                .Width = CSng(width * 0.96)
+                                .Height = CSng(height * 0.96)
+                            End With
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
+
+
+                        
 
                         Case "Übersicht Budget"
 
@@ -8002,7 +8079,7 @@ Public Module testModule
                                    Optional ByVal showPersonalBedarf As Boolean = True)
         Dim tabelle As pptNS.Table
         Dim zaehler As Integer = 1
-        Dim startItem As Integer, endeItem As Integer
+        Dim startItem As Integer = 1, endeItem As Integer = ShowProjekte.Count
         Dim tmpStr() As String
         Dim hproj As clsProjekt
 
@@ -8040,6 +8117,20 @@ Public Module testModule
         Dim stdFontFarbe As Integer = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
         Dim isBoldYN As TriState = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Bold
         Dim rightMargin As Double = tabelle.Cell(zeile, 5).Shape.TextFrame2.MarginRight
+        Dim vglDate As Date = Nothing
+
+        Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
+        qualifier = tmpQualifierStr(0)
+
+        If tmpQualifierStr.Length = 2 Then
+
+            Try
+                vglDate = CDate(tmpQualifierStr(1))
+            Catch ex As Exception
+
+            End Try
+
+        End If
 
 
         Try
@@ -8050,7 +8141,7 @@ Public Module testModule
             End If
         Catch ex As Exception
             startItem = 1
-            endeItem = 999999
+            endeItem = ShowProjekte.Count
         End Try
 
         zaehler = startItem
@@ -8142,13 +8233,16 @@ Public Module testModule
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
                                                                     storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                If vergleichstyp = PThis.letzterStand Then
-                    vproj = projekthistorie.Last
+                'If vergleichstyp = PThis.letzterStand Then
+                '    vproj = projekthistorie.Last
 
-                ElseIf vergleichstyp = PThis.beauftragung Then
-                    vproj = projekthistorie.beauftragung
+                'ElseIf vergleichstyp = PThis.beauftragung Then
+                '    vproj = projekthistorie.beauftragung
 
-                End If
+                'End If
+
+                vproj = projekthistorie.ElementAtorBefore(vglDate)
+
             End If
 
 
@@ -8646,6 +8740,598 @@ Public Module testModule
 
 
     End Sub
+
+    ''' <summary>
+    ''' erstellt einen Soll-Ist Vergleich zwischen letztem bzw. erstem Plan-Stand 
+    ''' </summary>
+    ''' <param name="reportObj"></param>
+    ''' <param name="heute"></param>
+    ''' <param name="auswahl">bestimmt , was verglichen werden soll </param>
+    ''' <param name="qualifier"></param>
+    ''' <param name="ersterStandDatum">gibt das Datum an, das den ersten Stand markiert</param>
+    ''' <param name="letzterStandDatum">gibt das Datum an, das den letzten Stand markiert</param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="height"></param>
+    ''' <param name="width"></param>
+    ''' <remarks></remarks>
+    Sub createSollIstOfPortfolio(ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, _
+                                 ByVal ersterStandDatum As Date, ByVal letzterStandDatum As Date, _
+                                ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
+        Dim chtobj As Excel.ChartObject
+        Dim anzDiagrams As Integer
+        Dim i As Integer, ix As Integer = 0
+        Dim found As Boolean
+        Dim abbruch As Boolean = False
+        Dim pname As String = ""
+        Dim fullname As String = ""
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
+        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim titelTeile(2) As String
+        Dim titelTeilLaengen(2) As Integer
+
+        'Dim vgl As Date
+        Dim hproj As clsProjekt
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+
+        Dim Xdatenreihe() As String
+        Dim tdatenreiheH() As Double
+        Dim tdatenreiheE() As Double
+        Dim tdatenreiheL() As Double
+
+        Dim von As Integer, bis As Integer, heuteColumn As Integer = getColumnOfDate(heute)
+        Dim pastAndFuture As Boolean = False
+        Dim future As Boolean = True
+
+        Dim ersteVersion As clsProjekt
+        Dim letzteVersion As clsProjekt
+        Dim anzSnapshots As Integer = projekthistorie.Count
+
+        Dim anzH As Integer = 0, anzE As Integer = 0, anzL As Integer = 0
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        'Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.EnableEvents = False
+        'appInstance.ScreenUpdating = False
+
+
+        ' Vorbelegungen 
+        Select Case auswahl
+            Case PThcc.perscost
+                ' Personalkosten
+                titelTeile(0) = "Retrospektive/Forecast Personalkosten (T€)" & vbLf
+                kennung = "PF Soll/Ist Personalkosten"
+
+            Case PThcc.othercost
+                ' Sonstige Kosten
+
+                titelTeile(0) = "Retrospektive/Forecast Sonstige Kosten (T€)" & vbLf
+                kennung = "PF Soll/Ist Sonstige Kosten"
+
+            Case PThcc.persbedarf
+                ' Personalbedarf Kosten
+
+                titelTeile(0) = "Retrospektive/Forecast Personentage (PT)" & vbLf
+                kennung = "PF Soll/Ist Personalbedarf"
+
+            Case PThcc.rolle
+                ' Rollen mit Qualifier
+
+                titelTeile(0) = "Retrospektive/Forecast " & qualifier & "(" & awinSettings.kapaEinheit & ")" & vbLf
+                kennung = "PF Soll/Ist Rolle " & qualifier
+
+            Case PThcc.kostenart
+                ' Kostenart mit Qualifier
+
+                titelTeile(0) = "Retrospektive/Forecast " & qualifier & " (T€)" & vbLf
+                kennung = "PF Soll/Ist Kostenart " & qualifier
+
+            Case Else
+                ' Gesamt Kosten
+
+                titelTeile(0) = "Retrospektive/Forecast Gesamtkosten (T€)" & vbLf
+                kennung = "PF Soll/Ist Gesamtkosten"
+
+        End Select
+
+        titelTeilLaengen(0) = titelTeile(0).Length
+        titelTeile(1) = currentConstellation & vbLf
+        titelTeilLaengen(1) = titelTeile(1).Length
+        titelTeile(2) = ""
+        titelTeilLaengen(2) = titelTeile(2).Length
+        diagramTitle = titelTeile(0) & titelTeile(1)
+
+        von = showRangeLeft
+        bis = showRangeRight
+
+
+
+        ReDim Xdatenreihe(1)
+
+        ReDim tdatenreiheH(1)
+        ReDim tdatenreiheL(1)
+        ReDim tdatenreiheE(1)
+
+        If heuteColumn >= von + 1 And heuteColumn <= bis Then
+            pastAndFuture = True
+            Xdatenreihe(0) = "Plan-/Istwerte Retrospektiv" & vbLf & textZeitraum(von, heuteColumn - 1)
+            Xdatenreihe(1) = "Planwerte Forecast" & vbLf & textZeitraum(heuteColumn, bis)
+        ElseIf heuteColumn > bis Then
+            future = False
+            Xdatenreihe(0) = "Plan-/Istwerte Retrospektiv" & vbLf & textZeitraum(von, bis)
+            Xdatenreihe(1) = "Planwerte Forecast" & vbLf & "existieren nicht"
+        ElseIf heuteColumn <= von Then
+            future = True
+            Xdatenreihe(0) = "Plan-/Istwerte Retrospektiv" & vbLf & "existieren nicht"
+            Xdatenreihe(1) = "Planwerte Forecast" & vbLf & textZeitraum(von, bis)
+        End If
+
+
+        ' jetzt gehen die Schleifen über alle Projekte los, die einen History Wert haben ... 
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            hproj = kvp.Value
+            pname = hproj.name
+            fullname = hproj.getShapeText
+            ersteVersion = Nothing
+            letzteVersion = Nothing
+
+            If request.pingMongoDb() Then
+                ' es soll mit der Standard-Variante verglichen werden ... 
+                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:="", _
+                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+
+                anzH = anzH + 1
+                anzSnapshots = projekthistorie.Count
+
+                If anzSnapshots = 0 Then
+                    ersteVersion = Nothing
+                    letzteVersion = Nothing
+
+                ElseIf anzSnapshots >= 1 Then
+
+                    letzteVersion = projekthistorie.ElementAtorBefore(letzterStandDatum)
+
+                    If Not IsNothing(letzteVersion) Then
+                        anzL = anzL + 1
+                    End If
+
+                    ersteVersion = projekthistorie.ElementAtorBefore(ersterStandDatum)
+                    If Not IsNothing(ersteVersion) Then
+                        anzE = anzE + 1
+                    End If
+
+                End If
+
+                Dim werteH() As Double = Nothing
+                Dim werteL() As Double = Nothing
+                Dim werteE() As Double = Nothing
+
+
+                ' Bestimmen der Werte 
+                Select Case auswahl
+                    Case PThcc.perscost
+                        ' Personalkosten
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getAllPersonalKosten
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getAllPersonalKosten
+                        End If
+
+                        werteH = hproj.getAllPersonalKosten
+
+
+                    Case PThcc.othercost
+                        ' Sonstige Kosten
+
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getGesamtAndereKosten
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getGesamtAndereKosten
+                        End If
+
+                        werteH = hproj.getGesamtAndereKosten
+
+                    Case PThcc.persbedarf
+                        ' Gesamter Personalbedarf
+
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getAlleRessourcen
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getAlleRessourcen
+                        End If
+
+                        werteH = hproj.getAlleRessourcen
+
+                    Case PThcc.rolle
+                        ' Rollen mit Qualifier
+                        Try
+                            If Not IsNothing(letzteVersion) Then
+                                werteL = letzteVersion.getRessourcenBedarf(qualifier)
+                            End If
+
+                            If Not IsNothing(ersteVersion) Then
+                                werteE = ersteVersion.getRessourcenBedarf(qualifier)
+                            End If
+
+                            werteH = hproj.getRessourcenBedarf(qualifier)
+                        Catch ex As Exception
+                            Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                        End Try
+
+                    Case PThcc.kostenart
+                        ' Kostenart mit Qualifier
+                        Try
+                            If Not IsNothing(letzteVersion) Then
+                                werteL = letzteVersion.getKostenBedarf(qualifier)
+                            End If
+
+                            If Not IsNothing(ersteVersion) Then
+                                werteE = ersteVersion.getKostenBedarf(qualifier)
+                            End If
+
+                            werteH = hproj.getKostenBedarf(qualifier)
+                        Catch ex As Exception
+                            Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                        End Try
+
+                    Case Else
+                        ' Gesamt Kosten
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getGesamtKostenBedarf
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getGesamtKostenBedarf
+                        End If
+
+                        werteH = hproj.getGesamtKostenBedarf
+                        auswahl = 3
+
+                End Select
+
+                Dim hsum As Double = 0.0
+                Dim ende As Integer
+
+                If pastAndFuture Then
+
+                    ende = hproj.Start + hproj.anzahlRasterElemente - 1
+                    Dim zwWert As Integer = heuteColumn - 1
+                    tdatenreiheH(0) = tdatenreiheH(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
+                                                                                pStart:=hproj.Start, pEnde:=ende, _
+                                                                                tmpValues:=werteH).Sum
+                    zwWert = heuteColumn
+                    tdatenreiheH(1) = tdatenreiheH(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
+                                                                                pStart:=hproj.Start, pEnde:=ende, _
+                                                                                tmpValues:=werteH).Sum
+
+                    If Not IsNothing(letzteVersion) Then
+
+                        ende = letzteVersion.Start + letzteVersion.anzahlRasterElemente - 1
+                        zwWert = heuteColumn - 1
+                        tdatenreiheL(0) = tdatenreiheL(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
+                                                                                    pStart:=letzteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteL).Sum
+                        zwWert = heuteColumn
+                        tdatenreiheL(1) = tdatenreiheL(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
+                                                                                    pStart:=letzteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteL).Sum
+                    End If
+
+                    If Not IsNothing(ersteVersion) Then
+                        ende = ersteVersion.Start + ersteVersion.anzahlRasterElemente - 1
+                        zwWert = heuteColumn - 1
+                        tdatenreiheE(0) = tdatenreiheE(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
+                                                                                    pStart:=ersteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteE).Sum
+                        zwWert = heuteColumn
+                        tdatenreiheE(1) = tdatenreiheE(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
+                                                                                    pStart:=ersteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteE).Sum
+                    End If
+
+
+                ElseIf future Then
+                    ' Vergangenheitswerte müssen nicht erhöht werden 
+                    tdatenreiheH(1) = tdatenreiheH(1) + werteH.Sum
+
+                    If Not IsNothing(letzteVersion) Then
+                        tdatenreiheL(1) = tdatenreiheL(1) + werteL.Sum
+                    End If
+
+                    If Not IsNothing(ersteVersion) Then
+                        tdatenreiheE(1) = tdatenreiheE(1) + werteE.Sum
+                    End If
+
+                Else
+                    tdatenreiheH(0) = tdatenreiheH(0) + werteH.Sum
+
+                    If Not IsNothing(letzteVersion) Then
+                        tdatenreiheL(0) = tdatenreiheL(0) + werteL.Sum
+                    End If
+
+                    If Not IsNothing(ersteVersion) Then
+                        tdatenreiheE(0) = tdatenreiheE(0) + werteE.Sum
+                    End If
+
+                End If
+
+
+            Else
+                'Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
+                Call MsgBox(repMessages.getmsg(81))
+            End If
+
+        Next
+
+
+
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+            '
+            ' um welches Diagramm handelt es sich ...
+            '
+            i = 1
+            found = False
+            While i <= anzDiagrams And Not found
+                Dim chtTitle As String
+                Try
+                    chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
+                Catch ex As Exception
+                    chtTitle = " "
+                End Try
+
+                If chtTitle = diagramTitle Then
+                    found = True
+
+                Else
+                    i = i + 1
+                End If
+
+            End While
+
+            If found Then
+                'Call MsgBox("Chart wird bereits angezeigt ...")
+                reportObj = CType(.ChartObjects(i), Excel.ChartObject)
+                appInstance.EnableEvents = formerEE
+                'appInstance.ScreenUpdating = formerSU
+                Exit Sub
+            Else
+                With appInstance.Charts.Add
+                    ' remove extra series
+                    Do Until .SeriesCollection.Count = 0
+                        .SeriesCollection(1).Delete()
+                    Loop
+
+                    .HasAxis(Excel.XlAxisType.xlCategory) = True
+                    .HasAxis(Excel.XlAxisType.xlValue) = True
+
+                    'Dim ax As Excel.Axis
+
+                    'With ax
+                    '    .MajorUnit = 10000
+                    'End With
+
+                    With .Axes(Excel.XlAxisType.xlCategory)
+                        .HasTitle = False
+                        '.MinimumScale = 0
+                        'With .AxisTitle
+                        '    .Characters.text = "Monate"
+                        '    .Font.Size = 8
+                        'End With
+                    End With
+
+                    With .Axes(Excel.XlAxisType.xlValue)
+                        .HasTitle = False
+                        .HasMajorGridlines = False
+                        .hasminorgridlines = False
+                        '.MajorUnit = 10000
+                        '.MinorUnit = 10000
+                        '.MaximumScale = maxscale
+                        '.MinimumScale = 0
+
+                        'With .AxisTitle
+                        '    .Characters.text = "Kosten"
+                        '    .Font.Size = 8
+                        'End With
+                    End With
+
+                    .HasLegend = True
+                    With .Legend
+                        .Position = Excel.Constants.xlTop
+                        .Font.Size = awinSettings.fontsizeLegend
+                    End With
+                    .HasTitle = True
+                    .ChartTitle.Text = diagramTitle
+                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+                End With
+
+                chtobj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+                'chtobj.Name = fullname & "#" & kennung & "#" & "1"
+                chtobj.Name = "Portfolio Soll/Ist" & "#" & kennung & "#" & "1"
+
+
+            End If
+
+            With chtobj.Chart
+
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + _
+                                                                   titelTeilLaengen(1) + 1, titelTeilLaengen(2)).Font.Size = awinSettings.fontsizeLegend
+
+                'series
+
+
+
+                With .SeriesCollection.NewSeries
+
+                    .name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
+                    '.name = "Baseline"
+                    .Interior.color = awinSettings.SollIstFarbeB
+                    .Values = tdatenreiheE
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnClustered
+
+                    If pastAndFuture Then
+                        For i = 0 To 1
+                            With .Points(i + 1)
+
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(tdatenreiheE(i), "###,###0")
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                            End With
+                        Next
+                    ElseIf future Then
+                        With .Points(2)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheE(1), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    Else
+                        With .Points(1)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheE(0), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    End If
+
+
+                End With
+
+
+
+                With .SeriesCollection.NewSeries
+
+                    .name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
+
+                    .Interior.color = awinSettings.SollIstFarbeL
+                    .Values = tdatenreiheL
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnClustered
+
+                    If pastAndFuture Then
+                        For i = 0 To 1
+                            With .Points(i + 1)
+
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(tdatenreiheL(i), "###,###0")
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                            End With
+                        Next
+                    ElseIf future Then
+                        With .Points(2)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheL(1), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    Else
+                        With .Points(1)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheL(0), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    End If
+
+                End With
+
+
+
+                With .SeriesCollection.NewSeries
+                    '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
+                    .name = "aktueller Stand: " & Date.Now.ToShortDateString & " (" & anzH.ToString & " P)"
+                    '.name = "Current"
+                    .Interior.color = awinSettings.SollIstFarbeC
+                    .Values = tdatenreiheH
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnClustered
+
+                    If pastAndFuture Then
+                        For i = 0 To 1
+                            With .Points(i + 1)
+
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(tdatenreiheH(i), "###,###0")
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                            End With
+                        Next
+                    ElseIf future Then
+                        With .Points(2)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheH(1), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    Else
+                        With .Points(1)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheH(0), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    End If
+
+                End With
+                .ChartGroups(1).Overlap = -50
+                .ChartGroups(1).GapWidth = 150
+            End With
+
+
+        End With
+
+        With chtobj
+            .Top = top
+            .Left = left
+            .Height = height
+            .Width = width
+        End With
+
+        appInstance.EnableEvents = formerEE
+        reportObj = chtobj
+
+    End Sub
+
 
 
     ''' <summary>

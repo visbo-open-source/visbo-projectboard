@@ -292,6 +292,9 @@ Public Module Module1
         customfields = 12
         projecttype = 13
         endedatum = 14
+        persbedarf = 15
+        rolle = 16
+        kostenart = 17
     End Enum
 
     ''' <summary>
@@ -310,6 +313,7 @@ Public Module Module1
         vorlage = 1
         beauftragung = 2
         letzterStand = 3
+        ersterStand = 4
     End Enum
 
     ' Enumeration für die Farbe 

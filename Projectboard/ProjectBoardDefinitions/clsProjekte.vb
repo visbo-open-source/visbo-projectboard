@@ -27,7 +27,9 @@ Public Class clsProjekte
             End If
 
             ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
-            currentConstellation = ""
+            If Not currentConstellation.EndsWith("(*)") Then
+                currentConstellation = currentConstellation & "(*)"
+            End If
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -84,7 +86,9 @@ Public Class clsProjekte
             End If
 
             ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
-            currentConstellation = ""
+            If Not currentConstellation.EndsWith("(*)") Then
+                currentConstellation = currentConstellation & "(*)"
+            End If
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)

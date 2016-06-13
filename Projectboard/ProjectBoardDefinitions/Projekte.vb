@@ -2697,6 +2697,10 @@ Public Module Projekte
 
     End Sub
 
+
+    
+
+
     ''' <summary>
     ''' zeigt bei beauftragten Projekten den Soll-/Ist Vergleich an
     ''' zeigt bei nicht beauftragten Projekten den Vergleich zwischen Min/Max/Current an
@@ -5047,7 +5051,7 @@ Public Module Projekte
             Dim tmpValue As Double = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
             If tmpValue > 0 Then
                 realAnzahl = realAnzahl + 1
-                tmpDatenreihe(realAnzahl - 1) = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
+                tmpDatenreihe(realAnzahl - 1) = tmpValue
                 tmpNames(realAnzahl - 1) = roleName
             End If
         Next r
@@ -8034,7 +8038,9 @@ Public Module Projekte
         If ShowProjekte.contains(pName) Then
 
             ' Aktuelle Konstellation ändert sich dadurch
-            currentConstellation = ""
+            If Not currentConstellation.EndsWith("(*)") Then
+                currentConstellation = currentConstellation & "(*)"
+            End If
 
             zeile = hproj.tfZeile
 
@@ -20959,28 +20965,53 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Function calcArrayIntersection(ByVal von As Integer, ByVal bis As Integer, _
                                               ByVal pStart As Integer, ByVal pEnde As Integer, _
-                                              ByVal tmpValues As Double())
+                                              ByVal tmpValues As Double()) As Double()
         Dim intersectionArray() As Double
         ReDim intersectionArray(bis - von)
         Dim startIX As Integer, endIX As Integer
+        Dim sonderfall As Boolean = False
 
         If pStart > bis Or von > pEnde Then
             ' es gibt überhaupt keine Überlappung 
+
         ElseIf von = pStart And bis = pEnde Then
             startIX = 1
             endIX = tmpValues.Length
-        ElseIf von <= pEnde Then
-            startIX = 1
-            'endIX = bis - von + 1 - (bis - pEnde)
-            endIX = pEnde - von + 1
-        Else
-            endIX = tmpValues.Length
+
+        ElseIf von <= pStart Then
             startIX = pStart - von + 1
+
+            If bis <= pEnde Then
+                endIX = startIX + bis - pStart
+            Else
+                ' bis ist größer als pEnde, es gilt das Gleiche wie oben  
+                endIX = startIX + pEnde - pStart
+            End If
+
+            sonderfall = True
+
+        Else
+            ' von ist größer als pStart 
+            startIX = von - pStart + 1
+
+            If bis <= pEnde Then
+                endIX = startIX + bis - von
+            Else
+                endIX = startIX + pEnde - von
+            End If
+            
         End If
 
-        For i As Integer = startIX To endIX
-            intersectionArray(i - startIX) = tmpValues(i - 1)
-        Next
+        If sonderfall Then
+            For i = startIX To endIX
+                intersectionArray(i - 1) = tmpValues(i - startIX)
+            Next
+        Else
+            For i As Integer = startIX To endIX
+                intersectionArray(i - startIX) = tmpValues(i - 1)
+            Next
+        End If
+        
 
         calcArrayIntersection = intersectionArray
     End Function
