@@ -241,6 +241,9 @@
                 hryNodeDB = New clsHierarchyNodeDB
 
                 elemID = hry.getIDAtIndex(i)
+                If elemID = rootPhaseName Then
+                    elemID = rootPhaseNameDB
+                End If
                 hryNode = hry.nodeItem(i)
                 hryNodeDB.copyFrom(hryNode)
 
@@ -266,6 +269,9 @@
                 hryNode = New clsHierarchyNode
 
                 elemID = Me.allNodes.ElementAt(i - 1).Key
+                If elemID = rootPhaseNameDB Then
+                    elemID = rootPhaseName
+                End If
                 hryNodeDB = Me.allNodes.ElementAt(i - 1).Value
                 hryNodeDB.copyTo(hryNode)
 
