@@ -480,8 +480,7 @@ Public Class frmReportProfil
                                                 selectedPhases, selectedMilestones, _
                                                 selectedRoles, selectedCosts, _
                                                 selectedBUs, selectedTypes, True, _
-                                                True, zeilenhoehe, _
-                                                legendFontSize, _
+                                                True, legendFontSize, _
                                                 worker, e)
 
 
