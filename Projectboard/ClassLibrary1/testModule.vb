@@ -6252,6 +6252,13 @@ Public Module testModule
             Throw New Exception(repMessages.getmsg(126))
         End If
 
+        Try
+            tabelle = pptshape.Table
+        Catch ex As Exception
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(127))
+        End Try
+
 
         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Or _
             prcTyp = DiagrammTypen(1) Or prcTyp = DiagrammTypen(2) Then
@@ -6262,6 +6269,10 @@ Public Module testModule
             ReDim ergebnisListe(0, 0)
         End If
 
+
+        ' hier wird eine Collection bestimmt, die alle Projekte enthält, die eines der Elemente enthalten  
+        Dim pNameCollection As New Collection
+        Dim tmpName As String
 
         Dim anzProjekte As Integer = ShowProjekte.Count
         Dim tmpValue As Integer = 0
@@ -6278,6 +6289,29 @@ Public Module testModule
                     If ergebnisListe(i - 1, ix - 1) = "" Then
                         found = True
                     Else
+
+                        ' Änderung tk: ergänzt, um ggf entscheiden zu können, wie dargestellt werden soll 
+                        Dim tmpStr() As String = ergebnisListe(i - 1, ix - 1).Split(New Char() {CChar(":")})
+                        If tmpStr.Length = 2 Then
+                            tmpName = tmpStr(0)
+                        ElseIf tmpStr.Length > 2 Then
+                            tmpName = ""
+                            For ti As Integer = 1 To tmpStr.Length - 2
+                                tmpName = tmpName & tmpStr(ti - 1)
+                            Next
+                        Else
+                            tmpName = tmpStr(0)
+                        End If
+
+                        Try
+                            tmpName = tmpName.Trim
+                            If Not pNameCollection.Contains(tmpName) Then
+                                pNameCollection.Add(tmpName, tmpName)
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
                         ix = ix + 1
                     End If
                 End If
@@ -6293,15 +6327,21 @@ Public Module testModule
         neededZeilen = neededZeilen + 2
         ' jetzt sind in neededzeilen die Anzahl Zeilen inkl der Bottom-Line und Header-Line für Angabe, welche Meilensteine für den Zeitraum 
 
+        ' Änderung tk: hier wird entschieden, ob in der ersten Spalte die Projektnamen aufgeführt werden , 
+        ' dann benötigt man in den Zellen nicht mehr den Projekt-Namen, dafür werden es tendenziell mehr Zeilen ... 
+        Dim pNamesInFirstSpalte As Boolean
+        If pNameCollection.Count <= 15 Then
+            pNamesInFirstSpalte = True
+            neededSpalten = neededSpalten + 1
+            neededZeilen = pNameCollection.Count + 2
+        Else
+            pNamesInFirstSpalte = False
+        End If
+
         Dim curZeile As Integer = 2
         Dim curSpalte As Integer = 1
 
-        Try
-            tabelle = pptshape.Table
-        Catch ex As Exception
-            'Throw New Exception("Shape hat keine Tabelle")
-            Throw New Exception(repMessages.getmsg(127))
-        End Try
+        
 
         Dim anzSpalten As Integer
 
@@ -6383,6 +6423,27 @@ Public Module testModule
             Loop
         End If
 
+        ' jetzt müssen die Spaltenbreiten entsprechend gesetzt werden 
+        If pNamesInFirstSpalte Then
+            Dim namesWidth As Double
+            Dim monthsWidth As Double
+            Dim gesamt As Integer = 3 + neededSpalten
+            monthsWidth = tabwidth / gesamt
+            namesWidth = 4 * monthsWidth
+
+            With tabelle
+                .Columns(1).Width = namesWidth
+
+                For i = showRangeLeft To showRangeRight
+                    .Columns(i - showRangeLeft + 2).Width = monthsWidth
+                Next
+            End With
+        Else
+            Dim monthsWidth As Double = tabwidth / (showRangeRight - showRangeLeft + 1)
+            For i = showRangeLeft To showRangeRight
+                tabelle.Columns(i - showRangeLeft + 1).Width = monthsWidth
+            Next
+        End If
 
         zeilenHoehe = tabelle.Rows(1).Height
         zeilenHoeheBottom = tabelle.Rows(tabelle.Rows.Count).Height
@@ -6393,9 +6454,16 @@ Public Module testModule
 
         ' jetzt wird die Bottom Zeile geschrieben 
         Dim startDate = StartofCalendar.AddMonths(-1)
+        Dim spaltenOffset As Integer
+        If pNamesInFirstSpalte Then
+            spaltenOffset = 1
+        Else
+            spaltenOffset = 0
+        End If
+
         For m As Integer = showRangeLeft To showRangeRight
             With tabelle
-                CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                CType(.Cell(neededZeilen, m - showRangeLeft + 1 + spaltenOffset), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
                             startDate.AddMonths(m).ToString("MMM yy", repCult)
             End With
         Next m
@@ -6405,7 +6473,7 @@ Public Module testModule
 
             Do While zeilenHoeheBottom > oldBottomHeight * 1.03
                 With tabelle
-                    For m As Integer = showRangeLeft To showRangeRight
+                    For m As Integer = showRangeLeft To showRangeRight + spaltenOffset
                         CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = _
                                                 CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size - 1
 
@@ -6488,23 +6556,103 @@ Public Module testModule
             CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = headerzeile
         End With
 
+        If pNamesInFirstSpalte Then
 
-        ' jetzt werden die eigentlichen Inhalte geschrieben 
-        With tabelle
-            For isp As Integer = 1 To neededSpalten
+            With tabelle
 
-                For ize As Integer = 1 To nrOfZeilen(isp - 1)
+                For ize As Integer = 1 To pNameCollection.Count
 
-                    If Not IsNothing(ergebnisListe(isp - 1, ize - 1)) Then
-                        CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                                                            ergebnisListe(isp - 1, ize - 1)
-                    End If
-                    
+                    Dim tmpNameC As String = CStr(pNameCollection.Item(ize))
+
+                    CType(.Cell(neededZeilen - ize, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                                                                tmpNameC
+                    CType(.Cell(neededZeilen - ize, 1), pptNS.Cell).Shape.TextFrame2.TextRange.ParagraphFormat.Alignment = _
+                                                    MsoParagraphAlignment.msoAlignLeft
+                    Dim tmpvalues() As Double
+                    ReDim tmpvalues(showRangeRight - showRangeLeft)
+
+                    ' die neededspalten wurde ja bei pNAmesInFirstSpalte um eine erhöht ... 
+                    For i As Integer = 1 To neededSpalten - 1
+
+                        Dim found As Boolean = False
+                        Dim ix As Integer = 1
+
+                        While ix <= anzProjekte And Not found
+                            If IsNothing(ergebnisListe(i - 1, ix - 1)) Then
+                                found = True
+                            Else
+                                If ergebnisListe(i - 1, ix - 1) = "" Then
+                                    found = True
+                                Else
+
+                                    ' Änderung tk: ergänzt, um ggf entscheiden zu können, wie dargestellt werden soll 
+                                    Dim tmpStr() As String = ergebnisListe(i - 1, ix - 1).Split(New Char() {CChar(":")})
+                                    If tmpStr.Length = 2 Then
+                                        tmpName = tmpStr(0)
+                                    ElseIf tmpStr.Length > 2 Then
+                                        tmpName = ""
+                                        For ti As Integer = 1 To tmpStr.Length - 2
+                                            tmpName = tmpName & tmpStr(ti - 1)
+                                        Next
+                                    Else
+                                        tmpName = tmpStr(0)
+                                    End If
+
+                                    Try
+                                        tmpName = tmpName.Trim
+
+                                        If tmpName = tmpNameC Then
+                                            tmpvalues(i - 1) = CDbl(tmpStr(tmpStr.Length - 1))
+                                        End If
+
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    ix = ix + 1
+                                End If
+                            End If
+
+                        End While
+
+                    Next
+
+
+                    For isp As Integer = 1 To showRangeRight - showRangeLeft + 1
+                        If tmpvalues(isp - 1) > 0 Then
+                            CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                                                                tmpvalues(isp - 1).ToString
+                        Else
+                            CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        End If
+                        
+                    Next
 
                 Next
+            End With
 
-            Next
-        End With
+
+
+
+        Else
+            With tabelle
+                For isp As Integer = 1 To neededSpalten
+
+                    For ize As Integer = 1 To nrOfZeilen(isp - 1)
+
+                        If Not IsNothing(ergebnisListe(isp - 1, ize - 1)) Then
+                            CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                                                                ergebnisListe(isp - 1, ize - 1)
+                        End If
+
+
+                    Next
+
+                Next
+            End With
+        End If
+        ' jetzt werden die eigentlichen Inhalte geschrieben 
+        
 
 
     End Sub
@@ -8117,7 +8265,7 @@ Public Module testModule
         Dim stdFontFarbe As Integer = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
         Dim isBoldYN As TriState = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Bold
         Dim rightMargin As Double = tabelle.Cell(zeile, 5).Shape.TextFrame2.MarginRight
-        Dim vglDate As Date = Nothing
+        Dim vglDate As Date = Date.Now
 
         Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
         qualifier = tmpQualifierStr(0)
@@ -8241,7 +8389,12 @@ Public Module testModule
 
                 'End If
 
-                vproj = projekthistorie.ElementAtorBefore(vglDate)
+                If vergleichstyp = PThis.letzterStand Then
+                    vproj = projekthistorie.ElementAtorBefore(vglDate)
+                Else
+                    vproj = projekthistorie.First
+                End If
+
 
             End If
 

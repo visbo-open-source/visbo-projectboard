@@ -923,7 +923,7 @@ Public Class clsProjekte
 
                             End If
 
-                            
+
 
 
                         Next
@@ -974,7 +974,7 @@ Public Class clsProjekte
 
                             End If
 
-                            
+
 
 
                         Next

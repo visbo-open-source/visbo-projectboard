@@ -2335,16 +2335,16 @@ Public Module Projekte
 
 
         If heuteColumn >= minColumn + 1 And heuteColumn <= maxColumn Then
-            Xdatenreihe(0) = "Soll/Ist-Werte" & vbLf & textZeitraum(minColumn, heuteColumn - 1)
-            Xdatenreihe(1) = "Prognose" & vbLf & textZeitraum(heuteColumn, maxColumn)
+            Xdatenreihe(0) = "Retrospektive" & vbLf & textZeitraum(minColumn, heuteColumn - 1)
+            Xdatenreihe(1) = "Forecast" & vbLf & textZeitraum(heuteColumn, maxColumn)
         ElseIf heuteColumn > maxColumn Then
             future = False
-            Xdatenreihe(0) = "Soll/Ist-Werte" & vbLf & textZeitraum(minColumn, maxColumn)
-            Xdatenreihe(1) = "Prognose" & vbLf & "existiert nicht"
+            Xdatenreihe(0) = "Retrospektive" & vbLf & textZeitraum(minColumn, maxColumn)
+            Xdatenreihe(1) = "Forecast" & vbLf & "existiert nicht"
         ElseIf heuteColumn <= minColumn Then
             future = True
-            Xdatenreihe(0) = "Soll/Ist-Werte" & vbLf & "existieren nicht"
-            Xdatenreihe(1) = "Prognose" & vbLf & textZeitraum(minColumn, maxColumn)
+            Xdatenreihe(0) = "Retrospektive" & vbLf & "existiert nicht"
+            Xdatenreihe(1) = "Forecast" & vbLf & textZeitraum(minColumn, maxColumn)
         End If
 
 
@@ -2550,7 +2550,7 @@ Public Module Projekte
                             .name = "Minimum (" & ersteVersion.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .name = "Soll"
+                            .name = "Planung: " & ersteVersion.timeStamp.ToString("d") & ")"
                         End If
 
                         '.name = "Baseline"
@@ -2599,7 +2599,7 @@ Public Module Projekte
                             .name = "Maximum (" & letzteVersion.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .name = "Last"
+                            .name = "letzte Version: " & letzteVersion.timeStamp.ToString("d") & ")"
                         End If
 
                         .Interior.color = awinSettings.SollIstFarbeL
@@ -2642,7 +2642,7 @@ Public Module Projekte
 
                 With .SeriesCollection.NewSeries
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "Ist"
+                    .name = "aktuell"
                     '.name = "Current"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
