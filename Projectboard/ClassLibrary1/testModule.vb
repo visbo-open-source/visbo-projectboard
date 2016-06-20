@@ -5722,16 +5722,12 @@ Public Module testModule
     ''' zeichnet eine Legenden Tabelle mit Darstellung von Shape sowie Short- wie Long-Name
     ''' </summary>
     ''' <param name="pptShape"></param>
-    ''' <param name="pptslide"></param>
     ''' <param name="selectedPhases"></param>
     ''' <param name="selectedMilestones"></param>
-    ''' <param name="legendPhaseVorlage"></param>
-    ''' <param name="legendMilestoneVorlage"></param>
     ''' <remarks></remarks>
-    Sub zeichneLegendenTabelle(ByRef pptShape As pptNS.Shape, ByVal pptslide As pptNS.Slide, _
-                                   ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-                                   ByVal legendPhaseVorlage As pptNS.Shape, ByVal legendMilestoneVorlage As pptNS.Shape, _
-                                   ByVal legendBuColorShape As pptNS.Shape)
+    Sub zeichneLegendenTabelle(ByRef pptShape As pptNS.Shape, ByVal rds As clsPPTShapes, _
+                                   ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection)
+
 
         Dim tabelle As pptNS.Table
         Dim anzZeilen As Integer
@@ -5785,7 +5781,7 @@ Public Module testModule
             ' alle Cells der Tabelle mit Schriftgröße von legendPhaseVorlage besetzen
             For i = 2 To tabelle.Rows.Count
                 For j = 1 To tabelle.Columns.Count
-                    CType(tabelle.Cell(i, j), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendPhaseVorlage.TextFrame2.TextRange.Font.Size
+                    CType(tabelle.Cell(i, j), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = rds.legendPhaseVorlagenShape.TextFrame2.TextRange.Font.Size
                 Next j
                 tabelle.Rows(i).Height = 0.5
             Next i
@@ -5812,7 +5808,7 @@ Public Module testModule
 
         zeilenHoehe = tabelle.Rows(tabelle.Rows.Count).Height
         zeilenHoeheTitel = tabelle.Rows(1).Height
-        anzMaxZeilen = (pptslide.CustomLayout.Height - (pptShape.Top + zeilenHoeheTitel)) / zeilenHoehe - 1
+        anzMaxZeilen = (rds.pptSlide.CustomLayout.Height - (pptShape.Top + zeilenHoeheTitel)) / zeilenHoehe - 1
         toDraw = uniquePhases.Count + uniqueMilestones.Count
 
 
@@ -5834,14 +5830,14 @@ Public Module testModule
 
         breadcrumb = ""
         ' jetzt werden ggf zunächst die BU Symbole gezeichnet 
-        If Not IsNothing(legendBuColorShape) Then
+        If Not IsNothing(rds.legendBuColorShape) Then
 
             For i = 1 To businessUnitDefinitions.Count
                 tmpBU = businessUnitDefinitions.ElementAt(i - 1).Value
                 ' jetzt das Shape eintragen 
                 ''legendBuColorShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(legendBuColorShape, pptslide)
+                copiedShape = pptCopypptPaste(rds.legendBuColorShape, rds.pptSlide)
 
                 With copiedShape(1)
                     .Height = zeilenHoehe * 0.8
@@ -5870,7 +5866,7 @@ Public Module testModule
             ' jetzt das Shape eintragen 
             ''legendBuColorShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendBuColorShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendBuColorShape, rds.pptSlide)
 
             With copiedShape(1)
                 .Height = zeilenHoehe * 0.8
@@ -5923,27 +5919,27 @@ Public Module testModule
             ' Phasen-Shape 
             ''phaseShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
+            copiedShape = xlnsCopypptPaste(phaseShape, rds.pptSlide)
 
             With copiedShape(1)
 
-                .Height = legendPhaseVorlage.Height
-                .Width = legendPhaseVorlage.Width
+                .Height = rds.legendPhaseVorlagenShape.Height
+                .Width = rds.legendPhaseVorlagenShape.Width
                 .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
                 .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
 
-                If .Top > pptslide.CustomLayout.Height Then
+                If .Top > rds.pptSlide.CustomLayout.Height Then
                     ''Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
                     Throw New Exception(repMessages.getmsg(6))
                 End If
             End With
 
             ' jetzt den Abkürzungstext eintragen 
-            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendPhaseVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = rds.legendPhaseVorlagenShape.TextFrame2.TextRange.Font.Size
             CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
 
             ' jetzt den Long Name eintragen 
-            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendPhaseVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = rds.legendPhaseVorlagenShape.TextFrame2.TextRange.Font.Size
             CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = phaseName
 
             curSpalte = curSpalte + 3
@@ -5977,27 +5973,27 @@ Public Module testModule
             ' Meilenstein-Shape 
             ''milestoneShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(milestoneShape, pptslide)
+            copiedShape = xlnsCopypptPaste(milestoneShape, rds.pptSlide)
 
             With copiedShape(1)
 
-                .Height = legendMilestoneVorlage.Height
+                .Height = rds.legendMilestoneVorlagenShape.Height
                 .Width = factor * .Height
                 .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
                 .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
 
-                If .Top > pptslide.CustomLayout.Height Then
+                If .Top > rds.pptSlide.CustomLayout.Height Then
                     '' Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
                     Throw New Exception(repMessages.getmsg(6))
                 End If
             End With
 
             ' jetzt den Abkürzungstext eintragen 
-            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendMilestoneVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = rds.legendMilestoneVorlagenShape.TextFrame2.TextRange.Font.Size
             CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
 
             ' jetzt den Long Name eintragen 
-            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendMilestoneVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = rds.legendMilestoneVorlagenShape.TextFrame2.TextRange.Font.Size
             CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = milestoneName
 
             curSpalte = curSpalte + 3
@@ -12844,31 +12840,17 @@ Public Module testModule
     ''' <summary>
     ''' zeichnet die Legende zu einer Multiprojekt-Sicht 
     ''' </summary>
-    ''' <param name="pptslide">ppt slide, in die gezeichnet werden soll</param>
     ''' <param name="selectedPhases">Phasen, die gezeichnet werden sollen</param>
     ''' <param name="selectedMilestones">Meilensteine, die gezeichnet werden sollen</param>
     ''' <param name="selectedRoles">Rollen, zu denen die Info ausgegeben werden soll</param>
-    ''' <param name="selectedCosts">Kostenarten, zu denen die Info ausgegeben werden soll </param>
-    ''' <param name="legendAreaTop">Oberer Rand der Legenden Zeichenfläche </param>
-    ''' <param name="legendAreaLeft">linker Rand der Legenden Zeichenfläche</param>
-    ''' <param name="legendAreaRight">rechter Rand der Legenden Zeichenfläche</param>
-    ''' <param name="legendAreaBottom">unterer Rand der Legenden Zeichenfläche</param>
-    ''' <param name="legendTextVorlagenShape">Legenden Schriftvorlage</param>
-    ''' <param name="legendPhaseVorlagenShape">Legenden Phasen Vorlage (bestimmt die Höhe und Breite)</param>
-    ''' <param name="legendMilestoneVorlagenShape">Legenden Meilenstein Vorlage; betimmt Höhe und Höhen / Breitenverhältnis </param>
-    ''' <param name="projectVorlagenShape">Vorlagen Shape zur Darstellung des Projekts</param>
-    ''' <param name="ampelVorlagenShape">Vorlagen Shape zur Darstellung der Projekt-Ampel</param>
+    ''' <param name="selectedCosts">Kostenarten, zu denen die Info ausgegeben werden soll </param>   
     ''' <remarks></remarks>
-    Sub zeichnePPTlegende(ByRef pptslide As pptNS.Slide, _
+    Sub zeichnePPTlegende(ByRef rds As clsPPTShapes, _
                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
-                                ByVal legendAreaTop As Double, ByVal legendAreaLeft As Double, legendAreaRight As Double, legendAreaBottom As Double, _
-                                ByVal legendLineShape As pptNS.Shape, ByVal legendStartShape As pptNS.Shape, _
-                                ByVal legendTextVorlagenShape As pptNS.Shape, ByVal legendPhaseVorlagenShape As pptNS.Shape, ByVal legendMilestoneVorlagenShape As pptNS.Shape, _
-                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, ByVal buColorVorlagenShape As pptNS.Shape, _
-                                Optional istEinzelprojektLegende As Boolean = False)
+                                                              Optional istEinzelprojektLegende As Boolean = False)
 
         Dim maxZeilen As Integer
-        Dim mindestNettoHoehe As Double = System.Math.Max(legendMilestoneVorlagenShape.Height, legendPhaseVorlagenShape.Height)
+        Dim mindestNettoHoehe As Double = System.Math.Max(rds.legendMilestoneVorlagenShape.Height, rds.legendPhaseVorlagenShape.Height)
         Dim zeilenHoehe As Double
         Dim xCursor As Double, yCursor As Double
         Dim copiedShape As pptNS.ShapeRange
@@ -12879,12 +12861,12 @@ Public Module testModule
 
 
         Dim tmpDbl(3) As Double
-        tmpDbl(0) = legendTextVorlagenShape.Height
-        tmpDbl(1) = legendMilestoneVorlagenShape.Height
-        tmpDbl(2) = legendPhaseVorlagenShape.Height
+        tmpDbl(0) = rds.legendTextVorlagenShape.Height
+        tmpDbl(1) = rds.legendMilestoneVorlagenShape.Height
+        tmpDbl(2) = rds.legendPhaseVorlagenShape.Height
 
-        If Not IsNothing(buColorVorlagenShape) Then
-            tmpDbl(3) = buColorVorlagenShape.Height
+        If Not IsNothing(rds.legendBuColorShape) Then
+            tmpDbl(3) = rds.legendBuColorShape.Height
         Else
             tmpDbl(3) = 0.0
         End If
@@ -12895,33 +12877,33 @@ Public Module testModule
             zeilenHoehe = zeilenHoehe * 1.1
         End If
 
-        maxZeilen = (legendAreaBottom - legendAreaTop) / zeilenHoehe
+        maxZeilen = (rds.legendAreaBottom - rds.legendAreaTop) / zeilenHoehe
 
-        xCursor = legendAreaLeft
-        yCursor = legendAreaTop
+        xCursor = rds.legendAreaLeft
+        yCursor = rds.legendAreaTop
 
         ' jetzt das LegendlineShape eintragen 
         ''legendLineShape.Copy()
         ''copiedShape = pptslide.Shapes.Paste()
-        copiedShape = pptCopypptPaste(legendLineShape, pptslide)
+        copiedShape = pptCopypptPaste(rds.legendLineShape, rds.pptSlide)
 
         With copiedShape.Item(1)
-            .Top = legendLineShape.Top
-            .Left = legendLineShape.Left
+            .Top = rds.legendLineShape.Top
+            .Left = rds.legendLineShape.Left
         End With
 
         ' jetzt das LegendlineShape eintragen 
         ''legendStartShape.Copy()
         ''copiedShape = pptslide.Shapes.Paste()
-        copiedShape = pptCopypptPaste(legendStartShape, pptslide)
+        copiedShape = pptCopypptPaste(rds.legendStartShape, rds.pptSlide)
 
         With copiedShape.Item(1)
-            .Top = legendStartShape.Top
-            .Left = legendStartShape.Left
+            .Top = rds.legendStartShape.Top
+            .Left = rds.legendStartShape.Left
         End With
 
 
-        If Not IsNothing(buColorVorlagenShape) And Not istEinzelprojektLegende Then
+        If Not IsNothing(rds.legendBuColorShape) And Not istEinzelprojektLegende Then
 
             For i = 1 To businessUnitDefinitions.Count
                 buName = businessUnitDefinitions.ElementAt(i - 1).Value.name
@@ -12930,7 +12912,7 @@ Public Module testModule
                 ' jetzt das Shape eintragen 
                 ''buColorVorlagenShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(buColorVorlagenShape, pptslide)
+                copiedShape = pptCopypptPaste(rds.legendBuColorShape, rds.pptSlide)
 
                 With copiedShape(1)
                     .Top = yCursor
@@ -12943,20 +12925,20 @@ Public Module testModule
                 ' Text
                 ''legendTextVorlagenShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+                copiedShape = pptCopypptPaste(rds.legendTextVorlagenShape, rds.pptSlide)
 
                 With copiedShape(1)
                     .TextFrame2.TextRange.Text = buName
                     .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                    .Left = xCursor + buColorVorlagenShape.Width + 3
-                    If maxDelta < buColorVorlagenShape.Width + .Width + 3 Then
-                        maxDelta = buColorVorlagenShape.Width + .Width + 3
+                    .Left = xCursor + rds.legendBuColorShape.Width + 3
+                    If maxDelta < rds.legendBuColorShape.Width + .Width + 3 Then
+                        maxDelta = rds.legendBuColorShape.Width + .Width + 3
                     End If
                 End With
 
                 yCursor = yCursor + zeilenHoehe
-                If yCursor + zeilenHoehe > legendAreaBottom Then
-                    yCursor = legendAreaTop
+                If yCursor + zeilenHoehe > rds.legendAreaBottom Then
+                    yCursor = rds.legendAreaTop
                     xCursor = xCursor + maxDelta
                     maxDelta = 0.0
                 End If
@@ -12969,7 +12951,7 @@ Public Module testModule
             ' jetzt das Shape eintragen 
             ''buColorVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(buColorVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendBuColorShape, rds.pptSlide)
 
             With copiedShape(1)
                 .Top = yCursor
@@ -12982,20 +12964,20 @@ Public Module testModule
             ' Text
             ''legendTextVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendTextVorlagenShape, rds.pptSlide)
 
             With copiedShape(1)
                 .TextFrame2.TextRange.Text = buName
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + buColorVorlagenShape.Width + 3
-                If maxDelta < buColorVorlagenShape.Width + .Width + 3 Then
-                    maxDelta = buColorVorlagenShape.Width + .Width + 3
+                .Left = xCursor + rds.legendBuColorShape.Width + 3
+                If maxDelta < rds.legendBuColorShape.Width + .Width + 3 Then
+                    maxDelta = rds.legendBuColorShape.Width + .Width + 3
                 End If
             End With
 
             xCursor = xCursor + maxDelta
             maxDelta = 0.0
-            yCursor = legendAreaTop
+            yCursor = rds.legendAreaTop
 
         End If
 
@@ -13005,27 +12987,27 @@ Public Module testModule
             ' Grafik
             ''projectVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(projectVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.projectVorlagenShape, rds.pptSlide)
 
             With copiedShape(1)
 
-                .Height = System.Math.Min(projectVorlagenShape.Height, legendPhaseVorlagenShape.Height)
+                .Height = System.Math.Min(rds.projectVorlagenShape.Height, rds.legendPhaseVorlagenShape.Height)
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor
-                .Width = legendPhaseVorlagenShape.Width
+                .Width = rds.legendPhaseVorlagenShape.Width
 
             End With
 
             ' Text
             ''legendTextVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendTextVorlagenShape, rds.pptSlide)
 
             With copiedShape(1)
                 '.TextFrame2.TextRange.Text = "Projekt, ggf. mit" & vbLf & "Anfangs- und Ende-Markierung"
                 .TextFrame2.TextRange.Text = repMessages.getmsg(15)
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + legendPhaseVorlagenShape.Width + 3
+                .Left = xCursor + rds.legendPhaseVorlagenShape.Width + 3
                 xCursor = .Left + copiedShape(1).Width + 15
             End With
 
@@ -13033,7 +13015,7 @@ Public Module testModule
 
         End If
 
-        yCursor = legendAreaTop
+        yCursor = rds.legendAreaTop
 
         ' jetzt ggf die Phasen-Legende zeichnen 
         Dim phaseShape As xlNS.Shape
@@ -13076,31 +13058,31 @@ Public Module testModule
             ' Phasen-Shape 
             ''phaseShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
+            copiedShape = xlnsCopypptPaste(phaseShape, rds.pptSlide)
 
             With copiedShape(1)
 
-                .Height = legendPhaseVorlagenShape.Height
+                .Height = rds.legendPhaseVorlagenShape.Height
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor
-                .Width = legendPhaseVorlagenShape.Width
+                .Width = rds.legendPhaseVorlagenShape.Width
 
             End With
 
             ' Phasen-Text
             ''legendTextVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendTextVorlagenShape, rds.pptSlide)
 
             With copiedShape(1)
 
                 .TextFrame2.TextRange.Text = phShortname & " (=" & phaseName & ")"
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + legendPhaseVorlagenShape.Width + 3
+                .Left = xCursor + rds.legendPhaseVorlagenShape.Width + 3
 
                 ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
-                If .Left + .Width > legendAreaRight Then
-                    Dim tmpWidth As Double = legendAreaRight - .Left
+                If .Left + .Width > rds.legendAreaRight Then
+                    Dim tmpWidth As Double = rds.legendAreaRight - .Left
                     If tmpWidth > 0.3 * .Width Then
                         .TextFrame.WordWrap = MsoTriState.msoTrue
                         .Width = tmpWidth
@@ -13110,27 +13092,27 @@ Public Module testModule
                     End If
                 End If
 
-                If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
-                    maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
+                If maxBreite < rds.legendPhaseVorlagenShape.Width + 3 + .Width Then
+                    maxBreite = rds.legendPhaseVorlagenShape.Width + 3 + .Width
                 End If
             End With
 
             If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
 
                 xCursor = xCursor + maxBreite
-                If xCursor > legendAreaRight Then
+                If xCursor > rds.legendAreaRight Then
                     'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                     Throw New ArgumentException(repMessages.getmsg(16))
                 End If
                 maxBreite = 0.0
-                yCursor = legendAreaTop
+                yCursor = rds.legendAreaTop
             Else
                 yCursor = yCursor + zeilenHoehe
-                If yCursor > legendAreaBottom + 5 Then
-                    yCursor = legendAreaTop
+                If yCursor > rds.legendAreaBottom + 5 Then
+                    yCursor = rds.legendAreaTop
                     xCursor = xCursor + maxBreite
                     maxBreite = 0.0
-                    If xCursor > legendAreaRight Then
+                    If xCursor > rds.legendAreaRight Then
                         ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                         Throw New ArgumentException(repMessages.getmsg(16))
                     End If
@@ -13146,7 +13128,7 @@ Public Module testModule
         If uniqueElemClasses.Count > 0 Then
             xCursor = xCursor + maxBreite + 15
         End If
-        yCursor = legendAreaTop
+        yCursor = rds.legendAreaTop
 
         ' jetzt ggf die Meilenstein-Legende zeichnen 
         Dim meilensteinShape As xlNS.Shape
@@ -13187,30 +13169,30 @@ Public Module testModule
             ' Meilenstein-Shape 
             ''meilensteinShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
+            copiedShape = xlnsCopypptPaste(meilensteinShape, rds.pptSlide)
 
             With copiedShape(1)
                 .Left = xCursor
-                .Height = legendMilestoneVorlagenShape.Height
-                .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
+                .Height = rds.legendMilestoneVorlagenShape.Height
+                .Width = rds.legendMilestoneVorlagenShape.Width / rds.legendMilestoneVorlagenShape.Height * .Height
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
             End With
 
             ' Meilenstein-Text
             ''legendTextVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendTextVorlagenShape, rds.pptSlide)
 
 
             With copiedShape(1)
 
                 .TextFrame2.TextRange.Text = msShortname & " (=" & msName & ")"
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
+                .Left = xCursor + rds.legendMilestoneVorlagenShape.Width + 3
 
                 ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
-                If .Left + .Width > legendAreaRight Then
-                    Dim tmpWidth As Double = legendAreaRight - .Left
+                If .Left + .Width > rds.legendAreaRight Then
+                    Dim tmpWidth As Double = rds.legendAreaRight - .Left
                     If tmpWidth > 0.3 * .Width Then
                         .TextFrame2.WordWrap = MsoTriState.msoTrue
                         .Width = tmpWidth
@@ -13219,27 +13201,27 @@ Public Module testModule
                     End If
                 End If
 
-                If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
-                    maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
+                If maxBreite < rds.legendMilestoneVorlagenShape.Width + 3 + .Width Then
+                    maxBreite = rds.legendMilestoneVorlagenShape.Width + 3 + .Width
                 End If
             End With
 
             If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
 
                 xCursor = xCursor + maxBreite
-                If xCursor > legendAreaRight Then
+                If xCursor > rds.legendAreaRight Then
                     ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                     Throw New ArgumentException(repMessages.getmsg(16))
                 End If
-                yCursor = legendAreaTop
+                yCursor = rds.legendAreaTop
                 maxBreite = 0.0
             Else
                 yCursor = yCursor + zeilenHoehe
-                If yCursor > legendAreaBottom + 5 Then
-                    yCursor = legendAreaTop
+                If yCursor > rds.legendAreaBottom + 5 Then
+                    yCursor = rds.legendAreaTop
                     xCursor = xCursor + maxBreite
                     maxBreite = 0.0
-                    If xCursor > legendAreaRight Then
+                    If xCursor > rds.legendAreaRight Then
                         ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                         Throw New ArgumentException(repMessages.getmsg(16))
                     End If
@@ -13253,12 +13235,12 @@ Public Module testModule
 
         If uniqueElemClasses.Count > 0 Then
             xCursor = xCursor + maxBreite - 5
-            If xCursor >= legendAreaRight Then
+            If xCursor >= rds.legendAreaRight Then
                 'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                 Throw New ArgumentException(repMessages.getmsg(16))
             End If
         End If
-        yCursor = legendAreaTop
+        yCursor = rds.legendAreaTop
 
         ' jetzt ggf die Ampel Legende zeichnen 
 
@@ -13271,14 +13253,14 @@ Public Module testModule
 
                 ''ampelVorlagenShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(ampelVorlagenShape, pptslide)
+                copiedShape = pptCopypptPaste(rds.ampelVorlagenShape, rds.pptSlide)
 
 
                 With copiedShape(1)
 
-                    .Height = legendMilestoneVorlagenShape.Height
+                    .Height = rds.legendMilestoneVorlagenShape.Height
                     .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                    .Width = legendMilestoneVorlagenShape.Height
+                    .Width = rds.legendMilestoneVorlagenShape.Height
                     .Left = xCursor + (i - 1) * (.Width + 4)
 
                     If i = 1 Then
@@ -13298,14 +13280,14 @@ Public Module testModule
             ' Projekt-Ampel-Text
             ''legendTextVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendTextVorlagenShape, rds.pptSlide)
 
 
             With copiedShape(1)
                 '.TextFrame2.TextRange.Text = "Projekt-Ampeln"
                 .TextFrame2.TextRange.Text = repMessages.getmsg(17)
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
+                .Left = xCursor + 4 * (rds.legendMilestoneVorlagenShape.Height + 4)
 
             End With
 
@@ -13316,12 +13298,12 @@ Public Module testModule
 
                 ''legendMilestoneVorlagenShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(legendMilestoneVorlagenShape, pptslide)
+                copiedShape = pptCopypptPaste(rds.legendMilestoneVorlagenShape, rds.pptSlide)
 
                 With copiedShape(1)
-                    .Height = legendMilestoneVorlagenShape.Height
+                    .Height = rds.legendMilestoneVorlagenShape.Height
                     .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                    .Width = legendMilestoneVorlagenShape.Height
+                    .Width = rds.legendMilestoneVorlagenShape.Height
                     .Glow.Radius = 3
                     .Left = xCursor + (i - 1) * (.Width + 4)
 
@@ -13342,7 +13324,7 @@ Public Module testModule
             ' Projekt-Ampel-Text
             ''legendTextVorlagenShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+            copiedShape = pptCopypptPaste(rds.legendTextVorlagenShape, rds.pptSlide)
 
 
             With copiedShape(1)
@@ -13350,7 +13332,7 @@ Public Module testModule
                 '.TextFrame2.TextRange.Text = "Meilenstein-Ampeln"
                 .TextFrame2.TextRange.Text = repMessages.getmsg(18)
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
+                .Left = xCursor + 4 * (rds.legendMilestoneVorlagenShape.Height + 4)
 
             End With
 
@@ -14302,15 +14284,12 @@ Public Module testModule
             If awinSettings.mppShowLegend Then
                 Try
 
-                    With rds
-                        Call zeichnePPTlegende(pptslide, _
-                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                        .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
-                                        .legendLineShape, .legendStartShape, _
-                                        .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
-                                        .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape)
 
-                    End With
+                    Call zeichnePPTlegende(rds, _
+                                    selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+
+
+
 
 
                 Catch ex As Exception
@@ -14835,12 +14814,9 @@ Public Module testModule
                         End If
 
                         With rds
-                            Call zeichnePPTlegende(pptslide, _
+                            Call zeichnePPTlegende(rds, _
                                             tmpphases, tmpMilestones, selectedRoles, selectedCosts, _
-                                            .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
-                                            .legendLineShape, .legendStartShape, _
-                                            .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
-                                            .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape, True)
+                                            True)
 
                         End With
 
@@ -15021,90 +14997,102 @@ Public Module testModule
     Private Sub prepZeichneLegendenTabelle(ByRef pptslide As pptNS.Slide, ByRef tableShape As pptNS.Shape, ByVal legendFontSize As Single, _
                                            ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection)
 
-        Dim legendPhaseVorlagenShape As pptNS.Shape = Nothing
-        Dim legendMilestoneVorlagenShape As pptNS.Shape = Nothing
-        Dim legendBuColorShape As pptNS.Shape = Nothing
-        Dim errorVorlagenShape As pptNS.Shape = Nothing
+        ' ''Dim legendPhaseVorlagenShape As pptNS.Shape = Nothing
+        ' ''Dim legendMilestoneVorlagenShape As pptNS.Shape = Nothing
+        ' ''Dim legendBuColorShape As pptNS.Shape = Nothing
+        ' ''Dim errorVorlagenShape As pptNS.Shape = Nothing
         Dim errorShape As pptNS.ShapeRange = Nothing
 
         ' mit completeLegendDefinition wird überprüft , ob alle Informationen/Shapes für das Erstellen der Legenden Tabelle vorhanden sind
         Dim completeLegendDefinition() As Integer
         ReDim completeLegendDefinition(1)
 
-        Dim anzShapes As Integer = pptslide.Shapes.Count
-        Dim pptShape As pptNS.Shape
-        ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
-        ' bzw. alle Shapes, die "gemerkt" werden müssen
-        For i = 1 To anzShapes
-            pptShape = pptslide.Shapes(i)
+        Dim rds As New clsPPTShapes
 
-            With pptShape
+        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
+        rds.pptSlide = pptslide
 
-                ' jetzt muss geprüft werden, ob es sich um ein definierendes Element für die Multiprojekt-Sichten handelt
-                If .Title.Length > 0 Then
-                    Select Case .Title
+        ' ''Dim anzShapes As Integer = pptslide.Shapes.Count
+        ' ''Dim pptShape As pptNS.Shape
+        '' '' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
+        '' '' bzw. alle Shapes, die "gemerkt" werden müssen
+        ' ''For i = 1 To anzShapes
+        ' ''    pptShape = pptslide.Shapes(i)
 
-                        Case "LegendPhase"
-                            legendPhaseVorlagenShape = pptShape
-                            legendPhaseVorlagenShape.TextFrame2.TextRange.Font.Size = legendFontSize
-                            completeLegendDefinition(0) = 1
+        ' ''    With pptShape
 
+        ' ''        ' jetzt muss geprüft werden, ob es sich um ein definierendes Element für die Multiprojekt-Sichten handelt
+        ' ''        If .Title.Length > 0 Then
+        ' ''            Select Case .Title
 
-                        Case "LegendMilestone"
-                            legendMilestoneVorlagenShape = pptShape
-                            legendMilestoneVorlagenShape.TextFrame2.TextRange.Font.Size = legendFontSize
-                            completeLegendDefinition(1) = 1
-
-                        Case "Fehlermeldung"
-                            ' optional 
-                            errorVorlagenShape = pptShape
-
-                        Case "LegendBuColor"
-                            ' optional
-                            legendBuColorShape = pptShape
-                            legendBuColorShape.TextFrame2.TextRange.Font.Size = legendFontSize
-                        Case Else
+        ' ''                Case "LegendPhase"
+        ' ''                    legendPhaseVorlagenShape = pptShape
+        ' ''                    legendPhaseVorlagenShape.TextFrame2.TextRange.Font.Size = legendFontSize
+        ' ''                    completeLegendDefinition(0) = 1
 
 
-                    End Select
-                End If
+        ' ''                Case "LegendMilestone"
+        ' ''                    legendMilestoneVorlagenShape = pptShape
+        ' ''                    legendMilestoneVorlagenShape.TextFrame2.TextRange.Font.Size = legendFontSize
+        ' ''                    completeLegendDefinition(1) = 1
+
+        ' ''                Case "Fehlermeldung"
+        ' ''                    ' optional 
+        ' ''                    errorVorlagenShape = pptShape
+
+        ' ''                Case "LegendBuColor"
+        ' ''                    ' optional
+        ' ''                    legendBuColorShape = pptShape
+        ' ''                    legendBuColorShape.TextFrame2.TextRange.Font.Size = legendFontSize
+        ' ''                Case Else
 
 
-            End With
-        Next
+        ' ''            End Select
+        ' ''        End If
+
+
+        ' ''    End With
+        ' ''Next
+
+        If Not IsNothing(rds.legendPhaseVorlagenShape) Then
+            completeLegendDefinition(0) = 1
+        End If
+        If Not IsNothing(rds.legendMilestoneVorlagenShape) Then
+            completeLegendDefinition(1) = 1
+        End If
 
 
         If completeLegendDefinition.Sum = completeLegendDefinition.Length Then
             ' alle Information vorhanden 
+           
+                Try
+                    Call zeichneLegendenTabelle(tableShape, rds, _
+                                                selectedPhases, selectedMilestones)
+                                              
 
-            Try
-                Call zeichneLegendenTabelle(tableShape, pptslide, _
-                                            selectedPhases, selectedMilestones, _
-                                            legendPhaseVorlagenShape, legendMilestoneVorlagenShape, _
-                                            legendBuColorShape)
+                Catch ex As Exception
+                    ''errorVorlagenShape.Copy()
+                    ''errorShape = pptslide.Shapes.Paste
+                errorShape = pptCopypptPaste(rds.errorVorlagenShape, rds.pptSlide)
 
-            Catch ex As Exception
-                ''errorVorlagenShape.Copy()
-                ''errorShape = pptslide.Shapes.Paste
-                errorShape = pptCopypptPaste(errorVorlagenShape, pptslide)
+                    With errorShape(1)
+                        '.TextFrame2.TextRange.Text = "Fehler beim Zeichnen  Legenden Symbole Phase oder Meilenstein fehlen "
+                        .TextFrame2.TextRange.Text = ex.Message
+                    End With
+                End Try
 
-                With errorShape(1)
-                    '.TextFrame2.TextRange.Text = "Fehler beim Zeichnen  Legenden Symbole Phase oder Meilenstein fehlen "
-                    .TextFrame2.TextRange.Text = ex.Message
-                End With
-            End Try
-
-            If Not IsNothing(legendBuColorShape) Then
-                legendBuColorShape.Delete()
+            If Not IsNothing(rds.legendBuColorShape) Then
+                rds.legendBuColorShape.Delete()
             End If
 
-            legendPhaseVorlagenShape.Delete()
-            legendMilestoneVorlagenShape.Delete()
+            rds.legendPhaseVorlagenShape.Delete()
+            rds.legendMilestoneVorlagenShape.Delete()
 
-        ElseIf Not IsNothing(errorVorlagenShape) Then
+
+        ElseIf Not IsNothing(rds.errorVorlagenShape) Then
             ''errorVorlagenShape.Copy()
             ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(errorVorlagenShape, pptslide)
+            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
 
             With errorShape(1)
                 ''.TextFrame2.TextRange.Text = "die Legenden Symbole Phase oder Meilenstein fehlen "
@@ -15115,12 +15103,15 @@ Public Module testModule
         End If
 
         Try
-            If Not IsNothing(errorVorlagenShape) Then
-                errorVorlagenShape.Delete()
+            If Not IsNothing(rds.errorVorlagenShape) Then
+                rds.errorVorlagenShape.Delete()
             End If
         Catch ex As Exception
 
         End Try
+
+      
+
 
     End Sub
     ''' <summary>
