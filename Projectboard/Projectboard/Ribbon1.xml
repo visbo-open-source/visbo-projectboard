@@ -93,6 +93,9 @@
           <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
         </group>
       </tab>
+      <!--
+      
+      -->
       <tab id="PT1" label="Reports">
         <group id="PT1G1" label="Powerpoint">
           <button id="PT1G1B0" label="Einzelprojekt Berichte I" onAction="Tom2G1Doku" supertip="zu den selektierten Projekten statische Einzelprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>

@@ -1266,7 +1266,7 @@ Public Class frmHierarchySelection
                                                 selectedPhases, selectedMilestones, _
                                                 selectedRoles, selectedCosts, _
                                                 selectedBUs, selectedTyps, True, _
-                                                True, zeilenhoehe, _
+                                                True, _
                                                 legendFontSize, _
                                                 worker, e)
 
