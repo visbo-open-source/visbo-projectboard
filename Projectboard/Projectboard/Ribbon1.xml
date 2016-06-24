@@ -58,7 +58,7 @@
             <button id="PT0G1B9" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>
           </menu>
           <separator id="PT0G1s3"/>
-          <button id="PT3G1B5" label="Zeit-Maschine" enabled = "false" onAction="awinShowTimeMachine" supertip="mit der Zeit-Maschine können zeitliche Position von Meilensteinen und Phasen von früheren Planungs-Ständen angezeigt werden"/>
+          <button id="PT3G1B5" label="Zeit-Maschine" onAction="awinShowTimeMachine" supertip="mit der Zeit-Maschine können zeitliche Position von Meilensteinen und Phasen von früheren Planungs-Ständen angezeigt werden"/>
           <button id="PT0G1B1" label="Abhängigkeiten"  enabled ="false" onAction="PT0ShowDependencies" supertip="die Abhängigkeiten zwischen Projekten werden über PFeile visualisiert"/>
         </group>
         <group id="PT0G2" label ="Charts">
@@ -205,7 +205,7 @@
           <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
           <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
           <separator id="PT4G1s1"/>-->
-          <button id="PT4G1B2" label="Import RPLAN Excel" enabled ="false" onAction="Tom2G4B1RPLANImport" supertip ="es kann eine ausgewählte RPLAN Excel Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+          <button id="PT4G1B2" label="Import RPLAN Excel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es kann eine ausgewählte RPLAN Excel Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <button id="PT4G1B3" label="Import RPLAN RXF" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip =" es kann eine ausgewählte RXF-Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
           <button id="PT4G1B4" label="Import MS Project" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es kann eine Microsoft Project Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus."/>
           <separator id="PT4G1s1"/>
@@ -297,7 +297,7 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <!--<group id ="PT6G5" label ="Testfunktionen">
+        <group id ="PT6G5" label ="Testfunktionen">
           <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="aktuelle Test Funktion"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Check Hierarchien korrekt ? "  onAction ="PTTestFunktion3" />
@@ -305,7 +305,7 @@
           <button id="PT6G5B4" label="Demo-Funktion Historie"  onAction ="PTTestFunktion5" />
           <button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>
         </group>
-        <group id ="PT6G6" label ="Licensierung">
+        <!--<group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
           <button id="Pt6G6B2" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>

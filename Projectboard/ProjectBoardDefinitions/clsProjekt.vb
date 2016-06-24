@@ -186,6 +186,76 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' filtert die übergebene Liste an IDs so , dass hinterher nur Elemente enthalten sind, die auch im Zeitraum liegen  
+    ''' </summary>
+    ''' <param name="todoCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property filterbyZeitraum(ByVal todoCollection As Collection) As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            ' prüfen, ob Showranges gültige Werte haben, wenn nein, wird die todoCollection gar nicht gefiltert
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+
+                For Each tmpID As String In todoCollection
+
+                    If elemIDIstMeilenstein(tmpID) Then
+                        ' es geht um einen Meilenstein 
+                        Dim milestone As clsMeilenstein = Me.getMilestoneByID(tmpID)
+                        If Not IsNothing(milestone) Then
+                            If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+                                Try
+                                    ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
+                                    ' in diesem Fall wäre das langsamer, da contains jedesmal aufgerufen wird, der Try aber nur im eigentlich 
+                                    ' gar nicht vorkommenden Fehlerfall zuschlägt
+                                    tmpCollection.Add(tmpID, tmpID)
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+                        End If
+
+                    Else
+                        ' es handelt sich um eine Phase
+                        Dim cPhase As clsPhase = Me.getPhaseByID(tmpID)
+                        If Not IsNothing(cPhase) Then
+                            If phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde, _
+                                                     showRangeLeft, showRangeRight) Then
+                                Try
+                                    ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
+                                    ' in diesem Fall wäre das langsamer, da contains jedesmal aufgerufen wird, der Try aber nur im eigentlich 
+                                    ' gar nicht vorkommenden Fehlerfall zuschlägt
+                                    tmpCollection.Add(tmpID, tmpID)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        End If
+                    End If
+                Next
+
+            Else
+                For Each tmpID As String In todoCollection
+                    Try
+                        ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
+                        ' in diesem Fall wäre das langsamer, da contains jedesmal aufgerufen wird, der Try aber nur im eigentlich 
+                        ' gar nicht vorkommenden Fehlerfall zuschlägt
+                        tmpCollection.Add(tmpID, tmpID)
+                    Catch ex As Exception
+
+                    End Try
+                Next
+            End If
+
+            filterbyZeitraum = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' synchronisiert die Arrays mit der evtl veränderten Array Länge durch eine Verschiebung des Projekts 
     ''' berechnet und bestimmt die XWerte der Rollen und Kostenarten für die Phasen neu
     ''' wird aus set Startdate heraus aufgerufen; dadurch kann es sein, daß sich die 

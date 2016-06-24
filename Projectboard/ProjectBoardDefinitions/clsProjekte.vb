@@ -2244,6 +2244,7 @@ Public Class clsProjekte
                     ' nur Platzhalter Rollenbedarfe berücksichtigen 
                     roleValues = Me.getRoleValuesInMonth(roleName)
                     ReDim kapaValues(zeitraum)
+
                 Else
 
                     myCollection.Add(roleName, roleName)
@@ -2304,6 +2305,79 @@ Public Class clsProjekte
 
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' wird für den Massenedit benötigt 
+    ''' gibt pro Projekt, Phase und Rolle bzw. Kostenart eine Zeile zurück, die die absoluten Bedarfs-Werte im betrachteten Monat enthält und ausserdem 
+    ''' pro Rolle die Gesamt bzw. monatl. Auslastungswerte 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer) As Double(,)
+        Get
+            Dim tmpArray(,) As Double
+            Dim anzahlRollen As Integer = RoleDefinitions.Count
+            ReDim tmpArray(anzahlRollen - 1, bis - von + 1)
+
+            For r = 1 To RoleDefinitions.Count
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(r)
+                Dim roleUID As Integer = tmpRole.UID
+                Dim roleName As String = tmpRole.name
+
+                ' nur für Testzwecke, nachher wieder rausmachen ...
+                If r <> roleUID Then
+                    Call MsgBox("RoleID ist ungleich laufender Nummer !")
+                End If
+
+
+                Dim roleValues() As Double
+                Dim kapaValues() As Double
+                Dim myCollection As New Collection
+                Dim ix As Integer
+                Dim zeitraum As Integer = bis - von
+
+                Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
+                ReDim roleValues(zeitraum)
+                ReDim kapaValues(zeitraum)
+
+                myCollection.Add(roleName, roleName)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                myCollection.Clear()
+
+                If istSammelRolle Then
+                    ' alle Bedarfe berücksichtigen
+                    roleValues = Me.getRoleValuesInMonth(roleID:=roleName, considerAllSubRoles:=True, _
+                                                         type:=PTcbr.all)
+                Else
+                    roleValues = Me.getRoleValuesInMonth(roleName)
+                End If
+
+                ' jetzt wird der Array aufgebaut
+                If kapaValues.Sum > 0 Then
+                    tmpArray(r - 1, 0) = roleValues.Sum / kapaValues.Sum
+                Else
+                    tmpArray(r - 1, 0) = 999 ' Kennzeichen für unendlich 
+                End If
+
+                For ix = 1 To bis - von + 1
+                    If kapaValues(ix - 1) > 0 Then
+                        tmpArray(r - 1, ix) = roleValues(ix - 1) / kapaValues(ix - 1)
+                    Else
+                        tmpArray(r - 1, ix) = 999 ' Kennzeichen für unendlich ...
+                    End If
+
+                Next
+
+            Next
+
+            getAuslastungsArray = tmpArray
+
+        End Get
     End Property
 
     ''' <summary>
@@ -2453,7 +2527,7 @@ Public Class clsProjekte
             Dim alleKapaValues() As Double
 
             Dim calculationValue As Double
-            
+
 
             Dim includesOverloadCost As Boolean = True
 
@@ -2489,7 +2563,7 @@ Public Class clsProjekte
                     Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
                     roleName = tmpRole.name
 
-                    
+
                     roleValues = Me.getRoleValuesInMonth(roleName)
 
 
@@ -2542,7 +2616,7 @@ Public Class clsProjekte
 
                                 costValues(ix) = costValues(ix) + _
                                                  diff * calculationValue * faktor / 1000
-                                
+
 
                             Else
                                 ' die internen Ressourcen reichen aus  
@@ -2635,7 +2709,7 @@ Public Class clsProjekte
                                                                  excludedNames:=Nothing)
                         myCollection.Clear()
                     End If
-                    
+
 
                 Else
                     myCollection.Add(roleName, roleName)
@@ -2644,7 +2718,7 @@ Public Class clsProjekte
                 End If
 
 
-               
+
 
                 For ix = 0 To zeitraum
 
@@ -2685,7 +2759,7 @@ Public Class clsProjekte
                         End If
 
                     End If
-                    
+
                 Next ix
 
             Next i
@@ -2914,7 +2988,7 @@ Public Class clsProjekte
                         Next ix
                     End If
                 End If
-                
+
 
             Next i
 
@@ -3082,7 +3156,7 @@ Public Class clsProjekte
 
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
 
-                If Not IsNothing(tmprole) Then
+                If Not IsNothing(tmpRole) Then
                     Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
 
                     roleName = tmpRole.name
@@ -3118,7 +3192,7 @@ Public Class clsProjekte
 
                     Next ix
                 End If
-                
+
 
             Next i
 

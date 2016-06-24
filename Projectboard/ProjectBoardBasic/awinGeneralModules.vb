@@ -5780,6 +5780,9 @@ Public Module awinGeneralModules
         Dim ProjektdauerIndays As Integer = 0
         Dim endedateProjekt As Date
 
+        Dim ampelFarbe As Integer
+        Dim ampelText As String
+
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet
 
@@ -5839,14 +5842,15 @@ Public Module awinGeneralModules
 
 
                     ' Ampel-Farbe
-                    hwert = CType(.Range("Bewertung").Value, Integer)
-
-                    If hwert >= 0 And hwert <= 3 Then
-                        hproj.ampelStatus = hwert
+                    ampelFarbe = CType(.Range("Bewertung").Value, Integer)
+                    If ampelFarbe >= 0 And ampelFarbe <= 3 Then
+                        hproj.ampelStatus = ampelFarbe
                     End If
 
+                    
                     ' Ampel-Bewertung 
-                    hproj.ampelErlaeuterung = CType(.Range("BewertgErläuterung").Value, String)
+                    ampelText = CType(.Range("BewertgErläuterung").Value, String)
+                    hproj.ampelErlaeuterung = ampelText
 
 
                 End With
@@ -6945,6 +6949,14 @@ Public Module awinGeneralModules
             Call logfileSchreiben("Fehler in awinImportProjectmitHrchy " & ex.Message, hproj.name, anzFehler)
             Throw New ArgumentException("Fehler in awinImportProjectmitHrchy '" & hproj.name & "' " & vbLf & ex.Message)
         End Try
+
+        ' da Ampelfarbe , Beschreibung jetzt in Phase ist, muss das hier , nach Einlesen der Phasen
+        If ampelFarbe >= 0 And ampelFarbe <= 3 Then
+            hproj.ampelStatus = ampelFarbe
+        End If
+
+        hproj.ampelErlaeuterung = ampelText
+
 
         If isTemplate Then
             ' hier müssen die Werte für die Vorlage übergeben werden.
@@ -14248,6 +14260,482 @@ Public Module awinGeneralModules
         End If
 
 
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.visbo) & "\EditNeeds_" & _
+            Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Try
+            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt eine Datei mit den monatlichen Zuordnungen Projekt/Phase - Rollenbedarfe / Kosten 
+    ''' Diese Datei kann editiert werden , dann wieder importiert werden 
+    ''' in Abhängigkeit vom Typ wird geschrieben: 
+    ''' 0: alles
+    ''' 1: nur Vergangenheit, von bestimmt den Start , Heute-1 das Ende 
+    ''' 2: nur die Zukunft, Heute bestimmt den Start, bis  das Ende  
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="type"></param>
+    ''' <remarks></remarks>
+    Public Sub writeProjektPhasenBedarfeXLSX(ByVal von As Integer, ByVal bis As Integer, ByVal type As Integer)
+
+
+        appInstance.EnableEvents = False
+
+        Dim newWB As Excel.Workbook
+        Dim rng As Excel.Range
+        Dim ersteZeile As Excel.Range
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        'Dim startSpalteDaten As Integer = 8
+        Dim startSpalteDaten As Integer = 8
+
+        With CType(newWB.ActiveSheet, Excel.Worksheet)
+
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+            CType(.Cells(1, 6), Excel.Range).Value = "Summe"
+            CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+
+
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+
+                With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = ""
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .Orientation = 0
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+
+            Next
+
+            ' bevor die Prozentualen Anteile ergänzt wurden ... 
+            ' ''CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von - 1)
+            ' ''CType(.Cells(1, startSpalteDaten + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von)
+            ' ''rng = .Range(.Cells(1, startSpalteDaten), .Cells(1, startSpalteDaten + 1))
+
+            ' '' '' Deutsches Format:
+            '' ''rng.NumberFormat = "[$-407]mmm yy;@"
+            '' '' Englisches Format:
+            ' ''rng.NumberFormat = "[$-409]mmm yy;@"
+
+            ' ''Dim destinationRange As Excel.Range = .Range(.Cells(1, 6), .Cells(1, 6 + bis - von))
+            ' ''With destinationRange
+            ' ''    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+            ' ''    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+            ' ''    '' Deutsches Format: 
+            ' ''    'rng.NumberFormat = "[$-407]mmm yy;@"
+            ' ''    ' Englische Format:
+            ' ''    .NumberFormat = "[$-409]mmm yy;@"
+            ' ''    .WrapText = False
+            ' ''    .Orientation = 90
+            ' ''    .AddIndent = False
+            ' ''    .IndentLevel = 0
+            ' ''    .ReadingOrder = Excel.Constants.xlContext
+            ' ''    .MergeCells = False
+            ' ''End With
+
+            ' ''rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+
+        End With
+
+
+
+
+
+        zeile = 2
+
+        Dim tmpName As String = ""
+
+        Dim schnittmenge() As Double
+        Dim zeilenWerte() As Double
+        Dim zeilensumme As Double
+        Dim pStart As Integer, pEnde As Integer
+
+        Dim editRange As Excel.Range
+
+
+        ' zu Beginn werden die rollen-spezifischen Auslastungskennzahlen ermittelt, die sich über alle aktuell 
+        ' betrachteten Projekte ergeben; 
+        ' es werden sowohl die Gesamt-Auslastungs Werte im Zeitraum betrachtet als auch der einzelne monats-spezifische Wert   
+        ' dazu wird ein Array angelegt mit der Dimension (anzahlRollen-1, bis-von+1) 
+        Dim auslastungsArray(,) As Double
+
+        Try
+            auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+        Catch ex As Exception
+            ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
+        End Try
+
+
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            pStart = getColumnOfDate(kvp.Value.startDate)
+            pEnde = getColumnOfDate(kvp.Value.endeDate)
+
+            For p = 1 To kvp.Value.CountPhases
+
+                Dim cphase As clsPhase = kvp.Value.getPhase(p)
+
+                If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
+                    ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+
+                    ' jetzt müssen die Zellen, die zur Phase gehören , entsperrt werden  ...
+                    Dim ixZeitraum As Integer
+                    Dim ix As Integer, breite As Integer
+
+                    Dim atLeastOne As Boolean = False
+
+                    Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
+
+
+                    For r = 1 To cphase.countRoles
+
+
+                        Dim role As clsRolle = cphase.getRole(r)
+                        Dim roleName As String = role.name
+                        Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                        Dim xValues() As Double = role.Xwerte
+
+                        schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                        zeilensumme = schnittmenge.Sum
+
+                        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+                        ' Schreiben der Projekt-Informationen 
+                        With CType(newWB.ActiveSheet, Excel.Worksheet)
+                            CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.businessUnit
+                            CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
+                            CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
+                            CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+                            CType(.Cells(zeile, 5), Excel.Range).Value = roleName
+                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                            CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                        End With
+
+                        ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                        For mis As Integer = 0 To bis - von
+                            zeilenWerte(2 * mis) = schnittmenge(mis)
+                            ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
+                            zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+                        Next
+
+                        'editRange.Value = schnittmenge
+                        editRange.Value = zeilenWerte
+                        atLeastOne = True
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+
+                        With CType(newWB.ActiveSheet, Excel.Worksheet)
+
+                            For l = 0 To bis - von
+
+                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                Else
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                End If
+
+                            Next
+
+                            ' vorheriger Code
+                            ''For l As Integer = ixZeitraum To ixZeitraum + breite - 1
+                            ''    CType(.cell(zeile, l + 6), Excel.Range).Locked = False
+                            ''    CType(.cell(zeile, l + 6), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                            ''Next
+                        End With
+
+
+                        ''With newWB.ActiveSheet
+                        ''    For l As Integer = ixZeitraum To ixZeitraum + breite - 1
+                        ''        CType(.cells(zeile, l + 6), Excel.Range).Locked = False
+                        ''    Next
+                        ''End With
+
+                        zeile = zeile + 1
+
+                    Next r
+
+                    For c = 1 To cphase.countCosts
+                        Dim cost As clsKostenart = cphase.getCost(c)
+                        Dim xValues() As Double = cost.Xwerte
+                        Dim costName As String = cost.name
+                        schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                        zeilensumme = schnittmenge.Sum
+
+                        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+                        ' Schreiben der Projekt-Informationen 
+                        With CType(newWB.ActiveSheet, Excel.Worksheet)
+                            CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.businessUnit
+                            CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
+                            CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
+                            CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+                            CType(.Cells(zeile, 5), Excel.Range).Value = costName
+                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                        End With
+
+                        ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                        For mis As Integer = 0 To bis - von
+                            zeilenWerte(2 * mis) = schnittmenge(mis)
+                            ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
+                            zeilenWerte(2 * mis + 1) = 0
+                        Next
+
+                        'editRange.Value = schnittmenge
+                        editRange.Value = zeilenWerte
+                        atLeastOne = True
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+
+                        With CType(newWB.ActiveSheet, Excel.Worksheet)
+
+                            For l = 0 To bis - von
+
+                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                Else
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                End If
+
+                            Next
+
+                        End With
+
+                        zeile = zeile + 1
+
+                    Next c
+
+                    If Not atLeastOne Then
+                        ' jetzt sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
+                        ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
+                        ' Schreiben der Projekt-Informationen 
+                        With CType(newWB.ActiveSheet, Excel.Worksheet)
+                            CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.businessUnit
+                            CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
+                            CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
+                            CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+                            CType(.Cells(zeile, 5), Excel.Range).Value = ""
+                            CType(.Cells(zeile, 6), Excel.Range).Value = ""
+                            CType(.Cells(zeile, 7), Excel.Range).Value = ""
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
+                        End With
+
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+                        With CType(newWB.ActiveSheet, Excel.Worksheet)
+
+                            For l = 0 To bis - von
+
+                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                Else
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                End If
+
+                            Next
+
+                        End With
+
+                        zeile = zeile + 1
+
+                    End If
+
+                End If
+
+                
+
+            Next p
+
+
+
+        Next
+
+
+        ' jetzt die Größe der Spalten anpassen 
+        Dim infoBlock As Excel.Range
+        With CType(newWB.ActiveSheet, Excel.Worksheet)
+            infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 1)), Excel.Range)
+            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+            infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+            infoBlock.AutoFit()
+        End With
+
+        Dim tmpRange As Excel.Range
+        With CType(newWB.ActiveSheet, Excel.Worksheet)
+
+            Dim isPrz As Boolean = False
+            For mis As Integer = 0 To 2 * (bis - von + 1) - 1
+                tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
+                If isPrz Then
+                    tmpRange.Columns.ColumnWidth = 3.1
+                    tmpRange.Font.Size = 6
+                    tmpRange.NumberFormat = "0%"
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                Else
+                    tmpRange.Columns.ColumnWidth = 5
+                    tmpRange.Font.Size = 10
+                    tmpRange.NumberFormat = "0"
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                End If
+                isPrz = Not isPrz
+            Next
+
+        End With
+
+        ' jetzt die Autofilter aktivieren ... 
+        Dim autoFilterRange As Excel.Range = Nothing
+
+        'With CType(newWB.ActiveSheet, Excel.Worksheet)
+
+        '    Try
+        '        autoFilterRange = CType(.Columns("A:E"), Excel.Range)
+        '        autoFilterRange.AutoFilter()
+        '    Catch ex As Exception
+
+        '    End Try
+
+        '    Try
+
+        '        Dim rng1 As Excel.Range = CType(.Columns(1), Excel.Range)
+        '        Dim rng2 As Excel.Range = CType(.Columns(5), Excel.Range)
+        '        autoFilterRange = CType(.Range(rng1, rng2), Excel.Range)
+        '    Catch ex As Exception
+
+        '    End Try
+
+
+        'End With
+
+
+
+
+        ' jetzt den Bereich markieren bzw. schützen 
+        ''Dim startProtectedArea As Integer
+        ''Dim endProtectedArea As Integer
+        ''Dim protectedRange As Excel.Range = Nothing
+        ''Dim wbName As String
+
+        ''Select Case type
+        ''    Case 0
+        ''        startProtectedArea = 0
+        ''        endProtectedArea = 0
+        ''        wbName = "all"
+        ''    Case 1
+
+        ''        startProtectedArea = getColumnOfDate(Date.Now)
+        ''        endProtectedArea = bis
+        ''        wbName = "past"
+        ''    Case 2
+        ''        startProtectedArea = von
+        ''        endProtectedArea = getColumnOfDate(Date.Now)
+        ''        wbName = "future"
+        ''    Case Else
+        ''        Call MsgBox("Typ nicht erkannt, muss Werte 0, 1 oder 2 haben: ist aber" & type)
+        ''        appInstance.EnableEvents = True
+        ''        Exit Sub
+        ''End Select
+
+        ''Dim generalRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, 1), _
+        ''                                        newWB.ActiveSheet.cells(zeile - 1, startSpalteDaten - 1)),  _
+        ''                                        Excel.Range)
+        ''Dim valueRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, startSpalteDaten), _
+        ''                                        newWB.ActiveSheet.cells(zeile - 1, startSpalteDaten + 2 * (bis - von + 1))),  _
+        ''                                        Excel.Range)
+
+        ''With generalRange
+        ''    .Columns.AutoFit()
+        ''End With
+
+
+        'With ersteZeile
+        '    .Interior.Color = awinSettings.AmpelGruen
+        'End With
+
+
+        'If type <> 0 Then
+
+        '    With newWB.ActiveSheet
+        '        protectedRange = CType(.Range(.cells(1, startProtectedArea), _
+        '                                                       .cells(zeile - 1, endProtectedArea)),  _
+        '                                                        Excel.Range)
+
+        '    End With
+        '    protectedRange.Interior.Color = awinSettings.AmpelNichtBewertet
+        'End If
+
+        With CType(newWB.ActiveSheet, Excel.Worksheet)
+            .Protect(Password:="x", AllowDeletingColumns:=False, UserInterfaceOnly:=True, DrawingObjects:=True, _
+                     AllowFormattingCells:=True, AllowDeletingRows:=True, AllowFiltering:=True, AllowFormattingColumns:=True, _
+                     AllowFormattingRows:=True, AllowInsertingColumns:=False, AllowInsertingHyperlinks:=False, AllowInsertingRows:=True,
+                     AllowSorting:=True, AllowUsingPivotTables:=True)
+        End With
 
         Dim expFName As String = exportOrdnerNames(PTImpExp.visbo) & "\EditNeeds_" & _
             Date.Now.ToString.Replace(":", ".") & ".xlsx"

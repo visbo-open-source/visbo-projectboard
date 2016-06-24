@@ -1386,13 +1386,19 @@ Public Module Module1
 
 
     '
-    ' gibt die Überdeckung zurück zwischen den beiden Zeiträumen definiert durch showRangeLeft /showRangeRight und anfang / ende
-    ' anzahl enthält die Breite der Überdeckung
-    ' ixzeitraum gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat
-    ' ix gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt
+
     '
+    ''' <summary>
+    ''' gibt die Überdeckung zurück zwischen den beiden Zeiträumen definiert durch showRangeLeft /showRangeRight und anfang / ende
+    ''' </summary>
+    ''' <param name="anfang">Anfang Zeitraum 2</param>
+    ''' <param name="ende">Ende Zeitraum 2</param>
+    ''' <param name="ixZeitraum">gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat</param>
+    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt</param>
+    ''' <param name="anzahl">enthält die Breite der Überdeckung</param>
+    ''' <remarks></remarks>
     Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, _
-                                ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
+                                    ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
 
 
 

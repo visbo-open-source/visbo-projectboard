@@ -3077,11 +3077,14 @@ Imports System.Windows
         enableOnUpdate = False
 
         If control.Id = "PT4G1M3B1" Then
-            Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+            ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 0)
         ElseIf control.Id = "PT4G1M3B2" Then
-            Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+            ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 1)
         ElseIf control.Id = "PT4G1M3B3" Then
-            Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+            'Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 2)
         End If
 
         enableOnUpdate = True

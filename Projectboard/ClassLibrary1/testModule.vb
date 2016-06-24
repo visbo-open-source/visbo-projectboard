@@ -8120,6 +8120,7 @@ Public Module testModule
     ''' <summary>
     ''' zeichnet die Tabelle mit den Meilensteinen
     ''' wenn eine Collection mit den Namen übergeben wird, dann werden nur die Meilensteine mit diesen Namen betrachtet 
+    ''' wenn ein Zeitraum angegeben ist, dann werden nur die Meilensteine berücksichtigt, die in diesem Zeitraum liegen
     ''' </summary>
     ''' <param name="pptShape"></param>
     ''' <param name="hproj"></param>
@@ -8139,6 +8140,14 @@ Public Module testModule
             todoCollection = hproj.getAllElemIDs(True)
         Else
             todoCollection = hproj.getElemIdsOf(selectedItems, True)
+        End If
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' falls ein Zeitraum definiert ist, werden jetzt alle Elemente rausgeschmissen, die nicht im zeitraum liegen ... 
+            ' das kann nicht bei getAllElemIDs gemacht werden, da das eine Methode von clsProjektvorlage ist, was aber kein Startdate hat ... 
+
+            todoCollection = hproj.filterbyZeitraum(todoCollection)
+
         End If
 
         Try
@@ -13743,7 +13752,7 @@ Public Module testModule
             If awinSettings.mppShowAmpel Then
                 .Glow.Color.RGB = CInt(MS.getBewertung(1).color)
                 If .Glow.Radius = 0 Then
-                    .Glow.Radius = 5
+                    .Glow.Radius = 2
                 End If
             End If
 
@@ -14156,7 +14165,7 @@ Public Module testModule
                 If awinSettings.mppShowAmpel Then
                     .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
                     If .Glow.Radius = 0 Then
-                        .Glow.Radius = 5
+                        .Glow.Radius = 2
                     End If
                 End If
 

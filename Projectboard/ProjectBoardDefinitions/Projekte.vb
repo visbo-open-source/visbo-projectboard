@@ -20970,9 +20970,11 @@ Public Module Projekte
         ReDim intersectionArray(bis - von)
         Dim startIX As Integer, endIX As Integer
         Dim sonderfall As Boolean = False
+        Dim noOverlap As Boolean = False
 
         If pStart > bis Or von > pEnde Then
             ' es gibt überhaupt keine Überlappung 
+            noOverlap = True
 
         ElseIf von = pStart And bis = pEnde Then
             startIX = 1
@@ -21002,18 +21004,22 @@ Public Module Projekte
             
         End If
 
-        If sonderfall Then
-            For i = startIX To endIX
-                intersectionArray(i - 1) = tmpValues(i - startIX)
-            Next
+        If noOverlap Then
+            ' nichts tun 
         Else
-            For i As Integer = startIX To endIX
-                intersectionArray(i - startIX) = tmpValues(i - 1)
-            Next
+            If sonderfall Then
+                For i = startIX To endIX
+                    intersectionArray(i - 1) = tmpValues(i - startIX)
+                Next
+            Else
+                For i As Integer = startIX To endIX
+                    intersectionArray(i - startIX) = tmpValues(i - 1)
+                Next
+            End If
         End If
-        
 
         calcArrayIntersection = intersectionArray
+
     End Function
 
     ''' <summary>
