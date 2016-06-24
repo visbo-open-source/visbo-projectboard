@@ -11112,11 +11112,11 @@ Public Module awinGeneralModules
 
                     ' hier wird Name, Typ, SOP, Business Unit, vname, Start-Datum, Dauer der Phase(1) ausgelesen  
 
+                    ' ur: 24.06.2016:testweise auskomentiert
+                    ' '' ''endDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colEnde).value)
+                    ' '' ''startDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colAnfang).value)
 
-                    endDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colEnde).value)
-                    startDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colAnfang).value)
-
-                    completeName = CStr(.Cells(RowIndex:=zeile, ColumnIndex:=colName).value)
+                    ' '' ''completeName = CStr(.Cells(RowIndex:=zeile, ColumnIndex:=colName).value)
 
                     startDate = CDate(CType(.Cells(zeile, colAnfang), Global.Microsoft.Office.Interop.Excel.Range).Value)
                     endDate = CDate(CType(.Cells(zeile, colEnde), Global.Microsoft.Office.Interop.Excel.Range).Value)

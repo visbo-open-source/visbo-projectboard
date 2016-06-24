@@ -2450,12 +2450,9 @@ Imports System.Windows
         Dim getRPLANImport As New frmSelectImportFiles
         Dim listofVorlagen As Collection
         Dim xlsRplanImport As Excel.Workbook
-       
+
         Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
 
         'dateiName = awinPath & projektInventurFile
 
@@ -2467,29 +2464,36 @@ Imports System.Windows
 
             listofVorlagen = getRPLANImport.selImportFiles
 
-            ' alle Import Projekte erstmal löschen
-            ImportProjekte.Clear()
-            myCollection.Clear()
+            '' '' alle Import Projekte erstmal löschen
+            ' ''ImportProjekte.Clear()
+            ' ''myCollection.Clear()
 
             Dim i As Integer
             For i = 1 To listofVorlagen.Count
 
+
+                appInstance.EnableEvents = False
+                appInstance.ScreenUpdating = False
+                enableOnUpdate = False
+
                 dateiName = listofVorlagen.Item(i).ToString
 
                 Try
-                    xlsRplanImport = appInstance.Workbooks.Open(dateiName)
+                    appInstance.Workbooks.Open(dateiName)
 
                     '' '' alle Import Projekte erstmal löschen
-                    ' ''ImportProjekte.Clear()
-                    ' ''myCollection.Clear()
+                    ImportProjekte.Clear()
+                    myCollection.Clear()
                     'Call bmwImportProjektInventur(myCollection)
                     Call rplanExcelImport(myCollection, False)
                     'Call bmwImportProjekteITO15(myCollection, False)
 
-                    'appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                    xlsRplanImport.Close(SaveChanges:=True)
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                    ' xlsRplanImport.Close(SaveChanges:=True)
 
-                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+
+                    appInstance.ScreenUpdating = True
+                    Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -2499,9 +2503,10 @@ Imports System.Windows
                     Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
                 End Try
 
-            Next
+            Next i
 
-            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+            ' ''appInstance.ScreenUpdating = True
+            ' ''Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Else
             Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
             Call logfileSchreiben(" Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
@@ -2514,6 +2519,61 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
     End Sub
+    ' ''Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
+
+
+    ' ''    Dim dateiName As String
+    ' ''    Dim myCollection As New Collection
+    ' ''    Dim importDate As Date = Date.Now
+    ' ''    Dim returnValue As DialogResult
+    ' ''    Dim getRPLANImport As New frmSelectRPlanImport
+
+    ' ''    Call projektTafelInit()
+
+    ' ''    appInstance.EnableEvents = False
+    ' ''    appInstance.ScreenUpdating = False
+    ' ''    enableOnUpdate = False
+
+    ' ''    'dateiName = awinPath & projektInventurFile
+
+    ' ''    getRPLANImport.menueAswhl = PTImpExp.rplan
+    ' ''    returnValue = getRPLANImport.ShowDialog
+
+    ' ''    If returnValue = DialogResult.OK Then
+    ' ''        dateiName = getRPLANImport.selectedDateiName
+
+    ' ''        Try
+    ' ''            appInstance.Workbooks.Open(dateiName)
+
+    ' ''            ' alle Import Projekte erstmal löschen
+    ' ''            ImportProjekte.Clear()
+    ' ''            'Call bmwImportProjektInventur(myCollection)
+    ' ''            Call rplanExcelImport(myCollection, False)
+    ' ''            'Call bmwImportProjekteITO15(myCollection, False)
+    ' ''            appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+    ' ''            appInstance.ScreenUpdating = True
+    ' ''            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+
+    ' ''            'Call awinWritePhaseDefinitions()
+    ' ''            'Call awinWritePhaseMilestoneDefinitions()
+
+    ' ''        Catch ex As Exception
+    ' ''            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+    ' ''            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+    ' ''        End Try
+    ' ''    Else
+    ' ''        Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
+    ' ''    End If
+
+
+
+    ' ''    enableOnUpdate = True
+    ' ''    appInstance.EnableEvents = True
+    ' ''    appInstance.ScreenUpdating = True
+
+    ' ''End Sub
+
     Public Sub Tom2G4B3RPLANRxfImport(control As IRibbonControl)
 
 
