@@ -96,6 +96,7 @@ Public Class frmSelectPPTTempl
                 RepVorlagenDropbox.Enabled = False
                 Me.Cursor = Cursors.WaitCursor
 
+                'Call PPTstarten()
 
                 BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
@@ -121,6 +122,7 @@ Public Class frmSelectPPTTempl
                 RepVorlagenDropbox.Enabled = False
                 Me.Cursor = Cursors.WaitCursor
 
+                'Call PPTstarten()
 
                 BackgroundWorker2.RunWorkerAsync(vorlagenDateiName)
 

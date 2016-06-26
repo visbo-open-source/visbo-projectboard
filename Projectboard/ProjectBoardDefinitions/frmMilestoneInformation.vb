@@ -1,8 +1,9 @@
 ﻿Public Class frmMilestoneInformation
 
     Public bewertungsListe As SortedList(Of String, clsBewertung)
-    Public milestoneNameID As String
+    Public milestone As clsMeilenstein
     Public curProject As clsProjekt
+
 
     Public Sub New()
 
@@ -50,8 +51,9 @@
 
                 ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
                 Dim tmpstr() As String
+                Dim tmpDeliverables As String = milestone.getAllDeliverables
                 If rdbDeliverables.Checked Then
-                    tmpstr = .deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                    tmpstr = tmpDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
                 Else
                     tmpstr = .description.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
                 End If
@@ -62,7 +64,7 @@
                     Next
                 Else
                     If rdbDeliverables.Checked Then
-                        bewertungsText.Text = .deliverables
+                        bewertungsText.Text = tmpDeliverables
                     Else
                         bewertungsText.Text = .description
                     End If
@@ -149,19 +151,15 @@
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub showOrigItem_CheckedChanged(sender As Object, e As EventArgs) Handles showOrigItem.CheckedChanged
-        Dim tmpNode As clsHierarchyNode
 
         awinSettings.showOrigName = showOrigItem.Checked
 
         If showOrigItem.Checked = True Then
-            tmpNode = curProject.hierarchy.nodeItem(milestoneNameID)
-            If Not IsNothing(tmpNode) Then
-                resultName.Text = tmpNode.origName
-            Else
-                resultName.Text = elemNameOfElemID(milestoneNameID)
-            End If
+            
+            resultName.Text = milestone.originalName
+            
         Else
-            resultName.Text = elemNameOfElemID(milestoneNameID)
+            resultName.Text = milestone.name
         End If
     End Sub
 

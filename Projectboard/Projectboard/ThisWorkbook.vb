@@ -13,7 +13,6 @@ Public Class ThisWorkbook
     ' 2012 ff
     ' Nicht authorisierte Verwendung nicht gestattet 
 
-
     Protected Overrides Function CreateRibbonExtensibilityObject() As Microsoft.Office.Core.IRibbonExtensibility
         Return New Ribbon1()
     End Function
@@ -38,6 +37,7 @@ Public Class ThisWorkbook
             .SplitRow = 0
             .DisplayWorkbookTabs = True
             .GridlineColor = RGB(220, 220, 220)
+            .DisplayHeadings = True
 
             Try
                 .FreezePanes = False
@@ -45,7 +45,7 @@ Public Class ThisWorkbook
 
             End Try
 
-            .DisplayHeadings = True
+
         End With
 
     End Sub
