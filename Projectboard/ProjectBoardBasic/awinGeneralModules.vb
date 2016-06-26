@@ -805,8 +805,8 @@ Public Module awinGeneralModules
 
         Try
             ''repCult = CultureInfo.CurrentCulture
-            'repCult = ReportLang(PTSprache.englisch)
-            repCult = ReportLang(PTSprache.deutsch)
+            repCult = ReportLang(PTSprache.englisch)
+            'repCult = ReportLang(PTSprache.deutsch)
 
 
             repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
