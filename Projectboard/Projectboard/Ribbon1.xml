@@ -110,6 +110,9 @@
           </menu>
           <separator id="PT1G1s4"/>
           <button id="PT1G1B1" label="Sprach-Einstellung" onAction="PTSpracheinstellung" supertip="Einstellung der möglichen Sprache für die Reports"/>
+          <!--    
+          <button id="PT1G1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
+          -->
         </group>
       </tab>
       <!--
@@ -308,7 +311,6 @@
         <!--<group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
-          <button id="Pt6G6B2" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
         </group>-->
      </tab>
     </tabs>
