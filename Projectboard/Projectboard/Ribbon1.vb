@@ -2485,7 +2485,7 @@ Imports System.Windows
                     ImportProjekte.Clear()
                     myCollection.Clear()
                     'Call bmwImportProjektInventur(myCollection)
-                    Call rplanExcelImport(myCollection, False)
+                    Call rplanExcelImport(myCollection, False, dateiName)
                     'Call bmwImportProjekteITO15(myCollection, False)
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
