@@ -3,15 +3,15 @@
     Public name As String
     Public farbe As Object
 
-    Private Budget() As Double
-    Private uuid As Long
+    Private _budget() As Double
+    Private _uuid As Integer
 
-    Public Property UID() As Long
+    Public Property UID() As Integer
         Get
-            UID = uuid
+            UID = _uuid
         End Get
-        Set(value As Long)
-            uuid = value
+        Set(value As Integer)
+            _uuid = value
         End Set
     End Property
 

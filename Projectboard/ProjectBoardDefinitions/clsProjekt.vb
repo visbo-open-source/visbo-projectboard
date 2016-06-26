@@ -21,8 +21,9 @@ Public Class clsProjekt
     Private _earliestStartDate As Date
     Private _startDate As Date
     Private _latestStartDate As Date
-    Private _ampelStatus As Integer
-    Private _ampelErlaeuterung As String
+    ' Änderung tk: ist jetzt in der Phase 1 , Bewertung (1) abgespeichert 
+    'Private _ampelStatus As Integer
+    'Private _ampelErlaeuterung As String
     Private _name As String
     Private _variantName As String
 
@@ -183,6 +184,76 @@ Public Class clsProjekt
 
 
     End Sub
+
+    ''' <summary>
+    ''' filtert die übergebene Liste an IDs so , dass hinterher nur Elemente enthalten sind, die auch im Zeitraum liegen  
+    ''' </summary>
+    ''' <param name="todoCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property filterbyZeitraum(ByVal todoCollection As Collection) As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            ' prüfen, ob Showranges gültige Werte haben, wenn nein, wird die todoCollection gar nicht gefiltert
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+
+                For Each tmpID As String In todoCollection
+
+                    If elemIDIstMeilenstein(tmpID) Then
+                        ' es geht um einen Meilenstein 
+                        Dim milestone As clsMeilenstein = Me.getMilestoneByID(tmpID)
+                        If Not IsNothing(milestone) Then
+                            If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+                                Try
+                                    ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
+                                    ' in diesem Fall wäre das langsamer, da contains jedesmal aufgerufen wird, der Try aber nur im eigentlich 
+                                    ' gar nicht vorkommenden Fehlerfall zuschlägt
+                                    tmpCollection.Add(tmpID, tmpID)
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+                        End If
+
+                    Else
+                        ' es handelt sich um eine Phase
+                        Dim cPhase As clsPhase = Me.getPhaseByID(tmpID)
+                        If Not IsNothing(cPhase) Then
+                            If phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde, _
+                                                     showRangeLeft, showRangeRight) Then
+                                Try
+                                    ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
+                                    ' in diesem Fall wäre das langsamer, da contains jedesmal aufgerufen wird, der Try aber nur im eigentlich 
+                                    ' gar nicht vorkommenden Fehlerfall zuschlägt
+                                    tmpCollection.Add(tmpID, tmpID)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        End If
+                    End If
+                Next
+
+            Else
+                For Each tmpID As String In todoCollection
+                    Try
+                        ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
+                        ' in diesem Fall wäre das langsamer, da contains jedesmal aufgerufen wird, der Try aber nur im eigentlich 
+                        ' gar nicht vorkommenden Fehlerfall zuschlägt
+                        tmpCollection.Add(tmpID, tmpID)
+                    Catch ex As Exception
+
+                    End Try
+                Next
+            End If
+
+            filterbyZeitraum = tmpCollection
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' synchronisiert die Arrays mit der evtl veränderten Array Länge durch eine Verschiebung des Projekts 
@@ -366,6 +437,13 @@ Public Class clsProjekt
         Dim phaseEnde As Double
         Dim maxM As Integer
 
+        ' wenn der Origname gesetzt werden soll ...
+        If origName <> "" Then
+            If phase.originalName <> origName Then
+                phase.originalName = origName
+            End If
+        End If
+
         With phase
 
             phaseEnde = .startOffsetinDays + .dauerInDays - 1
@@ -400,11 +478,12 @@ Public Class clsProjekt
                 .elemName = phase.name
             End If
 
-            If origName = "" Then
-                .origName = .elemName
-            Else
-                .origName = origName
-            End If
+            ' Änderung tk 29.5.16 origName ist nicht mehr Bestandteil von HierarchyNode, 
+            ''If origName = "" Then
+            ''    .origName = .elemName
+            ''Else
+            ''    .origName = origName
+            ''End If
 
             .indexOfElem = Me.CountPhases
 
@@ -432,7 +511,7 @@ Public Class clsProjekt
             With currentElementNode
 
                 .elemName = elemNameOfElemID(cmilestone.nameID)
-                .origName = .elemName
+                '.origName = .elemName
                 .indexOfElem = m
                 .parentNodeKey = phase.nameID
 
@@ -448,72 +527,112 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' Methode prüft auf Identität mit einem Vergleichsprojekt 
-    ''' type 0 (Overview) prüft auf: 
-    ''' Startdatum, Phasen, Milestones, Personalkosten, Sonstige Kosten, Ergebnis, Attribute, Projekt-Ampel, Milestone-Ampeln
-    ''' type 1 (strong role identity) prüft, welche Rollen unterschiedliche Bedarfe in den Monaten haben
-    ''' type 2 (weak role identity) prüft, ob die Gesamt-Summen jeweils identisch / unterschiedlich sind
-    ''' type 3 (strong cost identity) prüft, in welchen Kostenarten unterschiedliche Bedarfe in den Monaten sind
-    ''' type 4 (weak cost identity) prüft, ob die Gesamt-Summen jeweils identisch / unterschiedlich sind
+    ''' es wird verglichen: Startdatum, Endedatum (nur type=0), Phasen, Milestones, Personalkosten, Sonstige Kosten, Ergebnis, Attribute, Projekt-Ampel, Milestone-Ampeln, 
+    ''' Deliverables, CustomFields, Projekt-Typ verglichen  
+    ''' type 0: Vergleich eines Projektes mit einer seiner Projekt-Varianten bzw. einem anderen zeitlichen Stand; der Start/das Ende des Projektes macht einen Unterschied !
+    ''' type 1: Vergleich eines Projektes mit einem anderen Projekt; der Start des Projektes macht keinen Unterschied !  
+    ''' type 2: Vergleich eines Projektes mit seiner Vorlage: Startdatum, Ende-Datum, Ergebnis werden nicht miteinander verglichen; bei den CustomFields werden nur die keys miteinander verglichen   
+    ''' in beiden Typen werden neben Startdatum (abhängig von type) die Phasen, Milestones, Personalkosten, Sonstige Kosten, Ergebnis, Attribute, Projekt-Ampel, Milestone-Ampeln, 
+    ''' Deliverables, CustomFields, Projekt-Typ verglichen  
     ''' </summary>
     ''' <param name="vglproj">Projekt vom Typ clsProjekt</param>
     ''' <param name="absolut">soll absolut verglichen werden oder relativ; nur relevant bei Overview</param>
     ''' <param name="type">gibt den Vergleichstyp an</param>
+    ''' <param name="strongRoleIdentity" >true: unterschiede werden ausgewiesen, wenn ein einzelner Monat einen unterschiedlichen Wert aufweist
+    ''' false: Unterschied wird ausgewiesen, wenn Summe unterschiedlich ist; egal wie sich die einzelnen Werte verteilen</param>
+    ''' ''' <param name="strongCostIdentity" >true: unterschiede werden ausgewiesen, wenn ein einzelner Monat einen unterschiedlichen Wert aufweist
+    ''' false: Unterschied wird ausgewiesen, wenn Summe unterschiedlich ist; egal wie sich die einzelnen Werte verteilen</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property listOfDifferences(ByVal vglproj As clsProjekt, ByVal absolut As Boolean, ByVal type As Integer) As Collection
+    Public ReadOnly Property listOfDifferences(ByVal vglproj As clsProjekt, ByVal absolut As Boolean, ByVal type As Integer, _
+                                               Optional strongRoleIdentity As Boolean = False, _
+                                               Optional strongCostIdentity As Boolean = False) As Collection
         Get
+
+            ' im Folgenden sind viele Try .. Catch drin
+            ' ein ..contains wird extra nicht gemacht, weil der Eintrag eigentlich gar nicht vorkommen kann
+            ' wenn die Prüfung jedesmal gemacht wird, verlangsamt es die Sache unnötig. 
+            ' 
             Dim isDifferent As Boolean = False
             Dim tmpCollection As New Collection
             Dim hValues() As Double, cValues() As Double
-            Dim hdates As SortedList(Of Date, String)
-            Dim cdates As SortedList(Of Date, String)
+            'Dim hdates As SortedList(Of Date, String)
+            'Dim cdates As SortedList(Of Date, String)
 
             Dim verify As Integer = Me.dauerInDays
             verify = vglproj.dauerInDays
 
+            Dim istVorlage As Boolean
+            If type = 2 Then
+                ' Vorlage 
+                istVorlage = True
+            Else
+                istVorlage = False
+            End If
 
-            Select Case type
+            
+            ' Vergleich eines Projektes mit einer seiner Projekt-Varianten bzw. einem anderen zeitlichen Stand
 
-                Case 0 ' Overview
+            If type = 0 Then
+                ' Ist das startdatum unterschiedlich?
+                If Me.startDate.Date <> vglproj.startDate.Date Then
+                    Try
+                        tmpCollection.Add(CInt(PThcc.startdatum).ToString, CInt(PThcc.startdatum).ToString)
+                    Catch ex As Exception
 
-                    ' Ist das startdatum unterschiedlich?
-                    If Me.startDate.Date <> vglproj.startDate.Date Then
-                        Try
-                            tmpCollection.Add(CInt(PThcc.startdatum).ToString, CInt(PThcc.startdatum).ToString)
-                        Catch ex As Exception
+                    End Try
 
-                        End Try
+                End If
 
-                    End If
+                ' Ist das Ende-Datum unterschiedlich?
+                If Me.endeDate.Date <> vglproj.endeDate.Date Then
+                    Try
+                        tmpCollection.Add(CInt(PThcc.endedatum).ToString, CInt(PThcc.endedatum).ToString)
+                    Catch ex As Exception
 
-                    ' prüfen, ob die Phasen identisch sind 
-                    hValues = Me.getPhaseInfos
-                    cValues = vglproj.getPhaseInfos
-                    If arraysAreDifferent(hValues, cValues) Then
-                        Try
-                            tmpCollection.Add(CInt(PThcc.phasen).ToString, CInt(PThcc.phasen).ToString)
-                        Catch ex As Exception
+                    End Try
 
-                        End Try
+                End If
+            End If
 
-                    End If
 
-                    ' prüfen, ob die Milestones identisch sind 
-                    hdates = Me.getMilestones
-                    cdates = vglproj.getMilestones
-                    If dateListsareDifferent(hdates, cdates) Then
-                        Try
-                            tmpCollection.Add(CInt(PThcc.resultdates).ToString, CInt(PThcc.resultdates).ToString)
-                        Catch ex As Exception
+            ' prüfen, ob die Phasen identisch sind bzgl (StartOffset, Dauer)
+            hValues = Me.getPhaseInfos
+            cValues = vglproj.getPhaseInfos
+            If arraysAreDifferent(hValues, cValues) Then
+                Try
+                    tmpCollection.Add(CInt(PThcc.phasen).ToString, CInt(PThcc.phasen).ToString)
+                Catch ex As Exception
 
-                        End Try
+                End Try
 
-                    End If
+            End If
 
-                    ' prüfen , ob die Personalkosten identisch sind 
-                    hValues = Me.getAllPersonalKosten
-                    cValues = vglproj.getAllPersonalKosten
+            ' prüfen, ob die Milestones identisch sind 
+            ' muss bei allen Vergleichs-Typen projekt / version ./variante , ./vorlage, ./projekt2 gemacht werden
+            hValues = Me.getMilestoneOffsets.Keys.ToArray
+            cValues = vglproj.getMilestoneOffsets.Keys.ToArray
+            If arraysAreDifferent(hValues, cValues) Then
+                Try
+                    tmpCollection.Add(CInt(PThcc.resultdates).ToString, CInt(PThcc.resultdates).ToString)
+                Catch ex As Exception
+
+                End Try
+
+            End If
+            'End If
+
+
+            If Not istVorlage Then
+                ' bei einer Vorlage macht es wenig Sinn, gegen Personalkosten, Andere Kosten, Ergebnis zu prüfen 
+
+                ' prüfen , ob die Personalkosten identisch sind 
+                ' muss bei allen Vergleichs-Typen projekt / version ./variante , ./vorlage, ./projekt2 gemacht werden
+                hValues = Me.getAllPersonalKosten
+                cValues = vglproj.getAllPersonalKosten
+
+                If strongCostIdentity Then
                     If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
                         Try
                             tmpCollection.Add(CInt(PThcc.perscost).ToString, CInt(PThcc.perscost).ToString)
@@ -522,10 +641,22 @@ Public Class clsProjekt
                         End Try
 
                     End If
+                Else
+                    If hValues.Sum <> cValues.Sum Then
+                        Try
+                            tmpCollection.Add(CInt(PThcc.perscost).ToString, CInt(PThcc.perscost).ToString)
+                        Catch ex As Exception
 
-                    ' prüfen, ob sonstige Kosten identisch sind 
-                    hValues = Me.getGesamtAndereKosten
-                    cValues = vglproj.getGesamtAndereKosten
+                        End Try
+                    End If
+                End If
+
+
+                ' prüfen, ob sonstige Kosten identisch sind 
+                ' muss bei allen Vergleichs-Typen projekt / version ./variante , ./vorlage, ./projekt2 gemacht werden
+                hValues = Me.getGesamtAndereKosten
+                cValues = vglproj.getGesamtAndereKosten
+                If strongCostIdentity Then
                     If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
                         Try
                             tmpCollection.Add(CInt(PThcc.othercost).ToString, CInt(PThcc.othercost).ToString)
@@ -535,244 +666,361 @@ Public Class clsProjekt
 
                     End If
 
-                    ' prüfen, ob das Ergebnis identisch ist 
-                    Dim aktBudget As Double, aktPCost As Double, aktSCost As Double, aktRCost As Double, aktErg As Double
-                    Dim vglBudget As Double, vglPCost As Double, vglSCost As Double, vglRCost As Double, vglErg As Double
-
-                    With Me
-                        .calculateRoundedKPI(aktBudget, aktPCost, aktSCost, aktRCost, aktErg)
-                    End With
-
-                    With vglproj
-                        .calculateRoundedKPI(vglBudget, vglPCost, vglSCost, vglRCost, vglErg)
-                    End With
-
-                    If aktErg <> vglErg Then
+                Else
+                    If hValues.Sum <> cValues.Sum Then
                         Try
-                            tmpCollection.Add(CInt(PThcc.ergebnis).ToString, CInt(PThcc.ergebnis).ToString)
+                            tmpCollection.Add(CInt(PThcc.othercost).ToString, CInt(PThcc.othercost).ToString)
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+                End If
+                
+
+                ' prüfen, ob das Ergebnis identisch ist 
+                ' muss nicht bei Vergleichs-Typ 2 (Vorlage) gemacht werden 
+                Dim aktBudget As Double, aktPCost As Double, aktSCost As Double, aktRCost As Double, aktErg As Double
+                Dim vglBudget As Double, vglPCost As Double, vglSCost As Double, vglRCost As Double, vglErg As Double
+
+                With Me
+                    .calculateRoundedKPI(aktBudget, aktPCost, aktSCost, aktRCost, aktErg)
+                End With
+
+                With vglproj
+                    .calculateRoundedKPI(vglBudget, vglPCost, vglSCost, vglRCost, vglErg)
+                End With
+
+                If aktErg <> vglErg Then
+                    Try
+                        tmpCollection.Add(CInt(PThcc.ergebnis).ToString, CInt(PThcc.ergebnis).ToString)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+                ' prüfen, ob die Attribute identisch sind
+                If Me.StrategicFit <> vglproj.StrategicFit Or _
+                            Me.Risiko <> vglproj.Risiko Then
+                    Try
+                        tmpCollection.Add(CInt(PThcc.fitrisk).ToString, CInt(PThcc.fitrisk).ToString)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+                ' prüfen, ob die Projekt Ampel unterschiedlich ist 
+                If Me.ampelStatus <> vglproj.ampelStatus Then
+                    Try
+                        tmpCollection.Add(CInt(PThcc.projektampel).ToString, CInt(PThcc.projektampel).ToString)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+                ' prüfen, ob die Meilenstein Ampeln unterschiedlich sind 
+                hValues = Me.getMilestoneColors
+                cValues = vglproj.getMilestoneColors
+                If arraysAreDifferent(hValues, cValues) Then
+                    Try
+                        tmpCollection.Add(CInt(PThcc.resultampel).ToString, CInt(PThcc.resultampel).ToString)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+
+            End If
+            
+            ' prüfen, ob die Deliverables identisch sind 
+
+            Try
+                Dim hsortedList As SortedList(Of String, String) = Me.getDeliverables
+                Dim cSortedList As SortedList(Of String, String) = vglproj.getDeliverables
+                If sortedListsAreDifferent(hsortedList, cSortedList, 0) Then
+
+                    Try
+                        tmpCollection.Add(CInt(PThcc.deliverables).ToString, CInt(PThcc.deliverables).ToString)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+                    
+            ' prüfen, ob die Custom-Fields identisch sind 
+            Dim verschieden As Boolean = False
+            ' die String Custom Fields
+
+            Try
+                Dim hsortedList As SortedList(Of Integer, String) = Me.customStringFields
+                Dim cSortedList As SortedList(Of Integer, String) = vglproj.customStringFields
+                
+
+                If sortedListsAreDifferent(hsortedList, cSortedList, 1, istVorlage) Then
+
+                    verschieden = True
+                    Try
+                        tmpCollection.Add(CInt(PThcc.deliverables).ToString, CInt(PThcc.deliverables).ToString)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+            ' die Double Custom Fields
+            If Not verschieden Then
+                Try
+                    Dim hsortedList As SortedList(Of Integer, Double) = Me.customDblFields
+                    Dim cSortedList As SortedList(Of Integer, Double) = vglproj.customDblFields
+
+                    If sortedListsAreDifferent(hsortedList, cSortedList, 2, istVorlage) Then
+
+                        verschieden = True
+                        Try
+                            tmpCollection.Add(CInt(PThcc.deliverables).ToString, CInt(PThcc.deliverables).ToString)
                         Catch ex As Exception
 
                         End Try
 
                     End If
 
-                    ' prüfen, ob die Attribute identisch sind
-                    If Me.StrategicFit <> vglproj.StrategicFit Or _
-                        Me.Risiko <> vglproj.Risiko Then
+                Catch ex As Exception
+
+                End Try
+            End If
+
+            ' die Bool Fields
+            If Not verschieden Then
+                Try
+                    Dim hsortedList As SortedList(Of Integer, Boolean) = Me.customBoolFields
+                    Dim cSortedList As SortedList(Of Integer, Boolean) = vglproj.customBoolFields
+
+                    If sortedListsAreDifferent(hsortedList, cSortedList, 3, istVorlage) Then
+
+                        verschieden = True
                         Try
-                            tmpCollection.Add(CInt(PThcc.fitrisk).ToString, CInt(PThcc.fitrisk).ToString)
+                            tmpCollection.Add(CInt(PThcc.deliverables).ToString, CInt(PThcc.deliverables).ToString)
                         Catch ex As Exception
 
                         End Try
 
                     End If
 
-                    ' prüfen, ob die Projekt Ampel unterschiedlich ist 
-                    If Me.ampelStatus <> vglproj.ampelStatus Then
-                        Try
-                            tmpCollection.Add(CInt(PThcc.projektampel).ToString, CInt(PThcc.projektampel).ToString)
-                        Catch ex As Exception
+                Catch ex As Exception
 
-                        End Try
-
-                    End If
-
-                    ' prüfen, ob die Meilenstein Ampeln unterschiedlich sind 
-                    hValues = Me.getMilestoneColors
-                    cValues = vglproj.getMilestoneColors
-                    If arraysAreDifferent(hValues, cValues) Then
-                        Try
-                            tmpCollection.Add(CInt(PThcc.resultampel).ToString, CInt(PThcc.resultampel).ToString)
-                        Catch ex As Exception
-
-                        End Try
-
-                    End If
-
-                Case 1 ' strong role identity
-                    Dim hUsedRoles As Collection = Me.getUsedRollen
-                    Dim cUsedRoles As Collection = vglproj.getUsedRollen
-
-                    For Each role As String In hUsedRoles
+                End Try
+            End If
 
 
-                        hValues = Me.getRessourcenBedarf(role)
-                        If cUsedRoles.Contains(role) Then
+            ' prüfen, ob der Projekt-Typ der gleiche ist 
+            If Not istVorlage Then
+                Dim hvalue As String = Me.VorlagenName
+                Dim cvalue As String = vglproj.VorlagenName
 
-                            cValues = vglproj.getRessourcenBedarf(role)
-                            If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
-                                Try
-                                    tmpCollection.Add(role, role)
-                                Catch ex As Exception
+                If hvalue <> cvalue Then
+                    Try
+                        tmpCollection.Add(CInt(PThcc.projecttype).ToString, CInt(PThcc.projecttype).ToString)
+                    Catch ex As Exception
 
-                                End Try
-                            End If
-                        Else
-                            If hValues.Sum > 0 Then
-                                Try
-                                    tmpCollection.Add(role, role)
-                                Catch ex As Exception
+                    End Try
+                End If
+            End If
 
-                                End Try
-                            End If
+            '    Case 1 ' strong role identity
+            '        Dim hUsedRoles As Collection = Me.getUsedRollen
+            '        Dim cUsedRoles As Collection = vglproj.getUsedRollen
 
-                        End If
-
-                    Next
-
-                    ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
-                    ' die müssen dann auf alle fälle aufgenommen werden 
-
-                    For Each role As String In cUsedRoles
-
-                        cValues = vglproj.getRessourcenBedarf(role)
-
-                        If Not hUsedRoles.Contains(role) And cValues.Sum > 0 Then
-                            Try
-                                tmpCollection.Add(role, role)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
-
-                    Next
-
-                Case 2 ' weak role identity
-                    Dim hUsedRoles As Collection = Me.getUsedRollen
-                    Dim cUsedRoles As Collection = vglproj.getUsedRollen
-                    ReDim hValues(0)
-                    ReDim cValues(0)
-
-                    For Each role As String In hUsedRoles
-                        hValues(0) = Me.getRessourcenBedarf(role).Sum
-
-                        If cUsedRoles.Contains(role) Then
-
-                            cValues(0) = vglproj.getRessourcenBedarf(role).Sum
-                            If hValues(0) <> cValues(0) Then
-                                Try
-                                    tmpCollection.Add(role, role)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-                        ElseIf hValues(0) > 0 Then
-                            Try
-                                tmpCollection.Add(role, role)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
-
-                    Next
-
-                    ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
-                    ' die müssen dann auf alle fälle aufgenommen werden 
-
-                    For Each role As String In cUsedRoles
-
-                        cValues(0) = vglproj.getRessourcenBedarf(role).Sum
-
-                        If Not hUsedRoles.Contains(role) And cValues(0) > 0 Then
-                            Try
-                                tmpCollection.Add(role, role)
-                            Catch ex As Exception
-
-                            End Try
-
-                        End If
-
-                    Next
-
-                Case 3 ' strong cost identity
-
-                    Dim hUsedCosts As Collection = Me.getUsedKosten
-                    Dim cUsedCosts As Collection = vglproj.getUsedKosten
-
-                    For Each cost As String In hUsedCosts
-                        hValues = Me.getKostenBedarf(cost)
-
-                        If cUsedCosts.Contains(cost) Then
-
-                            cValues = vglproj.getKostenBedarf(cost)
-                            If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
-                                Try
-                                    tmpCollection.Add(cost, cost)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-                        ElseIf hValues.Sum > 0 Then
-                            Try
-                                tmpCollection.Add(cost, cost)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
-
-                    Next
-
-                    ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
-                    ' die müssen dann auf alle fälle aufgenommen werden 
-
-                    For Each cost As String In cUsedCosts
-                        cValues = vglproj.getKostenBedarf(cost)
-                        If Not hUsedCosts.Contains(cost) And cValues.Sum > 0 Then
-                            Try
-                                tmpCollection.Add(cost, cost)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
-
-                    Next
+            '        For Each role As String In hUsedRoles
 
 
-                Case 4 ' weak cost identity
-                    Dim hUsedCosts As Collection = Me.getUsedKosten
-                    Dim cUsedCosts As Collection = vglproj.getUsedKosten
-                    ReDim hValues(0)
-                    ReDim cValues(0)
+            '            hValues = Me.getRessourcenBedarf(role)
+            '            If cUsedRoles.Contains(role) Then
 
-                    For Each cost As String In hUsedCosts
-                        hValues(0) = Me.getKostenBedarf(cost).Sum
-                        If cUsedCosts.Contains(cost) Then
+            '                cValues = vglproj.getRessourcenBedarf(role)
+            '                If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
+            '                    Try
+            '                        tmpCollection.Add(role, role)
+            '                    Catch ex As Exception
 
-                            cValues(0) = vglproj.getKostenBedarf(cost).Sum
-                            If arraysAreDifferent(hValues, cValues) And (hValues(0) > 0 Or cValues(0) > 0) Then
-                                Try
-                                    tmpCollection.Add(cost, cost)
-                                Catch ex As Exception
+            '                    End Try
+            '                End If
+            '            Else
+            '                If hValues.Sum > 0 Then
+            '                    Try
+            '                        tmpCollection.Add(role, role)
+            '                    Catch ex As Exception
 
-                                End Try
-                            End If
-                        ElseIf hValues(0) > 0 Then
-                            Try
-                                tmpCollection.Add(cost, cost)
-                            Catch ex As Exception
+            '                    End Try
+            '                End If
 
-                            End Try
-                        End If
+            '            End If
 
-                    Next
+            '        Next
 
-                    ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
-                    ' die müssen dann auf alle fälle aufgenommen werden 
+            '        ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
+            '        ' die müssen dann auf alle fälle aufgenommen werden 
 
-                    For Each cost As String In cUsedCosts
-                        cValues(0) = vglproj.getKostenBedarf(cost).Sum
-                        If Not hUsedCosts.Contains(cost) And cValues(0) > 0 Then
-                            Try
-                                tmpCollection.Add(cost, cost)
-                            Catch ex As Exception
+            '        For Each role As String In cUsedRoles
 
-                            End Try
+            '            cValues = vglproj.getRessourcenBedarf(role)
 
-                        End If
+            '            If Not hUsedRoles.Contains(role) And cValues.Sum > 0 Then
+            '                Try
+            '                    tmpCollection.Add(role, role)
+            '                Catch ex As Exception
 
-                    Next
+            '                End Try
+            '            End If
 
-            End Select
+            '        Next
+
+            '    Case 2 ' weak role identity
+            '        Dim hUsedRoles As Collection = Me.getUsedRollen
+            '        Dim cUsedRoles As Collection = vglproj.getUsedRollen
+            '        ReDim hValues(0)
+            '        ReDim cValues(0)
+
+            '        For Each role As String In hUsedRoles
+            '            hValues(0) = Me.getRessourcenBedarf(role).Sum
+
+            '            If cUsedRoles.Contains(role) Then
+
+            '                cValues(0) = vglproj.getRessourcenBedarf(role).Sum
+            '                If hValues(0) <> cValues(0) Then
+            '                    Try
+            '                        tmpCollection.Add(role, role)
+            '                    Catch ex As Exception
+
+            '                    End Try
+            '                End If
+            '            ElseIf hValues(0) > 0 Then
+            '                Try
+            '                    tmpCollection.Add(role, role)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            End If
+
+            '        Next
+
+            '        ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
+            '        ' die müssen dann auf alle fälle aufgenommen werden 
+
+            '        For Each role As String In cUsedRoles
+
+            '            cValues(0) = vglproj.getRessourcenBedarf(role).Sum
+
+            '            If Not hUsedRoles.Contains(role) And cValues(0) > 0 Then
+            '                Try
+            '                    tmpCollection.Add(role, role)
+            '                Catch ex As Exception
+
+            '                End Try
+
+            '            End If
+
+            '        Next
+
+            '    Case 3 ' strong cost identity
+
+            '        Dim hUsedCosts As Collection = Me.getUsedKosten
+            '        Dim cUsedCosts As Collection = vglproj.getUsedKosten
+
+            '        For Each cost As String In hUsedCosts
+            '            hValues = Me.getKostenBedarf(cost)
+
+            '            If cUsedCosts.Contains(cost) Then
+
+            '                cValues = vglproj.getKostenBedarf(cost)
+            '                If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
+            '                    Try
+            '                        tmpCollection.Add(cost, cost)
+            '                    Catch ex As Exception
+
+            '                    End Try
+            '                End If
+            '            ElseIf hValues.Sum > 0 Then
+            '                Try
+            '                    tmpCollection.Add(cost, cost)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            End If
+
+            '        Next
+
+            '        ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
+            '        ' die müssen dann auf alle fälle aufgenommen werden 
+
+            '        For Each cost As String In cUsedCosts
+            '            cValues = vglproj.getKostenBedarf(cost)
+            '            If Not hUsedCosts.Contains(cost) And cValues.Sum > 0 Then
+            '                Try
+            '                    tmpCollection.Add(cost, cost)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            End If
+
+            '        Next
+
+
+            '    Case 4 ' weak cost identity
+            '        Dim hUsedCosts As Collection = Me.getUsedKosten
+            '        Dim cUsedCosts As Collection = vglproj.getUsedKosten
+            '        ReDim hValues(0)
+            '        ReDim cValues(0)
+
+            '        For Each cost As String In hUsedCosts
+            '            hValues(0) = Me.getKostenBedarf(cost).Sum
+            '            If cUsedCosts.Contains(cost) Then
+
+            '                cValues(0) = vglproj.getKostenBedarf(cost).Sum
+            '                If arraysAreDifferent(hValues, cValues) And (hValues(0) > 0 Or cValues(0) > 0) Then
+            '                    Try
+            '                        tmpCollection.Add(cost, cost)
+            '                    Catch ex As Exception
+
+            '                    End Try
+            '                End If
+            '            ElseIf hValues(0) > 0 Then
+            '                Try
+            '                    tmpCollection.Add(cost, cost)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            End If
+
+            '        Next
+
+            '        ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
+            '        ' die müssen dann auf alle fälle aufgenommen werden 
+
+            '        For Each cost As String In cUsedCosts
+            '            cValues(0) = vglproj.getKostenBedarf(cost).Sum
+            '            If Not hUsedCosts.Contains(cost) And cValues(0) > 0 Then
+            '                Try
+            '                    tmpCollection.Add(cost, cost)
+            '                Catch ex As Exception
+
+            '                End Try
+
+            '            End If
+
+            '        Next
+
+            'End Select
 
             listOfDifferences = tmpCollection
         End Get
@@ -1002,16 +1250,30 @@ Public Class clsProjekt
         End Get
     End Property
 
+    ''' <summary>
+    ''' ist für das Projekt jetzt in der Rootphase gespeichert 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property ampelStatus As Integer
         Get
-            ampelStatus = _ampelStatus
+            'ampelStatus = _ampelStatus
+            If Me.CountPhases > 0 Then
+                ampelStatus = Me.getPhase(1).ampelStatus
+            Else
+                ampelStatus = 0
+            End If
+
         End Get
 
         Set(value As Integer)
             If Not (IsNothing(value)) Then
                 If IsNumeric(value) Then
                     If value >= 0 And value <= 3 Then
-                        _ampelStatus = value
+                        If Me.CountPhases > 0 Then
+                            Me.getPhase(1).ampelStatus = value
+                        End If
                     Else
                         Throw New ArgumentException("unzulässiger Ampel-Wert")
                     End If
@@ -1020,21 +1282,33 @@ Public Class clsProjekt
                 End If
             Else
                 ' ohne Bewertung
-                _ampelStatus = 0
             End If
 
         End Set
     End Property
 
+    ''' <summary>
+    ''' ist für das Projekt jetzt in der RootPhase gespeichert 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property ampelErlaeuterung As String
         Get
-            ampelErlaeuterung = _ampelErlaeuterung
+            'ampelErlaeuterung = _ampelErlaeuterung
+            If Me.CountPhases > 0 Then
+                ampelErlaeuterung = Me.getPhase(1).ampelErlaeuterung
+            Else
+                ampelErlaeuterung = ""
+            End If
         End Get
         Set(value As String)
             If Not (IsNothing(value)) Then
-                _ampelErlaeuterung = CStr(value)
+                If Me.CountPhases > 0 Then
+                    Me.getPhase(1).ampelErlaeuterung = value
+                End If
             Else
-                _ampelErlaeuterung = " "
+                ' nichts tun 
             End If
         End Set
     End Property
@@ -1069,14 +1343,19 @@ Public Class clsProjekt
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
-                currentConstellation = ""
+                If Not currentConstellation.EndsWith("(*)") Then
+                    currentConstellation = currentConstellation & "(*)"
+                End If
+
 
             ElseIf _startDate = NullDatum Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 If differenzInTagen <> 0 Then
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    currentConstellation = ""
+                    If Not currentConstellation.EndsWith("(*)") Then
+                        currentConstellation = currentConstellation & "(*)"
+                    End If
                 End If
             ElseIf _Status <> ProjektStatus(0) Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
@@ -1265,16 +1544,28 @@ Public Class clsProjekt
 
 
 
+    ''' <summary>
+    ''' stellt sicher, dass die Phase1 immer das gesamte Projekt umfasst 
+    ''' und dass die Projektlaenge richtig kalkuliert ist 
+    ''' Me.dauerindays setzt die interne privat Variable 
+    ''' </summary>
+    ''' <param name="phasenEnde"></param>
+    ''' <remarks></remarks>
     Public Sub keepPhase1consistent(ByVal phasenEnde As Integer)
 
+        Try
+            Dim phase1 As clsPhase = Me.getPhase(1)
+            If Not IsNothing(phase1) Then
+                If phase1.dauerInDays < phasenEnde Then
+                    phase1.changeStartandDauerPhase1(0, phasenEnde)
+                    ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
+                    Dim projektLaengeInDays As Integer = Me.dauerInDays
+                End If
+            End If
 
-        If Me.getPhase(1).dauerInDays < phasenEnde Then
-            Me.getPhase(1).changeStartandDauerPhase1(0, phasenEnde)
-            ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
-            Dim projektLaengeInDays As Integer = Me.dauerInDays
-        End If
+        Catch ex As Exception
 
-
+        End Try
 
 
 
@@ -1674,6 +1965,39 @@ Public Class clsProjekt
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Summe aller Ressourcen des Projektes im angegebenen Zeitraum zurück  
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAllResBedarfimZeitraum(ByVal von As Integer, ByVal bis As Integer) As Double
+        Get
+            Dim valueArray() As Double
+            Dim ergArray() As Double
+            Dim tmpValue As Double = 0.0
+            Dim projektDauer As Integer = Me.anzahlRasterElemente
+            Dim start As Integer = Me.Start
+
+            
+            If projektDauer > 0 Then
+                ReDim valueArray(projektDauer - 1)
+                valueArray = Me.getAlleRessourcen
+
+                ergArray = calcArrayIntersection(von, bis, start, start + projektDauer - 1, valueArray)
+                tmpValue = ergArray.Sum
+            Else
+                tmpValue = 0.0
+            End If
+
+            getAllResBedarfimZeitraum = tmpValue
+
+        End Get
+    End Property
+
+
     Public ReadOnly Property hasDifferentRoleNeeds(ByVal compareProj As clsProjekt, roleName As String) As Boolean
         Get
             Dim myArray() As Double
@@ -1799,7 +2123,7 @@ Public Class clsProjekt
                 ' wenn gefunden dann alle Results kopieren 
                 For r = 1 To cphase.countMilestones
                     newresult = New clsMeilenstein(parent:=newphase)
-                    cphase.getMilestone(r).CopyTo(newresult)
+                    cphase.getMilestone(r).copyTo(newresult)
 
                     Try
                         newphase.addMilestone(newresult)
@@ -1834,7 +2158,7 @@ Public Class clsProjekt
 
             'parentID = Me.hierarchy.getParentIDOfID(hphase.nameID)
 
-            hphase.CopyTo(newphase)
+            hphase.copyTo(newphase)
             newproject.AddPhase(newphase)
             'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
         Next
@@ -2988,9 +3312,15 @@ Public Class clsProjekt
             ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
             Dim dimension As Integer = endNr - startNr
             Dim lastEndDates(dimension) As Date
+            ' list of Phases dient dazu, die IDs der Phasen, die in dieser Zeile gezeichnet wurden aufzunehmen
+            ' damit wird ein Cap eingeführt, das heisst keine Phase wird in der Swimlane über ihrer Eltern-Phase gezeichnet 
+            Dim listOfPhases(dimension) As Collection
+
             For i As Integer = 0 To dimension
                 lastEndDates(i) = StartofCalendar.AddDays(-1)
+                listOfPhases(i) = New Collection
             Next
+
             Dim maxOffsetZeile As Integer = 1
             Dim curOffsetZeile As Integer = 1
 
@@ -3047,31 +3377,53 @@ Public Class clsProjekt
                                                                                            extended, _
                                                                                            considerTimespace, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                            considerAll)
+
+                                    Dim bestStart As Integer = 0
+                                    ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
+                                    ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
+
+                                    Dim parentFound As Boolean = False
+                                    Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
+                                    Dim ix As Integer = maxOffsetZeile
+
+                                    While ix > 0 And Not parentFound
+
+                                        If listOfPhases(ix - 1).Count > 0 Then
+                                            Dim kx As Integer = 1
+                                            While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                                Dim vglBreadCrumb As String = Me.hierarchy.getBreadCrumb(CStr(listOfPhases(ix - 1).Item(kx)))
+                                                If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                                    parentFound = True
+                                                Else
+                                                    kx = kx + 1
+                                                End If
+                                            End While
+
+                                            If Not parentFound Then
+                                                ix = ix - 1
+                                            End If
+
+                                        Else
+                                            ix = ix - 1
+                                        End If
+                                    End While
+
+                                    If parentFound Then
+                                        bestStart = ix
+                                    Else
+                                        bestStart = 0
+                                    End If
+
                                     With cPhase
 
-                                        'If (zeilenOffset = 1) And (maxOffsetZeile = 1) Then
-                                        '    ' er muss sich so verhalten wie es bisher war 
-                                        '    ' old stuff
 
-
-                                        '    'phasenName = .name
-                                        '    If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getStartDate) < 0 Then
-                                        '        zeilenOffset = zeilenOffset + 1
-                                        '        maxOffsetZeile = System.Math.Max(zeilenOffset, maxOffsetZeile)
-                                        '        lastEndDates(zeilenOffset - 1) = StartofCalendar.AddDays(-1)
-                                        '    End If
-
-                                        '    If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
-                                        '        lastEndDates(zeilenOffset - 1) = .getEndDate
-                                        '    End If
-
-
-
-                                        'Else
-                                        ' man ist in der zweiten, dritten etc Zeile 
-                                        ' das im Folgenden gilt ebenso, wenn zeilenoffset = 1 and maxoffsetZeile = 1 
-                                        zeilenOffset = findeBesteZeile(lastEndDates, maxOffsetZeile, .getStartDate, requiredZeilen)
+                                        zeilenOffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
                                         maxOffsetZeile = System.Math.Max(zeilenOffset + requiredZeilen - 1, maxOffsetZeile)
+
+                                        ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
+                                        If Not listOfPhases(zeilenOffset - 1).Contains(cPhase.nameID) Then
+                                            listOfPhases(zeilenOffset - 1).Add(cPhase.nameID, cPhase.nameID)
+                                        End If
 
                                         If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
                                             lastEndDates(zeilenOffset - 1) = .getEndDate
@@ -3368,8 +3720,8 @@ Public Class clsProjekt
 
         _variantName = ""
 
-        _ampelErlaeuterung = ""
-        _ampelStatus = 0
+        '_ampelErlaeuterung = ""
+        '_ampelStatus = 0
 
         _description = ""
         _businessUnit = ""

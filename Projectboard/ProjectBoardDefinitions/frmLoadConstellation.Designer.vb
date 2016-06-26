@@ -36,6 +36,7 @@ Partial Class frmLoadConstellation
         Me.ListBox1.ItemHeight = 16
         Me.ListBox1.Location = New System.Drawing.Point(13, 12)
         Me.ListBox1.Name = "ListBox1"
+        Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.ListBox1.Size = New System.Drawing.Size(340, 180)
         Me.ListBox1.TabIndex = 0
         '

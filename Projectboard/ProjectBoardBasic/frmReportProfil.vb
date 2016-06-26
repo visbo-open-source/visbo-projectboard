@@ -259,6 +259,7 @@ Public Class frmReportProfil
                         Me.statusLabel.Visible = True
                         Me.statusLabel.Text = "...started"
 
+                        'Call PPTstarten()
 
                         BGworkerReportBHTC.RunWorkerAsync(reportProfil)
 

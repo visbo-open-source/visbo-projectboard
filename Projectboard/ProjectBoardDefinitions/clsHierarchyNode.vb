@@ -2,7 +2,7 @@
 
     
     Private _elemName As String
-    Private _origName As String
+    'Private _origName As String
     Private _indexOfElem As Integer
     Private _parentNodeKey As String
     Private _childNodeKeys As List(Of String)
@@ -16,7 +16,7 @@
     Public Sub New()
 
         _elemName = ""
-        _origName = ""
+        '_origName = ""
         _indexOfElem = -1
         _parentNodeKey = ""
         _childNodeKeys = New List(Of String)
@@ -28,11 +28,10 @@
     ''' nur die Kind-Knoten müssen dann noch ergänzt werden 
     ''' </summary>
     ''' <param name="elemName"></param>
-    ''' <param name="origName"></param>
     ''' <param name="indexOfElem"></param>
     ''' <param name="parentNodeKey"></param>
     ''' <remarks></remarks>
-    Public Sub New(ByVal elemName As String, ByVal origName As String, _
+    Public Sub New(ByVal elemName As String, _
                        ByVal indexOfElem As Integer, ByRef parentNodeKey As String)
 
         If Not IsNothing(elemName) Then
@@ -43,12 +42,6 @@
             End If
         Else
             Throw New ArgumentException("Element Name darf nicht Nothing oder leer sein")
-        End If
-
-        If Not IsNothing(origName) Then
-            _origName = origName
-        Else
-            _origName = ""
         End If
 
 
@@ -185,24 +178,24 @@
         End Set
     End Property
 
-    ''' <summary>
-    ''' liest bzw. schreibt den Original Namen des Objektes, so wie er aus dem Projektplan ausgelesen wurde
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Property origName As String
-        Get
-            origName = _origName
-        End Get
-        Set(value As String)
-            If Not IsNothing(value) Then
-                _origName = value
-            Else
-                _origName = ""
-            End If
-        End Set
-    End Property
+    ' ''' <summary>
+    ' ''' liest bzw. schreibt den Original Namen des Objektes, so wie er aus dem Projektplan ausgelesen wurde
+    ' ''' </summary>
+    ' ''' <value></value>
+    ' ''' <returns></returns>
+    ' ''' <remarks></remarks>
+    'Public Property origName As String
+    '    Get
+    '        origName = _origName
+    '    End Get
+    '    Set(value As String)
+    '        If Not IsNothing(value) Then
+    '            _origName = value
+    '        Else
+    '            _origName = ""
+    '        End If
+    '    End Set
+    'End Property
 
 
 

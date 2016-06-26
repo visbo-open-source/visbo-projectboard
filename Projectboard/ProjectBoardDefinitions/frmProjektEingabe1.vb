@@ -10,6 +10,8 @@ Public Class frmProjektEingabe1
     Private endMsOffset As Integer = 0
     Private vproj As clsProjektvorlage
 
+    Private dontFire As Boolean = False
+
     Public calcProjektStart As Date = Date.Now
     Public calcProjektEnde As Date = Date.Now.AddMonths(6)
     Public newProjektDauer As Integer = 0
@@ -31,6 +33,7 @@ Public Class frmProjektEingabe1
 
         With Me
 
+            dontFire = True
 
             With vorlagenDropbox
                 For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
@@ -116,6 +119,8 @@ Public Class frmProjektEingabe1
             ' das Formular an die letzte / Default-Position setzen 
             .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
             .Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
+
+            dontFire = False
 
         End With
     End Sub
@@ -366,95 +371,110 @@ Public Class frmProjektEingabe1
 
     Private Sub DateTimeEnde_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeEnde.ValueChanged
 
-        If dauerUnverändert.Checked Then
-            'StartDatum muss gemäß Vorlagendauer errechnet werden
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
-                Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
-                DateTimeEnde.Value = DateTimeStart.Value.AddDays(dauerVorlage - 1)
-            Else
-                calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
-                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
-
-                DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
-
-            End If
+        If dontFire Then
+            ' nichts tun 
         Else
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
+            If dauerUnverändert.Checked Then
+                'StartDatum muss gemäß Vorlagendauer errechnet werden
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
+                    Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
+                    DateTimeEnde.Value = DateTimeStart.Value.AddDays(dauerVorlage - 1)
+                Else
+                    calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
+                    calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
 
-                Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
-                DateTimeEnde.Value = DateTimeStart.Value.AddMonths(6)
+                    DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
 
+                End If
             Else
-                calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
 
+                    Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
+                    DateTimeEnde.Value = DateTimeStart.Value.AddMonths(6)
+
+                Else
+                    calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+                    calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+
+                End If
             End If
+
+            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                        calcProjektEnde.ToShortDateString
         End If
 
-        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
-                                    calcProjektEnde.ToShortDateString
+        
     End Sub
 
     Private Sub DateTimeStart_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeStart.ValueChanged
 
-
-        If dauerUnverändert.Checked Then
-            'StartDatum muss gemäß Vorlagendauer errechnet werden
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
-                Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeStart.Value = Date.Now.AddMonths(1)
-            Else
-                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-
-                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-
-
-            End If
+        If dontFire Then
+            ' nichts tun
         Else
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
-                Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeStart.Value = Date.Now.AddMonths(1)
-                'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
-            Else
-                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
-                calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
-            End If
-        End If
+            If dauerUnverändert.Checked Then
+                'StartDatum muss gemäß Vorlagendauer errechnet werden
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
+                    Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
+                    DateTimeStart.Value = Date.Now.AddMonths(1)
+                Else
+                    calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+                    calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
 
-        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
-                                    calcProjektEnde.ToShortDateString
+                    DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+
+
+                End If
+            Else
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
+                    Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
+                    DateTimeStart.Value = Date.Now.AddMonths(1)
+                    'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
+                Else
+                    calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+                    calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+                End If
+            End If
+
+            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                        calcProjektEnde.ToShortDateString
+        End If
+        
 
     End Sub
 
     Private Sub dauerUnverändert_CheckedChanged(sender As Object, e As EventArgs) Handles dauerUnverändert.CheckedChanged
 
-        If dauerUnverändert.Checked Then
-
-            lbl_Referenz1.Text = "Referenz"
-            lbl_Referenz2.Visible = False
-            endMilestoneDropbox.Visible = False
-            DateTimeEnde.Visible = False
-            propRessourcenAnpassung.Visible = False
-
-            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-
-            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+        If dontFire Then
+            ' nichts tun
         Else
+            If dauerUnverändert.Checked Then
 
-            lbl_Referenz1.Text = "Referenz 1"
-            lbl_Referenz2.Text = "Referenz 2"
-            lbl_Referenz2.Visible = True
-            endMilestoneDropbox.Visible = True
-            DateTimeEnde.Visible = True
-            propRessourcenAnpassung.Visible = True
+                lbl_Referenz1.Text = "Referenz"
+                lbl_Referenz2.Visible = False
+                endMilestoneDropbox.Visible = False
+                DateTimeEnde.Visible = False
+                propRessourcenAnpassung.Visible = False
 
+                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+
+                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+            Else
+
+                lbl_Referenz1.Text = "Referenz 1"
+                lbl_Referenz2.Text = "Referenz 2"
+                lbl_Referenz2.Visible = True
+                endMilestoneDropbox.Visible = True
+                DateTimeEnde.Visible = True
+                propRessourcenAnpassung.Visible = True
+
+            End If
+
+            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                        calcProjektEnde.ToShortDateString
         End If
-
-        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
-                                    calcProjektEnde.ToShortDateString
+        
 
     End Sub
 
@@ -495,49 +515,60 @@ Public Class frmProjektEingabe1
 
     Private Sub startMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles startMilestoneDropbox.SelectedIndexChanged
 
-        If startMilestoneDropbox.Text = "Projektstart" Then
-            startMsOffset = 0
+
+        If dontFire Then
+            ' nichts tun
         Else
-            startMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(startMilestoneDropbox.Text))
+            If startMilestoneDropbox.Text = "Projektstart" Then
+                startMsOffset = 0
+            Else
+                startMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(startMilestoneDropbox.Text))
+            End If
+
+            If dauerUnverändert.Checked Then
+                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+            Else
+                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+                calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
+            End If
+
+            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                        calcProjektEnde.ToShortDateString
+
         End If
-
-        If dauerUnverändert.Checked Then
-            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-        Else
-            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
-            calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
-            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
-        End If
-
-        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
-                                    calcProjektEnde.ToShortDateString
-
+        
     End Sub
 
     Private Sub endMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles endMilestoneDropbox.SelectedIndexChanged
 
-        If endMilestoneDropbox.Text = "Projektende" Then
-            endMsOffset = dauerVorlage - 1
+        If dontFire Then
+            ' nichts tun
         Else
-            endMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(endMilestoneDropbox.Text))
+            If endMilestoneDropbox.Text = "Projektende" Then
+                endMsOffset = dauerVorlage - 1
+            Else
+                endMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(endMilestoneDropbox.Text))
+            End If
+
+            If dauerUnverändert.Checked Then
+                calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
+                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
+
+                DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
+            Else
+                calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+
+            End If
+
+            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                        calcProjektEnde.ToShortDateString
+
         End If
-
-        If dauerUnverändert.Checked Then
-            calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
-            calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
-
-            DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
-        Else
-            calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-            calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
-
-        End If
-
-        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
-                                    calcProjektEnde.ToShortDateString
-
+        
     End Sub
 
     ''' <summary>
