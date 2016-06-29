@@ -244,6 +244,9 @@
                 If elemID = rootPhaseName Then
                     elemID = rootPhaseNameDB
                 End If
+                If elemID.Contains(punktName) Then
+                    elemID = elemID.Replace(punktName, punktNameDB)
+                End If
                 hryNode = hry.nodeItem(i)
                 hryNodeDB.copyFrom(hryNode)
 
@@ -271,6 +274,9 @@
                 elemID = Me.allNodes.ElementAt(i - 1).Key
                 If elemID = rootPhaseNameDB Then
                     elemID = rootPhaseName
+                End If
+                If elemID.Contains(punktNameDB) Then
+                    elemID = elemID.Replace(punktNameDB, punktName)
                 End If
                 hryNodeDB = Me.allNodes.ElementAt(i - 1).Value
                 hryNodeDB.copyTo(hryNode)
