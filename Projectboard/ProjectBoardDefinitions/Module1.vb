@@ -152,6 +152,11 @@ Public Module Module1
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
     Public Const rootPhaseNameDB As String = "0"
 
+    ' ur:29.06.2016: da "." kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
+    ' also wird "." = punktName durch "~|°" = punktNameDB  nur zum Speichern in DB ersetzt. Beim Lesen umgekehrt.
+    Public Const punktName As String = "."
+    Public Const punktNameDB As String = "~|°"
+
 
     ' diese Konstante legt die Einrücktiefe fest. Das wird benötigt beim Exportieren von Projekte in ein File, ebenso beim Importieren von Datei
     Public Const einrückTiefe As Integer = 2

@@ -55,37 +55,37 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("ds021701.mlab.com:21701")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\Project-Tafel Folder\Engineering Demo 2016\")> _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\Project-Tafel Folder\BMW Demo\")>  _
     Public ReadOnly Property awinPath() As String
         Get
-            Return CType(Me("awinPath"), String)
+            Return CType(Me("awinPath"),String)
         End Get
     End Property
-
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("visbomahle")> _
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("visbomahle")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
-            Return CType(Me("mongoDBname"), String)
+            Return CType(Me("mongoDBname"),String)
         End Get
     End Property
-
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\Engineering Demo 2016\")> _
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BMW Demo\")>  _
     Public ReadOnly Property globalPath() As String
         Get
-            Return CType(Me("globalPath"), String)
+            Return CType(Me("globalPath"),String)
         End Get
     End Property
     
