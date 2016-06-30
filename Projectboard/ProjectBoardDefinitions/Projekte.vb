@@ -10401,7 +10401,8 @@ Public Module Projekte
 
                 If ShowProjekte.contains(hproj.name) Then
                     With hproj
-                        Call replaceProjectVariant(.name, .variantName, False, True, 0)
+                        'Call replaceProjectVariant(.name, .variantName, False, True, 0)
+                        Call replaceProjectVariant(.name, .variantName, False, True, kvp.Value.zeile)
                         projectDidNotExistYet = False
                     End With
                 ElseIf kvp.Value.show = True Then
@@ -19293,23 +19294,29 @@ Public Module Projekte
                     With newConstellationItem
                         .projectName = hproj.name
                         .variantName = hproj.variantName
-                        Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
+                        .zeile = 0
+                        .Start = hproj.startDate
 
-                        If Not IsNothing(shownProject) Then
-                            If shownProject.variantName = hproj.variantName Then
+                        If ShowProjekte.contains(.projectName) Then
+
+                            Dim shownProject As clsProjekt = ShowProjekte.getProject(.projectName)
+
+                            If shownProject.variantName = .variantName Then
                                 .show = True
+                                .zeile = shownProject.tfZeile
                             Else
                                 .show = False
                             End If
+
                         Else
                             .show = False
                         End If
-
-                        .Start = hproj.startDate
-                        .zeile = hproj.tfZeile
+                        
 
                     End With
+
                     newC.Add(newConstellationItem)
+
                 End If
                 
             Next
@@ -19321,23 +19328,28 @@ Public Module Projekte
                 With newConstellationItem
                     .projectName = kvp.Value.name
                     .variantName = kvp.Value.variantName
+                    .zeile = 0
+                    .Start = kvp.Value.startDate
 
-                    Dim shownProject As clsProjekt = ShowProjekte.getProject(kvp.Value.name)
-                    If Not IsNothing(shownProject) Then
-                        If shownProject.variantName = kvp.Value.variantName Then
+                    If ShowProjekte.contains(.projectName) Then
+
+                        Dim shownProject As clsProjekt = ShowProjekte.getProject(.projectName)
+
+                        If shownProject.variantName = .variantName Then
                             .show = True
+                            .zeile = shownProject.tfZeile
                         Else
                             .show = False
                         End If
+
                     Else
                         .show = False
                     End If
 
-                    .Start = kvp.Value.startDate
-                    .zeile = kvp.Value.tfZeile
-
                 End With
+
                 newC.Add(newConstellationItem)
+
             Next
         End If
 
@@ -19454,11 +19466,12 @@ Public Module Projekte
 
     ''' <summary>
     ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
-    ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der myCollection aufgeführt sind
+    ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der ImportProjekte aufgeführt sind
     ''' </summary>
     ''' <param name="importDate"></param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal pStatus As String)
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal pStatus As String, _
+                                       Optional drawPlanTafel As Boolean = True)
 
 
         'Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
@@ -19477,6 +19490,7 @@ Public Module Projekte
 
         If AlleProjekte.Count > 0 Then
             wasNotEmpty = True
+            tafelZeile = projectboardShapes.getMaxZeile
         Else
             wasNotEmpty = False
         End If
@@ -19566,6 +19580,7 @@ Public Module Projekte
 
                             ' Änderung 28.1.14: bei einem bereits existierenden Projekt muss der Status mitübernommen werden 
                             .Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
+
                             .tfZeile = cproj.tfZeile
                             .timeStamp = importDate
                             .UID = cproj.UID
@@ -19774,13 +19789,16 @@ Public Module Projekte
 
             ' Änderung tk: jetzt wird das neu gezeichnet 
 
-            If wasNotEmpty Then
-                Call awinClearPlanTafel()
-            End If
+            If drawPlanTafel Then
+                If wasNotEmpty Then
+                    Call awinClearPlanTafel()
+                End If
 
-            'Call awinZeichnePlanTafel(True)
-            Call awinZeichnePlanTafel(False)
-            Call awinNeuZeichnenDiagramme(2)
+                'Call awinZeichnePlanTafel(True)
+                Call awinZeichnePlanTafel(False)
+                Call awinNeuZeichnenDiagramme(2)
+            End If
+            
 
         End If
 

@@ -6330,7 +6330,7 @@ Public Module testModule
         ' Änderung tk: hier wird entschieden, ob in der ersten Spalte die Projektnamen aufgeführt werden , 
         ' dann benötigt man in den Zellen nicht mehr den Projekt-Namen, dafür werden es tendenziell mehr Zeilen ... 
         Dim pNamesInFirstSpalte As Boolean
-        If pNameCollection.Count <= 15 Then
+        If pNameCollection.Count <= 25 Then
             pNamesInFirstSpalte = True
             neededSpalten = neededSpalten + 1
             neededZeilen = pNameCollection.Count + 2
@@ -6568,7 +6568,8 @@ Public Module testModule
                                                                 tmpNameC
                     CType(.Cell(neededZeilen - ize, 1), pptNS.Cell).Shape.TextFrame2.TextRange.ParagraphFormat.Alignment = _
                                                     MsoParagraphAlignment.msoAlignLeft
-                    Dim tmpvalues() As Double
+                    'Dim tmpvalues() As Double
+                    Dim tmpvalues() As String
                     ReDim tmpvalues(showRangeRight - showRangeLeft)
 
                     ' die neededspalten wurde ja bei pNAmesInFirstSpalte um eine erhöht ... 
@@ -6602,7 +6603,7 @@ Public Module testModule
                                         tmpName = tmpName.Trim
 
                                         If tmpName = tmpNameC Then
-                                            tmpvalues(i - 1) = CDbl(tmpStr(tmpStr.Length - 1))
+                                            tmpvalues(i - 1) = tmpStr(tmpStr.Length - 1)
                                         End If
 
                                     Catch ex As Exception
@@ -6619,13 +6620,14 @@ Public Module testModule
 
 
                     For isp As Integer = 1 To showRangeRight - showRangeLeft + 1
-                        If tmpvalues(isp - 1) > 0 Then
-                            CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                                                                tmpvalues(isp - 1).ToString
-                        Else
-                            CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
-                        End If
-                        
+                        'If tmpvalues(isp - 1) > 0 Then
+                        '    CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                        '                                        tmpvalues(isp - 1).ToString
+                        'Else
+                        '    CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        'End If
+                        CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpvalues(isp - 1)
+
                     Next
 
                 Next
