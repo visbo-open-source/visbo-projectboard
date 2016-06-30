@@ -53,7 +53,7 @@ Public Module testModule
             ' Der Report dieses Projektes soll dann zuerst erstellt werden, denn somit wird das Format der PowerPointPräsentation danach ausgewählt.
 
             Dim maxProj As clsProjekt = Nothing
-            Dim maxZeilen As Integer = 1
+            Dim maxZeilen As Integer = 0
 
             For Each singleShp In awinSelection
 
