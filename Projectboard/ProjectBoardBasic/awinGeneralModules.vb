@@ -702,265 +702,271 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub awinsetTypen()
-
-        Dim i As Integer
-        Dim xlsCustomization As Excel.Workbook = Nothing
-
-        ReDim importOrdnerNames(6)
-        ReDim exportOrdnerNames(4)
+        Try
 
 
+            Dim i As Integer
+            Dim xlsCustomization As Excel.Workbook = Nothing
 
-        globalPath = awinSettings.globalPath
-
-        ' awinPath kann relativ oder absolut angegeben sein, beides möglich
-
-        Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-
-        awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
-
-        If Not awinPath.EndsWith("\") Then
-            awinPath = awinPath & "\"
-        End If
+            ReDim importOrdnerNames(6)
+            ReDim exportOrdnerNames(4)
 
 
-        If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
-            awinPath = globalPath
-        ElseIf globalPath = "" And (awinPath <> "" And My.Computer.FileSystem.DirectoryExists(awinPath)) Then
-            globalPath = awinPath
-        ElseIf globalPath = "" Or awinPath = "" Then
-            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
-        End If
 
-        If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
-            Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
-        End If
+            globalPath = awinSettings.globalPath
 
-        ' Synchronization von Globalen und Lokalen Pfad
+            ' awinPath kann relativ oder absolut angegeben sein, beides möglich
 
-        If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
+            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
-            Call synchronizeGlobalToLocalFolder()
+            awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
 
-        Else
-            If My.Computer.FileSystem.DirectoryExists(awinPath) And (Dir(awinPath, vbDirectory) = "") Then
-                Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
+            If Not awinPath.EndsWith("\") Then
+                awinPath = awinPath & "\"
             End If
 
-        End If
 
+            If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
+                awinPath = globalPath
+            ElseIf globalPath = "" And (awinPath <> "" And My.Computer.FileSystem.DirectoryExists(awinPath)) Then
+                globalPath = awinPath
+            ElseIf globalPath = "" Or awinPath = "" Then
+                Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
+            End If
 
-        ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
+            If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
+                Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+            End If
 
-        reportOrdnerName = awinPath & "Reports\"
-        Try
-            My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
-        Catch ex As Exception
+            ' Synchronization von Globalen und Lokalen Pfad
 
-        End Try
+            If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
 
-        importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
-        importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
-        importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
-        importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
-        importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
-        importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
-        importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
+                Call synchronizeGlobalToLocalFolder()
 
-        exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
-        exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
-        exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
-        exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
-        exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
-
-
-        StartofCalendar = StartofCalendar.Date
-
-        LizenzKomponenten(PTSWKomp.ProjectAdmin) = "ProjectAdmin"
-        LizenzKomponenten(PTSWKomp.Swimlanes2) = "Swimlanes2"
-        LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
-        LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
-        LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
-
-
-        ProjektStatus(0) = "geplant"
-        ProjektStatus(1) = "beauftragt"
-        ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
-        ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
-        ProjektStatus(4) = "abgeschlossen"
-
-        ''ReportLang(PTSprache.deutsch) = "de"
-        ''ReportLang(PTSprache.englisch) = "en"
-        ''ReportLang(PTSprache.französisch) = "fr"
-        ''ReportLang(PTSprache.spanisch) = "es"
-        
-
-        DiagrammTypen(0) = "Phase"
-        DiagrammTypen(1) = "Rolle"
-        DiagrammTypen(2) = "Kostenart"
-        DiagrammTypen(3) = "Portfolio"
-        DiagrammTypen(4) = "Ergebnis"
-        DiagrammTypen(5) = "Meilenstein"
-        DiagrammTypen(6) = "Meilenstein Trendanalyse"
-
-        Try
-            ''repCult = CultureInfo.CurrentCulture
-            repCult = ReportLang(PTSprache.englisch)
-            'repCult = ReportLang(PTSprache.deutsch)
-
-
-            repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
-
-            Call setLanguageMessages()
-
-        Catch ex As Exception
-
-        End Try
-
-        autoSzenarioNamen(0) = "vor Optimierung"
-        autoSzenarioNamen(1) = "1. Optimum"
-        autoSzenarioNamen(2) = "2. Optimum"
-        autoSzenarioNamen(3) = "3. Optimum"
-
-        windowNames(0) = "Cockpit Phasen"
-        windowNames(1) = "Cockpit Rollen"
-        windowNames(2) = "Cockpit Kosten"
-        windowNames(3) = "Cockpit Wertigkeit"
-        windowNames(4) = "Cockpit Ergebnisse"
-        windowNames(5) = "Projekt Tafel"
-
-        '
-        ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
-        '
-        arrWsNames(1) = "Portfolio"
-        arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
-        arrWsNames(3) = "Tabelle1"
-        arrWsNames(4) = "Einstellungen"
-        arrWsNames(5) = "Tabelle2"
-        arrWsNames(6) = "Edit Allgemein"
-        arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
-        arrWsNames(8) = "Phasen-Mappings"
-        arrWsNames(9) = "Tabelle3"
-        arrWsNames(10) = "Meilenstein-Mappings"
-        arrWsNames(11) = "Projekt editieren"
-        arrWsNames(12) = "Lizenzen"
-        arrWsNames(13) = "Projekt iErloese"
-        arrWsNames(14) = "Objekte"
-        arrWsNames(15) = "missing Definitions"
-
-
-        awinSettings.applyFilter = False
-
-        showRangeLeft = 0
-        showRangeRight = 0
-
-        'selectedRoleNeeds = 0
-        'selectedCostNeeds = 0
-
-        ' bestimmen der maximalen Breite und Höhe 
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        appInstance.ScreenUpdating = False
-
-
-        ' um dahinter temporär die Darstellungsklassen kopieren zu können  
-        Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-
-
-        With appInstance.ActiveWindow
-
-
-            If .WindowState = Excel.XlWindowState.xlMaximized Then
-                maxScreenHeight = .Height
-                maxScreenWidth = .Width
             Else
-                Dim formerState As Excel.XlWindowState = .WindowState
-                .WindowState = Excel.XlWindowState.xlMaximized
-                maxScreenHeight = .Height
-                maxScreenWidth = .Width
-                .WindowState = formerState
+                If My.Computer.FileSystem.DirectoryExists(awinPath) And (Dir(awinPath, vbDirectory) = "") Then
+                    Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
+                End If
+
             End If
 
 
-        End With
+            ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
 
-        miniHeight = maxScreenHeight / 6
-        miniWidth = maxScreenWidth / 10
+            reportOrdnerName = awinPath & "Reports\"
+            Try
+                My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+            Catch ex As Exception
 
+            End Try
 
+            importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
+            importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
+            importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
+            importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
+            importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+            importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
+            importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
 
-        Dim oGrenze As Integer = UBound(frmCoord, 1)
-        ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
-        For i = 0 To oGrenze
-            frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
-            frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
-        Next
-
-        ' jetzt setzen der Werte für Status-Information und Milestone-Information
-        frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
-        frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-        frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
-        frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-        ' With listOfWorkSheets(arrWsNames(4))
-
-        ' Logfile öffnen und ggf. initialisieren
-        Call logfileOpen()
+            exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
+            exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
+            exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
+            exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
+            exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
 
 
-        ' Auslesen des Window Namens 
-        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
-        Dim myUser As New WindowsIdentity(accountToken)
-        myWindowsName = myUser.Name
-        Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+            StartofCalendar = StartofCalendar.Date
+
+            LizenzKomponenten(PTSWKomp.ProjectAdmin) = "ProjectAdmin"
+            LizenzKomponenten(PTSWKomp.Swimlanes2) = "Swimlanes2"
+            LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
+            LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
+            LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
 
 
+            ProjektStatus(0) = "geplant"
+            ProjektStatus(1) = "beauftragt"
+            ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
+            ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
+            ProjektStatus(4) = "abgeschlossen"
 
-
-
-        ' hier muss jetzt das Customization File aufgemacht werden ...
-        Try
-            xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
-            myCustomizationFile = appInstance.ActiveWorkbook.Name
-        Catch ex As Exception
-            appInstance.ScreenUpdating = formerSU
-            Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-        End Try
-
-        Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-        ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
-        '' ''Try
-        '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
-        '' ''    If awinSettings.databaseName = "" Then
-        '' ''        awinSettings.databaseName = "VisboTest"
-        '' ''    End If
-        '' ''Catch ex As Exception
-
-        '' ''    awinSettings.databaseName = "VisboTest"
-        '' ''    'appInstance.ScreenUpdating = formerSU
-        '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
-        '' ''End Try
+            ''ReportLang(PTSprache.deutsch) = "de"
+            ''ReportLang(PTSprache.englisch) = "en"
+            ''ReportLang(PTSprache.französisch) = "fr"
+            ''ReportLang(PTSprache.spanisch) = "es"
 
 
 
-        ' ur: 23.01.2015: Abfragen der Login-Informationen
-        loginErfolgreich = loginProzedur()
+            DiagrammTypen(0) = "Phase"
+            DiagrammTypen(1) = "Rolle"
+            DiagrammTypen(2) = "Kostenart"
+            DiagrammTypen(3) = "Portfolio"
+            DiagrammTypen(4) = "Ergebnis"
+            DiagrammTypen(5) = "Meilenstein"
+            DiagrammTypen(6) = "Meilenstein Trendanalyse"
+
+            Try
+                ''repCult = CultureInfo.CurrentCulture
+                'repCult = ReportLang(PTSprache.englisch)
+                repCult = ReportLang(PTSprache.deutsch)
 
 
-        If Not loginErfolgreich Then
-            ' Customization-File wird geschlossen
-            xlsCustomization.Close(SaveChanges:=False)
-            Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
-            Call logfileSchliessen()
-            appInstance.Quit()
-            Exit Sub
-        Else
+                repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+
+                Call setLanguageMessages()
+
+            Catch ex As Exception
+
+            End Try
+
+            autoSzenarioNamen(0) = "vor Optimierung"
+            autoSzenarioNamen(1) = "1. Optimum"
+            autoSzenarioNamen(2) = "2. Optimum"
+            autoSzenarioNamen(3) = "3. Optimum"
+
+            windowNames(0) = "Cockpit Phasen"
+            windowNames(1) = "Cockpit Rollen"
+            windowNames(2) = "Cockpit Kosten"
+            windowNames(3) = "Cockpit Wertigkeit"
+            windowNames(4) = "Cockpit Ergebnisse"
+            windowNames(5) = "Projekt Tafel"
+
+            '
+            ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
+            '
+            arrWsNames(1) = "Portfolio"
+            arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
+            arrWsNames(3) = "Tabelle1"
+            arrWsNames(4) = "Einstellungen"
+            arrWsNames(5) = "Tabelle2"
+            arrWsNames(6) = "Edit Allgemein"
+            arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
+            arrWsNames(8) = "Phasen-Mappings"
+            arrWsNames(9) = "Tabelle3"
+            arrWsNames(10) = "Meilenstein-Mappings"
+            arrWsNames(11) = "Projekt editieren"
+            arrWsNames(12) = "Lizenzen"
+            arrWsNames(13) = "Projekt iErloese"
+            arrWsNames(14) = "Objekte"
+            arrWsNames(15) = "missing Definitions"
 
 
+            awinSettings.applyFilter = False
+
+            showRangeLeft = 0
+            showRangeRight = 0
+
+            'selectedRoleNeeds = 0
+            'selectedCostNeeds = 0
+
+            ' bestimmen der maximalen Breite und Höhe 
+            Dim formerSU As Boolean = appInstance.ScreenUpdating
+            appInstance.ScreenUpdating = False
+
+
+            ' um dahinter temporär die Darstellungsklassen kopieren zu können  
+            Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+
+            With appInstance.ActiveWindow
+
+
+                If .WindowState = Excel.XlWindowState.xlMaximized Then
+                    maxScreenHeight = .Height
+                    maxScreenWidth = .Width
+                Else
+                    Dim formerState As Excel.XlWindowState = .WindowState
+                    .WindowState = Excel.XlWindowState.xlMaximized
+                    maxScreenHeight = .Height
+                    maxScreenWidth = .Width
+                    .WindowState = formerState
+                End If
+
+
+            End With
+
+            miniHeight = maxScreenHeight / 6
+            miniWidth = maxScreenWidth / 10
+
+
+
+            Dim oGrenze As Integer = UBound(frmCoord, 1)
+            ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
+            For i = 0 To oGrenze
+                frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
+                frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
+            Next
+
+            ' jetzt setzen der Werte für Status-Information und Milestone-Information
+            frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
+            frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+            frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
+            frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+            ' With listOfWorkSheets(arrWsNames(4))
+
+            ' Logfile öffnen und ggf. initialisieren
+            Call logfileOpen()
+
+
+            ' Auslesen des Window Namens 
+            Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+            Dim myUser As New WindowsIdentity(accountToken)
+            myWindowsName = myUser.Name
+            Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+
+
+
+
+
+            ' hier muss jetzt das Customization File aufgemacht werden ...
+            Try
+                xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
+                myCustomizationFile = appInstance.ActiveWorkbook.Name
+            Catch ex As Exception
+                appInstance.ScreenUpdating = formerSU
+                Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+            End Try
+
+            Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
+            '' ''Try
+            '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
+            '' ''    If awinSettings.databaseName = "" Then
+            '' ''        awinSettings.databaseName = "VisboTest"
+            '' ''    End If
+            '' ''Catch ex As Exception
+
+            '' ''    awinSettings.databaseName = "VisboTest"
+            '' ''    'appInstance.ScreenUpdating = formerSU
+            '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
+            '' ''End Try
+
+            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                noDB = False
+
+                ' ur: 23.01.2015: Abfragen der Login-Informationen
+                loginErfolgreich = loginProzedur()
+
+
+                If Not loginErfolgreich Then
+                    ' Customization-File wird geschlossen
+                    xlsCustomization.Close(SaveChanges:=False)
+                    Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
+                    Call logfileSchliessen()
+                    appInstance.Quit()
+                    Exit Sub
+
+                End If
+            
+            End If
 
 
             Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -1092,8 +1098,11 @@ Public Module awinGeneralModules
                 projectBoardSheet.Activate()
                 appInstance.EnableEvents = True
 
-                ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
-                Call readInitConstellations()
+                If Not noDB Then
+                    ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
+                    Call readInitConstellations()
+                End If
+
 
             Catch ex As Exception
                 appInstance.ScreenUpdating = formerSU
@@ -1105,8 +1114,9 @@ Public Module awinGeneralModules
             Call logfileSchliessen()
 
 
-        End If  ' von "if Login erfolgt"
-
+        Catch ex As Exception
+            Call MsgBox("Fehler in awinsettypen" & vbLf & "ex.message")
+        End Try
 
     End Sub
 
@@ -3589,7 +3599,6 @@ Public Module awinGeneralModules
         isRemovable = result
 
     End Function
-
     ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
     ''' stellt sie in ImportProjekte 
@@ -3614,7 +3623,6 @@ Public Module awinGeneralModules
         Dim description As String = ""
         Dim businessUnit As String = ""
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim custFields As New Collection
         ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
@@ -3943,132 +3951,6 @@ Public Module awinGeneralModules
                                 End If
                             End If
 
-                            ' '' ####################################################################
-                            ' '' prüfen ob das Projekt bereits in Session oder Datenbank existiert 
-                            ' '' 
-                            ''If AlleProjekte.Containskey(vglName) Then
-                            ''    ' dann existiert es bereits in der Session
-
-                            ''    vglProj = AlleProjekte.getProject(vglName)
-                            ''    If IsNothing(vglProj) Then
-                            ''        ' dieser Fall kann eigentlich gar nicht auftreten ... ? 
-                            ''        Call MsgBox("Fehler mit " & vglName)
-
-                            ''    Else
-                            ''        ' prüfen, ob es unterschiedlich ist; 
-                            ''        ' wenn ja , dann wird es unter dem Varianten Namen Datei-Name angelegt
-                            ''        ' wenn der auch schon existiert, dann Fehler udn nichts anlegen ...
-                            ''        Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
-
-                            ''        If unterschiede.Count > 0 Then
-                            ''            ' es gibt Unterschiede, also muss eine Variante angelegt werden 
-                            ''            If hproj.variantName <> scenarioNAme Then
-                            ''                hproj.variantName = scenarioNAme
-                            ''                vglName = calcProjektKey(hproj.name, hproj.variantName)
-
-                            ''                ' wenn die Variante bereits in der Session existiert ..
-                            ''                ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                            ''                If AlleProjekte.Containskey(vglName) Then
-                            ''                    AlleProjekte.Remove(vglName)
-                            ''                End If
-
-                            ''            Else
-                            ''                ' in diesem Fall wird die Variante über hproj neu angelegt 
-                            ''                AlleProjekte.Remove(vglName)
-                            ''            End If
-
-                            ''            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
-
-                            ''            Try
-                            ''                namesForConstellation.Add(vglName, vglName)
-                            ''            Catch ex As Exception
-
-                            ''            End Try
-
-                            ''        Else
-                            ''            ' Projekt in der Form existiert bereits , keine Neu-Anlage
-                            ''            ' es muss sichergestellt sein, dass es angezeigt wird und die Portfolio Definition entsprechend angepasst wird 
-                            ''            ok = True
-                            ''            hproj = vglProj
-
-                            ''            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
-
-                            ''            Try
-                            ''                namesForConstellation.Add(vglName, vglName)
-                            ''            Catch ex As Exception
-
-                            ''            End Try
-                            ''        End If
-                            ''    End If
-                            ''Else
-                            ''    '
-                            ''    ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-
-                            ''    If request.pingMongoDb() Then
-
-                            ''        If request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
-
-                            ''            ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                            ''            vglProj = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName)
-
-                            ''            If IsNothing(vglProj) Then
-                            ''                ok = False
-                            ''            Else
-                            ''                Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
-                            ''                If unterschiede.Count > 0 Then
-                            ''                    ok = True ' das heisst es kommt in ImportProjekte 
-                            ''                    ' es muss eine Variante angelegt werden 
-                            ''                    If hproj.variantName <> scenarioName Then
-                            ''                        hproj.variantName = scenarioName
-                            ''                        vglName = calcProjektKey(hproj.name, hproj.variantName)
-
-                            ''                        ' wenn die Variante bereits in der Session existiert ..
-                            ''                        ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                            ''                        If AlleProjekte.Containskey(vglName) Then
-                            ''                            AlleProjekte.Remove(vglName)
-                            ''                        End If
-
-                            ''                    Else
-                            ''                        ' in diesem Fall wird die Variante über hproj neu angelegt 
-                            ''                        AlleProjekte.Remove(vglName)
-                            ''                    End If
-
-                            ''                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
-
-                            ''                    Try
-                            ''                        namesForConstellation.Add(vglName, vglName)
-                            ''                    Catch ex As Exception
-
-                            ''                    End Try
-
-                            ''                Else
-                            ''                    ' Projekt in der Form existiert bereits , es wird das über die Datei erzeugte hproj verwendet 
-                            ''                    vglName = calcProjektKey(hproj.name, hproj.variantName)
-                            ''                    Try
-                            ''                        namesForConstellation.Add(vglName, vglName)
-                            ''                    Catch ex As Exception
-
-                            ''                    End Try
-                            ''                End If
-                            ''            End If
-
-                            ''        Else
-                            ''            ' nichts weiter tun, Projekt existert noch nicht; es kann und soll das bereits angelegte hproj verwendet werden 
-                            ''            Try
-                            ''                vglName = calcProjektKey(hproj.name, hproj.variantName)
-                            ''                namesForConstellation.Add(vglName, vglName)
-                            ''            Catch ex As Exception
-
-                            ''            End Try
-                            ''        End If
-                            ''    Else
-                            ''        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & hproj.name & "'konnte nicht geladen werden")
-                            ''    End If
-
-
-
-                            ''End If
-
                         Else
                             ok = False
                         End If
@@ -4103,107 +3985,6 @@ Public Module awinGeneralModules
 
     End Sub
 
-    ''' <summary>
-    ''' diese Funktion verarbeitet die Import Projekte 
-    ''' wenn sie schon in der Datenbank bzw Session existieren und unterschiedlich sind: es wird eine Variante angelegt, die so heisst wie das Scenario 
-    ''' wenn sie bereits existieren und identisch sind: in AlleProjekte holen, wenn nicht schon geschehen
-    ''' wenn sie noch nicht existieren: in AlleProjekte anlegen
-    ''' in jedem Fall: eine Constellation mit dem Namen cName anlegen
-    ''' </summary>
-    ''' <param name="cName"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function verarbeiteImportProjekte(ByVal cName As String) As clsConstellation
-        Dim newC As New clsConstellation
-        newC.constellationName = cName
-        Dim vglProj As clsProjekt
-        Dim lfdZeilenNr As Integer = 2
-        Dim ok As Boolean
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
-
-            Dim impProjekt As clsProjekt = kvp.Value
-            Dim importKey As String = calcProjektKey(impProjekt)
-
-            vglProj = Nothing
-
-            If AlleProjekte.Containskey(importKey) Then
-
-                vglProj = AlleProjekte.getProject(importKey)
-
-            Else
-                ' nicht in der Session, aber ist es in der Datenbank ?  
-
-                '
-                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If Request.pingMongoDb() Then
-
-                    If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName) Then
-
-                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName)
-
-                        If IsNothing(vglProj) Then
-                            ' kann eigentlich nicht sein 
-                            ok = False
-                        Else
-                            ' jetzt in AlleProjekte eintragen ... 
-                            AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
-
-                        End If
-
-                    Else
-                        ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
-                        AlleProjekte.Add(importKey, impProjekt)
-                        
-                    End If
-                Else
-                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
-                End If
-
-
-
-            End If
-
-            ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
-            If Not IsNothing(vglProj) Then
-
-                Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
-
-                If unterschiede.Count > 0 Then
-                    ' es gibt Unterschiede, also muss eine Variante angelegt werden 
-
-                    impProjekt.variantName = cName
-                    importKey = calcProjektKey(impProjekt)
-
-                    ' wenn die Variante bereits in der Session existiert ..
-                    ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                    If AlleProjekte.Containskey(importKey) Then
-                        AlleProjekte.Remove(importKey)
-                    End If
-
-                    ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
-                    AlleProjekte.Add(importKey, impProjekt)
-                End If
-            End If
-
-            ' Aufnehmen in Constellation
-            Dim newCItem As New clsConstellationItem
-            newCItem.projectName = impProjekt.name
-            newCItem.variantName = impProjekt.variantName
-            newCItem.show = True
-            newCItem.Start = impProjekt.startDate
-            newCItem.zeile = lfdZeilenNr
-            newC.Add(newCItem)
-
-            lfdZeilenNr = lfdZeilenNr + 1
-
-        Next
-
-        verarbeiteImportProjekte = newC
-
-    End Function
 
 
     Public Sub awinImportModule(ByRef myCollection As Collection)
@@ -8506,7 +8287,7 @@ Public Module awinGeneralModules
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
         ' prüfen, ob diese Constellation überhaupt existiert ..
         Try
@@ -8517,11 +8298,12 @@ Public Module awinGeneralModules
         End Try
 
         If deleteDB Then
-            If request.pingMongoDb() Then
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If Request.pingMongoDb() Then
 
                 ' Konstellation muss aus der Datenbank gelöscht werden.
 
-                returnValue = request.removeConstellationFromDB(activeConstellation)
+                returnValue = Request.removeConstellationFromDB(activeConstellation)
             Else
                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
                 returnValue = False
@@ -9579,15 +9361,13 @@ Public Module awinGeneralModules
         Dim pname As String = ""
         Dim variantName As String = ""
         Dim loadErrorMsg As String = ""
-        Dim listOfVariantNamesDB As Collection
+        Dim listOfVariantNamesDB As New Collection
 
 
         Dim deletedProj As Integer = 0
 
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
-
+      
         ' alles zurücksetzen 
         projektHistorien.clear()
 
@@ -9602,9 +9382,12 @@ Public Module awinGeneralModules
         Select Case aKtionskennung
 
             Case PTTvActions.delFromDB
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
                 pname = ""
                 variantName = ""
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = Request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.delFromSession
@@ -9612,6 +9395,9 @@ Public Module awinGeneralModules
                 loadErrorMsg = "es sind keine Projekte geladen"
 
             Case PTTvActions.loadPVS    ' ur: 30.01.2015: aktuell nicht benutzt!!!
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
                 pname = ""
                 variantName = ""
 
@@ -9621,6 +9407,9 @@ Public Module awinGeneralModules
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.loadPV
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
                 pname = ""
                 variantName = ""
 
@@ -9670,7 +9459,14 @@ Public Module awinGeneralModules
                 For Each pname In projektliste
 
                     showPname = True
-                    listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
+                    If noDB Then
+                        listOfVariantNamesDB.Clear()
+                    Else
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
+                        listOfVariantNamesDB = Request.retrieveVariantNamesFromDB(pname)
+                    End If
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
                     If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then
@@ -9939,13 +9735,15 @@ Public Module awinGeneralModules
 
         Dim loginDialog As New frmAuthentication
         Dim returnValue As DialogResult
+        Dim i As Integer = 0
 
         returnValue = DialogResult.Retry
 
-        While returnValue = DialogResult.Retry
+        ' ur: 30.6.2016: Login-Versuche auf fünf limitiert
+        While returnValue = DialogResult.Retry And i < 5
 
             returnValue = loginDialog.ShowDialog
-
+            i = i + 1
         End While
 
         If returnValue = DialogResult.Abort Then
@@ -10752,48 +10550,57 @@ Public Module awinGeneralModules
         ' einlesen und anzeigen der in der Datenbank definierten Filter
         If menuOption = PTmenue.filterdefinieren Then
 
+            If Not noDB Then
+                ' Filter mit Namen "fName" in DB speichern
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
+                ' Datenbank ist gestartet
+                If request.pingMongoDb() Then
 
-            ' Datenbank ist gestartet
-            If request.pingMongoDb() Then
-
-                Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(False)
-                For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
-                    If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
-                        filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
-                    End If
-                Next
+                    Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(False)
+                    For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
+                        If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
+                            filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
+                        End If
+                    Next
+                Else
+                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                End If
             Else
-                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+
             End If
+
         Else
             If menuOption = PTmenue.visualisieren Or _
                 menuOption = PTmenue.multiprojektReport Or _
                 menuOption = PTmenue.einzelprojektReport Or _
                 menuOption = PTmenue.leistbarkeitsAnalyse Then
 
-                ' allee Filter aus DB lesen
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If Not noDB Then
 
-                ' Datenbank ist gestartet
-                If request.pingMongoDb() Then
+                    ' allee Filter aus DB lesen
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
-                    For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
+                    ' Datenbank ist gestartet
+                    If request.pingMongoDb() Then
 
-                        If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
-                            selFilterDefinitions.Liste.Add(kvp.Key, kvp.Value)
-                        End If
+                        Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
+                        For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
 
-                    Next
-                Else
-                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                            If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
+                                selFilterDefinitions.Liste.Add(kvp.Key, kvp.Value)
+                            End If
+
+                        Next
+                    Else
+                        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                    End If
+
                 End If
             End If
         End If
+
 
     End Sub
 
@@ -11268,18 +11075,23 @@ Public Module awinGeneralModules
 
             filterDefinitions.storeFilter(fName, lastFilter)
 
-            ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If Not noDB Then
 
-            ' Datenbank ist gestartet
-            If request.pingMongoDb() Then
 
-                Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
-                Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, False)
-            Else
-                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                ' Filter mit Namen "fName" in DB speichern
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                ' Datenbank ist gestartet
+                If request.pingMongoDb() Then
+
+                    Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
+                    Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, False)
+                Else
+                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                End If
+
+
             End If
-
 
         Else        ' nicht menuOption = PTmenue.filterdefinieren
 
@@ -11304,16 +11116,21 @@ Public Module awinGeneralModules
             End If
 
             selFilterDefinitions.storeFilter(fName, lastFilter)
-            ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            ' Datenbank ist gestartet
-            If request.pingMongoDb() Then
+            If Not noDB Then
 
-                Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
-                Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, True)
-            Else
-                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                ' Filter mit Namen "fName" in DB speichern
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                ' Datenbank ist gestartet
+                If request.pingMongoDb() Then
+
+                    Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
+                    Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, True)
+                Else
+                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                End If
+
             End If
 
         End If

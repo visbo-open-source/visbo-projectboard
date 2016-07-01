@@ -281,7 +281,7 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim node As New TreeNode
         Dim nodeVariant As New TreeNode
         Dim nodeTimeStamp As New TreeNode
@@ -382,25 +382,30 @@ Public Class frmProjPortfolioAdmin
 
                 If hliste.Count = 0 Then
 
-                    If request.pingMongoDb() Then
-                    Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-                    End If
+                    If Not noDB Then
 
-                    ' Lesen der TimeStamp Snapshots für ProjNAme, variantName 
-                    Try
-                        If Not projekthistorie Is Nothing Then
-                            projekthistorie.clear()
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If request.pingMongoDb() Then
                         Else
-                            projekthistorie = New clsProjektHistorie
+                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
                         End If
 
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName, _
-                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                        ' Lesen der TimeStamp Snapshots für ProjNAme, variantName 
+                        Try
+                            If Not projekthistorie Is Nothing Then
+                                projekthistorie.clear()
+                            Else
+                                projekthistorie = New clsProjektHistorie
+                            End If
 
-                    Catch ex As Exception
-                        projekthistorie.clear()
-                    End Try
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName, _
+                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+
+                        Catch ex As Exception
+                            projekthistorie.clear()
+                        End Try
+
+                    End If
 
                     If projekthistorie.Count > 0 Then
 
@@ -480,8 +485,8 @@ Public Class frmProjPortfolioAdmin
         'Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+        ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ' ''Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
         Dim p As Integer, v As Integer, t As Integer
 
