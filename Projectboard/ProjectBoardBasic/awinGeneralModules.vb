@@ -3985,7 +3985,107 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' diese Funktion verarbeitet die Import Projekte 
+    ''' wenn sie schon in der Datenbank bzw Session existieren und unterschiedlich sind: es wird eine Variante angelegt, die so heisst wie das Scenario 
+    ''' wenn sie bereits existieren und identisch sind: in AlleProjekte holen, wenn nicht schon geschehen
+    ''' wenn sie noch nicht existieren: in AlleProjekte anlegen
+    ''' in jedem Fall: eine Constellation mit dem Namen cName anlegen
+    ''' </summary>
+    ''' <param name="cName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function verarbeiteImportProjekte(ByVal cName As String) As clsConstellation
+        Dim newC As New clsConstellation
+        newC.constellationName = cName
+        Dim vglProj As clsProjekt
+        Dim lfdZeilenNr As Integer = 2
+        Dim ok As Boolean
 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
+            Dim impProjekt As clsProjekt = kvp.Value
+            Dim importKey As String = calcProjektKey(impProjekt)
+
+            vglProj = Nothing
+
+            If AlleProjekte.Containskey(importKey) Then
+
+                vglProj = AlleProjekte.getProject(importKey)
+
+            Else
+                ' nicht in der Session, aber ist es in der Datenbank ?  
+
+                '
+                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If Request.pingMongoDb() Then
+
+                    If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName) Then
+
+                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                        vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName)
+
+                        If IsNothing(vglProj) Then
+                            ' kann eigentlich nicht sein 
+                            ok = False
+                        Else
+                            ' jetzt in AlleProjekte eintragen ... 
+                            AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+
+                        End If
+
+                    Else
+                        ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
+                        AlleProjekte.Add(importKey, impProjekt)
+
+                    End If
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
+                End If
+
+
+
+            End If
+
+            ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
+            If Not IsNothing(vglProj) Then
+
+                Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
+
+                If unterschiede.Count > 0 Then
+                    ' es gibt Unterschiede, also muss eine Variante angelegt werden 
+
+                    impProjekt.variantName = cName
+                    importKey = calcProjektKey(impProjekt)
+
+                    ' wenn die Variante bereits in der Session existiert ..
+                    ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                    If AlleProjekte.Containskey(importKey) Then
+                        AlleProjekte.Remove(importKey)
+                    End If
+
+                    ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
+                    AlleProjekte.Add(importKey, impProjekt)
+                End If
+            End If
+
+            ' Aufnehmen in Constellation
+            Dim newCItem As New clsConstellationItem
+            newCItem.projectName = impProjekt.name
+            newCItem.variantName = impProjekt.variantName
+            newCItem.show = True
+            newCItem.Start = impProjekt.startDate
+            newCItem.zeile = lfdZeilenNr
+            newC.Add(newCItem)
+
+            lfdZeilenNr = lfdZeilenNr + 1
+
+        Next
+
+        verarbeiteImportProjekte = newC
+
+    End Function
 
     Public Sub awinImportModule(ByRef myCollection As Collection)
 
