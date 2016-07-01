@@ -21,6 +21,7 @@ Public Module Module1
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
     Public loginErfolgreich As Boolean = False
+    Public noDB As Boolean = True
 
     Public myWindowsName As String
 

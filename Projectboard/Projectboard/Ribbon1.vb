@@ -58,7 +58,7 @@ Imports System.Windows
         Dim returnValue As DialogResult
         Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
         Dim storeToDB As Boolean = False
         Dim returnRequest As Boolean = False
         Dim controlID As String = control.Id
@@ -73,7 +73,7 @@ Imports System.Windows
             If returnValue = DialogResult.OK Then
                 constellationName = storeConstellationFrm.ComboBox1.Text
 
-                If ControlID = speichernDatenbank Then
+                If controlID = speichernDatenbank And Not noDB Then
                     storeToDB = True
                 End If
                 Call storeSessionConstellation(constellationName)
@@ -82,6 +82,7 @@ Imports System.Windows
                 ' speichern der Konstellation mit constellationName in DB
                 If storeToDB Then
 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     If request.pingMongoDb() Then
                         ' prüfen, ob diese Constellation existiert ..
                         If projectConstellations.Contains(constellationName) Then
@@ -119,8 +120,7 @@ Imports System.Windows
 
         Dim ControlID As String = control.Id
         Dim constellationName As String
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
+      
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
         Dim successMessage As String = initMessage
@@ -131,7 +131,10 @@ Imports System.Windows
 
         ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
-        If ControlID = loadFromDatenbank Then
+        If ControlID = loadFromDatenbank And Not noDB Then
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
             If request.pingMongoDb() Then
                 projectConstellations = request.retrieveConstellationsFromDB()
             Else
@@ -225,14 +228,16 @@ Imports System.Windows
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
         Dim removeFromDB As Boolean
 
-        If ControlID = deleteDatenbank Then
+        If ControlID = deleteDatenbank And Not noDB Then
             removeFromDB = True
-            If request.pingMongoDb() Then
-                projectConstellations = request.retrieveConstellationsFromDB()
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If Request.pingMongoDb() Then
+                projectConstellations = Request.retrieveConstellationsFromDB()
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -2708,8 +2713,9 @@ Imports System.Windows
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
-
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        If Not noDB Then
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
@@ -2816,8 +2822,7 @@ Imports System.Windows
 
 
 
-        
-        'Schließen des LogFilesTom2G4M2ImportMSProject
+       
         Call logfileSchliessen()
 
         enableOnUpdate = True
@@ -2829,7 +2834,9 @@ Imports System.Windows
 
     Public Sub Tom2G4M2ImportMSProject(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        If Not noDB Then
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
