@@ -29,7 +29,8 @@ Public Module testModule
 
         Dim awinSelection As xlNS.ShapeRange
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ' ur:4.7.2016: an Stelle verschoben, wo genötigt:
+        ' Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As xlNS.Shape
         Dim hproj As clsProjekt
         Dim vglName As String = " "
@@ -90,25 +91,31 @@ Public Module testModule
                 variantName = .variantName
             End With
 
-            If vglName <> maxProj.getShapeText Then
-                If request.pingMongoDb() Then
-                    Try
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
-                        projekthistorie.Add(Date.Now, maxProj)
-                    Catch ex As Exception
-                        projekthistorie.clear()
-                    End Try
+            If Not noDB Then
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                If vglName <> maxProj.getShapeText Then
+                    If request.pingMongoDb() Then
+                        Try
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                            projekthistorie.Add(Date.Now, maxProj)
+                        Catch ex As Exception
+                            projekthistorie.clear()
+                        End Try
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+
+
                 Else
-                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    ' der aktuelle Stand hproj muss hinzugefügt werden 
+                    Dim lastElem As Integer = projekthistorie.Count - 1
+                    projekthistorie.RemoveAt(lastElem)
+                    projekthistorie.Add(Date.Now, maxProj)
                 End If
 
-
-            Else
-                ' der aktuelle Stand hproj muss hinzugefügt werden 
-                Dim lastElem As Integer = projekthistorie.Count - 1
-                projekthistorie.RemoveAt(lastElem)
-                projekthistorie.Add(Date.Now, maxProj)
             End If
 
             e.Result = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
@@ -148,26 +155,33 @@ Public Module testModule
                         variantName = .variantName
                     End With
 
-                    If vglName <> hproj.getShapeText Then
-                        If request.pingMongoDb() Then
-                            Try
-                                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                                storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
-                                projekthistorie.Add(Date.Now, hproj)
-                            Catch ex As Exception
-                                projekthistorie.clear()
-                            End Try
+                    If Not noDB Then
+
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                        If vglName <> hproj.getShapeText Then
+                            If request.pingMongoDb() Then
+                                Try
+                                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                                    storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                    projekthistorie.Add(Date.Now, hproj)
+                                Catch ex As Exception
+                                    projekthistorie.clear()
+                                End Try
+                            Else
+                                Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                            End If
+
+
                         Else
-                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                            ' der aktuelle Stand hproj muss hinzugefügt werden 
+                            Dim lastElem As Integer = projekthistorie.Count - 1
+                            projekthistorie.RemoveAt(lastElem)
+                            projekthistorie.Add(Date.Now, hproj)
                         End If
 
-
-                    Else
-                        ' der aktuelle Stand hproj muss hinzugefügt werden 
-                        Dim lastElem As Integer = projekthistorie.Count - 1
-                        projekthistorie.RemoveAt(lastElem)
-                        projekthistorie.Add(Date.Now, hproj)
                     End If
+
 
                     e.Result = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
                     worker.ReportProgress(0, e)

@@ -1003,7 +1003,7 @@ Public Module PBBModules
         Dim awinSelection As Excel.ShapeRange
         Dim neueVariante As New frmCreateNewVariant
         Dim resultat As DialogResult
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim newproj As clsProjekt
         Dim key As String
         Dim phaseList As New Collection

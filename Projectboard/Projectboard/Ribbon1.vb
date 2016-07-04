@@ -820,7 +820,7 @@ Imports System.Windows
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -832,24 +832,39 @@ Imports System.Windows
         If returnValue = DialogResult.OK Then
             With ProjektEingabe
                 Dim buName As String = CStr(.businessUnitDropBox.SelectedItem)
-                If request.pingMongoDb() Then
 
-                    If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+                If Not noDB Then
 
-                        ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If request.pingMongoDb() Then
+
+                        If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+
+                            ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
 
-                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
-                                           CStr(""), buName)
+                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CStr(""), buName)
+                        Else
+                            Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                        End If
                     Else
-                        Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+
+                        Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                        appInstance.ScreenUpdating = True
+
+                        ' Projekt soll trotzdem angezeigt werden
+                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CStr(""), buName)
+
                     End If
 
                 Else
 
-                    Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
                     appInstance.ScreenUpdating = True
 
                     ' Projekt soll trotzdem angezeigt werden

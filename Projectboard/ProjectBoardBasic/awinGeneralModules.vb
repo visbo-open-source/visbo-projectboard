@@ -4016,37 +4016,41 @@ Public Module awinGeneralModules
             Else
                 ' nicht in der Session, aber ist es in der Datenbank ?  
 
-                '
-                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If Request.pingMongoDb() Then
+                If Not noDB Then
 
-                    If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName) Then
+                    '
+                    ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If request.pingMongoDb() Then
 
-                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName)
+                        If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName) Then
 
-                        If IsNothing(vglProj) Then
-                            ' kann eigentlich nicht sein 
-                            ok = False
-                        Else
-                            ' jetzt in AlleProjekte eintragen ... 
-                            AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+                            ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                            vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName)
 
+                            If IsNothing(vglProj) Then
+                                ' kann eigentlich nicht sein 
+                                ok = False
+                            Else
+                                ' jetzt in AlleProjekte eintragen ... 
+                                AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+
+                            End If
                         End If
-
                     Else
-                        ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
-                        AlleProjekte.Add(importKey, impProjekt)
-
+                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
                     End If
+
+
                 Else
-                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
+                    ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
+                    AlleProjekte.Add(importKey, impProjekt)
+
                 End If
 
 
-
             End If
+
 
             ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
             If Not IsNothing(vglProj) Then
@@ -8162,7 +8166,6 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -8192,7 +8195,10 @@ Public Module awinGeneralModules
             If AlleProjekte.Containskey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
-            Else
+
+            ElseIf Not noDB Then
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 If request.pingMongoDb() Then
 
                     If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
@@ -8218,8 +8224,12 @@ Public Module awinGeneralModules
                 Else
                     Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                 End If
-            End If
 
+            Else      ' not noDB
+                Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+
+            End If
+           
             If hproj.name = kvp.Value.projectName Then
 
                 With hproj
