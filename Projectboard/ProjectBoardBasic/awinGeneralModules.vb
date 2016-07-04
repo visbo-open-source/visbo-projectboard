@@ -8225,8 +8225,8 @@ Public Module awinGeneralModules
                     Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                 End If
 
-            Else      ' not noDB
-                Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                ''Else      ' not noDB
+                ''    Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
 
             End If
            
