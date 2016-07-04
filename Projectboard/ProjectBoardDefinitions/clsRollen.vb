@@ -56,9 +56,9 @@ Public Class clsRollen
             ' jetzt die Behandlung Sammelrolle machen 
             For Each sammelRolle As String In sammelRollen
                 Dim subRoleList As Collection = Me.getSubRoleNamesOf(roleName:=sammelRolle, _
-                                                                     type:=PTcbr.realRoles)
+                                                                     type:=PTcbr.all)
                 For Each subRole As String In subRoleList
-                    If tmpCollection.Contains(CStr(subRole)) Then
+                    If ((tmpCollection.Contains(CStr(subRole))) And (subRole <> sammelRolle)) Then
                         tmpCollection.Remove(CStr(subRole))
                     End If
                 Next

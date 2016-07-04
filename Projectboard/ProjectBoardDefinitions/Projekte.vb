@@ -4678,8 +4678,15 @@ Public Module Projekte
 
 
         anzRollen = realAnzahl
-        ReDim tdatenreihe(anzRollen - 1)
-        ReDim Xdatenreihe(anzRollen - 1)
+
+        If anzRollen > 0 Then
+            ReDim tdatenreihe(anzRollen - 1)
+            ReDim Xdatenreihe(anzRollen - 1)
+        Else
+            ReDim tdatenreihe(0)
+            ReDim Xdatenreihe(0)
+        End If
+
         ' jetzt alle Rollen, die Werte > 0 haben aufnehmen 
         For r = 1 To realAnzahl
             tdatenreihe(r - 1) = tmpDatenreihe(r - 1)
@@ -5058,8 +5065,15 @@ Public Module Projekte
 
 
         anzRollen = realAnzahl
-        ReDim tdatenreihe(anzRollen - 1)
-        ReDim Xdatenreihe(anzRollen - 1)
+
+        If anzRollen > 0 Then
+            ReDim tdatenreihe(anzRollen - 1)
+            ReDim Xdatenreihe(anzRollen - 1)
+        Else
+            ReDim tdatenreihe(0)
+            ReDim Xdatenreihe(0)
+        End If
+        
         ' jetzt alle Rollen, die Werte > 0 haben aufnehmen 
         For r = 1 To realAnzahl
             tdatenreihe(r - 1) = tmpDatenreihe(r - 1)
