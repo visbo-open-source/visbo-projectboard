@@ -27,31 +27,37 @@ Public Class frmCreateNewVariant
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
         Dim key As String
         Dim ok As Boolean = False
 
         key = calcProjektKey(Me.projektName.Text, Me.newVariant.Text)
 
-        If request.pingMongoDb() Then
+        If Not noDB Then
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            If Not _
-                (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text) Or _
-                 AlleProjekte.ContainsKey(key)) Then
+            If request.pingMongoDb() Then
 
-                ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
-                ok = True
+                If Not _
+                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text) Or _
+                     AlleProjekte.Containskey(key)) Then
+
+                    ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
+                    ok = True
+                Else
+                    Call MsgBox(" Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                                "existiert bereits in DB!")
+                End If
+
             Else
-                Call MsgBox(" Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                            "existiert bereits in DB!")
+                Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+
             End If
-
         Else
-
-            Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
-
-
+            ' es wird ohne Datenbank gearbeitet
+            ok = True
         End If
+      
         If ok Then
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
