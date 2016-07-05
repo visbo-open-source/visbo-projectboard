@@ -144,7 +144,13 @@ Imports System.Windows
 
         enableOnUpdate = False
 
-        loadConstellationFrm.addToSession.Checked = True
+        If AlleProjekte.Count > 0 Then
+            loadConstellationFrm.addToSession.Checked = False
+        Else
+            loadConstellationFrm.addToSession.Checked = False
+            loadConstellationFrm.addToSession.Visible = False
+        End If
+
         returnValue = loadConstellationFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
@@ -183,7 +189,8 @@ Imports System.Windows
 
                 Next
 
-                If loadConstellationFrm.ListBox1.SelectedItems.Count = 1 And boardWasEmpty Then
+                If loadConstellationFrm.ListBox1.SelectedItems.Count = 1 And _
+                    (boardWasEmpty Or loadConstellationFrm.addToSession.Checked = False) Then
                     constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(0))
 
                 Else
@@ -813,7 +820,7 @@ Imports System.Windows
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -825,24 +832,39 @@ Imports System.Windows
         If returnValue = DialogResult.OK Then
             With ProjektEingabe
                 Dim buName As String = CStr(.businessUnitDropBox.SelectedItem)
-                If request.pingMongoDb() Then
 
-                    If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+                If Not noDB Then
 
-                        ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If request.pingMongoDb() Then
+
+                        If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+
+                            ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
 
-                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
-                                           CStr(""), buName)
+                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CStr(""), buName)
+                        Else
+                            Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                        End If
                     Else
-                        Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+
+                        Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                        appInstance.ScreenUpdating = True
+
+                        ' Projekt soll trotzdem angezeigt werden
+                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CStr(""), buName)
+
                     End If
 
                 Else
 
-                    Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
                     appInstance.ScreenUpdating = True
 
                     ' Projekt soll trotzdem angezeigt werden
@@ -2214,7 +2236,8 @@ Imports System.Windows
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
         Dim getInventurImport As New frmSelectRPlanImport
-        
+        Dim wasNotEmpty As Boolean = False
+
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -2232,6 +2255,14 @@ Imports System.Windows
             Try
 
                 If My.Computer.FileSystem.FileExists(dateiName) Then
+
+                    If ShowProjekte.Count > 0 Then
+                        wasNotEmpty = True
+                        Call storeSessionConstellation("Last")
+                        ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
+                        Call awinClearPlanTafel()
+                    End If
+
                     appInstance.Workbooks.Open(dateiName)
                     Dim scenarioName As String = appInstance.ActiveWorkbook.Name
                     Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
@@ -2243,18 +2274,34 @@ Imports System.Windows
 
                     ' alle Import Projekte erstmal löschen
                     ImportProjekte.Clear()
-                    Call awinImportProjektInventur(myCollection, scenarioName)
+
+                    Call awinImportProjektInventur()
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                    Call importProjekteEintragen(importDate, ProjektStatus(1))
+                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
 
-                    
-                    ' jetzt noch ein Szenario anlegen, wenn myCollection was enthält 
-                    If myCollection.Count > 0 Then
-                        currentConstellation = scenarioName
-                        Call storeSessionConstellation(scenarioName, myCollection)
+                    ' ''If wasNotEmpty Then
+                    ' ''    Call awinClearPlanTafel()
+                    ' ''End If
+
+                    '' ''Call awinZeichnePlanTafel(True)
+                    ' ''Call awinZeichnePlanTafel(False)
+                    ' ''Call awinNeuZeichnenDiagramme(2)
+
+                    If sessionConstellation.count > 0 Then
+
+                        If projectConstellations.Contains(scenarioName) Then
+                            projectConstellations.Remove(scenarioName)
+                        End If
+
+                        projectConstellations.Add(sessionConstellation)
+                        Call loadSessionConstellation(scenarioName, False, False, True)
+                    Else
+                        Call MsgBox("keine PRojekte importiert ...")
                     End If
+
+                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                     If ImportProjekte.Count > 0 Then
                         ImportProjekte.Clear()
@@ -2263,12 +2310,12 @@ Imports System.Windows
 
                     Call MsgBox("bitte Datei auswählen ...")
                 End If
-                
+
 
             Catch ex As Exception
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-            End Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+        End Try
         Else
             Call MsgBox(" Import Scenario wurde abgebrochen")
         End If

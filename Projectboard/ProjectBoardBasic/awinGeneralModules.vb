@@ -797,6 +797,7 @@ Public Module awinGeneralModules
             ''ReportLang(PTSprache.spanisch) = "es"
 
 
+
             DiagrammTypen(0) = "Phase"
             DiagrammTypen(1) = "Rolle"
             DiagrammTypen(2) = "Kostenart"
@@ -3598,13 +3599,12 @@ Public Module awinGeneralModules
         isRemovable = result
 
     End Function
-
     ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
+    ''' stellt sie in ImportProjekte 
     ''' </summary>
-    ''' <param name="namesForConstellation">hier werden die NAmen zurückgegeben, die alle in der Constellation aufgenommen werden sollen</param>
     ''' <remarks></remarks>
-    Public Sub awinImportProjektInventur(ByRef namesForConstellation As Collection, ByVal scenarioName As String)
+    Public Sub awinImportProjektInventur()
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
         Dim variantName As String = ""
@@ -3921,8 +3921,6 @@ Public Module awinGeneralModules
                     ' jetzt die Aktion durchführen, wenn alles ok 
                     If ok Then
 
-                        Dim vglProj As clsProjekt
-
                         'Projekt anlegen ,Verschiebung um 
                         hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
@@ -3934,6 +3932,9 @@ Public Module awinGeneralModules
                                                      capacityNeeded, externCostInput, businessUnit, description, custFields)
 
                         If Not IsNothing(hproj) Then
+
+                            ' immer als Fixiertes Projekt darstellen ..
+                            hproj.Status = ProjektStatus(1)
 
                             'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
                             If Not IsNothing(sMilestone) Then
@@ -3948,138 +3949,6 @@ Public Module awinGeneralModules
                                     'Call MsgBox("Differenz Ende:" & DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde))
                                     hproj.getMilestone(endElem).setDate = inputEnde
                                 End If
-                            End If
-
-                            ' ####################################################################
-                            ' prüfen ob das Projekt bereits in Session oder Datenbank existiert 
-                            ' 
-                            If AlleProjekte.Containskey(vglName) Then
-                                ' dann existiert es bereits in der Session
-
-                                vglProj = AlleProjekte.getProject(vglName)
-                                If IsNothing(vglProj) Then
-                                    ' dieser Fall kann eigentlich gar nicht auftreten ... ? 
-                                    Call MsgBox("Fehler mit " & vglName)
-
-                                Else
-                                    ' prüfen, ob es unterschiedlich ist; 
-                                    ' wenn ja , dann wird es unter dem Varianten Namen Datei-Name angelegt
-                                    ' wenn der auch schon existiert, dann Fehler udn nichts anlegen ...
-                                    Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
-
-                                    If unterschiede.Count > 0 Then
-                                        ' es gibt Unterschiede, also muss eine Variante angelegt werden 
-                                        If hproj.variantName <> scenarioName Then
-                                            hproj.variantName = scenarioName
-                                            vglName = calcProjektKey(hproj.name, hproj.variantName)
-
-                                            ' wenn die Variante bereits in der Session existiert ..
-                                            ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                                            If AlleProjekte.Containskey(vglName) Then
-                                                AlleProjekte.Remove(vglName)
-                                            End If
-
-                                        Else
-                                            ' in diesem Fall wird die Variante über hproj neu angelegt 
-                                            AlleProjekte.Remove(vglName)
-                                        End If
-
-                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
-
-                                        Try
-                                            namesForConstellation.Add(vglName, vglName)
-                                        Catch ex As Exception
-
-                                        End Try
-
-                                    Else
-                                        ' Projekt in der Form existiert bereits , keine Neu-Anlage
-                                        ' es muss sichergestellt sein, dass es angezeigt wird und die Portfolio Definition entsprechend angepasst wird 
-                                        ok = False
-                                        hproj = vglProj
-
-                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
-
-                                        Try
-                                            namesForConstellation.Add(vglName, vglName)
-                                        Catch ex As Exception
-
-                                        End Try
-                                    End If
-                                End If
-                            Else
-                                '
-                                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-
-                                If Not noDB Then
-
-                                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-                                    If request.pingMongoDb() Then
-
-                                        If request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
-
-                                            ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                            vglProj = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName)
-
-                                            If IsNothing(vglProj) Then
-                                                ok = False
-                                            Else
-                                                Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
-                                                If unterschiede.Count > 0 Then
-                                                    ok = True ' das heisst es kommt in ImportProjekte 
-                                                    ' es muss eine Variante angelegt werden 
-                                                    If hproj.variantName <> scenarioName Then
-                                                        hproj.variantName = scenarioName
-                                                        vglName = calcProjektKey(hproj.name, hproj.variantName)
-
-                                                        ' wenn die Variante bereits in der Session existiert ..
-                                                        ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                                                        If AlleProjekte.Containskey(vglName) Then
-                                                            AlleProjekte.Remove(vglName)
-                                                        End If
-
-                                                    Else
-                                                        ' in diesem Fall wird die Variante über hproj neu angelegt 
-                                                        AlleProjekte.Remove(vglName)
-                                                    End If
-
-                                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
-
-                                                    Try
-                                                        namesForConstellation.Add(vglName, vglName)
-                                                    Catch ex As Exception
-
-                                                    End Try
-
-                                                Else
-                                                    ' Projekt in der Form existiert bereits , es wird das über die Datei erzeugte hproj verwendet 
-                                                    vglName = calcProjektKey(hproj.name, hproj.variantName)
-                                                    Try
-                                                        namesForConstellation.Add(vglName, vglName)
-                                                    Catch ex As Exception
-
-                                                    End Try
-                                                End If
-                                            End If
-
-                                        Else
-                                            ' nichts weiter tun, Projekt existert noch nicht; es kann und soll das bereits angelegte hproj verwendet werden 
-                                            Try
-                                                vglName = calcProjektKey(hproj.name, hproj.variantName)
-                                                namesForConstellation.Add(vglName, vglName)
-                                            Catch ex As Exception
-
-                                            End Try
-                                        End If
-                                    Else
-                                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & hproj.name & "'konnte nicht geladen werden")
-                                    End If
-
-                                End If     ' noDB
-
-
-
                             End If
 
                         Else
@@ -4115,6 +3984,112 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' diese Funktion verarbeitet die Import Projekte 
+    ''' wenn sie schon in der Datenbank bzw Session existieren und unterschiedlich sind: es wird eine Variante angelegt, die so heisst wie das Scenario 
+    ''' wenn sie bereits existieren und identisch sind: in AlleProjekte holen, wenn nicht schon geschehen
+    ''' wenn sie noch nicht existieren: in AlleProjekte anlegen
+    ''' in jedem Fall: eine Constellation mit dem Namen cName anlegen
+    ''' </summary>
+    ''' <param name="cName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function verarbeiteImportProjekte(ByVal cName As String) As clsConstellation
+        Dim newC As New clsConstellation
+        newC.constellationName = cName
+        Dim vglProj As clsProjekt
+        Dim lfdZeilenNr As Integer = 2
+        Dim ok As Boolean
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
+            Dim impProjekt As clsProjekt = kvp.Value
+            Dim importKey As String = calcProjektKey(impProjekt)
+
+            vglProj = Nothing
+
+            If AlleProjekte.Containskey(importKey) Then
+
+                vglProj = AlleProjekte.getProject(importKey)
+
+            Else
+                ' nicht in der Session, aber ist es in der Datenbank ?  
+
+                If Not noDB Then
+
+                    '
+                    ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If request.pingMongoDb() Then
+
+                        If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName) Then
+
+                            ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                            vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName)
+
+                            If IsNothing(vglProj) Then
+                                ' kann eigentlich nicht sein 
+                                ok = False
+                            Else
+                                ' jetzt in AlleProjekte eintragen ... 
+                                AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+
+                            End If
+                        End If
+                    Else
+                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
+                    End If
+
+
+                Else
+                    ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
+                    AlleProjekte.Add(importKey, impProjekt)
+
+                End If
+
+
+            End If
+
+
+            ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
+            If Not IsNothing(vglProj) Then
+
+                Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
+
+                If unterschiede.Count > 0 Then
+                    ' es gibt Unterschiede, also muss eine Variante angelegt werden 
+
+                    impProjekt.variantName = cName
+                    importKey = calcProjektKey(impProjekt)
+
+                    ' wenn die Variante bereits in der Session existiert ..
+                    ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                    If AlleProjekte.Containskey(importKey) Then
+                        AlleProjekte.Remove(importKey)
+                    End If
+
+                    ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
+                    AlleProjekte.Add(importKey, impProjekt)
+                End If
+            End If
+
+            ' Aufnehmen in Constellation
+            Dim newCItem As New clsConstellationItem
+            newCItem.projectName = impProjekt.name
+            newCItem.variantName = impProjekt.variantName
+            newCItem.show = True
+            newCItem.Start = impProjekt.startDate
+            newCItem.zeile = lfdZeilenNr
+            newC.Add(newCItem)
+
+            lfdZeilenNr = lfdZeilenNr + 1
+
+        Next
+
+        verarbeiteImportProjekte = newC
+
+    End Function
 
     Public Sub awinImportModule(ByRef myCollection As Collection)
 
@@ -5790,7 +5765,6 @@ Public Module awinGeneralModules
 
         Dim zeile As Integer, spalte As Integer
         Dim hproj As New clsProjekt
-        Dim hwert As Integer
         Dim ProjektdauerIndays As Integer = 0
         Dim endedateProjekt As Date
 
@@ -8192,7 +8166,6 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -8222,7 +8195,10 @@ Public Module awinGeneralModules
             If AlleProjekte.Containskey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
-            Else
+
+            ElseIf Not noDB Then
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 If request.pingMongoDb() Then
 
                     If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
@@ -8248,7 +8224,12 @@ Public Module awinGeneralModules
                 Else
                     Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                 End If
+
+                ''Else      ' not noDB
+                ''    Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+
             End If
+           
             If hproj.name = kvp.Value.projectName Then
 
                 With hproj
@@ -8285,7 +8266,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                
+
             End If
 
         Next
@@ -8314,6 +8295,7 @@ Public Module awinGeneralModules
 
         ' ab diesem Wert soll neu gezeichnet werden 
         Dim startOfFreeRows As Integer = projectboardShapes.getMaxZeile
+        Dim zeilenOffset As Integer = 1
 
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
@@ -8330,19 +8312,38 @@ Public Module awinGeneralModules
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
+            Dim showIT As Boolean = kvp.Value.show
+
             If AlleProjekte.Containskey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
 
-                ' wenn es bereits in Showprojekte ist , gar nichts machen
-                If ShowProjekte.contains(hproj.name) Then
-                    tryZeile = ShowProjekte.getProject(hproj.name).tfZeile
+                If showIT Then
+
+                    If ShowProjekte.contains(hproj.name) Then
+
+                        Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
+                        If shownProject.variantName = hproj.variantName Then
+                            ' es wird bereits gezeigt, nichts machen ...
+                        Else
+                            tryZeile = shownProject.tfZeile
+                            ' jetzt die Variante aktivieren 
+                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        End If
+
+                    Else
+                        'tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                        tryZeile = startOfFreeRows + zeilenOffset
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        zeilenOffset = zeilenOffset + 1
+                    End If
+
+                    
                 Else
-                    tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                    ' gar nichts machen
                 End If
 
-                ' jetzt die Variante aktivieren 
-                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                
 
             Else
                 If request.pingMongoDb() Then
@@ -8355,8 +8356,9 @@ Public Module awinGeneralModules
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         AlleProjekte.Add(kvp.Key, hproj)
                         ' jetzt die Variante aktivieren 
-                        tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                        tryZeile = startOfFreeRows + zeilenOffset
                         Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                        zeilenOffset = zeilenOffset + 1
 
                     Else
                         anzErrDB = anzErrDB + 1
@@ -14350,7 +14352,6 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = False
 
         Dim newWB As Excel.Workbook
-        Dim rng As Excel.Range
         Dim ersteZeile As Excel.Range
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 

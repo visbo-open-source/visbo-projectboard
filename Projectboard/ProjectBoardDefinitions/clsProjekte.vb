@@ -810,11 +810,14 @@ Public Class clsProjekte
                         Dim phEnde As Integer
                         Dim ixZeitraum As Integer
                         Dim anzLoops As Integer
+                        Dim Dauer As Integer
 
 
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
                             hproj = kvp.Value
+                            Dauer = hproj.anzahlRasterElemente
+                            Dim tempArray(Dauer - 1) As Double
 
                             Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(elemName, breadCrumb)
 
@@ -852,15 +855,35 @@ Public Class clsProjekte
                                         If anzLoops > 0 Then
                                             ' dann ist die Phase enthalten 
 
+                                            Try
+
+                                                tempArray = hproj.getPhasenBedarf(elemName)
+                                                ' ix bezeichnet aktuell den start mit Nullpunkt Phasen-Start, das muss jetzt korrigiert werden 
+                                                ix = ix + hphase.relStart - 1
+
+                                            Catch ex As Exception
+
+                                            End Try
+
                                             For al As Integer = 1 To anzLoops
                                                 If ixZeitraum + al - 1 > zeitraum Then
                                                     ' Fehlerprotokoll schreiben ...  
                                                 Else
                                                     ' wenn mehr als ein Element angezeigt werden soll, soll die Abkürzung dazugeschrieben werden 
                                                     If myCollection.Count > 1 Then
-                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & abbrev
+                                                        ' nach dem Doppelpunkt solte immer der Wert stehen, nicht der Bezeichner
+                                                        'ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & abbrev
+                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
+                                                                                                                                & ":X"
                                                     Else
-                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText
+                                                        If awinSettings.phasesProzentual Then
+                                                            ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
+                                                                                                                            & ":" & tempArray(ix + al - 1).ToString("0%")
+                                                        Else
+                                                            ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
+                                                                                                                                & ":X"
+                                                        End If
+                                                        
                                                     End If
 
                                                     curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
@@ -888,7 +911,7 @@ Public Class clsProjekte
                             Dauer = hproj.anzahlRasterElemente
                             Dim tempArray(Dauer - 1) As Double
                             Dim prAnfang As Integer, prEnde As Integer
-                            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+                            Dim ixZeitraum As Integer, ixArray As Integer, anzLoops As Integer
 
                             With hproj
                                 prAnfang = .Start + .StartOffset
@@ -896,7 +919,7 @@ Public Class clsProjekte
                             End With
 
                             anzLoops = 0
-                            Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+                            Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ixArray, anzLoops)
 
                             If anzLoops > 0 Then
 
@@ -914,8 +937,8 @@ Public Class clsProjekte
                                 For al As Integer = 1 To anzLoops
                                     If ixZeitraum + al - 1 > zeitraum Then
                                         ' Fehlerprotokoll schreiben ...  
-                                    ElseIf tempArray(ix + al - 1) > 0 Then
-                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
+                                    ElseIf tempArray(ixArray + al - 1) > 0 Then
+                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ixArray + al - 1)).ToString
                                         curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
                                     End If
 
@@ -1005,9 +1028,10 @@ Public Class clsProjekte
                                     If ix >= 0 And ix <= zeitraum Then
 
                                         If myCollection.Count > 1 Then
-                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":" & abbrev
+                                            'ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":" & abbrev
+                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & "-" & abbrev & ":X"
                                         Else
-                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText
+                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":X"
                                         End If
 
                                         curElemIX(ix) = curElemIX(ix) + 1
