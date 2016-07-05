@@ -25,23 +25,23 @@
             <button id="PTXG1B6" label="Auswahl über Namen" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
             <button id="PTXG1B7" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
           </menu>
-          <!--<button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />-->
+          <button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />
           <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
          <separator id="PTXG1s4"/> 
           <menu id="PTOPT" label="Optimieren">
             <button id="PTOPTB1" label ="optimale Varianten-Kombination" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
-            <button id="PTOPTB2" label ="Spielraum nutzen" enabled ="false" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
+            <button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
           </menu>    
           <separator id="PTXG1s5"/>
           <button id="PTXG1B8" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
-          <button id="PTXG1B9" label="Strategie/Risiko/Abhängigkeiten" enabled ="false" onAction="PT0ShowSFitRisikoDependency" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Anzahl der abhängigen Projekte. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
+          <button id="PTXG1B9" label="Strategie/Risiko/Abhängigkeiten" enabled ="true" onAction="PT0ShowSFitRisikoDependency" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Anzahl der abhängigen Projekte. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
           <!--<button id="PTXG1B9" label="Strategie/Risiko/Volumen" enabled ="false" onAction="PT0ShowStratRisikoVolume" />
           <button id="PTXG1B8" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
           <separator id="PTXG1s6"/>
           <button id="PTFKB1" label="Budget/Kosten"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
           <button id="PTFKB2" label="Budget/Kosten/Auslastung"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>
           <separator id="PTXG1s7"/>
-          <button id="PTFKB3" label="Abhängigkeiten"  enabled ="false" onAction="PT0ShowAbhaengigkeiten" supertip="Es wird für die einzelnen Projekte dargestellt, wie hoch ihre Abhängigkeit bzw. wie hoch ihre Ausstrahlung ist."/>
+          <button id="PTFKB3" label="Abhängigkeiten"  enabled ="true" onAction="PT0ShowAbhaengigkeiten" supertip="Es wird für die einzelnen Projekte dargestellt, wie hoch ihre Abhängigkeit bzw. wie hoch ihre Ausstrahlung ist."/>
         </group>       
       </tab>
       <!--
@@ -58,8 +58,8 @@
             <button id="PT0G1B9" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>
           </menu>
           <separator id="PT0G1s3"/>
-          <button id="PT3G1B5" label="Zeit-Maschine" enabled ="false" onAction="awinShowTimeMachine" supertip="mit der Zeit-Maschine können zeitliche Position von Meilensteinen und Phasen von früheren Planungs-Ständen angezeigt werden"/>
-          <button id="PT0G1B1" label="Abhängigkeiten"  enabled ="false" onAction="PT0ShowDependencies" supertip="die Abhängigkeiten zwischen Projekten werden über PFeile visualisiert"/>
+          <button id="PT3G1B5" label="Zeit-Maschine" enabled ="true" onAction="awinShowTimeMachine" supertip="mit der Zeit-Maschine können zeitliche Position von Meilensteinen und Phasen von früheren Planungs-Ständen angezeigt werden"/>
+          <button id="PT0G1B1" label="Abhängigkeiten"  enabled ="true" onAction="PT0ShowDependencies" supertip="die Abhängigkeiten zwischen Projekten werden über PFeile visualisiert"/>
         </group>
         <group id="PT0G2" label ="Charts">
           <button id="PT0G1M0B2" label="Phasen Übersicht"  onAction="Tom2G2M1B1Phasen" supertip="Es wird ein Diagramm gezeichnet, das von einem selektierten Projekt alle Phasen inkl. Start und Ende-Datum aufzeigt"/>
@@ -70,15 +70,15 @@
           <separator id="PT0G1s5"/>
           <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
           <!--<button id="PT0G1B4" label="Strategie/Risiko/Abhängigkeiten" enabled ="false" onAction="Tom2G2M1B6SFITDEP" />
-          <button id="PT0G1B4" label="Strategie/Risiko/Volumen" enabled ="false" onAction="Tom2G2M1B6SFITVOl" />-->
+          <button id="PT0G1B5" label="Strategie/Risiko/Volumen" enabled ="false" onAction="Tom2G2M1B6SFITVOl" />-->
           <separator id="PT0G1s8"/>
           <!--<button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
           <button id="PT0G1B6" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
           <separator id="PT0G1s6"/>
           <menu id="PT3G1M1" label ="Soll/Ist">
-            <button id="PT3G1M1B1" label="Personalkosten"  enabled ="false" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-            <button id="PT3G1M1B2" label="Sonstige Kosten" enabled ="false" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-            <button id="PT3G1M1B3" label="Gesamt Kosten" enabled ="false" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+            <button id="PT3G1M1B1" label="Personalkosten"  enabled ="true" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+            <button id="PT3G1M1B2" label="Sonstige Kosten" enabled ="true" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+            <button id="PT3G1M1B3" label="Gesamt Kosten" enabled ="true" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
           </menu>
           <separator id="PT0G1s7"/>
           <button id="PT0G1B7" label="Ergebnis"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>
@@ -135,7 +135,7 @@
           <menu id="PT2G1M2" label="Editieren">
             <button id="PT2G1M2B1" label="Ressourcen Bedarfe"  onAction="Tom2G1Resources" />
             <button id="PT2G1M2B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" supertip ="die Attribute eines Projektes wie Budget Zuordnung, strateg. Fit und Risiko Einschätzung können hier verändert werden. Dieses Formular kann kundenspezifisch um weitere Attribute ergänzt werden"/>
-            <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" enabled ="false" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
+            <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" enabled ="true" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
           </menu>
           <separator id="PT2G1s2"/>
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
@@ -177,9 +177,9 @@
         
       -->
         <group id="PT2G4" label="Abhängigkeiten">
-          <button id="PT2G4B1" label="Definieren"  enabled ="false" onAction="PTDefineDependencies" supertip="hier können schwache und starke Abhängigkeiten zwischen Projekten definiert werden"/>
+          <button id="PT2G4B1" label="Definieren"  enabled ="true" onAction="PTDefineDependencies" supertip="hier können schwache und starke Abhängigkeiten zwischen Projekten definiert werden"/>
           <separator id="PT2G4s1"/>
-          <button id="PT2G4B2" label="Löschen"  enabled ="false" onAction="PTDeleteDependencies" supertip="hier können Projekt-Abhängigkeiten gelöscht werden"/>
+          <button id="PT2G4B2" label="Löschen"  enabled ="true" onAction="PTDeleteDependencies" supertip="hier können Projekt-Abhängigkeiten gelöscht werden"/>
         </group>
       </tab>
       <!---->
@@ -209,8 +209,8 @@
           <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
           <separator id="PT4G1s1"/>-->
           <button id="PT4G1B2" label="Import RPLAN Excel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es kann eine ausgewählte RPLAN Excel Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-          <button id="PT4G1B3" label="Import RPLAN RXF" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip =" es kann eine ausgewählte RXF-Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
-          <button id="PT4G1B4" label="Import MS Project" enabled ="false" onAction="Tom2G4M2ImportMSProject" supertip ="es kann eine Microsoft Project Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus."/>
+          <button id="PT4G1B3" label="Import RPLAN RXF" enabled ="true" onAction ="Tom2G4B3RPLANRxfImport" supertip =" es kann eine ausgewählte RXF-Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
+          <button id="PT4G1B4" label="Import MS Project" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es kann eine Microsoft Project Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus."/>
           <separator id="PT4G1s1"/>
           <button id="PT4G1M1B1" label="Import VISBO-Steckbriefe" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <!--<button id="PT4G1M1B2" label="Import MSProject Projekte" onAction="Tom2G4M2ImportMSProject" supertip ="alle Projekte, die in MSProject definiert wurden und im Folder MSProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
@@ -236,8 +236,8 @@
           <separator id="PT4G1s2"/>
           <menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="alle angezeigten Projekte werden ausgeleitet ">
             <button id="PT4G1M3B1" label="Alles" onAction="awinWriteProjektBedarfeXLSX" supertip ="alle Werte sind editierbar"/>
-            <button id="PT4G1M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
-            <button id="PT4G1M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>
+            <button id="PT4G1M3B2" label="Aktuell" enabled ="true" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
+            <button id="PT4G1M3B3" label="Zukunft" enabled ="true" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>
           </menu>
           <!--<menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
             <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
@@ -299,19 +299,19 @@
           <checkBox id="PT6G4B5" label="Projekt-Linie anzeigen" getPressed="PT6ProjectLinePressed" onAction ="PT6SetShowProjectLine"/>
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
-        </group>
-        <group id ="PT6G5" label ="Testfunktionen">
+        </group>-->
+        <!--<group id ="PT6G5" label ="Testfunktionen">
           <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="aktuelle Test Funktion"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Check Hierarchien korrekt ? "  onAction ="PTTestFunktion3" />
           <button id="PT6G5B3" label="Demo-Funktion Ampel"  onAction ="PTTestFunktion4" />
           <button id="PT6G5B4" label="Demo-Funktion Historie"  onAction ="PTTestFunktion5" />
           <button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>
-        </group>
+        </group>-->
         <group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
-        </group>-->
+        </group>
      </tab>
     </tabs>
   </ribbon>
