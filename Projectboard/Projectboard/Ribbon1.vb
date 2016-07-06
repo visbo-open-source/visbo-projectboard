@@ -155,17 +155,17 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
-<<<<<<< HEAD
-            ' Maus auf Wartemodus setzen
-            appInstance.Cursor = XlMousePointer.xlWait
+            ' '' ''<<<<<<< HEAD
+            ' '' ''            ' Maus auf Wartemodus setzen
+            ' '' ''            appInstance.Cursor = XlMousePointer.xlWait
 
-            If loadConstellationFrm.addToSession.Checked = True Then
-                constellationName = loadConstellationFrm.ListBox1.Text
-                Call awinAddConstellation(constellationName, successMessage)
-            Else
-                constellationName = loadConstellationFrm.ListBox1.Text
-                Call awinLoadConstellation(constellationName, successMessage)
-=======
+            ' '' ''            If loadConstellationFrm.addToSession.Checked = True Then
+            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
+            ' '' ''                Call awinAddConstellation(constellationName, successMessage)
+            ' '' ''            Else
+            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
+            ' '' ''                Call awinLoadConstellation(constellationName, successMessage)
+            ' '' ''=======
             appInstance.ScreenUpdating = False
 
             Try
@@ -208,26 +208,26 @@ Imports System.Windows
                     constellationName = "no Name Scenario"
 
                 End If
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
+                '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
                 currentConstellation = constellationName
                 Call awinNeuZeichnenDiagramme(2)
 
-<<<<<<< HEAD
-            appInstance.ScreenUpdating = False
-            'Call diagramsVisible(False)
-            Call awinClearPlanTafel()
-            ' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario 
-            'Call awinZeichnePlanTafel(False)
-            Call awinZeichnePlanTafel(True)
-            Call awinNeuZeichnenDiagramme(2)
-            'Call diagramsVisible(True)
+                '' ''<<<<<<< HEAD
+                '' ''            appInstance.ScreenUpdating = False
+                '' ''            'Call diagramsVisible(False)
+                '' ''            Call awinClearPlanTafel()
+                '' ''            ' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario 
+                '' ''            'Call awinZeichnePlanTafel(False)
+                '' ''            Call awinZeichnePlanTafel(True)
+                '' ''            Call awinNeuZeichnenDiagramme(2)
+                '' ''            'Call diagramsVisible(True)
 
-            ' Maus auf Wartemodus setzen
-            appInstance.Cursor = XlMousePointer.xlDefault
+                '' ''            ' Maus auf Wartemodus setzen
+                '' ''            appInstance.Cursor = XlMousePointer.xlDefault
 
-            appInstance.ScreenUpdating = True
-=======
+                '' ''            appInstance.ScreenUpdating = True
+                '' ''=======
                 ' Änderung tk am 2.6 
                 ''Call awinLoadConstellation(constellationName, successMessage)
 
@@ -241,7 +241,7 @@ Imports System.Windows
             Catch ex As Exception
                 Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
             End Try
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
+            '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
             appInstance.ScreenUpdating = True
 
@@ -2268,14 +2268,10 @@ Imports System.Windows
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-<<<<<<< HEAD
-        Dim getInventurImport As New frmSelectImportFiles
-        
-=======
+
         Dim getInventurImport As New frmSelectRPlanImport
         Dim wasNotEmpty As Boolean = False
 
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -2555,7 +2551,7 @@ Imports System.Windows
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectImportFiles
-        Dim listofVorlagen As Collection
+        Dim listofVorlagen As New Collection
         Dim xlsRplanImport As Excel.Workbook
 
         Call projektTafelInit()
@@ -2568,23 +2564,7 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
-
-<<<<<<< HEAD
             listofVorlagen = getRPLANImport.selImportFiles
-=======
-                ' alle Import Projekte erstmal löschen
-                ImportProjekte.Clear()
-                'Call bmwImportProjektInventur(myCollection)
-                Call rplanExcelImport(myCollection, False)
-                'Call bmwImportProjekteITO15(myCollection, False)
-                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
-
-            '' '' alle Import Projekte erstmal löschen
-            ' ''ImportProjekte.Clear()
-            ' ''myCollection.Clear()
 
             Dim i As Integer
             For i = 1 To listofVorlagen.Count
@@ -2611,7 +2591,7 @@ Imports System.Windows
 
 
                     appInstance.ScreenUpdating = True
-                    Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -2996,20 +2976,11 @@ Imports System.Windows
             Next i
 
 
-<<<<<<< HEAD
-=======
         Try
             Call importProjekteEintragen(importDate, ProjektStatus(1))
             'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
-
-            Try
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-            Catch ex As Exception
-                Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
             End Try
 
         Else
@@ -3019,11 +2990,6 @@ Imports System.Windows
         End If
 
 
-<<<<<<< HEAD
-        'Schließen des LogFilesTom2G4M2ImportMSProject
-=======
-       
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
         Call logfileSchliessen()
 
         enableOnUpdate = True
@@ -3120,31 +3086,22 @@ Imports System.Windows
                         ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                         Call MsgBox(ex1.Message)
                         Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
-                    End Try
+                End Try
 
-
-
-                    ' '' ''End If
-
-
-<<<<<<< HEAD
             Next i
 
-=======
-        Try
-            'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-            Call importProjekteEintragen(importDate, ProjektStatus(1))
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
+            ' '' ''End If
 
             Try
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
             Catch ex As Exception
+
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
             End Try
+
+
 
         End If
 

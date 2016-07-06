@@ -2442,11 +2442,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(223)
                                 End If
-<<<<<<< HEAD
-                                .TextFrame2.TextRange.Text = Date.Now.ToString("d", repCult)
 
-=======
->>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
 
                             Case "Laufzeit:"
