@@ -124,7 +124,13 @@ Public Module PBBModules
             Try
                 If .calledFrom = "MS-Project" Then
 
-                    Dim lic As clsLicences = XMLImportLicences(licFileName)
+                    Dim lic As New clsLicences
+                    Try
+                        lic = XMLImportLicences(licFileName)
+                    Catch ex As Exception
+
+                    End Try
+
                     ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
                     If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
 

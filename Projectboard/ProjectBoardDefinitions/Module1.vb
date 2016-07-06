@@ -437,11 +437,13 @@ Public Module Module1
 
     ' SoftwareKomponenten für die Lizensierung
     Public Enum PTSWKomp
+
         ProjectAdmin = 0
         Swimlanes2 = 1
         SWkomp2 = 2
         SWkomp3 = 3
         SWkomp4 = 4
+        Premium = 5
     End Enum
 
 
@@ -454,7 +456,7 @@ Public Module Module1
     ' Lizenzkomponente kann sein:
     ' ProjectAdmin
     ' Swimlanes2
-    Public LizenzKomponenten(4) As String '
+    Public LizenzKomponenten(5) As String '
     '
     ' Projektstatus kann sein:
     ' beendet

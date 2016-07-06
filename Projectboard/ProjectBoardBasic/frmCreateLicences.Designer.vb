@@ -32,6 +32,7 @@ Partial Class frmCreateLicences
         Me.AddLicences = New System.Windows.Forms.Button()
         Me.FileNameUserList = New System.Windows.Forms.TextBox()
         Me.LabelUserList = New System.Windows.Forms.Label()
+        Me.SaveButton = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'untilDate
@@ -81,7 +82,7 @@ Partial Class frmCreateLicences
         Me.ListKomponenten.ItemHeight = 16
         Me.ListKomponenten.Location = New System.Drawing.Point(186, 157)
         Me.ListKomponenten.Name = "ListKomponenten"
-        Me.ListKomponenten.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple
+        Me.ListKomponenten.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.ListKomponenten.Size = New System.Drawing.Size(282, 116)
         Me.ListKomponenten.Sorted = True
         Me.ListKomponenten.TabIndex = 4
@@ -91,7 +92,7 @@ Partial Class frmCreateLicences
         Me.OKButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.OKButton.Location = New System.Drawing.Point(32, 343)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(197, 23)
+        Me.OKButton.Size = New System.Drawing.Size(140, 23)
         Me.OKButton.TabIndex = 6
         Me.OKButton.Text = "Create Licence-File"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -107,9 +108,9 @@ Partial Class frmCreateLicences
         'AddLicences
         '
         Me.AddLicences.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.AddLicences.Location = New System.Drawing.Point(292, 343)
+        Me.AddLicences.Location = New System.Drawing.Point(356, 343)
         Me.AddLicences.Name = "AddLicences"
-        Me.AddLicences.Size = New System.Drawing.Size(176, 23)
+        Me.AddLicences.Size = New System.Drawing.Size(155, 23)
         Me.AddLicences.TabIndex = 8
         Me.AddLicences.Text = "Add Licences"
         Me.AddLicences.UseVisualStyleBackColor = True
@@ -132,11 +133,22 @@ Partial Class frmCreateLicences
         Me.LabelUserList.TabIndex = 10
         Me.LabelUserList.Text = "User-Liste"
         '
+        'SaveButton
+        '
+        Me.SaveButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.SaveButton.Location = New System.Drawing.Point(198, 343)
+        Me.SaveButton.Name = "SaveButton"
+        Me.SaveButton.Size = New System.Drawing.Size(140, 23)
+        Me.SaveButton.TabIndex = 11
+        Me.SaveButton.Text = "Save Licence-File"
+        Me.SaveButton.UseVisualStyleBackColor = True
+        '
         'frmCreateLicences
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(491, 378)
+        Me.ClientSize = New System.Drawing.Size(540, 378)
+        Me.Controls.Add(Me.SaveButton)
         Me.Controls.Add(Me.LabelUserList)
         Me.Controls.Add(Me.FileNameUserList)
         Me.Controls.Add(Me.AddLicences)
@@ -163,4 +175,5 @@ Partial Class frmCreateLicences
     Friend WithEvents AddLicences As System.Windows.Forms.Button
     Friend WithEvents FileNameUserList As System.Windows.Forms.TextBox
     Friend WithEvents LabelUserList As System.Windows.Forms.Label
+    Friend WithEvents SaveButton As System.Windows.Forms.Button
 End Class

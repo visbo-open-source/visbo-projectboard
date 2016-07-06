@@ -6,7 +6,7 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\mahle</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\mahle\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />

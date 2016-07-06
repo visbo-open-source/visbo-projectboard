@@ -780,6 +780,7 @@ Public Module awinGeneralModules
 
             LizenzKomponenten(PTSWKomp.ProjectAdmin) = "ProjectAdmin"
             LizenzKomponenten(PTSWKomp.Swimlanes2) = "Swimlanes2"
+            LizenzKomponenten(PTSWKomp.Premium) = "Premium"
             LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
             LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
             LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
@@ -919,203 +920,226 @@ Public Module awinGeneralModules
             myWindowsName = myUser.Name
             Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
+            '' '--------------------------------------------------------------------------------
+            '   Testen, ob der User die passende Lizenz besitzt
+            '' '--------------------------------------------------------------------------------
+            Dim user As String = myWindowsName
+            Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
+
+            ' Lesen des Lizenzen-Files
+
+            Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+
+            ' Prüfen der Lizenzen
+            If Not lizenzen.validLicence(user, komponente) Then
+
+                Call logfileSchreiben("Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
+
+                ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
 
 
+            Else            ' Lizenz ist ok
 
-
-            ' hier muss jetzt das Customization File aufgemacht werden ...
-            Try
-                xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
-                myCustomizationFile = appInstance.ActiveWorkbook.Name
-            Catch ex As Exception
-                appInstance.ScreenUpdating = formerSU
-                Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-            End Try
-
-            Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-            ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
-            '' ''Try
-            '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
-            '' ''    If awinSettings.databaseName = "" Then
-            '' ''        awinSettings.databaseName = "VisboTest"
-            '' ''    End If
-            '' ''Catch ex As Exception
-
-            '' ''    awinSettings.databaseName = "VisboTest"
-            '' ''    'appInstance.ScreenUpdating = formerSU
-            '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
-            '' ''End Try
-
-            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
-
-                noDB = False
-
-                ' ur: 23.01.2015: Abfragen der Login-Informationen
-                loginErfolgreich = loginProzedur()
-
-
-                If Not loginErfolgreich Then
-                    ' Customization-File wird geschlossen
-                    xlsCustomization.Close(SaveChanges:=False)
-                    Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
-                    Call logfileSchliessen()
-                    appInstance.Quit()
-                    Exit Sub
-
-                End If
-            
-            End If
-
-
-            Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-            Try
-                ' Aufbauen der Darstellungsklassen  
-                Call aufbauenAppearanceDefinitions(wsName7810)
-
-                ' Auslesen der BusinessUnit Definitionen
-                Call readBusinessUnitDefinitions(wsName4)
-
-                ' Auslesen der Phasen Definitionen 
-                Call readPhaseDefinitions(wsName4)
-
-                ' Auslesen der Meilenstein Definitionen 
-                Call readMilestoneDefinitions(wsName4)
-
-
-                ' Auslesen der Rollen Definitionen 
-                Call readRoleDefinitions(wsName4)
-
-                ' Auslesen der Kosten Definitionen 
-                Call readCostDefinitions(wsName4)
-
-                ' Auslesen der Custom Field Definitions
+                ' hier muss jetzt das Customization File aufgemacht werden ...
                 Try
-                    Call readCustomFieldDefinitions(wsName4)
+                    xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
+                    myCustomizationFile = appInstance.ActiveWorkbook.Name
                 Catch ex As Exception
-
+                    appInstance.ScreenUpdating = formerSU
+                    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
                 End Try
 
-
-                ' auslesen der anderen Informationen 
-                Call readOtherDefinitions(wsName4)
-
-                ' sollen die missingDefinitions gelesen / geschrieben werden 
-                Dim needToBeSaved As Boolean = False
-                If awinSettings.readWriteMissingDefinitions Then
-                    Try
-                        Dim wsName15 As Excel.Worksheet
-                        Try
-
-                            wsName15 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                         Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                            ' Auslesen der MissingPhase Definitionen 
-                            Call readPhaseDefinitions(wsName15, True)
+                ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
+                '' ''Try
+                '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
+                '' ''    If awinSettings.databaseName = "" Then
+                '' ''        awinSettings.databaseName = "VisboTest"
+                '' ''    End If
+                '' ''Catch ex As Exception
 
-                            ' Auslesen der Meilenstein Definitionen 
-                            Call readMilestoneDefinitions(wsName15, True)
-                        Catch ex1 As Exception
+                '' ''    awinSettings.databaseName = "VisboTest"
+                '' ''    'appInstance.ScreenUpdating = formerSU
+                '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
+                '' ''End Try
 
-                            ' wenn das Sheet nicht existiert, muss es angelegt werden 
-                            needToBeSaved = True
-                            wsName15 = appInstance.Worksheets.Add(Count:=appInstance.Worksheets.Count + 1)
-                            wsName15.Name = arrWsNames(15)
-                            With wsName15
+                If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                                Dim tmpRange As Excel.Range = .Range(.Cells(1, 2), .Cells(2, 2))
-                                tmpRange.Offset(0, -1).Value = "unbekannte Phasen-/Vorgangs-Namen"
-                                .Names.Add(Name:="Missing_Phasen_Definition", RefersToR1C1:=tmpRange)
+                    noDB = False
 
-                                tmpRange = .Range(.Cells(4, 2), .Cells(5, 2))
-                                tmpRange.Offset(0, -1).Value = "unbekannte Meilenstein-Namen"
-                                .Names.Add(Name:="Missing_Meilenstein_Definition", RefersToR1C1:=tmpRange)
-                            End With
-
-                        End Try
+                    ' ur: 23.01.2015: Abfragen der Login-Informationen
+                    loginErfolgreich = loginProzedur()
 
 
+                    If Not loginErfolgreich Then
+                        ' Customization-File wird geschlossen
+                        xlsCustomization.Close(SaveChanges:=False)
+                        Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
+                        Call logfileSchliessen()
+                        appInstance.Quit()
+                        Exit Sub
 
+                    End If
+
+                End If
+
+
+                Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                Try
+                    ' Aufbauen der Darstellungsklassen  
+                    Call aufbauenAppearanceDefinitions(wsName7810)
+
+                    ' Auslesen der BusinessUnit Definitionen
+                    Call readBusinessUnitDefinitions(wsName4)
+
+                    ' Auslesen der Phasen Definitionen 
+                    Call readPhaseDefinitions(wsName4)
+
+                    ' Auslesen der Meilenstein Definitionen 
+                    Call readMilestoneDefinitions(wsName4)
+
+
+                    ' Auslesen der Rollen Definitionen 
+                    Call readRoleDefinitions(wsName4)
+
+                    ' Auslesen der Kosten Definitionen 
+                    Call readCostDefinitions(wsName4)
+
+                    ' Auslesen der Custom Field Definitions
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
                     Catch ex As Exception
 
                     End Try
-                End If
+
+
+                    ' auslesen der anderen Informationen 
+                    Call readOtherDefinitions(wsName4)
+
+                    ' sollen die missingDefinitions gelesen / geschrieben werden 
+                    Dim needToBeSaved As Boolean = False
+                    If awinSettings.readWriteMissingDefinitions Then
+                        Try
+                            Dim wsName15 As Excel.Worksheet
+                            Try
+
+                                wsName15 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                                ' Auslesen der MissingPhase Definitionen 
+                                Call readPhaseDefinitions(wsName15, True)
+
+                                ' Auslesen der Meilenstein Definitionen 
+                                Call readMilestoneDefinitions(wsName15, True)
+                            Catch ex1 As Exception
+
+                                ' wenn das Sheet nicht existiert, muss es angelegt werden 
+                                needToBeSaved = True
+                                wsName15 = appInstance.Worksheets.Add(Count:=appInstance.Worksheets.Count + 1)
+                                wsName15.Name = arrWsNames(15)
+                                With wsName15
+
+                                    Dim tmpRange As Excel.Range = .Range(.Cells(1, 2), .Cells(2, 2))
+                                    tmpRange.Offset(0, -1).Value = "unbekannte Phasen-/Vorgangs-Namen"
+                                    .Names.Add(Name:="Missing_Phasen_Definition", RefersToR1C1:=tmpRange)
+
+                                    tmpRange = .Range(.Cells(4, 2), .Cells(5, 2))
+                                    tmpRange.Offset(0, -1).Value = "unbekannte Meilenstein-Namen"
+                                    .Names.Add(Name:="Missing_Meilenstein_Definition", RefersToR1C1:=tmpRange)
+                                End With
+
+                            End Try
 
 
 
-                ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        Catch ex As Exception
 
-                Call readNameMappings(wsName7810, phaseMappings)
-
-
-                ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                Call readNameMappings(wsName7810, milestoneMappings)
-
-                ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
-                appInstance.EnableEvents = False
-                CType(appInstance.Worksheets(arrWsNames(7)), _
-                Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
-
-                ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-                appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=needToBeSaved) ' ur: 6.5.2014 savechanges hinzugefügt; tk 1.3.16 needtobesaved hinzugefügt
-                appInstance.EnableEvents = True
+                        End Try
+                    End If
 
 
-                ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
-                appearanceDefinitions.Clear()
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-                Call aufbauenAppearanceDefinitions(wsName7810)
+
+                    ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                    Call readNameMappings(wsName7810, phaseMappings)
 
 
-                ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                Call readRessourcenDetails()
+                    ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                    Call readNameMappings(wsName7810, milestoneMappings)
+
+                    ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
+                    appInstance.EnableEvents = False
+                    CType(appInstance.Worksheets(arrWsNames(7)), _
+                    Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
+
+                    ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                    appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=needToBeSaved) ' ur: 6.5.2014 savechanges hinzugefügt; tk 1.3.16 needtobesaved hinzugefügt
+                    appInstance.EnableEvents = True
 
 
-                ' jetzt werden die Modul-Vorlagen ausgelesen 
-                Call readVorlagen(True)
-
-                ' jetzt werden die Projekt-Vorlagen ausgelesen 
-                Call readVorlagen(False)
-
-                Dim a As Integer = Projektvorlagen.Count
-                Dim b As Integer = ModulVorlagen.Count
-
-                ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
-                ' Beschriftung des Kalenders
-                appInstance.EnableEvents = False
-                Call prepareProjektTafel()
+                    ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
+                    appearanceDefinitions.Clear()
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    Call aufbauenAppearanceDefinitions(wsName7810)
 
 
-                projectBoardSheet.Activate()
-                appInstance.EnableEvents = True
-
-                If Not noDB Then
-                    ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
-                    Call readInitConstellations()
-                End If
+                    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
+                    Call readRessourcenDetails()
 
 
-            Catch ex As Exception
-                appInstance.ScreenUpdating = formerSU
-                appInstance.EnableEvents = True
-                Throw New ArgumentException(ex.Message)
-            End Try
+                    ' jetzt werden die Modul-Vorlagen ausgelesen 
+                    Call readVorlagen(True)
 
-            ' Logfile wird geschlossen
-            Call logfileSchliessen()
+                    ' jetzt werden die Projekt-Vorlagen ausgelesen 
+                    Call readVorlagen(False)
+
+                    Dim a As Integer = Projektvorlagen.Count
+                    Dim b As Integer = ModulVorlagen.Count
+
+                    ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
+                    ' Beschriftung des Kalenders
+                    appInstance.EnableEvents = False
+                    Call prepareProjektTafel()
+
+
+                    projectBoardSheet.Activate()
+                    appInstance.EnableEvents = True
+
+                    If Not noDB Then
+                        ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
+                        Call readInitConstellations()
+                    End If
+
+
+                Catch ex As Exception
+                    appInstance.ScreenUpdating = formerSU
+                    appInstance.EnableEvents = True
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+                ' Logfile wird geschlossen
+                Call logfileSchliessen()
+
+
+            End If    ' else-Zweig von Lizenzprüfung
 
 
         Catch ex As Exception
-            Call MsgBox("Fehler in awinsettypen" & vbLf & "ex.message")
+            Call MsgBox("Fehler in awinsettypen " & vbLf & ex.Message)
+            Throw New ArgumentException("Fehler in awinsettypen " & vbLf & ex.Message)
         End Try
 
     End Sub
@@ -14042,8 +14066,8 @@ Public Module awinGeneralModules
             XMLImportLicences = lic
 
         Catch ex As Exception
-
-            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            'Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            Throw New ArgumentException("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
             XMLImportLicences = Nothing
         End Try
 
