@@ -159,7 +159,8 @@ Public Class frmSelectImportFiles
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ' Datenbank wird hier ohnehin nicht benötigt
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim element As String = ""
         Dim dirName As String = ""
