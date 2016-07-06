@@ -21,6 +21,7 @@ Public Module Module1
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
     Public loginErfolgreich As Boolean = False
+    Public noDB As Boolean = True
 
     Public myWindowsName As String
 
@@ -298,6 +299,24 @@ Public Module Module1
         resultampel = 8
         phasen = 9
         startdatum = 10
+        deliverables = 11
+        customfields = 12
+        projecttype = 13
+        endedatum = 14
+        persbedarf = 15
+        rolle = 16
+        kostenart = 17
+    End Enum
+
+    ''' <summary>
+    ''' betimmt bei den combined Rollen, ob nach allen SubRoles, den Platzhaltern und den Real Rollen aufgelöst werden soll 
+    ''' nur nach den Platzhaltern bzw real Rollen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTcbr
+        all = 0
+        placeholders = 1
+        realRoles = 2
     End Enum
 
     Public Enum PThis
@@ -305,6 +324,7 @@ Public Module Module1
         vorlage = 1
         beauftragung = 2
         letzterStand = 3
+        ersterStand = 4
     End Enum
 
     ' Enumeration für die Farbe 
@@ -427,11 +447,13 @@ Public Module Module1
 
     ' SoftwareKomponenten für die Lizensierung
     Public Enum PTSWKomp
+
         ProjectAdmin = 0
         Swimlanes2 = 1
         SWkomp2 = 2
         SWkomp3 = 3
         SWkomp4 = 4
+        Premium = 5
     End Enum
 
 
@@ -444,7 +466,7 @@ Public Module Module1
     ' Lizenzkomponente kann sein:
     ' ProjectAdmin
     ' Swimlanes2
-    Public LizenzKomponenten(4) As String '
+    Public LizenzKomponenten(5) As String '
     '
     ' Projektstatus kann sein:
     ' beendet
@@ -568,6 +590,12 @@ Public Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' eingefügt, um eine Warteschleife relisieren zu können ... 
+    ''' </summary>
+    ''' <param name="dwMilliseconds"></param>
+    ''' <remarks></remarks>
+    Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
     'Sub awinLoescheProjekt(pname As String)
     '    '
@@ -1371,13 +1399,19 @@ Public Module Module1
 
 
     '
-    ' gibt die Überdeckung zurück zwischen den beiden Zeiträumen definiert durch showRangeLeft /showRangeRight und anfang / ende
-    ' anzahl enthält die Breite der Überdeckung
-    ' ixzeitraum gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat
-    ' ix gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt
+
     '
+    ''' <summary>
+    ''' gibt die Überdeckung zurück zwischen den beiden Zeiträumen definiert durch showRangeLeft /showRangeRight und anfang / ende
+    ''' </summary>
+    ''' <param name="anfang">Anfang Zeitraum 2</param>
+    ''' <param name="ende">Ende Zeitraum 2</param>
+    ''' <param name="ixZeitraum">gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat</param>
+    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt</param>
+    ''' <param name="anzahl">enthält die Breite der Überdeckung</param>
+    ''' <remarks></remarks>
     Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, _
-                                ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
+                                    ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
 
 
 
@@ -1413,7 +1447,7 @@ Public Module Module1
         Dim i As Integer
         Dim chtobj As Excel.ChartObject
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
@@ -1448,7 +1482,7 @@ Public Module Module1
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
             Dim found As Boolean
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
@@ -1490,7 +1524,7 @@ Public Module Module1
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
@@ -1601,7 +1635,7 @@ Public Module Module1
         ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
 
         If selectedProjekte.Count > 0 Then
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             ReDim shpArray(selectedProjekte.Count - 1)
 
             For Each kvp In selectedProjekte.Liste
@@ -1609,7 +1643,7 @@ Public Module Module1
                 hproj = kvp.Value
                 i = i + 1
                 Try
-                    shpElement = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpElement = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
                     shpArray(i - 1) = shpElement.Name
 
                 Catch ex As Exception
@@ -1853,7 +1887,7 @@ Public Module Module1
         End Select
 
         Try
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
 
 
@@ -1898,7 +1932,7 @@ Public Module Module1
 
 
         Try
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             If pName = "" Then
                 For Each shpElement In worksheetShapes
@@ -3005,6 +3039,45 @@ Public Module Module1
 
 
 
+    End Sub
+
+    ''' <summary>
+    ''' setzt die komplette Session zurück 
+    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearCompleteSession()
+
+        Dim allShapes As Excel.Shapes
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' jetzt: Löschen der Session 
+
+        Try
+
+            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+            For Each element As Excel.Shape In allShapes
+                element.Delete()
+            Next
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen der Shapes ...")
+        End Try
+
+        ShowProjekte.Clear()
+        AlleProjekte.Clear()
+        selectedProjekte.Clear()
+        ImportProjekte.Clear()
+        DiagramList.Clear()
+        awinButtonEvents.Clear()
+
+        allDependencies.Clear()
+        projectboardShapes.clear()
+        ' Session gelöscht
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
     End Sub
 
     Public Sub PPTstarten()

@@ -1,12 +1,12 @@
 ﻿Public Class clsKostenarten
 
-    Private AllKostenarten As Collection
+    Private _allKostenarten As Collection
 
 
     Public Sub Add(costdef As clsKostenartDefinition)
 
         Try
-            AllKostenarten.Add(Item:=costdef, Key:=costdef.name)
+            _allKostenarten.Add(Item:=costdef, Key:=costdef.name)
         Catch ex As Exception
             Throw New ArgumentException(costdef.name & " existiert bereits")
         End Try
@@ -17,7 +17,7 @@
     Public Sub Remove(myitem As Object)
 
         Try
-            AllKostenarten.Remove(myitem)
+            _allKostenarten.Remove(myitem)
         Catch ex As Exception
             Throw New ArgumentException("Fehler bei Kostenart entfernen")
         End Try
@@ -27,7 +27,7 @@
 
     Public ReadOnly Property Count() As Integer
         Get
-            Count = AllKostenarten.Count
+            Count = _allKostenarten.Count
         End Get
     End Property
 
@@ -38,9 +38,9 @@
     ''' <value></value>
     ''' <returns>wahr, wenn enthalten; falsch sonst</returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property Contains(name As String) As Boolean
+    Public ReadOnly Property containsName(name As String) As Boolean
         Get
-            Contains = AllKostenarten.Contains(name)
+            containsName = _allKostenarten.Contains(name)
         End Get
     End Property
 
@@ -48,7 +48,7 @@
         Get
 
             Try
-                getCostdef = CType(AllKostenarten.Item(myitem), clsKostenartDefinition)
+                getCostdef = CType(_allKostenarten.Item(myitem), clsKostenartDefinition)
             Catch ex As Exception
                 Throw New ArgumentException(myitem & " ist keine Kostenart")
             End Try
@@ -59,7 +59,7 @@
     Public ReadOnly Property getCostdef(ByVal myitem As Integer) As clsKostenartDefinition
         Get
             Try
-                getCostdef = CType(AllKostenarten.Item(myitem), clsKostenartDefinition)
+                getCostdef = CType(_allKostenarten.Item(myitem), clsKostenartDefinition)
             Catch ex As Exception
                 Throw New ArgumentException(" es gibt keine Kostenart mit Nummer " & myitem)
             End Try
@@ -69,7 +69,7 @@
 
 
     Public Sub New()
-        AllKostenarten = New Collection
+        _allKostenarten = New Collection
     End Sub
 
 End Class

@@ -32,6 +32,8 @@ Public Class frmTestLicences
 
             Next i
 
+            UserName.Text = myWindowsName
+
         Catch ex As Exception
             Me.statusLabel.Text = ex.Message
             Me.statusLabel.Visible = False

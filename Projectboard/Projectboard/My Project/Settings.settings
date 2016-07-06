@@ -6,6 +6,7 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
+<<<<<<< HEAD
       <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\BMW Demo\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
@@ -13,6 +14,15 @@
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BMWDemo\</Value>
+=======
+      <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\mahle\</Value>
+    </Setting>
+    <Setting Name="mongoDBname" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="globalPath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\Mahle 2017\</Value>
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>

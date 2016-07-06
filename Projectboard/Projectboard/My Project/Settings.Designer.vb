@@ -73,7 +73,11 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+<<<<<<< HEAD
      Global.System.Configuration.DefaultSettingValueAttribute("DemoBMW")>  _
+=======
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -82,7 +86,11 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+<<<<<<< HEAD
      Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BMWDemo\")>  _
+=======
+     Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\Mahle 2017\")>  _
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
     Public ReadOnly Property globalPath() As String
         Get
             Return CType(Me("globalPath"),String)

@@ -19,38 +19,21 @@
 
     Private Sub ListBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
 
+        
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-        If ListBox1.Text <> "" Then
-            If ListBox1.Text = formerselect Then
-                Call MsgBox("ist bereits geladen ...")
-                DialogResult = System.Windows.Forms.DialogResult.Cancel
-                MyBase.Close()
-            Else
-                DialogResult = System.Windows.Forms.DialogResult.OK
-                MyBase.Close()
-                'formerselect = ListBox1.Text
-                'Call awinLoadConstellation(ListBox1.Text)
-
-                'appInstance.ScreenUpdating = False
-                'Call diagramsVisible(False)
-                'Call awinClearPlanTafel()
-                'Call awinZeichnePlanTafel()
-                'Call awinNeuZeichnenDiagramme(2)
-                'Call diagramsVisible(True)
-                ''Call awinScrollintoView()
-                'appInstance.ScreenUpdating = True
-
-                'Call MsgBox(formerselect & " wurde geladen ...")
-            End If
-
+        If ListBox1.SelectedItems.Count >= 1 Then
+            DialogResult = System.Windows.Forms.DialogResult.OK
+            MyBase.Close()
         Else
             Call MsgBox("bitte einen Eintrag selektieren")
         End If
 
-        'DialogResult = System.Windows.Forms.DialogResult.OK
+    End Sub
+
+    Private Sub addToSession_CheckedChanged(sender As Object, e As EventArgs) Handles addToSession.CheckedChanged
 
 
     End Sub

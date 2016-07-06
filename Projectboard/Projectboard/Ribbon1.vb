@@ -58,7 +58,7 @@ Imports System.Windows
         Dim returnValue As DialogResult
         Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
         Dim storeToDB As Boolean = False
         Dim returnRequest As Boolean = False
         Dim controlID As String = control.Id
@@ -73,15 +73,16 @@ Imports System.Windows
             If returnValue = DialogResult.OK Then
                 constellationName = storeConstellationFrm.ComboBox1.Text
 
-                If ControlID = speichernDatenbank Then
+                If controlID = speichernDatenbank And Not noDB Then
                     storeToDB = True
                 End If
-                Call storeSessionConstellation(ShowProjekte, constellationName)
+                Call storeSessionConstellation(constellationName)
 
               
                 ' speichern der Konstellation mit constellationName in DB
                 If storeToDB Then
 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     If request.pingMongoDb() Then
                         ' prüfen, ob diese Constellation existiert ..
                         If projectConstellations.Contains(constellationName) Then
@@ -119,8 +120,7 @@ Imports System.Windows
 
         Dim ControlID As String = control.Id
         Dim constellationName As String
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
+      
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
         Dim successMessage As String = initMessage
@@ -131,7 +131,10 @@ Imports System.Windows
 
         ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
-        If ControlID = loadFromDatenbank Then
+        If ControlID = loadFromDatenbank And Not noDB Then
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
             If request.pingMongoDb() Then
                 projectConstellations = request.retrieveConstellationsFromDB()
             Else
@@ -141,11 +144,18 @@ Imports System.Windows
 
         enableOnUpdate = False
 
-        loadConstellationFrm.addToSession.Checked = True
+        If AlleProjekte.Count > 0 Then
+            loadConstellationFrm.addToSession.Checked = False
+        Else
+            loadConstellationFrm.addToSession.Checked = False
+            loadConstellationFrm.addToSession.Visible = False
+        End If
+
         returnValue = loadConstellationFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
 
+<<<<<<< HEAD
             ' Maus auf Wartemodus setzen
             appInstance.Cursor = XlMousePointer.xlWait
 
@@ -155,11 +165,55 @@ Imports System.Windows
             Else
                 constellationName = loadConstellationFrm.ListBox1.Text
                 Call awinLoadConstellation(constellationName, successMessage)
+=======
+            appInstance.ScreenUpdating = False
 
-                ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+            Try
+                Dim boardWasEmpty As Boolean
+
+                If AlleProjekte.Count = 0 Then
+                    boardWasEmpty = True
+                Else
+                    boardWasEmpty = False
+                End If
+
+                If Not boardWasEmpty And Not loadConstellationFrm.addToSession.Checked = True Then
+
+                    Call awinClearPlanTafel()
+
+                    If ControlID = loadFromDatenbank Then
+                        Call clearCompleteSession()
+                    End If
+
+                End If
+
+                For i As Integer = 1 To loadConstellationFrm.ListBox1.SelectedItems.Count
+
+                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
+
+                    If i = 1 And (boardWasEmpty Or Not (ControlID = loadFromDatenbank)) Then
+                        Call awinLoadConstellation(constellationName, successMessage)
+                    Else
+                        Call awinAddConstellation(constellationName, successMessage)
+                    End If
+
+
+                Next
+
+                If loadConstellationFrm.ListBox1.SelectedItems.Count = 1 And _
+                    (boardWasEmpty Or loadConstellationFrm.addToSession.Checked = False) Then
+                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(0))
+
+                Else
+                    constellationName = "no Name Scenario"
+
+                End If
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
+
                 currentConstellation = constellationName
-            End If
+                Call awinNeuZeichnenDiagramme(2)
 
+<<<<<<< HEAD
             appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
             Call awinClearPlanTafel()
@@ -173,14 +227,26 @@ Imports System.Windows
             appInstance.Cursor = XlMousePointer.xlDefault
 
             appInstance.ScreenUpdating = True
+=======
+                ' Änderung tk am 2.6 
+                ''Call awinLoadConstellation(constellationName, successMessage)
 
-            'If successMessage.Length > initMessage.Length Then
-            '    Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
-            'Else
-            '    'Call MsgBox(constellationName & " wurde geladen ...")
-            'End If
+                ' '' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+                ''currentConstellation = constellationName
+
+
+                ' '' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario
+                ' '' mit fromScratch = false, weil di eReihenfolge erhalten bleiben soll 
+                ' ''Call awinZeichnePlanTafel(False)
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
+            End Try
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
+
+            appInstance.ScreenUpdating = True
 
         End If
+
         enableOnUpdate = True
 
     End Sub
@@ -197,14 +263,16 @@ Imports System.Windows
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
         Dim removeFromDB As Boolean
 
-        If ControlID = deleteDatenbank Then
+        If ControlID = deleteDatenbank And Not noDB Then
             removeFromDB = True
-            If request.pingMongoDb() Then
-                projectConstellations = request.retrieveConstellationsFromDB()
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If Request.pingMongoDb() Then
+                projectConstellations = Request.retrieveConstellationsFromDB()
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -226,7 +294,7 @@ Imports System.Windows
             If constellationName = currentConstellation Then
 
                 ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                Call storeSessionConstellation(ShowProjekte, "Last")
+                Call storeSessionConstellation("Last")
                 currentConstellation = "Last"
             Else
                 ' aktuelle Konstellation bleibt unverändert
@@ -338,7 +406,6 @@ Imports System.Windows
         ' Bestätigungs-Fenster aufrufen 
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim returnValue As DialogResult
-        Dim allShapes As Excel.Shapes
 
         bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen der kompletten Session"
         returnValue = bestaetigeLoeschen.ShowDialog
@@ -346,35 +413,9 @@ Imports System.Windows
         If returnValue = DialogResult.Cancel Then
             ' nichts tun
         Else
-            appInstance.EnableEvents = False
-            enableOnUpdate = False
 
-            ' jetzt: Löschen der Session 
-
-            Try
-
-                allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
-                For Each element As Excel.Shape In allShapes
-                    element.Delete()
-                Next
-
-            Catch ex As Exception
-                Call MsgBox("Fehler beim Löschen der Shapes ...")
-            End Try
-
-            ShowProjekte.Clear()
-            AlleProjekte.Clear()
-            selectedProjekte.Clear()
-            ImportProjekte.Clear()
-            DiagramList.Clear()
-            awinButtonEvents.Clear()
-
-            allDependencies.Clear()
-            projectboardShapes.clear()
-            ' Session gelöscht
-
-            appInstance.EnableEvents = True
-            enableOnUpdate = True
+            Call clearCompleteSession()
+            
         End If
 
     End Sub
@@ -407,7 +448,7 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             anzDiagrams = CInt(CType(.ChartObjects, Excel.ChartObjects).Count)
 
@@ -441,7 +482,7 @@ Imports System.Windows
 
             Call awinDeSelect()
 
-            Dim anzDiagrams As Integer = CType(appInstance.Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
 
 
             If anzDiagrams > 0 Then
@@ -812,7 +853,7 @@ Imports System.Windows
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -824,24 +865,39 @@ Imports System.Windows
         If returnValue = DialogResult.OK Then
             With ProjektEingabe
                 Dim buName As String = CStr(.businessUnitDropBox.SelectedItem)
-                If request.pingMongoDb() Then
 
-                    If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+                If Not noDB Then
 
-                        ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If request.pingMongoDb() Then
+
+                        If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+
+                            ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
 
-                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
-                                           CStr(""), buName)
+                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CStr(""), buName)
+                        Else
+                            Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                        End If
                     Else
-                        Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+
+                        Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                        appInstance.ScreenUpdating = True
+
+                        ' Projekt soll trotzdem angezeigt werden
+                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CStr(""), buName)
+
                     End If
 
                 Else
 
-                    Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
                     appInstance.ScreenUpdating = True
 
                     ' Projekt soll trotzdem angezeigt werden
@@ -2212,8 +2268,14 @@ Imports System.Windows
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
+<<<<<<< HEAD
         Dim getInventurImport As New frmSelectImportFiles
         
+=======
+        Dim getInventurImport As New frmSelectRPlanImport
+        Dim wasNotEmpty As Boolean = False
+
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -2231,23 +2293,67 @@ Imports System.Windows
             Try
 
                 If My.Computer.FileSystem.FileExists(dateiName) Then
+
+                    If ShowProjekte.Count > 0 Then
+                        wasNotEmpty = True
+                        Call storeSessionConstellation("Last")
+                        ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
+                        Call awinClearPlanTafel()
+                    End If
+
                     appInstance.Workbooks.Open(dateiName)
+                    Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+                    Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+                    Dim tmpName As String = ""
+                    For ih As Integer = 0 To positionIX
+                        tmpName = tmpName & scenarioName.Chars(ih)
+                    Next
+                    scenarioName = tmpName.Trim
 
                     ' alle Import Projekte erstmal löschen
                     ImportProjekte.Clear()
-                    Call awinImportProjektInventur(myCollection)
+
+                    Call awinImportProjektInventur()
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
+
+                    ' ''If wasNotEmpty Then
+                    ' ''    Call awinClearPlanTafel()
+                    ' ''End If
+
+                    '' ''Call awinZeichnePlanTafel(True)
+                    ' ''Call awinZeichnePlanTafel(False)
+                    ' ''Call awinNeuZeichnenDiagramme(2)
+
+                    If sessionConstellation.count > 0 Then
+
+                        If projectConstellations.Contains(scenarioName) Then
+                            projectConstellations.Remove(scenarioName)
+                        End If
+
+                        projectConstellations.Add(sessionConstellation)
+                        Call loadSessionConstellation(scenarioName, False, False, True)
+                    Else
+                        Call MsgBox("keine PRojekte importiert ...")
+                    End If
+
+                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                    If ImportProjekte.Count > 0 Then
+                        ImportProjekte.Clear()
+                    End If
                 Else
+
                     Call MsgBox("bitte Datei auswählen ...")
                 End If
-                
+
 
             Catch ex As Exception
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-            End Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+        End Try
         Else
             Call MsgBox(" Import Scenario wurde abgebrochen")
         End If
@@ -2297,7 +2403,8 @@ Imports System.Windows
                 Call awinImportModule(myCollection)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -2462,7 +2569,18 @@ Imports System.Windows
         If returnValue = DialogResult.OK Then
 
 
+<<<<<<< HEAD
             listofVorlagen = getRPLANImport.selImportFiles
+=======
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear()
+                'Call bmwImportProjektInventur(myCollection)
+                Call rplanExcelImport(myCollection, False)
+                'Call bmwImportProjekteITO15(myCollection, False)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
             '' '' alle Import Projekte erstmal löschen
             ' ''ImportProjekte.Clear()
@@ -2610,7 +2728,8 @@ Imports System.Windows
 
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -2653,128 +2772,129 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
     End Sub
-    Public Sub Tom2G4M1ImportOLD(control As IRibbonControl)
+    ' ''Public Sub Tom2G4M1ImportOLD(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim hproj As New clsProjekt
-        Dim cproj As New clsProjekt
-        Dim vglName As String = " "
-        Dim outputString As String = ""
-        Dim dirName As String
-        Dim dateiName As String
-        Dim pname As String
-        Dim importDate As Date = Date.Now
-        'Dim importDate As Date = "31.10.2013"
-        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
-        Dim projektInventurFile As String = "ProjektInventur.xlsm"
+    ' ''    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+    ' ''    Dim hproj As New clsProjekt
+    ' ''    Dim cproj As New clsProjekt
+    ' ''    Dim vglName As String = " "
+    ' ''    Dim outputString As String = ""
+    ' ''    Dim dirName As String
+    ' ''    Dim dateiName As String
+    ' ''    Dim pname As String
+    ' ''    Dim importDate As Date = Date.Now
+    ' ''    'Dim importDate As Date = "31.10.2013"
+    ' ''    Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+    ' ''    Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
-        ' öffnen des LogFiles
-        Call logfileOpen()
+    ' ''    ' öffnen des LogFiles
+    ' ''    Call logfileOpen()
 
-        ' '' '' ProjektTafel wieder Aktiv setzen
-        '' ''appInstance.Workbooks(myProjektTafel).Activate()
-
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-        Dim myCollection As New Collection
+    ' ''    ' '' '' ProjektTafel wieder Aktiv setzen
+    ' ''    '' ''appInstance.Workbooks(myProjektTafel).Activate()
 
 
+    ' ''    Call projektTafelInit()
 
+    ' ''    appInstance.EnableEvents = False
+    ' ''    appInstance.ScreenUpdating = False
+    ' ''    enableOnUpdate = False
 
-        'dirName = awinPath & projektFilesOrdner
-        dirName = importOrdnerNames(PTImpExp.visbo)
-        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
-
-        ' alle Import Projekte erstmal löschen
-        ImportProjekte.Clear()
-
-
-        ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-        Dim i As Integer
-        For i = 1 To listOfVorlagen.Count
-            dateiName = listOfVorlagen.Item(i - 1)
-
-            If dateiName = projektInventurFile Then
-
-                ' nichts machen 
-
-            Else
-                Dim skip As Boolean = False
-
-
-                Try
-                    appInstance.Workbooks.Open(dateiName)
-                    Call logfileSchreiben("Beginn Import ", dateiName, -1)
-
-                Catch ex1 As Exception
-                    Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
-                    skip = True
-                End Try
-
-                If Not skip Then
-                    pname = ""
-                    hproj = New clsProjekt
-                    Try
-                        Call awinImportProjectmitHrchy_beforePT113(hproj, Nothing, False, importDate)
-
-                        Try
-                            Dim keyStr As String = calcProjektKey(hproj)
-                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                            myCollection.Add(calcProjektKey(hproj))
-                        Catch ex2 As Exception
-                            Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
-                        End Try
-
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-
-                    Catch ex1 As Exception
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                        Call logfileSchreiben(ex1.Message, "", anzFehler)
-                        Call MsgBox(ex1.Message)
-                        'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
-                    End Try
-
-
-
-                End If
-
-
-
-            End If
-
-
-        Next i
-
-
-
-        Try
-            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
+    ' ''    Dim myCollection As New Collection
 
 
 
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
+    ' ''    'dirName = awinPath & projektFilesOrdner
+    ' ''    dirName = importOrdnerNames(PTImpExp.visbo)
+    ' ''    listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
+
+    ' ''    ' alle Import Projekte erstmal löschen
+    ' ''    ImportProjekte.Clear()
 
 
-        ' Schließen des LogFiles
-        Call logfileSchliessen()
+    ' ''    ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+    ' ''    Dim i As Integer
+    ' ''    For i = 1 To listOfVorlagen.Count
+    ' ''        dateiName = listOfVorlagen.Item(i - 1)
 
-    End Sub
+    ' ''        If dateiName = projektInventurFile Then
+
+    ' ''            ' nichts machen 
+
+    ' ''        Else
+    ' ''            Dim skip As Boolean = False
+
+
+    ' ''            Try
+    ' ''                appInstance.Workbooks.Open(dateiName)
+    ' ''                Call logfileSchreiben("Beginn Import ", dateiName, -1)
+
+    ' ''            Catch ex1 As Exception
+    ' ''                Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
+    ' ''                skip = True
+    ' ''            End Try
+
+    ' ''            If Not skip Then
+    ' ''                pname = ""
+    ' ''                hproj = New clsProjekt
+    ' ''                Try
+    ' ''                    Call awinImportProjectmitHrchy_beforePT113(hproj, Nothing, False, importDate)
+
+    ' ''                    Try
+    ' ''                        Dim keyStr As String = calcProjektKey(hproj)
+    ' ''                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+    ' ''                        myCollection.Add(calcProjektKey(hproj))
+    ' ''                    Catch ex2 As Exception
+    ' ''                        Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+    ' ''                    End Try
+
+    ' ''                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+    ' ''                Catch ex1 As Exception
+    ' ''                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+    ' ''                    Call logfileSchreiben(ex1.Message, "", anzFehler)
+    ' ''                    Call MsgBox(ex1.Message)
+    ' ''                    'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
+    ' ''                End Try
+
+
+
+    ' ''            End If
+
+
+
+    ' ''        End If
+
+
+    ' ''    Next i
+
+
+
+    ' ''    Try
+    ' ''        Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+    ' ''    Catch ex As Exception
+    ' ''        Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+    ' ''    End Try
+
+
+
+
+    ' ''    enableOnUpdate = True
+    ' ''    appInstance.EnableEvents = True
+    ' ''    appInstance.ScreenUpdating = True
+
+
+    ' ''    ' Schließen des LogFiles
+    ' ''    Call logfileSchliessen()
+
+    ' ''End Sub
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
-
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        If Not noDB Then
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
@@ -2876,6 +2996,15 @@ Imports System.Windows
             Next i
 
 
+<<<<<<< HEAD
+=======
+        Try
+            Call importProjekteEintragen(importDate, ProjektStatus(1))
+            'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
             Try
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
@@ -2890,7 +3019,11 @@ Imports System.Windows
         End If
 
 
+<<<<<<< HEAD
         'Schließen des LogFilesTom2G4M2ImportMSProject
+=======
+       
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
         Call logfileSchliessen()
 
         enableOnUpdate = True
@@ -2902,7 +3035,9 @@ Imports System.Windows
 
     Public Sub Tom2G4M2ImportMSProject(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        If Not noDB Then
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
@@ -2992,8 +3127,17 @@ Imports System.Windows
                     ' '' ''End If
 
 
+<<<<<<< HEAD
             Next i
 
+=======
+        Try
+            'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+            Call importProjekteEintragen(importDate, ProjektStatus(1))
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
 
             Try
@@ -3136,6 +3280,40 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
 
+
+    End Sub
+
+    ''' <summary>
+    ''' exportiert alle angezeigten Projekte in eine Massen-Edit Datei 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub awinWriteProjektBedarfeXLSX(control As IRibbonControl)
+
+        If showRangeLeft <= 0 And Not showRangeRight > showRangeLeft Then
+            Call MsgBox("bitte  einen Zeitraum angeben")
+            Exit Sub
+        End If
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        If control.Id = "PT4G1M3B1" Then
+            ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+        ElseIf control.Id = "PT4G1M3B2" Then
+            ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+        ElseIf control.Id = "PT4G1M3B3" Then
+            'Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
     End Sub
 
@@ -6776,12 +6954,24 @@ Imports System.Windows
 
                 Dim dummyObj As Excel.ChartObject = Nothing
                 Dim hproj As clsProjekt
+
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
+
+                    Try
+
+                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
+                    Catch ex1 As Exception
+                        Call MsgBox("Fehler bei Diagramm erzeugen: " & ex1.Message)
+                    End Try
+
                 Catch ex As Exception
+
                     Call MsgBox("Name nicht gefunden : " & singleShp.Name)
+
                 End Try
+
+                
 
                 appInstance.ScreenUpdating = formerSU
                 appInstance.EnableEvents = formerEE
@@ -7892,7 +8082,9 @@ Imports System.Windows
     Sub PTTestFunktion1(control As IRibbonControl)
 
         Call MsgBox("Enable Events ist " & appInstance.EnableEvents.ToString)
+        Call MsgBox("Screen Updating " & appInstance.ScreenUpdating.ToString)
         appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
 
     End Sub
@@ -7902,7 +8094,7 @@ Imports System.Windows
         Dim hproj As clsProjekt
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
-        Dim tstCollection As SortedList(Of Date, String)
+        ''Dim tstCollection As SortedList(Of Date, String)
         Dim anzElements As Integer
 
         Dim awinSelection As Excel.ShapeRange
@@ -7928,7 +8120,7 @@ Imports System.Windows
 
         If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count > 1 Then
+            If awinSelection.Count >= 1 Then
                 anzElements = awinSelection.Count
 
                 For i = 1 To anzElements
@@ -7936,41 +8128,62 @@ Imports System.Windows
                     singleShp = awinSelection.Item(i)
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
 
-                    If i = 1 Then
-                        schluessel = calcProjektKey(hproj)
+                    Dim openXMLproj As New clsOpenXML
+                    Call openXMLproj.copyFrom(hproj)
+
+                    Dim vglProj As New clsProjekt
+                    Call openXMLproj.copyTo(vglProj)
+
+                    vglProj.variantName = "OpenXML"
+                    If Not AlleProjekte.Containskey(calcProjektKey(vglProj)) Then
+                        AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
                     End If
 
-                    If request.pingMongoDb() Then
-                        ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                                                                           storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                        projekthistorie.clear()
+
+                    Dim unterschiede As New Collection
+                    ' jetzt wird festgestellt, ob es Unterschiede gibt 
+                    ' 
+                    unterschiede = hproj.listOfDifferences(vglProj, True, 0)
+                    If unterschiede.Count > 0 Then
+                        Call MsgBox("What is the difference: " & unterschiede.Item(1))
                     End If
 
-                    If projekthistorie.Count > 0 Then
-                        ' Aufbau der Listen 
-                        projektHistorien.Add(projekthistorie)
+
+                    'If i = 1 Then
+                    '    schluessel = calcProjektKey(hproj)
+                    'End If
+
+                    ''If request.pingMongoDb() Then
+                    ''    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                    ''    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                    ''                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                    ''Else
+                    ''    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+                    ''    projekthistorie.clear()
+                    ''End If
+
+                    ''If projekthistorie.Count > 0 Then
+                    ''    ' Aufbau der Listen 
+                    ''    projektHistorien.Add(projekthistorie)
 
 
-                    End If
+                    ''End If
 
                 Next
             End If
         End If
 
-        Dim ts As Date
 
 
-        tstCollection = projektHistorien.getTimeStamps(schluessel)
-        anzElements = tstCollection.Count
 
-        For i = 1 To anzElements
-            ts = tstCollection.ElementAt(0).Key
-            projektHistorien.Remove(schluessel, ts)
-            todoListe.Add(schluessel, ts)
-        Next
+        ''tstCollection = projektHistorien.getTimeStamps(schluessel)
+        ''anzElements = tstCollection.Count
+
+        ''For i = 1 To anzElements
+        ''    ts = tstCollection.ElementAt(0).Key
+        ''    projektHistorien.Remove(schluessel, ts)
+        ''    todoListe.Add(schluessel, ts)
+        ''Next
 
 
         enableOnUpdate = True
