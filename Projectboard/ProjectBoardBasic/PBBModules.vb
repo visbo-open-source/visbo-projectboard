@@ -124,7 +124,13 @@ Public Module PBBModules
             Try
                 If .calledFrom = "MS-Project" Then
 
-                    Dim lic As clsLicences = XMLImportLicences(licFileName)
+                    Dim lic As New clsLicences
+                    Try
+                        lic = XMLImportLicences(licFileName)
+                    Catch ex As Exception
+
+                    End Try
+
                     ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
                     If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
 
@@ -267,6 +273,7 @@ Public Module PBBModules
 
             If awinSettings.isHryNameFrmActive Then
                 Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
+
             ElseIf controlID = "PTXG1B4" Or controlID = "PT0G1B8" Then
                 ' Namen auswählen, Visualisieren
                 awinSettings.useHierarchy = False
@@ -339,6 +346,7 @@ Public Module PBBModules
                 End With
             ElseIf controlID = "PTXG1B6" Then
                 ' Namen auswählen, Leistbarkeit
+
                 awinSettings.useHierarchy = False
                 With nameFormular
                     .Text = "Leistbarkeits-Charts erstellen"
@@ -420,7 +428,11 @@ Public Module PBBModules
                     Call MsgBox("vorher Projekt/e selektieren ...")
                 Else
 
+                    ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                    ' false, dann auf True gesetzt werden
+                    ' bei .show darf das nicht gemacht werden ! 
                     appInstance.ScreenUpdating = False
+                    appInstance.EnableEvents = False
 
                     With nameFormular
 
@@ -462,6 +474,7 @@ Public Module PBBModules
                     End With
 
                     appInstance.ScreenUpdating = True
+                    appInstance.EnableEvents = True
 
                 End If
 
@@ -478,8 +491,11 @@ Public Module PBBModules
                 Else
 
 
-                    ' Hierarchie auswählen, Einzelprojekt Berichte 
+                    ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                    ' dalse, dann auf True gesetzt werden
+                    ' bei .show darf das nicht gemacht werden ! 
                     appInstance.ScreenUpdating = False
+                    appInstance.EnableEvents = False
 
                     awinSettings.useHierarchy = True
                     With hryFormular
@@ -513,7 +529,7 @@ Public Module PBBModules
                     End With
 
                     appInstance.ScreenUpdating = True
-
+                    appInstance.EnableEvents = True
                 End If
 
             ElseIf controlID = "PT1G1M2B1" Then
@@ -521,7 +537,11 @@ Public Module PBBModules
 
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' Namen Auswahl, Multiprojekt Report
+                    ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                    ' dalse, dann auf True gesetzt werden
+                    ' bei .show darf das nicht gemacht werden ! 
                     appInstance.ScreenUpdating = False
+                    appInstance.EnableEvents = False
 
                     With nameFormular
 
@@ -561,6 +581,7 @@ Public Module PBBModules
                     End With
 
                     appInstance.ScreenUpdating = True
+                    appInstance.EnableEvents = True
 
                 Else
 
@@ -573,7 +594,11 @@ Public Module PBBModules
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
 
                     ' Hierarchie Auswahl, Multiprojekt Report
+                    ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                    ' dalse, dann auf True gesetzt werden
+                    ' bei .show darf das nicht gemacht werden ! 
                     appInstance.ScreenUpdating = False
+                    appInstance.EnableEvents = False
 
                     awinSettings.useHierarchy = True
                     With hryFormular
@@ -606,6 +631,8 @@ Public Module PBBModules
                     End With
 
                     appInstance.ScreenUpdating = True
+                    appInstance.EnableEvents = True
+
                 Else
 
                     Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
@@ -615,7 +642,11 @@ Public Module PBBModules
 
             ElseIf controlID = "PT4G1M0B1" Then
                 ' Auswahl über Namen, Typ II Export
+                ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                ' dalse, dann auf True gesetzt werden
+                ' bei .show darf das nicht gemacht werden ! 
                 appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
 
                 With nameFormular
 
@@ -651,11 +682,16 @@ Public Module PBBModules
                 End With
 
                 appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
 
             ElseIf controlID = "PT4G1M0B2" Then
 
                 ' Auswahl über Hierarchie, Typ II Export
+                ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                ' dalse, dann auf True gesetzt werden
+                ' bei .show darf das nicht gemacht werden ! 
                 appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
 
                 awinSettings.useHierarchy = True
 
@@ -684,12 +720,21 @@ Public Module PBBModules
                     .einstellungen.Visible = False
 
                     ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                    '.Show()
+                    returnValue = .ShowDialog
                 End With
+
+                appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
+
             ElseIf controlID = "PT4G1M2B1" Then
                 ' Auswahl über Namen, Vorlagen erzeugen
+                ' Auswahl über Hierarchie, Typ II Export
+                ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                ' dalse, dann auf True gesetzt werden
+                ' bei .show darf das nicht gemacht werden ! 
                 appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
 
                 With nameFormular
 
@@ -724,11 +769,17 @@ Public Module PBBModules
                 End With
 
                 appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
 
 
             ElseIf controlID = "PT4G1M2B2" Then
                 ' Auswahl über Hierarchie, Vorlagen Export
+
+                ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                ' dalse, dann auf True gesetzt werden
+                ' bei .show darf das nicht gemacht werden ! 
                 appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
 
                 awinSettings.useHierarchy = True
                 With hryFormular
@@ -759,6 +810,9 @@ Public Module PBBModules
                     returnValue = .ShowDialog
                 End With
 
+                appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
+
             ElseIf controlID = "PT0G1M2B7" Then
                 ' Auswahl über Namen, Meilensteine für Meilenstein Trendanalyse
                 Try
@@ -771,7 +825,11 @@ Public Module PBBModules
                     Call MsgBox("vorher Projekt/e selektieren ...")
                 Else
 
+                    ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
+                    ' dalse, dann auf True gesetzt werden
+                    ' bei .show darf das nicht gemacht werden ! 
                     appInstance.ScreenUpdating = False
+                    appInstance.EnableEvents = False
 
                     With nameFormular
 
@@ -823,6 +881,7 @@ Public Module PBBModules
                     End With
 
                     appInstance.ScreenUpdating = True
+                    appInstance.EnableEvents = True
 
                 End If
 
@@ -950,7 +1009,7 @@ Public Module PBBModules
         Dim awinSelection As Excel.ShapeRange
         Dim neueVariante As New frmCreateNewVariant
         Dim resultat As DialogResult
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim newproj As clsProjekt
         Dim key As String
         Dim phaseList As New Collection

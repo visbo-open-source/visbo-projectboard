@@ -109,6 +109,30 @@
     End Property
 
     ''' <summary>
+    ''' gibt den Type eines Customfields Namen zurück, Nothing, wenn NAme nicht existiert
+    ''' wenn zwei mit gleichen Namen und unterschiedlichem Typ existieren, wird immer der zuerst 
+    ''' gefundene zurückgegegen  
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTyp(ByVal name As String) As Integer
+        Get
+            Dim tmpValue As Integer = Nothing
+            ' suche das erste Auftreten, egal welchen Typs ...
+            For Each kvp As KeyValuePair(Of Integer, clsCustomFieldDefinition) In listOfDefinitions
+                If name = kvp.Value.name Then
+                    tmpValue = kvp.Value.type
+                    Exit For
+                End If
+            Next
+
+            getTyp = tmpValue
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die uid des CustomFields zurück; -1 wenn nicht existent 
     ''' </summary>
     ''' <param name="name"></param>
@@ -129,7 +153,7 @@
                     End If
                 Next
             Else
-                ' suche die uid, wo name und uid übereinstimmen 
+                ' suche die uid, wo name und type übereinstimmen 
                 For Each kvp As KeyValuePair(Of Integer, clsCustomFieldDefinition) In listOfDefinitions
                     If name = kvp.Value.name And type = kvp.Value.type Then
                         tmpValue = kvp.Key

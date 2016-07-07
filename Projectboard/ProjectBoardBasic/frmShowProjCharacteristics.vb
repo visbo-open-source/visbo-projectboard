@@ -25,7 +25,7 @@ Public Class frmShowProjCharacteristics
 
         'Call aktualisiereCharts(hproj, False)
 
-        'With appInstance.Worksheets(arrWsNames(3))
+        'With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
         '    Dim tmpArray() As String
         '    Dim anzDiagrams As Integer
         '    anzDiagrams = .Chartobjects.count
@@ -123,7 +123,7 @@ Public Class frmShowProjCharacteristics
 
 
         End With
-        
+
 
 
 
@@ -171,7 +171,7 @@ Public Class frmShowProjCharacteristics
 
     End Sub
 
-    
+
 
     Private Sub frmShowProjCharacteristics_Load(sender As Object, e As EventArgs) Handles Me.Load
         'Dim pShape As Excel.Shape
@@ -265,7 +265,7 @@ Public Class frmShowProjCharacteristics
         '
         ' hier wird bestimmt, welche Skalierungsfaktoren überhaupt bereücksicht werden müssen 
         '
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then
@@ -446,7 +446,7 @@ Public Class frmShowProjCharacteristics
         '
         ' jetzt werden wieder alle relevanten Diagramme durchgegangen, um sie auf die entsprechende Skalierung zu setzen ...
         '
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then

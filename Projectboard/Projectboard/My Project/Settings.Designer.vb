@@ -55,7 +55,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("ds021701.mlab.com:21701")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -64,7 +64,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\Project-Tafel Folder\BMW Demo\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\Project-Tafel Folder\mahle\")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -82,7 +82,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BMW Demo\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\Mahle 2017\")>  _
     Public ReadOnly Property globalPath() As String
         Get
             Return CType(Me("globalPath"),String)

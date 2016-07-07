@@ -117,6 +117,10 @@ Public Class clsawinSettings
     Public Property costToleranzRel As Double
     Public Property costToleranzAbs As Double
 
+    ' Settings für Default Meilenstein bzw Phasen Settings 
+    Public Property defaultMilestoneClass As String
+    Public Property defaultPhaseClass As String
+
     ' Settings für Multiprojekt-Sichten
     Public Property mppShowAllIfOne As Boolean
     Public Property mppShowMsDate As Boolean
@@ -140,6 +144,10 @@ Public Class clsawinSettings
     Public Property mppSmartTxtPositioning As Boolean
     ' enable Smart Powerpoint
     Public Property mppEnableSmartPPT As Boolean
+
+    ' steuert in der Methode clsFilter.doesnotBlock, ob ein Projekt, das keine Phasen/Meilensteine enthält, vom 
+    ' Milestone/Phasen Filter für die Multiprojektsicht blockiert wird oder nicht 
+    Public Property mppProjectsWithNoMPmayPass As Boolean
 
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
@@ -233,6 +241,10 @@ Public Class clsawinSettings
         _costToleranzRel = 0.02
         _costToleranzAbs = 2
 
+        ' Settings fürp Default Meilenstein bzw. Phasen-Klassen Namen
+        _defaultMilestoneClass = ""
+        _defaultPhaseClass = ""
+
         ' Settings für Einzel- und Multiprojekt Sichten 
         _mppShowAllIfOne = False
         _mppShowMsDate = True
@@ -254,6 +266,8 @@ Public Class clsawinSettings
         _mppUseInnerText = False
         _mppSmartTxtPositioning = True
         _mppEnableSmartPPT = True
+
+        _mppProjectsWithNoMPmayPass = True
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True
