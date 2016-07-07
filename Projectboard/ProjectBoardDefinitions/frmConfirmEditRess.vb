@@ -54,7 +54,7 @@ Public Class frmConfirmEditRess
 
             Try
 
-                With CType(appInstance.Worksheets(arrWsNames(3)), Microsoft.Office.Interop.Excel.Worksheet)
+                With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Microsoft.Office.Interop.Excel.Worksheet)
                     tmpShapes = .Shapes
                     shpElement = tmpShapes.Item(hproj.name)
                     shpElement.Select()
@@ -101,7 +101,7 @@ Public Class frmConfirmEditRess
             appInstance.ScreenUpdating = False
         End If
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
             .activate()
         End With
 

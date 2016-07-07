@@ -85,6 +85,7 @@
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
     <Compile Include="clsLicences.vb" />
+    <Compile Include="clsOpenXML.vb" />
     <Compile Include="clsPPTShapes.vb" />
     <Compile Include="clsAddElementRules.vb" />
     <Compile Include="clsAddElementRuleItem.vb" />
@@ -92,6 +93,7 @@
     <Compile Include="clsFilterDB.vb" />
     <Compile Include="clsReport.vb" />
     <Compile Include="clsReportMessages.vb" />
+    <Compile Include="clsRiskChance.vb" />
     <Compile Include="clsVisboZustaende.vb" />
     <Compile Include="clsHierarchy.vb" />
     <Compile Include="clsHierarchyNode.vb" />

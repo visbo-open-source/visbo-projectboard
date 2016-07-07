@@ -32,7 +32,8 @@
     Public Sub Add(cItem As clsConstellationItem)
 
         Dim key As String
-        key = cItem.projectName & "#" & cItem.variantName
+        'key = cItem.projectName & "#" & cItem.variantName
+        key = calcProjektKey(cItem.projectName, cItem.variantName)
         allItems.Add(key, cItem)
 
     End Sub
