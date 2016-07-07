@@ -55,7 +55,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("ds021701.mlab.com:21701")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -73,7 +73,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("visbomahle")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -98,22 +98,28 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Alias")>  _
-    Public ReadOnly Property VISBOAbbreviation() As String
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Abbreviation")>  _
+    Public Property VISBOAbbreviation() As String
         Get
             Return CType(Me("VISBOAbbreviation"),String)
         End Get
+        Set
+            Me("VISBOAbbreviation") = value
+        End Set
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel")>  _
-    Public ReadOnly Property VISBOAmpel() As String
+    Public Property VISBOAmpel() As String
         Get
             Return CType(Me("VISBOAmpel"),String)
         End Get
+        Set
+            Me("VISBOAmpel") = value
+        End Set
     End Property
 End Class
 

@@ -1313,4 +1313,8 @@ Public Class frmNameSelection
 
 
     End Sub
+
+    Private Sub nameListBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles nameListBox.SelectedIndexChanged
+
+    End Sub
 End Class

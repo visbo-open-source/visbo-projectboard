@@ -11278,7 +11278,7 @@ Public Module awinGeneralModules
     ''' <param name="myCollection"></param>
     ''' <param name="isVorlage"></param>
     ''' <remarks></remarks>
-    Public Sub rplanExcelImport(ByRef myCollection As Collection, ByVal isVorlage As Boolean)
+    Public Sub rplanExcelImport(ByRef myCollection As Collection, ByVal isVorlage As Boolean, ByVal dateiname As String)
 
         Dim phaseHierarhy(9) As String
         Dim currentHierarchy As Integer = 0
@@ -11292,6 +11292,8 @@ Public Module awinGeneralModules
 
         Dim hproj As clsProjekt
         Dim vproj As clsProjektvorlage
+        Dim vglName As String = ""
+        Dim vglProj As New clsProjekt
         Dim geleseneProjekte As Integer
         Dim projektFarbe As Object
         Dim anfang As Integer, ende As Integer
@@ -11308,6 +11310,7 @@ Public Module awinGeneralModules
         Dim startDate As Date, endDate As Date
         Dim startoffset As Long, duration As Long
         Dim vorlagenName As String = ""
+        Dim variantenName As String = ""
 
         Dim itemName As String = ""
         Dim zufall As New Random(10)
@@ -11338,10 +11341,13 @@ Public Module awinGeneralModules
         ' wird benötigt, um bei Phasen, die als doppelt erkannt wurden alle darunter liegenden Elemente auch zu ignorieren 
         Dim lastDuplicateIndent As Integer = 1000000
 
+        ' bestimmen, des eventuell benötigten VariantenName. Dieser wird aus dem Dateinamen erstellt
+        Dim tmpStrNew() As String
+        tmpStrNew = Split(dateiname, "\", -1)
+        variantenName = tmpStrNew(tmpStrNew.Length - 1)
+
+
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
-
-
-
 
         Dim colName As Integer
         Dim colAnfang As Integer
@@ -11540,11 +11546,11 @@ Public Module awinGeneralModules
 
                     ' hier wird Name, Typ, SOP, Business Unit, vname, Start-Datum, Dauer der Phase(1) ausgelesen  
 
+                    ' ur: 24.06.2016:testweise auskomentiert
+                    ' '' ''endDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colEnde).value)
+                    ' '' ''startDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colAnfang).value)
 
-                    endDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colEnde).value)
-                    startDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colAnfang).value)
-
-                    completeName = CStr(.Cells(RowIndex:=zeile, ColumnIndex:=colName).value)
+                    ' '' ''completeName = CStr(.Cells(RowIndex:=zeile, ColumnIndex:=colName).value)
 
                     startDate = CDate(CType(.Cells(zeile, colAnfang), Global.Microsoft.Office.Interop.Excel.Range).Value)
                     endDate = CDate(CType(.Cells(zeile, colEnde), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -11581,7 +11587,7 @@ Public Module awinGeneralModules
                     ' jetzt doch wieder hereingenommen, weil sich von einem Monat auf den anderen ein und dasselbe Projekte im SOP ändert .... 
                     Dim doADD As Boolean = False
 
-                    
+
                     pName = tmpStr(0)
 
 
@@ -11590,7 +11596,7 @@ Public Module awinGeneralModules
                     ' wenn nein, dann nicht importieren 
                     If DateDiff(DateInterval.Day, StartofCalendar, startDate) < 0 Then
 
-                        
+
                         Call MsgBox("Projekt liegt vor dem Kalender-Anfang und wird deshalb nicht importiert")
 
 
@@ -11599,8 +11605,6 @@ Public Module awinGeneralModules
                         ' jetzt wird das Projekt angelegt 
                         '
                         hproj = New clsProjekt
-
-
 
 
                         Try
@@ -12379,14 +12383,81 @@ Public Module awinGeneralModules
                         End If
 
                         ' jetzt muss das Projekt eingetragen werden 
-                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                        myCollection.Add(calcProjektKey(hproj))
+                        ' ####################################################################
+                        ' prüfen ob das Projekt bereits in Session oder Datenbank existiert 
+
+                        vglName = calcProjektKey(hproj.name, hproj.variantName)
+                        ' 
+                        If ImportProjekte.Containskey(vglName) Then
+
+                            ' dann existiert es bereits in der Session
+
+                            vglProj = ImportProjekte.getProject(vglName)
+                            If IsNothing(vglProj) Then
+                                ' dieser Fall kann eigentlich gar nicht auftreten ... ? 
+                                Call MsgBox("Fehler mit " & vglName)
+
+                            Else
+                                ' prüfen, ob es unterschiedlich ist; 
+                                ' wenn ja , dann wird es unter dem Varianten Namen Datei-Name angelegt
+                                ' wenn der auch schon existiert, dann Fehler udn nichts anlegen ...
+                                Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
+
+                                If unterschiede.Count > 0 Then
+                                    '' '' '' es gibt Unterschiede, also muss eine Variante angelegt werden 
+                                    If hproj.variantName <> variantenName Then
+                                        hproj.variantName = variantenName
+                                        vglName = calcProjektKey(hproj.name, hproj.variantName)
+
+                                        ' wenn die Variante bereits in der Session existiert ..
+                                        ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                                        If AlleProjekte.Containskey(vglName) Then
+                                            AlleProjekte.Remove(vglName)
+                                        End If
+
+                                    Else
+                                        ' in diesem Fall wird die Variante über hproj neu angelegt 
+                                        AlleProjekte.Remove(vglName)
+                                    End If
+
+                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
+
+                                    Try
+                                        myCollection.Add(vglName, vglName)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Else
+                                    ' Projekt in der Form existiert bereits , keine Neu-Anlage
+                                    ' es muss sichergestellt sein, dass es angezeigt wird und die Portfolio Definition entsprechend angepasst wird 
+                                    ok = False
+                                    hproj = vglProj
+
+                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
+
+                                    Try
+                                        myCollection.Add(vglName, vglName)
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
+                            End If
+
+
+                        End If
+
+
+
+                        If Not ImportProjekte.Containskey(calcProjektKey(hproj)) Then
+                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                            myCollection.Add(calcProjektKey(hproj))
+
+                        End If
+
+                        zeile = ende + 1
 
                     End If
-
-                    zeile = ende + 1
-
-
 
                 End While
 

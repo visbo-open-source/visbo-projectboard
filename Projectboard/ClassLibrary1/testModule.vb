@@ -2442,6 +2442,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(223)
                                 End If
+
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
 
                             Case "Laufzeit:"

@@ -155,6 +155,17 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
+            ' '' ''<<<<<<< HEAD
+            ' '' ''            ' Maus auf Wartemodus setzen
+            ' '' ''            appInstance.Cursor = XlMousePointer.xlWait
+
+            ' '' ''            If loadConstellationFrm.addToSession.Checked = True Then
+            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
+            ' '' ''                Call awinAddConstellation(constellationName, successMessage)
+            ' '' ''            Else
+            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
+            ' '' ''                Call awinLoadConstellation(constellationName, successMessage)
+            ' '' ''=======
             appInstance.ScreenUpdating = False
 
             Try
@@ -197,10 +208,26 @@ Imports System.Windows
                     constellationName = "no Name Scenario"
 
                 End If
+                '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
                 currentConstellation = constellationName
                 Call awinNeuZeichnenDiagramme(2)
 
+                '' ''<<<<<<< HEAD
+                '' ''            appInstance.ScreenUpdating = False
+                '' ''            'Call diagramsVisible(False)
+                '' ''            Call awinClearPlanTafel()
+                '' ''            ' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario 
+                '' ''            'Call awinZeichnePlanTafel(False)
+                '' ''            Call awinZeichnePlanTafel(True)
+                '' ''            Call awinNeuZeichnenDiagramme(2)
+                '' ''            'Call diagramsVisible(True)
+
+                '' ''            ' Maus auf Wartemodus setzen
+                '' ''            appInstance.Cursor = XlMousePointer.xlDefault
+
+                '' ''            appInstance.ScreenUpdating = True
+                '' ''=======
                 ' Änderung tk am 2.6 
                 ''Call awinLoadConstellation(constellationName, successMessage)
 
@@ -214,6 +241,7 @@ Imports System.Windows
             Catch ex As Exception
                 Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
             End Try
+            '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
             appInstance.ScreenUpdating = True
 
@@ -296,7 +324,12 @@ Imports System.Windows
                     msgresult = MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
 
                     If msgresult = MsgBoxResult.Ok Then
+                        ' Mouse auf Wartemodus setzen
+                        appInstance.Cursor = XlMousePointer.xlWait
+                        'Projekte speichern
                         Call StoreAllProjectsinDB()
+                        ' Mouse wieder auf Normalmodus setzen
+                        appInstance.Cursor = XlMousePointer.xlDefault
                     End If
                 Else
                     'Call MsgBox("Es wurden " & storedProj & " Projekte gespeichert!")
@@ -2235,7 +2268,8 @@ Imports System.Windows
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim getInventurImport As New frmSelectRPlanImport
+
+        Dim getInventurImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
 
         Call projektTafelInit()
@@ -2341,7 +2375,7 @@ Imports System.Windows
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim getModuleImport As New frmSelectRPlanImport
+        Dim getModuleImport As New frmSelectImportFiles
 
         Call projektTafelInit()
 
@@ -2396,7 +2430,7 @@ Imports System.Windows
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim getModuleImport As New frmSelectRPlanImport
+        Dim getModuleImport As New frmSelectImportFiles
 
         Call projektTafelInit()
 
@@ -2512,17 +2546,16 @@ Imports System.Windows
     Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
 
 
-        Dim dateiName As String
+        Dim dateiName As String = ""
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim getRPLANImport As New frmSelectRPlanImport
-       
+        Dim getRPLANImport As New frmSelectImportFiles
+        Dim listofVorlagen As New Collection
+        Dim xlsRplanImport As Excel.Workbook
+
         Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
 
         'dateiName = awinPath & projektInventurFile
 
@@ -2530,29 +2563,51 @@ Imports System.Windows
         returnValue = getRPLANImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            dateiName = getRPLANImport.selectedDateiName
 
-            Try
-                appInstance.Workbooks.Open(dateiName)
+            listofVorlagen = getRPLANImport.selImportFiles
 
-                ' alle Import Projekte erstmal löschen
-                ImportProjekte.Clear()
-                'Call bmwImportProjektInventur(myCollection)
-                Call rplanExcelImport(myCollection, False)
-                'Call bmwImportProjekteITO15(myCollection, False)
-                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+            Dim i As Integer
+            For i = 1 To listofVorlagen.Count
 
-                'Call awinWritePhaseDefinitions()
-                'Call awinWritePhaseMilestoneDefinitions()
 
-            Catch ex As Exception
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-            End Try
+                appInstance.EnableEvents = False
+                appInstance.ScreenUpdating = False
+                enableOnUpdate = False
+
+                dateiName = listofVorlagen.Item(i).ToString
+
+                Try
+                    appInstance.Workbooks.Open(dateiName)
+
+                    '' '' alle Import Projekte erstmal löschen
+                    ImportProjekte.Clear()
+                    myCollection.Clear()
+                    'Call bmwImportProjektInventur(myCollection)
+                    Call rplanExcelImport(myCollection, False, dateiName)
+                    'Call bmwImportProjekteITO15(myCollection, False)
+
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                    ' xlsRplanImport.Close(SaveChanges:=True)
+
+
+                    appInstance.ScreenUpdating = True
+                    Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                    'Call awinWritePhaseDefinitions()
+                    'Call awinWritePhaseMilestoneDefinitions()
+
+                Catch ex As Exception
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                    Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+                End Try
+
+            Next i
+
+            ' ''appInstance.ScreenUpdating = True
+            ' ''Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Else
             Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
+            Call logfileSchreiben(" Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
 
 
@@ -2562,14 +2617,69 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
     End Sub
+    ' ''Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
+
+
+    ' ''    Dim dateiName As String
+    ' ''    Dim myCollection As New Collection
+    ' ''    Dim importDate As Date = Date.Now
+    ' ''    Dim returnValue As DialogResult
+    ' ''    Dim getRPLANImport As New frmSelectRPlanImport
+
+    ' ''    Call projektTafelInit()
+
+    ' ''    appInstance.EnableEvents = False
+    ' ''    appInstance.ScreenUpdating = False
+    ' ''    enableOnUpdate = False
+
+    ' ''    'dateiName = awinPath & projektInventurFile
+
+    ' ''    getRPLANImport.menueAswhl = PTImpExp.rplan
+    ' ''    returnValue = getRPLANImport.ShowDialog
+
+    ' ''    If returnValue = DialogResult.OK Then
+    ' ''        dateiName = getRPLANImport.selectedDateiName
+
+    ' ''        Try
+    ' ''            appInstance.Workbooks.Open(dateiName)
+
+    ' ''            ' alle Import Projekte erstmal löschen
+    ' ''            ImportProjekte.Clear()
+    ' ''            'Call bmwImportProjektInventur(myCollection)
+    ' ''            Call rplanExcelImport(myCollection, False)
+    ' ''            'Call bmwImportProjekteITO15(myCollection, False)
+    ' ''            appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+    ' ''            appInstance.ScreenUpdating = True
+    ' ''            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+
+    ' ''            'Call awinWritePhaseDefinitions()
+    ' ''            'Call awinWritePhaseMilestoneDefinitions()
+
+    ' ''        Catch ex As Exception
+    ' ''            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+    ' ''            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+    ' ''        End Try
+    ' ''    Else
+    ' ''        Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
+    ' ''    End If
+
+
+
+    ' ''    enableOnUpdate = True
+    ' ''    appInstance.EnableEvents = True
+    ' ''    appInstance.ScreenUpdating = True
+
+    ' ''End Sub
+
     Public Sub Tom2G4B3RPLANRxfImport(control As IRibbonControl)
 
 
-        Dim dateiName As String
+        Dim dateiName As String = ""
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim getRPLANImport As New frmSelectRPlanImport
+        Dim getRPLANImport As New frmSelectImportFiles
         Dim protokoll As New SortedList(Of Integer, clsProtokoll)
 
         ' öffnen des LogFiles
@@ -2627,8 +2737,10 @@ Imports System.Windows
 
                 Call MsgBox(ex.Message & vbLf & dateiName & vbLf & "Fehler bei RXFImport ")
             End Try
+
         Else
-            Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
+            Call MsgBox(" RXF-Import RPLAN-Projekte wurde abgebrochen")
+            Call logfileSchreiben(" RXF-Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
 
 
@@ -2772,91 +2884,96 @@ Imports System.Windows
         Dim pname As String
         Dim importDate As Date = Date.Now
         'Dim importDate As Date = "31.10.2013"
-        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+        Dim listofVorlagen As Collection
         Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
+        Dim getVisboImport As New frmSelectImportFiles
+        Dim returnValue As DialogResult
 
-        ' öffnen des LogFiles
         Call logfileOpen()
 
-        ' '' '' ProjektTafel wieder Aktiv setzen
-        '' ''appInstance.Workbooks(myProjektTafel).Activate()
+        getVisboImport.menueAswhl = PTImpExp.visbo
+        returnValue = getVisboImport.ShowDialog
 
-        Call projektTafelInit()
+        If returnValue = DialogResult.OK Then
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
+            listofVorlagen = getVisboImport.selImportFiles
 
-        Dim myCollection As New Collection
+            Call projektTafelInit()
 
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
 
-
-
-        'dirName = awinPath & projektFilesOrdner
-        dirName = importOrdnerNames(PTImpExp.visbo)
-        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
-
-        ' alle Import Projekte erstmal löschen
-        ImportProjekte.Clear()
+            Dim myCollection As New Collection
 
 
-        ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-        Dim i As Integer
-        For i = 1 To listOfVorlagen.Count
-            dateiName = listOfVorlagen.Item(i - 1)
 
-            If dateiName = projektInventurFile Then
+            '' ''dirName = awinPath & msprojectFilesOrdner
+            ' ''dirName = importOrdnerNames(PTImpExp.msproject)
+            ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
 
-                ' nichts machen 
-
-            Else
-                Dim skip As Boolean = False
+            ' alle Import Projekte erstmal löschen
+            ImportProjekte.Clear()
 
 
-                Try
-                    appInstance.Workbooks.Open(dateiName)
-                    Call logfileSchreiben("Beginn Import ", dateiName, -1)
+            ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+            Dim i As Integer
+            For i = 1 To listofVorlagen.Count
+                dateiName = listofVorlagen.Item(i).ToString
+                ' öffnen des LogFiles
 
-                Catch ex1 As Exception
-                    Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
-                    skip = True
-                End Try
 
-                If Not skip Then
-                    pname = ""
-                    hproj = New clsProjekt
+                If dateiName = projektInventurFile Then
+
+                    ' nichts machen 
+
+                Else
+                    Dim skip As Boolean = False
+
+
                     Try
-                        Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
-
-                        Try
-                            Dim keyStr As String = calcProjektKey(hproj)
-                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                            myCollection.Add(calcProjektKey(hproj))
-                        Catch ex2 As Exception
-                            Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
-                        End Try
-
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                        appInstance.Workbooks.Open(dateiName)
+                        Call logfileSchreiben("Beginn Import ", dateiName, -1)
 
                     Catch ex1 As Exception
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                        Call logfileSchreiben(ex1.Message, "", anzFehler)
-                        Call MsgBox(ex1.Message)
-                        'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
+                        Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
+                        skip = True
                     End Try
+
+                    If Not skip Then
+                        pname = ""
+                        hproj = New clsProjekt
+                        Try
+                            Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
+
+                            Try
+                                Dim keyStr As String = calcProjektKey(hproj)
+                                ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                myCollection.Add(calcProjektKey(hproj))
+                            Catch ex2 As Exception
+                                Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+                            End Try
+
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+                        Catch ex1 As Exception
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                            Call logfileSchreiben(ex1.Message, "", anzFehler)
+                            Call MsgBox(ex1.Message)
+                            'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
+                        End Try
+
+
+
+                    End If
 
 
 
                 End If
 
 
-
-            End If
-
-
-        Next i
-
+            Next i
 
 
         Try
@@ -2864,12 +2981,15 @@ Imports System.Windows
             'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
+            End Try
+
+        Else
+
+            Call logfileSchreiben("Import wurde abgebrochen", "", -1)
+
+        End If
 
 
-
-
-       
         Call logfileSchliessen()
 
         enableOnUpdate = True
@@ -2888,13 +3008,9 @@ Imports System.Windows
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
         Dim outputString As String = ""
-        Dim dirName As String
         Dim dateiName As String
-
-        Dim importDate As Date = Date.Now
-        'Dim importDate As Date = "31.10.2013"
-        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
-        Dim projektInventurFile As String = "ProjektInventur.xlsm"
+        Dim getMSImport As New frmSelectImportFiles
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -2902,81 +3018,92 @@ Imports System.Windows
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        Dim myCollection As New Collection
+
+
+        getMSImport.menueAswhl = PTImpExp.msproject
+        returnValue = getMSImport.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+
+
+            Dim importDate As Date = Date.Now
+            'Dim importDate As Date = "31.10.2013"
+            ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+            Dim listofVorlagen As Collection
+            listofVorlagen = getMSImport.selImportFiles
+
+            Call projektTafelInit()
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+            Dim myCollection As New Collection
 
 
 
-        'dirName = awinPath & msprojectFilesOrdner
-        dirName = importOrdnerNames(PTImpExp.msproject)
-        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
+            '' ''dirName = awinPath & msprojectFilesOrdner
+            ' ''dirName = importOrdnerNames(PTImpExp.msproject)
+            ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
 
-        ' alle Import Projekte erstmal löschen
-        ImportProjekte.Clear()
-
-
-        ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-        Dim i As Integer
-        For i = 1 To listOfVorlagen.Count
-            dateiName = listOfVorlagen.Item(i - 1)
-
-            If dateiName = projektInventurFile Then
-
-                ' nichts machen 
-
-            Else
-                ' '' ''Dim skip As Boolean = False
+            ' alle Import Projekte erstmal löschen
+            ImportProjekte.Clear()
 
 
-                ' '' ''Try
-                ' '' ''    appInstance.Workbooks.Open(dateiName)
-                ' '' ''Catch ex1 As Exception
-                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
-                ' '' ''    skip = True
-                ' '' ''End Try
+            ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+            Dim i As Integer
+            For i = 1 To listOfVorlagen.Count
+                dateiName = listofVorlagen.Item(i).ToString
 
-                ' '' ''If Not skip Then
-                ' '' ''    pname = ""
-                hproj = New clsProjekt
-                Try
-                    Call awinImportMSProject("", dateiName, hproj, importDate)
+                
+                    ' '' ''Dim skip As Boolean = False
 
+
+                    ' '' ''Try
+                    ' '' ''    appInstance.Workbooks.Open(dateiName)
+                    ' '' ''Catch ex1 As Exception
+                    ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
+                    ' '' ''    skip = True
+                    ' '' ''End Try
+
+                    ' '' ''If Not skip Then
+                    ' '' ''    pname = ""
+                    hproj = New clsProjekt
                     Try
-                        Dim keyStr As String = calcProjektKey(hproj)
-                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                        myCollection.Add(calcProjektKey(hproj))
-                    Catch ex2 As Exception
-                        Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
-                    End Try
+                        Call awinImportMSProject("", dateiName, hproj, importDate)
 
-                    ' ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                        Try
+                            Dim keyStr As String = calcProjektKey(hproj)
+                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                            myCollection.Add(calcProjektKey(hproj))
+                        Catch ex2 As Exception
+                            Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+                        End Try
 
-                Catch ex1 As Exception
-                    ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                    Call MsgBox(ex1.Message)
-                    Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
+                        ' ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+                    Catch ex1 As Exception
+                        ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                        Call MsgBox(ex1.Message)
+                        Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
                 End Try
 
+            Next i
 
 
-                ' '' ''End If
+            ' '' ''End If
+
+            Try
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
+            Catch ex As Exception
+
+                Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+            End Try
 
 
 
-            End If
-
-
-        Next i
-
-
-
-        Try
-            'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-            Call importProjekteEintragen(importDate, ProjektStatus(1))
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
-
-
+        End If
 
 
         enableOnUpdate = True

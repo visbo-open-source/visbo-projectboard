@@ -10,7 +10,8 @@
     <AssemblyName>ProjectBoardBasic</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Windows</MyType>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>ProjectBoardBasic.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +31,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DocumentationFile>ProjectBoardBasic.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -107,6 +110,12 @@
       <DependentUpon>frmReportProfil.vb</DependentUpon>
     </Compile>
     <Compile Include="frmReportProfil.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSelectImportFiles.Designer.vb">
+      <DependentUpon>frmSelectImportFiles.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectImportFiles.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmSelectRepSprache.Designer.vb">
@@ -319,6 +328,9 @@
     <EmbeddedResource Include="frmReportProfil.resx">
       <DependentUpon>frmReportProfil.vb</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectImportFiles.resx">
+      <DependentUpon>frmSelectImportFiles.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSelectPPTTempl.resx">
       <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>

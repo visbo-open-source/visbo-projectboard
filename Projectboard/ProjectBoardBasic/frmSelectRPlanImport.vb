@@ -112,8 +112,8 @@ Public Class frmSelectRPlanImport
 
 
     Private Sub RPLANImportDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles RPLANImportDropbox.SelectedIndexChanged
-        ' hier muss die selektierte Vorlage genommen werden, um damit den dann bei OK-Button Click den Report anzustoßen
-        Dim newTemplate As String = RPLANImportDropbox.Text
+
+
     End Sub
 
 End Class
