@@ -4060,6 +4060,10 @@ Public Module awinGeneralModules
                                 AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
 
                             End If
+                        Else
+                            ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
+                            AlleProjekte.Add(importKey, impProjekt)
+
                         End If
                     Else
                         Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
