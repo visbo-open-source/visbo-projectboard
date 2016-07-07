@@ -55,7 +55,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("ds021701.mlab.com:21701")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -64,19 +64,19 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\Project-Tafel Folder\BMW Demo\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\Project-Tafel Folder\mahle\")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-         Global.System.Configuration.DefaultSettingValueAttribute("")> _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("visbomahle")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
-            Return CType(Me("mongoDBname"), String)
+            Return CType(Me("mongoDBname"),String)
         End Get
     End Property
     
@@ -88,37 +88,37 @@ Partial Public NotInheritable Class MySettings
             Return CType(Me("globalPath"),String)
         End Get
     End Property
-
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Task Class")> _
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Task Class")>  _
     Public ReadOnly Property TaskClass() As String
         Get
-            Return CType(Me("TaskClass"), String)
+            Return CType(Me("TaskClass"),String)
         End Get
     End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Abbreviation")> _
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Abbreviation")>  _
     Public Property VISBOAbbreviation() As String
         Get
-            Return CType(Me("VISBOAbbreviation"), String)
+            Return CType(Me("VISBOAbbreviation"),String)
         End Get
-        Set(value As String)
-            Me("VISBOAbbreviation") = Value
+        Set
+            Me("VISBOAbbreviation") = value
         End Set
     End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel")> _
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel")>  _
     Public Property VISBOAmpel() As String
         Get
-            Return CType(Me("VISBOAmpel"), String)
+            Return CType(Me("VISBOAmpel"),String)
         End Get
-        Set(value As String)
-            Me("VISBOAmpel") = Value
+        Set
+            Me("VISBOAmpel") = value
         End Set
     End Property
 End Class
