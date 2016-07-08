@@ -1269,7 +1269,7 @@ Public Class frmHierarchySelection
                                                 selectedPhases, selectedMilestones, _
                                                 selectedRoles, selectedCosts, _
                                                 selectedBUs, selectedTyps, True, _
-                                                True, zeilenhoehe, _
+                                                True, _
                                                 legendFontSize, _
                                                 worker, e)
 
@@ -1338,4 +1338,9 @@ Public Class frmHierarchySelection
         End If
 
     End Sub
+
+    Private Sub createPPTSlidesFromProject(hproj As clsProjekt, vorlagendateiname As String, selectedPhases As Collection, selectedMilestones As Collection, selectedRoles As Collection, selectedCosts As Collection, selectedBUs As Collection, selectedTyps As Collection, p9 As Boolean, p10 As Boolean, legendFontSize As Single, worker As BackgroundWorker, e As DoWorkEventArgs)
+        Throw New NotImplementedException
+    End Sub
+
 End Class

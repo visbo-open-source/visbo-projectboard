@@ -113,10 +113,20 @@ Public Class frmSelectPPTTempl
             'awinSettings.eppExtendedMode = True
 
             Try
+                If selectedProjekte.Count <= 0 Then
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                    For Each tmpname In awinSelection
+                        Try
+                            selectedProjekte.Add(ShowProjekte.getProject(tmpname))
+                        Catch ex As Exception
 
-                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                        End Try
+                    Next
+                End If
+
             Catch ex As Exception
                 awinSelection = Nothing
+                selectedProjekte.Clear()
             End Try
 
             Try
@@ -161,7 +171,7 @@ Public Class frmSelectPPTTempl
             End If
         End With
 
-
+        selectedProjekte.Clear()
         'Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
 
