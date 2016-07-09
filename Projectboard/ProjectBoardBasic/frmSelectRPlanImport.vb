@@ -33,7 +33,9 @@ Public Class frmSelectRPlanImport
         ElseIf menueAswhl = PTImpExp.addElements Then
             dirname = importOrdnerNames(PTImpExp.addElements)
             Me.Text = "Regel-Dateien auswählen"
-
+        ElseIf menueAswhl = PTImpExp.massenEdit Then
+            dirname = importOrdnerNames(PTImpExp.massenEdit)
+            Me.Text = "Massen-Edit Datei auswählen"
         End If
 
 
@@ -99,6 +101,8 @@ Public Class frmSelectRPlanImport
             dirName = importOrdnerNames(PTImpExp.modulScen)
         ElseIf menueAswhl = PTImpExp.addElements Then
             dirName = importOrdnerNames(PTImpExp.addElements)
+        ElseIf menueAswhl = PTImpExp.massenEdit Then
+            dirName = importOrdnerNames(PTImpExp.massenEdit)
         End If
 
         selectedDateiName = dirName & "\" & RPLANImportDropbox.Text

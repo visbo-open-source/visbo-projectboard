@@ -425,14 +425,20 @@ Public Module Module1
         deleteV = 7
     End Enum
 
+    ''' <summary>
+    ''' alle Bezeichner, die sowohl lesend wie schreibend sind , stehen am Anfang; 
+    ''' dann kommen die, die nur lesend sind ... 
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Enum PTImpExp
         visbo = 0
         rplan = 1
         msproject = 2
         simpleScen = 3
         modulScen = 4
-        addElements = 5
-        rplanrxf = 6
+        massenEdit = 5
+        addElements = 6
+        rplanrxf = 7
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

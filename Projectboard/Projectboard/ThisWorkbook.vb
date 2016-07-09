@@ -53,53 +53,60 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_Startup() Handles Me.Startup
 
         'Dim cbar As CommandBar
+        Dim validUntil As Date = CDate("19.07.2016")
+
+        If Date.Now <= validUntil Then
+            appInstance = Application
+
+            myProjektTafel = appInstance.ActiveWorkbook.Name
 
 
-        appInstance = Application
 
-        myProjektTafel = appInstance.ActiveWorkbook.Name
+            ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
+            ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
+            ' in anderen Excel Sheets ist das weiterhin aktiv 
+            'For Each cbar In appInstance.CommandBars
+
+            '    If cbar.Type = MsoBarType.msoBarTypePopup Then
+            '        cbar.Enabled = False
+            '    End If
+            'Next
+
+            magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
 
-        ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
-        ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
-        ' in anderen Excel Sheets ist das weiterhin aktiv 
-        'For Each cbar In appInstance.CommandBars
 
-        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
-        '        cbar.Enabled = False
-        '    End If
-        'Next
+            Try
 
-        magicBoardCmdBar.cmdbars = appInstance.CommandBars
+                appInstance.ScreenUpdating = False
 
-      
+                awinSettings.databaseURL = My.Settings.mongoDBURL
+                awinSettings.databaseName = My.Settings.mongoDBname
+                awinSettings.globalPath = My.Settings.globalPath
+                awinSettings.awinPath = My.Settings.awinPath
+                awinSettings.visboTaskClass = My.Settings.TaskClass
+                awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                awinSettings.visboAmpel = My.Settings.VISBOAmpel
 
-        Try
+                Call awinsetTypen()
 
-            appInstance.ScreenUpdating = False
+            Catch ex As Exception
 
-            awinSettings.databaseURL = My.Settings.mongoDBURL
-            awinSettings.databaseName = My.Settings.mongoDBname
-            awinSettings.globalPath = My.Settings.globalPath
-            awinSettings.awinPath = My.Settings.awinPath
-            awinSettings.visboTaskClass = My.Settings.TaskClass
-            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-            awinSettings.visboAmpel = My.Settings.VISBOAmpel
+                Call MsgBox(ex.Message)
+                appInstance.Quit()
+            Finally
+                appInstance.ScreenUpdating = True
+                appInstance.ShowChartTipNames = True
+                appInstance.ShowChartTipValues = True
+            End Try
 
-            Call awinsetTypen()
+            anzahlCalls = 0
 
-        Catch ex As Exception
-
-            Call MsgBox(ex.Message)
+        Else
+            Call MsgBox("Test-Lizenz abgelaufen .. bitte kontaktieren Sie Ihren Administrator")
             appInstance.Quit()
-        Finally
-            appInstance.ScreenUpdating = True
-            appInstance.ShowChartTipNames = True
-            appInstance.ShowChartTipValues = True
-        End Try
-
-        anzahlCalls = 0
-
+        End If
+        
 
         'Call awinRightClickinPortfolioAendern()
         ' Änderung 19.1.15 Right Click in den Charts de-aktivieren für BMW 

@@ -267,7 +267,7 @@ Public Class clsawinSettings
         _mppSmartTxtPositioning = True
         _mppEnableSmartPPT = True
 
-        _mppProjectsWithNoMPmayPass = True
+        _mppProjectsWithNoMPmayPass = False
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True

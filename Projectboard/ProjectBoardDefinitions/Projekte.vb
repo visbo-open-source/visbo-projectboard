@@ -5554,7 +5554,7 @@ Public Module Projekte
             If auswahl = 1 Then
                 tdatenreihe(r) = Math.Round(hproj.getRessourcenBedarf(roleName).Sum)
             Else
-                tdatenreihe(r) = Math.Round(hproj.getPersonalKosten(roleName).Sum / 10) * 10
+                tdatenreihe(r) = Math.Round(hproj.getPersonalKosten(roleName).Sum)
             End If
 
         Next r
@@ -7717,7 +7717,8 @@ Public Module Projekte
                                        ByVal startdate As Date, ByVal endedate As Date, _
                                        ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
                                        ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
-                                       Optional ByVal listOfCustomFields As Collection = Nothing) As clsProjekt
+                                       Optional ByVal listOfCustomFields As Collection = Nothing, _
+                                       Optional responsiblePerson As String = "") As clsProjekt
 
         Dim newprojekt As New clsProjekt
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
@@ -7760,6 +7761,7 @@ Public Module Projekte
                 .StrategicFit = sfit
                 .Risiko = risk
 
+                .leadPerson = responsiblePerson
                 .businessUnit = businessUnit
                 .description = description
                 .tfZeile = tafelZeile
@@ -7799,14 +7801,15 @@ Public Module Projekte
                     If roleCostStr.Length > 1 Then
 
                         Try
-                            If RoleDefinitions.containsName(roleCostStr(0)) Then
+                            Dim roleCostName As String = roleCostStr(0).Trim
+                            If RoleDefinitions.containsName(roleCostName) Then
                                 isRole = True
-                                rk = CInt(RoleDefinitions.getRoledef(roleCostStr(0)).UID)
-                                tagessatz = RoleDefinitions.getRoledef(roleCostStr(0)).tagessatzIntern
+                                rk = CInt(RoleDefinitions.getRoledef(roleCostName).UID)
+                                tagessatz = RoleDefinitions.getRoledef(roleCostName).tagessatzIntern
 
-                            ElseIf CostDefinitions.containsName(roleCostStr(0)) Then
+                            ElseIf CostDefinitions.containsName(roleCostName) Then
                                 isCost = True
-                                rk = CInt(CostDefinitions.getCostdef(roleCostStr(0)).UID)
+                                rk = CInt(CostDefinitions.getCostdef(roleCostName).UID)
 
                             Else
                                 rk = -1

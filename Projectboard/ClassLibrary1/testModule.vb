@@ -2743,8 +2743,12 @@ Public Module testModule
         Dim folieIX As Integer = 1
 
         ' bei den objectsToDo kann es sich um Swimlanes oder Projekte handeln 
+        ' oder um die Tabelle Projektliste 
         Dim objectsToDo As Integer = 0
         Dim objectsDone As Integer = 0
+
+        Dim summenArray() As Double
+        ReDim summenArray(6)
 
         While folieIX <= anzSlidesToAdd
 
@@ -2827,8 +2831,6 @@ Public Module testModule
                         kennzeichnung = "Multiprojektsicht" Or _
                         kennzeichnung = "Projekt-Tafel" Or _
                         kennzeichnung = "Tabelle Projektliste" Or _
-                        kennzeichnung = "Tabelle Projektliste1" Or _
-                        kennzeichnung = "Tabelle ProjektlisteN" Or _
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
                         kennzeichnung = "Tabelle Zielerreichung" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
@@ -3387,10 +3389,13 @@ Public Module testModule
 
 
                         Case "Tabelle Projektliste"
+
                             Try
+
                                 Call zeichneTabelleProjektliste(pptSlide, pptShape, _
                                                                 gleichShape, steigendShape, fallendShape, _
-                                                                PThis.current, qualifier)
+                                                                objectsToDo, objectsDone, summenArray, _
+                                                                qualifier)
 
                                 ' jetzt ggf die Hilfs-Shapes löschen 
                                 Try
@@ -3421,75 +3426,6 @@ Public Module testModule
 
                             End Try
 
-                        Case "Tabelle ProjektlisteN"
-                            Try
-                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
-                                                                gleichShape, steigendShape, fallendShape, _
-                                                                PThis.letzterStand, qualifier)
-
-                                ' jetzt die Hilfs-Shapes löschen 
-                                Try
-                                    If Not IsNothing(gleichShape) Then
-                                        gleichShape.Delete()
-                                    End If
-                                Catch ex As Exception
-
-                                End Try
-                                
-                                Try
-                                    If Not IsNothing(steigendShape) Then
-                                        steigendShape.Delete()
-                                    End If
-                                Catch ex As Exception
-
-                                End Try
-                                
-                                Try
-                                    If Not IsNothing(fallendShape) Then
-                                        fallendShape.Delete()
-                                    End If
-                                Catch ex As Exception
-
-                                End Try
-                                
-                            Catch ex As Exception
-
-                            End Try
-
-                        Case "Tabelle Projektliste1"
-                            Try
-                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
-                                                                gleichShape, steigendShape, fallendShape, _
-                                                                PThis.beauftragung, qualifier)
-
-                                ' jetzt die Hilfs-Shapes löschen 
-                                Try
-                                    If Not IsNothing(gleichShape) Then
-                                        gleichShape.Delete()
-                                    End If
-                                Catch ex As Exception
-
-                                End Try
-
-                                Try
-                                    If Not IsNothing(steigendShape) Then
-                                        steigendShape.Delete()
-                                    End If
-                                Catch ex As Exception
-
-                                End Try
-
-                                Try
-                                    If Not IsNothing(fallendShape) Then
-                                        fallendShape.Delete()
-                                    End If
-                                Catch ex As Exception
-
-                                End Try
-
-                            Catch ex As Exception
-
-                            End Try
 
 
                         Case "Fortschritt Personalkosten"
@@ -8243,17 +8179,17 @@ Public Module testModule
     ''' <param name="gleichShape">das Shape, das für die Darstellung identisch verwendet wird </param>
     ''' <param name="steigendShape">das Shape, das für Darstellung steigender Werte verwendet wird </param>
     ''' <param name="fallendShape">das Shape, das zur Darstellung fallender Werte verwendet wird</param>
-    ''' <param name="vergleichstyp"></param>
     ''' <remarks></remarks>
     Sub zeichneTabelleProjektliste(ByVal pptSlide As pptNS.Slide, ByVal pptShape As pptNS.Shape, _
                                    ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
-                                   ByVal vergleichstyp As Integer, _
+                                   ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef summenArray() As Double, _
                                    Optional ByVal qualifier As String = "", _
                                    Optional ByVal showPersonalBedarf As Boolean = True)
         Dim tabelle As pptNS.Table
         Dim zaehler As Integer = 1
         Dim startItem As Integer = 1, endeItem As Integer = ShowProjekte.Count
-        Dim tmpStr() As String
+
+
         Dim hproj As clsProjekt
 
         Dim hErloes As Double, hPersKosten As Double, hSonstKosten As Double, hRisikoKosten As Double, hErgebnis As Double
@@ -8271,6 +8207,11 @@ Public Module testModule
         Dim zeile As Integer = 2
         Dim spalte As Integer = 9
 
+        Dim atLeastOneDeliverable As Boolean = False
+
+        'Dim formatierung As String = "#0.#"
+        Dim formatierung As String = "#0"
+
         Try
             tabelle = pptShape.Table
             anzahlZeilen = tabelle.Rows.Count
@@ -8286,19 +8227,25 @@ Public Module testModule
 
         ' Bestimmen der Standard-Vordergrund-Farbe der potentiell einzufärbenden Felder
         ' das ist notwendig, weil andernfalls bei einem rows.add die ggf eingefärbten Felder übernommen werden 
-        Dim stdColor As Integer = tabelle.Cell(zeile, 1).Shape.Fill.ForeColor.RGB
-        Dim stdFontFarbe As Integer = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-        Dim isBoldYN As TriState = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Bold
-        Dim rightMargin As Double = tabelle.Cell(zeile, 5).Shape.TextFrame2.MarginRight
+        'Dim stdColor As Integer = tabelle.Cell(zeile, 1).Shape.Fill.ForeColor.RGB
+        'Dim stdFontFarbe As Integer = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+        'Dim isBoldYN As TriState = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Bold
+        'Dim rightMargin As Double = tabelle.Cell(zeile, 5).Shape.TextFrame2.MarginRight
+
         Dim vglDate As Date = Date.Now
+        Dim vergleichstyp As Integer = PThis.current
 
-        Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
-        qualifier = tmpQualifierStr(0)
-
-        If tmpQualifierStr.Length = 2 Then
-
+        If Not IsNothing(qualifier) Then
             Try
-                vglDate = CDate(tmpQualifierStr(1))
+                If qualifier.Trim = "1" Then
+                    vergleichstyp = PThis.ersterStand
+                ElseIf qualifier.Trim = "L" Or qualifier.Trim = "N" Then
+                    vergleichstyp = PThis.letzterStand
+                Else
+                    vglDate = CDate(qualifier)
+                    vergleichstyp = PThis.letzterStand
+                End If
+
             Catch ex As Exception
 
             End Try
@@ -8306,59 +8253,56 @@ Public Module testModule
         End If
 
 
-        Try
-            If qualifier.Contains("-") Then
-                tmpStr = qualifier.Split(New Char() {CChar("-")})
-                startItem = CInt(tmpStr(0))
-                endeItem = CInt(tmpStr(1))
-            End If
-        Catch ex As Exception
-            startItem = 1
-            endeItem = ShowProjekte.Count
-        End Try
+        'Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
+        'qualifier = tmpQualifierStr(0)
 
-        zaehler = startItem
-        Do While zaehler <= endeItem And zaehler <= ShowProjekte.Count
+        'If tmpQualifierStr.Length = 2 Then
+
+        '    Try
+        '        vglDate = CDate(tmpQualifierStr(1))
+        '    Catch ex As Exception
+
+        '    End Try
+
+        'End If
+
+
+        'Try
+        '    If qualifier.Contains("-") Then
+        '        tmpStr = qualifier.Split(New Char() {CChar("-")})
+        '        startItem = CInt(tmpStr(0))
+        '        endeItem = CInt(tmpStr(1))
+        '    End If
+        'Catch ex As Exception
+        '    startItem = 1
+        '    endeItem = ShowProjekte.Count
+        'End Try
+
+
+        objectsToDo = ShowProjekte.Count
+
+        If objectsDone = 0 Then
+            zaehler = 1
+        Else
+            zaehler = objectsDone + 1
+        End If
+
+        Dim endOfPage As Boolean = False
+        'zaehler = startItem
+        'Do While zaehler <= endeItem And zaehler <= ShowProjekte.Count
+
+        Do While Not endOfPage And zaehler <= objectsToDo
 
             hproj = ShowProjekte.getProject(zaehler)
             ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
 
             ' Ermitteln der Kennzahlen 
-            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
+            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
 
             If showPersonalBedarf Then
                 hpersonalBedarf = hproj.getAlleRessourcen.Sum
             End If
 
-            If zeile > anzahlZeilen Then
-                tabelle.Rows.Add()
-                ' jetzt die potenziell einzufärbenden Felder alle auf noColor setzen 
-                ' ausserdem die Margins auf den entsprechenden Wert setzen 
-                With tabelle
-
-                    stdColor = CType(.Cell(zeile, 2), pptNS.Cell).Shape.Fill.ForeColor.RGB
-                    stdFontFarbe = CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                    isBoldYN = CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold
-
-                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
-                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
-                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
-                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
-
-                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
-                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
-                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
-
-                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
-                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
-                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
-
-                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
-                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
-                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
-                End With
-                anzahlZeilen = anzahlZeilen + 1
-            End If
 
             With tabelle
                 Select Case hproj.ampelStatus
@@ -8423,6 +8367,16 @@ Public Module testModule
 
             End If
 
+            summenArray(0) = summenArray(0) + hErloes
+
+            If showPersonalBedarf Then
+                summenArray(1) = summenArray(1) + hpersonalBedarf
+            Else
+                summenArray(1) = summenArray(1) + hPersKosten
+            End If
+
+            summenArray(2) = summenArray(2) + hSonstKosten
+            summenArray(3) = summenArray(3) + hErgebnis
 
 
 
@@ -8430,16 +8384,16 @@ Public Module testModule
                 ' dieses Projekt hat noch keine Historie 
 
                 With tabelle
-                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#")
+                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
 
                     If showPersonalBedarf Then
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString("#0.#")
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString(formatierung)
                     Else
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString(formatierung)
                     End If
 
-                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
-                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
+                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
+                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
 
                     CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
                     CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
@@ -8449,7 +8403,7 @@ Public Module testModule
 
 
             Else
-                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
+                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis, False)
 
                 If showPersonalBedarf Then
                     vPersonalBedarf = vproj.getAlleRessourcen.Sum
@@ -8461,9 +8415,9 @@ Public Module testModule
                 If hErloes - vErloes <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString("#0.#") & "/" & _
-                                hErloes.ToString("#0.#")
-                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString(formatierung) & "/" & _
+                                hErloes.ToString(formatierung)
+                        'CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
                     If trendShapesAreDefined Then
@@ -8476,7 +8430,7 @@ Public Module testModule
 
                 Else
                     With tabelle
-                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#")
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
                     End With
 
                 End If
@@ -8494,9 +8448,9 @@ Public Module testModule
                 If hValue - vValue <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString("#0.#") & "/" & _
-                                hValue.ToString("#0.#")
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString(formatierung) & "/" & _
+                                hValue.ToString(formatierung)
+                        'CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
                     If trendShapesAreDefined Then
@@ -8510,7 +8464,7 @@ Public Module testModule
                 Else
 
                     With tabelle
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString("#0.#")
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString(formatierung)
                     End With
 
                 End If
@@ -8518,9 +8472,9 @@ Public Module testModule
                 If hSonstKosten - vSonstKosten <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString("#0.#") & "/" & _
-                                hSonstKosten.ToString("#0.#")
-                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString(formatierung) & "/" & _
+                                hSonstKosten.ToString(formatierung)
+                        'CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
                     If trendShapesAreDefined Then
@@ -8533,16 +8487,16 @@ Public Module testModule
 
                 Else
                     With tabelle
-                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
                     End With
                 End If
 
                 If hErgebnis - vErgebnis <> 0 Then
 
                     With tabelle
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString("#0.#") & "/" & _
-                                hErgebnis.ToString("#0.#")
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString(formatierung) & "/" & _
+                                hErgebnis.ToString(formatierung)
+                        'CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                     End With
 
                     If trendShapesAreDefined Then
@@ -8555,7 +8509,7 @@ Public Module testModule
 
                 Else
                     With tabelle
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
                     End With
                 End If
 
@@ -8566,7 +8520,9 @@ Public Module testModule
                     spalte = 9
                     deltaValue = hErgebnis - vErgebnis
 
-                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0.#")
+                    summenArray(4) = summenArray(4) + deltaValue
+
+                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString(formatierung)
 
                     If deltaValue > 0 Then
                         If deltaValue > 0.05 * hErloes Then
@@ -8590,6 +8546,7 @@ Public Module testModule
                     deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
                     CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
+                    summenArray(5) = summenArray(5) + deltaValue
 
                     If deltaValue > 0 Then
 
@@ -8620,19 +8577,22 @@ Public Module testModule
                     Dim vAnzahl As Integer = vproj.getDeliverables.Count
                     deltaValue = hAnzahl - vAnzahl
 
+                    summenArray(6) = summenArray(6) + deltaValue
+
                     If hAnzahl > 0 Or vAnzahl > 0 Then
                         ' nur was ausgeben, wenn wenigstens in einem Projekt Deliverables definiert sind
+                        atLeastOneDeliverable = True
 
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
                         If deltaValue > 0 Then
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                             awinSettings.AmpelGruen
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
                                 RGB(249, 249, 249)
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                         Else
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                                 awinSettings.AmpelRot
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
                                 RGB(249, 249, 249)
@@ -8652,11 +8612,53 @@ Public Module testModule
 
             End If
 
-            zaehler = zaehler + 1
+
             zeile = zeile + 1
+            If zeile > anzahlZeilen Then
+                endOfPage = True
+            Else
+                zaehler = zaehler + 1
+            End If
 
         Loop
 
+        objectsDone = zaehler
+
+        ' prüfen, ob alles erledigt wurde ; dann wird die Summenzeile geschrieben und alles zurückgesetzt 
+        If objectsDone >= objectsToDo Then
+
+            If endOfPage Then
+                tabelle.Rows.Add()
+                zeile = zeile + 1
+                ' Summenzeile schreiben  
+            End If
+
+            With tabelle
+
+                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(262)
+
+                For i As Integer = 0 To 6
+
+                    If i >= 4 And vergleichstyp <> PThis.current Then
+
+                        If i <> 6 Or atLeastOneDeliverable Then
+                            CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+                        End If
+
+                    Else
+                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+                    End If
+
+                Next
+
+            End With
+
+            objectsDone = 0
+            objectsToDo = 0
+            For i As Integer = 0 To summenArray.Length - 1
+                summenArray(i) = 0
+            Next
+        End If
 
     End Sub
     ''' <summary>

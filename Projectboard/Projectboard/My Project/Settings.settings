@@ -9,7 +9,7 @@
       <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Mahle 2017</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">Mahle17</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />

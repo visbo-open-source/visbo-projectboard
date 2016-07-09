@@ -2228,6 +2228,112 @@ Imports System.Windows
 
     End Sub
 
+    Public Sub awinImportMassenEdit(control As IRibbonControl)
+
+        ' Übernahme 
+
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+        Dim returnValue As DialogResult
+        Dim getMassenEditImport As New frmSelectRPlanImport
+        Dim wasNotEmpty As Boolean = False
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        'dateiName = awinPath & projektInventurFile
+
+        getMassenEditImport.menueAswhl = PTImpExp.massenEdit
+        returnValue = getMassenEditImport.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+            dateiName = getMassenEditImport.selectedDateiName
+
+            Try
+
+                If My.Computer.FileSystem.FileExists(dateiName) Then
+
+
+                    If ShowProjekte.Count > 0 Then
+                        wasNotEmpty = True
+                        Call storeSessionConstellation("Last")
+                        ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
+                        Call awinClearPlanTafel()
+                    End If
+
+                    appInstance.Workbooks.Open(dateiName)
+                    'Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+                    'Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+                    'Dim tmpName As String = ""
+                    'For ih As Integer = 0 To positionIX
+                    '    tmpName = tmpName & scenarioName.Chars(ih)
+                    'Next
+
+                    Dim scenarioName As String = "ME"
+
+                    ' alle Import Projekte erstmal löschen
+                    ImportProjekte.Clear()
+
+
+                    Call importiereMassenEdit()
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, True)
+
+                    ' ''If wasNotEmpty Then
+                    ' ''    Call awinClearPlanTafel()
+                    ' ''End If
+
+                    '' ''Call awinZeichnePlanTafel(True)
+                    ' ''Call awinZeichnePlanTafel(False)
+                    ' ''Call awinNeuZeichnenDiagramme(2)
+
+                    If sessionConstellation.count > 0 Then
+
+                        If projectConstellations.Contains(scenarioName) Then
+                            projectConstellations.Remove(scenarioName)
+                        End If
+
+                        projectConstellations.Add(sessionConstellation)
+                        Call loadSessionConstellation(scenarioName, False, False, True)
+                    Else
+                        Call MsgBox("keine PRojekte importiert ...")
+                    End If
+
+                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                    If ImportProjekte.Count > 0 Then
+                        ImportProjekte.Clear()
+                    End If
+                Else
+
+                    Call MsgBox("bitte Datei auswählen ...")
+                End If
+
+
+            Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            End Try
+        Else
+            Call MsgBox(" Import Scenario wurde abgebrochen")
+        End If
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+
+    End Sub
+
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
         ' Übernahme 
 
@@ -2313,9 +2419,9 @@ Imports System.Windows
 
 
             Catch ex As Exception
-            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-        End Try
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            End Try
         Else
             Call MsgBox(" Import Scenario wurde abgebrochen")
         End If
@@ -2495,7 +2601,7 @@ Imports System.Windows
                 End If
 
             End If
-            
+
         Else
             Call MsgBox(" Ergänzungs-Vorgang wurde abgebrochen")
         End If
@@ -2517,7 +2623,7 @@ Imports System.Windows
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectRPlanImport
-       
+
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -2869,7 +2975,7 @@ Imports System.Windows
 
 
 
-       
+
         Call logfileSchliessen()
 
         enableOnUpdate = True
@@ -3130,16 +3236,21 @@ Imports System.Windows
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        If control.Id = "PT4G1M3B1" Then
-            ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
-            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 0)
-        ElseIf control.Id = "PT4G1M3B2" Then
-            ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
-            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 1)
-        ElseIf control.Id = "PT4G1M3B3" Then
-            'Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
-            Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 2)
-        End If
+        Try
+            If control.Id = "PT4G2M3B1" Then
+                ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+            ElseIf control.Id = "PT4G2M3B2" Then
+                ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+            ElseIf control.Id = "PT4G2M3B3" Then
+                'Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+            End If
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+        
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -3216,7 +3327,7 @@ Imports System.Windows
                                 ' jetzt wird dieses Projekt exportiert ... 
                                 Try
                                     Call awinExportProjectmitHrchy(hproj)
-                                    
+
                                     outputString = outputString & hproj.getShapeText & " erfolgreich .." & vbLf
                                 Catch ex As Exception
                                     outputString = outputString & hproj.getShapeText & " nicht erfolgreich .." & vbLf & _
@@ -3480,7 +3591,7 @@ Imports System.Windows
             End If
 
         End If
-        
+
 
 
 
@@ -3676,7 +3787,7 @@ Imports System.Windows
 
     End Sub
 
-  
+
 
     ''' <summary>
     ''' lädt die gewählten Projekte und gewählten Varianten in die Session
@@ -4760,15 +4871,15 @@ Imports System.Windows
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
-                reportObj = Nothing
+                reportobj = Nothing
 
                 Dim qualifier As String = " "
 
                 Try
                     If typ = "Curve" Then
-                        Call createSollIstCurveOfProject(hproj, reportObj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
-                        Call createSollIstOfProject(hproj, reportObj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     End If
                 Catch ex As Exception
 
@@ -5877,7 +5988,7 @@ Imports System.Windows
             Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
             relevanteProjekte = ShowProjekte
         End If
-      
+
         If relevanteProjekte.Count > 0 Then
             If showRangeRight - showRangeLeft > 5 Then
 
@@ -6801,7 +6912,7 @@ Imports System.Windows
 
                 End Try
 
-                
+
 
                 appInstance.ScreenUpdating = formerSU
                 appInstance.EnableEvents = formerEE
