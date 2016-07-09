@@ -8207,10 +8207,13 @@ Public Module testModule
         Dim zeile As Integer = 2
         Dim spalte As Integer = 9
 
+
+
+
         Dim atLeastOneDeliverable As Boolean = False
 
         'Dim formatierung As String = "#0.#"
-        Dim formatierung As String = "#0"
+        Dim formatierung As String = "#,##0"
 
         Try
             tabelle = pptShape.Table
@@ -8224,6 +8227,12 @@ Public Module testModule
         If tabelle.Columns.Count < 12 Then
             Throw New Exception(repMessages.getmsg(127))
         End If
+
+        ' jetzt werden die HeaderZeilen entsprechend gesetzt 
+        For i As Integer = 1 To 11
+            CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(262 + i)
+        Next
+
 
         ' Bestimmen der Standard-Vordergrund-Farbe der potentiell einzufärbenden Felder
         ' das ist notwendig, weil andernfalls bei einem rows.add die ggf eingefärbten Felder übernommen werden 
@@ -8639,14 +8648,16 @@ Public Module testModule
 
                 For i As Integer = 0 To 6
 
-                    If i >= 4 And vergleichstyp <> PThis.current Then
+                    If i <= 3 Then
+
+                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+
+                    ElseIf vergleichstyp <> PThis.current Then
 
                         If i <> 6 Or atLeastOneDeliverable Then
                             CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
                         End If
 
-                    Else
-                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
                     End If
 
                 Next
