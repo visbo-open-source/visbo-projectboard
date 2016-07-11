@@ -8085,8 +8085,21 @@ Imports System.Windows
                     ' jetzt wird festgestellt, ob es Unterschiede gibt 
                     ' 
                     unterschiede = hproj.listOfDifferences(vglProj, True, 0)
+
                     If unterschiede.Count > 0 Then
-                        Call MsgBox("What is the difference: " & unterschiede.Item(1))
+                        Dim ergStr As String = ""
+                        For ei As Integer = 1 To unterschiede.Count
+                            If ei = 1 Then
+                                ergStr = CStr(unterschiede.Item(i))
+                            Else
+                                ergStr = ergStr & "; " & CStr(unterschiede.Item(i))
+                            End If
+
+                        Next
+                        Call MsgBox("Unterschiede: " & ergStr)
+
+                    Else
+                        Call MsgBox(vglProj.name & ": identisch ...")
                     End If
 
 
