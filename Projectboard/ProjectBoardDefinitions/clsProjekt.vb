@@ -2953,20 +2953,25 @@ Public Class clsProjekt
 
     End Sub
 
-    Public Sub calculateRoundedKPI(ByRef budget As Double, ByRef personalKosten As Double, ByRef sonstKosten As Double, ByRef risikoKosten As Double, ByRef ergebnis As Double)
+    Public Sub calculateRoundedKPI(ByRef budget As Double, ByRef personalKosten As Double, ByRef sonstKosten As Double, ByRef risikoKosten As Double, ByRef ergebnis As Double, _
+                                   Optional roundIT As Boolean = True)
 
         With Me
             Dim gk As Double = .getSummeKosten
 
-            budget = System.Math.Round(.Erloes, mode:=MidpointRounding.ToEven)
-
-            risikoKosten = System.Math.Round(.risikoKostenfaktor * gk, mode:=MidpointRounding.ToEven)
-
-            personalKosten = System.Math.Round(.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
-
-            sonstKosten = System.Math.Round(.getGesamtAndereKosten.Sum, mode:=MidpointRounding.ToEven)
-
-            ergebnis = budget - (risikoKosten + personalKosten + sonstKosten)
+            If roundIT Then
+                budget = System.Math.Round(.Erloes, mode:=MidpointRounding.ToEven)
+                risikoKosten = System.Math.Round(.risikoKostenfaktor * gk, mode:=MidpointRounding.ToEven)
+                personalKosten = System.Math.Round(.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
+                sonstKosten = System.Math.Round(.getGesamtAndereKosten.Sum, mode:=MidpointRounding.ToEven)
+                ergebnis = budget - (risikoKosten + personalKosten + sonstKosten)
+            Else
+                budget = .Erloes
+                risikoKosten = .risikoKostenfaktor * gk
+                personalKosten = .getAllPersonalKosten.Sum
+                sonstKosten = .getGesamtAndereKosten.Sum
+                ergebnis = budget - (risikoKosten + personalKosten + sonstKosten)
+            End If
 
         End With
 

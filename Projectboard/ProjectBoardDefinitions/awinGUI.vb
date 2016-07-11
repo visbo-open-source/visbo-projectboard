@@ -566,7 +566,7 @@ Public Module awinGUI
                         With .Axes(Excel.XlAxisType.xlCategory)
                             .HasTitle = True
                             .MinimumScale = 15.0
-                            .MaximumScale = System.Math.Round(xAchsenValues.Max / 10 + 0.5) * 10
+                            .MaximumScale = System.Math.Round(xAchsenValues.Max)
                             With .AxisTitle
                                 '.Characters.text = "Projekt-Dauer"
                                 .Characters.text = repMessages.getmsg(73)

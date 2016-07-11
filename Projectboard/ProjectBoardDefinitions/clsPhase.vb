@@ -1074,15 +1074,111 @@ Public Class clsPhase
     '    End Try
 
 
+    ''' <summary>
+    ''' gibt die Rollen Instanz der Phase zurück, die den Namen roleName hat 
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRole(ByVal roleName As String) As clsRolle
 
-    'End Sub
+        Get
+            Dim returnValue As clsRolle = Nothing
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allRoles.Count - 1
+                If _allRoles.Item(ix).name = roleName Then
+                    found = True
+                    returnValue = _allRoles.Item(ix)
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            getRole = returnValue
+
+        End Get
+
+    End Property
+
+
+    ''' <summary>
+    ''' addRole fügt die Rollen Instanz hinzu, wenn sie nicht schon existiert
+    ''' summiert die Werte zu der shon existierenden ...
+    ''' </summary>
+    ''' <param name="role"></param>
+    ''' <remarks></remarks>
     Public Sub addRole(ByVal role As clsRolle)
 
-        If Not _allRoles.Contains(role) Then
-            _allRoles.Add(role)
+        'sollte nach dem 8.7.16 aktiviert werden 
+        'ebenso für addCost, mehrere Rollen/Kosten des gleichen NAmens sollen aufsummiert werden 
+        Dim roleName As String = role.name
+        Dim returnValue As clsRolle = Nothing
+        Dim ix As Integer = 0
+        Dim found As Boolean = False
+        Dim oldXWerte() As Double
+        Dim newXwerte() As Double
+
+        While Not found And ix <= _allRoles.Count - 1
+            If _allRoles.Item(ix).name = roleName Then
+                found = True
+            Else
+                ix = ix + 1
+            End If
+        End While
+
+        If found Then
+            oldXWerte = _allRoles.Item(ix).Xwerte()
+            newXwerte = role.Xwerte
+            If oldXWerte.Length = newXwerte.Length Then
+                ' hier dann aufsummieren 
+                For i As Integer = 0 To oldXWerte.Length - 1
+                    newXwerte(i) = newXwerte(i) + oldXWerte(i)
+                Next
+
+                _allRoles.Item(ix).Xwerte() = newXwerte
+
+            Else
+                ' darf eigentlich nicht sein 
+                ' Test: 
+                Call MsgBox("Fehler in Rollen-Zuordnung")
+                ' es wird dann einfach gar nichts gemacht 
+            End If
         Else
-            'Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
+            _allRoles.Add(role)
         End If
+
+        ' '' Code vor dem 8.7.16
+        ''If Not _allRoles.Contains(role) Then
+        ''    _allRoles.Add(role)
+        ''Else
+        ''    'Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
+        ''End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt alle Rollen-Instanzen mit Rollen-Name aus der Phase
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <remarks></remarks>
+    Public Sub removeRoleByName(ByVal roleName As String)
+
+        Dim toDoList As New List(Of clsRolle)
+
+        For i As Integer = 1 To _allRoles.Count
+            Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
+            If tmpRole.name = roleName Then
+                toDoList.Add(tmpRole)
+            End If
+        Next
+
+        For Each tmpRole As clsRolle In toDoList
+            _allRoles.Remove(tmpRole)
+        Next
 
 
     End Sub
@@ -1606,15 +1702,112 @@ Public Class clsPhase
         End Get
     End Property
 
+    ''' <summary>
+    ''' fügt die Kostenart Instanz der Liste der Kosten hinzu;
+    ''' wenn sie schon existiert, werden die Xwerte aufsummiert  
+    ''' </summary>
+    ''' <param name="cost"></param>
+    ''' <remarks></remarks>
     Public Sub AddCost(ByVal cost As clsKostenart)
 
-        If Not _allCosts.Contains(cost) Then
-            _allCosts.Add(cost)
+        'sollte nach dem 8.7.16 aktiviert werden 
+        'ebenso für addCost, mehrere Rollen/Kosten des gleichen NAmens sollen aufsummiert werden 
+        Dim costName As String = cost.name
+
+        Dim ix As Integer = 0
+        Dim found As Boolean = False
+        Dim oldXWerte() As Double
+        Dim newXwerte() As Double
+
+        While Not found And ix <= _allCosts.Count - 1
+            If _allCosts.Item(ix).name = costName Then
+                found = True
+            Else
+                ix = ix + 1
+            End If
+        End While
+
+        If found Then
+            oldXWerte = _allCosts.Item(ix).Xwerte()
+            newXwerte = cost.Xwerte
+            If oldXWerte.Length = newXwerte.Length Then
+                ' hier dann aufsummieren 
+                For i As Integer = 0 To oldXWerte.Length - 1
+                    newXwerte(i) = newXwerte(i) + oldXWerte(i)
+                Next
+
+                _allCosts.Item(ix).Xwerte() = newXwerte
+
+            Else
+                ' darf eigentlich nicht sein 
+                ' Test: 
+                Call MsgBox("Fehler in Kosten-Zuordnung")
+                ' es wird dann einfach gar nichts gemacht 
+            End If
         Else
-            Throw New Exception("Fehler: Kostenart '" & cost.name & "' ist bereits in der Phase '" & Me.name & "' enthalten")
+            _allCosts.Add(cost)
         End If
 
+        ' vor dem 8.7.16
+        ''If Not _allCosts.Contains(cost) Then
+        ''    _allCosts.Add(cost)
+        ''Else
+        ''    Throw New Exception("Fehler: Kostenart '" & cost.name & "' ist bereits in der Phase '" & Me.name & "' enthalten")
+        ''End If
+
     End Sub
+
+    ''' <summary>
+    ''' entfernt alle Rollen-Instanzen mit Rollen-Name aus der Phase
+    ''' </summary>
+    ''' <param name="costName"></param>
+    ''' <remarks></remarks>
+    Public Sub removeCostByName(ByVal costName As String)
+
+        Dim toDoList As New List(Of clsKostenart)
+
+        For i As Integer = 1 To _allCosts.Count
+            Dim tmpCost As clsKostenart = _allCosts.Item(i - 1)
+            If tmpCost.name = costName Then
+                toDoList.Add(tmpCost)
+            End If
+        Next
+
+        For Each tmpCost As clsKostenart In toDoList
+            _allCosts.Remove(tmpCost)
+        Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt die Kostenart Instanz der Phase zurück, die den Namen costName hat 
+    ''' </summary>
+    ''' <param name="costName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCost(ByVal costName As String) As clsKostenart
+
+        Get
+            Dim returnValue As clsKostenart = Nothing
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allCosts.Count - 1
+                If _allCosts.Item(ix).name = costName Then
+                    found = True
+                    returnValue = _allCosts.Item(ix)
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            getCost = returnValue
+
+        End Get
+
+    End Property
 
 
     Public ReadOnly Property countCosts() As Integer

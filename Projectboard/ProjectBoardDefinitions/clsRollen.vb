@@ -56,9 +56,9 @@ Public Class clsRollen
             ' jetzt die Behandlung Sammelrolle machen 
             For Each sammelRolle As String In sammelRollen
                 Dim subRoleList As Collection = Me.getSubRoleNamesOf(roleName:=sammelRolle, _
-                                                                     type:=PTcbr.realRoles)
+                                                                     type:=PTcbr.all)
                 For Each subRole As String In subRoleList
-                    If tmpCollection.Contains(CStr(subRole)) Then
+                    If ((tmpCollection.Contains(CStr(subRole))) And (subRole <> sammelRolle)) Then
                         tmpCollection.Remove(CStr(subRole))
                     End If
                 Next
@@ -280,14 +280,19 @@ Public Class clsRollen
     Public ReadOnly Property containsName(name As String) As Boolean
         Get
             Dim found As Boolean = False
-            Dim ix As Integer = 0
-            Do While ix <= _allRollen.Count - 1 And Not found
-                If _allRollen.ElementAt(ix).Value.name = name Then
-                    found = True
-                Else
-                    ix = ix + 1
-                End If
-            Loop
+            If IsNothing(name) Then
+                ' found bleibt auf false
+            Else
+                Dim ix As Integer = 0
+                Do While ix <= _allRollen.Count - 1 And Not found
+                    If _allRollen.ElementAt(ix).Value.name = name Then
+                        found = True
+                    Else
+                        ix = ix + 1
+                    End If
+                Loop
+            End If
+            
             containsName = found
         End Get
     End Property
