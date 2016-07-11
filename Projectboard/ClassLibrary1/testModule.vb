@@ -8230,7 +8230,21 @@ Public Module testModule
 
         ' jetzt werden die HeaderZeilen entsprechend gesetzt 
         For i As Integer = 1 To 11
-            CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(262 + i)
+            Dim tmpMsg As String = repMessages.getmsg(262 + i).TrimEnd
+            CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpMsg
+            If i >= 8 And i <= 10 Then
+                ' 1. Buchstabe muss WingDings sein
+                Try
+                    Dim len As Integer = tmpMsg.Length
+                    Dim oldName As String = CType(tabelle.Cell(1, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Name
+
+                    CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Name = "Wingdings 3"
+                    CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=2, Length:=len - 1).Font.Name = oldName
+                Catch ex As Exception
+
+                End Try
+                
+            End If
         Next
 
 
@@ -8644,18 +8658,26 @@ Public Module testModule
 
             With tabelle
 
+                Dim fntSize As Integer = CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size
                 CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(262)
+
+                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
+                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                 For i As Integer = 0 To 6
 
                     If i <= 3 Then
 
                         CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
+                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                     ElseIf vergleichstyp <> PThis.current Then
 
                         If i <> 6 Or atLeastOneDeliverable Then
                             CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+                            CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
+                            CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                         End If
 
                     End If
