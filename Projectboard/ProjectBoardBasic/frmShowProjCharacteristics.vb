@@ -343,11 +343,11 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 1) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 1) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 1) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 1) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 1) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 1) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 1) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -361,11 +361,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 2) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 2) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 2) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 2) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 2) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 2) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 2) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 2) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 2) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 2) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -379,11 +382,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 3) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 3) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 3) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 3) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 3) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 3) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 3) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 3) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 3) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 3) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -397,11 +403,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 4) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 4) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 4) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 4) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 4) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 4) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 4) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 4) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 4) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 4) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -420,11 +429,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = erloes
                 If currentvalue > minmaxScales(1, 6) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 6) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 6) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 6) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 6) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 6) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 6) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 6) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 6) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 6) = Round(currentvalue)
                     End If
                 End If
 
@@ -432,11 +444,14 @@ Public Class frmShowProjCharacteristics
                     currentvalue = erloes - gesamtKosten * (1 + .risikoKostenfaktor)
                     If currentvalue < minmaxScales(0, 6) Then
                         If currentvalue < -300 Then
-                            minmaxScales(0, 6) = Round(currentvalue / 50 - 0.6) * 50
+                            'minmaxScales(0, 6) = Round(currentvalue / 50 - 0.6) * 50
+                            minmaxScales(0, 6) = Round(currentvalue)
                         ElseIf currentvalue < -80 Then
-                            minmaxScales(0, 6) = Round(currentvalue / 10 - 0.6) * 10
+                            'minmaxScales(0, 6) = Round(currentvalue / 10 - 0.6) * 10
+                            minmaxScales(0, 6) = Round(currentvalue)
                         Else
-                            minmaxScales(0, 6) = Round(currentvalue / 5 - 0.6) * 5
+                            'minmaxScales(0, 6) = Round(currentvalue / 5 - 0.6) * 5
+                            minmaxScales(0, 6) = Round(currentvalue)
                         End If
                     End If
                 End With

@@ -28,9 +28,15 @@ Public Class clsOpenXML
     Public risk As Double
 
     ' die Custom Fields für ein Projekt 
-    Public customDblFields As SortedList(Of Integer, Double)
-    Public customStringFields As SortedList(Of Integer, String)
-    Public customBoolFields As SortedList(Of Integer, Boolean)
+    ' diese Felder müssen in einen Schlüssel haben , der als String kodiert ist
+    ' andernfalls gibt es Schwieirgkeiten beim Speichern in MongoDB
+    'Public customDblFields As SortedList(Of Integer, Double)
+    'Public customStringFields As SortedList(Of Integer, String)
+    'Public customBoolFields As SortedList(Of Integer, Boolean)
+
+    Public customDblFields As SortedList(Of String, Double)
+    Public customStringFields As SortedList(Of String, String)
+    Public customBoolFields As SortedList(Of String, Boolean)
 
     Public tasks As List(Of clsOpenTask)
 
@@ -71,15 +77,15 @@ Public Class clsOpenXML
             ' jetzt werden die CustomFields bestückt .... 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
             For Each kvp As KeyValuePair(Of Integer, String) In projekt.customStringFields
-                Me.customStringFields.Add(kvp.Key, kvp.Value)
+                Me.customStringFields.Add(CStr(kvp.Key), kvp.Value)
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Double) In projekt.customDblFields
-                Me.customDblFields.Add(kvp.Key, kvp.Value)
+                Me.customDblFields.Add(CStr(kvp.Key), kvp.Value)
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Boolean) In projekt.customBoolFields
-                Me.customBoolFields.Add(kvp.Key, kvp.Value)
+                Me.customBoolFields.Add(CStr(kvp.Key), kvp.Value)
             Next
 
 
@@ -181,22 +187,22 @@ Public Class clsOpenXML
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
 
             If Not IsNothing(Me.customStringFields) Then
-                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
-                    projekt.customStringFields.Add(kvp.Key, kvp.Value)
+                For Each kvp As KeyValuePair(Of String, String) In Me.customStringFields
+                    projekt.customStringFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
 
 
             If Not IsNothing(Me.customDblFields) Then
-                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
-                    projekt.customDblFields.Add(kvp.Key, kvp.Value)
+                For Each kvp As KeyValuePair(Of String, Double) In Me.customDblFields
+                    projekt.customDblFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
 
 
             If Not IsNothing(Me.customBoolFields) Then
-                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
-                    projekt.customBoolFields.Add(kvp.Key, kvp.Value)
+                For Each kvp As KeyValuePair(Of String, Boolean) In Me.customBoolFields
+                    projekt.customBoolFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
 
@@ -248,9 +254,9 @@ Public Class clsOpenXML
         strategicFit = 5
         risk = 5
 
-        customDblFields = New SortedList(Of Integer, Double)
-        customStringFields = New SortedList(Of Integer, String)
-        customBoolFields = New SortedList(Of Integer, Boolean)
+        customDblFields = New SortedList(Of String, Double)
+        customStringFields = New SortedList(Of String, String)
+        customBoolFields = New SortedList(Of String, Boolean)
 
 
         tasks = New List(Of clsOpenTask)
@@ -345,7 +351,7 @@ Public Class clsOpenXML
                     resourceNeeds.Add(newOpenRole)
                 Next
 
-                For k = 1 To .countCosts - 1
+                For k = 1 To .countCosts
                     dimension = .getCost(k).getDimension
                     Dim newCost As New clsOpenCostNeed(dimension)
                     newCost.copyFrom(.getCost(k))

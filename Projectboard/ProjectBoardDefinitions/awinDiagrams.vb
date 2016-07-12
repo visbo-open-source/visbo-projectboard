@@ -1801,10 +1801,10 @@ Public Module awinDiagrams
         Dim positiv As Boolean = True
 
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
-        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
         ertragsWert = budgetSum - (riskValue + pCost + oCost)
 
@@ -1848,7 +1848,7 @@ Public Module awinDiagrams
 
 
             If ertragsWert < 0 Then
-                minScale = System.Math.Round(ertragsWert / 10, mode:=MidpointRounding.ToEven) * 10
+                minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
             Else
                 minScale = 0
             End If
@@ -1968,7 +1968,7 @@ Public Module awinDiagrams
                         .HasMajorGridlines = False
                         .hasminorgridlines = False
                         If minScale < 0 Then
-                            .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                            .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
                         Else
                             .MinimumScale = 0
                         End If
@@ -2830,11 +2830,11 @@ Public Module awinDiagrams
 
         ' neu 
         ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
-        zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
         ' das ist der Risiko Abschlag  
-        zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
 
         ' das ist der Earned Value 
@@ -2854,12 +2854,12 @@ Public Module awinDiagrams
 
 
         ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
-        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum, mode:=MidpointRounding.ToEven)
         itemValue(1) = additionalCostExt
         itemColor(1) = farbeExterne
 
         ' das sind die durch Unterauslastung verursachten Kosten , also Personal-Kosten von Leuten, die in keinem Projekt sind
-        internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         itemValue(2) = internwithoutProject
         itemColor(2) = awinSettings.AmpelGelb
 
@@ -2883,7 +2883,7 @@ Public Module awinDiagrams
         appInstance.ScreenUpdating = False
 
         If ertragsWert < 0 Then
-            minScale = System.Math.Round(ertragsWert / 10, mode:=MidpointRounding.ToEven) * 10
+            minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
         Else
             minScale = 0
         End If
@@ -3012,7 +3012,7 @@ Public Module awinDiagrams
                         .HasMajorGridlines = False
                         .hasminorgridlines = False
                         If minScale < 0 Then
-                            .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                            .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
                         Else
                             .MinimumScale = 0
                         End If
@@ -3122,16 +3122,16 @@ Public Module awinDiagrams
 
 
         ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
-        zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
-        Dim pCost As Double = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        Dim oCost As Double = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        'zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        Dim pCost As Double = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        Dim oCost As Double = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        'zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven) 
         zeitraumCost = pCost + oCost
 
 
         ' das ist der Risiko Abschlag  
-        zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
 
         ' das ist der Earned Value 
@@ -3150,12 +3150,12 @@ Public Module awinDiagrams
 
 
         ' das sind die Zusatzkosten, die durch Überauslastung) verursacht werden
-        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum, mode:=MidpointRounding.ToEven)
         itemValue(1) = additionalCostExt
         itemColor(1) = farbeExterne
 
         ' das sind die durch Unterauslastung verursachten Kosten , also Personal-Kosten von Leuten, die in keinem Projekt sind
-        internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         itemValue(2) = internwithoutProject
         itemColor(2) = awinSettings.AmpelGelb
 
@@ -3203,7 +3203,7 @@ Public Module awinDiagrams
             Else
 
                 If ertragsWert < 0 Then
-                    minScale = System.Math.Round(ertragsWert / 10, mode:=MidpointRounding.ToEven) * 10
+                    minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
                 Else
                     minScale = 0
                 End If
@@ -3330,7 +3330,7 @@ Public Module awinDiagrams
                             .HasMajorGridlines = False
                             .hasminorgridlines = False
                             If minScale < 0 Then
-                                .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                                .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
                             Else
                                 .MinimumScale = 0
                             End If
@@ -3530,10 +3530,10 @@ Public Module awinDiagrams
         Dim positiv As Boolean = True
 
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
-        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
         ertragsWert = budgetSum - (riskValue + pCost + oCost)
 
@@ -3599,7 +3599,7 @@ Public Module awinDiagrams
             Else
 
                 If ertragsWert < 0 Then
-                    minScale = System.Math.Round(ertragsWert / 10, mode:=MidpointRounding.ToEven) * 10
+                    minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
                 Else
                     minScale = 0
                 End If
@@ -3726,7 +3726,7 @@ Public Module awinDiagrams
                             .HasMajorGridlines = False
                             .hasminorgridlines = False
                             If minScale < 0 Then
-                                .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                                .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
                             Else
                                 .MinimumScale = 0
                             End If
@@ -3942,9 +3942,9 @@ Public Module awinDiagrams
         Dim positiv As Boolean = True
 
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
-        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         costValues = ShowProjekte.getTotalCostValuesInMonth
-        zeitraumCost = System.Math.Round(costValues.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumCost = System.Math.Round(costValues.Sum, mode:=MidpointRounding.ToEven)
 
 
         Dim zeitraumLaenge = costValues.Length - 1
@@ -3952,14 +3952,14 @@ Public Module awinDiagrams
         For i = 0 To Min(heuteIndex - 1, zeitraumLaenge)
             costPast = costPast + costValues(i)
         Next
-        costPast = System.Math.Round(costPast / 10, mode:=MidpointRounding.ToEven) * 10
+        costPast = System.Math.Round(costPast, mode:=MidpointRounding.ToEven)
 
 
         costFuture = 0
         For i = Max(0, heuteIndex) To zeitraumLaenge
             costFuture = costFuture + costValues(i)
         Next
-        costFuture = System.Math.Round(costFuture / 10, mode:=MidpointRounding.ToEven) * 10
+        costFuture = System.Math.Round(costFuture, mode:=MidpointRounding.ToEven)
 
         Dim korrektur As Double = zeitraumCost - (costPast + costFuture)
         If future Then
@@ -3973,7 +3973,7 @@ Public Module awinDiagrams
         End If
 
         ' das ist der Risiko Abschlag  
-        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
         itemValue(0) = budgetSum
         itemColor(0) = ergebnisfarbe1
@@ -4037,7 +4037,7 @@ Public Module awinDiagrams
             Else
 
                 If ertragsWert < 0 Then
-                    minScale = System.Math.Round(ertragsWert / 10, mode:=MidpointRounding.ToEven) * 10
+                    minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
                 Else
                     minScale = 0
                 End If
@@ -4164,7 +4164,7 @@ Public Module awinDiagrams
                             .HasMajorGridlines = False
                             .hasminorgridlines = False
                             If minScale < 0 Then
-                                .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                                .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
                             Else
                                 .MinimumScale = 0
                             End If
@@ -4305,13 +4305,13 @@ Public Module awinDiagrams
 
 
         ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
-        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        additionalCostExt = System.Math.Round(ShowProjekte.getCosteValuesInMonth(True).Sum, mode:=MidpointRounding.ToEven)
 
         itemValue(0) = additionalCostExt
         itemColor(0) = awinSettings.AmpelRot
 
         ' das sind die durch Unterauslastung verursachten Kosten , also Personal-Kosten von Leuten, die in keinem Projekt sind
-        internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         itemValue(1) = internwithoutProject
         itemColor(1) = awinSettings.AmpelGelb
 

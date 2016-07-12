@@ -24,6 +24,8 @@
             allOnOnePage.Checked = .mppOnePage
             shwExtendedMode.Checked = .mppExtendedMode
 
+            filterEmptyProjects.Checked = Not .mppProjectsWithNoMPmayPass
+
             If .mppSortiertDauer Then
                 .mppShowAllIfOne = True
             End If
@@ -124,6 +126,8 @@
         awinSettings.mppSortiertDauer = sortiertNachDauer.Checked
         awinSettings.mppExtendedMode = shwExtendedMode.Checked
 
+        awinSettings.mppProjectsWithNoMPmayPass = Not filterEmptyProjects.Checked
+
         If awinSettings.mppSortiertDauer Then
             awinSettings.mppShowAllIfOne = True
         End If
@@ -139,6 +143,10 @@
     End Sub
 
     Private Sub shwExtendedMode_CheckedChanged(sender As Object, e As EventArgs) Handles shwExtendedMode.CheckedChanged
+
+    End Sub
+
+    Private Sub filterEmptyProjects_CheckedChanged(sender As Object, e As EventArgs) Handles filterEmptyProjects.CheckedChanged
 
     End Sub
 End Class
