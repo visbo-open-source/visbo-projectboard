@@ -52,8 +52,8 @@ namespace MongoDbAccess
             }
             else
             {
-                // mongodb://<dbuser>:<dbpassword>@ds021701.mlab.com:21701/visbomahle
-                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL;  /*Aufruf mit MongoDB mit Authentication  */
+
+                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;  /*Aufruf mit MongoDB mit Authentication  */
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
@@ -153,9 +153,14 @@ namespace MongoDbAccess
             try
             {
                 var projektDB = new clsProjektDB();
+                bool ergebnis;
+                string xx = "";
                 projektDB.copyfrom(projekt);
                 projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
-                return CollectionProjects.Save(projektDB).Ok;    
+                ergebnis = !CollectionProjects.Save(projektDB).HasLastErrorMessage;
+                //xx = CollectionProjects.Save(projektDB).LastErrorMessage;
+                //return !CollectionProjects.Save(projektDB).HasLastErrorMessage;    
+                return ergebnis;
             }
             catch
             {
@@ -191,7 +196,7 @@ namespace MongoDbAccess
                     Query<clsProjektDB>.LTE(p => p.timestamp, storedLatest)
                 );
             
-            return CollectionProjects.Remove(query).Ok;
+            return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
 
         //************************************/
@@ -206,7 +211,7 @@ namespace MongoDbAccess
                         .Where(p => (p.name == searchstr && p.timestamp == stored));
 
             
-            return CollectionProjects.Remove(query).Ok;
+            return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
 
         public SortedList<string, clsProjekt> retrieveProjectsFromDB(string projectname, string variantName, DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedEarliest, DateTime storedLatest, bool onlyLatest)
@@ -400,7 +405,7 @@ namespace MongoDbAccess
             var cDB = new clsConstellationDB();
             cDB.copyfrom(ref c);
             cDB.Id = cDB.constellationName;
-            return CollectionConstellations.Save(cDB).Ok;
+            return !CollectionConstellations.Save(cDB).HasLastErrorMessage;
            
         }
 
@@ -410,7 +415,7 @@ namespace MongoDbAccess
             //cDB.copyfrom(ref c);
             //cDB.Id = cDB.constellationName;
             var query = Query<clsConstellationDB>.EQ(e => e.Id, c.constellationName);
-            return CollectionConstellations.Remove(query).Ok;
+            return !CollectionConstellations.Remove(query).HasLastErrorMessage;
         }
 
         public clsConstellations retrieveConstellationsFromDB()
@@ -437,7 +442,7 @@ namespace MongoDbAccess
             var depDB = new clsDependenciesOfPDB();
             depDB.copyFrom(d);
             depDB.Id = depDB.projectName;
-            return CollectionDependencies.Save(depDB).Ok;
+            return !CollectionDependencies.Save(depDB).HasLastErrorMessage;
         }
 
         public clsDependencies  retrieveDependenciesFromDB()
@@ -482,7 +487,7 @@ namespace MongoDbAccess
             var filterDB = new clsFilterDB();
             filterDB.copyfrom( ref filter,  selfilter);
             filterDB.Id = filter.name;
-            return CollectionFilter.Save(filterDB).Ok;
+            return !CollectionFilter.Save(filterDB).HasLastErrorMessage;
         }
         /** löscht einen bestimmten Filter aus der Datenbank */
 
@@ -494,7 +499,7 @@ namespace MongoDbAccess
            
             var query = Query<clsFilterDB>
                 .Where(e => (e.name == filter.name));
-            return CollectionFilter.Remove(query).Ok;
+            return !CollectionFilter.Remove(query).HasLastErrorMessage;
         }
 
         /** liest alle Filter aus der Datenbank */

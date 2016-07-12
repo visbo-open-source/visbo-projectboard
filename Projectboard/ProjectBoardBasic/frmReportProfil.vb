@@ -480,23 +480,22 @@ Public Class frmReportProfil
                                                 selectedPhases, selectedMilestones, _
                                                 selectedRoles, selectedCosts, _
                                                 selectedBUs, selectedTypes, True, _
-                                                True, zeilenhoehe, _
-                                                legendFontSize, _
+                                                True, zeilenhoehe, legendFontSize, _
                                                 worker, e)
+  
 
-
-                ' ''Call createPPTReportFromProjects(vorlagenDateiName, _
-                ' ''                                   selectedPhases, selectedMilestones, _
-                ' ''                                   selectedRoles, selectedCosts, _
-                ' ''                                   selectedBUs, selectedTyps, _
-                ' ''                                   worker, e)
+        ' ''Call createPPTReportFromProjects(vorlagenDateiName, _
+        ' ''                                   selectedPhases, selectedMilestones, _
+        ' ''                                   selectedRoles, selectedCosts, _
+        ' ''                                   selectedBUs, selectedTyps, _
+        ' ''                                   worker, e)
             Else
 
-                ''Call createPPTSlidesFromConstellation(reportProfil.PPTTemplate, _
-                ''                                reportProfil.Phases, reportProfil.Milestones, _
-                ''                                reportProfil.Roles, reportProfil.Costs, _
-                ''                                reportProfil.BUs, reportProfil.Typs, True, _
-                ''                                worker, e)
+        ''Call createPPTSlidesFromConstellation(reportProfil.PPTTemplate, _
+        ''                                reportProfil.Phases, reportProfil.Milestones, _
+        ''                                reportProfil.Roles, reportProfil.Costs, _
+        ''                                reportProfil.BUs, reportProfil.Typs, True, _
+        ''                                worker, e)
             End If
 
 

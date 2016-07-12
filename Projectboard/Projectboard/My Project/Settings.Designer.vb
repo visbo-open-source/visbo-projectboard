@@ -98,22 +98,28 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Alias")>  _
-    Public ReadOnly Property VISBOAbbreviation() As String
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Abbreviation")>  _
+    Public Property VISBOAbbreviation() As String
         Get
             Return CType(Me("VISBOAbbreviation"),String)
         End Get
+        Set
+            Me("VISBOAbbreviation") = value
+        End Set
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel")>  _
-    Public ReadOnly Property VISBOAmpel() As String
+    Public Property VISBOAmpel() As String
         Get
             Return CType(Me("VISBOAmpel"),String)
         End Get
+        Set
+            Me("VISBOAmpel") = value
+        End Set
     End Property
 End Class
 

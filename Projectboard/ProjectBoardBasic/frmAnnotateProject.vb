@@ -12,7 +12,7 @@ Public Class frmAnnotateProject
 
         Try
 
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Call MsgBox("keine Shapes Zuordnung möglich ")
@@ -45,7 +45,7 @@ Public Class frmAnnotateProject
 
 
                 'Try
-                '    worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+                '    worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
                 '    projectshape = worksheetShapes.Item(kvp.Value.name)
                 'Catch ex As Exception
 

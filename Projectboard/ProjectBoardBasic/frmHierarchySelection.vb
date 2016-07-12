@@ -162,7 +162,10 @@ Public Class frmHierarchySelection
         Dim element As String
 
 
+        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
+
+        Dim formerEoU As Boolean = enableOnUpdate
         enableOnUpdate = False
 
         statusLabel.Text = ""
@@ -372,8 +375,8 @@ Public Class frmHierarchySelection
                             tmpCollection, tmpCollection, Me.chkbxOneChart.Checked, lastfilter)
         End If
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formerEoU
 
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 
         'If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Or Me.menuOption = PTmenue.reportBHTC Then
@@ -1266,7 +1269,7 @@ Public Class frmHierarchySelection
                                                 selectedPhases, selectedMilestones, _
                                                 selectedRoles, selectedCosts, _
                                                 selectedBUs, selectedTyps, True, _
-                                                True, zeilenhoehe, _
+                                                True, _
                                                 legendFontSize, _
                                                 worker, e)
 
@@ -1335,4 +1338,9 @@ Public Class frmHierarchySelection
         End If
 
     End Sub
+
+    Private Sub createPPTSlidesFromProject(hproj As clsProjekt, vorlagendateiname As String, selectedPhases As Collection, selectedMilestones As Collection, selectedRoles As Collection, selectedCosts As Collection, selectedBUs As Collection, selectedTyps As Collection, p9 As Boolean, p10 As Boolean, legendFontSize As Single, worker As BackgroundWorker, e As DoWorkEventArgs)
+        Throw New NotImplementedException
+    End Sub
+
 End Class

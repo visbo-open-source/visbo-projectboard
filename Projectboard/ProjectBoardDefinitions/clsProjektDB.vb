@@ -6,9 +6,9 @@
     Public StrategicFit As Double
 
     ' Änderung tk: die CustomFields ergänzt ...
-    Public customDblFields As SortedList(Of Integer, Double)
-    Public customStringFields As SortedList(Of Integer, String)
-    Public customBoolFields As SortedList(Of Integer, Boolean)
+    Public customDblFields As SortedList(Of String, Double)
+    Public customStringFields As SortedList(Of String, String)
+    Public customBoolFields As SortedList(Of String, Boolean)
 
     Public Erloes As Double
     Public leadPerson As String
@@ -23,7 +23,7 @@
     Public status As String
     Public ampelStatus As Integer
     Public ampelErlaeuterung As String
-    Public farbe As Object
+    Public farbe As Integer
     Public Schrift As Integer
     Public Schriftfarbe As Object
     Public VorlagenName As String
@@ -61,7 +61,7 @@
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
 
-            Me.name = calcProjektKeyDB(projekt)
+            Me.name = calcProjektKeyDB(projekt.name, projekt.variantName)
 
             Me.variantName = .variantName
             Me.Risiko = .Risiko
@@ -100,15 +100,15 @@
 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
             For Each kvp As KeyValuePair(Of Integer, String) In projekt.customStringFields
-                Me.customStringFields.Add(kvp.Key, kvp.Value)
+                Me.customStringFields.Add(CStr(kvp.Key), kvp.Value)
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Double) In projekt.customDblFields
-                Me.customDblFields.Add(kvp.Key, kvp.Value)
+                Me.customDblFields.Add(CStr(kvp.Key), kvp.Value)
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Boolean) In projekt.customBoolFields
-                Me.customBoolFields.Add(kvp.Key, kvp.Value)
+                Me.customBoolFields.Add(CStr(kvp.Key), kvp.Value)
             Next
 
 
@@ -155,8 +155,7 @@
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
             .Status = Me.status
-            .ampelStatus = Me.ampelStatus
-            .ampelErlaeuterung = Me.ampelErlaeuterung
+            
             .farbe = Me.farbe
             .Schrift = Me.Schrift
 
@@ -194,26 +193,26 @@
                 .AddPhase(newPhase)
             Next
 
+            ' jetzt werden Ampel Status und Beschreibung gesetzt 
+            ' da das jetzt in der Phase(1) abgespeichert ist, darf das erst gemacht werden, wenn die Phasen alle kopiert sind ... 
+            .ampelStatus = Me.ampelStatus
+            .ampelErlaeuterung = Me.ampelErlaeuterung
 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
 
             If Not IsNothing(Me.customStringFields) Then
-                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
-                    projekt.customStringFields.Add(kvp.Key, kvp.Value)
+                For Each kvp As KeyValuePair(Of String, String) In Me.customStringFields
+                    projekt.customStringFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
-            
-
             If Not IsNothing(Me.customDblFields) Then
-                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
-                    projekt.customDblFields.Add(kvp.Key, kvp.Value)
+                For Each kvp As KeyValuePair(Of String, Double) In Me.customDblFields
+                    projekt.customDblFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
-            
-
             If Not IsNothing(Me.customBoolFields) Then
-                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
-                    projekt.customBoolFields.Add(kvp.Key, kvp.Value)
+                For Each kvp As KeyValuePair(Of String, Boolean) In Me.customBoolFields
+                    projekt.customBoolFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
             
@@ -241,6 +240,12 @@
                 hryNodeDB = New clsHierarchyNodeDB
 
                 elemID = hry.getIDAtIndex(i)
+                If elemID = rootPhaseName Then
+                    elemID = rootPhaseNameDB
+                End If
+                If elemID.Contains(punktName) Then
+                    elemID = elemID.Replace(punktName, punktNameDB)
+                End If
                 hryNode = hry.nodeItem(i)
                 hryNodeDB.copyFrom(hryNode)
 
@@ -266,6 +271,12 @@
                 hryNode = New clsHierarchyNode
 
                 elemID = Me.allNodes.ElementAt(i - 1).Key
+                If elemID = rootPhaseNameDB Then
+                    elemID = rootPhaseName
+                End If
+                If elemID.Contains(punktNameDB) Then
+                    elemID = elemID.Replace(punktNameDB, punktName)
+                End If
                 hryNodeDB = Me.allNodes.ElementAt(i - 1).Value
                 hryNodeDB.copyTo(hryNode)
 
@@ -298,7 +309,8 @@
             Dim childID As String
             With hryNode
                 Me.elemName = .elemName
-                Me.origName = .origName
+                ' ist seit 29.5 niht mehr Bestandteil eines Hierarchie Knotens
+                'Me.origName = .origName
                 Me.indexOfElem = .indexOfElem
                 Me.parentNodeKey = .parentNodeKey
                 For i As Integer = 1 To .childCount
@@ -319,7 +331,8 @@
             Dim childID As String
             With hryNode
                 .elemName = Me.elemName
-                .origName = Me.origName
+                ' ist seit 29.5 nicht mehr Bestandteil eines Hierarchie-Knotens 
+                '.origName = Me.origName
                 .indexOfElem = Me.indexOfElem
                 .parentNodeKey = Me.parentNodeKey
                 For i As Integer = 1 To Me.childNodeKeys.Count
@@ -355,7 +368,11 @@
         Public startOffsetinDays As Integer
         Public dauerInDays As Integer
         Public name As String
-        Public farbe As Object
+        Public farbe As Integer
+
+        Public shortName As String
+        Public originalName As String
+        Public appearance As String
 
         Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultDB
 
@@ -366,28 +383,33 @@
         End Property
 
 
-        Sub copyFrom(ByVal phase As clsPhase, ByVal hfarbe As Object)
+        Sub copyFrom(ByVal phase As clsPhase, ByVal hfarbe As Integer)
+
             Dim r As Integer, k As Integer
 
             With phase
                 Me.earliestStart = .earliestStart
                 Me.latestStart = .latestStart
-                Me.minDauer = .minDauer
-                Me.maxDauer = .maxDauer
+                'Me.minDauer = .minDauer
+                'Me.maxDauer = .maxDauer
                 Me.relStart = .relStart
                 Me.relEnde = .relEnde
                 Me.startOffsetinDays = .startOffsetinDays
                 Me.dauerInDays = .dauerInDays
                 Me.name = .nameID
 
+                Me.shortName = .shortName
+                Me.originalName = .originalName
+                Me.appearance = .appearance
+
                 Me.ampelErlaeuterung = .ampelErlaeuterung
                 Me.ampelStatus = .ampelStatus
 
                 Dim dimension As Integer
 
-                ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
+                ' Änderung 18.6 , ab 29.5 .16 kann jeder Phase auch eine Farbe zugewiesen werden 
                 Try
-                    Me.farbe = .farbe
+                    Me.farbe = .individualColor
                 Catch ex As Exception
                     Me.farbe = hfarbe
                 End Try
@@ -433,15 +455,28 @@
             With phase
                 .earliestStart = Me.earliestStart
                 .latestStart = Me.latestStart
-                .minDauer = Me.minDauer
-                .maxDauer = Me.maxDauer
+                '.minDauer = Me.minDauer
+                '.maxDauer = Me.maxDauer
+
+                If Not IsNothing(Me.shortName) Then
+                    .shortName = Me.shortName
+                End If
+
+                If Not IsNothing(Me.originalName) Then
+                    .originalName = Me.originalName
+                End If
+
+                If Not IsNothing(Me.appearance) Then
+                    .appearance = Me.appearance
+                End If
+
 
                 ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
                 .ampelStatus = Me.ampelStatus
                 .ampelErlaeuterung = Me.ampelErlaeuterung
 
                 Try
-                    .setFarbe = CLng(Me.farbe)
+                    .farbe = Me.farbe
                 Catch ex As Exception
 
                 End Try
@@ -465,9 +500,9 @@
                 ' nicht aber der Wert für dauerindays oder startoffset
                 If Me.dauerInDays = 0 Then
                     ' nutze 
-                    startoffset = CInt(DateDiff(DateInterval.Day, .Parent.startDate, .Parent.startDate.AddMonths(Me.relStart - 1)))
+                    startoffset = CInt(DateDiff(DateInterval.Day, .parentProject.startDate, .parentProject.startDate.AddMonths(Me.relStart - 1)))
                     'dauer = DateDiff(DateInterval.Day, .Parent.startDate.AddMonths(Me.relStart - 1), .Parent.startDate.AddMonths(Me.relEnde).AddDays(-1)) + 1
-                    dauer = calcDauerIndays(.Parent.startDate.AddDays(startoffset), Me.relEnde - Me.relStart + 1, True)
+                    dauer = calcDauerIndays(.parentProject.startDate.AddDays(startoffset), Me.relEnde - Me.relStart + 1, True)
                 Else
                     startoffset = Me.startOffsetinDays
                     dauer = Me.dauerInDays
@@ -529,6 +564,10 @@
 
             ampelStatus = 0
             ampelErlaeuterung = ""
+
+            shortName = ""
+            originalName = ""
+            appearance = ""
 
         End Sub
     End Class
@@ -632,6 +671,12 @@
         Public offset As Long
         Public alternativeColor As Long
 
+        Public shortName As String
+        Public originalName As String
+        Public appearance As String
+
+        Public deliverables As List(Of String)
+
         'Friend Property fileLink As Uri
 
         Friend ReadOnly Property bewertungsCount As Integer
@@ -665,16 +710,50 @@
                     .verantwortlich = Me.verantwortlich
                     .offset = Me.offset
 
+                    If Not IsNothing(Me.shortName) Then
+                        .shortName = Me.shortName
+                    End If
+
+                    If Not IsNothing(Me.originalName) Then
+                        .originalName = Me.originalName
+                    End If
+
+                    If Not IsNothing(Me.appearance) Then
+                        .appearance = Me.appearance
+                    End If
+
                     Try
                         If Not IsNothing(Me.alternativeColor) Then
-                            .setFarbe = Me.alternativeColor
+                            .farbe = CInt(Me.alternativeColor)
                         Else
-                            .setFarbe = awinSettings.AmpelNichtBewertet
+                            .farbe = CInt(awinSettings.AmpelNichtBewertet)
                         End If
                     Catch ex As Exception
 
                     End Try
-                    
+
+                    If Me.deliverables.Count > 0 Then
+                        For i = 1 To Me.deliverables.Count
+                            Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
+                            .addDeliverable(tmpDeliverable)
+                        Next
+                    Else
+                        ' evtl sind die noch in der Bewertung vergraben ... 
+                        If Me.bewertungsCount > 0 Then
+                            If Not IsNothing(Me.getBewertung(1).deliverables) Then
+                                Dim allDeliverables As String = Me.getBewertung(1).deliverables
+
+                                If allDeliverables.Trim.Length > 0 Then
+                                    Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                                    For i = 1 To tmpstr.Length
+                                        .addDeliverable(tmpstr(i - 1))
+                                    Next
+                                End If
+                                
+                            End If
+                        End If
+                    End If
+
 
 
                     For i = 1 To Me.bewertungsCount
@@ -701,17 +780,28 @@
 
         Friend Sub CopyFrom(ByVal newResult As clsMeilenstein)
             Dim i As Integer
-            Dim newb As New clsBewertungDB
+
 
             With newResult
 
                 Me.name = .nameID
                 Me.verantwortlich = .verantwortlich
                 Me.offset = .offset
-                Me.alternativeColor = .farbe
+
+                Me.shortName = .shortName
+                Me.originalName = .originalName
+                Me.appearance = .appearance
+
+                Me.alternativeColor = .individualColor
+
+                For i = 1 To .countDeliverables
+                    Dim tmpDeliverable As String = .getDeliverable(i)
+                    Me.deliverables.Add(tmpDeliverable)
+                Next
 
                 Try
                     For i = 1 To .bewertungsCount
+                        Dim newb As New clsBewertungDB
                         newb.copyfrom(.getBewertung(i))
                         Me.addBewertung(newb)
                     Next
@@ -775,11 +865,13 @@
         Sub New()
 
             bewertungen = New SortedList(Of String, clsBewertungDB)
+            deliverables = New List(Of String)
 
         End Sub
 
 
     End Class
+
 
     Public Class clsBewertungDB
         ' Änderung tk: 2.11 deliverables / Ergebnisse hinzugefügt 
@@ -795,7 +887,7 @@
             With newB
                 .colorIndex = Me.color
                 .description = Me.description
-                .deliverables = Me.deliverables
+                '.deliverables = Me.deliverables
                 .datum = Me.datum
                 .bewerterName = Me.bewerterName
             End With
@@ -806,7 +898,7 @@
 
             Me.color = b.colorIndex
             Me.description = b.description
-            Me.deliverables = b.deliverables
+            'Me.deliverables = b.deliverables
             Me.bewerterName = b.bewerterName
             Me.datum = b.datum
 
@@ -828,9 +920,9 @@
         AllPhases = New List(Of clsPhaseDB)
         hierarchy = New clsHierarchyDB
 
-        customDblFields = New SortedList(Of Integer, Double)
-        customStringFields = New SortedList(Of Integer, String)
-        customBoolFields = New SortedList(Of Integer, Boolean)
+        customDblFields = New SortedList(Of String, Double)
+        customStringFields = New SortedList(Of String, String)
+        customBoolFields = New SortedList(Of String, Boolean)
 
     End Sub
 

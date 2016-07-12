@@ -105,7 +105,7 @@ namespace WpfWindow
                             }
                             
                             Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
-                            awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
+                            awinDiagrams.awinCreateprcCollectionDiagram(myCollection, ref repObj, chTop, chLeft,
                                                                            chWidth, chHeight, false, chTyp, false);
                         }
                         else
@@ -119,7 +119,7 @@ namespace WpfWindow
                                 myCollection.Add(name, name);
                                 Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
                                 
-                                awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
+                                awinDiagrams.awinCreateprcCollectionDiagram(myCollection, ref repObj, chTop, chLeft,
                                                                                chWidth, chHeight, false, chTyp, false);
 
 
@@ -254,7 +254,7 @@ namespace WpfWindow
 
                         }
                         Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
-                        awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
+                        awinDiagrams.awinCreateprcCollectionDiagram(myCollection, ref repObj, chTop, chLeft,
                                                                        chWidth, chHeight, false, chTyp, false);
                     }
                     else
@@ -267,7 +267,7 @@ namespace WpfWindow
 
                             myCollection.Add(name, name);
                             Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
-                            awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
+                            awinDiagrams.awinCreateprcCollectionDiagram(myCollection, ref repObj, chTop, chLeft,
                                                                            chWidth, chHeight, false, chTyp, false);
 
 

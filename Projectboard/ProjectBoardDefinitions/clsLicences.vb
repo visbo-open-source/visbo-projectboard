@@ -27,6 +27,9 @@ Public Class clsLicences
 
             Dim userPrim As Long = 211
 
+            ' User-Name in Kleinbuchstaben umwandeln
+            User = LCase(User)
+
             ' Codierung Username
             Dim userlicCode As Long = 0
             Dim zahl(User.Length - 1) As Long
@@ -96,6 +99,10 @@ Public Class clsLicences
 
             validLicence = False
 
+            ' User-Name in Kleinbuchstaben umwandeln
+            user = LCase(user)
+
+
             ' '' '' Codierung Username
             '' ''Dim userlicCode As Long = 0
             '' ''Dim zahl(user.Length - 1) As Long
@@ -138,6 +145,7 @@ Public Class clsLicences
 
                 ' User-LicensCode erzeugen für aktuellen User
                 Dim hilfsUserlicCode As Long = 0
+
                 Dim zahl(user.Length - 1) As Long
 
                 For i As Integer = 0 To user.Length - 1

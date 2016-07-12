@@ -29,7 +29,8 @@ Public Module testModule
 
         Dim awinSelection As xlNS.ShapeRange
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ' ur:4.7.2016: an Stelle verschoben, wo genötigt:
+        ' Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As xlNS.Shape
         Dim hproj As clsProjekt
         Dim vglName As String = " "
@@ -53,7 +54,7 @@ Public Module testModule
             ' Der Report dieses Projektes soll dann zuerst erstellt werden, denn somit wird das Format der PowerPointPräsentation danach ausgewählt.
 
             Dim maxProj As clsProjekt = Nothing
-            Dim maxZeilen As Integer = 1
+            Dim maxZeilen As Integer = 0
 
             For Each singleShp In awinSelection
 
@@ -90,25 +91,31 @@ Public Module testModule
                 variantName = .variantName
             End With
 
-            If vglName <> maxProj.getShapeText Then
-                If request.pingMongoDb() Then
-                    Try
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
-                        projekthistorie.Add(Date.Now, maxProj)
-                    Catch ex As Exception
-                        projekthistorie.clear()
-                    End Try
+            If Not noDB Then
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                If vglName <> maxProj.getShapeText Then
+                    If request.pingMongoDb() Then
+                        Try
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                            projekthistorie.Add(Date.Now, maxProj)
+                        Catch ex As Exception
+                            projekthistorie.clear()
+                        End Try
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+
+
                 Else
-                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    ' der aktuelle Stand hproj muss hinzugefügt werden 
+                    Dim lastElem As Integer = projekthistorie.Count - 1
+                    projekthistorie.RemoveAt(lastElem)
+                    projekthistorie.Add(Date.Now, maxProj)
                 End If
 
-
-            Else
-                ' der aktuelle Stand hproj muss hinzugefügt werden 
-                Dim lastElem As Integer = projekthistorie.Count - 1
-                projekthistorie.RemoveAt(lastElem)
-                projekthistorie.Add(Date.Now, maxProj)
             End If
 
             e.Result = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
@@ -148,26 +155,33 @@ Public Module testModule
                         variantName = .variantName
                     End With
 
-                    If vglName <> hproj.getShapeText Then
-                        If request.pingMongoDb() Then
-                            Try
-                                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                                storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
-                                projekthistorie.Add(Date.Now, hproj)
-                            Catch ex As Exception
-                                projekthistorie.clear()
-                            End Try
+                    If Not noDB Then
+
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                        If vglName <> hproj.getShapeText Then
+                            If request.pingMongoDb() Then
+                                Try
+                                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                                    storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                    projekthistorie.Add(Date.Now, hproj)
+                                Catch ex As Exception
+                                    projekthistorie.clear()
+                                End Try
+                            Else
+                                Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                            End If
+
+
                         Else
-                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                            ' der aktuelle Stand hproj muss hinzugefügt werden 
+                            Dim lastElem As Integer = projekthistorie.Count - 1
+                            projekthistorie.RemoveAt(lastElem)
+                            projekthistorie.Add(Date.Now, hproj)
                         End If
 
-
-                    Else
-                        ' der aktuelle Stand hproj muss hinzugefügt werden 
-                        Dim lastElem As Integer = projekthistorie.Count - 1
-                        projekthistorie.RemoveAt(lastElem)
-                        projekthistorie.Add(Date.Now, hproj)
                     End If
+
 
                     e.Result = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
                     worker.ReportProgress(0, e)
@@ -647,13 +661,11 @@ Public Module testModule
                             Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
 
-
                         Else
                             ' Start neu
 
                             Call title2kennzQualifier(.TextFrame2.TextRange.Text, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
-
 
                         End If
 
@@ -1635,6 +1647,11 @@ Public Module testModule
                                         Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
 
+
+                                    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & _
+                                        " " & awinSettings.kapaEinheit & ")"
+
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
@@ -1666,6 +1683,9 @@ Public Module testModule
                                     End If
 
 
+                                    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+
                                     reportObj = obj
                                     notYetDone = True
 
@@ -1695,7 +1715,8 @@ Public Module testModule
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
 
-
+                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
 
                                     reportObj = obj
                                     notYetDone = True
@@ -1733,6 +1754,10 @@ Public Module testModule
                                     Else
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
                                     End If
+
+                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
+                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+
 
                                     reportObj = obj
                                     notYetDone = True
@@ -2396,7 +2421,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(225)
                                 End If
-                                .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                                .TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
 
                             Case "Business-Unit:"
 
@@ -2410,14 +2435,15 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(227)
                                 End If
-                                .TextFrame2.TextRange.Text = hproj.description
+                                .TextFrame2.TextRange.Text = boxName & ": " & hproj.description
 
                             Case "Stand:"
 
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(223)
                                 End If
-                                .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToShortDateString
+
+                                .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
 
                             Case "Laufzeit:"
 
@@ -2574,6 +2600,11 @@ Public Module testModule
         Dim presentationFile As String = awinPath & requirementsOrdner & "boarddossier.pptx"
         Dim presentationFileH As String = awinPath & requirementsOrdner & "boarddossier_Hochformat.pptx"
         Dim newFileName As String = reportOrdnerName & "MP Report.pptx"
+
+        ' das sind Formen , die zur in der Tabelle Vergleich Anzeige der Tendenz verwendet werden 
+        Dim gleichShape As pptNS.Shape = Nothing
+        Dim steigendShape As pptNS.Shape = Nothing
+        Dim fallendShape As pptNS.Shape = Nothing
 
         Dim pptShape As pptNS.Shape
         Dim portfolioName As String = currentConstellation
@@ -2796,6 +2827,9 @@ Public Module testModule
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Multiprojektsicht" Or _
                         kennzeichnung = "Projekt-Tafel" Or _
+                        kennzeichnung = "Tabelle Projektliste" Or _
+                        kennzeichnung = "Tabelle Projektliste1" Or _
+                        kennzeichnung = "Tabelle ProjektlisteN" Or _
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
                         kennzeichnung = "Tabelle Zielerreichung" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
@@ -2806,6 +2840,7 @@ Public Module testModule
                         kennzeichnung = "Tabelle ProjekteMitPhImMonat" Or _
                         kennzeichnung = "Tabelle ProjekteMitRolleImMonat" Or _
                         kennzeichnung = "Tabelle ProjekteMitKostenartImMonat" Or _
+                        kennzeichnung = "Plan/Forecast" Or _
                         kennzeichnung = "Fortschritt Personalkosten" Or _
                         kennzeichnung = "Fortschritt Sonstige Kosten" Or _
                         kennzeichnung = "Fortschritt Gesamtkosten" Or _
@@ -2832,9 +2867,16 @@ Public Module testModule
 
                         listofShapes.Add(pptShape)
 
+
+                    ElseIf kennzeichnung = "gleich" Then
+                        gleichShape = pptShape
+
+                    ElseIf kennzeichnung = "steigend" Then
+                        steigendShape = pptShape
+
+                    ElseIf kennzeichnung = "fallend" Then
+                        fallendShape = pptShape
                     End If
-
-
 
                 End With
             Next
@@ -3051,7 +3093,7 @@ Public Module testModule
                                     .GridlineColor = RGB(255, 255, 255)
                                 End With
 
-                                With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
 
 
@@ -3195,7 +3237,7 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                    With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
                                         rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
                                         colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
@@ -3236,7 +3278,7 @@ Public Module testModule
 
                                             Call awinZeichnePhasen(phNameCollection, False, True)
                                             rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                           
+
 
                                             If Not awinSettings.showTimeSpanInPT Then
 
@@ -3345,6 +3387,112 @@ Public Module testModule
                             End Try
 
 
+                        Case "Tabelle Projektliste"
+                            Try
+                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
+                                                                gleichShape, steigendShape, fallendShape, _
+                                                                PThis.current, qualifier)
+
+                                ' jetzt ggf die Hilfs-Shapes löschen 
+                                Try
+                                    If Not IsNothing(gleichShape) Then
+                                        gleichShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(steigendShape) Then
+                                        steigendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(fallendShape) Then
+                                        fallendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                            Catch ex As Exception
+
+                            End Try
+
+                        Case "Tabelle ProjektlisteN"
+                            Try
+                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
+                                                                gleichShape, steigendShape, fallendShape, _
+                                                                PThis.letzterStand, qualifier)
+
+                                ' jetzt die Hilfs-Shapes löschen 
+                                Try
+                                    If Not IsNothing(gleichShape) Then
+                                        gleichShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+                                Try
+                                    If Not IsNothing(steigendShape) Then
+                                        steigendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+                                Try
+                                    If Not IsNothing(fallendShape) Then
+                                        fallendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+                            Catch ex As Exception
+
+                            End Try
+
+                        Case "Tabelle Projektliste1"
+                            Try
+                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
+                                                                gleichShape, steigendShape, fallendShape, _
+                                                                PThis.beauftragung, qualifier)
+
+                                ' jetzt die Hilfs-Shapes löschen 
+                                Try
+                                    If Not IsNothing(gleichShape) Then
+                                        gleichShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(steigendShape) Then
+                                        steigendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(fallendShape) Then
+                                        fallendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                            Catch ex As Exception
+
+                            End Try
+
+
                         Case "Fortschritt Personalkosten"
 
                             Dim compareToID As Integer = 1
@@ -3447,6 +3595,82 @@ Public Module testModule
                             Catch ex As Exception
 
                             End Try
+
+                        Case "Plan/Forecast"
+
+
+                            Dim vglVersion As Integer = PThis.ersterStand
+                            Dim auswahl As Integer
+
+                            Dim ersterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.DayOfYear + 1)
+                            Dim letzterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.Day + 1)
+
+                            Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
+                            qualifier = tmpQualifierStr(0)
+
+                            If tmpQualifierStr.Length = 3 Then
+
+                                Try
+                                    ersterStandDate = CDate(tmpQualifierStr(1))
+                                    letzterStandDate = CDate(tmpQualifierStr(2))
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+
+                            Select Case qualifier
+                                Case "Personalkosten"
+                                    boxName = repMessages.getmsg(188) & " (T€)"
+                                    auswahl = PThcc.perscost
+                                Case "Sonstige Kosten"
+                                    boxName = repMessages.getmsg(190) & " (T€)"
+                                    auswahl = PThcc.othercost
+                                Case "Personalbedarf"
+                                    boxName = repMessages.getmsg(159) & " (PT)"
+                                    auswahl = PThcc.persbedarf
+                                Case Else
+                            End Select
+
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hwidth = 450
+                            hheight = awinSettings.ChartHoehe1
+                            obj = Nothing
+                            Call createSollIstOfPortfolio(obj, Date.Now, auswahl, qualifier, ersterStandDate, letzterStandDate, _
+                                                           htop, hleft, hheight, hwidth)
+
+                            reportObj = obj
+
+                            With reportObj
+                                '.Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                            With newShapeRange.Item(1)
+                                .Top = CSng(top + 0.02 * height)
+                                .Left = CSng(left + 0.02 * width)
+                                .Width = CSng(width * 0.96)
+                                .Height = CSng(height * 0.96)
+                            End With
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
+
+
+                        
 
                         Case "Übersicht Budget"
 
@@ -4461,7 +4685,7 @@ Public Module testModule
         enableOnUpdate = False
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
-        Call storeSessionConstellation(ShowProjekte, "Last")
+        Call storeSessionConstellation("Last")
 
         If request.pingMongoDb() Then
 
@@ -5054,14 +5278,14 @@ Public Module testModule
                             diagramTitle = diagramTitle & " " & repMessages.getmsg(166)
                             kennzeichnung = "Gesamtkosten"
                         Case 4
-                            If RoleDefinitions.Contains(qualifier) Then
+                            If RoleDefinitions.containsName(qualifier) Then
                                 werteH = hproj.getRessourcenBedarf(qualifier)
                                 werteV = vglProj.getRessourcenBedarf(qualifier)
                                 diagramTitle = diagramTitle & " " & qualifier
                                 kennzeichnung = "Rolle"
                             End If
                         Case 5
-                            If CostDefinitions.Contains(qualifier) Then
+                            If CostDefinitions.containsName(qualifier) Then
                                 werteH = hproj.getKostenBedarf(qualifier)
                                 werteV = vglProj.getKostenBedarf(qualifier)
                                 diagramTitle = diagramTitle & " " & qualifier
@@ -5148,7 +5372,7 @@ Public Module testModule
 
 
 
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 '
@@ -5316,8 +5540,29 @@ Public Module testModule
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Characters.Font.Size = awinSettings.fontsizeTitle
-                    .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
+                                  Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+
                 End With
 
 
@@ -5521,12 +5766,12 @@ Public Module testModule
                     formerValues = vglProj.getGesamtKostenBedarf
 
                 Case 4
-                    If RoleDefinitions.Contains(qualifier) Then
+                    If RoleDefinitions.containsName(qualifier) Then
                         currentValues = hproj.getRessourcenBedarf(qualifier)
                         formerValues = vglProj.getRessourcenBedarf(qualifier)
                     End If
                 Case 5
-                    If CostDefinitions.Contains(qualifier) Then
+                    If CostDefinitions.containsName(qualifier) Then
                         currentValues = hproj.getKostenBedarf(qualifier)
                         formerValues = vglProj.getKostenBedarf(qualifier)
                     End If
@@ -6022,6 +6267,13 @@ Public Module testModule
             Throw New Exception(repMessages.getmsg(126))
         End If
 
+        Try
+            tabelle = pptshape.Table
+        Catch ex As Exception
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(127))
+        End Try
+
 
         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Or _
             prcTyp = DiagrammTypen(1) Or prcTyp = DiagrammTypen(2) Then
@@ -6032,6 +6284,10 @@ Public Module testModule
             ReDim ergebnisListe(0, 0)
         End If
 
+
+        ' hier wird eine Collection bestimmt, die alle Projekte enthält, die eines der Elemente enthalten  
+        Dim pNameCollection As New Collection
+        Dim tmpName As String
 
         Dim anzProjekte As Integer = ShowProjekte.Count
         Dim tmpValue As Integer = 0
@@ -6048,6 +6304,29 @@ Public Module testModule
                     If ergebnisListe(i - 1, ix - 1) = "" Then
                         found = True
                     Else
+
+                        ' Änderung tk: ergänzt, um ggf entscheiden zu können, wie dargestellt werden soll 
+                        Dim tmpStr() As String = ergebnisListe(i - 1, ix - 1).Split(New Char() {CChar(":")})
+                        If tmpStr.Length = 2 Then
+                            tmpName = tmpStr(0)
+                        ElseIf tmpStr.Length > 2 Then
+                            tmpName = ""
+                            For ti As Integer = 1 To tmpStr.Length - 2
+                                tmpName = tmpName & tmpStr(ti - 1)
+                            Next
+                        Else
+                            tmpName = tmpStr(0)
+                        End If
+
+                        Try
+                            tmpName = tmpName.Trim
+                            If Not pNameCollection.Contains(tmpName) Then
+                                pNameCollection.Add(tmpName, tmpName)
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
                         ix = ix + 1
                     End If
                 End If
@@ -6063,15 +6342,21 @@ Public Module testModule
         neededZeilen = neededZeilen + 2
         ' jetzt sind in neededzeilen die Anzahl Zeilen inkl der Bottom-Line und Header-Line für Angabe, welche Meilensteine für den Zeitraum 
 
+        ' Änderung tk: hier wird entschieden, ob in der ersten Spalte die Projektnamen aufgeführt werden , 
+        ' dann benötigt man in den Zellen nicht mehr den Projekt-Namen, dafür werden es tendenziell mehr Zeilen ... 
+        Dim pNamesInFirstSpalte As Boolean
+        If pNameCollection.Count <= 25 Then
+            pNamesInFirstSpalte = True
+            neededSpalten = neededSpalten + 1
+            neededZeilen = pNameCollection.Count + 2
+        Else
+            pNamesInFirstSpalte = False
+        End If
+
         Dim curZeile As Integer = 2
         Dim curSpalte As Integer = 1
 
-        Try
-            tabelle = pptshape.Table
-        Catch ex As Exception
-            'Throw New Exception("Shape hat keine Tabelle")
-            Throw New Exception(repMessages.getmsg(127))
-        End Try
+        
 
         Dim anzSpalten As Integer
 
@@ -6153,6 +6438,27 @@ Public Module testModule
             Loop
         End If
 
+        ' jetzt müssen die Spaltenbreiten entsprechend gesetzt werden 
+        If pNamesInFirstSpalte Then
+            Dim namesWidth As Double
+            Dim monthsWidth As Double
+            Dim gesamt As Integer = 3 + neededSpalten
+            monthsWidth = tabwidth / gesamt
+            namesWidth = 4 * monthsWidth
+
+            With tabelle
+                .Columns(1).Width = namesWidth
+
+                For i = showRangeLeft To showRangeRight
+                    .Columns(i - showRangeLeft + 2).Width = monthsWidth
+                Next
+            End With
+        Else
+            Dim monthsWidth As Double = tabwidth / (showRangeRight - showRangeLeft + 1)
+            For i = showRangeLeft To showRangeRight
+                tabelle.Columns(i - showRangeLeft + 1).Width = monthsWidth
+            Next
+        End If
 
         zeilenHoehe = tabelle.Rows(1).Height
         zeilenHoeheBottom = tabelle.Rows(tabelle.Rows.Count).Height
@@ -6163,9 +6469,16 @@ Public Module testModule
 
         ' jetzt wird die Bottom Zeile geschrieben 
         Dim startDate = StartofCalendar.AddMonths(-1)
+        Dim spaltenOffset As Integer
+        If pNamesInFirstSpalte Then
+            spaltenOffset = 1
+        Else
+            spaltenOffset = 0
+        End If
+
         For m As Integer = showRangeLeft To showRangeRight
             With tabelle
-                CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                CType(.Cell(neededZeilen, m - showRangeLeft + 1 + spaltenOffset), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
                             startDate.AddMonths(m).ToString("MMM yy", repCult)
             End With
         Next m
@@ -6175,7 +6488,7 @@ Public Module testModule
 
             Do While zeilenHoeheBottom > oldBottomHeight * 1.03
                 With tabelle
-                    For m As Integer = showRangeLeft To showRangeRight
+                    For m As Integer = showRangeLeft To showRangeRight + spaltenOffset
                         CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = _
                                                 CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size - 1
 
@@ -6258,23 +6571,105 @@ Public Module testModule
             CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = headerzeile
         End With
 
+        If pNamesInFirstSpalte Then
 
-        ' jetzt werden die eigentlichen Inhalte geschrieben 
-        With tabelle
-            For isp As Integer = 1 To neededSpalten
+            With tabelle
 
-                For ize As Integer = 1 To nrOfZeilen(isp - 1)
+                For ize As Integer = 1 To pNameCollection.Count
 
-                    If Not IsNothing(ergebnisListe(isp - 1, ize - 1)) Then
-                        CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                                                            ergebnisListe(isp - 1, ize - 1)
-                    End If
-                    
+                    Dim tmpNameC As String = CStr(pNameCollection.Item(ize))
+
+                    CType(.Cell(neededZeilen - ize, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                                                                tmpNameC
+                    CType(.Cell(neededZeilen - ize, 1), pptNS.Cell).Shape.TextFrame2.TextRange.ParagraphFormat.Alignment = _
+                                                    MsoParagraphAlignment.msoAlignLeft
+                    'Dim tmpvalues() As Double
+                    Dim tmpvalues() As String
+                    ReDim tmpvalues(showRangeRight - showRangeLeft)
+
+                    ' die neededspalten wurde ja bei pNAmesInFirstSpalte um eine erhöht ... 
+                    For i As Integer = 1 To neededSpalten - 1
+
+                        Dim found As Boolean = False
+                        Dim ix As Integer = 1
+
+                        While ix <= anzProjekte And Not found
+                            If IsNothing(ergebnisListe(i - 1, ix - 1)) Then
+                                found = True
+                            Else
+                                If ergebnisListe(i - 1, ix - 1) = "" Then
+                                    found = True
+                                Else
+
+                                    ' Änderung tk: ergänzt, um ggf entscheiden zu können, wie dargestellt werden soll 
+                                    Dim tmpStr() As String = ergebnisListe(i - 1, ix - 1).Split(New Char() {CChar(":")})
+                                    If tmpStr.Length = 2 Then
+                                        tmpName = tmpStr(0)
+                                    ElseIf tmpStr.Length > 2 Then
+                                        tmpName = ""
+                                        For ti As Integer = 1 To tmpStr.Length - 2
+                                            tmpName = tmpName & tmpStr(ti - 1)
+                                        Next
+                                    Else
+                                        tmpName = tmpStr(0)
+                                    End If
+
+                                    Try
+                                        tmpName = tmpName.Trim
+
+                                        If tmpName = tmpNameC Then
+                                            tmpvalues(i - 1) = tmpStr(tmpStr.Length - 1)
+                                        End If
+
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    ix = ix + 1
+                                End If
+                            End If
+
+                        End While
+
+                    Next
+
+
+                    For isp As Integer = 1 To showRangeRight - showRangeLeft + 1
+                        'If tmpvalues(isp - 1) > 0 Then
+                        '    CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                        '                                        tmpvalues(isp - 1).ToString
+                        'Else
+                        '    CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        'End If
+                        CType(.Cell(neededZeilen - ize, isp + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpvalues(isp - 1)
+
+                    Next
 
                 Next
+            End With
 
-            Next
-        End With
+
+
+
+        Else
+            With tabelle
+                For isp As Integer = 1 To neededSpalten
+
+                    For ize As Integer = 1 To nrOfZeilen(isp - 1)
+
+                        If Not IsNothing(ergebnisListe(isp - 1, ize - 1)) Then
+                            CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                                                                ergebnisListe(isp - 1, ize - 1)
+                        End If
+
+
+                    Next
+
+                Next
+            End With
+        End If
+        ' jetzt werden die eigentlichen Inhalte geschrieben 
+        
 
 
     End Sub
@@ -6529,7 +6924,7 @@ Public Module testModule
 
         Call awinDeleteProjectChildShapes(0)
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
             allShapes = .Shapes
             projektShape = allShapes.Item(hproj.name)
@@ -7609,8 +8004,9 @@ Public Module testModule
     ''' <param name="zeichen"></param>
     ''' <param name="farbkennung"></param>
     ''' <remarks></remarks>
-    Sub zeichneTrendSymbol(ByRef pptslide As pptNS.Slide, ByRef tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
-                                ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long)
+    Sub zeichneTrendSymbol(ByVal pptslide As pptNS.Slide, ByVal tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
+                                ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long, _
+                                Optional ByVal rechtsMittig As Boolean = False)
 
         Dim korrFaktor As Double = 1.0
         Dim newZeichen As pptNS.ShapeRange
@@ -7647,13 +8043,27 @@ Public Module testModule
 
         ' jetzt bestimmen der Left , Top Koordinaten des Pfeils und setzen der Farbe
 
-        With newZeichen(1)
 
-            .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
-            .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
-            .Fill.ForeColor.RGB = CInt(farbkennung)
+        If rechtsMittig Then
 
-        End With
+            With newZeichen(1)
+
+                .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
+                .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + tabelle.Cell(tbZeile, tbSpalte).Shape.Width - (.Width + 3)
+                .Fill.ForeColor.RGB = CInt(farbkennung)
+
+            End With
+
+        Else
+            With newZeichen(1)
+
+                .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
+                .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
+                .Fill.ForeColor.RGB = CInt(farbkennung)
+
+            End With
+
+        End If
 
 
 
@@ -7671,8 +8081,9 @@ Public Module testModule
     ''' <param name="farbkennung"></param>
     ''' <param name="lineColor"></param>
     ''' <remarks></remarks>
-    Sub zeichneTrendSymbol(ByRef pptslide As pptNS.Slide, ByRef tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
-                                    ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long, ByVal lineColor As Long)
+    Sub zeichneTrendSymbol(ByVal pptslide As pptNS.Slide, ByVal tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
+                                    ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long, ByVal lineColor As Long, _
+                                    Optional ByVal rechtsMittig As Boolean = False)
 
         Dim korrFaktor As Double = 1.0
         Dim newZeichen As pptNS.ShapeRange
@@ -7726,6 +8137,7 @@ Public Module testModule
     ''' <summary>
     ''' zeichnet die Tabelle mit den Meilensteinen
     ''' wenn eine Collection mit den Namen übergeben wird, dann werden nur die Meilensteine mit diesen Namen betrachtet 
+    ''' wenn ein Zeitraum angegeben ist, dann werden nur die Meilensteine berücksichtigt, die in diesem Zeitraum liegen
     ''' </summary>
     ''' <param name="pptShape"></param>
     ''' <param name="hproj"></param>
@@ -7745,6 +8157,14 @@ Public Module testModule
             todoCollection = hproj.getAllElemIDs(True)
         Else
             todoCollection = hproj.getElemIdsOf(selectedItems, True)
+        End If
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' falls ein Zeitraum definiert ist, werden jetzt alle Elemente rausgeschmissen, die nicht im zeitraum liegen ... 
+            ' das kann nicht bei getAllElemIDs gemacht werden, da das eine Methode von clsProjektvorlage ist, was aber kein Startdate hat ... 
+
+            todoCollection = hproj.filterbyZeitraum(todoCollection)
+
         End If
 
         Try
@@ -7781,7 +8201,7 @@ Public Module testModule
 
                         CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
                         CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
-                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.deliverables
+                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getAllDeliverables
                         If anzSpalten >= 5 Then
                             CType(.Cell(tabellenzeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.description
                         End If
@@ -7814,6 +8234,432 @@ Public Module testModule
 
     End Sub
 
+
+    ''' <summary>
+    ''' zeichnet aus der Multiprojektsicht eine tabellarische Übersicht aller Projekte inkl ihrer Veränderungen bezogen auf 
+    ''' Ergebnis, Termine, Lieferumfänge ; im Vergleichstyp kann angegeben werden, ob gegen den ersten oder letzten Stand vergichen werden soll 
+    ''' </summary>
+    ''' <param name="pptSlide">die Slide, muss für das Kopieren mit übergeben werden ...</param>
+    ''' <param name="pptShape"></param>
+    ''' <param name="gleichShape">das Shape, das für die Darstellung identisch verwendet wird </param>
+    ''' <param name="steigendShape">das Shape, das für Darstellung steigender Werte verwendet wird </param>
+    ''' <param name="fallendShape">das Shape, das zur Darstellung fallender Werte verwendet wird</param>
+    ''' <param name="vergleichstyp"></param>
+    ''' <remarks></remarks>
+    Sub zeichneTabelleProjektliste(ByVal pptSlide As pptNS.Slide, ByVal pptShape As pptNS.Shape, _
+                                   ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
+                                   ByVal vergleichstyp As Integer, _
+                                   Optional ByVal qualifier As String = "", _
+                                   Optional ByVal showPersonalBedarf As Boolean = True)
+        Dim tabelle As pptNS.Table
+        Dim zaehler As Integer = 1
+        Dim startItem As Integer = 1, endeItem As Integer = ShowProjekte.Count
+        Dim tmpStr() As String
+        Dim hproj As clsProjekt
+
+        Dim hErloes As Double, hPersKosten As Double, hSonstKosten As Double, hRisikoKosten As Double, hErgebnis As Double
+        Dim vErloes As Double, vPersKosten As Double, vSonstKosten As Double, vRisikoKosten As Double, vErgebnis As Double
+        Dim hpersonalBedarf As Double = 0.0, vPersonalBedarf As Double = 0.0
+
+        Dim deltaValue As Double
+        Dim anzahlZeilen As Integer
+
+        Dim farbePositiv As Integer = awinSettings.AmpelGruen
+        Dim farbeNeutral As Integer = awinSettings.AmpelNichtBewertet
+        Dim farbeNegativ As Integer = awinSettings.AmpelRot
+
+        Dim vproj As clsProjekt = Nothing
+        Dim zeile As Integer = 2
+        Dim spalte As Integer = 9
+
+        Try
+            tabelle = pptShape.Table
+            anzahlZeilen = tabelle.Rows.Count
+        Catch ex As Exception
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(127))
+            Exit Sub
+        End Try
+
+        If tabelle.Columns.Count < 12 Then
+            Throw New Exception(repMessages.getmsg(127))
+        End If
+
+        ' Bestimmen der Standard-Vordergrund-Farbe der potentiell einzufärbenden Felder
+        ' das ist notwendig, weil andernfalls bei einem rows.add die ggf eingefärbten Felder übernommen werden 
+        Dim stdColor As Integer = tabelle.Cell(zeile, 1).Shape.Fill.ForeColor.RGB
+        Dim stdFontFarbe As Integer = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+        Dim isBoldYN As TriState = tabelle.Cell(zeile, 9).Shape.TextFrame2.TextRange.Font.Bold
+        Dim rightMargin As Double = tabelle.Cell(zeile, 5).Shape.TextFrame2.MarginRight
+        Dim vglDate As Date = Date.Now
+
+        Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
+        qualifier = tmpQualifierStr(0)
+
+        If tmpQualifierStr.Length = 2 Then
+
+            Try
+                vglDate = CDate(tmpQualifierStr(1))
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+
+        Try
+            If qualifier.Contains("-") Then
+                tmpStr = qualifier.Split(New Char() {CChar("-")})
+                startItem = CInt(tmpStr(0))
+                endeItem = CInt(tmpStr(1))
+            End If
+        Catch ex As Exception
+            startItem = 1
+            endeItem = ShowProjekte.Count
+        End Try
+
+        zaehler = startItem
+        Do While zaehler <= endeItem And zaehler <= ShowProjekte.Count
+
+            hproj = ShowProjekte.getProject(zaehler)
+            ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
+
+            ' Ermitteln der Kennzahlen 
+            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
+
+            If showPersonalBedarf Then
+                hpersonalBedarf = hproj.getAlleRessourcen.Sum
+            End If
+
+            If zeile > anzahlZeilen Then
+                tabelle.Rows.Add()
+                ' jetzt die potenziell einzufärbenden Felder alle auf noColor setzen 
+                ' ausserdem die Margins auf den entsprechenden Wert setzen 
+                With tabelle
+
+                    stdColor = CType(.Cell(zeile, 2), pptNS.Cell).Shape.Fill.ForeColor.RGB
+                    stdFontFarbe = CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    isBoldYN = CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold
+
+                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = rightMargin
+
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
+
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
+
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.Fill.ForeColor.RGB = stdColor
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = stdFontFarbe
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = isBoldYN
+                End With
+                anzahlZeilen = anzahlZeilen + 1
+            End If
+
+            With tabelle
+                Select Case hproj.ampelStatus
+                    Case 0
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelNichtBewertet)
+                    Case 1
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelGruen)
+                    Case 2
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelGelb)
+                    Case 3
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelRot)
+                    Case Else
+                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CInt(awinSettings.AmpelNichtBewertet)
+
+                End Select
+
+                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
+                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
+
+            End With
+
+            Dim trendShapesAreDefined As Boolean
+            If vergleichstyp = PThis.current Then
+                ' es wird nichts verglichen ... 
+                trendShapesAreDefined = False
+
+            Else
+
+                ' Bestimmen, ob die Shapes auch vorhanden sind ... 
+
+                If Not IsNothing(steigendShape) And Not IsNothing(fallendShape) And Not IsNothing(gleichShape) Then
+                    trendShapesAreDefined = True
+                Else
+                    trendShapesAreDefined = False
+                End If
+
+                ' hat das Projekt bereits eine Historie ? 
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                'If vergleichstyp = PThis.letzterStand Then
+                '    vproj = projekthistorie.Last
+
+                'ElseIf vergleichstyp = PThis.beauftragung Then
+                '    vproj = projekthistorie.beauftragung
+
+                'End If
+
+                If vergleichstyp = PThis.letzterStand Then
+                    vproj = projekthistorie.ElementAtorBefore(vglDate)
+                Else
+                    vproj = projekthistorie.First
+                End If
+
+
+            End If
+
+
+
+
+            If IsNothing(vproj) Then
+                ' dieses Projekt hat noch keine Historie 
+
+                With tabelle
+                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#")
+
+                    If showPersonalBedarf Then
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString("#0.#")
+                    Else
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString("#0.#")
+                    End If
+
+                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
+                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
+
+                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                    CType(.Cell(zeile, 12), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
+                End With
+
+
+            Else
+                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
+
+                If showPersonalBedarf Then
+                    vPersonalBedarf = vproj.getAlleRessourcen.Sum
+                End If
+
+                ' hier werden die Symbole gezeichnet, die anzeigen wie sich der jeweilige Wert im Vergleich zum letzten / ersten Stand verändert hat 
+                ' angezeigt werden nur positive oder negative Abweichungen 
+
+                If hErloes - vErloes <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString("#0.#") & "/" & _
+                                hErloes.ToString("#0.#")
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hErloes > vErloes Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, steigendShape, farbePositiv, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, fallendShape, farbeNegativ, True)
+                        End If
+                    End If
+
+                Else
+                    With tabelle
+                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString("#0.#")
+                    End With
+
+                End If
+
+                Dim hValue As Double, vValue As Double
+
+                If showPersonalBedarf Then
+                    hValue = hpersonalBedarf
+                    vValue = vPersonalBedarf
+                Else
+                    hValue = hPersKosten
+                    vValue = vPersKosten
+                End If
+
+                If hValue - vValue <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString("#0.#") & "/" & _
+                                hValue.ToString("#0.#")
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hPersKosten > vPersKosten Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, steigendShape, farbeNegativ, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, fallendShape, farbePositiv, True)
+                        End If
+                    End If
+
+                Else
+
+                    With tabelle
+                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString("#0.#")
+                    End With
+
+                End If
+
+                If hSonstKosten - vSonstKosten <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString("#0.#") & "/" & _
+                                hSonstKosten.ToString("#0.#")
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hSonstKosten > vSonstKosten Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, steigendShape, farbeNegativ, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, fallendShape, farbePositiv, True)
+                        End If
+                    End If
+
+                Else
+                    With tabelle
+                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString("#0.#")
+                    End With
+                End If
+
+                If hErgebnis - vErgebnis <> 0 Then
+
+                    With tabelle
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString("#0.#") & "/" & _
+                                hErgebnis.ToString("#0.#")
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                    End With
+
+                    If trendShapesAreDefined Then
+                        If hErgebnis > vErgebnis Then
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, steigendShape, farbePositiv, True)
+                        Else
+                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, fallendShape, farbeNegativ, True)
+                        End If
+                    End If
+
+                Else
+                    With tabelle
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString("#0.#")
+                    End With
+                End If
+
+
+
+                With tabelle
+                    ' Ergebnis-Delta ? 
+                    spalte = 9
+                    deltaValue = hErgebnis - vErgebnis
+
+                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0.#")
+
+                    If deltaValue > 0 Then
+                        If deltaValue > 0.05 * hErloes Then
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelGruen
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+
+                        End If
+                    ElseIf deltaValue * -1 > 0.05 * hErloes Then
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelRot
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                    End If
+
+                    ' Termine ? 
+                    spalte = 10
+                    deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
+                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
+
+
+                    If deltaValue > 0 Then
+
+                        If deltaValue > 14 Then
+
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelRot
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+
+                        End If
+
+                    ElseIf deltaValue * -1 > 14 Then
+
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelGruen
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+
+                    End If
+
+
+                    ' Deliverables ?
+                    spalte = 11
+                    Dim hAnzahl As Integer = hproj.getDeliverables.Count
+                    Dim vAnzahl As Integer = vproj.getDeliverables.Count
+                    deltaValue = hAnzahl - vAnzahl
+
+                    If hAnzahl > 0 Or vAnzahl > 0 Then
+                        ' nur was ausgeben, wenn wenigstens in einem Projekt Deliverables definiert sind
+
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
+
+                        If deltaValue > 0 Then
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            awinSettings.AmpelGruen
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                        Else
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                awinSettings.AmpelRot
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                        End If
+
+                    End If
+
+
+                    ' TimeStamp des Vergleichsprojektes 
+                    spalte = 12
+                    Dim timeStamp As Date = vproj.timeStamp
+                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+
+                End With
+
+
+            End If
+
+            zaehler = zaehler + 1
+            zeile = zeile + 1
+
+        Loop
+
+
+    End Sub
     ''' <summary>
     ''' schreibt für jedes Projekt, das Abhängigkeiten hat, diese in eine Tabelle
     ''' </summary>
@@ -8073,6 +8919,598 @@ Public Module testModule
 
 
     End Sub
+
+    ''' <summary>
+    ''' erstellt einen Soll-Ist Vergleich zwischen letztem bzw. erstem Plan-Stand 
+    ''' </summary>
+    ''' <param name="reportObj"></param>
+    ''' <param name="heute"></param>
+    ''' <param name="auswahl">bestimmt , was verglichen werden soll </param>
+    ''' <param name="qualifier"></param>
+    ''' <param name="ersterStandDatum">gibt das Datum an, das den ersten Stand markiert</param>
+    ''' <param name="letzterStandDatum">gibt das Datum an, das den letzten Stand markiert</param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="height"></param>
+    ''' <param name="width"></param>
+    ''' <remarks></remarks>
+    Sub createSollIstOfPortfolio(ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, _
+                                 ByVal ersterStandDatum As Date, ByVal letzterStandDatum As Date, _
+                                ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
+        Dim chtobj As Excel.ChartObject
+        Dim anzDiagrams As Integer
+        Dim i As Integer, ix As Integer = 0
+        Dim found As Boolean
+        Dim abbruch As Boolean = False
+        Dim pname As String = ""
+        Dim fullname As String = ""
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
+        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim titelTeile(2) As String
+        Dim titelTeilLaengen(2) As Integer
+
+        'Dim vgl As Date
+        Dim hproj As clsProjekt
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+
+        Dim Xdatenreihe() As String
+        Dim tdatenreiheH() As Double
+        Dim tdatenreiheE() As Double
+        Dim tdatenreiheL() As Double
+
+        Dim von As Integer, bis As Integer, heuteColumn As Integer = getColumnOfDate(heute)
+        Dim pastAndFuture As Boolean = False
+        Dim future As Boolean = True
+
+        Dim ersteVersion As clsProjekt
+        Dim letzteVersion As clsProjekt
+        Dim anzSnapshots As Integer = projekthistorie.Count
+
+        Dim anzH As Integer = 0, anzE As Integer = 0, anzL As Integer = 0
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        'Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.EnableEvents = False
+        'appInstance.ScreenUpdating = False
+
+
+        ' Vorbelegungen 
+        Select Case auswahl
+            Case PThcc.perscost
+                ' Personalkosten
+                titelTeile(0) = "Retrospektive/Forecast Personalkosten (T€)" & vbLf
+                kennung = "PF Soll/Ist Personalkosten"
+
+            Case PThcc.othercost
+                ' Sonstige Kosten
+
+                titelTeile(0) = "Retrospektive/Forecast Sonstige Kosten (T€)" & vbLf
+                kennung = "PF Soll/Ist Sonstige Kosten"
+
+            Case PThcc.persbedarf
+                ' Personalbedarf Kosten
+
+                titelTeile(0) = "Retrospektive/Forecast Personentage (PT)" & vbLf
+                kennung = "PF Soll/Ist Personalbedarf"
+
+            Case PThcc.rolle
+                ' Rollen mit Qualifier
+
+                titelTeile(0) = "Retrospektive/Forecast " & qualifier & "(" & awinSettings.kapaEinheit & ")" & vbLf
+                kennung = "PF Soll/Ist Rolle " & qualifier
+
+            Case PThcc.kostenart
+                ' Kostenart mit Qualifier
+
+                titelTeile(0) = "Retrospektive/Forecast " & qualifier & " (T€)" & vbLf
+                kennung = "PF Soll/Ist Kostenart " & qualifier
+
+            Case Else
+                ' Gesamt Kosten
+
+                titelTeile(0) = "Retrospektive/Forecast Gesamtkosten (T€)" & vbLf
+                kennung = "PF Soll/Ist Gesamtkosten"
+
+        End Select
+
+        titelTeilLaengen(0) = titelTeile(0).Length
+        titelTeile(1) = currentConstellation & vbLf
+        titelTeilLaengen(1) = titelTeile(1).Length
+        titelTeile(2) = ""
+        titelTeilLaengen(2) = titelTeile(2).Length
+        diagramTitle = titelTeile(0) & titelTeile(1)
+
+        von = showRangeLeft
+        bis = showRangeRight
+
+
+
+        ReDim Xdatenreihe(1)
+
+        ReDim tdatenreiheH(1)
+        ReDim tdatenreiheL(1)
+        ReDim tdatenreiheE(1)
+
+        If heuteColumn >= von + 1 And heuteColumn <= bis Then
+            pastAndFuture = True
+            Xdatenreihe(0) = "Plan-/Istwerte Retrospektiv" & vbLf & textZeitraum(von, heuteColumn - 1)
+            Xdatenreihe(1) = "Planwerte Forecast" & vbLf & textZeitraum(heuteColumn, bis)
+        ElseIf heuteColumn > bis Then
+            future = False
+            Xdatenreihe(0) = "Plan-/Istwerte Retrospektiv" & vbLf & textZeitraum(von, bis)
+            Xdatenreihe(1) = "Planwerte Forecast" & vbLf & "existieren nicht"
+        ElseIf heuteColumn <= von Then
+            future = True
+            Xdatenreihe(0) = "Plan-/Istwerte Retrospektiv" & vbLf & "existieren nicht"
+            Xdatenreihe(1) = "Planwerte Forecast" & vbLf & textZeitraum(von, bis)
+        End If
+
+
+        ' jetzt gehen die Schleifen über alle Projekte los, die einen History Wert haben ... 
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            hproj = kvp.Value
+            pname = hproj.name
+            fullname = hproj.getShapeText
+            ersteVersion = Nothing
+            letzteVersion = Nothing
+
+            If request.pingMongoDb() Then
+                ' es soll mit der Standard-Variante verglichen werden ... 
+                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:="", _
+                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+
+                anzH = anzH + 1
+                anzSnapshots = projekthistorie.Count
+
+                If anzSnapshots = 0 Then
+                    ersteVersion = Nothing
+                    letzteVersion = Nothing
+
+                ElseIf anzSnapshots >= 1 Then
+
+                    letzteVersion = projekthistorie.ElementAtorBefore(letzterStandDatum)
+
+                    If Not IsNothing(letzteVersion) Then
+                        anzL = anzL + 1
+                    End If
+
+                    ersteVersion = projekthistorie.ElementAtorBefore(ersterStandDatum)
+                    If Not IsNothing(ersteVersion) Then
+                        anzE = anzE + 1
+                    End If
+
+                End If
+
+                Dim werteH() As Double = Nothing
+                Dim werteL() As Double = Nothing
+                Dim werteE() As Double = Nothing
+
+
+                ' Bestimmen der Werte 
+                Select Case auswahl
+                    Case PThcc.perscost
+                        ' Personalkosten
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getAllPersonalKosten
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getAllPersonalKosten
+                        End If
+
+                        werteH = hproj.getAllPersonalKosten
+
+
+                    Case PThcc.othercost
+                        ' Sonstige Kosten
+
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getGesamtAndereKosten
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getGesamtAndereKosten
+                        End If
+
+                        werteH = hproj.getGesamtAndereKosten
+
+                    Case PThcc.persbedarf
+                        ' Gesamter Personalbedarf
+
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getAlleRessourcen
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getAlleRessourcen
+                        End If
+
+                        werteH = hproj.getAlleRessourcen
+
+                    Case PThcc.rolle
+                        ' Rollen mit Qualifier
+                        Try
+                            If Not IsNothing(letzteVersion) Then
+                                werteL = letzteVersion.getRessourcenBedarf(qualifier)
+                            End If
+
+                            If Not IsNothing(ersteVersion) Then
+                                werteE = ersteVersion.getRessourcenBedarf(qualifier)
+                            End If
+
+                            werteH = hproj.getRessourcenBedarf(qualifier)
+                        Catch ex As Exception
+                            Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                        End Try
+
+                    Case PThcc.kostenart
+                        ' Kostenart mit Qualifier
+                        Try
+                            If Not IsNothing(letzteVersion) Then
+                                werteL = letzteVersion.getKostenBedarf(qualifier)
+                            End If
+
+                            If Not IsNothing(ersteVersion) Then
+                                werteE = ersteVersion.getKostenBedarf(qualifier)
+                            End If
+
+                            werteH = hproj.getKostenBedarf(qualifier)
+                        Catch ex As Exception
+                            Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                        End Try
+
+                    Case Else
+                        ' Gesamt Kosten
+                        If Not IsNothing(letzteVersion) Then
+                            werteL = letzteVersion.getGesamtKostenBedarf
+                        End If
+
+                        If Not IsNothing(ersteVersion) Then
+                            werteE = ersteVersion.getGesamtKostenBedarf
+                        End If
+
+                        werteH = hproj.getGesamtKostenBedarf
+                        auswahl = 3
+
+                End Select
+
+                Dim hsum As Double = 0.0
+                Dim ende As Integer
+
+                If pastAndFuture Then
+
+                    ende = hproj.Start + hproj.anzahlRasterElemente - 1
+                    Dim zwWert As Integer = heuteColumn - 1
+                    tdatenreiheH(0) = tdatenreiheH(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
+                                                                                pStart:=hproj.Start, pEnde:=ende, _
+                                                                                tmpValues:=werteH).Sum
+                    zwWert = heuteColumn
+                    tdatenreiheH(1) = tdatenreiheH(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
+                                                                                pStart:=hproj.Start, pEnde:=ende, _
+                                                                                tmpValues:=werteH).Sum
+
+                    If Not IsNothing(letzteVersion) Then
+
+                        ende = letzteVersion.Start + letzteVersion.anzahlRasterElemente - 1
+                        zwWert = heuteColumn - 1
+                        tdatenreiheL(0) = tdatenreiheL(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
+                                                                                    pStart:=letzteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteL).Sum
+                        zwWert = heuteColumn
+                        tdatenreiheL(1) = tdatenreiheL(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
+                                                                                    pStart:=letzteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteL).Sum
+                    End If
+
+                    If Not IsNothing(ersteVersion) Then
+                        ende = ersteVersion.Start + ersteVersion.anzahlRasterElemente - 1
+                        zwWert = heuteColumn - 1
+                        tdatenreiheE(0) = tdatenreiheE(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
+                                                                                    pStart:=ersteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteE).Sum
+                        zwWert = heuteColumn
+                        tdatenreiheE(1) = tdatenreiheE(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
+                                                                                    pStart:=ersteVersion.Start, pEnde:=ende, _
+                                                                                    tmpValues:=werteE).Sum
+                    End If
+
+
+                ElseIf future Then
+                    ' Vergangenheitswerte müssen nicht erhöht werden 
+                    tdatenreiheH(1) = tdatenreiheH(1) + werteH.Sum
+
+                    If Not IsNothing(letzteVersion) Then
+                        tdatenreiheL(1) = tdatenreiheL(1) + werteL.Sum
+                    End If
+
+                    If Not IsNothing(ersteVersion) Then
+                        tdatenreiheE(1) = tdatenreiheE(1) + werteE.Sum
+                    End If
+
+                Else
+                    tdatenreiheH(0) = tdatenreiheH(0) + werteH.Sum
+
+                    If Not IsNothing(letzteVersion) Then
+                        tdatenreiheL(0) = tdatenreiheL(0) + werteL.Sum
+                    End If
+
+                    If Not IsNothing(ersteVersion) Then
+                        tdatenreiheE(0) = tdatenreiheE(0) + werteE.Sum
+                    End If
+
+                End If
+
+
+            Else
+                'Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
+                Call MsgBox(repMessages.getmsg(81))
+            End If
+
+        Next
+
+
+
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+            '
+            ' um welches Diagramm handelt es sich ...
+            '
+            i = 1
+            found = False
+            While i <= anzDiagrams And Not found
+                Dim chtTitle As String
+                Try
+                    chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
+                Catch ex As Exception
+                    chtTitle = " "
+                End Try
+
+                If chtTitle = diagramTitle Then
+                    found = True
+
+                Else
+                    i = i + 1
+                End If
+
+            End While
+
+            If found Then
+                'Call MsgBox("Chart wird bereits angezeigt ...")
+                reportObj = CType(.ChartObjects(i), Excel.ChartObject)
+                appInstance.EnableEvents = formerEE
+                'appInstance.ScreenUpdating = formerSU
+                Exit Sub
+            Else
+                With appInstance.Charts.Add
+                    ' remove extra series
+                    Do Until .SeriesCollection.Count = 0
+                        .SeriesCollection(1).Delete()
+                    Loop
+
+                    .HasAxis(Excel.XlAxisType.xlCategory) = True
+                    .HasAxis(Excel.XlAxisType.xlValue) = True
+
+                    'Dim ax As Excel.Axis
+
+                    'With ax
+                    '    .MajorUnit = 10000
+                    'End With
+
+                    With .Axes(Excel.XlAxisType.xlCategory)
+                        .HasTitle = False
+                        '.MinimumScale = 0
+                        'With .AxisTitle
+                        '    .Characters.text = "Monate"
+                        '    .Font.Size = 8
+                        'End With
+                    End With
+
+                    With .Axes(Excel.XlAxisType.xlValue)
+                        .HasTitle = False
+                        .HasMajorGridlines = False
+                        .hasminorgridlines = False
+                        '.MajorUnit = 10000
+                        '.MinorUnit = 10000
+                        '.MaximumScale = maxscale
+                        '.MinimumScale = 0
+
+                        'With .AxisTitle
+                        '    .Characters.text = "Kosten"
+                        '    .Font.Size = 8
+                        'End With
+                    End With
+
+                    .HasLegend = True
+                    With .Legend
+                        .Position = Excel.Constants.xlTop
+                        .Font.Size = awinSettings.fontsizeLegend
+                    End With
+                    .HasTitle = True
+                    .ChartTitle.Text = diagramTitle
+                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+
+                    Dim achieved As Boolean = False
+                    Dim anzahlVersuche As Integer = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            Call Sleep(100)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    End If
+
+
+                End With
+
+                chtobj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+                'chtobj.Name = fullname & "#" & kennung & "#" & "1"
+                chtobj.Name = "Portfolio Soll/Ist" & "#" & kennung & "#" & "1"
+
+
+            End If
+
+            With chtobj.Chart
+
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + _
+                                                                   titelTeilLaengen(1) + 1, titelTeilLaengen(2)).Font.Size = awinSettings.fontsizeLegend
+
+                'series
+
+
+
+                With .SeriesCollection.NewSeries
+
+                    .name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
+                    '.name = "Baseline"
+                    .Interior.color = awinSettings.SollIstFarbeB
+                    .Values = tdatenreiheE
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnClustered
+
+                    If pastAndFuture Then
+                        For i = 0 To 1
+                            With .Points(i + 1)
+
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(tdatenreiheE(i), "###,###0")
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                            End With
+                        Next
+                    ElseIf future Then
+                        With .Points(2)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheE(1), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    Else
+                        With .Points(1)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheE(0), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    End If
+
+
+                End With
+
+
+
+                With .SeriesCollection.NewSeries
+
+                    .name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
+
+                    .Interior.color = awinSettings.SollIstFarbeL
+                    .Values = tdatenreiheL
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnClustered
+
+                    If pastAndFuture Then
+                        For i = 0 To 1
+                            With .Points(i + 1)
+
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(tdatenreiheL(i), "###,###0")
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                            End With
+                        Next
+                    ElseIf future Then
+                        With .Points(2)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheL(1), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    Else
+                        With .Points(1)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheL(0), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    End If
+
+                End With
+
+
+
+                With .SeriesCollection.NewSeries
+                    '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
+                    .name = "aktueller Stand: " & Date.Now.ToShortDateString & " (" & anzH.ToString & " P)"
+                    '.name = "Current"
+                    .Interior.color = awinSettings.SollIstFarbeC
+                    .Values = tdatenreiheH
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnClustered
+
+                    If pastAndFuture Then
+                        For i = 0 To 1
+                            With .Points(i + 1)
+
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(tdatenreiheH(i), "###,###0")
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                            End With
+                        Next
+                    ElseIf future Then
+                        With .Points(2)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheH(1), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    Else
+                        With .Points(1)
+
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(tdatenreiheH(0), "###,###0")
+                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+
+                        End With
+                    End If
+
+                End With
+                .ChartGroups(1).Overlap = -50
+                .ChartGroups(1).GapWidth = 150
+            End With
+
+
+        End With
+
+        With chtobj
+            .Top = top
+            .Left = left
+            .Height = height
+            .Width = width
+        End With
+
+        appInstance.EnableEvents = formerEE
+        reportObj = chtobj
+
+    End Sub
+
 
 
     ''' <summary>
@@ -8523,7 +9961,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -8879,8 +10317,29 @@ Public Module testModule
 
                 ' Events disablen, wegen Report erstellen
                 appInstance.EnableEvents = False
-                .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+
+                Dim achieved As Boolean = False
+                Dim anzahlVersuche As Integer = 0
+                Dim errmsg As String = ""
+                Do While Not achieved And anzahlVersuche < 10
+                    Try
+                        Call Sleep(100)
+                        .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
+                          Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                        achieved = True
+                    Catch ex As Exception
+                        errmsg = ex.Message
+                        Call Sleep(100)
+                        anzahlVersuche = anzahlVersuche + 1
+                    End Try
+                Loop
+
+                If Not achieved Then
+                    Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                End If
+
+
+
                 appInstance.EnableEvents = formerEE
                 ' Events sind wieder zurückgesetzt
             End With
@@ -9040,7 +10499,7 @@ Public Module testModule
                     tmpMinimum = projMitVariants.startDate
                     tmpMaximum = projMitVariants.endeDate
                 End If
-                
+
             Else
                 tmpMinimum = StartofCalendar.AddMonths(von - 1)
                 tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
@@ -9057,7 +10516,7 @@ Public Module testModule
                 key = 1
                 projektListe.Add(key, calcProjektKey(projMitVariants.name, projMitVariants.variantName))
             End If
-            
+
         End If
 
 
@@ -9683,7 +11142,7 @@ Public Module testModule
         monthName(10) = "Nov"
         monthName(11) = "Dec"
 
-        Dim QuartalsName() As String = {"QI", "QII", "QIII", "QIV"}
+        Dim QuartalsName() As String = {"Q1", "Q2", "Q3", "Q4"}
 
 
         Dim newShapes As pptNS.ShapeRange
@@ -9846,7 +11305,7 @@ Public Module testModule
 
         curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfYear).AddYears(1)
 
-        Do While curDatePtr < rds.PPTEndOFCalendar
+        Do While curDatePtr <= rds.PPTEndOFCalendar
             curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
             positionY(positionYPtr) = curRight
             positionYPtr = positionYPtr + 1
@@ -10525,11 +11984,11 @@ Public Module testModule
             .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
             '.Name = .Name & .Id
             .Name = swlShapeName & PTpptAnnotationType.text
-            
+
 
             ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
             shapeNameCollection.Add(.Name)
-            
+
 
             If awinSettings.mppEnableSmartPPT Then
 
@@ -10683,8 +12142,13 @@ Public Module testModule
         ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
         Dim dimension As Integer = endNr - startNr
         Dim lastEndDates(dimension) As Date
+        ' list of Phases dient dazu, die IDs der Phasen, die in dieser Zeile gezeichnet wurden aufzunehmen
+        ' damit wird ein Cap eingeführt, das heisst keine Phase wird in der Swimlane über ihrer Eltern-Phase gezeichnet 
+        Dim listOfPhases(dimension) As Collection
+
         For i As Integer = 0 To dimension
             lastEndDates(i) = StartofCalendar.AddDays(-1)
+            listOfPhases(i) = New Collection
         Next
 
         Dim maxOffsetZeile As Integer = 1
@@ -10748,12 +12212,7 @@ Public Module testModule
                                 (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
                                                                             zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
-                        Dim requiredZeilen As Integer = hproj.calcNeededLinesSwl(curPhase.nameID, _
-                                                                                           selectedPhaseIDs, _
-                                                                                           selectedMilestoneIDs, _
-                                                                                           extended, _
-                                                                                           considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
-                                                                                           considerAll)
+                        Dim requiredZeilen As Integer
 
                         ' ermittle den Zeilenoffset
                         If extended Then
@@ -10763,7 +12222,44 @@ Public Module testModule
                                                                                     extended, _
                                                                                     considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                     considerAll)
-                            zeilenoffset = findeBesteZeile(lastEndDates, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+
+                            Dim bestStart As Integer = 0
+                            ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
+                            ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
+
+                            Dim parentFound As Boolean = False
+                            Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
+                            Dim ix As Integer = maxOffsetZeile
+
+                            While ix > 0 And Not parentFound
+                                If listOfPhases(ix - 1).Count > 0 Then
+                                    Dim kx As Integer = 1
+
+                                    While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                        Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
+                                        If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                            parentFound = True
+                                        Else
+                                            kx = kx + 1
+                                        End If
+                                    End While
+
+                                    If Not parentFound Then
+                                        ix = ix - 1
+                                    End If
+
+                                Else
+                                    ix = ix - 1
+                                End If
+                            End While
+
+                            If parentFound Then
+                                bestStart = ix
+                            Else
+                                bestStart = 0
+                            End If
+
+                            zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
                         Else
                             requiredZeilen = 1
                             zeilenoffset = 1
@@ -10773,6 +12269,12 @@ Public Module testModule
                         ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
                         maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
 
+                        ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
+                        If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
+                            listOfPhases(zeilenoffset - 1).Add(curPhase.nameID, curPhase.nameID)
+                        End If
+
+                        ' merken, bis wohin in dieser Zeile bereits gezeichnet wurde 
                         If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
                             lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
                         End If
@@ -11412,7 +12914,7 @@ Public Module testModule
                                 'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
                                 ' erhänzt tk
                                 Dim phShortname As String = ""
-                                phShortname = hproj.hierarchy.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames, _
+                                phShortname = hproj.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames, _
                                                                               awinSettings.mppUseAbbreviation)
 
                                 Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
@@ -12051,11 +13553,12 @@ Public Module testModule
 
 
         '
-        ' wenn Texte gezeichnet wurden, müssen jetzt die Phasen, dann die Meilensteine in den Vordergrund geholt werden 
+        ' wenn  Texte gezeichnet wurden, müssen jetzt die Phasen in den Vordergrund geholt werden, danach auf alle Fälle auch die Meilensteine 
+        Dim anzElements As Integer
         If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or _
             awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
             ' Phasen vorholen 
-            Dim anzElements As Integer
+
             anzElements = phShapeNames.Count
 
             If anzElements > 0 Then
@@ -12073,24 +13576,27 @@ Public Module testModule
 
             End If
 
-            anzElements = msShapeNames.Count
-
-            If anzElements > 0 Then
-
-                ReDim arrayOfNames(anzElements - 1)
-                For ix = 1 To anzElements
-                    arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
-                Next
-
-                Try
-                    CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
-                Catch ex As Exception
-
-                End Try
-
-            End If
 
         End If
+
+        ' jetzt die Meilensteine in Vordergrund holen ...
+        anzElements = msShapeNames.Count
+
+        If anzElements > 0 Then
+
+            ReDim arrayOfNames(anzElements - 1)
+            For ix = 1 To anzElements
+                arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
+            Next
+
+            Try
+                CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
 
         If currentProjektIndex < projectCollection.Count And awinSettings.mppOnePage Then
             'Throw New ArgumentException("es konnten nur " & _
@@ -12144,7 +13650,7 @@ Public Module testModule
         Dim copiedShape As pptNS.ShapeRange
 
         Dim msShapeName As String = calcPPTShapeName(hproj, MS.nameID)
-        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
+        Dim msBeschriftung As String = hproj.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
                                                              awinSettings.mppUseAbbreviation)
 
         Dim x1 As Double
@@ -12263,7 +13769,7 @@ Public Module testModule
             If awinSettings.mppShowAmpel Then
                 .Glow.Color.RGB = CInt(MS.getBewertung(1).color)
                 If .Glow.Radius = 0 Then
-                    .Glow.Radius = 5
+                    .Glow.Radius = 2
                 End If
             End If
 
@@ -12366,7 +13872,7 @@ Public Module testModule
         Dim x2 As Double
 
 
-        Dim phDescription As String = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
+        Dim phDescription As String = hproj.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
 
         If PhaseDefinitions.Contains(phaseName) Then
@@ -12566,7 +14072,7 @@ Public Module testModule
         Dim x2 As Double
 
         Dim msShapeName As String = calcPPTShapeName(hproj, milestoneID)
-        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
+        Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
                                                              awinSettings.mppUseAbbreviation)
 
         If MilestoneDefinitions.Contains(milestoneName) Then
@@ -12676,7 +14182,7 @@ Public Module testModule
                 If awinSettings.mppShowAmpel Then
                     .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
                     If .Glow.Radius = 0 Then
-                        .Glow.Radius = 5
+                        .Glow.Radius = 2
                     End If
                 End If
 
@@ -13752,6 +15258,12 @@ Public Module testModule
         Dim explicit As Boolean = True
         Dim trennzeichen As Char = "#"
 
+        ' wenn qualifier leer ist , aber selectedItems etwas enthält ...
+        ' dann wird alles, was in selectedItems liegt, berücksichtigt 
+        If qualifier = "" And selectedItems.Count > 0 Then
+            qualifier = "Alle"
+        End If
+
         If qualifier.Contains("#") Then
             explicit = True
             trennzeichen = "#"
@@ -13825,12 +15337,12 @@ Public Module testModule
                             End If
 
                         Case PTpfdk.Rollen
-                            If RoleDefinitions.Contains(tmpName) Then
+                            If RoleDefinitions.containsName(tmpName) Then
                                 tmpCollection.Add(tmpName, tmpName)
                             End If
 
                         Case PTpfdk.Kosten
-                            If CostDefinitions.Contains(tmpName) Then
+                            If CostDefinitions.containsName(tmpName) Then
                                 tmpCollection.Add(tmpName, tmpName)
                             End If
 
@@ -14094,7 +15606,7 @@ Public Module testModule
                     neededSpace = maxZeilen * zeilenhoehe
                 End If
             Else
-                neededSpace = (projCollection.Count + 1) * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
+                neededSpace = projCollection.Count * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
             End If
 
 
@@ -15173,6 +16685,7 @@ Public Module testModule
 
             Try
                 'srcShape.Copy()
+
                 While Not ok2 And j < 100
                     Try
                         srcShape.Copy()
@@ -15224,6 +16737,7 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
                 'srcShape.Copy()
+
                 While Not ok2 And j < 100
                     Try
                         srcShape.Copy()
@@ -15252,6 +16766,7 @@ Public Module testModule
         If Not ok1 Then
             Call MsgBox("pptCopypptPaste Timeout oder i=" & i.ToString)
             Throw New ArgumentException("pptCopypptPaste timeout")
+
         Else
             'Call MsgBox("pptCopypptPaste erfolgreich")
         End If
@@ -15276,6 +16791,7 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
                 'srcChartobj.Copy()
+
                 While Not ok2 And j < 100
                     Try
                         srcChartobj.Copy()
@@ -15304,6 +16820,7 @@ Public Module testModule
         If Not ok1 Then
             Call MsgBox("chartCopypptPaste Timeout oder i = " & i.ToString)
             Throw New ArgumentException("chartCopypptPaste timeout")
+
         Else
             'Call MsgBox("chartCopypptPaste erfolgreich")
         End If
@@ -15326,7 +16843,9 @@ Public Module testModule
         While Not ok1 And i < 100
             Try
 
+
                 While Not ok2 And j < 100
+
                     Try
                         srcChartobj.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
                         ok2 = True
@@ -15354,6 +16873,7 @@ Public Module testModule
         If Not ok1 Then
             Call MsgBox("pictCopypptPaste Timeout oder i = " & i.ToString)
             Throw New ArgumentException("pictCopypptPaste timeout")
+
         Else
             'Call MsgBox("pictCopypptPaste erfolgreich")
         End If
@@ -15375,6 +16895,7 @@ Public Module testModule
 
         While Not ok1 And i < 100
             Try
+
 
                 While Not ok2 And j < 100
                     Try
@@ -15439,8 +16960,12 @@ Public Module testModule
         End If
 
     End Function
+
+    ' title wird zerlegt in kennzeichung und qualifier
+
+
     ''' <summary>
-    ''' title wird zerlegt in kennzeichung und qualifier
+    ''' 
     ''' </summary>
     ''' <param name="title"></param>
     ''' <param name="kennz"></param>
