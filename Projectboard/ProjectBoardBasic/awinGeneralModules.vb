@@ -4370,9 +4370,7 @@ Public Module awinGeneralModules
                                 AlleProjekte.Add(importKey, impProjekt)
                             End If
                         Else
-
                             Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
-
                         End If
 
 
