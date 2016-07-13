@@ -3082,11 +3082,11 @@ Imports System.Windows
             Next i
 
 
-        Try
-            Call importProjekteEintragen(importDate, ProjektStatus(1))
-            'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+            Try
+                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
             End Try
 
         Else
