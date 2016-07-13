@@ -2656,11 +2656,9 @@ Imports System.Windows
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-
         Dim getRPLANImport As New frmSelectImportFiles
         Dim listofVorlagen As New Collection
         Dim xlsRplanImport As Excel.Workbook
-
 
         Call projektTafelInit()
 
@@ -3096,6 +3094,8 @@ Imports System.Windows
             Call logfileSchreiben("Import wurde abgebrochen", "", -1)
 
         End If
+
+
 
         Call logfileSchliessen()
 
