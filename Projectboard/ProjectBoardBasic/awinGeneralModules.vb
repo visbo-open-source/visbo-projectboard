@@ -3672,6 +3672,8 @@ Public Module awinGeneralModules
         Dim hproj As clsProjekt = Nothing
         Dim vproj As clsProjekt = Nothing
 
+        Dim phaseWasCompletelyCovered As Boolean = False
+
         Try
             Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("VISBO"), _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -3779,77 +3781,91 @@ Public Module awinGeneralModules
                                     tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                 Next
 
-                                If tmpValues.Sum > 0 Then
 
-                                    Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
-                                    Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate), _
-                                                               ixZeitraum, ix, anzLoops)
+                                Dim ixPhase As Integer, ixZeitraum As Integer, anzLoops As Integer
+                                Dim pAnfang As Integer = getColumnOfDate(cphase.getStartDate)
+                                Dim pEnde As Integer = getColumnOfDate(cphase.getEndDate)
+                                Call awinIntersectZeitraum(pAnfang, pEnde, _
+                                                           ixZeitraum, ixPhase, anzLoops)
 
-                                    If anzLoops > 0 Then
-                                        ' es gibt eine Überdeckung
-                                        If isRole Then
-                                            Dim tmpRole As clsRolle = cphase.getRole(rcName)
-                                            ' wenn die Rolle in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
-                                            Dim didntExist As Boolean = False
 
-                                            If IsNothing(tmpRole) Then
-                                                didntExist = True
-                                                Dim dimension As Integer = cphase.relEnde - cphase.relStart
-                                                tmpRole = New clsRolle(dimension)
+                                If anzLoops > 0 Then
+                                    ' es gibt eine Überdeckung
 
-                                                With tmpRole
-                                                    .RollenTyp = RoleDefinitions.getRoledef(rcName).UID
-                                                End With
+                                    ' feststellen, ob die Phase durch den Zeitraum komplett abgedekct ist ..
+                                    ' nur dann darf die Rolle in der Phase gelöscht werden, wenn die tmpValues.sum = 0 
+                                    If anzLoops >= pEnde - pAnfang + 1 Then
+                                        phaseWasCompletelyCovered = True
+                                    Else
+                                        phaseWasCompletelyCovered = False
+                                    End If
+
+                                    If isRole Then
+                                        Dim tmpRole As clsRolle = cphase.getRole(rcName)
+                                        ' wenn die Rolle in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+                                        Dim didntExist As Boolean = False
+
+                                        If IsNothing(tmpRole) Then
+                                            didntExist = True
+                                            Dim dimension As Integer = cphase.relEnde - cphase.relStart
+                                            tmpRole = New clsRolle(dimension)
+
+                                            With tmpRole
+                                                .RollenTyp = RoleDefinitions.getRoledef(rcName).UID
+                                            End With
+                                        End If
+
+                                        Dim xWerte() As Double = tmpRole.Xwerte
+
+                                        ' jetzt werden die Werte überschrieben ...
+                                        For al As Integer = 1 To anzLoops
+                                            xWerte(ixPhase + al - 1) = tmpValues(ixZeitraum + al - 1)
+                                        Next
+
+                                        If didntExist Then
+                                            cphase.addRole(tmpRole)
+                                        Else
+                                            If tmpValues.Sum = 0 And phaseWasCompletelyCovered Then
+                                                ' Role hat existiert, Werte wurden aber auf Null gesetzt und es waren alle Werte betrachtet  
+                                                Call cphase.removeRoleByName(rcName)
                                             End If
+                                        End If
 
-                                            Dim xWerte() As Double = tmpRole.Xwerte
+                                    ElseIf isCost Then
+                                        Dim tmpCost As clsKostenart = cphase.getCost(rcName)
+                                        ' wenn die Kostenart in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+                                        Dim didntExist As Boolean = False
 
-                                            ' jetzt werden die Werte überschrieben ...
-                                            For al As Integer = 1 To anzLoops
-                                                xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
-                                            Next
+                                        If IsNothing(tmpCost) Then
+                                            didntExist = True
+                                            Dim dimension As Integer = cphase.relEnde - cphase.relStart
+                                            tmpCost = New clsKostenart(dimension)
 
-                                            If didntExist Then
-                                                cphase.addRole(tmpRole)
+                                            With tmpCost
+                                                .KostenTyp = CostDefinitions.getCostdef(rcName).UID
+                                            End With
+                                        End If
+
+                                        Dim xWerte() As Double = tmpCost.Xwerte
+
+                                        ' jetzt werden die Werte überschrieben ...
+                                        For al As Integer = 1 To anzLoops
+                                            xWerte(ixPhase + al - 1) = tmpValues(ixZeitraum + al - 1)
+                                        Next
+
+                                        If didntExist Then
+                                            cphase.AddCost(tmpCost)
+                                        Else
+                                            If tmpValues.Sum = 0 And phaseWasCompletelyCovered Then
+                                                ' Kostenart hat existiert, Werte wurden aber auf Null gesetzt und es waren alle Werte betrachtet  
+                                                Call cphase.removeCostByName(rcName)
                                             End If
-
-                                        ElseIf isCost Then
-                                            Dim tmpCost As clsKostenart = cphase.getCost(rcName)
-                                            ' wenn die Kostenart in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
-                                            Dim didntExist As Boolean = False
-
-                                            If IsNothing(tmpCost) Then
-                                                didntExist = True
-                                                Dim dimension As Integer = cphase.relEnde - cphase.relStart
-                                                tmpCost = New clsKostenart(dimension)
-
-                                                With tmpCost
-                                                    .KostenTyp = CostDefinitions.getCostdef(rcName).UID
-                                                End With
-                                            End If
-
-                                            Dim xWerte() As Double = tmpCost.Xwerte
-
-                                            ' jetzt werden die Werte überschrieben ...
-                                            For al As Integer = 1 To anzLoops
-                                                xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
-                                            Next
-
-                                            If didntExist Then
-                                                cphase.AddCost(tmpCost)
-                                            End If
-
                                         End If
 
                                     End If
-                                Else
-                                    ' Löschen der Rolle bzw. Kostenart aus dieser Phase
-                                    If isRole Then
-                                        Call cphase.removeRoleByName(rcName)
-                                    ElseIf isCost Then
-                                        Call cphase.removeCostByName(rcName)
-                                    End If
+
                                 End If
+
 
 
                             Else
@@ -10191,7 +10207,7 @@ Public Module awinGeneralModules
             i = i + 1
         End While
 
-        If returnValue = DialogResult.Abort Then
+        If returnValue = DialogResult.Abort Or returnValue = DialogResult.Retry Then
             'Call MsgBox("Customization-File schließen")
             Return False
         Else
@@ -14824,7 +14840,7 @@ Public Module awinGeneralModules
 
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
 
-            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 7 + 2 * (bis - von + 1))), Excel.Range)
 
             CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
             CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
@@ -15162,13 +15178,22 @@ Public Module awinGeneralModules
         Dim maxRows As Integer
         Dim autoFilterRange As Excel.Range = Nothing
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-            maxRows = .Rows.Count
+            maxRows = CType(.Cells(.Rows.Count, 1), Excel.Range).End(XlDirection.xlUp).Row
             autoFilterRange = CType(.Range(.Cells(1, 1), _
                                            .Cells(maxRows, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+            'If .EnableAutoFilter Then
+            '    autoFilterRange.AutoFilter()
+            'Else
+            '    .EnableAutoFilter = True
+            '    autoFilterRange.AutoFilter()
+            'End If
+
         End With
 
+
+
         'Try
-        '    autoFilterRange.AutoFilter(
+        '    ersteZeile.AutoFilter()
         'Catch ex As Exception
 
         'End Try
@@ -15279,6 +15304,7 @@ Public Module awinGeneralModules
         Catch ex As Exception
 
         End Try
+
 
         Try
             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
