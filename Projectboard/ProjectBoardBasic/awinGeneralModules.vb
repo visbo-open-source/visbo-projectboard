@@ -14760,12 +14760,23 @@ Public Module awinGeneralModules
         Dim newWB As Excel.Workbook
         Dim ersteZeile As Excel.Range
         Dim ressCostColumn As Integer
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\EditNeeds_" & _
+        Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 
         Try
 
             newWB = appInstance.Workbooks.Add()
+
             CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            If newWB.Worksheets.Count < 2 Then
+                newWB.Worksheets.Add(After:=newWB.Worksheets("VISBO"))
+                CType(appInstance.ActiveSheet, Excel.Worksheet).Name = "tmp"
+
+            End If
+            newWB.SaveAs(expFName)
 
         Catch ex As Exception
             Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
@@ -14785,7 +14796,7 @@ Public Module awinGeneralModules
         Dim tmpName As String = ""
 
         ' hier werden jetzt erst mal die Ressourcen und Kostenarten geschrieben 
-        With CType(newWB.Worksheets.Item(2), Excel.Worksheet)
+        With CType(newWB.Worksheets("tmp"), Excel.Worksheet)
 
             Dim sortedRCListe As New SortedList(Of String, String)
             For iz As Integer = 1 To RoleDefinitions.Count
@@ -14817,6 +14828,7 @@ Public Module awinGeneralModules
             offz = offz + sortedRCListe.Count
             roleCostNames = CType(.Range(.Cells(1, 1), .Cells(offz, 1)), Excel.Range)
             newWB.Names.Add(Name:="RollenKostenNamen", RefersToR1C1:=roleCostNames)
+            CType(newWB.Worksheets("tmp"), Excel.Worksheet).Visible = False    ' Worksheet "tmp" ausblenden
 
         End With
 
@@ -15271,17 +15283,21 @@ Public Module awinGeneralModules
         '             AllowSorting:=True, AllowUsingPivotTables:=True)
         'End With
 
-        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\EditNeeds_" & _
-            Date.Now.ToString.Replace(":", ".") & ".xlsx"
+        ' '' '' ''Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\EditNeeds_" & _
+        ' '' '' ''    Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        '' ''Try
+        '' ''    'appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        '' ''    'newWB.SaveAs(Filename:=expFName, ConflictResolution:=Microsoft.Office.Interop.Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        '' ''    newWB.Save()
+
+        '' ''Catch ex As Exception
+
+        '' ''End Try
 
         Try
-            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-        Catch ex As Exception
-
-        End Try
-
-        Try
-            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            'appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            newWB.Close(SaveChanges:=True)
         Catch ex As Exception
 
         End Try
