@@ -15170,24 +15170,11 @@ Public Module awinGeneralModules
 
         End With
 
-        ' jetzt die Autofilter aktivieren ... 
-        Dim maxRows As Integer
-        Dim autoFilterRange As Excel.Range = Nothing
-        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-            maxRows = .Rows.Count
-            autoFilterRange = CType(.Range(.Cells(1, 1), _
-                                           .Cells(maxRows, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
-        End With
-
-        'Try
-        '    autoFilterRange.AutoFilter(
-        'Catch ex As Exception
-
-        'End Try
-
-
+     
+        
         ' jetzt wird der RoleCostInput Bereich festgelegt 
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            Dim maxRows As Integer = .Rows.Count
             roleCostInput = CType(.Range(.Cells(2, ressCostColumn), .Cells(maxRows, ressCostColumn)), Excel.Range)
         End With
 
@@ -15296,10 +15283,15 @@ Public Module awinGeneralModules
         '' ''End Try
 
         Try
-            'appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            ' ExcelFile abspeichern und schließen
             newWB.Close(SaveChanges:=True)
         Catch ex As Exception
-
+            Throw New ArgumentException("Fehler beim Filtersetzen und Speichern" & ex.Message)
         End Try
 
         appInstance.EnableEvents = True
