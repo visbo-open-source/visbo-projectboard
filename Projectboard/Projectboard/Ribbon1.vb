@@ -2658,7 +2658,7 @@ Imports System.Windows
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectImportFiles
         Dim listofVorlagen As New Collection
-        Dim xlsRplanImport As Excel.Workbook
+        'Dim xlsRplanImport As Excel.Workbook
 
         Call projektTafelInit()
 
@@ -2985,7 +2985,7 @@ Imports System.Windows
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
         Dim outputString As String = ""
-        Dim dirName As String
+        'Dim dirName As String
         Dim dateiName As String
         Dim pname As String
         Dim importDate As Date = Date.Now

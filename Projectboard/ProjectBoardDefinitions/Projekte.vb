@@ -4390,7 +4390,7 @@ Public Module Projekte
         Dim hsum() As Double, gesamt_summe As Double
         Dim anzKostenarten As Integer
         Dim costname As String
-        Dim chtTitle As String
+        'Dim chtTitle As String
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim chtobj As Excel.ChartObject
