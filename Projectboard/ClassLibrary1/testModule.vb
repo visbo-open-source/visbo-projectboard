@@ -8317,6 +8317,9 @@ Public Module testModule
 
         Do While Not endOfPage And zaehler <= objectsToDo
 
+            ' falls im folgenden ein Fehler auftritt , dann muss für die aufrufende Routine klar sein, wo objectsDone stand ...
+            objectsDone = zaehler
+
             hproj = ShowProjekte.getProject(zaehler)
             ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
 
