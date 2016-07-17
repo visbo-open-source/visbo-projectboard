@@ -3651,6 +3651,7 @@ Public Module awinGeneralModules
         Dim projectName As String = ""
         Dim variantName As String = ""
 
+        Dim phaseName As String = ""
         Dim phaseNameID As String = ""
         Dim rcName As String = ""
 
@@ -3699,10 +3700,33 @@ Public Module awinGeneralModules
                 ' jetzt Zeile für Zeile auslesen 
                 While zeile <= lastRow
 
+                    Dim valuesDidChange As Boolean = False
+
+                    Try
+
+                    Catch ex As Exception
+                        ' dann ist irgendwo was schief gegangen ... 
+
+                    End Try
+
+                    ' die Farben in der Zeile zurücksetzen , aber nicht in den Datenbereichen, weil sonst die Info zu den Phasen weg ist 
+                    CType(.Range(.Cells(zeile, 1), .Cells(zeile, startColumnData - 1)), Excel.Range).Interior.ColorIndex = XlColorIndex.xlColorIndexNone
 
                     projectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
                     variantName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    phaseNameID = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment.Text)
+                    phaseName = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                    Try
+                        Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment
+                        If Not IsNothing(cellComment) Then
+                            phaseNameID = cellComment.Text
+                        Else
+                            phaseNameID = calcHryElemKey(phaseName, False)
+                        End If
+                    Catch ex As Exception
+                        phaseNameID = calcHryElemKey(phaseName, False)
+                    End Try
+
                     rcName = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                     ok = False
@@ -3753,7 +3777,7 @@ Public Module awinGeneralModules
 
                         ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
                         ' hier ist das hproj gelesen 
-                        ' jetzt prüfen, ob des die Phase gibt 
+                        ' jetzt prüfen, ob es die Phase gibt 
                         Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
                         If Not IsNothing(cphase) Then
                             ' es gibt die Phase
@@ -3770,14 +3794,26 @@ Public Module awinGeneralModules
                                 isRole = False
                             End If
 
+                            ' jetzt werden die Werte ausgelesen ... 
+                            ' die müssen an der Stelle ausgelesen werden, weil eine fehlende Rolle/kostenart nur angemeckert werden soll, 
+                            ' wenn auch tmpValues.sum > 0 
+                            ReDim tmpValues(bis - von)
+                            Dim i As Integer
+
+                            For i = 0 To bis - von
+
+                                Try
+                                    tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+                                    CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                End Try
+
+                            Next
+
+
                             ' nur weitermachen, wenn es entweder eine gültige Rolle oder gültige Kostenart ist 
                             If isRole Or isCost Then
-                                ' jetzt werden die Werte ausgelesen ... 
-                                ReDim tmpValues(bis - von)
 
-                                For i = 0 To bis - von
-                                    tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                Next
 
                                 If tmpValues.Sum > 0 Then
 
@@ -3806,6 +3842,9 @@ Public Module awinGeneralModules
 
                                             ' jetzt werden die Werte überschrieben ...
                                             For al As Integer = 1 To anzLoops
+                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                    valuesDidChange = True
+                                                End If
                                                 xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
                                             Next
 
@@ -3832,6 +3871,9 @@ Public Module awinGeneralModules
 
                                             ' jetzt werden die Werte überschrieben ...
                                             For al As Integer = 1 To anzLoops
+                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                    valuesDidChange = True
+                                                End If
                                                 xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
                                             Next
 
@@ -3844,6 +3886,7 @@ Public Module awinGeneralModules
                                     End If
                                 Else
                                     ' Löschen der Rolle bzw. Kostenart aus dieser Phase
+                                    valuesDidChange = True
                                     If isRole Then
                                         Call cphase.removeRoleByName(rcName)
                                     ElseIf isCost Then
@@ -3854,7 +3897,12 @@ Public Module awinGeneralModules
 
                             Else
                                 ' es gibt die Rolle / Kostenart nicht 
-                                CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                If tmpValues.Sum > 0 Then
+                                    CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                Else
+                                    ' keine Aktion notwendig 
+                                End If
+
                             End If
 
                         Else
@@ -3864,6 +3912,10 @@ Public Module awinGeneralModules
                     Else
                         ' Projekt- Variante existiert nicht !
                         CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                    End If
+
+                    If valuesDidChange Then
+                        hproj.diffToPrev = True
                     End If
 
                     zeile = zeile + 1
@@ -4502,7 +4554,7 @@ Public Module awinGeneralModules
             vglProj = Nothing
 
             If noComparison Then
-                ' nichts weiter tun 
+                ' nicht vergleichen, einfach in AlleProjekte rein machen 
                 If AlleProjekte.Containskey(importKey) Then
                     AlleProjekte.Remove(importKey)
                 End If
@@ -4546,7 +4598,7 @@ Public Module awinGeneralModules
 
 
                     Else
-                        ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
+                        ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
                         AlleProjekte.Add(importKey, impProjekt)
 
                     End If
@@ -4559,7 +4611,7 @@ Public Module awinGeneralModules
             
 
             ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
-            If Not IsNothing(vglProj) Then
+            If Not IsNothing(vglProj) And Not noComparison Then
 
                 Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
 
@@ -6416,7 +6468,7 @@ Public Module awinGeneralModules
 
                                 Try
 
-                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value)
+                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value).Trim
                                     Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
 
                                     If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
@@ -6994,7 +7046,7 @@ Public Module awinGeneralModules
                         Else
                             ressOff = gefundenRange.Column - rng.Column - 1
                             ressSumOffset = gefundenRange.Column - rng.Column - 2
-                            Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
+                            'Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
 
                         End If
 
@@ -15122,6 +15174,8 @@ Public Module awinGeneralModules
 
                 Dim cphase As clsPhase = kvp.Value.getPhase(p)
                 Dim phaseNameID As String = cphase.nameID
+                Dim phaseName As String = cphase.name
+                Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
                 If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                     ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
@@ -15154,8 +15208,20 @@ Public Module awinGeneralModules
                             CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
                             CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
                             CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-                            CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                            CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
                             CType(.Cells(zeile, 5), Excel.Range).Value = roleName
                             CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
                             CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
@@ -15221,8 +15287,20 @@ Public Module awinGeneralModules
                             CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
                             CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
                             CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-                            CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                            CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
                             CType(.Cells(zeile, 5), Excel.Range).Value = costName
                             CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
                             editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
@@ -15273,8 +15351,20 @@ Public Module awinGeneralModules
                             CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
                             CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
                             CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-                            CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                            CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
                             CType(.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(.Cells(zeile, 6), Excel.Range).Value = ""
                             CType(.Cells(zeile, 7), Excel.Range).Value = ""
