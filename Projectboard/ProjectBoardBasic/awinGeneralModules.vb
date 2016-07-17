@@ -9896,6 +9896,7 @@ Public Module awinGeneralModules
                         Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, spalte - 1), Excel.Range).Value)
 
                         If Not IsNothing(subRoleName) Then
+                            subRoleName = subRoleName.Trim
                             If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
 
                                 Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
