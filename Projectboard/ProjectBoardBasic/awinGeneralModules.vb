@@ -3804,6 +3804,10 @@ Public Module awinGeneralModules
 
                                 Try
                                     tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If tmpValues(i) < 0 Then
+                                        tmpValues(i) = 0
+                                        CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                    End If
                                 Catch ex As Exception
                                     CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
                                 End Try
