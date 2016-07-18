@@ -53,6 +53,11 @@ Public Class frmSelectImportFiles
             Me.Text = "Regel-Dateien auswählen"
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
             Me.alleButton.Visible = False
+        ElseIf menueAswhl = PTImpExp.massenEdit Then
+            dirname = importOrdnerNames(PTImpExp.massenEdit)
+            Me.Text = "Massen-Edit Datei auswählen"
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
         End If
 
 
@@ -133,6 +138,9 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.addElements Then
             dirName = importOrdnerNames(PTImpExp.addElements)
 
+        ElseIf menueAswhl = PTImpExp.massenEdit Then
+            dirName = importOrdnerNames(PTImpExp.massenEdit)
+
         End If
 
         For i = 1 To Me.ListImportFiles.Items.Count
@@ -185,6 +193,9 @@ Public Class frmSelectImportFiles
             selectedDateiName = dirName & "\" & ListImportFiles.Text
         ElseIf menueAswhl = PTImpExp.addElements Then
             dirName = importOrdnerNames(PTImpExp.addElements)
+            selectedDateiName = dirName & "\" & ListImportFiles.Text
+        ElseIf menueAswhl = PTImpExp.massenEdit Then
+            dirName = importOrdnerNames(PTImpExp.massenEdit)
             selectedDateiName = dirName & "\" & ListImportFiles.Text
         End If
 
