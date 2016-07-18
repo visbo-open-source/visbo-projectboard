@@ -2269,7 +2269,7 @@ Imports System.Windows
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim getMassenEditImport As New frmSelectRPlanImport
+        Dim getMassenEditImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
 
         Call projektTafelInit()
