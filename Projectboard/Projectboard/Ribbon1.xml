@@ -305,7 +305,7 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <group id ="PT6G5" label ="Testfunktionen">
+        <!--<group id ="PT6G5" label ="Testfunktionen">
           <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="aktuelle Test Funktion"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Check Hierarchien korrekt ? "  onAction ="PTTestFunktion3" />
@@ -316,7 +316,7 @@
         <group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
-        </group>
+        </group>-->
      </tab>
     </tabs>
   </ribbon>
