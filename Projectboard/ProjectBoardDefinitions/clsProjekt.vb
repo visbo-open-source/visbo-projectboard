@@ -767,7 +767,7 @@ Public Class clsProjekt
 
                     verschieden = True
                     Try
-                        tmpCollection.Add(CInt(PThcc.deliverables).ToString, CInt(PThcc.deliverables).ToString)
+                        tmpCollection.Add(CInt(PThcc.customfields).ToString, CInt(PThcc.customfields).ToString)
                     Catch ex As Exception
 
                     End Try
@@ -788,7 +788,7 @@ Public Class clsProjekt
 
                         verschieden = True
                         Try
-                            tmpCollection.Add(CInt(PThcc.deliverables).ToString, CInt(PThcc.deliverables).ToString)
+                            tmpCollection.Add(CInt(PThcc.customfields).ToString, CInt(PThcc.customfields).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -810,7 +810,7 @@ Public Class clsProjekt
 
                         verschieden = True
                         Try
-                            tmpCollection.Add(CInt(PThcc.deliverables).ToString, CInt(PThcc.deliverables).ToString)
+                            tmpCollection.Add(CInt(PThcc.customfields).ToString, CInt(PThcc.customfields).ToString)
                         Catch ex As Exception
 
                         End Try

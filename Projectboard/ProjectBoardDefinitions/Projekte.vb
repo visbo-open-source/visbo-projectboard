@@ -1244,6 +1244,7 @@ Public Module Projekte
         Dim kennung As String = " "
         Dim maxscale As Double
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
 
         Dim pname As String = hproj.name
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
@@ -1327,6 +1328,16 @@ Public Module Projekte
 
         With chtobj.Chart
 
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
 
             '' remove extra series
             'Do Until .SeriesCollection.Count = 0
@@ -1481,13 +1492,18 @@ Public Module Projekte
 
             End If
 
-
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
                 .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                       titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
+
 
         End With
 
@@ -1531,6 +1547,7 @@ Public Module Projekte
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
 
         isSingleProject = True
         projektListe.Add(hproj.name)
@@ -1766,6 +1783,17 @@ Public Module Projekte
 
             With CType(chtobj.Chart, Excel.Chart)
 
+                ' bestimmen der Fontsize Größen 
+                Try
+                    If .HasTitle Then
+                        Dim len As Integer = .ChartTitle.Text.Length
+                        fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                        fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                    End If
+                Catch ex As Exception
+
+                End Try
+
                 showLabels = True
 
                 ' Einstellungen der vorhandenen SeriesCollection merken
@@ -1943,12 +1971,15 @@ Public Module Projekte
 
                 If .HasTitle Then
                     .ChartTitle.Text = diagramTitle
+                    ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                    .ChartTitle.Font.Size = CSng(fontSize1)
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                        titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
                     ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                     '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
                     '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                    '   titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                    '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
                 End If
-
 
             End With
 
@@ -2028,6 +2059,9 @@ Public Module Projekte
             ' 
             vgl = hproj.timeStamp.AddMinutes(-1)
             letzteVersion = projekthistorie.ElementAtorBefore(vgl)
+            If IsNothing(letzteVersion) Then
+                letzteVersion = projekthistorie.First
+            End If
 
         Else
             ' Min-Max Vergleich 
@@ -2176,9 +2210,6 @@ Public Module Projekte
 
 
         ' Ende Ergänzung 18.6 Min/Max 
-
-
-
 
 
         Dim minColumn As Integer, maxColumn As Integer, heuteColumn As Integer = getColumnOfDate(heute)
@@ -3867,13 +3898,13 @@ Public Module Projekte
         Dim tdatenreihe() As Double
         Dim hsum() As Double, gesamt_summe As Double
         Dim anzRollen As Integer
-        Dim chtTitle As String
+        'Dim chtTitle As String
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim chtobj As Excel.ChartObject
         Dim ErgebnisListeR As New Collection
         Dim roleName As String
-        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
         Dim tmpcollection As New Collection
@@ -3931,21 +3962,22 @@ Public Module Projekte
             '
             i = 1
             found = False
-            While i <= anzDiagrams And Not found
-                Try
-                    chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
-                Catch ex As Exception
-                    chtTitle = " "
-                End Try
+            ' das folgende While ist irrelevant ... da chtTitle an dieser stelle immer Blamk ist 
+            ''While i <= anzDiagrams And Not found
+            ''    Try
+            ''        chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
+            ''    Catch ex As Exception
+            ''        chtTitle = " "
+            ''    End Try
 
-                If chtTitle = diagramTitle Then
-                    found = True
+            ''    If chtTitle = diagramTitle Then
+            ''        found = True
 
-                Else
-                    i = i + 1
-                End If
+            ''    Else
+            ''        i = i + 1
+            ''    End If
 
-            End While
+            ''End While
 
             If found Then
                 'Call MsgBox("Chart wird bereits angezeigt ...")
@@ -3989,8 +4021,8 @@ Public Module Projekte
                         .Font.Size = awinSettings.fontsizeLegend
                     End With
                     .HasTitle = True
-                    .ChartTitle.Text = diagramTitle
-                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                    .ChartTitle.Text = " "  ' Platzhalter 
+                    '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
 
                     Dim achieved As Boolean = False
                     Dim anzahlVersuche As Integer = 0
@@ -4078,7 +4110,14 @@ Public Module Projekte
                 'kennung = "Gesamtkosten"
             End If
 
-            chtobj.Chart.ChartTitle.Text = diagramTitle
+
+            With chtobj.Chart
+                .ChartTitle.Text = diagramTitle
+                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+            End With
+
 
 
             ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -4157,6 +4196,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
 
         Dim pname As String = hproj.name
 
@@ -4202,7 +4242,18 @@ Public Module Projekte
         'gesamt_summe = 0
 
 
-        With chtobj.Chart
+        With CType(chtobj.Chart, Excel.Chart)
+
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
 
             '' remove extra series
             Do Until .SeriesCollection.Count = 0
@@ -4266,7 +4317,7 @@ Public Module Projekte
             If auswahl = 1 Then
                 'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
                 ' tk 17.5. titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
                 titelTeilLaengen(0) = titelTeile(0).Length
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 titelTeilLaengen(1) = titelTeile(1).Length
@@ -4274,7 +4325,7 @@ Public Module Projekte
                 'kennung = "Personalbedarf"
             ElseIf auswahl = 2 Then
                 'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
                 titelTeilLaengen(0) = titelTeile(0).Length
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 titelTeilLaengen(1) = titelTeile(1).Length
@@ -4286,16 +4337,17 @@ Public Module Projekte
                 'kennung = "Gesamtkosten"
             End If
 
-            chtobj.Chart.ChartTitle.Text = diagramTitle
-
-
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                ' ur: 21.07.2014: auskommentiert für Chart-Cockpit
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                 '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                '       titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
 
 
@@ -4327,8 +4379,8 @@ Public Module Projekte
     Public Sub createCostBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                             ByVal top As Double, left As Double, height As Double, width As Double)
 
-        Dim kennung As String
-        Dim diagramTitle As String
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
         Dim anzDiagrams As Integer
         Dim found As Boolean
         Dim plen As Integer
@@ -4338,7 +4390,7 @@ Public Module Projekte
         Dim hsum() As Double, gesamt_summe As Double
         Dim anzKostenarten As Integer
         Dim costname As String
-        Dim chtTitle As String
+        'Dim chtTitle As String
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim chtobj As Excel.ChartObject
@@ -4358,25 +4410,7 @@ Public Module Projekte
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
-        If auswahl = 1 Then
-
-            'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(165) & " T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Sonstige Kosten"
-        Else
-            'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(166) & " T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Gesamtkosten"
-        End If
-
+       
 
         '
         ' hole die Projektdauer
@@ -4431,21 +4465,22 @@ Public Module Projekte
             '
             i = 1
             found = False
-            While i <= anzDiagrams And Not found
-                Try
-                    chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
-                Catch ex As Exception
-                    chtTitle = " "
-                End Try
+            ' tk 14.7.16 irrelevant , weil chtTitle = Blank an dieser stelle 
+            ''While i <= anzDiagrams And Not found
+            ''    Try
+            ''        chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
+            ''    Catch ex As Exception
+            ''        chtTitle = " "
+            ''    End Try
 
-                If chtTitle = diagramTitle Then
-                    found = True
+            ''    If chtTitle = diagramTitle Then
+            ''        found = True
 
-                Else
-                    i = i + 1
-                End If
+            ''    Else
+            ''        i = i + 1
+            ''    End If
 
-            End While
+            ''End While
 
             If found Then
                 'Call MsgBox("Chart wird bereits angezeigt ...")
@@ -4489,10 +4524,7 @@ Public Module Projekte
                         .Font.Size = awinSettings.fontsizeLegend
                     End With
                     .HasTitle = True
-                    .ChartTitle.Text = diagramTitle
-                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                    .ChartTitle.Text = " " ' Platzhalter 
 
 
                     Dim achieved As Boolean = False
@@ -4573,6 +4605,35 @@ Public Module Projekte
 
             End With
 
+
+            ' tk: an diese Stelle bewegt, damit die Gesamt-Summe mit ausgegeben werden kann 
+            If auswahl = 1 Then
+
+                'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Sonstige Kosten"
+            Else
+                'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+                'kennung = "Gesamtkosten"
+            End If
+
+            With chtobj.Chart
+                .ChartTitle.Text = diagramTitle
+                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+            End With
+
+
             ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
             With chtobj
                 .Top = top
@@ -4631,6 +4692,7 @@ Public Module Projekte
         Dim anzRollen As Integer
         Dim roleName As String
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
 
         Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
@@ -4716,12 +4778,27 @@ Public Module Projekte
 
 
 
-            With chtobj.Chart
-                '' remove extra series
-                'Do Until .SeriesCollection.Count = 0
-                '    .SeriesCollection(1).Delete()
-                'Loop
+            With CType(chtobj.Chart, Excel.Chart)
 
+                ' bestimmen der Fontsize Größen 
+                Try
+                    If .HasTitle Then
+                        Dim len As Integer = .ChartTitle.Text.Length
+                        fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                        fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                ' remove extra series
+                ''Try
+                ''    Do Until .SeriesCollection.Count = 0
+                ''        .SeriesCollection(1).Delete()
+                ''    Loop
+                ''Catch ex As Exception
+
+                ''End Try
 
                 ' -----------------------
                 ' Schreibe Über- bzw Unterauslastung 
@@ -4756,12 +4833,13 @@ Public Module Projekte
 
                 Next r
 
-                .HasTitle = True
-                .ChartTitle.Text = diagramTitle
-                ' ur: 17.7.2014 fontsize kommt vom existierenden chart
-                ' .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                '    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                If .HasTitle Then
+                    .ChartTitle.Text = diagramTitle
+                    ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                    .ChartTitle.Font.Size = CSng(fontSize1)
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                        titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+                End If
 
             End With
 
@@ -4799,6 +4877,7 @@ Public Module Projekte
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
         Dim sumdatenreihe() As Double
+        Dim hsum() As Double, gesamt_summe As Double
         Dim anzKostenarten As Integer
         Dim costname As String
         Dim pkIndex As Integer = CostDefinitions.Count
@@ -4809,29 +4888,16 @@ Public Module Projekte
         Dim tmpcollection As New Collection
         Dim kennung As String = " "
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
+
+
 
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
-        If auswahl = 1 Then
-            'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(165) & " T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-
-        Else
-            'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(166) & " T€" & vbLf & hproj.getShapeText & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeilLaengen(1) = titelTeile(1).Length
-            diagramTitle = titelTeile(0) & titelTeile(1)
-
-        End If
+        
 
 
         Dim ErgebnisListeK As Collection
@@ -4862,6 +4928,17 @@ Public Module Projekte
         ReDim tdatenreihe(plen - 1)
         ReDim sumdatenreihe(plen - 1)
 
+        If auswahl = 1 Then
+
+            If anzKostenarten = 0 Then
+                ReDim hsum(0)
+            Else
+                ReDim hsum(anzKostenarten - 1)
+            End If
+
+        Else
+            ReDim hsum(anzKostenarten) ' weil jetzt die berechneten Personalkosten dazu kommen
+        End If
 
 
         For i = 1 To plen
@@ -4874,6 +4951,18 @@ Public Module Projekte
 
         With CType(chtobj.Chart, Excel.Chart)
 
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
+            
+
             '' remove extra series
             Do Until .SeriesCollection.Count = 0
                 .SeriesCollection(1).Delete()
@@ -4884,9 +4973,14 @@ Public Module Projekte
                 'costname = "Personalkosten"
                 costname = repMessages.getmsg(164)
                 tdatenreihe = hproj.getAllPersonalKosten
+                hsum(ik) = 0
+
                 For i = 0 To plen - 1
+                    hsum(ik) = hsum(ik) + tdatenreihe(i)
                     sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
                 Next
+
+                gesamt_summe = gesamt_summe + +hsum(ik)
 
                 With .SeriesCollection.NewSeries
                     .Name = costname
@@ -4902,8 +4996,13 @@ Public Module Projekte
                 tdatenreihe = hproj.getKostenBedarf(costname)
 
                 For i = 0 To plen - 1
+                    hsum(k - ik) = hsum(k - ik) + tdatenreihe(i)
                     sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
                 Next
+
+                gesamt_summe = gesamt_summe + hsum(k - ik)
+
+
                 Dim iSerColl As Integer = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
                 With .SeriesCollection.NewSeries
@@ -4938,12 +5037,31 @@ Public Module Projekte
 
             End If
 
+            If auswahl = 1 Then
+                'titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+
+            Else
+                'titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
+                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+                titelTeilLaengen(0) = titelTeile(0).Length
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeilLaengen(1) = titelTeile(1).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+
+            End If
+
+
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
-                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
             End If
 
         End With
@@ -5351,7 +5469,7 @@ Public Module Projekte
 
         If auswahl = 1 Then
             'titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("#####.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5509,11 +5627,12 @@ Public Module Projekte
 
 
         Dim kennung As String = " "
-        Dim zE As String = awinSettings.kapaEinheit & " "
+        Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
         Dim tmpCollection As New Collection
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
 
         Dim ErgebnisListeR As Collection
 
@@ -5564,7 +5683,7 @@ Public Module Projekte
 
         If auswahl = 1 Then
             'titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####.#") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5585,6 +5704,18 @@ Public Module Projekte
 
 
         With chtobj.Chart
+
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
+
             'ur:22.07.2014 wegen Chart-Cockpit
             '' remove extra series
             'Do Until .SeriesCollection.Count = 0
@@ -5613,10 +5744,10 @@ Public Module Projekte
             ' Änderung: evtl wurde ja der Titel gelöscht 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
-                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
             End If
 
 
@@ -5913,6 +6044,8 @@ Public Module Projekte
         Dim pstart As Integer
         Dim pname As String = hproj.name
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
+
         Dim kennung As String = " "
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
@@ -6005,6 +6138,17 @@ Public Module Projekte
             '    .SeriesCollection(1).Delete()
             'Loop
 
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
+
 
             'With .SeriesCollection.NewSeries
             With .SeriesCollection(1)
@@ -6037,14 +6181,19 @@ Public Module Projekte
 
             Next k
 
+
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
                 ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                 '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                 '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
-
+            
 
         End With
 
@@ -7294,6 +7443,8 @@ Public Module Projekte
         Dim kennung As String
         Dim tmpcollection As New Collection
 
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
+
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
@@ -7387,6 +7538,17 @@ Public Module Projekte
         Dim valueCrossesNull As Boolean = False
 
         With chtobj.Chart
+
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
 
             'ur:22.07.2014: bereits in Charts enthalten und soll nur mit neuen Daten bestückt werden
             '' remove extra series
@@ -7546,14 +7708,17 @@ Public Module Projekte
 
             End With
 
-
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                 '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                '    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
-
 
         End With
 

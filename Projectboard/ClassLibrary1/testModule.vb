@@ -8317,8 +8317,14 @@ Public Module testModule
 
         Do While Not endOfPage And zaehler <= objectsToDo
 
+            ' falls im folgenden ein Fehler auftritt , dann muss für die aufrufende Routine klar sein, wo objectsDone stand ...
+            objectsDone = zaehler
+
             hproj = ShowProjekte.getProject(zaehler)
             ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
+
+            ' das Vergleichsprojekt zurücksetzen ..
+            vproj = Nothing
 
             ' Ermitteln der Kennzahlen 
             hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
@@ -8382,11 +8388,16 @@ Public Module testModule
 
                 'End If
 
-                If vergleichstyp = PThis.letzterStand Then
-                    vproj = projekthistorie.ElementAtorBefore(vglDate)
-                Else
-                    vproj = projekthistorie.First
+                If Not IsNothing(projekthistorie) Then
+                    If projekthistorie.Count > 0 Then
+                        If vergleichstyp = PThis.letzterStand Then
+                            vproj = projekthistorie.ElementAtorBefore(vglDate)
+                        Else
+                            vproj = projekthistorie.First
+                        End If
+                    End If
                 End If
+                
 
 
             End If
@@ -8626,10 +8637,16 @@ Public Module testModule
                     End If
 
 
-                    ' TimeStamp des Vergleichsprojektes 
+                    ' TimeStamp des Vergleichsprojektes
                     spalte = 12
-                    Dim timeStamp As Date = vproj.timeStamp
-                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                    If Not IsNothing(vproj) Then
+                        Dim timeStamp As Date = vproj.timeStamp
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                    Else
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
+                    End If
+
+                    
 
                 End With
 

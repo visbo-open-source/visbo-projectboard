@@ -3651,6 +3651,7 @@ Public Module awinGeneralModules
         Dim projectName As String = ""
         Dim variantName As String = ""
 
+        Dim phaseName As String = ""
         Dim phaseNameID As String = ""
         Dim rcName As String = ""
 
@@ -3699,10 +3700,33 @@ Public Module awinGeneralModules
                 ' jetzt Zeile für Zeile auslesen 
                 While zeile <= lastRow
 
+                    Dim valuesDidChange As Boolean = False
+
+                    Try
+
+                    Catch ex As Exception
+                        ' dann ist irgendwo was schief gegangen ... 
+
+                    End Try
+
+                    ' die Farben in der Zeile zurücksetzen , aber nicht in den Datenbereichen, weil sonst die Info zu den Phasen weg ist 
+                    CType(.Range(.Cells(zeile, 1), .Cells(zeile, startColumnData - 1)), Excel.Range).Interior.ColorIndex = XlColorIndex.xlColorIndexNone
 
                     projectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
                     variantName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    phaseNameID = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment.Text)
+                    phaseName = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                    Try
+                        Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment
+                        If Not IsNothing(cellComment) Then
+                            phaseNameID = cellComment.Text
+                        Else
+                            phaseNameID = calcHryElemKey(phaseName, False)
+                        End If
+                    Catch ex As Exception
+                        phaseNameID = calcHryElemKey(phaseName, False)
+                    End Try
+
                     rcName = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                     ok = False
@@ -3753,7 +3777,7 @@ Public Module awinGeneralModules
 
                         ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
                         ' hier ist das hproj gelesen 
-                        ' jetzt prüfen, ob des die Phase gibt 
+                        ' jetzt prüfen, ob es die Phase gibt 
                         Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
                         If Not IsNothing(cphase) Then
                             ' es gibt die Phase
@@ -3770,14 +3794,26 @@ Public Module awinGeneralModules
                                 isRole = False
                             End If
 
+                            ' jetzt werden die Werte ausgelesen ... 
+                            ' die müssen an der Stelle ausgelesen werden, weil eine fehlende Rolle/kostenart nur angemeckert werden soll, 
+                            ' wenn auch tmpValues.sum > 0 
+                            ReDim tmpValues(bis - von)
+                            Dim i As Integer
+
+                            For i = 0 To bis - von
+
+                                Try
+                                    tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Catch ex As Exception
+                                    CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                End Try
+
+                            Next
+
+
                             ' nur weitermachen, wenn es entweder eine gültige Rolle oder gültige Kostenart ist 
                             If isRole Or isCost Then
-                                ' jetzt werden die Werte ausgelesen ... 
-                                ReDim tmpValues(bis - von)
 
-                                For i = 0 To bis - von
-                                    tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                Next
 
                                 If tmpValues.Sum > 0 Then
 
@@ -3806,6 +3842,9 @@ Public Module awinGeneralModules
 
                                             ' jetzt werden die Werte überschrieben ...
                                             For al As Integer = 1 To anzLoops
+                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                    valuesDidChange = True
+                                                End If
                                                 xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
                                             Next
 
@@ -3832,6 +3871,9 @@ Public Module awinGeneralModules
 
                                             ' jetzt werden die Werte überschrieben ...
                                             For al As Integer = 1 To anzLoops
+                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                    valuesDidChange = True
+                                                End If
                                                 xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
                                             Next
 
@@ -3844,6 +3886,7 @@ Public Module awinGeneralModules
                                     End If
                                 Else
                                     ' Löschen der Rolle bzw. Kostenart aus dieser Phase
+                                    valuesDidChange = True
                                     If isRole Then
                                         Call cphase.removeRoleByName(rcName)
                                     ElseIf isCost Then
@@ -3854,7 +3897,12 @@ Public Module awinGeneralModules
 
                             Else
                                 ' es gibt die Rolle / Kostenart nicht 
-                                CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                If tmpValues.Sum > 0 Then
+                                    CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                Else
+                                    ' keine Aktion notwendig 
+                                End If
+
                             End If
 
                         Else
@@ -3864,6 +3912,10 @@ Public Module awinGeneralModules
                     Else
                         ' Projekt- Variante existiert nicht !
                         CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                    End If
+
+                    If valuesDidChange Then
+                        hproj.diffToPrev = True
                     End If
 
                     zeile = zeile + 1
@@ -3996,295 +4048,375 @@ Public Module awinGeneralModules
                     ok = False
                     Dim sMilestone As clsMeilenstein = Nothing
                     Dim eMilestone As clsMeilenstein = Nothing
+                    ' Kommentare zurücksetzen ...
+                    Try
+                        CType(.Range(.Cells(zeile, 1), .Cells(zeile, lastColumn)), Global.Microsoft.Office.Interop.Excel.Range).ClearComments()
+                    Catch ex As Exception
+
+                    End Try
 
                     ' hier muss jetzt alles zurückgesetzt werden 
                     ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    variantName = ""
-                    custFields.Clear()
-                    capacityNeeded = ""
-
-                    ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
-                    Try
-                        Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
-                        If tmpStr.Length > 1 Then
-                            pName = tmpStr(0)
-                            variantName = tmpStr(1).Trim
-                        End If
-                    Catch ex As Exception
+                    If IsNothing(pName) Then
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                    End Try
-
-                    vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    lastSpaltenValue = spalte + 1
-                    If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
-
-                        vproj = Projektvorlagen.getProject(vorlageName)
-                        refProj = New clsProjekt
-                        vproj.copyTo(refProj)
-                        refProj.startDate = Date.Now
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
+                    ElseIf pName.Trim.Length < 2 Then
 
                         Try
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
+                        Catch ex As Exception
 
-                            lastSpaltenValue = spalte + 2
-                            responsiblePerson = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 3
-                            start = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 4
-                            ende = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 5
-                            startElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 6
-                            endElem = CStr(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 7
-                            dauer = CInt(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 8
-                            budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 9
-                            capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 10
-                            externCostInput = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 11
-                            risk = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 12
-                            sfit = CDbl(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        End Try
+                       
 
-                            'volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            'complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    Else
+                        variantName = ""
+                        custFields.Clear()
+                        capacityNeeded = ""
 
-                            lastSpaltenValue = spalte + 13
-                            businessUnit = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            lastSpaltenValue = spalte + 14
-                            description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
-                            If lastColumn > nrOfStdColumns Then
-                                ' es gibt evtl Custom fields 
-                                For i As Integer = nrOfStdColumns To lastColumn - 1
-
-                                    Try
-                                        Dim cfName As String = CStr(CType(.Cells(1, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                        Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
-
-                                        If uniqueID > 0 Then
-                                            ' es ist eine Custom Field
-
-                                            Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
-                                            Dim cfValue As Object = Nothing
-                                            Dim tstStr As String
-
-                                            Select Case cfType
-                                                Case ptCustomFields.Str
-                                                    lastSpaltenValue = spalte + i
-                                                    cfValue = CStr(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                Case ptCustomFields.Dbl
-                                                    lastSpaltenValue = spalte + i
-                                                    cfValue = CDbl(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                Case ptCustomFields.bool
-                                                    lastSpaltenValue = spalte + i
-                                                    cfValue = CBool(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                            End Select
-
-                                            Dim cfObj As New clsCustomField
-                                            With cfObj
-                                                .uid = uniqueID
-                                                .wert = cfValue
-                                                tstStr = CStr(.wert)
-                                            End With
-                                            custFields.Add(cfObj)
-                                        End If
-                                    Catch ex As Exception
-                                        CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                    End Try
-
-                                Next
+                        ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
+                        Try
+                            Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
+                            If tmpStr.Length > 1 Then
+                                pName = tmpStr(0)
+                                variantName = tmpStr(1).Trim
                             End If
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            variantName = ""
+                        End Try
 
-                            vglName = calcProjektKey(pName.Trim, variantName)
-                            inputStart = start
-                            inputEnde = ende
+                        vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        lastSpaltenValue = spalte + 1
 
-                            If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
+                        If IsNothing(vorlageName) Then
+                            CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        ElseIf vorlageName.Trim.Length = 0 Then
+                            CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        Else
+                            If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
 
-                                If DateDiff(DateInterval.Day, start, ende) > 0 Then
-                                    ' nichts tun , Ende-Datum ist ein gültiges Datum
-                                    ok = True
-                                ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
-                                    ' auch Ende ist ein gültiges Datum , liegt nur vor Start
-                                    ' also vertauschen der beiden 
-                                    Dim tmpDate As Date = ende
-                                    ende = start
-                                    start = tmpDate
-                                    ok = True
-                                Else
-                                    ' Ende Datum wird anhand der Laufzeit der Vorlage oder der Dauer berechnet
-                                    If dauer > 0 Then
-                                        ProjektdauerIndays = dauer
-                                    Else
-                                        ProjektdauerIndays = vproj.dauerInDays
+                                vproj = Projektvorlagen.getProject(vorlageName)
+                                refProj = New clsProjekt
+                                vproj.copyTo(refProj)
+                                refProj.startDate = Date.Now
+
+                                Try
+
+                                    lastSpaltenValue = spalte + 2
+                                    responsiblePerson = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    lastSpaltenValue = spalte + 3
+                                    start = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If start < StartofCalendar Then
+                                        Throw New ArgumentException("Datum vor Kalender-Start")
                                     End If
-                                    ende = calcDatum(start, ProjektdauerIndays)
-                                    ok = True
-                                End If
 
-                            ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
-                                ' hier ist Start kein gültiges Datum innerhalb der Projekt-Tafel 
-                                ' Start Datum wird anhand der Laufzeit der Vorlage berechnet
-                                If dauer > 0 Then
-                                    ProjektdauerIndays = -1 * dauer
-                                Else
-                                    ProjektdauerIndays = -1 * vproj.dauerInDays
-                                End If
+                                    lastSpaltenValue = spalte + 4
+                                    ende = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If ende < StartofCalendar Then
+                                        Throw New ArgumentException("Datum vor Kalender-Start")
+                                    End If
 
-                                start = calcDatum(ende, ProjektdauerIndays)
+                                    lastSpaltenValue = spalte + 5
+                                    startElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                                If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
-                                    ' Start ist ein korrektes Datum 
-                                    ok = True
-                                Else
-                                    CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "Start liegt vor Kalender-Start "
+                                    lastSpaltenValue = spalte + 6
+                                    endElem = CStr(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    lastSpaltenValue = spalte + 7
+                                    dauer = CInt(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    lastSpaltenValue = spalte + 8
+                                    budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If budget < 0 Then
+                                        Throw New ArgumentException("negative Werte nicht zugelassen!")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 9
+                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If Not isValidRoleCostInput(capacityNeeded, True) Then
+                                        Throw New ArgumentException("ungültige Kapa-Angabe")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 10
+                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If Not isValidRoleCostInput(externCostInput, False) Then
+                                        Throw New ArgumentException("ungültige Kosten-Angabe")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 11
+                                    risk = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If risk < 0 Or risk > 10.0 Then
+                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 12
+                                    sfit = CDbl(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If sfit < 0 Or risk > 10.0 Then
+                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
+                                    End If
+
+
+                                    lastSpaltenValue = spalte + 13
+                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If Not IsNothing(businessUnit) Then
+                                        Dim bi As Integer = 0
+                                        Dim found As Boolean = False
+                                        While bi <= businessUnitDefinitions.Count - 1 And Not found
+                                            If businessUnitDefinitions.ElementAt(bi).Value.name = businessUnit Then
+                                                found = True
+                                            Else
+                                                bi = bi + 1
+                                            End If
+                                        End While
+
+                                        If Not found Then
+                                            Throw New ArgumentException("Business Unit unbekannt ..")
+                                        End If
+                                    End If
+                                    
+
+                                    lastSpaltenValue = spalte + 14
+                                    description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    If lastColumn > nrOfStdColumns Then
+                                        ' es gibt evtl Custom fields 
+                                        For i As Integer = nrOfStdColumns To lastColumn - 1
+
+                                            Try
+                                                Dim cfName As String = CStr(CType(.Cells(1, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
+
+                                                If uniqueID > 0 Then
+                                                    ' es ist eine Custom Field
+
+                                                    Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+                                                    Dim cfValue As Object = Nothing
+                                                    Dim tstStr As String
+
+                                                    Select Case cfType
+                                                        Case ptCustomFields.Str
+                                                            lastSpaltenValue = spalte + i
+                                                            cfValue = CStr(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                        Case ptCustomFields.Dbl
+                                                            lastSpaltenValue = spalte + i
+                                                            cfValue = CDbl(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                        Case ptCustomFields.bool
+                                                            lastSpaltenValue = spalte + i
+                                                            cfValue = CBool(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                    End Select
+
+                                                    Dim cfObj As New clsCustomField
+                                                    With cfObj
+                                                        .uid = uniqueID
+                                                        .wert = cfValue
+                                                        tstStr = CStr(.wert)
+                                                    End With
+                                                    custFields.Add(cfObj)
+                                                End If
+                                            Catch ex As Exception
+                                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            End Try
+
+                                        Next
+                                    End If
+
+                                    vglName = calcProjektKey(pName.Trim, variantName)
+                                    inputStart = start
+                                    inputEnde = ende
+
+                                    If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
+
+                                        If DateDiff(DateInterval.Day, start, ende) > 0 Then
+                                            ' nichts tun , Ende-Datum ist ein gültiges Datum
+                                            ok = True
+                                        ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
+                                            ' auch Ende ist ein gültiges Datum , liegt nur vor Start
+                                            ' also vertauschen der beiden 
+                                            Dim tmpDate As Date = ende
+                                            ende = start
+                                            start = tmpDate
+                                            ok = True
+                                        Else
+                                            ' Ende Datum wird anhand der Laufzeit der Vorlage oder der Dauer berechnet
+                                            If dauer > 0 Then
+                                                ProjektdauerIndays = dauer
+                                            Else
+                                                ProjektdauerIndays = vproj.dauerInDays
+                                            End If
+                                            ende = calcDatum(start, ProjektdauerIndays)
+                                            ok = True
+                                        End If
+
+                                    ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
+                                        ' hier ist Start kein gültiges Datum innerhalb der Projekt-Tafel 
+                                        ' Start Datum wird anhand der Laufzeit der Vorlage berechnet
+                                        If dauer > 0 Then
+                                            ProjektdauerIndays = -1 * dauer
+                                        Else
+                                            ProjektdauerIndays = -1 * vproj.dauerInDays
+                                        End If
+
+                                        start = calcDatum(ende, ProjektdauerIndays)
+
+                                        If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
+                                            ' Start ist ein korrektes Datum 
+                                            ok = True
+                                        Else
+                                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "Start liegt vor Kalender-Start "
+                                            ok = False
+                                        End If
+
+                                    Else
+                                        CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "ungültiges Start- und Ende-Datum"
+                                        ok = False
+                                    End If
+
+                                Catch ex As Exception
+
                                     ok = False
-                                End If
+                                    'Call MsgBox(ex.Message)
+                                    CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                    CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                End Try
+
+                                ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
+
+                                vorgabeDauer = calcDauerIndays(start, ende)
+                                Try
+
+                                    If Not IsNothing(startElem) Then
+                                        If startElem.Trim.Length > 0 Then
+                                            sMilestone = refProj.getMilestone(startElem)
+                                        End If
+                                    End If
+
+                                    If Not IsNothing(endElem) Then
+                                        If endElem.Trim.Length > 0 Then
+                                            eMilestone = refProj.getMilestone(endElem)
+                                        End If
+                                    End If
+
+                                    ' jetzt werden Start und Ende ggf neu bestimmt, so dass die Bezugs-Elemente genau so liegen 
+                                    If Not IsNothing(sMilestone) Then
+                                        abstandAnfang = DateDiff(DateInterval.Day, refProj.startDate, sMilestone.getDate) * -1
+                                        If Not IsNothing(eMilestone) Then
+                                            abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
+                                            refDauer = calcDauerIndays(sMilestone.getDate, eMilestone.getDate)
+                                        Else
+                                            refDauer = calcDauerIndays(sMilestone.getDate, refProj.endeDate)
+                                        End If
+                                    Else
+                                        If Not IsNothing(eMilestone) Then
+                                            abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
+                                            refDauer = calcDauerIndays(refProj.startDate, eMilestone.getDate)
+                                        Else
+                                            refDauer = vorgabeDauer
+                                        End If
+                                    End If
+
+                                    If refDauer < 0 Then
+                                        refDauer = -1 * refDauer
+                                    ElseIf refDauer = 0 Then
+                                        refDauer = vorgabeDauer
+                                    End If
+
+                                    dauerFaktor = vorgabeDauer / refDauer
+
+                                    ' rechne den neuen Start aus 
+                                    If Not IsNothing(sMilestone) Then
+                                        start = start.AddDays(CInt(dauerFaktor * abstandAnfang))
+                                        ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
+                                    ElseIf Not IsNothing(eMilestone) Then
+                                        ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
+                                    End If
+
+                                Catch ex As Exception
+                                    ' nichts tn 
+                                End Try
+
 
                             Else
-                                CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "ungültiges Start- und Ende-Datum"
+                                'CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
+                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                 ok = False
                             End If
 
-                        Catch ex As Exception
+                            ' jetzt die Aktion durchführen, wenn alles ok 
+                            If ok Then
 
-                            ok = False
-                            'Call MsgBox(ex.Message)
-                            CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                'Projekt anlegen ,Verschiebung um 
+                                hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                        End Try
-
-                        ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
-
-                        vorgabeDauer = calcDauerIndays(start, ende)
-                        Try
-
-                            If Not IsNothing(startElem) Then
-                                If startElem.Trim.Length > 0 Then
-                                    sMilestone = refProj.getMilestone(startElem)
-                                End If
-                            End If
-
-                            If Not IsNothing(endElem) Then
-                                If endElem.Trim.Length > 0 Then
-                                    eMilestone = refProj.getMilestone(endElem)
-                                End If
-                            End If
-
-                            ' jetzt werden Start und Ende ggf neu bestimmt, so dass die Bezugs-Elemente genau so liegen 
-                            If Not IsNothing(sMilestone) Then
-                                abstandAnfang = DateDiff(DateInterval.Day, refProj.startDate, sMilestone.getDate) * -1
-                                If Not IsNothing(eMilestone) Then
-                                    abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
-                                    refDauer = calcDauerIndays(sMilestone.getDate, eMilestone.getDate)
-                                Else
-                                    refDauer = calcDauerIndays(sMilestone.getDate, refProj.endeDate)
-                                End If
-                            Else
-                                If Not IsNothing(eMilestone) Then
-                                    abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
-                                    refDauer = calcDauerIndays(refProj.startDate, eMilestone.getDate)
-                                Else
-                                    refDauer = vorgabeDauer
-                                End If
-                            End If
-
-                            If refDauer < 0 Then
-                                refDauer = -1 * refDauer
-                            ElseIf refDauer = 0 Then
-                                refDauer = vorgabeDauer
-                            End If
-
-                            dauerFaktor = vorgabeDauer / refDauer
-
-                            ' rechne den neuen Start aus 
-                            If Not IsNothing(sMilestone) Then
-                                start = start.AddDays(CInt(dauerFaktor * abstandAnfang))
-                                ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
-                            ElseIf Not IsNothing(eMilestone) Then
-                                ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
-                            End If
-
-                        Catch ex As Exception
-                            ' nichts tn 
-                        End Try
+                                ' #####################################################################
+                                ' Erstellen des Projekts nach den Angaben aus der Batch-Datei 
+                                '
+                                hproj = erstelleInventurProjekt(pName, vorlageName, variantName, _
+                                                             start, ende, budget, zeile, sfit, risk, _
+                                                             capacityNeeded, externCostInput, businessUnit, description, custFields, _
+                                                             responsiblePerson)
 
 
-                    Else
-                        'CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
-                        CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                        ok = False
-                    End If
+                                If Not IsNothing(hproj) Then
+                                    createdProjects = createdProjects + 1
+                                    ' immer als Fixiertes Projekt darstellen ..
+                                    hproj.Status = ProjektStatus(1)
 
-                    ' jetzt die Aktion durchführen, wenn alles ok 
-                    If ok Then
-
-                        'Projekt anlegen ,Verschiebung um 
-                        hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
-
-                        ' #####################################################################
-                        ' Erstellen des Projekts nach den Angaben aus der Batch-Datei 
-                        '
-                        hproj = erstelleInventurProjekt(pName, vorlageName, variantName, _
-                                                     start, ende, budget, zeile, sfit, risk, _
-                                                     capacityNeeded, externCostInput, businessUnit, description, custFields, _
-                                                     responsiblePerson)
-
-
-                        If Not IsNothing(hproj) Then
-                            createdProjects = createdProjects + 1
-                            ' immer als Fixiertes Projekt darstellen ..
-                            hproj.Status = ProjektStatus(1)
-
-                            'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
-                            If Not IsNothing(sMilestone) Then
-                                If DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart) <> 0 Then
-                                    'Call MsgBox("Differenz Start:" & DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart))
-                                    hproj.getMilestone(startElem).setDate = inputStart
-                                End If
-                            End If
-
-                            If Not IsNothing(eMilestone) Then
-                                If DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde) <> 0 Then
-                                    'Call MsgBox("Differenz Ende:" & DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde))
-                                    hproj.getMilestone(endElem).setDate = inputEnde
-                                End If
-                            End If
-
-                        Else
-                            ok = False
-                        End If
-
-
-                        If ok Then ' wenn es nicht explizit auf false gesetzt wurde, ist es an dieser Stelle immer noch true 
-                            Dim pkey As String = ""
-                            If Not hproj Is Nothing Then
-                                Try
-                                    pkey = calcProjektKey(hproj)
-
-                                    If ImportProjekte.Containskey(pkey) Then
-                                        CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                        CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
-                                    Else
-                                        ImportProjekte.Add(pkey, hproj)
+                                    'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
+                                    If Not IsNothing(sMilestone) Then
+                                        If DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart) <> 0 Then
+                                            'Call MsgBox("Differenz Start:" & DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart))
+                                            hproj.getMilestone(startElem).setDate = inputStart
+                                        End If
                                     End If
 
+                                    If Not IsNothing(eMilestone) Then
+                                        If DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde) <> 0 Then
+                                            'Call MsgBox("Differenz Ende:" & DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde))
+                                            hproj.getMilestone(endElem).setDate = inputEnde
+                                        End If
+                                    End If
 
-                                    'myCollection.Add(calcProjektKey(hproj))
-                                Catch ex As Exception
-                                    CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                    CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
-                                End Try
+                                Else
+                                    ok = False
+                                    CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                    CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
+                                End If
+
+
+                                If ok Then ' wenn es nicht explizit auf false gesetzt wurde, ist es an dieser Stelle immer noch true 
+                                    Dim pkey As String = ""
+                                    If Not hproj Is Nothing Then
+                                        Try
+                                            pkey = calcProjektKey(hproj)
+
+                                            If ImportProjekte.Containskey(pkey) Then
+                                                CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
+                                            Else
+                                                ImportProjekte.Add(pkey, hproj)
+                                            End If
+
+
+                                            'myCollection.Add(calcProjektKey(hproj))
+                                        Catch ex As Exception
+                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                        End Try
+
+                                    End If
+
+                                End If
 
                             End If
-
                         End If
 
+                        
                     End If
+                    
 
                     geleseneProjekte = geleseneProjekte + 1
                     zeile = zeile + 1
@@ -4304,6 +4436,97 @@ Public Module awinGeneralModules
                     "importiert: " & ImportProjekte.Count)
 
     End Sub
+
+    ''' <summary>
+    ''' bestimmt, ob es sich um einen gültigen Kapazitäts- bzw Kosten-Input String handelt
+    ''' alle Rollen- bzw Kostenart Namen bekannt, alle Werte >= 0 
+    ''' </summary>
+    ''' <param name="inputStr"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidRoleCostInput(ByVal inputStr As String, ByVal checkRoles As Boolean) As Boolean
+        Dim resultValue As Boolean = True
+        Dim anzDefinitions As Integer
+
+        If checkRoles Then
+            anzDefinitions = RoleDefinitions.Count
+        Else
+            anzDefinitions = CostDefinitions.Count
+        End If
+
+
+        If Not IsNothing(inputStr) Then
+            If inputStr.Trim.Length > 0 Then
+
+                Dim completeStr() As String = inputStr.Split(New Char() {CType("#", Char)}, 100)
+
+
+                ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
+                Dim i As Integer = 1
+                While i <= completeStr.Length And resultValue = True
+
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+
+                    If roleCostStr.Length = 2 Then
+
+                        Try
+                            Dim roleCostName As String = roleCostStr(0).Trim
+                            Dim roleCostSum As Double = CDbl(roleCostStr(1).Trim)
+                            If checkRoles Then
+                                If RoleDefinitions.containsName(roleCostName) And roleCostSum >= 0 Then
+                                    ' ok, nichts tun 
+                                Else
+                                    resultValue = False
+                                End If
+
+                            Else
+                                If CostDefinitions.containsName(roleCostName) And roleCostSum >= 0 Then
+                                    ' ok, nichts tun 
+                                Else
+                                    resultValue = False
+                                End If
+
+                            End If
+
+                        Catch ex As Exception
+                            resultValue = False
+                        End Try
+
+                    ElseIf roleCostStr.Length = 1 And anzDefinitions >= 1 Then
+                        ' es muss sich um eine Zahl größer 0 handeln, Rolle 1 wird angenommen 
+
+                        Try
+                            If CDbl(roleCostStr(0).Trim) >= 0 Then
+                                ' ok, nichts tun
+                            Else
+                                resultValue = False
+                            End If
+                        Catch ex As Exception
+                            resultValue = False
+                        End Try
+
+                    Else
+                        resultValue = False
+                    End If
+
+                    i = i + 1
+
+                End While
+
+
+
+            Else
+                ' leerer String, ok 
+                resultValue = True
+            End If
+        Else
+            ' Nothing, ok 
+            resultValue = True
+        End If
+
+        isValidRoleCostInput = resultValue
+
+    End Function
 
     ''' <summary>
     ''' diese Funktion verarbeitet die Import Projekte 
@@ -4331,7 +4554,7 @@ Public Module awinGeneralModules
             vglProj = Nothing
 
             If noComparison Then
-                ' nichts weiter tun 
+                ' nicht vergleichen, einfach in AlleProjekte rein machen 
                 If AlleProjekte.Containskey(importKey) Then
                     AlleProjekte.Remove(importKey)
                 End If
@@ -4375,7 +4598,7 @@ Public Module awinGeneralModules
 
 
                     Else
-                        ' nicht in der Session, nicht n der Datenbank : also in AlleProjekte eintragen ... 
+                        ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
                         AlleProjekte.Add(importKey, impProjekt)
 
                     End If
@@ -4388,7 +4611,7 @@ Public Module awinGeneralModules
             
 
             ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
-            If Not IsNothing(vglProj) Then
+            If Not IsNothing(vglProj) And Not noComparison Then
 
                 Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
 
@@ -6245,7 +6468,7 @@ Public Module awinGeneralModules
 
                                 Try
 
-                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value)
+                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value).Trim
                                     Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
 
                                     If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
@@ -6823,7 +7046,7 @@ Public Module awinGeneralModules
                         Else
                             ressOff = gefundenRange.Column - rng.Column - 1
                             ressSumOffset = gefundenRange.Column - rng.Column - 2
-                            Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
+                            'Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
 
                         End If
 
@@ -9673,6 +9896,7 @@ Public Module awinGeneralModules
                         Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, spalte - 1), Excel.Range).Value)
 
                         If Not IsNothing(subRoleName) Then
+                            subRoleName = subRoleName.Trim
                             If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
 
                                 Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
@@ -14775,7 +14999,10 @@ Public Module awinGeneralModules
                 newWB.Worksheets.Add(After:=newWB.Worksheets("VISBO"))
                 CType(appInstance.ActiveSheet, Excel.Worksheet).Name = "tmp"
 
+            Else
+                CType(newWB.Worksheets.Item(2), Excel.Worksheet).Name = "tmp"
             End If
+
             newWB.SaveAs(expFName)
 
         Catch ex As Exception
@@ -14948,6 +15175,8 @@ Public Module awinGeneralModules
 
                 Dim cphase As clsPhase = kvp.Value.getPhase(p)
                 Dim phaseNameID As String = cphase.nameID
+                Dim phaseName As String = cphase.name
+                Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
                 If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                     ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
@@ -14980,8 +15209,20 @@ Public Module awinGeneralModules
                             CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
                             CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
                             CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-                            CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                            CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
                             CType(.Cells(zeile, 5), Excel.Range).Value = roleName
                             CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
                             CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
@@ -15047,8 +15288,20 @@ Public Module awinGeneralModules
                             CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
                             CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
                             CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-                            CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                            CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
                             CType(.Cells(zeile, 5), Excel.Range).Value = costName
                             CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
                             editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
@@ -15099,8 +15352,20 @@ Public Module awinGeneralModules
                             CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
                             CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
                             CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-                            CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                            CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
                             CType(.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(.Cells(zeile, 6), Excel.Range).Value = ""
                             CType(.Cells(zeile, 7), Excel.Range).Value = ""
