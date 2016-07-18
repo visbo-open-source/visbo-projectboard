@@ -262,6 +262,8 @@ Public Class frmProjPortfolioAdmin
                     If aKtionskennung = PTTvActions.activateV Then
                         ' jetzt die Variante aktivieren 
                         Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        Call aktualisiereCharts(hproj, False)
                         Call awinNeuZeichnenDiagramme(2)
                     End If
 

@@ -6,13 +6,13 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\Mahle 2017\</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Mahle 2017\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">mahle17</Value>
+      <Value Profile="(Default)">Mahle17</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\Mahle 2017\</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>

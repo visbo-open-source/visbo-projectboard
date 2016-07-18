@@ -10404,7 +10404,9 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Function loginProzedur() As Boolean
 
-        appInstance.EnableEvents = True
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
 
         Dim loginDialog As New frmAuthentication
         Dim returnValue As DialogResult
@@ -10419,12 +10421,17 @@ Public Module awinGeneralModules
             i = i + 1
         End While
 
-        If returnValue = DialogResult.Abort Then
+        If returnValue = DialogResult.Abort Or i >= 5 Then
             'Call MsgBox("Customization-File schließen")
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
             Return False
         Else
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
             Return True
         End If
+
     End Function
 
     ''' <summary>
