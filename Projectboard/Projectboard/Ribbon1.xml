@@ -113,7 +113,7 @@
           </menu>
           <separator id="PT1G1s4"/>
           <button id="PT1G1B1" label="Sprach-Einstellung" onAction="PTSpracheinstellung" supertip="Einstellung der möglichen Sprache für die Reports"/>              
-          <button id="PT1G1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
+          <!--<button id="PT1G1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
         </group>
       </tab>
       <!--
