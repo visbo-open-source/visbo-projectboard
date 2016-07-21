@@ -33,9 +33,13 @@ Public Module Module1
     Public iWertFarbe As Object
     'Public HoehePrcChart As Double
 
+
     Public myProjektTafel As String = ""
     Public myCustomizationFile As String
     Public myLogfile As String
+
+    ' gibt an, in welchem Modus sich aktuell die Projekt-Tafe befindet 
+    Public currentProjektTafelModus As Integer
 
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
     Public repMessages As clsReportMessages
@@ -200,6 +204,10 @@ Public Module Module1
         bool = 2
     End Enum
 
+    Public Enum ptModus
+        graficboard = 0
+        massEditRessCost = 1
+    End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
     Public Enum ptRplanNamen

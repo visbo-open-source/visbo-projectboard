@@ -54,6 +54,7 @@ Imports System.Windows
 
     Sub PTNeueKonstellation(control As IRibbonControl)
 
+
         Dim storeConstellationFrm As New frmStoreConstellation
         Dim returnValue As DialogResult
         Dim constellationName As String
@@ -78,7 +79,7 @@ Imports System.Windows
                 End If
                 Call storeSessionConstellation(constellationName)
 
-              
+
                 ' speichern der Konstellation mit constellationName in DB
                 If storeToDB Then
 
@@ -1538,6 +1539,130 @@ Imports System.Windows
 
 
     End Sub
+    Private Sub enableControls(ByVal modus As Integer)
+
+        If modus = ptModus.graficboard Then
+            visboZustaende.projectBoardMode = modus
+
+            ' jetzt werden die Ribbon Controls gesetzt 
+
+
+        ElseIf modus = ptModus.massEditRessCost Then
+            visboZustaende.projectBoardMode = modus
+
+        End If
+
+        Me.ribbon.Invalidate()
+
+    End Sub
+
+    Function chckVisibility(control As IRibbonControl) As Boolean
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            Select Case control.Id
+                Case "PT2G1M2B4" ' Bearbeiten - Zeile einfügen
+                    chckVisibility = False
+                Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
+                    chckVisibility = False
+                Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
+                    chckVisibility = False
+                Case "PT2G1M2B7" ' zurück zur Multiprojekt-Tafel
+                    chckVisibility = False
+                Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
+                    chckVisibility = False
+                Case "PT6G2B4" ' Einstellungen - Berechnung - Platzhalter Rollen automatisch reduzieren
+                    chckVisibility = False
+                Case Else
+                    chckVisibility = True
+            End Select
+        Else
+            Select Case control.Id
+                Case "PTX" ' Multiprojekt-Info
+                    chckVisibility = False
+                Case "PT0" ' Einzelprojekt-Info
+                    chckVisibility = False
+                Case "PT7" ' Cockpit
+                    chckVisibility = False
+                Case "PT1" ' Reports
+                    chckVisibility = False
+                Case "PT2G1M0" ' neues Projekt anlegen
+                    chckVisibility = False
+                Case "PT2G1M1B0" ' neue Variante anlegen
+                    chckVisibility = False
+                Case "PT2G1M1B2" ' Variante löschen    
+                    chckVisibility = False
+                Case "PT2G1M1B3" ' Variante übernehmen    
+                    chckVisibility = False
+                Case "PT2G1M2B1" ' Ressourcen und Kosten   
+                    chckVisibility = False
+                Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
+                    chckVisibility = False
+                Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
+                    chckVisibility = False
+                Case "PT2G1B2" ' Fixieren
+                    chckVisibility = False
+                Case "PT2G1B3" ' Fixierung aufheben
+                    chckVisibility = False
+                Case "PT2G1B4" ' Beschriften
+                    chckVisibility = False
+                Case "PT2G1B5" ' alle Beschriftungen löschen
+                    chckVisibility = False
+                Case "PT2G1B6" ' Extended View
+                    chckVisibility = False
+                Case "PT2G1B7" ' Extended View aufheben
+                    chckVisibility = False
+                Case "PT2G2" ' Bearbeiten - Multiprojekt-Szenario
+                    chckVisibility = False
+                Case "PT2G3" ' Bearbeiten - Session
+                    chckVisibility = False
+                Case "PT4" ' Datenmanagement
+                    chckVisibility = False
+                Case "PT6G1" ' Einstellungen - Visualisierung
+                    chckVisibility = False
+                Case "PT6G2B1" ' Einstellungen - Berechnung - Dehnen/Stauchen
+                    chckVisibility = False
+                Case "PT6G2B2" ' Phasenhäufigkeit anteilig berechnen
+                    chckVisibility = False
+                Case "PT6G3" ' Lade- und Import-Vorgänge
+                    chckVisibility = False
+                Case Else
+                    chckVisibility = True
+            End Select
+
+        End If
+    End Function
+    Sub Tom2G2MassEdit(control As IRibbonControl)
+
+
+        Call projektTafelInit()
+
+
+        Call enableControls(ptModus.massEditRessCost)
+
+        'Call MsgBox("jetzt sind die entsprechend disabled ...")
+
+        'Call enableControls(ptModus.graficboard)
+
+        
+
+
+    End Sub
+
+    Sub PTbackToProjectBoard(control As IRibbonControl)
+
+
+        Call projektTafelInit()
+
+
+        Call enableControls(ptModus.graficboard)
+
+        'Call MsgBox("jetzt ist wieder Graphical Board  ...")
+
+        'Call enableControls(ptModus.graficboard)
+
+
+
+
+    End Sub
 
     ''' <summary>
     ''' Attribute eines Projektes bearbeiten 
@@ -1629,7 +1754,7 @@ Imports System.Windows
                     Else
                         Call MsgBox("bitte erst eine Variante anlegen")
                     End If
-                    
+
 
                 Catch ex As Exception
                     Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Resources")
@@ -1864,7 +1989,7 @@ Imports System.Windows
 
         Call PBBNameHierarchySelAction(control.Id)
 
-        
+
 
     End Sub
 
@@ -2195,7 +2320,7 @@ Imports System.Windows
         Call PBBBHTCHierarchySelAction(control.Id, Nothing)
 
         appInstance.ScreenUpdating = True
-        
+
     End Sub
 
 
@@ -3159,40 +3284,40 @@ Imports System.Windows
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
             Dim i As Integer
-            For i = 1 To listOfVorlagen.Count
+            For i = 1 To listofVorlagen.Count
                 dateiName = listofVorlagen.Item(i).ToString
 
-                
-                    ' '' ''Dim skip As Boolean = False
+
+                ' '' ''Dim skip As Boolean = False
 
 
-                    ' '' ''Try
-                    ' '' ''    appInstance.Workbooks.Open(dateiName)
-                    ' '' ''Catch ex1 As Exception
-                    ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
-                    ' '' ''    skip = True
-                    ' '' ''End Try
+                ' '' ''Try
+                ' '' ''    appInstance.Workbooks.Open(dateiName)
+                ' '' ''Catch ex1 As Exception
+                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
+                ' '' ''    skip = True
+                ' '' ''End Try
 
-                    ' '' ''If Not skip Then
-                    ' '' ''    pname = ""
-                    hproj = New clsProjekt
+                ' '' ''If Not skip Then
+                ' '' ''    pname = ""
+                hproj = New clsProjekt
+                Try
+                    Call awinImportMSProject("", dateiName, hproj, importDate)
+
                     Try
-                        Call awinImportMSProject("", dateiName, hproj, importDate)
+                        Dim keyStr As String = calcProjektKey(hproj)
+                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                        myCollection.Add(calcProjektKey(hproj))
+                    Catch ex2 As Exception
+                        Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+                    End Try
 
-                        Try
-                            Dim keyStr As String = calcProjektKey(hproj)
-                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                            myCollection.Add(calcProjektKey(hproj))
-                        Catch ex2 As Exception
-                            Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
-                        End Try
+                    ' ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
 
-                        ' ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-
-                    Catch ex1 As Exception
-                        ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                        Call MsgBox(ex1.Message)
-                        Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
+                Catch ex1 As Exception
+                    ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                    Call MsgBox(ex1.Message)
+                    Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
                 End Try
 
             Next i
@@ -3378,7 +3503,7 @@ Imports System.Windows
         Catch ex As Exception
             Call MsgBox(ex.Message)
         End Try
-        
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -3768,59 +3893,56 @@ Imports System.Windows
 
     End Sub
 
-    Sub PTShowSelectedObjects(control As IRibbonControl, ByRef pressed As Boolean)
+    Public Function PTShowSelectedObjects(control As IRibbonControl) As Boolean
 
-        awinSettings.showValuesOfSelected = Not awinSettings.showValuesOfSelected
-        pressed = awinSettings.showValuesOfSelected
+        PTShowSelectedObjects = awinSettings.showValuesOfSelected
 
-    End Sub
+    End Function
 
     Sub awinSetShowSelObj(control As IRibbonControl, ByRef pressed As Boolean)
 
-        If pressed Then
-            awinSettings.showValuesOfSelected = True
-        Else
-            awinSettings.showValuesOfSelected = False
-        End If
-
+        awinSettings.showValuesOfSelected = pressed
+        
     End Sub
 
 
-    Sub PTPropAnpassen(control As IRibbonControl, ByRef pressed As Boolean)
+    Public Function PTPropAnpassen(control As IRibbonControl) As Boolean
 
-        awinSettings.propAnpassRess = Not awinSettings.propAnpassRess
-        pressed = awinSettings.propAnpassRess
+        PTPropAnpassen = awinSettings.propAnpassRess
 
-    End Sub
+    End Function
 
     Sub awinSetPropAnpass(control As IRibbonControl, ByRef pressed As Boolean)
 
-        If pressed Then
-            awinSettings.propAnpassRess = True
-        Else
-            awinSettings.propAnpassRess = False
-        End If
+
+        awinSettings.propAnpassRess = pressed
+        
 
     End Sub
 
-    Sub PTPhaseAnteilig(control As IRibbonControl, ByRef pressed As Boolean)
-
-        awinSettings.phasesProzentual = Not awinSettings.phasesProzentual
-        pressed = awinSettings.phasesProzentual
-
-    End Sub
+    Public Function PTPhaseAnteilig(control As IRibbonControl) As Boolean
+        PTPhaseAnteilig = awinSettings.phasesProzentual
+    End Function
 
     Sub awinSetPhaseAnteilig(control As IRibbonControl, ByRef pressed As Boolean)
-
-        If pressed Then
-            awinSettings.phasesProzentual = True
-        Else
-            awinSettings.phasesProzentual = False
-        End If
-
+        awinSettings.phasesProzentual = pressed
     End Sub
 
+    Public Function PTProzAuslastung(control As IRibbonControl) As Boolean
+        PTProzAuslastung = awinSettings.mePrzAuslastung
+    End Function
 
+    Sub awinPTProzAuslastung(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.mePrzAuslastung = pressed
+    End Sub
+
+    Public Function PTautomaticReduce(control As IRibbonControl) As Boolean
+        PTautomaticReduce = awinSettings.meAutoReduce
+    End Function
+
+    Sub awinPTautomaticReduce(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.meAutoReduce = pressed
+    End Sub
     'Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
 
     '    pressed = awinSettings.mppStrict
@@ -3900,18 +4022,16 @@ Imports System.Windows
 
     'End Sub
 
-    Public Sub PT6AmpelnPressed(control As IRibbonControl, ByRef pressed As Boolean)
-        pressed = awinSettings.mppShowAmpel
-    End Sub
+    Public Function PT6AmpelnPressed(control As IRibbonControl) As Boolean
+        PT6AmpelnPressed = awinSettings.mppShowAmpel
+    End Function
 
 
     Public Sub PT6SetShowAmpeln(Control As IRibbonControl, ByRef pressed As Boolean)
 
-        If pressed Then
-            awinSettings.mppShowAmpel = True
-        Else
-            awinSettings.mppShowAmpel = False
-        End If
+
+        awinSettings.mppShowAmpel = pressed
+        
 
     End Sub
 
@@ -3963,12 +4083,12 @@ Imports System.Windows
     End Sub
 
 
-    Public Sub PT5loadprojectsInit(control As IRibbonControl, ByRef pressed As Boolean)
+    Public Function PT5loadprojectsInit(control As IRibbonControl) As Boolean
 
-        pressed = awinSettings.applyFilter
+        PT5loadprojectsInit = awinSettings.applyFilter
 
 
-    End Sub
+    End Function
 
     Public Sub PT5loadProjectsOnChange(control As IRibbonControl, ByRef pressed As Boolean)
 
