@@ -1455,10 +1455,6 @@ Public Class clsProjekte
         End Get
     End Property
 
-
-    '
-    '
-    '
     ''' <summary>
     ''' gibt für die in myCollection übergebenen Rollen die Kapazitäten zurück 
     ''' wenn includingExterns = true, dann inkl der bereits beauftragten externen Ressourcen
@@ -2335,13 +2331,15 @@ Public Class clsProjekte
     ''' wird für den Massenedit benötigt 
     ''' gibt pro Projekt, Phase und Rolle bzw. Kostenart eine Zeile zurück, die die absoluten Bedarfs-Werte im betrachteten Monat enthält und ausserdem 
     ''' pro Rolle die Gesamt bzw. monatl. Auslastungswerte 
+    ''' standardmäßig werden die prozentualen Auslastungswerte angezeigt; es können bei Setzung bon absoluteValues = true aich die noch freien Tage in dem Monat angezeigt werden 
     ''' </summary>
     ''' <param name="von"></param>
     ''' <param name="bis"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer) As Double(,)
+    Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer, _
+                                                 ByVal percentValues As Boolean) As Double(,)
         Get
             Dim tmpArray(,) As Double
             Dim anzahlRollen As Integer = RoleDefinitions.Count
@@ -2353,9 +2351,9 @@ Public Class clsProjekte
                 Dim roleName As String = tmpRole.name
 
                 ' nur für Testzwecke, nachher wieder rausmachen ...
-                If r <> roleUID Then
-                    Call MsgBox("RoleID ist ungleich laufender Nummer !")
-                End If
+                'If r <> roleUID Then
+                '    Call MsgBox("RoleID ist ungleich laufender Nummer !")
+                'End If
 
 
                 Dim roleValues() As Double
@@ -2382,24 +2380,116 @@ Public Class clsProjekte
                 End If
 
                 ' jetzt wird der Array aufgebaut
-                If kapaValues.Sum > 0 Then
-                    tmpArray(r - 1, 0) = roleValues.Sum / kapaValues.Sum
-                Else
-                    tmpArray(r - 1, 0) = 999 ' Kennzeichen für unendlich 
-                End If
 
-                For ix = 1 To bis - von + 1
-                    If kapaValues(ix - 1) > 0 Then
-                        tmpArray(r - 1, ix) = roleValues(ix - 1) / kapaValues(ix - 1)
+                If Not percentValues Then
+
+                    tmpArray(r - 1, 0) = kapaValues.Sum - roleValues.Sum
+                    For ix = 1 To bis - von + 1
+                        tmpArray(r - 1, ix) = kapaValues(ix - 1) - roleValues(ix - 1)
+                    Next
+
+                Else
+                    If kapaValues.Sum > 0 Then
+                        tmpArray(r - 1, 0) = roleValues.Sum / kapaValues.Sum
                     Else
-                        tmpArray(r - 1, ix) = 999 ' Kennzeichen für unendlich ...
+                        tmpArray(r - 1, 0) = 999 ' Kennzeichen für unendlich 
                     End If
 
-                Next
+                    For ix = 1 To bis - von + 1
+                        If kapaValues(ix - 1) > 0 Then
+                            tmpArray(r - 1, ix) = roleValues(ix - 1) / kapaValues(ix - 1)
+                        Else
+                            tmpArray(r - 1, ix) = 999 ' Kennzeichen für unendlich ...
+                        End If
+
+                    Next
+                End If
+
 
             Next
 
             getAuslastungsArray = tmpArray
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' wird für MassenEdit benötigt
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="percentValues"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAuslastungsArrayOfRole(ByVal roleID As Integer, ByVal von As Integer, ByVal bis As Integer, _
+                                                       ByVal percentValues As Boolean) As Double()
+        Get
+            Dim tmpArray() As Double
+            ReDim tmpArray(bis - von + 1)
+
+            Try
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleID)
+
+                Dim roleUID As Integer = tmpRole.UID
+                Dim roleName As String = tmpRole.name
+
+
+                Dim roleValues() As Double
+                Dim kapaValues() As Double
+                Dim myCollection As New Collection
+                Dim ix As Integer
+                Dim zeitraum As Integer = bis - von
+
+                Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
+                ReDim roleValues(zeitraum)
+                ReDim kapaValues(zeitraum)
+
+                myCollection.Add(roleName, roleName)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                myCollection.Clear()
+
+                If istSammelRolle Then
+                    ' alle Bedarfe berücksichtigen
+                    roleValues = Me.getRoleValuesInMonth(roleID:=roleName, considerAllSubRoles:=True, _
+                                                         type:=PTcbr.all)
+                Else
+                    roleValues = Me.getRoleValuesInMonth(roleName)
+                End If
+
+                ' jetzt wird der Array aufgebaut
+
+                If Not percentValues Then
+
+                    tmpArray(0) = kapaValues.Sum - roleValues.Sum
+                    For ix = 1 To bis - von + 1
+                        tmpArray(ix) = kapaValues(ix - 1) - roleValues(ix - 1)
+                    Next
+
+                Else
+                    If kapaValues.Sum > 0 Then
+                        tmpArray(0) = roleValues.Sum / kapaValues.Sum
+                    Else
+                        tmpArray(0) = 999 ' Kennzeichen für unendlich 
+                    End If
+
+                    For ix = 1 To bis - von + 1
+                        If kapaValues(ix - 1) > 0 Then
+                            tmpArray(ix) = roleValues(ix - 1) / kapaValues(ix - 1)
+                        Else
+                            tmpArray(ix) = 999 ' Kennzeichen für unendlich ...
+                        End If
+
+                    Next
+                End If
+
+            Catch ex As Exception
+                ReDim tmpArray(bis - von + 1)
+            End Try
+
+            getAuslastungsArrayOfRole = tmpArray
 
         End Get
     End Property

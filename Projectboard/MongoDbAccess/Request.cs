@@ -154,7 +154,7 @@ namespace MongoDbAccess
             {
                 var projektDB = new clsProjektDB();
                 bool ergebnis;
-                string xx = "";
+                //string xx = "";
                 projektDB.copyfrom(projekt);
                 projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
                 ergebnis = !CollectionProjects.Save(projektDB).HasLastErrorMessage;

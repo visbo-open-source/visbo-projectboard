@@ -15,9 +15,10 @@
     <ProjectGuid>{3CDE9F31-6693-4AF9-AF7F-81FAC9D0A600}</ProjectGuid>
     <SolutionID>9c1e2ee7-a36c-4ca8-b8fd-97bdf04a0cd8</SolutionID>
     <IsWebBootstrapper>False</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <PublishUrl>C:\Users\tom\Documents\privat\temp\Publish MPT\</PublishUrl>
-    <InstallUrl />
+    <InstallUrl>\\KOYTEK-NAS\backup\VISBO PRojekt-Tafel Install\</InstallUrl>
     <TargetCulture>en</TargetCulture>
     <ApplicationVersion>1.0.0.2</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
@@ -29,12 +30,11 @@
     <SupportUrl />
     <FriendlyName>Projectboard</FriendlyName>
     <OfficeApplicationDescription />
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4 %28x86 und x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

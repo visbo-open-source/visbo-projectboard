@@ -1543,8 +1543,7 @@ Imports System.Windows
 
         If modus = ptModus.graficboard Then
             visboZustaende.projectBoardMode = modus
-
-            ' jetzt werden die Ribbon Controls gesetzt 
+            Call visboZustaende.clearAuslastungsArray()
 
 
         ElseIf modus = ptModus.massEditRessCost Then
@@ -1635,16 +1634,39 @@ Imports System.Windows
 
         Call projektTafelInit()
 
+        enableOnUpdate = False
 
         Call enableControls(ptModus.massEditRessCost)
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            Dim von As Integer = showRangeLeft
+            Dim bis As Integer = showRangeRight
+
+
+            Try
+                Call writeOnlineMassEditRessCost(von, bis)
+                appInstance.EnableEvents = True
+
+                With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+                    .Activate()
+                End With
+
+            Catch ex As Exception
+                Call MsgBox("Fehler: " & ex.Message)
+                If appInstance.EnableEvents = False Then
+                    appInstance.EnableEvents = True
+                End If
+            End Try
+
+        End If
 
         'Call MsgBox("jetzt sind die entsprechend disabled ...")
 
         'Call enableControls(ptModus.graficboard)
 
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
         
-
-
     End Sub
 
     Sub PTbackToProjectBoard(control As IRibbonControl)
@@ -1655,12 +1677,56 @@ Imports System.Windows
 
         Call enableControls(ptModus.graficboard)
 
-        'Call MsgBox("jetzt ist wieder Graphical Board  ...")
+        appInstance.EnableEvents = True
 
-        'Call enableControls(ptModus.graficboard)
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            .Activate()
+        End With
 
 
 
+    End Sub
+
+    ''' <summary>
+    ''' fügt im MassenEdit Sheet eine Zeile ein, macht aber sonst noch nichts, es werden also noch keinerlei Änderungen am 
+    ''' betroffenen Projekt vorgenommen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTzeileEinfuegen(control As IRibbonControl)
+
+        Dim currentCell As Excel.Range
+        appInstance.EnableEvents = False
+
+        Try
+
+            currentCell = CType(appInstance.ActiveCell, Excel.Range)
+
+            Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
+            Dim columnStartData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("StartData"), Excel.Range).Column
+            Dim hoehe As Double = CDbl(currentCell.Height)
+            currentCell.EntireRow.Insert(Shift:=XlInsertShiftDirection.xlShiftDown)
+            Dim zeile As Integer = currentCell.Row
+
+            With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEnddata)), Excel.Range)
+                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData)), Excel.Range)
+                copySource.Copy(Destination:=copyDestination)
+
+                CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
+
+                For c As Integer = columnStartData - 3 To columnEndData + 1
+                    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
+                Next
+            End With
+
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Kopieren einer Zeile ...")
+        End Try
+
+        appInstance.EnableEvents = True
 
     End Sub
 
@@ -1757,7 +1823,7 @@ Imports System.Windows
 
 
                 Catch ex As Exception
-                    Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Resources")
+                    Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Attribute")
                     Exit Sub
                 End Try
 
@@ -3934,6 +4000,39 @@ Imports System.Windows
 
     Sub awinPTProzAuslastung(control As IRibbonControl, ByRef pressed As Boolean)
         awinSettings.mePrzAuslastung = pressed
+
+        ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
+        visboZustaende.clearAuslastungsArray()
+        Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+
+    End Sub
+
+    Public Function PTenableSorting(control As IRibbonControl) As Boolean
+        PTenableSorting = awinSettings.meEnableSorting
+    End Function
+
+    Sub awinPTenableSorting(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.meEnableSorting = pressed
+
+        If awinSettings.meEnableSorting Then
+            With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                .Unprotect("x")
+                .EnableSelection = XlEnableSelection.xlNoRestrictions
+            End With
+        Else
+            With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                         AllowFormattingCells:=True, _
+                         AllowInsertingColumns:=False,
+                         AllowInsertingRows:=True, _
+                         AllowDeletingColumns:=False, _
+                         AllowDeletingRows:=True, _
+                         AllowSorting:=True, _
+                         AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End With
+        End If
     End Sub
 
     Public Function PTautomaticReduce(control As IRibbonControl) As Boolean

@@ -150,8 +150,12 @@ Public Class clsawinSettings
     Public Property mppProjectsWithNoMPmayPass As Boolean
 
     ' Settings für Massen-Edit Funktionen 
+    ' Anzeigen der prozentualen Auslastung bzw. der absoluten "freien" bzw. "überbelegten" Kapazitäten 
     Public Property mePrzAuslastung As Boolean
+    ' sollen Zuweisungen zu Rollen automatisch ggf vorhandene Sammelrollen Zuweisungen ersetzen  
     Public Property meAutoReduce As Boolean
+    ' soll in der Massen-Edit Funktion die Sortierung enabled sein ? 
+    Public Property meEnableSorting As Boolean
 
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
@@ -276,6 +280,7 @@ Public Class clsawinSettings
         ' Settings für online MassenEdit 
         _mePrzAuslastung = True
         _meAutoReduce = True
+        _meEnableSorting = False
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True

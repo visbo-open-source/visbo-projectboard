@@ -1,8 +1,18 @@
 ﻿
 Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 Imports Microsoft.Office.Interop.Excel
 
 Public Class Tabelle2
+
+    Private columnStartData As Integer = 8
+    Private columnEndData As Integer = 30
+    Private columnRC As Integer = 5
+    Private oldValue As String = ""
+    Private oldColumn As Integer = 5
+    Private oldRow As Integer = 2
+    Private meWS As Excel.Worksheet
+
 
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
 
@@ -12,109 +22,50 @@ Public Class Tabelle2
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
-        Application.ScreenUpdating = False
+        meWS = CType(appInstance.ActiveSheet, Excel.Worksheet)
 
-        ' bei betreten dieses Tabellenblattes soll es auf false gesetzt werden - 
-        ' in dem Moment, wo tabelle1 wieder aktiviert wird, also bei tabelle1.activate wird es auf true gesetzt ... 
+        Try
+            ' die Anzahl maximaler Zeilen bestimmen 
+            With visboZustaende
+                .meMaxZeile = CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange.Rows.Count
+                .meColRC = CType(appInstance.ActiveSheet.Range("RoleCost"), Excel.Range).Column
+                .meColSD = CType(appInstance.ActiveSheet.Range("StartData"), Excel.Range).Column
+                .meColED = CType(appInstance.ActiveSheet.Range("EndData"), Excel.Range).Column
 
-        enableOnUpdate = False
+                columnRC = .meColRC
+                columnStartData = .meColSD
+                columnEndData = .meColED
+            End With
+            
+        Catch ex As Exception
+            Call MsgBox("Fehler in Laden des Sheets ...")
+        End Try
+        
+        Try
+            If awinSettings.meEnableSorting Then
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                    .Unprotect("x")
+                    .EnableSelection = XlEnableSelection.xlNoRestrictions
+                End With
+            Else
+                With meWS
+                    .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                    .EnableAutoFilter = True
+                End With
+            End If
+            
 
+        Catch ex As Exception
 
-        CType(appInstance.ActiveSheet, Excel.Worksheet).EnableSelection = XlEnableSelection.xlUnlockedCells
-
-        'With Application.ActiveSheet
-
-        '    If awinSettings.zeitEinheit = "PM" Then
-
-        '        .cells(1, 1).value = "Monate"
-
-        '        rng = .Range(.cells(1, 3), .cells(1, 4))
-        '        rng.NumberFormat = "mmm-yy"
-
-        '        Dim destinationRange As Excel.Range = .Range(.Cells(1, 3), .Cells(1, 62))
-        '        With destinationRange
-        '            .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-        '            .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-        '            .NumberFormat = "mmm-yy"
-        '            .WrapText = False
-        '            .Orientation = 90
-        '            .AddIndent = False
-        '            .IndentLevel = 0
-        '            .ShrinkToFit = False
-        '            .ReadingOrder = Excel.Constants.xlContext
-        '            .MergeCells = False
-        '            .Interior.color = noshowtimezone_color
-        '        End With
-
-        '        rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
-
-        '    ElseIf awinSettings.zeitEinheit = "PW" Then
-        '        .cells(1, 1).value = "Wochen"
-        '        For i = 1 To 210
-        '            CType(.cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddDays((i - 1) * 7)
-        '        Next
-
-        '    ElseIf awinSettings.zeitEinheit = "PT" Then
-        '        .cells(1, 1).value = "Tage"
-        '        Dim workOnSat As Boolean = False
-        '        Dim workOnSun As Boolean = False
-
-
-        '        If Weekday(StartofCalendar, FirstDayOfWeek.Monday) > 3 Then
-        '            tmpstart = StartofCalendar.AddDays(8 - Weekday(StartofCalendar, FirstDayOfWeek.Monday))
-        '        Else
-        '            tmpstart = StartofCalendar.AddDays(Weekday(StartofCalendar, FirstDayOfWeek.Monday) - 8)
-        '        End If
-        '        '
-        '        ' jetzt ist tmpstart auf Montag ... 
-        '        Dim tmpDay As Date
-        '        Dim i As Integer, w As Integer
-        '        i = 1
-        '        For w = 1 To 30
-        '            For d = 0 To 4
-        '                ' das sind Montag bis Freitag
-        '                tmpDay = tmpstart.AddDays(d)
-        '                If Not feierTage.Contains(tmpDay) Then
-        '                    CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
-        '                    i = i + 1
-        '                End If
-        '            Next
-        '            tmpDay = tmpstart.AddDays(5)
-        '            If workOnSat Then
-        '                CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
-        '                i = i + 1
-        '            End If
-        '            tmpDay = tmpstart.AddDays(6)
-        '            If workOnSun Then
-        '                CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
-        '                i = i + 1
-        '            End If
-        '            tmpstart = tmpstart.AddDays(7)
-        '        Next
-
-
-        '    End If
-
-
-        '    ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
-
-        '    Dim maxRows As Integer = .Rows.Count
-        '    Dim maxColumns As Integer = .Columns.Count
-
-
-        '    CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-        '    CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2 * 0.5
-
-        '    CType(.Columns(1), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 20.0
-        '    CType(.Columns(2), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 20.0
-        '    CType(.Range(.Cells(1, 3), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
-
-
-        '    '.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-        '    '.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-
-
-        'End With
+        End Try
 
 
         With Application.ActiveWindow
@@ -127,11 +78,340 @@ Public Class Tabelle2
             .DisplayHeadings = False
         End With
 
+        With meWS
+            CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
+        End With
+
+        If Not IsNothing(appInstance.ActiveCell) Then
+            oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
+        End If
 
         Application.EnableEvents = formerEE
-        Application.ScreenUpdating = True
+        'Application.ScreenUpdating = True
 
     End Sub
 
+    ''' <summary>
+    ''' wird aufgerufen, sobald sich der Wert in einer Zelle verändert hat ...
+    ''' entweder nachdem eine Dropbox Selection getroffen wurde oder eine Eingabe duch Pfeiltaste / Eingabe beendet wurde
+    ''' 
+    ''' </summary>
+    ''' <param name="Target"></param>
+    ''' <remarks></remarks>
+    Private Sub Tabelle2_Change(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.Change
 
+        ' damit nicht eine immerwährende Event Orgie durch Änderung in den Zellen abgeht ...
+        appInstance.EnableEvents = False
+
+        Try
+            Dim auslastungChanged As Boolean = False
+            Dim newValue As String = ""
+
+            If Target.Column = columnRC Then
+                ' es handelt sich um eine Änderung in der Rollen-/Kostenzuordnung
+                If Target.Cells.Count = 1 Then
+                    ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
+                    Dim zeile As Integer = Target.Row
+
+                    newValue = CStr(Target.Cells(1, 1).value)
+                    If isValidRCChange(newValue, oldValue) Then
+                        ' es ist eine gültige Änderung, das heisst es wurde eine Rolle in eine andere gewechselt , oder 
+                        ' eine Kostenart in eine andere; Kategorie-übergreifende Wechsel sind nicht erlaubt 
+
+                        Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
+                        Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+                        Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                        Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+                        Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                        If Not IsNothing(curComment) Then
+                            phaseNameID = curComment.Text
+                        End If
+
+                        ' jetzt muss noch geprüft werden, ob auch keine Duplikate vorkommen: zu einem Projekt dürfen z.Bsp keine 
+                        ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
+                        If noDuplicatesInSheet(pName, phaseNameID, newValue, zeile) Then
+
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+
+
+                            If Not IsNothing(hproj) Then
+                                Dim cPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+                                If Not IsNothing(cPhase) Then
+                                    If RoleDefinitions.containsName(newValue) Then
+                                        ' es handelt sich um eine Rollen-Änderung
+                                        If oldValue.Length > 0 And oldValue.Trim <> newValue.Trim Then
+                                            ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
+                                            Try
+                                                Dim newRoleID As Integer = RoleDefinitions.getRoledef(newValue).UID
+                                                cPhase.getRole(oldValue).RollenTyp = newRoleID
+                                                auslastungChanged = True
+                                            Catch ex As Exception
+                                                Dim a As Integer = 0
+                                            End Try
+
+                                        Else
+                                            ' es kam eine neue Rolle hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
+                                            ' muss an dieser Stelle noch gar nichts gemacht werden ..
+                                        End If
+                                    Else
+                                        ' es handelt sich um eine Kostenart Änderung 
+                                        If oldValue.Length > 0 And oldValue.Trim <> newValue.Trim Then
+                                            ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
+                                            Dim newCostID As Integer = CostDefinitions.getCostdef(newValue).UID
+                                            cPhase.getCost(oldValue).KostenTyp = newCostID
+                                        Else
+                                            ' es kam eine neue Rolle hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
+                                            ' muss an dieser Stelle noch gar nichts gemacht werden ..
+                                        End If
+                                    End If
+                                End If
+
+                            End If
+
+
+
+                        Else
+                            Call MsgBox("keine Doppelbelegung innerhalb einer Projektphase erlaubt ... ")
+                            Target.Cells(1, 1).value = oldValue
+                        End If
+                        
+
+
+                    Else
+                        Call MsgBox("bitte nur innerhalb Rollen bzw. innerhalb Kostenarten wechseln !")
+                        Target.Cells(1, 1).value = oldValue
+                    End If
+                Else
+                    Call MsgBox("bitte nur eine Zelle selektieren ...")
+                    Target.Cells(1, 1).value = oldValue
+                End If
+
+            Else
+
+                ' es handelt sich um eine Datenänderung
+                Call MsgBox("oldValue: " & oldValue)
+
+            End If
+
+            If auslastungChanged Then
+                Dim roleNames As New Collection
+                roleNames.Add(newValue, newValue)
+                If oldValue.Length > 0 Then
+                    If Not roleNames.Contains(oldValue) Then
+                        roleNames.Add(oldValue, oldValue)
+                    End If
+                End If
+
+                Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleNames)
+            End If
+
+            oldValue = CStr(Target.Cells(1, 1).value)
+
+        Catch ex As Exception
+            Dim a As Integer = 0
+        End Try
+        
+        appInstance.EnableEvents = True
+    End Sub
+
+
+    Private Sub Tabelle2_SelectionChange(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.SelectionChange
+
+        appInstance.EnableEvents = False
+
+        If awinSettings.meEnableSorting Then
+            ' es können auch nicht zugelassene Zellen selektiert worden sein 
+            If Target.Cells.Count = 1 Then
+
+                If isValidSelection(Target) Then
+                    oldColumn = Target.Column
+                    oldRow = Target.Row
+                    If Not IsNothing(Target.Value) Then
+                        oldValue = CStr(Target.Value)
+                    Else
+                        oldValue = ""
+                    End If
+                Else
+                    CType(appInstance.ActiveSheet.Cells(oldRow, oldColumn), Excel.Range).Select()
+                End If
+                
+
+            Else
+                If isValidSelection(CType(Target.Cells(1, 1), Excel.Range)) Then
+                    oldColumn = Target.Column
+                    oldRow = Target.Row
+                    If Not IsNothing(CType(Target.Cells(1, 1), Excel.Range).Value) Then
+                        oldValue = CStr(CType(Target.Cells(1, 1), Excel.Range).Value)
+                    Else
+                        oldValue = ""
+                    End If
+                    CType(Target.Cells(1, 1), Excel.Range).Select()
+                Else
+                    CType(appInstance.ActiveSheet.Cells(oldRow, oldColumn), Excel.Range).Select()
+                End If
+            End If
+
+        Else
+            ' es können nur zugelassene Zellen selektiert worden sein ...
+            oldColumn = Target.Column
+            oldRow = Target.Row
+
+            If Not IsNothing(CType(Target.Cells(1, 1), Excel.Range).Value) Then
+                oldValue = CStr(CType(Target.Cells(1, 1), Excel.Range).Value)
+            Else
+                oldValue = ""
+            End If
+
+            If Target.Column = columnRC Then
+                'Call MsgBox("RoleCost")
+            Else
+                'Call MsgBox("Data")
+            End If
+
+        End If
+
+        appInstance.EnableEvents = True
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft, ob neuer und alter Wert derselben Kategorie angehören; es darf nur von Kostenart zu Kostenart und von Rolle zu Rolle gewechselt werden 
+    ''' </summary>
+    ''' <param name="newValue"></param>
+    ''' <param name="oldValue"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidRCChange(ByVal newValue As String, ByVal oldValue As String) As Boolean
+
+        Dim tmpValue As Boolean = False
+
+        If RoleDefinitions.containsName(newValue) Then
+            If RoleDefinitions.containsName(oldValue) Or oldValue = "" Then
+                tmpValue = True
+            End If
+        ElseIf CostDefinitions.containsName(newValue) Then
+            If CostDefinitions.containsName(oldValue) Or oldValue = "" Then
+                tmpValue = True
+            End If
+        End If
+
+        isValidRCChange = tmpValue
+
+    End Function
+
+
+    ''' <summary>
+    ''' prüft, ob eine gültige Zelle selektiert wurde ... 
+    ''' gültig ist eine Zelle, wenn sie entweder in der RoleCost Spalte ist oder in einer Datenspalte 
+    ''' und ausserdem die Zeilennummer zwischen 2 und maxzeilen liegt 
+    ''' </summary>
+    ''' <param name="rng"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidSelection(ByVal rng As Excel.Range) As Boolean
+
+        Dim result As Boolean = False
+
+        If rng.Cells.Count > 1 Then
+            result = False
+        Else
+            If rng.Row >= 2 And rng.Row <= visboZustaende.meMaxZeile Then
+                If rng.Column = columnRC Then
+                    result = True
+
+                ElseIf rng.Column >= columnStartData And rng.Column <= columnEndData Then
+                    Dim diff As Integer = rng.Column - columnStartData
+                    Dim rest As Integer
+                    Dim tmpValue As Integer = System.Math.DivRem(diff, 2, rest)
+
+                    If rest = 0 Then
+                        If rng.Interior.ColorIndex = XlColorIndex.xlColorIndexNone Then
+                            result = False
+                        Else
+                            result = True
+                        End If
+                    Else
+                        result = False
+                    End If
+                Else
+                    result = False
+                End If
+            Else
+                result = False
+            End If
+        End If
+
+        isValidSelection = result
+
+    End Function
+
+    ''' <summary>
+    ''' prüft ob in dem aktiven Massen-Edit Sheet die übergebene Kombination nocheinmal vorkommt ... 
+    ''' wenn nein: Rückgabe true
+    ''' wenn ja: Rückgabe false
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>
+    ''' <param name="zeile"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String, _
+                                             ByVal zeile As Integer) As Boolean
+        Dim found As Boolean = False
+        Dim curZeile As Integer = 2
+
+        Dim chckName As String
+        Dim chckPhNameID As String
+        Dim chckRCName As String
+
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+
+        With meWS
+            chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+            Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+            chckPhNameID = calcHryElemKey(phaseName, False)
+            Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+            If Not IsNothing(curComment) Then
+                chckPhNameID = curComment.Text
+            End If
+
+            chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+        End With
+
+        Do While Not found And curZeile <= visboZustaende.meMaxZeile
+
+
+            If chckName = pName And _
+                phaseNameID = chckPhNameID And _
+                rcName = chckRCName And _
+                zeile <> curZeile Then
+                found = True
+            Else
+                curZeile = curZeile + 1
+
+                With meWS
+                    chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+                    Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                    chckPhNameID = calcHryElemKey(phaseName, False)
+                    Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                    If Not IsNothing(curComment) Then
+                        chckPhNameID = curComment.Text
+                    End If
+
+                    chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+                End With
+
+            End If
+
+        Loop
+
+        noDuplicatesInSheet = Not found
+
+    End Function
 End Class

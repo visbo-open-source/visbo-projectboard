@@ -15169,7 +15169,8 @@ Public Module awinGeneralModules
         Dim auslastungsArray(,) As Double
 
         Try
-            auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+            auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
+            'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
         Catch ex As Exception
             ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
         End Try
@@ -15582,9 +15583,8 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="von"></param>
     ''' <param name="bis"></param>
-    ''' <param name="type"></param>
     ''' <remarks></remarks>
-    Public Sub writeOnlineMassEditRessCost(ByVal von As Integer, ByVal bis As Integer, ByVal type As Integer)
+    Public Sub writeOnlineMassEditRessCost(ByVal von As Integer, ByVal bis As Integer)
 
 
         appInstance.EnableEvents = False
@@ -15593,49 +15593,15 @@ Public Module awinGeneralModules
         Dim currentWB As Excel.Workbook
         Dim ersteZeile As Excel.Range
         Dim ressCostColumn As Integer
-
-        Dim rcValidationList As String = ""
         Dim tmpName As String
-        ' jetzt wird die ValidationList aufgebaut 
-        Dim sortedRCListe As New SortedList(Of String, String)
-        For iz As Integer = 1 To RoleDefinitions.Count
-            tmpName = RoleDefinitions.getRoledef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
 
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcValidationList.Length = 0 Then
-                rcValidationList = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcValidationList = rcValidationList & "," & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
-
-        sortedRCListe.Clear()
-
-        For iz As Integer = 1 To CostDefinitions.Count - 1
-            tmpName = CostDefinitions.getCostdef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
-
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcValidationList.Length = 0 Then
-                rcValidationList = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcValidationList = rcValidationList & "," & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
 
 
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 
         Try
             currentWB = CType(appInstance.Workbooks.Item("Projectboard.xlsx"), Excel.Workbook)
-            currentWS = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            currentWS = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(5)), Excel.Worksheet)
             currentWS.UsedRange.Clear()
 
         Catch ex As Exception
@@ -15658,6 +15624,10 @@ Public Module awinGeneralModules
 
         With CType(currentWS, Excel.Worksheet)
 
+            If .ProtectContents Then
+                .Unprotect(Password:="x")
+            End If
+
             ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
 
             CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
@@ -15666,8 +15636,12 @@ Public Module awinGeneralModules
             CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
             CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
             CType(.Cells(1, 6), Excel.Range).Value = "Summe"
-            CType(.Cells(1, 7), Excel.Range).Value = "Proz."
-            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+            If awinSettings.mePrzAuslastung Then
+                CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+            Else
+                CType(.Cells(1, 7), Excel.Range).Value = "Frei"
+            End If
+
 
             ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
             ressCostColumn = 5
@@ -15677,6 +15651,7 @@ Public Module awinGeneralModules
             ' jetzt wird der Name hinzugefügt
             Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
             Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + 2 * (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
+            Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
 
             Try
                 If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then
@@ -15685,7 +15660,7 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-            
+
             Try
                 If Not IsNothing(CType(currentWB.Names.Item("EndData"), Excel.Name)) Then
                     currentWB.Names.Item("EndData").Delete()
@@ -15693,10 +15668,18 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-            
+
+            Try
+                If Not IsNothing(CType(currentWB.Names.Item("RoleCost"), Excel.Name)) Then
+                    currentWB.Names.Item("RC").Delete()
+                End If
+            Catch ex As Exception
+
+            End Try
 
             currentWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
             currentWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
+            currentWB.Names.Add(Name:="RoleCost", RefersToR1C1:=tmpRange3)
 
             ' jetzt werden die Überschriften des Datenbereichs geschrieben 
             For m As Integer = 0 To bis - von
@@ -15707,6 +15690,7 @@ Public Module awinGeneralModules
                     .NumberFormat = "[$-409]mmm yy;@"
                     .WrapText = False
                     .Orientation = 90
+                    .ShrinkToFit = False
                     .AddIndent = False
                     .IndentLevel = 0
                     .ReadingOrder = Excel.Constants.xlContext
@@ -15717,6 +15701,7 @@ Public Module awinGeneralModules
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                     .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                     .Orientation = 0
+                    .ShrinkToFit = False
                     .AddIndent = False
                     .IndentLevel = 0
                     .ReadingOrder = Excel.Constants.xlContext
@@ -15726,6 +15711,7 @@ Public Module awinGeneralModules
 
 
         End With
+
 
         zeile = 2
 
@@ -15744,7 +15730,8 @@ Public Module awinGeneralModules
         Dim auslastungsArray(,) As Double
 
         Try
-            auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+            auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
+            'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
         Catch ex As Exception
             ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
         End Try
@@ -15810,6 +15797,8 @@ Public Module awinGeneralModules
                             End If
 
                             CType(.Cells(zeile, 5), Excel.Range).Value = roleName
+                            CType(.Cells(zeile, 5), Excel.Range).Locked = False
+
                             CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
                             CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
                             editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
@@ -15831,7 +15820,29 @@ Public Module awinGeneralModules
                             For l = 0 To bis - von
 
                                 If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+
+                                    With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                        .Locked = False
+                                        Try
+                                            .Validation.Delete()
+                                        Catch ex As Exception
+
+                                        End Try
+                                        Try
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                        AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                        Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                        Formula1:="0")
+                                        Catch ex As Exception
+                                            .Validation.Modify(Type:=XlDVType.xlValidateDecimal, _
+                                                        AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                        Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                        Formula1:="0")
+                                        End Try
+                                        
+
+                                    End With
+                                    ' erlaubter Eingabebereich grau markieren  
                                     CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                  .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                 Else
@@ -15876,6 +15887,8 @@ Public Module awinGeneralModules
                             End If
 
                             CType(.Cells(zeile, 5), Excel.Range).Value = costName
+                            CType(.Cells(zeile, 5), Excel.Range).Locked = False
+
                             CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
                             editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
                         End With
@@ -15899,10 +15912,25 @@ Public Module awinGeneralModules
                             For l = 0 To bis - von
 
                                 If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+
+                                    With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                        .Locked = False
+                                        Try
+                                            .Validation.Delete()
+                                        Catch ex As Exception
+
+                                        End Try
+                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                        AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                        Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                        Formula1:="0")
+                                    End With
+
+                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+
+                                    ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
                                     CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                  .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
                                 Else
                                     CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
                                     CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
@@ -15940,6 +15968,8 @@ Public Module awinGeneralModules
                             End If
 
                             CType(.Cells(zeile, 5), Excel.Range).Value = ""
+                            CType(.Cells(zeile, 5), Excel.Range).Locked = False
+
                             CType(.Cells(zeile, 6), Excel.Range).Value = ""
                             CType(.Cells(zeile, 7), Excel.Range).Value = ""
                             editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
@@ -15951,11 +15981,27 @@ Public Module awinGeneralModules
                             For l = 0 To bis - von
 
                                 If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+
+                                    With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                        .Locked = False
+                                        Try
+                                            .Validation.Delete()
+                                        Catch ex As Exception
+
+                                        End Try
+                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                        AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                        Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                        Formula1:="0")
+                                    End With
+
+                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+
                                     CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                  .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                 Else
                                     CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
                                 End If
 
                             Next
@@ -15977,11 +16023,18 @@ Public Module awinGeneralModules
         Next
 
 
+        ' jetzt die erste Zeile so groß wie nötig machen 
+        Try
+            ersteZeile.AutoFit()
+        Catch ex As Exception
+
+        End Try
+
         ' jetzt die Größe der Spalten anpassen 
         Dim infoBlock As Excel.Range
         With CType(currentWS, Excel.Worksheet)
             infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 1)), Excel.Range)
-            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
             infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
             infoBlock.AutoFit()
         End With
@@ -15993,15 +16046,20 @@ Public Module awinGeneralModules
             For mis As Integer = 0 To 2 * (bis - von + 1) - 1
                 tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
                 If isPrz Then
-                    tmpRange.Columns.ColumnWidth = 3.1
-                    tmpRange.Font.Size = 6
-                    tmpRange.NumberFormat = "0%"
-                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    tmpRange.Columns.ColumnWidth = 4
+                    tmpRange.Font.Size = 8
+                    If awinSettings.mePrzAuslastung Then
+                        tmpRange.NumberFormat = "0%"
+                    Else
+                        tmpRange.NumberFormat = "0"
+                    End If
+
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                 Else
                     tmpRange.Columns.ColumnWidth = 5
                     tmpRange.Font.Size = 10
                     tmpRange.NumberFormat = "0"
-                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                 End If
                 isPrz = Not isPrz
             Next
@@ -16016,14 +16074,61 @@ Public Module awinGeneralModules
             roleCostInput = CType(.Range(.Cells(2, ressCostColumn), .Cells(maxRows, ressCostColumn)), Excel.Range)
         End With
 
+
+
+        Dim sortedRCListe As New SortedList(Of String, String)
+        Dim rcDefinition As String = ""
+
+        For iz As Integer = 1 To RoleDefinitions.Count
+            tmpName = RoleDefinitions.getRoledef(iz).name
+            If Not sortedRCListe.ContainsKey(tmpName) Then
+                sortedRCListe.Add(tmpName, tmpName)
+            End If
+        Next
+
+        For iz As Integer = 1 To sortedRCListe.Count
+            If rcDefinition.Length = 0 Then
+                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+            Else
+                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+            End If
+        Next
+
+        sortedRCListe.Clear()
+
+        For iz As Integer = 1 To CostDefinitions.Count - 1
+            tmpName = CostDefinitions.getCostdef(iz).name
+            If Not sortedRCListe.ContainsKey(tmpName) Then
+                sortedRCListe.Add(tmpName, tmpName)
+            End If
+        Next
+
+        For iz As Integer = 1 To sortedRCListe.Count
+            If rcDefinition.Length = 0 Then
+                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+            Else
+                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+            End If
+        Next
+
+
         With roleCostInput
-            .Validation.Delete()
+            Try
+                .Validation.Delete()
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt wird die ValidationList aufgebaut 
             .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                           Formula1:=rcValidationList)
+                                           Formula1:=rcDefinition)
+            
+
+            
         End With
 
 
-       
+
         Try
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
@@ -16036,6 +16141,87 @@ Public Module awinGeneralModules
 
         appInstance.EnableEvents = True
 
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert in Tabelle2 die Auslastungs-Values 
+    ''' Voraussetzung: der Auslastungs-Array in visbozustaende ist aktualisiert 
+    ''' </summary>
+    ''' <param name="roleNames">eine sortierte Collection mit den Namen der Rollen, die aktualisiert werden sollen
+    ''' Kostenarten brauchen nicht aktualisiert zu werden, da die keine Kapa / Grenze kennen </param>
+    ''' <remarks></remarks>
+    Public Sub updateMassEditAuslastungsValues(ByVal von As Integer, ByVal bis As Integer, _
+                                               Optional ByVal roleNames As Collection = Nothing)
+        Dim treatAllRoles As Boolean
+        Dim roleID As Integer
+
+        'Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+            ' nur dann befindet sich das Programm im MassEdit Sheet 
+
+            Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+
+            If IsNothing(roleNames) Then
+                treatAllRoles = True
+            Else
+                treatAllRoles = False
+            End If
+
+            Dim columnStartData As Integer = visboZustaende.meColSD
+            Dim columnEndData As Integer = visboZustaende.meColED
+            Dim columnRC As Integer = visboZustaende.meColRC
+
+            Dim auslastungsArray(,) As Double = visboZustaende.getUpDatedAuslastungsArray(roleNames, von, bis, awinSettings.mePrzAuslastung)
+
+            Dim tstZeilenanzahl = meWS.UsedRange.Rows.Count
+
+
+            ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
+            For zeile As Integer = 2 To visboZustaende.meMaxZeile
+                Dim curRoleName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                If Not IsNothing(curRoleName) Then
+                    If curRoleName.Trim.Length > 0 Then
+                        If RoleDefinitions.containsName(curRoleName) Then
+                            Dim updateNecessary As Boolean = False
+                            If treatAllRoles Then
+                                updateNecessary = True
+                            ElseIf roleNames.Contains(curRoleName) Then
+                                updateNecessary = True
+                            End If
+                            If updateNecessary Then
+                                ' nur in diesem Fall muss was gemacht werden ... 
+                                roleID = RoleDefinitions.getRoledef(curRoleName).UID
+
+                                For mis As Integer = 0 To bis - von + 1
+                                    Dim tmpCol As Integer = columnStartData - 1 + 2 * mis
+                                    With meWS.Cells(zeile, tmpCol)
+                                        If ((tmpCol = columnStartData - 1) Or _
+                                            (meWS.Cells(zeile, tmpCol - 1).locked = False)) Then
+                                            .value = auslastungsArray(roleID - 1, mis)
+                                            If awinSettings.mePrzAuslastung Then
+                                                .NumberFormat = "0%"
+                                            Else
+                                                .NumberFormat = "0"
+                                            End If
+                                        End If
+                                    End With
+                                Next
+
+                            End If
+                        End If
+                    End If
+                End If
+            Next
+
+        Else
+            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+        End If
+
+        'appInstance.EnableEvents = formerEE
+        appInstance.EnableEvents = True
 
     End Sub
 End Module
