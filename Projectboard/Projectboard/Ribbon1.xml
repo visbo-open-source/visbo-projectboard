@@ -155,7 +155,7 @@
             <button id="PT2G1M2B3" getVisible="chckVisibility" label="Zeitspanne f. Projektstart" enabled ="true" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
             <button id="PT2G1M2B4" getVisible="chckVisibility" label="Zeile einfügen" onAction="PTzeileEinfuegen" supertip ="es wird eine neue Zeile mit den Daten der aktuellen Zeile eingefügt"/>
             <button id="PT2G1M2B5" getVisible="chckVisibility" label="Zeile löschen" onAction="PTzeileLoeschen" supertip ="die Daten der aktuellen Zeile werden gelöscht"/>
-            <button id="PT2G1M2B6" getVisible="chckVisibility" label="Änderungen verwerfen" onAction="PTzeileLoeschen" supertip ="alle Änderungen, die im aktuellen Fenster gemacht wurden, werden verworfen"/>
+            <button id="PT2G1M2B6" getVisible="chckVisibility" label="Änderungen verwerfen" onAction="PTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden verworfen"/>
             <button id="PT2G1M2B7" getVisible="chckVisibility" label="zurück zur Multiprojekt-Tafel" onAction="PTbackToProjectBoard" supertip ="zurück zur grafischen Multiprojekt-Tafel"/>
           </menu>
           <separator id="PT2G1s2"/>

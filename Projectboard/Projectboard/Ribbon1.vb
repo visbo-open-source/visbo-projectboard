@@ -5,7 +5,7 @@ Imports MongoDbAccess
 Imports WpfWindow
 Imports WPFPieChart
 Imports Microsoft.Office.Core
-Imports Microsoft.Office.Interop.Excel
+'Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
 'Imports MSProject = Microsoft.Office.Interop.MSProject
 Imports System.Security.Principal
@@ -326,11 +326,11 @@ Imports System.Windows
 
                     If msgresult = MsgBoxResult.Ok Then
                         ' Mouse auf Wartemodus setzen
-                        appInstance.Cursor = XlMousePointer.xlWait
+                        appInstance.Cursor = Excel.XlMousePointer.xlWait
                         'Projekte speichern
                         Call StoreAllProjectsinDB()
                         ' Mouse wieder auf Normalmodus setzen
-                        appInstance.Cursor = XlMousePointer.xlDefault
+                        appInstance.Cursor = Excel.XlMousePointer.xlDefault
                     End If
                 Else
                     'Call MsgBox("Es wurden " & storedProj & " Projekte gespeichert!")
@@ -1702,10 +1702,14 @@ Imports System.Windows
 
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
 
-            Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-            Dim columnStartData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("StartData"), Excel.Range).Column
+            'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
+            Dim columnEndData As Integer = visboZustaende.meColED
+            'Dim columnStartData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("StartData"), Excel.Range).Column
+            Dim columnStartData As Integer = visboZustaende.meColSD
+            Dim columnRC As Integer = visboZustaende.meColRC
+
             Dim hoehe As Double = CDbl(currentCell.Height)
-            currentCell.EntireRow.Insert(Shift:=XlInsertShiftDirection.xlShiftDown)
+            currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
             Dim zeile As Integer = currentCell.Row
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
@@ -1720,10 +1724,102 @@ Imports System.Windows
                 Next
             End With
 
+            ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
 
+            ' jetzt wird der Old-Value gesetzt 
+            With visboZustaende
+                If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
+                    Call MsgBox("Fehler 099 in PTzeileEinfügen")
+                End If
+                .oldValue = ""
+                .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
+            End With
 
         Catch ex As Exception
             Call MsgBox("Fehler beim Kopieren einer Zeile ...")
+        End Try
+
+        appInstance.EnableEvents = True
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht im MassenEdit Sheet eine Zeile, das heisst, die Rolle bzw. Kostenart wird rausgenommen 
+    ''' es bleibt aber pro Projekt-/Phase eine leere Zeile als Platzhalter stehen  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTzeileLoeschen(control As IRibbonControl)
+
+        Dim currentCell As Excel.Range
+        Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+        appInstance.EnableEvents = False
+
+        Try
+
+            currentCell = CType(appInstance.ActiveCell, Excel.Range)
+            Dim zeile As Integer = currentCell.Row
+
+            If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
+                Dim columnEndData As Integer = visboZustaende.meColED
+                Dim columnStartData As Integer = visboZustaende.meColSD
+                Dim columnRC As Integer = visboZustaende.meColRC
+
+
+                Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
+                Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+                Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+                Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                If Not IsNothing(curComment) Then
+                    phaseNameID = curComment.Text
+                End If
+
+                Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+
+                ' hier wird die Rolle- bzw. Kostenart aus der Projekt-Phase gelöscht 
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+                If IsNothing(rcName) Then
+                    ' nichts tun
+                ElseIf rcName.Trim.Length = 0 Then
+                    ' nichts tun ... 
+                ElseIf RoleDefinitions.containsName(rcName) Then
+                    ' es handelt sich um eine Rolle
+                    cphase.removeRoleByName(rcName)
+                ElseIf CostDefinitions.containsName(rcName) Then
+                    ' es handelt sih um eine Kostenart 
+                    cphase.removeCostByName(rcName)
+                End If
+
+                ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
+                ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
+                If noDuplicatesInSheet(pName, phaseNameID, Nothing, zeile) Then
+                    ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
+                    ' aber die Werte müssen alle gelöscht werden 
+                    For ix As Integer = columnRC To columnEndData + 1
+                        CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
+                    Next
+                Else
+                    CType(meWS.Rows(zeile), Excel.Range).Delete()
+                End If
+
+                ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+                CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
+
+                ' jetzt wird der Old-Value gesetzt 
+                With visboZustaende
+                    .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
+                    .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
+                End With
+            Else
+                Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen einer Zeile ..." & vbLf & ex.Message)
         End Try
 
         appInstance.EnableEvents = True
@@ -3737,7 +3833,7 @@ Imports System.Windows
         Try
 
             appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\Summary.xlsx", _
-                                      ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges)
+                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
             ok = True
             appInstance.ActiveWorkbook.Close()
 
@@ -3810,7 +3906,7 @@ Imports System.Windows
                     appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & initialeVorlageName)
                     Try
                         appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\" & kapaFileName, _
-                                      ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges)
+                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
 
                         infoMessage = infoMessage & kapaFileName & vbLf
                     Catch ex2 As Exception
@@ -3841,7 +3937,7 @@ Imports System.Windows
                     'appInstance.ActiveWorkbook.Save()
 
                     appInstance.ActiveWorkbook.SaveAs(Filename:=awinPath & zuordnungsOrdner & "\" & curFilename, _
-                                                      ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges)
+                                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
 
 
                 Catch ex As Exception
@@ -4017,7 +4113,7 @@ Imports System.Windows
         If awinSettings.meEnableSorting Then
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
                 .Unprotect("x")
-                .EnableSelection = XlEnableSelection.xlNoRestrictions
+                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
             End With
         Else
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
@@ -4029,7 +4125,7 @@ Imports System.Windows
                          AllowDeletingRows:=True, _
                          AllowSorting:=True, _
                          AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
                 .EnableAutoFilter = True
             End With
         End If

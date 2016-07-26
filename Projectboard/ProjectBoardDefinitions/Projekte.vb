@@ -8006,7 +8006,9 @@ Public Module Projekte
 
 
                                     If isRole Then
-                                        Dim crole As New clsRolle(ende - anfang + 1)
+                                        'Dim crole As New clsRolle(ende - anfang + 1)
+                                        ' tk: Änderung 26.7.16
+                                        Dim crole As New clsRolle(ende - anfang)
                                         With crole
                                             .RollenTyp = rk
                                             .Xwerte = Xwerte
@@ -8020,7 +8022,8 @@ Public Module Projekte
 
 
                                     ElseIf isCost Then
-                                        Dim ccost As New clsKostenart(ende - anfang + 1)
+                                        'Dim ccost As New clsKostenart(ende - anfang + 1)
+                                        Dim ccost As New clsKostenart(ende - anfang)
                                         With ccost
                                             .KostenTyp = rk
                                             .Xwerte = Xwerte
@@ -8088,7 +8091,8 @@ Public Module Projekte
 
                     End With
 
-                    Dim ccost As New clsKostenart(ende - anfang + 1)
+                    'Dim ccost As New clsKostenart(ende - anfang + 1)
+                    Dim ccost As New clsKostenart(ende - anfang)
                     With ccost
                         .KostenTyp = rk
                         .Xwerte = Xwerte

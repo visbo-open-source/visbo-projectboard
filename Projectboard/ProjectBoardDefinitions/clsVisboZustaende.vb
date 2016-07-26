@@ -17,6 +17,8 @@ Public Class clsVisboZustaende
     ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für EndData  
     Public Property meColED As Integer
 
+    Public Property oldValue As String
+
     ' wird jetzt von getUpdatedAuslastungsArray übernommen ...
     ''Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer, _
     ''                                             ByVal percentValues As Boolean) As Double(,)
@@ -123,6 +125,7 @@ Public Class clsVisboZustaende
         _showTimeZoneBalken = False
         _projectBoardMode = ptModus.graficboard
         _meMaxZeile = 0
+        _oldValue = ""
         _auslastungsArray = Nothing
     End Sub
 End Class

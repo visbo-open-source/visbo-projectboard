@@ -8378,8 +8378,15 @@ Public Module testModule
                 ' hat das Projekt bereits eine Historie ? 
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+
+                If awinSettings.compareWithStandardVariant Then
+                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
                                                                     storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                Else
+                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                End If
+                
                 'If vergleichstyp = PThis.letzterStand Then
                 '    vproj = projekthistorie.Last
 
@@ -8397,7 +8404,7 @@ Public Module testModule
                         End If
                     End If
                 End If
-                
+
 
 
             End If
@@ -8646,7 +8653,7 @@ Public Module testModule
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                     End If
 
-                    
+
 
                 End With
 

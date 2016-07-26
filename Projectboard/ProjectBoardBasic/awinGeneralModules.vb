@@ -5841,8 +5841,9 @@ Public Module awinGeneralModules
                                                     End Try
 
                                                 Next m
-
-                                                crole = New clsRolle(ende - anfang + 1)
+                                                ' tk: das muss doch eigentlich heissen: end-anfag !? 
+                                                'crole = New clsRolle(ende - anfang + 1)
+                                                crole = New clsRolle(ende - anfang)
                                                 With crole
                                                     .RollenTyp = r
                                                     .Xwerte = Xwerte
@@ -5875,7 +5876,9 @@ Public Module awinGeneralModules
 
                                                 Next m
 
-                                                ccost = New clsKostenart(ende - anfang + 1)
+                                                ' Änderung tk: 26.7 
+                                                'ccost = New clsKostenart(ende - anfang + 1)
+                                                ccost = New clsKostenart(ende - anfang)
                                                 With ccost
                                                     .KostenTyp = k
                                                     .Xwerte = Xwerte
@@ -7372,7 +7375,9 @@ Public Module awinGeneralModules
 
                                                     End If
 
-                                                    crole = New clsRolle(ende - anfang + 1)
+                                                    ' das muss doch eigentlich heissen: ende - anfang !? 
+                                                    'crole = New clsRolle(ende - anfang + 1)
+                                                    crole = New clsRolle(ende - anfang)
                                                     With crole
                                                         .RollenTyp = r
                                                         .Xwerte = Xwerte
@@ -7451,7 +7456,8 @@ Public Module awinGeneralModules
 
                                                     End If
 
-                                                    ccost = New clsKostenart(ende - anfang + 1)
+                                                    'ccost = New clsKostenart(ende - anfang + 1)
+                                                    ccost = New clsKostenart(ende - anfang)
                                                     With ccost
                                                         .KostenTyp = k
                                                         .Xwerte = Xwerte
@@ -16156,13 +16162,15 @@ Public Module awinGeneralModules
         Dim treatAllRoles As Boolean
         Dim roleID As Integer
 
-        'Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
         If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
             ' nur dann befindet sich das Programm im MassEdit Sheet 
 
-            Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+            'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
 
             If IsNothing(roleNames) Then
                 treatAllRoles = True
@@ -16220,8 +16228,328 @@ Public Module awinGeneralModules
             Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
         End If
 
-        'appInstance.EnableEvents = formerEE
-        appInstance.EnableEvents = True
+        appInstance.EnableEvents = formerEE
+        'appInstance.EnableEvents = True
 
     End Sub
+
+   
+    ''' <summary>
+    ''' aktualisiert die Summen-Werte im Massen-Edit Sheet der Ressourcen-/Kostenzuordnungen  
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="roleCostNames"></param>
+    ''' <remarks></remarks>
+    Public Sub updateMassEditSummenValues(ByVal pname As String, ByVal phaseNameID As String, _
+                                              ByVal von As Integer, ByVal bis As Integer, _
+                                              ByVal roleCostNames As Collection)
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+            ' nur dann befindet sich das Programm im MassEdit Sheet 
+
+            'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+            If IsNothing(roleCostNames) Then
+                ' nichts tun 
+            ElseIf roleCostNames.Count = 0 Then
+                ' nichts tun 
+            Else
+                ' Update Lauf der Summen 
+                Dim columnSummen As Integer = visboZustaende.meColRC + 1
+                Dim columnRC As Integer = visboZustaende.meColRC
+
+                ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
+                For zeile As Integer = 2 To visboZustaende.meMaxZeile
+
+                    Dim curpName As String = CStr(meWS.Cells(zeile, 2).value)
+                    Dim curphaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                    Dim curphaseNameID As String = calcHryElemKey(curphaseName, False)
+                    Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                    If Not IsNothing(curComment) Then
+                        curphaseNameID = curComment.Text
+                    End If
+
+
+                    If curpName = pname And curphaseNameID = phaseNameID Then
+
+                        Dim curRCName As String = CStr(meWS.Cells(zeile, columnRC).value)
+
+                        If Not IsNothing(curRCName) Then
+                            If curRCName.Trim.Length > 0 Then
+                                If roleCostNames.Contains(curRCName) Then
+                                    Dim tmpSum As Double = 0.0
+                                    ' jetzt muss die Summe aktualisiert werden 
+                                    Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+                                    If Not IsNothing(hproj) Then
+                                        Dim cphase As clsPhase = hproj.getPhaseByID(curphaseNameID)
+
+                                        If Not IsNothing(cphase) Then
+
+                                            Dim xWerte() As Double
+                                            Dim ixZeitraum As Integer
+                                            Dim ix As Integer
+                                            Dim anzLoops As Integer
+
+                                            ' diese MEthode definiert, wo der Zeitraum sich mit den Werte überlappt ... 
+                                            ' Anzloops sind die Anzahl Überlappungen 
+                                            Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate), _
+                                                               ixZeitraum, ix, anzLoops)
+
+                                            If RoleDefinitions.containsName(curRCName) Then
+
+                                                Dim tmpRole As clsRolle = cphase.getRole(curRCName)
+
+                                                If Not IsNothing(tmpRole) Then
+                                                    xWerte = tmpRole.Xwerte
+
+                                                    ' jetzt werden die Werte summiert ...
+                                                    Try
+                                                        For al As Integer = 1 To anzLoops
+                                                            tmpSum = tmpSum + xWerte(ix + al - 1)
+                                                        Next
+                                                    Catch ex As Exception
+                                                        Call MsgBox("Fehler bei Summenbildung ...")
+                                                        tmpSum = 0
+                                                    End Try
+                                                    
+
+                                                Else
+                                                    ' Summe löschen
+                                                End If
+
+                                            ElseIf CostDefinitions.containsName(curRCName) Then
+
+                                                Dim tmpCost As clsKostenart = cphase.getCost(curRCName)
+
+                                                If Not IsNothing(tmpCost) Then
+                                                    xWerte = tmpCost.Xwerte
+
+                                                    ' jetzt werden die Werte summiert ...
+                                                    Try
+                                                        For al As Integer = 1 To anzLoops
+                                                            tmpSum = tmpSum + xWerte(ix + al - 1)
+                                                        Next
+                                                    Catch ex As Exception
+                                                        Call MsgBox("Fehler bei Summenbildung ...")
+                                                        tmpSum = 0
+                                                    End Try
+
+                                                Else
+                                                    ' Summe löschen
+                                                End If
+                                            Else
+                                                ' Summe löschen 
+                                            End If
+
+                                        Else
+                                            ' Summe löschen  
+                                        End If
+                                    Else
+                                        ' Summe löschen 
+                                    End If
+
+                                    ' jetzt den Wert in die Zelle schreiben
+                                    If tmpSum > 0 Then
+                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = tmpSum.ToString("#,##0")
+                                    Else
+                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = ""
+                                    End If
+
+                                End If
+                            End If
+                        End If
+
+                    End If
+
+                Next
+
+            End If
+
+
+        Else
+            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+        End If
+
+        appInstance.EnableEvents = formerEE
+
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft ob in dem aktiven Massen-Edit Sheet die übergebene Kombination nocheinmal vorkommt ... 
+    ''' wenn nein: Rückgabe true
+    ''' wenn ja: Rückgabe false
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>
+    ''' <param name="zeile"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String, _
+                                             ByVal zeile As Integer) As Boolean
+        Dim found As Boolean = False
+        Dim curZeile As Integer = 2
+
+        Dim chckName As String
+        Dim chckPhNameID As String
+        Dim chckRCName As String
+
+        Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+        With meWS
+            chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+            Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+            chckPhNameID = calcHryElemKey(phaseName, False)
+            Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+            If Not IsNothing(curComment) Then
+                chckPhNameID = curComment.Text
+            End If
+
+            chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+        End With
+        ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
+        Do While Not found And curZeile <= visboZustaende.meMaxZeile
+
+
+            If chckName = pName And _
+                phaseNameID = chckPhNameID And _
+                zeile <> curZeile Then
+
+                If IsNothing(rcName) Then
+                    found = True
+                ElseIf rcName = chckRCName Then
+                    found = True
+                End If
+
+            End If
+
+            If Not found Then
+
+                curZeile = curZeile + 1
+
+                With meWS
+                    chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+                    Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                    chckPhNameID = calcHryElemKey(phaseName, False)
+                    Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                    If Not IsNothing(curComment) Then
+                        chckPhNameID = curComment.Text
+                    End If
+
+                    chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+                End With
+
+            End If
+
+        Loop
+
+        noDuplicatesInSheet = Not found
+
+    End Function
+
+    ''' <summary>
+    ''' gibt eine Zeile zurück, die zu dem angegebenen Projekt, der Phase und dem rcName eine Sammelrolle zurückgibt
+    ''' Wenn mehrere mögliche Sammelrollen existieren, dann wird die erste auftretende zurückgegeben
+    ''' 0, wenn in diesem Projekt zu dieser Rolle keine Sammelrolle definiert ist  
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function findeSammelRollenZeile(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String) As Integer
+        Dim found As Boolean = False
+        Dim curZeile As Integer = 2
+
+        Dim chckName As String
+        Dim chckPhNameID As String
+        Dim chckRCName As String
+        Dim bestName As String = ""
+        Dim secondBestName As String = ""
+
+
+
+        Dim potentialParentRoles As Collection = RoleDefinitions.getSummaryRoles(rcName)
+        If potentialParentRoles.Count = 0 Then
+            curZeile = 0
+        Else
+            '
+            ' auf die Suche gehen ... 
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+            With meWS
+                chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+                Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                chckPhNameID = calcHryElemKey(phaseName, False)
+                Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                If Not IsNothing(curComment) Then
+                    chckPhNameID = curComment.Text
+                End If
+
+                chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+            End With
+            ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
+            Do While Not found And curZeile <= visboZustaende.meMaxZeile
+
+
+                If chckName = pName And _
+                    phaseNameID = chckPhNameID Then
+
+                    If potentialParentRoles.Contains(chckRCName) Then
+                        ' nimm jetzt einfach mal den ersten, der auftritt  ... 
+                        found = True
+                    End If
+
+                End If
+
+                If Not found Then
+
+                    curZeile = curZeile + 1
+
+                    With meWS
+                        chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+                        Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                        chckPhNameID = calcHryElemKey(phaseName, False)
+                        Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                        If Not IsNothing(curComment) Then
+                            chckPhNameID = curComment.Text
+                        End If
+
+                        chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+                    End With
+
+                End If
+
+            Loop
+
+
+        End If
+
+
+        If found Then
+            findeSammelRollenZeile = curZeile
+        Else
+            findeSammelRollenZeile = 0
+        End If
+
+    End Function
 End Module

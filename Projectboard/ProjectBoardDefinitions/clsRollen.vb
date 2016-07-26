@@ -97,16 +97,38 @@ Public Class clsRollen
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSummaryRoles As Collection
+    Public ReadOnly Property getSummaryRoles(Optional ByVal roleName As String = Nothing) As Collection
         Get
             Dim tmpCollection As New Collection
+            Dim removeList As New Collection
 
             For r As Integer = 1 To _allRollen.Count
                 Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
                 If tmpRole.isCombinedRole Then
-                    tmpCollection.Add(tmpRole.name, tmpRole.name)
+                    If IsNothing(roleName) Then
+                        tmpCollection.Add(tmpRole.name, tmpRole.name)
+                    ElseIf tmpRole.name <> roleName Then
+                        tmpCollection.Add(tmpRole.name, tmpRole.name)
+                    End If
                 End If
             Next
+
+            If Not IsNothing(roleName) Then
+
+                For sr As Integer = 1 To tmpCollection.Count
+                    Dim tmpRole As clsRollenDefinition = Me.getRoledef(CStr(tmpCollection.Item(sr)))
+                    Dim subRoleNames As Collection = Me.getSubRoleNamesOf(tmpRole.name, PTcbr.all)
+
+                    If Not subRoleNames.Contains(roleName) Then
+                        removeList.Add(tmpRole.name, tmpRole.name)
+                    End If
+                Next
+
+                For rm As Integer = 1 To removeList.Count
+                    tmpCollection.Remove(CStr(removeList.Item(rm)))
+                Next
+
+            End If
 
             getSummaryRoles = tmpCollection
 

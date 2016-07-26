@@ -160,6 +160,10 @@ Public Class clsawinSettings
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
+    ' Setting, ob bei Vergleichen mit früheren Ständen mit der standard-Variante verglichen werden soll 
+    ' oder mit einem früheren Stand der Variante
+    Public Property compareWithStandardVariant As Boolean
+
     ' Settings für MSProject-AddIn und ImportMSProject
     Public Property visboTaskClass As String
     Public Property visboAbbreviation As String
@@ -285,6 +289,7 @@ Public Class clsawinSettings
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True
 
+        _compareWithStandardVariant = True
 
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True
