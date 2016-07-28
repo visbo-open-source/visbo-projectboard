@@ -344,17 +344,29 @@ Public Module PBBModules
                     .Show()
                     'returnValue = .ShowDialog
                 End With
-            ElseIf controlID = "PTXG1B6" Then
+            ElseIf controlID = "PTXG1B6" Or controlID = "PTMEC1" Then
                 ' Namen auswählen, Leistbarkeit
 
                 awinSettings.useHierarchy = False
                 With nameFormular
-                    .Text = "Leistbarkeits-Charts erstellen"
+
+                    If controlID = "PTMEC1" Then
+                        .Text = "Rollen-/Kosten-Charts erstellen"
+                    Else
+                        .Text = "Leistbarkeits-Charts erstellen"
+                    End If
+
                     .OKButton.Text = "Charts erstellen"
                     .menuOption = PTmenue.leistbarkeitsAnalyse
                     .statusLabel.Text = ""
                     .statusLabel.Visible = True
 
+                    If controlID = "PTMEC1" Then
+                        .rdbPhases.Visible = False
+                        .picturePhasen.Visible = False
+                        .rdbMilestones.Visible = False
+                        .pictureMilestones.Visible = False
+                    End If
 
                     .rdbBU.Visible = False
                     .pictureBU.Visible = False

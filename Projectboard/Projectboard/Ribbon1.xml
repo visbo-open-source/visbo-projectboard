@@ -24,6 +24,12 @@
     </contextualTabs>
     <!---->
     <tabs>
+      <tab id="PTMEC" getVisible ="chckVisibility" label="Charts">
+        <group id="PTMECG1" label=" ">
+          <button id="PTMEC1" label="Rollen und Kosten" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
+          <button id="PTMEC2" label="Budget/Kosten"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
+      </group>
+      </tab>
       <tab id="PTX" getVisible="chckVisibility" label ="Multiprojekt-Info">
         <group id="PTXG1" label ="Analysen">
           <button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" supertip="es werden die Projekt-Ampeln als farbige Symbole angezeigt"/>
@@ -135,34 +141,37 @@
       
       -->
       <tab id ="PT2" label="Bearbeiten">
-        <group id="PT2G1" label="Einzelprojekt">
+        <group id="PT2G1" label="Einzelprojekte">
           <menu id="PT2G1M0" getVisible="chckVisibility"  label ="Neues Projekt anlegen">
             <button id="PT2G1M0B0" label="Neu auf Basis Vorlage" onAction="PT2ProjektNeu" supertip="auf Basis einer sogenannten Projekt-Generik ein neues Projekt anlegen; wenn eine von der Generik abweichende Dauer gewählt wird, werden die Termine so gelegt, daß die relativen Abstände der Plan-Elemente voneinander erhalten bleiben"/>
             <!--<button id="PT2G1M0B1" label="Neu auf Basis Projekt" onAction="PT2ProjektNeuBasisProjekt" />-->
           </menu>
           <separator id="PT2G1s0"/>
-          <menu id ="PT2G1M1" label ="Variante">
-            <button id="PT2G1M1B0" getVisible="chckVisibility" label="neue Variante anlegen" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden. So können zunächst mehrere Varianten für ein oder mehrere Projekte erstellt werden, die dann in Folge in Optimierungs- und Leistbarkeitsanalysen verwendet werden können"/>
+          <menu id ="PT2G1M1" getVisible="chckVisibility" label ="Variante">
+            <button id="PT2G1M1B0" label="neue Variante anlegen" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden. So können zunächst mehrere Varianten für ein oder mehrere Projekte erstellt werden, die dann in Folge in Optimierungs- und Leistbarkeitsanalysen verwendet werden können"/>
             <button id="PT2G1M1B1" label="Variante aktivieren" onAction="PT2VarianteAktiv" supertip ="eine Variante eines Projektes zur aktiven Variante machen bedeutet, diese Projektvariante auf der Projekttafel zu visualisieren und in den Analysen zu verwenden"/>
-            <button id="PT2G1M1B2" getVisible="chckVisibility" label="Variante löschen" onAction="PT2VarianteLoeschen" supertip ="es wird die selektierte Variante des Projektes aus der Session gelöscht; in der Datenbank wird die Variante nicht gelöscht; das kann über den entsprechenden Datenbank Befehl erreicht werden "/>
-            <button id="PT2G1M1B3" getVisible="chckVisibility" label="Variante übernehmen" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
+            <button id="PT2G1M1B2" label="Variante löschen" onAction="PT2VarianteLoeschen" supertip ="es wird die selektierte Variante des Projektes aus der Session gelöscht; in der Datenbank wird die Variante nicht gelöscht; das kann über den entsprechenden Datenbank Befehl erreicht werden "/>
+            <button id="PT2G1M1B3" label="Variante übernehmen" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
           </menu>
           <separator id="PT2G1s1"/>
-          <menu id="PT2G1M2" label="Editieren">
+          <button id="PT2G1M2B4" getVisible="chckVisibility" label="Zeile einfügen" onAction="PTzeileEinfuegen" supertip ="es wird eine neue Zeile mit den Daten der aktuellen Zeile eingefügt"/>
+          <button id="PT2G1M2B5" getVisible="chckVisibility" label="Zeile löschen" onAction="PTzeileLoeschen" supertip ="die Daten der aktuellen Zeile werden gelöscht"/>
+          <menu id="PT2G1M2" getVisible="chckVisibility" label="Editieren">
             <!--<button id="PT2G1M2B1" label="Ressourcen und Kosten"  onAction="Tom2G1Resources" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>-->
-            <button id="PT2G1M2B1" getVisible="chckVisibility" label="Ressourcen und Kosten"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
-            <button id="PT2G1M2B2" getVisible="chckVisibility" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" supertip ="die Attribute eines Projektes wie Budget Zuordnung, strateg. Fit und Risiko Einschätzung können hier verändert werden. Dieses Formular kann kundenspezifisch um weitere Attribute ergänzt werden"/>
-            <button id="PT2G1M2B3" getVisible="chckVisibility" label="Zeitspanne f. Projektstart" enabled ="true" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
-            <button id="PT2G1M2B4" getVisible="chckVisibility" label="Zeile einfügen" onAction="PTzeileEinfuegen" supertip ="es wird eine neue Zeile mit den Daten der aktuellen Zeile eingefügt"/>
-            <button id="PT2G1M2B5" getVisible="chckVisibility" label="Zeile löschen" onAction="PTzeileLoeschen" supertip ="die Daten der aktuellen Zeile werden gelöscht"/>
-            <button id="PT2G1M2B6" getVisible="chckVisibility" label="Änderungen verwerfen" onAction="PTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden verworfen"/>
-            <button id="PT2G1M2B7" getVisible="chckVisibility" label="zurück zur Multiprojekt-Tafel" onAction="PTbackToProjectBoard" supertip ="zurück zur grafischen Multiprojekt-Tafel"/>
+            <button id="PT2G1M2B1" label="Ressourcen und Kosten"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
+            <button id="PT2G1M2B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" supertip ="die Attribute eines Projektes wie Budget Zuordnung, strateg. Fit und Risiko Einschätzung können hier verändert werden. Dieses Formular kann kundenspezifisch um weitere Attribute ergänzt werden"/>
+            <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" enabled ="true" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
           </menu>
           <separator id="PT2G1s2"/>
+          <checkBox id="PT6G2B3" getVisible="chckVisibility" label="prozentuale Auslastungs-Werte anzeigen" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn nicht gesetzt, werden die absoluten Werte in Personentagen angezeig die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen; andernfalls wird die prozentuale Auslastung gezeigt"/>
+          <checkBox id="PT6G2B4" getVisible="chckVisibility" label="Platzhalter Rollen automatisch reduzieren" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>
+          <checkBox id="PT6G2B5" getVisible="chckVisibility" label="Sortierung ermöglichen" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, alleridngs sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
           <button id="PT2G1B2" getVisible="chckVisibility" label="Fixieren" onAction="Tom2G1Beauftragen" supertip ="mit dem Fixieren können Termine von Phasen oder Meilensteinen und zugehörige Rollen- und Kostenbedarfe des Projektes nicht mehr verändert werden. Visuell ist ein fixiertes Projekt durch die eckigere Projektbalken Darstellung zu erkennen"/>
           <button id="PT2G1B3" getVisible="chckVisibility" label="Fixierung aufheben" onAction="Tom2GXBeauftragen" supertip ="mit dem Aufheben der Fixierung können Projekte bzw. Varianten in ihren Terminen und zugehörigen Rollen- und Kostenbedarfe verändert werden. Visuell ist ein nicht fixiertes Projekt durch die rundere Projektbalken Darstellung zu erkennen"/>
           <separator id="PT2G1s3"/>
+          <button id="PT2G1M2B7" getVisible="chckVisibility" label="zurück zur Multiprojekt-Tafel" onAction="PTbackToProjectBoard" supertip ="zurück zur grafischen Multiprojekt-Tafel"/>
+          <checkBox id="PT2G1M2B6" getVisible="chckVisibility" label="Änderungen verwerfen" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>
           <button id="PT2G1B4" getVisible="chckVisibility" label="Beschriften" onAction="PTBeschriften" />
           <button id="PT2G1B5" getVisible="chckVisibility" label="alle Beschriftungen löschen" onAction="PT6DeleteBeschriftung" />
           <separator id="PT2G1s4"/>
@@ -292,7 +301,7 @@
         </group>
       </tab>  
       <!---->     
-      <tab id ="PT6" label ="Einstellungen">
+      <tab id ="PT6" getVisible="chckVisibility" label ="Einstellungen">
         <group id ="PT6G1" getVisible="chckVisibility" label ="Visualisierung">
           <!--<checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>
           <checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
@@ -303,9 +312,6 @@
         <group id ="PT6G2" label="Berechnung">
           <checkBox id="PT6G2B1" getVisible="chckVisibility" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass" supertip ="diese Option wirkt nur auf Ressourcenbedarfe und Kostenbedarfe; ist diese Option aktiviert, so werden die Ressourcen und Kostenbedarfe proportional angepasst, wenn das Projekt / die Phase durch Dehnen oder Stauchen verlängert bzw. verkürzt wird. Das Budget bleibt allerdings unverändert !"/>
           <checkBox id="PT6G2B2" getVisible="chckVisibility" label="Phasenhäufigkeit anteilig berechnen" getPressed="PTPhaseAnteilig" onAction ="awinSetPhaseAnteilig" supertip ="diese Option wirkt nur auf die Berechnung von Häufigkeit Charts bei Phasen; ist diese Option aktiviert, so wird für die Phase in ihrem Start-Monat und Ende-Monat der prozentuale Wert angenommen. Andernfalls wird der Wert 1 zugrundegelegt, unabhängig wieviel vom Monat von der Phase belegt wird. Beispiel: die Phase beginnt erst zum 10. eines Monats, das bedeutet mit der aktivierten Option wird der Häufigkeits-Wert für diese Phase in diesem Monat auf ca 0.66 gesetzt, weil nur in knapp 2/3 des Monats die Phase aktiv ist"/>
-          <checkBox id="PT6G2B3" getVisible="chckVisibility" label="prozentuale Auslastungs-Werte anzeigen" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn nicht gesetzt, werden die absoluten Werte in Personentagen angezeig die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen; andernfalls wird die prozentuale Auslastung gezeigt"/>
-          <checkBox id="PT6G2B4" getVisible="chckVisibility" label="Platzhalter Rollen automatisch reduzieren" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>
-          <checkBox id="PT6G2B5" getVisible="chckVisibility" label="Sortierung ermöglichen" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, alleridngs sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
         </group>
         <group id ="PT6G3" getVisible="chckVisibility" label ="Lade- und Import-Vorgänge">
            <checkBox id="PT6G3B1" label="DB Filter aktivieren" getPressed="PT5loadprojectsInit" enabled ="true" onAction ="PT5loadProjectsOnChange" supertip ="diese Option wirkt auf alle Import- und Ladevorgänge aus der Datenbank; wenn der Filter aktiviert ist, so werden beispielsweise aus der Datenbank nur die Projekte geladen, die den gesetzten Kriterien entsprechen. Dabei gilt: wenn in einer Kategorie gar nichts ausgewählt wird, so gilt der Filter für diese Kategorie als nicht gesetzt"/>

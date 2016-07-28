@@ -18,9 +18,9 @@
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <PublishUrl>C:\Users\tom\Documents\privat\temp\Publish MPT\</PublishUrl>
-    <InstallUrl>\\KOYTEK-NAS\backup\VISBO PRojekt-Tafel Install\</InstallUrl>
+    <InstallUrl>\\KOYTEK-NAS\backup\VISBO Projekt-Tafel Install\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.2</ApplicationVersion>
+    <ApplicationVersion>3.0.4.4</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -215,6 +215,7 @@
     <None Include="Projectboard.xlsx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Projectboard_1_TemporaryKey.pfx" />
     <None Include="Projectboard_TemporaryKey.pfx" />
     <None Include="ThisWorkbook.Designer.xml">
       <DependentUpon>ThisWorkbook.vb</DependentUpon>
@@ -331,10 +332,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Projectboard_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Projectboard_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>04F761BB9C946EBD6343D182E3A2F26DD8E15E77</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>721486F33E20DA6CD98D38340A747689001677BC</ManifestCertificateThumbprint>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />

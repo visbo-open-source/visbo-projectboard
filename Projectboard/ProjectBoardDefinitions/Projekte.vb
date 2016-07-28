@@ -4682,7 +4682,7 @@ Public Module Projekte
     '''         = 2 : Unterauslastung
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub updateAuslastungsDetailPie(ByRef chtobj As Excel.ChartObject, ByVal auswahl As Integer)
+    Public Sub updateAuslastungsDetailPie(ByVal chtobj As Excel.ChartObject, ByVal auswahl As Integer)
 
         Dim diagramTitle As String
 
@@ -4708,7 +4708,7 @@ Public Module Projekte
 
         '
         ' hole die Anzahl Rollen
-        
+
         anzRollen = basicRolesCollection.Count
 
 
@@ -4771,79 +4771,79 @@ Public Module Projekte
 
 
 
-        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        'With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
 
-            Dim tmpValues(1) As Double
+        Dim tmpValues(1) As Double
 
 
 
-            With CType(chtobj.Chart, Excel.Chart)
+        With CType(chtobj.Chart, Excel.Chart)
 
-                ' bestimmen der Fontsize Größen 
-                Try
-                    If .HasTitle Then
-                        Dim len As Integer = .ChartTitle.Text.Length
-                        fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
-                        fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
-                    End If
-                Catch ex As Exception
-
-                End Try
-
-                ' remove extra series
-                ''Try
-                ''    Do Until .SeriesCollection.Count = 0
-                ''        .SeriesCollection(1).Delete()
-                ''    Loop
-                ''Catch ex As Exception
-
-                ''End Try
-
-                ' -----------------------
-                ' Schreibe Über- bzw Unterauslastung 
-
-                With .SeriesCollection(1)
-                    .name = "Details"
-
-                    .Values = tdatenreihe
-                    .XValues = Xdatenreihe
-
-                    .ChartType = Excel.XlChartType.xlPie
-                    .HasDataLabels = True
-
-                    With .Datalabels
-                        .Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
-                        ' ur: 17.7.2014 fontsize kommt vom existierenden chart
-                        '.Font.Size = awinSettings.fontsizeItems + 2
-                    End With
-
-                End With
-
-
-                For r = 1 To realAnzahl
-
-                    'roleName = RoleDefinitions.getRoledef(r).name
-                    roleName = tmpNames(r - 1)
-                    With .SeriesCollection(1).Points(r)
-                        .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
-                        ' ur: 17.7.2014 fontsize kommt vom existierenden chart
-                        '.DataLabel.Font.Size = awinSettings.fontsizeItems
-                    End With
-
-                Next r
-
+            ' bestimmen der Fontsize Größen 
+            Try
                 If .HasTitle Then
-                    .ChartTitle.Text = diagramTitle
-                    ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
-                    .ChartTitle.Font.Size = CSng(fontSize1)
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
                 End If
+            Catch ex As Exception
+
+            End Try
+
+            ' remove extra series
+            ''Try
+            ''    Do Until .SeriesCollection.Count = 0
+            ''        .SeriesCollection(1).Delete()
+            ''    Loop
+            ''Catch ex As Exception
+
+            ''End Try
+
+            ' -----------------------
+            ' Schreibe Über- bzw Unterauslastung 
+
+            With .SeriesCollection(1)
+                .name = "Details"
+
+                .Values = tdatenreihe
+                .XValues = Xdatenreihe
+
+                .ChartType = Excel.XlChartType.xlPie
+                .HasDataLabels = True
+
+                With .Datalabels
+                    .Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                    ' ur: 17.7.2014 fontsize kommt vom existierenden chart
+                    '.Font.Size = awinSettings.fontsizeItems + 2
+                End With
 
             End With
 
+
+            For r = 1 To realAnzahl
+
+                'roleName = RoleDefinitions.getRoledef(r).name
+                roleName = tmpNames(r - 1)
+                With .SeriesCollection(1).Points(r)
+                    .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
+                    ' ur: 17.7.2014 fontsize kommt vom existierenden chart
+                    '.DataLabel.Font.Size = awinSettings.fontsizeItems
+                End With
+
+            Next r
+
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+            End If
+
         End With
+
+        'End With
 
     End Sub
 
@@ -5115,6 +5115,14 @@ Public Module Projekte
         Dim myCollection As New Collection
         myCollection.Add("Auslastungs-Details")
 
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
+
         If auswahl = 1 Then
             chtobjname = calcChartKennung("pf", PTpfdk.UeberAuslastung, myCollection)
         Else
@@ -5214,7 +5222,14 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+            End If
+
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -5301,7 +5316,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -5374,8 +5389,19 @@ Public Module Projekte
 
             End If
 
-
-
+            ' wenn es geschützt war .. 
+            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End If
 
 
         End With

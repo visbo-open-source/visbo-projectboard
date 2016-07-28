@@ -65,6 +65,8 @@ Public Module awinGUI
             Exit Sub
         End If
 
+
+
         'Dim allOK As Boolean = False
         ' wenn der Charttype nicht bekannt ist : sofortiger Exit 
         If charttype = PTpfdk.FitRisiko Or _
@@ -79,7 +81,13 @@ Public Module awinGUI
             Exit Sub
         End If
 
+        Dim currentSheetName As String
 
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
 
         appInstance.ScreenUpdating = False
 
@@ -329,7 +337,14 @@ Public Module awinGUI
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+            End If
+
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -690,7 +705,7 @@ Public Module awinGUI
                 Do While Not achieved And anzahlVersuche < 10
                     Try
                         Call Sleep(100)
-                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message
@@ -784,6 +799,20 @@ Public Module awinGUI
                 DiagramList.Add(pfDiagram)
             End If
 
+            ' wenn es geschützt war .. 
+            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End If
+
             repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
         End With
@@ -801,7 +830,7 @@ Public Module awinGUI
     ''' <param name="bubbleColor">gibt an, ob di eAMpelfarbe des Projekts gezeigt werden soll</param>
     ''' <remarks></remarks>
     '''
-    Sub awinUpdatePortfolioDiagrams(ByRef chtobj As ChartObject, bubbleColor As Integer)
+    Sub awinUpdatePortfolioDiagrams(ByVal chtobj As ChartObject, bubbleColor As Integer)
 
         Dim i As Integer
         Dim pname As String
@@ -998,12 +1027,12 @@ Public Module awinGUI
                             ' wird immer um 1 erhöht, damit der kleinste Wert 1 ist 
                             bubbleValues(anzBubbles) = allDependencies.activeNumber(pname, PTdpndncyType.inhalt) + 1
                             nameValues(anzBubbles) = .name
-                            
+
                             'PfChartBubbleNames(anzBubbles) = .name & _
                             '        " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & " Abh.)"
                             PfChartBubbleNames(anzBubbles) = .name & _
                                    " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & repMessages.getmsg(71)
-                            
+
                         Case PTpfdk.FitRisikoVol
 
                             xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
@@ -1280,7 +1309,7 @@ Public Module awinGUI
                         'End If
                         ' Ende Äderung 30.12.15
 
-                        
+
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
                             Try

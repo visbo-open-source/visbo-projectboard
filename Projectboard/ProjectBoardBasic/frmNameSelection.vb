@@ -64,7 +64,7 @@ Public Class frmNameSelection
         awinSettings.isHryNameFrmActive = False
 
         ' Falls einzelne Projekte selektiert waren, so wird diese Selection hier aufgehoben
-        If selectedProjekte.Count > 0 Then
+        If selectedProjekte.Count > 0 And visboZustaende.projectBoardMode = ptModus.graficboard Then
             Call awinDeSelect()
         End If
 

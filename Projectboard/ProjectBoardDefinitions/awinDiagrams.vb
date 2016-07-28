@@ -15,7 +15,7 @@ Public Module awinDiagrams
 
         If von > 0 And laenge > 0 Then
 
-            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
 
                 If showzone Then
                     '
@@ -162,7 +162,19 @@ Public Module awinDiagrams
         Dim chtobjName As String
         Dim breadcrumb As String = ""
 
-        
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
+
+        ' nur für Testzwecke 
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
+            Call MsgBox("Namen ungleich: " & currentSheetName & " ist ungleich " & _
+                        CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
+        End If
 
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
@@ -333,7 +345,14 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+            End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -851,7 +870,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -964,6 +983,21 @@ Public Module awinDiagrams
 
 
             End If
+
+            ' wenn es geschützt war .. 
+            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End If
+
         End With
 
         appInstance.EnableEvents = formerEE
@@ -977,8 +1011,15 @@ Public Module awinDiagrams
 
     '
     ' aktualisiert ein Rollen-Diagramm
+
     '
-    Sub awinUpdateprcCollectionDiagram(ByRef chtobj As ChartObject)
+    ''' <summary>
+    ''' aktualisiert ein Phasen-/Meilenstein-/Rollen-/Kosten-Diagramm 
+    ''' 
+    ''' </summary>
+    ''' <param name="chtobj"></param>
+    ''' <remarks></remarks>
+    Sub awinUpdateprcCollectionDiagram(ByVal chtobj As ChartObject)
 
         Dim von As Integer, bis As Integer
         Dim i As Integer, m As Integer, d As Integer, r As Integer
@@ -1169,206 +1210,247 @@ Public Module awinDiagrams
         appInstance.ScreenUpdating = False
 
 
-        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        'With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
 
-            With chtobj.Chart
+        With chtobj.Chart
 
-                ' remove old series
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
+            ' remove old series
+            Do Until .SeriesCollection.Count = 0
+                .SeriesCollection(1).Delete()
+            Loop
 
-                ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
-                Dim roleISCombinedRole As Boolean
+            ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
+            Dim roleISCombinedRole As Boolean
 
-                For r = 1 To myCollection.Count
+            For r = 1 To myCollection.Count
 
-                    roleISCombinedRole = False
+                roleISCombinedRole = False
 
-                    If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                        Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+                If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
+                    Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+                Else
+                    prcName = CStr(myCollection.Item(r))
+                End If
+
+
+                If prcTyp = DiagrammTypen(0) Then
+                    einheit = " "
+
+                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
+
+                    If IsNothing(tmpPhaseDef) Then
+                        If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                            objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                        Else
+                            objektFarbe = awinSettings.AmpelNichtBewertet
+                        End If
+
                     Else
-                        prcName = CStr(myCollection.Item(r))
+                        objektFarbe = tmpPhaseDef.farbe
+                    End If
+
+                    datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
+                    hmxWert = datenreihe.Max
+
+                    If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                        ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                        tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName, breadcrumb)
+                        For ix = 0 To bis - von
+                            datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                            seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                        Next
                     End If
 
 
-                    If prcTyp = DiagrammTypen(0) Then
-                        einheit = " "
+                ElseIf prcTyp = DiagrammTypen(1) Then
+                    einheit = " " & awinSettings.kapaEinheit
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(prcName)
+                    objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
 
-                        Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
+                    If tmpRole.isCombinedRole Then
+                        roleISCombinedRole = True
+                        datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                       considerAllSubRoles:=True, _
+                                                                       type:=PTcbr.placeholders, _
+                                                                       excludedNames:=myCollection)
+                        edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                       considerAllSubRoles:=True, _
+                                                                       type:=PTcbr.realRoles, _
+                                                                       excludedNames:=myCollection)
+                    Else
+                        datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+                    End If
 
-                        If IsNothing(tmpPhaseDef) Then
-                            If appearanceDefinitions.ContainsKey("Phasen Default") Then
-                                objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
-                            Else
-                                objektFarbe = awinSettings.AmpelNichtBewertet
-                            End If
+                    hmxWert = datenreihe.Max
 
-                        Else
-                            objektFarbe = tmpPhaseDef.farbe
-                        End If
-
-                        datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
-                        hmxWert = datenreihe.Max
-
-                        If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
-                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                            tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName, breadcrumb)
-                            For ix = 0 To bis - von
-                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                            Next
-                        End If
-
-
-                    ElseIf prcTyp = DiagrammTypen(1) Then
-                        einheit = " " & awinSettings.kapaEinheit
-                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(prcName)
-                        objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
-
+                    If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                        ' Ergänzung wegen Anzeige der selektierten Objekte ... 
                         If tmpRole.isCombinedRole Then
-                            roleISCombinedRole = True
-                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                           considerAllSubRoles:=True, _
-                                                                           type:=PTcbr.placeholders, _
-                                                                           excludedNames:=myCollection)
-                            edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                           considerAllSubRoles:=True, _
-                                                                           type:=PTcbr.realRoles, _
-                                                                           excludedNames:=myCollection)
+                            tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                       considerAllSubRoles:=True, _
+                                                                       type:=PTcbr.all, _
+                                                                       excludedNames:=myCollection)
                         Else
-                            datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+                            tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
                         End If
 
-                        hmxWert = datenreihe.Max
+                        For ix = 0 To bis - von
+                            datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
 
-                        If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
-                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
                             If tmpRole.isCombinedRole Then
-                                tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                           considerAllSubRoles:=True, _
-                                                                           type:=PTcbr.all, _
-                                                                           excludedNames:=myCollection)
-                            Else
-                                tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
-                            End If
-
-                            For ix = 0 To bis - von
-                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-
-                                If tmpRole.isCombinedRole Then
-                                    ' in diesem Fall kann datenreihe(ix) auch negativ werden, muss also auch von edatenreihe abgezogen werden ...
-                                    If datenreihe(ix) < 0 Then
-                                        ' datenreihe(ix) ist negativ, also heisst das abziehen 
-                                        edatenreihe(ix) = edatenreihe(ix) + datenreihe(ix)
-                                        datenreihe(ix) = 0
-                                    End If
-
+                                ' in diesem Fall kann datenreihe(ix) auch negativ werden, muss also auch von edatenreihe abgezogen werden ...
+                                If datenreihe(ix) < 0 Then
+                                    ' datenreihe(ix) ist negativ, also heisst das abziehen 
+                                    edatenreihe(ix) = edatenreihe(ix) + datenreihe(ix)
+                                    datenreihe(ix) = 0
                                 End If
 
+                            End If
+
+                            seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                        Next
+                    End If
+
+                ElseIf prcTyp = DiagrammTypen(2) Then
+                    einheit = " T€"
+                    If prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
+                        ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
+                        isPersCost = True
+                        objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                        'datenreihe = ShowProjekte.getCostiValuesInMonth
+                        'edatenreihe = ShowProjekte.getCosteValuesInMonth
+                        datenreihe = ShowProjekte.getCostGpValuesInMonth
+
+
+                        For i = 0 To bis - von
+                            seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
+                            hmxWert = Max(hmxWert, datenreihe(i) + edatenreihe(i))
+                        Next i
+
+                    Else
+                        ' es handelt sich nicht um die Personalkosten
+                        isPersCost = False
+                        objektFarbe = CostDefinitions.getCostdef(prcName).farbe
+                        datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
+                        hmxWert = datenreihe.Max
+
+                        If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                            tmpdatenreihe = selectedProjekte.getCostValuesInMonth(prcName)
+                            For ix = 0 To bis - von
+                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
                                 seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
                             Next
                         End If
 
-                    ElseIf prcTyp = DiagrammTypen(2) Then
-                        einheit = " T€"
-                        If prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
-                            ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
-                            isPersCost = True
-                            objektFarbe = CostDefinitions.getCostdef(prcName).farbe
-                            'datenreihe = ShowProjekte.getCostiValuesInMonth
-                            'edatenreihe = ShowProjekte.getCosteValuesInMonth
-                            datenreihe = ShowProjekte.getCostGpValuesInMonth
+                    End If
 
+                ElseIf prcTyp = DiagrammTypen(4) Then
+                    ' es handelt sich um die Ergebnisse Earned Value bzw. Earned Value - gewichtet 
+                    einheit = " T€"
 
-                            For i = 0 To bis - von
-                                seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
-                                hmxWert = Max(hmxWert, datenreihe(i) + edatenreihe(i))
-                            Next i
+                    objektFarbe = ergebnisfarbe1
+                    datenreihe = ShowProjekte.getEarnedValuesInMonth()
+                    ' jetzt müssen die - theoretischen Earned Values um die externen Kosten bereinigt werden, die abfallen, weil aufgrund 
+                    ' bestimmter überlasteter Rollen externe , teurere Kräfte reingeholt werden müssen 
 
-                        Else
-                            ' es handelt sich nicht um die Personalkosten
-                            isPersCost = False
-                            objektFarbe = CostDefinitions.getCostdef(prcName).farbe
-                            datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
-                            hmxWert = datenreihe.Max
+                    edatenreihe = ShowProjekte.getCosteValuesInMonth(True)
+                    For i = 0 To bis - von
+                        datenreihe(i) = datenreihe(i) - edatenreihe(i)
+                    Next
 
-                            If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
-                                ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                                tmpdatenreihe = selectedProjekte.getCostValuesInMonth(prcName)
-                                For ix = 0 To bis - von
-                                    datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                                    seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                                Next
+                    ' jetzt werdem die RiskValues bestimmt 
+                    If prcName = ergebnisChartName(1) Then
+                        isWeightedValues = True
+                        edatenreihe = ShowProjekte.getWeightedRiskValuesInMonth
+                        For i = 0 To bis - von
+                            If datenreihe(i) - edatenreihe(i) >= 0 Then
+                                datenreihe(i) = datenreihe(i) - edatenreihe(i)
+                            Else
+                                edatenreihe(i) = (edatenreihe(i) - datenreihe(i)) * -1
                             End If
 
+                        Next
+                    Else
+                        isWeightedValues = False
+                    End If
+
+                ElseIf prcTyp = DiagrammTypen(5) Then
+
+                    einheit = " "
+                    Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
+                    If IsNothing(tmpMilestoneDef) Then
+                        If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
+                            objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                        Else
+                            objektFarbe = awinSettings.AmpelNichtBewertet
                         End If
 
-                    ElseIf prcTyp = DiagrammTypen(4) Then
-                        ' es handelt sich um die Ergebnisse Earned Value bzw. Earned Value - gewichtet 
-                        einheit = " T€"
+                    Else
+                        objektFarbe = tmpMilestoneDef.farbe
+                    End If
+                    msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
+                End If
 
-                        objektFarbe = ergebnisfarbe1
-                        datenreihe = ShowProjekte.getEarnedValuesInMonth()
-                        ' jetzt müssen die - theoretischen Earned Values um die externen Kosten bereinigt werden, die abfallen, weil aufgrund 
-                        ' bestimmter überlasteter Rollen externe , teurere Kräfte reingeholt werden müssen 
+                If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                    For i = 0 To bis - von
+                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
+                                                    edatenreihe(i)
+                    Next i
+                Else
+                    For i = 0 To bis - von
+                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
+                    Next i
+                End If
 
-                        edatenreihe = ShowProjekte.getCosteValuesInMonth(True)
+
+                If isPersCost Then
+                    With .SeriesCollection.NewSeries
+
+                        '.name = prcName & " intern "
+                        .name = prcName & repMessages.getmsg(115)
+                        .Interior.color = objektFarbe
+                        .Values = datenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlColumnStacked
+                        .HasDataLabels = False
+                    End With
+
+                    If edatenreihe.Sum > 0 Then
+                        With .SeriesCollection.NewSeries
+                            '.name = "Kosten durch Überlastung "
+                            .name = repMessages.getmsg(152)
+                            .Interior.color = farbeExterne
+                            .Values = edatenreihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Excel.XlChartType.xlColumnStacked
+                            .HasDataLabels = False
+                        End With
+                    End If
+
+                Else
+                    If prcTyp = DiagrammTypen(5) Then
+
+
+                        ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
+                        ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
+
                         For i = 0 To bis - von
-                            datenreihe(i) = datenreihe(i) - edatenreihe(i)
+                            datenreihe(i) = 0
+                            For c = 0 To 3
+                                datenreihe(i) = datenreihe(i) + msdatenreihe(c, i)
+                            Next
                         Next
 
-                        ' jetzt werdem die RiskValues bestimmt 
-                        If prcName = ergebnisChartName(1) Then
-                            isWeightedValues = True
-                            edatenreihe = ShowProjekte.getWeightedRiskValuesInMonth
-                            For i = 0 To bis - von
-                                If datenreihe(i) - edatenreihe(i) >= 0 Then
-                                    datenreihe(i) = datenreihe(i) - edatenreihe(i)
-                                Else
-                                    edatenreihe(i) = (edatenreihe(i) - datenreihe(i)) * -1
-                                End If
-
-                            Next
-                        Else
-                            isWeightedValues = False
-                        End If
-
-                    ElseIf prcTyp = DiagrammTypen(5) Then
-
-                        einheit = " "
-                        Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
-                        If IsNothing(tmpMilestoneDef) Then
-                            If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
-                                objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                        With .SeriesCollection.NewSeries
+                            If breadcrumb = "" Then
+                                .name = prcName
                             Else
-                                objektFarbe = awinSettings.AmpelNichtBewertet
+                                .name = breadcrumb & "-" & prcName
                             End If
 
-                        Else
-                            objektFarbe = tmpMilestoneDef.farbe
-                        End If
-                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
-                    End If
-
-                    If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
-                        For i = 0 To bis - von
-                            seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
-                                                        edatenreihe(i)
-                        Next i
-                    Else
-                        For i = 0 To bis - von
-                            seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
-                        Next i
-                    End If
-
-
-                    If isPersCost Then
-                        With .SeriesCollection.NewSeries
-
-                            '.name = prcName & " intern "
-                            .name = prcName & repMessages.getmsg(115)
+                            '.Interior.color = ampelfarbe(0)
                             .Interior.color = objektFarbe
                             .Values = datenreihe
                             .XValues = Xdatenreihe
@@ -1376,339 +1458,298 @@ Public Module awinDiagrams
                             .HasDataLabels = False
                         End With
 
-                        If edatenreihe.Sum > 0 Then
-                            With .SeriesCollection.NewSeries
-                                '.name = "Kosten durch Überlastung "
-                                .name = repMessages.getmsg(152)
-                                .Interior.color = farbeExterne
+
+
+                    Else
+
+                        With CType(.SeriesCollection.NewSeries, Excel.Series)
+
+                            If prcTyp = DiagrammTypen(0) Then
+                                If breadcrumb = "" Then
+                                    .Name = prcName
+                                Else
+                                    .Name = breadcrumb & "-" & prcName
+                                End If
+                            ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                                ' repmsg!
+                                .Name = prcName & ": Platzhalter"
+                            Else
+                                .Name = prcName
+                            End If
+
+                            .Interior.Color = objektFarbe
+                            .Values = datenreihe
+                            .XValues = Xdatenreihe
+                            If myCollection.Count = 1 Then
+                                If isWeightedValues Or roleISCombinedRole Then
+                                    .ChartType = Excel.XlChartType.xlColumnStacked
+                                Else
+                                    .ChartType = Excel.XlChartType.xlColumnClustered
+                                End If
+                            Else
+                                .ChartType = Excel.XlChartType.xlColumnStacked
+                            End If
+                            .HasDataLabels = False
+                        End With
+
+                        If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                            ' alle anderen zeigen 
+                            With CType(.SeriesCollection.NewSeries, Excel.Series)
+
+                                .Name = prcName & ": zugeordnet"
+                                .Interior.Color = awinSettings.AmpelNichtBewertet
                                 .Values = edatenreihe
                                 .XValues = Xdatenreihe
                                 .ChartType = Excel.XlChartType.xlColumnStacked
                                 .HasDataLabels = False
+
                             End With
-                        End If
-
-                    Else
-                        If prcTyp = DiagrammTypen(5) Then
-
-
-                            ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
-                            ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
-
-                            For i = 0 To bis - von
-                                datenreihe(i) = 0
-                                For c = 0 To 3
-                                    datenreihe(i) = datenreihe(i) + msdatenreihe(c, i)
-                                Next
-                            Next
-
-                            With .SeriesCollection.NewSeries
-                                If breadcrumb = "" Then
-                                    .name = prcName
-                                Else
-                                    .name = breadcrumb & "-" & prcName
-                                End If
-
-                                '.Interior.color = ampelfarbe(0)
-                                .Interior.color = objektFarbe
-                                .Values = datenreihe
-                                .XValues = Xdatenreihe
-                                .ChartType = Excel.XlChartType.xlColumnStacked
-                                .HasDataLabels = False
-                            End With
-
-
-
-                        Else
-
-                            With CType(.SeriesCollection.NewSeries, Excel.Series)
-
-                                If prcTyp = DiagrammTypen(0) Then
-                                    If breadcrumb = "" Then
-                                        .Name = prcName
-                                    Else
-                                        .Name = breadcrumb & "-" & prcName
-                                    End If
-                                ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
-                                    ' repmsg!
-                                    .Name = prcName & ": Platzhalter"
-                                Else
-                                    .Name = prcName
-                                End If
-
-                                .Interior.Color = objektFarbe
-                                .Values = datenreihe
-                                .XValues = Xdatenreihe
-                                If myCollection.Count = 1 Then
-                                    If isWeightedValues Or roleISCombinedRole Then
-                                        .ChartType = Excel.XlChartType.xlColumnStacked
-                                    Else
-                                        .ChartType = Excel.XlChartType.xlColumnClustered
-                                    End If
-                                Else
-                                    .ChartType = Excel.XlChartType.xlColumnStacked
-                                End If
-                                .HasDataLabels = False
-                            End With
-
-                            If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
-                                ' alle anderen zeigen 
-                                With CType(.SeriesCollection.NewSeries, Excel.Series)
-
-                                    .Name = prcName & ": zugeordnet"
-                                    .Interior.Color = awinSettings.AmpelNichtBewertet
-                                    .Values = edatenreihe
-                                    .XValues = Xdatenreihe
-                                    .ChartType = Excel.XlChartType.xlColumnStacked
-                                    .HasDataLabels = False
-
-                                End With
-
-                            End If
 
                         End If
 
                     End If
 
-                Next r
-
-                ' wenn es sich um die weighted Variante handelt
-                If isWeightedValues Then
-                    With .SeriesCollection.NewSeries
-                        .HasDataLabels = False
-                        '.name = "Risiko Abschlag"
-                        .name = repMessages.getmsg(117)
-                        .Interior.color = ergebnisfarbe2
-                        .Values = edatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlColumnStacked
-                    End With
                 End If
 
+            Next r
 
-                ' Ergänzung wegen Anzeige selektierter Objekte 
-                ' wenn der Wert größer ist als Null, dann Anzeigen ... 
-                If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+            ' wenn es sich um die weighted Variante handelt
+            If isWeightedValues Then
+                With .SeriesCollection.NewSeries
+                    .HasDataLabels = False
+                    '.name = "Risiko Abschlag"
+                    .name = repMessages.getmsg(117)
+                    .Interior.color = ergebnisfarbe2
+                    .Values = edatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+                End With
+            End If
+
+
+            ' Ergänzung wegen Anzeige selektierter Objekte 
+            ' wenn der Wert größer ist als Null, dann Anzeigen ... 
+            If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+                With .SeriesCollection.NewSeries
+                    .HasDataLabels = False
+                    .name = "Selected Projects"
+                    .Interior.color = selectionFarbe
+                    .Values = seldatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+                End With
+
+            End If
+
+
+            ' wenn es sich um ein Cockpit Chart handelt, dann wird der jeweilige Min, Max-Wert angezeigt
+
+            lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
+
+            ' '' ''If isCockpitChart Then
+            ' '' ''    ' jetzt muss eine Dummy Series Collection eingeführt werde, damit das Datalabel über dem Balken angezeigt wird
+            ' '' ''    If lastSC > 1 Then
+
+            ' '' ''        maxwert = appInstance.WorksheetFunction.Max(seriesSumDatenreihe)
+
+            ' '' ''        For i = 0 To bis - von
+            ' '' ''            VarValues(i) = 0.5 * maxwert
+            ' '' ''        Next i
+
+            ' '' ''        With .SeriesCollection.NewSeries
+            ' '' ''            .name = "Dummy"
+            ' '' ''            .Interior.color = RGB(255, 255, 255)
+            ' '' ''            .Values = VarValues
+            ' '' ''            .XValues = Xdatenreihe
+            ' '' ''            .ChartType = Excel.XlChartType.xlColumnStacked
+            ' '' ''            .HasDataLabels = False
+            ' '' ''        End With
+            ' '' ''        lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
+
+            ' '' ''    End If
+            ' '' ''    With .SeriesCollection(lastSC)
+            ' '' ''        .HasDataLabels = False
+            ' '' ''        VarValues = seriesSumDatenreihe
+            ' '' ''        nr_pts = CType(.Points, Excel.Points).Count
+            ' '' ''        minwert = VarValues.Min
+            ' '' ''        maxwert = VarValues.Max
+
+            ' '' ''        mindone = False
+            ' '' ''        maxdone = False
+            ' '' ''        i = 1
+            ' '' ''        While i <= nr_pts And (mindone = False Or maxdone = False)
+
+            ' '' ''            If VarValues(i - 1) = minwert And Not mindone Then
+            ' '' ''                mindone = True
+            ' '' ''                With .Points(i)
+            ' '' ''                    .HasDataLabel = True
+            ' '' ''                    .DataLabel.text = Format(minwert, "##,##0")
+
+            ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
+            ' '' ''                    Try
+
+            ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
+            ' '' ''                    Catch ex As Exception
+            ' '' ''                    End Try
+
+
+            ' '' ''                End With
+            ' '' ''            ElseIf VarValues(i - 1) = maxwert And Not maxdone Then
+            ' '' ''                maxdone = True
+            ' '' ''                With .Points(i)
+            ' '' ''                    .HasDataLabel = True
+            ' '' ''                    .DataLabel.text = Format(maxwert, "##,##0")
+
+            ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
+            ' '' ''                    Try
+
+            ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
+            ' '' ''                    Catch ex As Exception
+            ' '' ''                    End Try
+
+            ' '' ''                End With
+
+            ' '' ''            End If
+            ' '' ''            i = i + 1
+            ' '' ''        End While
+            ' '' ''    End With
+
+            ' '' ''    ' es ist ein Mini-Diagramm, deswegen müssen folgende Einstellungen gelten:
+
+            ' '' ''    .HasLegend = False
+            ' '' ''    .HasAxis(Excel.XlAxisType.xlCategory) = False
+            ' '' ''    .HasAxis(Excel.XlAxisType.xlValue) = False
+            ' '' ''    .Axes(Excel.XlAxisType.xlCategory).HasMajorGridlines = False
+            ' '' ''    With .Axes(Excel.XlAxisType.xlValue)
+            ' '' ''        .HasMajorGridlines = False
+            ' '' ''    End With
+
+            ' '' ''ElseIf myCollection.Count > 1 Then
+
+            ' '' ''End If
+
+
+            ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
+            ' ansonsten werden nur die internen Kapazitäten angezeigt 
+            If prcTyp = DiagrammTypen(1) Then
+                If kdatenreihe.Sum < kdatenreihePlus.Sum Then
+                    ' es gibt geplante externe Ressourcen ... 
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
-                        .name = "Selected Projects"
-                        .Interior.color = selectionFarbe
-                        .Values = seldatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlColumnStacked
-                    End With
+                        '.name = "Kapazität incl. Externe"
+                        .name = repMessages.getmsg(118)
 
-                End If
-
-
-                ' wenn es sich um ein Cockpit Chart handelt, dann wird der jeweilige Min, Max-Wert angezeigt
-
-                lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
-
-                ' '' ''If isCockpitChart Then
-                ' '' ''    ' jetzt muss eine Dummy Series Collection eingeführt werde, damit das Datalabel über dem Balken angezeigt wird
-                ' '' ''    If lastSC > 1 Then
-
-                ' '' ''        maxwert = appInstance.WorksheetFunction.Max(seriesSumDatenreihe)
-
-                ' '' ''        For i = 0 To bis - von
-                ' '' ''            VarValues(i) = 0.5 * maxwert
-                ' '' ''        Next i
-
-                ' '' ''        With .SeriesCollection.NewSeries
-                ' '' ''            .name = "Dummy"
-                ' '' ''            .Interior.color = RGB(255, 255, 255)
-                ' '' ''            .Values = VarValues
-                ' '' ''            .XValues = Xdatenreihe
-                ' '' ''            .ChartType = Excel.XlChartType.xlColumnStacked
-                ' '' ''            .HasDataLabels = False
-                ' '' ''        End With
-                ' '' ''        lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
-
-                ' '' ''    End If
-                ' '' ''    With .SeriesCollection(lastSC)
-                ' '' ''        .HasDataLabels = False
-                ' '' ''        VarValues = seriesSumDatenreihe
-                ' '' ''        nr_pts = CType(.Points, Excel.Points).Count
-                ' '' ''        minwert = VarValues.Min
-                ' '' ''        maxwert = VarValues.Max
-
-                ' '' ''        mindone = False
-                ' '' ''        maxdone = False
-                ' '' ''        i = 1
-                ' '' ''        While i <= nr_pts And (mindone = False Or maxdone = False)
-
-                ' '' ''            If VarValues(i - 1) = minwert And Not mindone Then
-                ' '' ''                mindone = True
-                ' '' ''                With .Points(i)
-                ' '' ''                    .HasDataLabel = True
-                ' '' ''                    .DataLabel.text = Format(minwert, "##,##0")
-
-                ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-                ' '' ''                    Try
-
-                ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-                ' '' ''                    Catch ex As Exception
-                ' '' ''                    End Try
-
-
-                ' '' ''                End With
-                ' '' ''            ElseIf VarValues(i - 1) = maxwert And Not maxdone Then
-                ' '' ''                maxdone = True
-                ' '' ''                With .Points(i)
-                ' '' ''                    .HasDataLabel = True
-                ' '' ''                    .DataLabel.text = Format(maxwert, "##,##0")
-
-                ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-                ' '' ''                    Try
-
-                ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-                ' '' ''                    Catch ex As Exception
-                ' '' ''                    End Try
-
-                ' '' ''                End With
-
-                ' '' ''            End If
-                ' '' ''            i = i + 1
-                ' '' ''        End While
-                ' '' ''    End With
-
-                ' '' ''    ' es ist ein Mini-Diagramm, deswegen müssen folgende Einstellungen gelten:
-
-                ' '' ''    .HasLegend = False
-                ' '' ''    .HasAxis(Excel.XlAxisType.xlCategory) = False
-                ' '' ''    .HasAxis(Excel.XlAxisType.xlValue) = False
-                ' '' ''    .Axes(Excel.XlAxisType.xlCategory).HasMajorGridlines = False
-                ' '' ''    With .Axes(Excel.XlAxisType.xlValue)
-                ' '' ''        .HasMajorGridlines = False
-                ' '' ''    End With
-
-                ' '' ''ElseIf myCollection.Count > 1 Then
-
-                ' '' ''End If
-
-
-                ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
-                ' ansonsten werden nur die internen Kapazitäten angezeigt 
-                If prcTyp = DiagrammTypen(1) Then
-                    If kdatenreihe.Sum < kdatenreihePlus.Sum Then
-                        ' es gibt geplante externe Ressourcen ... 
-                        With .SeriesCollection.NewSeries
-                            .HasDataLabels = False
-                            '.name = "Kapazität incl. Externe"
-                            .name = repMessages.getmsg(118)
-
-                            .Values = kdatenreihePlus
-                            .XValues = Xdatenreihe
-                            .ChartType = Excel.XlChartType.xlLine
-
-                            With .Format.Line
-                                .DashStyle = MsoLineDashStyle.msoLineSysDot
-                                .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                                .Weight = 3
-
-                            End With
-                            nr_pts = CType(.Points, Excel.Points).Count
-                        End With
-                    End If
-                End If
-
-
-                If prcTyp = DiagrammTypen(1) Or _
-                       (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
-                       (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
-                    With .SeriesCollection.NewSeries
-                        .HasDataLabels = False
-
-                        If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                            '.name = "Leistbarkeitsgrenze"
-                            .name = repMessages.getmsg(119)
-                        Else
-                            '.name = "Interne Kapazität"
-                            .name = repMessages.getmsg(260)
-                        End If
-
-                        .Border.color = rollenKapaFarbe
-                        .Values = kdatenreihe
+                        .Values = kdatenreihePlus
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
+
                         With .Format.Line
-                            .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
-                            .ForeColor.RGB = XlRgbColor.rgbFireBrick
+                            .DashStyle = MsoLineDashStyle.msoLineSysDot
+                            .ForeColor.RGB = XlRgbColor.rgbFuchsia
                             .Weight = 3
-                        End With
 
+                        End With
                         nr_pts = CType(.Points, Excel.Points).Count
+                    End With
+                End If
+            End If
 
-                        With .Points(nr_pts)
 
-                            .HasDataLabel = False
+            If prcTyp = DiagrammTypen(1) Or _
+                   (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
+                   (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
+                With .SeriesCollection.NewSeries
+                    .HasDataLabels = False
 
-                        End With
+                    If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
+                        '.name = "Leistbarkeitsgrenze"
+                        .name = repMessages.getmsg(119)
+                    Else
+                        '.name = "Interne Kapazität"
+                        .name = repMessages.getmsg(260)
+                    End If
+
+                    .Border.color = rollenKapaFarbe
+                    .Values = kdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlLine
+                    With .Format.Line
+                        .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
+                        .ForeColor.RGB = XlRgbColor.rgbFireBrick
+                        .Weight = 3
+                    End With
+
+                    nr_pts = CType(.Points, Excel.Points).Count
+
+                    With .Points(nr_pts)
+
+                        .HasDataLabel = False
 
                     End With
 
-                End If
+                End With
 
-                .HasTitle = True
+            End If
+
+            .HasTitle = True
 
 
-                If prcTyp = DiagrammTypen(0) Or _
-                        prcTyp = DiagrammTypen(5) Or _
-                        awinSettings.kapaEinheit = "ST" Then
-                    titleSumme = ""
+            If prcTyp = DiagrammTypen(0) Or _
+                    prcTyp = DiagrammTypen(5) Or _
+                    awinSettings.kapaEinheit = "ST" Then
+                titleSumme = ""
 
-                ElseIf prcTyp = DiagrammTypen(1) Then
+            ElseIf prcTyp = DiagrammTypen(1) Then
 
-                    einheit = awinSettings.kapaEinheit
-                    If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
-                        titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
-                                            Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
-                                            Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
-                    Else
-                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                einheit = awinSettings.kapaEinheit
+                If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+                    titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
+                                        Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
                                         Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
-                    End If
-
-
-                ElseIf prcTyp = DiagrammTypen(2) Then
-
-                    einheit = "T€"
-                    If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
-                        titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
-                                            Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
-                    Else
-                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " " & einheit & ")"
-                    End If
-
-
                 Else
-                    titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
+                    titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                                    Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
                 End If
 
 
-                .ChartTitle.Text = diagramTitle & titleSumme
-                ' lastSC muss  bestimmt werden 
-                lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
+            ElseIf prcTyp = DiagrammTypen(2) Then
+
+                einheit = "T€"
+                If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+                    titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
+                                        Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
+                Else
+                    titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                End If
 
 
-                ' Änderung 18.3.15 tk: bei einem Update muss überhaupt nix geändert werden, was LEgende angeht ; 
-                ' die ist entweder da und soll da bleiben oder sie ist nicht da und soll auch nicht kommen 
-                'If isCockpitChart Then
-                '    .HasLegend = False
-                'ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
-                '    .HasLegend = True
-                '    'ur: 11.03.2015: wenn ein Chart eine Legende hat, so soll sie bleiben wie zuletzt definiert, nicht jedesmal auf Ursprungszustand zurückgesetzt werden
-                '    '.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-                '    '.Legend.Font.Size = awinSettings.fontsizeLegend
-                'Else
-                '    .HasLegend = False
-                'End If
+            Else
+                titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
+            End If
 
-            End With
 
+            .ChartTitle.Text = diagramTitle & titleSumme
+            ' lastSC muss  bestimmt werden 
+            lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
+
+
+            ' Änderung 18.3.15 tk: bei einem Update muss überhaupt nix geändert werden, was LEgende angeht ; 
+            ' die ist entweder da und soll da bleiben oder sie ist nicht da und soll auch nicht kommen 
+            'If isCockpitChart Then
+            '    .HasLegend = False
+            'ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
+            '    .HasLegend = True
+            '    'ur: 11.03.2015: wenn ein Chart eine Legende hat, so soll sie bleiben wie zuletzt definiert, nicht jedesmal auf Ursprungszustand zurückgesetzt werden
+            '    '.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
+            '    '.Legend.Font.Size = awinSettings.fontsizeLegend
+            'Else
+            '    .HasLegend = False
+            'End If
 
         End With
+
+
+        'End With ' with worksheet ...
 
         With chtobj
             If Not isCockpitChart Then
@@ -1743,7 +1784,7 @@ Public Module awinDiagrams
     ''' </summary>
     ''' <param name="chtObj">Verweis aus das zu aktualisierende Chart</param>
     ''' <remarks></remarks>
-    Sub awinUpdateBudgetErgebnisDiagramm(ByRef chtObj As Excel.ChartObject)
+    Sub awinUpdateBudgetErgebnisDiagramm(ByVal chtObj As Excel.ChartObject)
 
         Dim diagramTitle As String
         Dim minScale As Double
@@ -1808,7 +1849,7 @@ Public Module awinDiagrams
 
         ertragsWert = budgetSum - (riskValue + pCost + oCost)
 
-        
+
         itemValue(0) = budgetSum
         itemColor(0) = ergebnisfarbe1
 
@@ -1828,7 +1869,7 @@ Public Module awinDiagrams
         itemValue(3) = oCost
         itemColor(3) = farbeExterne
 
-         ' das ist der Ertrag 
+        ' das ist der Ertrag 
         itemValue(4) = ertragsWert
         If ertragsWert > 0 Then
             itemColor(4) = ergebnisfarbe2
@@ -1843,169 +1884,171 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        'With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
 
 
-            If ertragsWert < 0 Then
-                minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
-            Else
-                minScale = 0
-            End If
+        If ertragsWert < 0 Then
+            minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
+        Else
+            minScale = 0
+        End If
 
-            'Dim htxt As String
-            Dim valueCrossesNull As Boolean = False
+        'Dim htxt As String
+        Dim valueCrossesNull As Boolean = False
 
-            With chtObj.Chart
-                ' remove extra series
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
-                Dim crossindex As Integer = -1
+        With chtObj.Chart
+            ' remove extra series
+            Do Until .SeriesCollection.Count = 0
+                .SeriesCollection(1).Delete()
+            Loop
+            Dim crossindex As Integer = -1
 
-                ' bestimmen des Anfangs  
-                Dim iv = 0
-                valueDatenreihe1(iv) = 0
-                valueDatenreihe2(iv) = itemValue(iv)
-                currentWert = itemValue(iv)
-                Dim formerValue As Double = currentWert
-                Dim negativeFromNull As Boolean = False
+            ' bestimmen des Anfangs  
+            Dim iv = 0
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
+            currentWert = itemValue(iv)
+            Dim formerValue As Double = currentWert
+            Dim negativeFromNull As Boolean = False
 
-                ' alle nächsten Zwischen-Werte 
-                For iv = 1 To 3
-                    If formerValue <= 0 Then
-                        negativeFromNull = True
-                    Else
-                        negativeFromNull = False
-                    End If
+            ' alle nächsten Zwischen-Werte 
+            For iv = 1 To 3
+                If formerValue <= 0 Then
+                    negativeFromNull = True
+                Else
+                    negativeFromNull = False
+                End If
 
-                    currentWert = currentWert - itemValue(iv)
-                    valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
+                currentWert = currentWert - itemValue(iv)
+                valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
 
-                    If currentWert >= 0 Then
-                        valueDatenreihe1(iv) = currentWert
-                        valueDatenreihe2(iv) = itemValue(iv)
-                    ElseIf valueCrossesNull Then
-                        valueDatenreihe1(iv) = currentWert
-                        valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
-                        crossindex = iv + 1
-                    ElseIf negativeFromNull Then
-                        valueDatenreihe1(iv) = formerValue
-                        valueDatenreihe2(iv) = itemValue(iv) * (-1)
-                    Else
-                        valueDatenreihe1(iv) = currentWert
-                        valueDatenreihe2(iv) = itemValue(iv) * (-1)
-                    End If
+                If currentWert >= 0 Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv)
+                ElseIf valueCrossesNull Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
+                    crossindex = iv + 1
+                ElseIf negativeFromNull Then
+                    valueDatenreihe1(iv) = formerValue
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                Else
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                End If
 
-                    formerValue = currentWert
-                Next
+                formerValue = currentWert
+            Next
 
-                ' bestimmen des Ende 
-                iv = 4
-                valueDatenreihe1(iv) = 0
-                valueDatenreihe2(iv) = itemValue(iv)
-
-
-
-                'series
-                With .SeriesCollection.NewSeries
-                    .name = "Bottom"
-                    .HasDataLabels = False
-                    .Interior.colorindex = -4142
-                    .Values = valueDatenreihe1
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlColumnStacked
-                    If crossindex > 0 Then
-                        ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
-                        With .Points(crossindex)
-                            .Interior.color = itemColor(crossindex - 1)
-                        End With
-                    End If
-
-                End With
-
-                With .SeriesCollection.NewSeries
-                    .name = "Top"
-                    .HasDataLabels = True
-                    .Values = valueDatenreihe2
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlColumnStacked
-
-                    For iv = 0 To 4
-
-                        With .Points(iv + 1)
-                            .HasDataLabel = True
-                            .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
-                            .Interior.color = itemColor(iv)
-                            .DataLabel.Font.Size = awinSettings.fontsizeLegend
-                            Try
-                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
-                            Catch ex As Exception
-
-                            End Try
-                        End With
-
-                    Next
-
-                End With
-
-                .HasAxis(Excel.XlAxisType.xlCategory) = True
-                .HasAxis(Excel.XlAxisType.xlValue) = False
-
-                With .Axes(Excel.XlAxisType.xlCategory)
-                    .HasTitle = False
-                    If minScale < 0 Then
-                        .TickLabelPosition = Excel.Constants.xlLow
-                    End If
-                    '.MinimumScale = 0
-
-                End With
+            ' bestimmen des Ende 
+            iv = 4
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
 
 
-                Try
-                    With .Axes(Excel.XlAxisType.xlValue)
-                        .HasTitle = False
-                        .HasMajorGridlines = False
-                        .hasminorgridlines = False
-                        If minScale < 0 Then
-                            .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
-                        Else
-                            .MinimumScale = 0
-                        End If
+
+            'series
+            With .SeriesCollection.NewSeries
+                .name = "Bottom"
+                .HasDataLabels = False
+                .Interior.colorindex = -4142
+                .Values = valueDatenreihe1
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+                If crossindex > 0 Then
+                    ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
+                    With .Points(crossindex)
+                        .Interior.color = itemColor(crossindex - 1)
                     End With
-                Catch ex As Exception
-
-                End Try
-
-
-                .HasLegend = False
-                .HasTitle = True
-
-                .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-
-                Dim achieved As Boolean = False
-                Dim anzahlVersuche As Integer = 0
-                Dim errmsg As String = ""
-                Do While Not achieved And anzahlVersuche < 10
-                    Try
-                        Call Sleep(100)
-                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
-                        achieved = True
-                    Catch ex As Exception
-                        errmsg = ex.Message
-                        Call Sleep(100)
-                        anzahlVersuche = anzahlVersuche + 1
-                    End Try
-                Loop
-
-                If Not achieved Then
-                    Throw New ArgumentException("Chart-Fehler:" & errmsg)
                 End If
 
             End With
 
+            With .SeriesCollection.NewSeries
+                .name = "Top"
+                .HasDataLabels = True
+                .Values = valueDatenreihe2
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+
+                For iv = 0 To 4
+
+                    With .Points(iv + 1)
+                        .HasDataLabel = True
+                        .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
+                        .Interior.color = itemColor(iv)
+                        .DataLabel.Font.Size = awinSettings.fontsizeLegend
+                        Try
+                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                        Catch ex As Exception
+
+                        End Try
+                    End With
+
+                Next
+
+            End With
+
+            .HasAxis(Excel.XlAxisType.xlCategory) = True
+            .HasAxis(Excel.XlAxisType.xlValue) = False
+
+            With .Axes(Excel.XlAxisType.xlCategory)
+                .HasTitle = False
+                If minScale < 0 Then
+                    .TickLabelPosition = Excel.Constants.xlLow
+                End If
+                '.MinimumScale = 0
+
+            End With
+
+
+            Try
+                With .Axes(Excel.XlAxisType.xlValue)
+                    .HasTitle = False
+                    .HasMajorGridlines = False
+                    .hasminorgridlines = False
+                    If minScale < 0 Then
+                        .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
+                    Else
+                        .MinimumScale = 0
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
+
+            .HasLegend = False
+            .HasTitle = True
+
+            .ChartTitle.Text = diagramTitle
+            .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+
+            '
+            ' tk : das gehört hier doch nicht hin , das ist doch cut&paste Fehler !? 
+            ''Dim achieved As Boolean = False
+            ''Dim anzahlVersuche As Integer = 0
+            ''Dim errmsg As String = ""
+            ''Do While Not achieved And anzahlVersuche < 10
+            ''    Try
+            ''        Call Sleep(100)
+            ''        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+            ''        achieved = True
+            ''    Catch ex As Exception
+            ''        errmsg = ex.Message
+            ''        Call Sleep(100)
+            ''        anzahlVersuche = anzahlVersuche + 1
+            ''    End Try
+            ''Loop
+
+            ''If Not achieved Then
+            ''    Throw New ArgumentException("Chart-Fehler:" & errmsg)
+            ''End If
+
         End With
+
+        'End With
 
 
         appInstance.EnableEvents = formerEE
@@ -2050,6 +2093,15 @@ Public Module awinDiagrams
         myCollection.Add("Auslastung")
         chtobjName = calcChartKennung("pf", PTpfdk.Auslastung, myCollection)
         myCollection.Clear()
+
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
+
 
         If Not calledfromReporting Then
 
@@ -2106,7 +2158,13 @@ Public Module awinDiagrams
         datenreihe(2) = ShowProjekte.getAuslastungsValues(2).Sum
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+            End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -2186,7 +2244,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -2273,6 +2331,21 @@ Public Module awinDiagrams
 
 
             End If
+
+            ' wenn es geschützt war .. 
+            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End If
+
         End With
 
         appInstance.EnableEvents = formerEE
@@ -2316,6 +2389,15 @@ Public Module awinDiagrams
         Dim heuteColumn As Integer = getColumnOfDate(Date.Now)
         'Dim sumDiagram As clsDiagramm
         'Dim sumChart As clsEventsPrcCharts
+
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
+
 
         ReDim Xdatenreihe(3)
         ReDim datenreihe(3)
@@ -2432,7 +2514,13 @@ Public Module awinDiagrams
             appInstance.EnableEvents = False
             appInstance.ScreenUpdating = False
 
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+                Dim wasProtected As Boolean = .ProtectContents
+
+                If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    .Unprotect(Password:="x")
+                End If
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -2521,7 +2609,7 @@ Public Module awinDiagrams
                         Do While Not achieved And anzahlVersuche < 10
                             Try
                                 Call Sleep(100)
-                                .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                                .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                                 achieved = True
                             Catch ex As Exception
                                 errmsg = ex.Message
@@ -2607,27 +2695,22 @@ Public Module awinDiagrams
 
                     End If
 
-
-                    'sumDiagram = New clsDiagramm
-
-                    'sumChart = New clsEventsPrcCharts
-                    'sumChart.PrcChartEvents = .ChartObjects(anzDiagrams + 1).Chart
-
-                    'sumDiagram.setDiagramEvent = sumChart
-
-
-                    'With sumDiagram
-                    '    .DiagrammTitel = diagramTitle
-                    '    .diagrammTyp = DiagrammTypen(4)
-                    '    '.setCollection = myCollection
-                    '    .isCockpitChart = isCockpitChart
-                    'End With
-
-                    'DiagramList.Add(sumDiagram)
-                    'sumDiagram = Nothing
-
-
                 End If
+
+                ' wenn es geschützt war .. 
+                If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    .Protect(Password:="x", UserInterfaceOnly:=True, _
+                                 AllowFormattingCells:=True, _
+                                 AllowInsertingColumns:=False,
+                                 AllowInsertingRows:=True, _
+                                 AllowDeletingColumns:=False, _
+                                 AllowDeletingRows:=True, _
+                                 AllowSorting:=True, _
+                                 AllowFiltering:=True)
+                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                    .EnableAutoFilter = True
+                End If
+
             End With
 
             appInstance.EnableEvents = formerEE
@@ -2638,9 +2721,9 @@ Public Module awinDiagrams
 
     End Sub
 
-    Sub awinUpdateAuslastungsDiagramm(ByRef repObj As Excel.ChartObject)
+    Sub awinUpdateAuslastungsDiagramm(ByVal repObj As Excel.ChartObject)
 
-        Dim anzDiagrams As Integer, i As Integer
+        Dim i As Integer
 
         Dim Xdatenreihe() As String
         Dim datenreihe() As Double
@@ -2691,98 +2774,98 @@ Public Module awinDiagrams
         datenreihe(2) = ShowProjekte.getAuslastungsValues(2).Sum
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        'With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
 
 
 
-            With repObj.Chart
+        With repObj.Chart
 
 
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
+            Do Until .SeriesCollection.Count = 0
+                .SeriesCollection(1).Delete()
+            Loop
 
 
-                With .SeriesCollection.NewSeries
-                    .name = "Auslastung"
-                    .Values = datenreihe
-                    .XValues = Xdatenreihe
-                    .HasDataLabels = False
-                    .ChartType = Excel.XlChartType.xlPie
-                    .Points(1).Interior.color = awinSettings.AmpelGruen
-                    .Points(2).Interior.color = awinSettings.AmpelRot
-                    .Points(3).Interior.color = awinSettings.AmpelGelb
+            With .SeriesCollection.NewSeries
+                .name = "Auslastung"
+                .Values = datenreihe
+                .XValues = Xdatenreihe
+                .HasDataLabels = False
+                .ChartType = Excel.XlChartType.xlPie
+                .Points(1).Interior.color = awinSettings.AmpelGruen
+                .Points(2).Interior.color = awinSettings.AmpelRot
+                .Points(3).Interior.color = awinSettings.AmpelGelb
 
 
-                    For i = 1 To 3
-                        htxt = Format(datenreihe(i - 1), "###,###0")
-                        With .Points(i)
-                            .HasDataLabel = True
-                            .DataLabel.text = htxt
+                For i = 1 To 3
+                    htxt = Format(datenreihe(i - 1), "###,###0")
+                    With .Points(i)
+                        .HasDataLabel = True
+                        .DataLabel.text = htxt
 
-                            .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
-
-
-                            Try
-                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
-                            Catch ex As Exception
-
-                            End Try
+                        .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
 
 
-                        End With
-                    Next i
+                        Try
+                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                        Catch ex As Exception
 
-                End With
+                        End Try
 
 
-                .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                    End With
+                Next i
 
             End With
 
-            ' myCollection wird jetzt über alle Rollen aufgebaut ..
-            'Dim myCollection As New Collection
 
-            'For i = 1 To RoleDefinitions.Count
-            '    Dim roleName As String
-            '    roleName = RoleDefinitions.getRoledef(i).name
-            '    Try
-            '        myCollection.Add(roleName, roleName)
-            '    Catch ex As Exception
-
-            '    End Try
-
-            'Next
-
-            repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
-            ' Änderung 31.7 dieses Diagramm muss nicht geupdated werden, ausserdem macht es keinen Sinn, den Roentgenblick anzuwenden 
-            ' die Optimierung kann ebenso über die Summe der Rollen gemacht werden 
-
-            'sumDiagram = New clsDiagramm
-
-            'sumChart = New clsEventsPrcCharts
-            'sumChart.PrcChartEvents = .ChartObjects(anzDiagrams + 1).Chart
-
-            'sumDiagram.setDiagramEvent = sumChart
-
-
-            'With sumDiagram
-            '    .DiagrammTitel = diagramTitle
-            '    .diagrammTyp = DiagrammTypen(4)
-            '    .gsCollection = myCollection
-            '    .isCockpitChart = False
-            'End With
-
-            'DiagramList.Add(sumDiagram)
-
-
-
+            .ChartTitle.Text = diagramTitle
+            .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+            .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
         End With
+
+        ' myCollection wird jetzt über alle Rollen aufgebaut ..
+        'Dim myCollection As New Collection
+
+        'For i = 1 To RoleDefinitions.Count
+        '    Dim roleName As String
+        '    roleName = RoleDefinitions.getRoledef(i).name
+        '    Try
+        '        myCollection.Add(roleName, roleName)
+        '    Catch ex As Exception
+
+        '    End Try
+
+        'Next
+
+        'repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+        ' Änderung 31.7 dieses Diagramm muss nicht geupdated werden, ausserdem macht es keinen Sinn, den Roentgenblick anzuwenden 
+        ' die Optimierung kann ebenso über die Summe der Rollen gemacht werden 
+
+        'sumDiagram = New clsDiagramm
+
+        'sumChart = New clsEventsPrcCharts
+        'sumChart.PrcChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+
+        'sumDiagram.setDiagramEvent = sumChart
+
+
+        'With sumDiagram
+        '    .DiagrammTitel = diagramTitle
+        '    .diagrammTyp = DiagrammTypen(4)
+        '    .gsCollection = myCollection
+        '    .isCockpitChart = False
+        'End With
+
+        'DiagramList.Add(sumDiagram)
+
+
+
+
+        'End With
 
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
@@ -2800,7 +2883,7 @@ Public Module awinDiagrams
     ''' </summary>
     ''' <param name="chtobj">Chart, das aktualisiert werden soll</param>
     ''' <remarks></remarks>
-    Sub awinUpdateErgebnisDiagramm(ByRef chtobj As ChartObject)
+    Sub awinUpdateErgebnisDiagramm(ByVal chtobj As ChartObject)
 
 
         Dim diagramTitle As String
@@ -2893,146 +2976,146 @@ Public Module awinDiagrams
         Dim valueCrossesNull As Boolean = False
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        'With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-            With chtobj.Chart
-                ' remove extra series
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
-                Dim crossindex As Integer = -1
+        With chtobj.Chart
+            ' remove extra series
+            Do Until .SeriesCollection.Count = 0
+                .SeriesCollection(1).Delete()
+            Loop
+            Dim crossindex As Integer = -1
 
-                ' bestimmen des Anfangs  
-                Dim iv = 0
-                valueDatenreihe1(iv) = 0
-                valueDatenreihe2(iv) = itemValue(iv)
-                currentWert = itemValue(iv)
-                Dim formerValue As Double = currentWert
-                Dim negativeFromNull As Boolean = False
+            ' bestimmen des Anfangs  
+            Dim iv = 0
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
+            currentWert = itemValue(iv)
+            Dim formerValue As Double = currentWert
+            Dim negativeFromNull As Boolean = False
 
-                ' alle nächsten Zwischen-Werte 
-                For iv = 1 To 2
-                    If formerValue <= 0 Then
-                        negativeFromNull = True
-                    Else
-                        negativeFromNull = False
-                    End If
+            ' alle nächsten Zwischen-Werte 
+            For iv = 1 To 2
+                If formerValue <= 0 Then
+                    negativeFromNull = True
+                Else
+                    negativeFromNull = False
+                End If
 
-                    currentWert = currentWert - itemValue(iv)
-                    valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
+                currentWert = currentWert - itemValue(iv)
+                valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
 
-                    If currentWert >= 0 Then
-                        valueDatenreihe1(iv) = currentWert
-                        valueDatenreihe2(iv) = itemValue(iv)
-                    ElseIf valueCrossesNull Then
-                        valueDatenreihe1(iv) = currentWert
-                        valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
-                        crossindex = iv + 1
-                    ElseIf negativeFromNull Then
-                        valueDatenreihe1(iv) = formerValue
-                        valueDatenreihe2(iv) = itemValue(iv) * (-1)
-                    Else
-                        valueDatenreihe1(iv) = currentWert
-                        valueDatenreihe2(iv) = itemValue(iv) * (-1)
-                    End If
+                If currentWert >= 0 Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv)
+                ElseIf valueCrossesNull Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
+                    crossindex = iv + 1
+                ElseIf negativeFromNull Then
+                    valueDatenreihe1(iv) = formerValue
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                Else
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                End If
 
-                    formerValue = currentWert
-                Next
+                formerValue = currentWert
+            Next
 
-                ' bestimmen des Ende 
-                iv = 3
-                valueDatenreihe1(iv) = 0
-                valueDatenreihe2(iv) = itemValue(iv)
+            ' bestimmen des Ende 
+            iv = 3
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
 
 
 
-                'series
-                With .SeriesCollection.NewSeries
-                    .name = "Bottom"
-                    .HasDataLabels = False
-                    .Interior.colorindex = -4142
-                    .Values = valueDatenreihe1
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlColumnStacked
-                    If crossindex > 0 Then
-                        ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
-                        With .Points(crossindex)
-                            .Interior.color = itemColor(crossindex - 1)
-                        End With
-                    End If
-
-                End With
-
-                With .SeriesCollection.NewSeries
-                    .name = "Top"
-                    .HasDataLabels = True
-                    .Values = valueDatenreihe2
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlColumnStacked
-
-                    For iv = 0 To 3
-
-                        With .Points(iv + 1)
-                            .HasDataLabel = True
-                            .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
-                            .Interior.color = itemColor(iv)
-                            ' ur:17.7.2014 fontsize bei update nicht ändern für die Legend
-                            '.DataLabel.Font.Size = awinSettings.fontsizeLegend
-                            Try
-                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
-                            Catch ex As Exception
-
-                            End Try
-                        End With
-
-                    Next
-
-                End With
-                .HasAxis(Excel.XlAxisType.xlCategory) = True
-                .HasAxis(Excel.XlAxisType.xlValue) = False
-
-                With .Axes(Excel.XlAxisType.xlCategory)
-                    .HasTitle = False
-                    If minScale < 0 Then
-                        .TickLabelPosition = Excel.Constants.xlLow
-                    End If
-                    '.MinimumScale = 0
-
-                End With
-
-                'Dim hax As Excel.Axis
-                'With hax
-                '    .HasMajorGridlines
-                '    .hasminor()
-                'End With
-
-                Try
-                    With .Axes(Excel.XlAxisType.xlValue)
-                        .HasTitle = False
-                        .HasMajorGridlines = False
-                        .hasminorgridlines = False
-                        If minScale < 0 Then
-                            .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
-                        Else
-                            .MinimumScale = 0
-                        End If
+            'series
+            With .SeriesCollection.NewSeries
+                .name = "Bottom"
+                .HasDataLabels = False
+                .Interior.colorindex = -4142
+                .Values = valueDatenreihe1
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+                If crossindex > 0 Then
+                    ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
+                    With .Points(crossindex)
+                        .Interior.color = itemColor(crossindex - 1)
                     End With
-                Catch ex As Exception
-
-                End Try
-
-
-                .HasLegend = False
-                'With .Legend
-                '    .Position = XlConstants.xlTop
-                '    .Font.Size = 8
-                'End With
-                .HasTitle = True
-                .ChartTitle.Text = diagramTitle
-
+                End If
 
             End With
+
+            With .SeriesCollection.NewSeries
+                .name = "Top"
+                .HasDataLabels = True
+                .Values = valueDatenreihe2
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+
+                For iv = 0 To 3
+
+                    With .Points(iv + 1)
+                        .HasDataLabel = True
+                        .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
+                        .Interior.color = itemColor(iv)
+                        ' ur:17.7.2014 fontsize bei update nicht ändern für die Legend
+                        '.DataLabel.Font.Size = awinSettings.fontsizeLegend
+                        Try
+                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                        Catch ex As Exception
+
+                        End Try
+                    End With
+
+                Next
+
+            End With
+            .HasAxis(Excel.XlAxisType.xlCategory) = True
+            .HasAxis(Excel.XlAxisType.xlValue) = False
+
+            With .Axes(Excel.XlAxisType.xlCategory)
+                .HasTitle = False
+                If minScale < 0 Then
+                    .TickLabelPosition = Excel.Constants.xlLow
+                End If
+                '.MinimumScale = 0
+
+            End With
+
+            'Dim hax As Excel.Axis
+            'With hax
+            '    .HasMajorGridlines
+            '    .hasminor()
+            'End With
+
+            Try
+                With .Axes(Excel.XlAxisType.xlValue)
+                    .HasTitle = False
+                    .HasMajorGridlines = False
+                    .hasminorgridlines = False
+                    If minScale < 0 Then
+                        .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
+                    Else
+                        .MinimumScale = 0
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
+
+            .HasLegend = False
+            'With .Legend
+            '    .Position = XlConstants.xlTop
+            '    .Font.Size = 8
+            'End With
+            .HasTitle = True
+            .ChartTitle.Text = diagramTitle
+
+
         End With
+        'End With
 
 
         appInstance.EnableEvents = formerEE
@@ -3073,6 +3156,14 @@ Public Module awinDiagrams
 
         Dim mycollection As New Collection
         Dim chtobjName As String
+
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
 
         'Dim hproj As clsProjekt
         Dim ErgebnisListeR As New Collection
@@ -3176,7 +3267,14 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+            End If
+
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -3356,7 +3454,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3426,6 +3524,19 @@ Public Module awinDiagrams
 
             End If
 
+            ' wenn es geschützt war .. 
+            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End If
 
         End With
 
@@ -3477,6 +3588,14 @@ Public Module awinDiagrams
         'Dim hproj As clsProjekt
         Dim ErgebnisListeR As New Collection
 
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
+
         mycollection.Add("Projektergebnisse")
         chtobjName = calcChartKennung("pf", PTpfdk.Budget, mycollection)
         mycollection.Clear()
@@ -3503,23 +3622,6 @@ Public Module awinDiagrams
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.ScreenUpdating = False
-
-
-
-        'Xdatenreihe(0) = "Budget Summe"
-        'If heuteColumn >= minColumn + 1 And heuteColumn <= maxColumn Then
-        '    Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, heuteColumn - 1)
-        '    Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(heuteColumn, maxColumn)
-        'ElseIf heuteColumn > maxColumn Then
-        '    future = False
-        '    Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
-        '    Xdatenreihe(3) = "Prognose Kosten" & vbLf & "existieren nicht"
-        'ElseIf heuteColumn <= minColumn Then
-        '    future = True
-        '    Xdatenreihe(2) = "bisherige Kosten" & vbLf & "existieren nicht"
-        '    Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
-        'End If
-
 
         Xdatenreihe(0) = repMessages.getmsg(49)
         Xdatenreihe(1) = repMessages.getmsg(50)
@@ -3572,7 +3674,14 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+            End If
+
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -3752,7 +3861,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3822,6 +3931,19 @@ Public Module awinDiagrams
 
             End If
 
+            ' wenn es geschützt war .. 
+            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End If
 
         End With
 
@@ -4289,6 +4411,15 @@ Public Module awinDiagrams
         Dim sumDiagram As clsDiagramm
         Dim sumChart As clsEventsPrcCharts
         Dim ErgebnisListeR As New Collection
+
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
+
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.ScreenUpdating = False
 
@@ -4324,7 +4455,14 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+            End If
+
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -4413,7 +4551,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4460,6 +4598,20 @@ Public Module awinDiagrams
 
             DiagramList.Add(sumDiagram)
             'sumDiagram = Nothing
+
+            ' wenn es geschützt war .. 
+            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End If
 
         End With
 
@@ -4874,6 +5026,18 @@ Public Module awinDiagrams
         Dim chtobj As ChartObject
         Dim i As Integer, p As Integer
 
+        Dim currentSheetName As String
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
+
+        ' temporärer Check: 
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
+            Call MsgBox("Fehler: " & currentSheetName & " ist ungleich " & _
+                        CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
+        End If
 
         ' typus:
         ' 1 - verschieben
@@ -4888,7 +5052,14 @@ Public Module awinDiagrams
 
         ' Schutz Funktion : wenn showrangeleft = 0 und showrangeright = 0 , dann nichts tun
         If showRangeRight - showRangeLeft >= 5 Then
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+                Dim wasProtected As Boolean = .ProtectContents
+                If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    .Unprotect(Password:="x")
+                End If
+
                 anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 For i = 1 To anz_diagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
@@ -4970,6 +5141,21 @@ Public Module awinDiagrams
                     End Select
 
                 Next i
+
+                ' wenn es geschützt war .. 
+                If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    .Protect(Password:="x", UserInterfaceOnly:=True, _
+                                 AllowFormattingCells:=True, _
+                                 AllowInsertingColumns:=False,
+                                 AllowInsertingRows:=True, _
+                                 AllowDeletingColumns:=False, _
+                                 AllowDeletingRows:=True, _
+                                 AllowSorting:=True, _
+                                 AllowFiltering:=True)
+                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                    .EnableAutoFilter = True
+                End If
+
 
             End With
         End If

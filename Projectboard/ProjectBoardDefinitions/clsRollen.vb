@@ -136,6 +136,45 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' gibt zu der angegebenen Rolle die "Sammel-Rolle" zurück, die die Rolle als direkte Sub-Role enthält 
+    ''' leerer String, wenn keine Sammel-Rolle existiert, die die angegebene Rolle enthält  
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getParentRoleOf(ByVal roleName As String) As String
+        Get
+
+            Dim sammelRollen As Collection = Me.getSummaryRoles
+            Dim myOwnID As Integer = Me.getRoledef(roleName).UID
+            Dim found As Boolean = False
+            Dim i As Integer = 1
+            Dim parentName As String = ""
+
+            If Me.containsName(roleName) Then
+                While Not found And i <= sammelRollen.Count
+                    Dim tmpName As String = CStr(sammelRollen.Item(i))
+                    Dim subRoleIDs As SortedList(Of Integer, String) = Me.getRoledef(tmpName).getSubRoleIDs
+                    If subRoleIDs.ContainsKey(myOwnID) Then
+                        found = True
+                        parentName = tmpName
+                    Else
+                        i = i + 1
+                    End If
+                End While
+            Else
+                ' nichts tun ... 
+            End If
+
+            getParentRoleOf = parentName
+
+        End Get
+    End Property
+
+
+
+    ''' <summary>
     ''' gibt in einer eindeutigen Liste die Namen aller vorkommenden SubRoles in einer Collection zurück, das heisst alle Platzhalter und die realen Rollen , oder nur die Platzhalter oder nur die realen Rollen  
     ''' es werden also alle Rollen-Namen zurückgegeben, Platzhalter und reale Rollen-Namen, oder nur eine Kategorie davon 
     ''' wenn die excludedNames angegeben sind, dann werden nur die Rollen aufgenommen, die nicht in den excluded Names drin sind. 

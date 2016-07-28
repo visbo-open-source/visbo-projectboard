@@ -38,6 +38,8 @@ Imports System.Windows
 
     Private ribbon As Office.IRibbonUI
 
+    Private tempSkipChanges As Boolean = False
+
     Public Sub New()
     End Sub
 
@@ -1558,6 +1560,8 @@ Imports System.Windows
     Function chckVisibility(control As IRibbonControl) As Boolean
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             Select Case control.Id
+                Case "PTMEC" ' Massen-Edit Charts
+                    chckVisibility = False
                 Case "PT2G1M2B4" ' Bearbeiten - Zeile einfügen
                     chckVisibility = False
                 Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
@@ -1568,7 +1572,9 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
                     chckVisibility = False
-                Case "PT6G2B4" ' Einstellungen - Berechnung - Platzhalter Rollen automatisch reduzieren
+                Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
+                    chckVisibility = False
+                Case "PT6G2B5" ' Sortierung ermöglichen
                     chckVisibility = False
                 Case Else
                     chckVisibility = True
@@ -1583,20 +1589,26 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PT1" ' Reports
                     chckVisibility = False
+                Case "PT6" ' Einstellungen
+                    chckVisibility = False
                 Case "PT2G1M0" ' neues Projekt anlegen
                     chckVisibility = False
-                Case "PT2G1M1B0" ' neue Variante anlegen
+                Case "PT2G1M1" ' Variante
                     chckVisibility = False
-                Case "PT2G1M1B2" ' Variante löschen    
+                    'Case "PT2G1M1B0" ' neue Variante anlegen
+                    '    chckVisibility = False
+                    'Case "PT2G1M1B1" '  Variante aktivieren
+                    '    chckVisibility = False
+                    'Case "PT2G1M1B2" ' Variante löschen    
+                    '    chckVisibility = False
+                    'Case "PT2G1M1B3" ' Variante übernehmen    
+                    '    chckVisibility = False
+                Case "PT2G1M2" ' Editieren   
                     chckVisibility = False
-                Case "PT2G1M1B3" ' Variante übernehmen    
-                    chckVisibility = False
-                Case "PT2G1M2B1" ' Ressourcen und Kosten   
-                    chckVisibility = False
-                Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
-                    chckVisibility = False
-                Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
-                    chckVisibility = False
+                    'Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
+                    '    chckVisibility = False
+                    'Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
+                    '    chckVisibility = False
                 Case "PT2G1B2" ' Fixieren
                     chckVisibility = False
                 Case "PT2G1B3" ' Fixierung aufheben
@@ -1631,20 +1643,60 @@ Imports System.Windows
     End Function
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+        Dim todoListe As New Collection
 
         Call projektTafelInit()
 
         enableOnUpdate = False
 
-        Call enableControls(ptModus.massEditRessCost)
+        If ShowProjekte.Count > 0 Then
 
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-            Dim von As Integer = showRangeLeft
-            Dim bis As Integer = showRangeRight
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                ' alles ok , bereits gesetzt 
 
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+            End If
 
             Try
-                Call writeOnlineMassEditRessCost(von, bis)
+                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+            Catch ex As Exception
+                awinSelection = Nothing
+            End Try
+
+            If IsNothing(awinSelection) Then
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                    todoListe.Add(kvp.Key, kvp.Key)
+                Next
+
+            Else
+
+                For i As Integer = 1 To awinSelection.Count
+                    singleShp = awinSelection.Item(i)
+                    Dim hproj As clsProjekt
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp.Name, True)
+                        todoListe.Add(hproj.name, hproj.name)
+                    Catch ex As Exception
+
+                    End Try
+                Next
+            End If
+
+            Call enableControls(ptModus.massEditRessCost)
+
+            ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
+            ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
+            'Call saveProjectsToBackup(todoListe)
+
+            Try
+                Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
                 appInstance.EnableEvents = True
 
                 With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
@@ -1658,14 +1710,16 @@ Imports System.Windows
                 End If
             End Try
 
+        Else
+            Call MsgBox("Es sind keine Projekte geladen!")
         End If
 
-        'Call MsgBox("jetzt sind die entsprechend disabled ...")
 
-        'Call enableControls(ptModus.graficboard)
+        'Call MsgBox("ok, zurück ...")
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
+        ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
+        'enableOnUpdate = True
+        'appInstance.EnableEvents = True
         
     End Sub
 
@@ -1674,6 +1728,11 @@ Imports System.Windows
 
         Call projektTafelInit()
 
+        If tempSkipChanges Then
+            'Call restoreProjectsFromBackup()
+            Call MsgBox("restored ...")
+            tempSkipChanges = False
+        End If
 
         Call enableControls(ptModus.graficboard)
 
@@ -1700,6 +1759,9 @@ Imports System.Windows
 
         Try
 
+            ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
+            Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
+
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
 
             'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
@@ -1711,6 +1773,16 @@ Imports System.Windows
             Dim hoehe As Double = CDbl(currentCell.Height)
             currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
             Dim zeile As Integer = currentCell.Row
+
+            ' Blattschutz aufheben ... 
+            If Not awinSettings.meEnableSorting Then
+                ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                    .Unprotect(Password:="x")
+                End With
+            End If
+
+
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
                 Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEnddata)), Excel.Range)
@@ -1727,6 +1799,23 @@ Imports System.Windows
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
             CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
 
+            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range)
+
+                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
+
+                Try
+                    If Not IsNothing(.Validation) Then
+                        .Validation.Delete()
+                    End If
+                    ' jetzt wird die ValidationList aufgebaut 
+                    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                               Formula1:=validationStrings.Item("alles"))
+                Catch ex As Exception
+
+                End Try
+
+            End With
+
             ' jetzt wird der Old-Value gesetzt 
             With visboZustaende
                 If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
@@ -1735,6 +1824,24 @@ Imports System.Windows
                 .oldValue = ""
                 .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
             End With
+
+
+            ' jetzt den Blattschutz wiederherstellen ... 
+            If Not awinSettings.meEnableSorting Then
+                ' es muss der Blattschutz wieder aktiviert werden ... 
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                    .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                    .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+                    .EnableAutoFilter = True
+                End With
+            End If
 
         Catch ex As Exception
             Call MsgBox("Fehler beim Kopieren einer Zeile ...")
@@ -4101,6 +4208,14 @@ Imports System.Windows
         visboZustaende.clearAuslastungsArray()
         Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
 
+    End Sub
+
+    Public Function PTSkipChanges(control As IRibbonControl) As Boolean
+        PTSkipChanges = tempSkipChanges
+    End Function
+
+    Sub awinPTSkipChanges(control As IRibbonControl, ByRef pressed As Boolean)
+        tempSkipChanges = pressed
     End Sub
 
     Public Function PTenableSorting(control As IRibbonControl) As Boolean
