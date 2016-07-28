@@ -445,26 +445,16 @@ Imports System.Windows
 
     Sub PT6DeleteCharts(control As IRibbonControl)
 
-        Dim anzDiagrams As Integer
-        Dim chtobj As Excel.ChartObject
-        Dim i As Integer = 1
-
         Call projektTafelInit()
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        Dim currentWsName As String
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentWsName = arrWsNames(3)
+        Else
+            currentWsName = arrWsNames(5)
+        End If
 
-            anzDiagrams = CInt(CType(.ChartObjects, Excel.ChartObjects).Count)
-
-            While i <= anzDiagrams
-
-                chtobj = CType(.ChartObjects(1), Excel.ChartObject)
-                Call awinDeleteChart(chtobj)
-                i = i + 1
-
-            End While
-
-
-        End With
+        Call deleteChartsInSheet(currentWsName)
 
 
     End Sub
@@ -1613,6 +1603,8 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PT2G1B3" ' Fixierung aufheben
                     chckVisibility = False
+                Case "PT2G1M2B6" ' Änderungen verwerfen
+                    chckVisibility = False
                 Case "PT2G1B4" ' Beschriften
                     chckVisibility = False
                 Case "PT2G1B5" ' alle Beschriftungen löschen
@@ -1689,6 +1681,8 @@ Imports System.Windows
                 Next
             End If
 
+
+            Call deleteChartsInSheet(arrWsNames(3))
             Call enableControls(ptModus.massEditRessCost)
 
             ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
@@ -1736,6 +1730,12 @@ Imports System.Windows
 
         Call enableControls(ptModus.graficboard)
 
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        Call deleteChartsInSheet(arrWsNames(5))
+
+        enableOnUpdate = True
         appInstance.EnableEvents = True
 
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
@@ -2255,10 +2255,15 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub NameHierarchySelAction(control As IRibbonControl)
 
+        Dim formerES As Boolean = awinSettings.meEnableSorting
 
         Call PBBNameHierarchySelAction(control.Id)
 
 
+        If control.Id = "PTMEC1" And awinSettings.meEnableSorting <> formerES Then
+            Me.ribbon.Invalidate()
+        End If
+        
 
     End Sub
 
@@ -7272,6 +7277,8 @@ Imports System.Windows
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
+        Dim formerES As Boolean = awinSettings.meEnableSorting
+
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
         If myCollection.Count > 0 Then
@@ -7314,6 +7321,9 @@ Imports System.Windows
 
         End If
 
+        If control.Id = "PTMEC2" And awinSettings.meEnableSorting <> formerES Then
+            Me.ribbon.Invalidate()
+        End If
 
         appInstance.EnableEvents = True
         enableOnUpdate = True

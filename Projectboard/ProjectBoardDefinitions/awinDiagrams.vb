@@ -171,10 +171,10 @@ Public Module awinDiagrams
         End If
 
         ' nur für Testzwecke 
-        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
-            Call MsgBox("Namen ungleich: " & currentSheetName & " ist ungleich " & _
-                        CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
-        End If
+        'If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
+        '    Call MsgBox("Namen ungleich: " & currentSheetName & " ist ungleich " & _
+        '                CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
+        'End If
 
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
@@ -352,6 +352,7 @@ Public Module awinDiagrams
 
             If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 .Unprotect(Password:="x")
+                awinSettings.meEnableSorting = True
             End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -984,19 +985,20 @@ Public Module awinDiagrams
 
             End If
 
-            ' wenn es geschützt war .. 
-            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                .EnableAutoFilter = True
-            End If
+            ' Schutz nicht mehr aktivieren, weil Chart dann nicht mehr selektierbar ist 
+            ' '' wenn es geschützt war .. 
+            ''If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            ''    .Protect(Password:="x", UserInterfaceOnly:=True, _
+            ''                 AllowFormattingCells:=True, _
+            ''                 AllowInsertingColumns:=False,
+            ''                 AllowInsertingRows:=True, _
+            ''                 AllowDeletingColumns:=False, _
+            ''                 AllowDeletingRows:=True, _
+            ''                 AllowSorting:=True, _
+            ''                 AllowFiltering:=True)
+            ''    .EnableSelection = XlEnableSelection.xlUnlockedCells
+            ''    .EnableAutoFilter = True
+            ''End If
 
         End With
 
@@ -2164,6 +2166,7 @@ Public Module awinDiagrams
 
             If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 .Unprotect(Password:="x")
+                awinSettings.meEnableSorting = True
             End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -2332,19 +2335,20 @@ Public Module awinDiagrams
 
             End If
 
+            ' nicht aktivieren, weil ein Chart dann im Mass-Edit Fenster nicht mehr selektierbar ist nicht mehr selektierbar ist ... 
             ' wenn es geschützt war .. 
-            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                .EnableAutoFilter = True
-            End If
+            'If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            '    .Protect(Password:="x", UserInterfaceOnly:=True, _
+            '                 AllowFormattingCells:=True, _
+            '                 AllowInsertingColumns:=False,
+            '                 AllowInsertingRows:=True, _
+            '                 AllowDeletingColumns:=False, _
+            '                 AllowDeletingRows:=True, _
+            '                 AllowSorting:=True, _
+            '                 AllowFiltering:=True)
+            '    .EnableSelection = XlEnableSelection.xlUnlockedCells
+            '    .EnableAutoFilter = True
+            'End If
 
         End With
 
@@ -2520,6 +2524,7 @@ Public Module awinDiagrams
 
                 If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                     .Unprotect(Password:="x")
+                    awinSettings.meEnableSorting = True
                 End If
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -2697,19 +2702,20 @@ Public Module awinDiagrams
 
                 End If
 
-                ' wenn es geschützt war .. 
-                If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                    .Protect(Password:="x", UserInterfaceOnly:=True, _
-                                 AllowFormattingCells:=True, _
-                                 AllowInsertingColumns:=False,
-                                 AllowInsertingRows:=True, _
-                                 AllowDeletingColumns:=False, _
-                                 AllowDeletingRows:=True, _
-                                 AllowSorting:=True, _
-                                 AllowFiltering:=True)
-                    .EnableSelection = XlEnableSelection.xlUnlockedCells
-                    .EnableAutoFilter = True
-                End If
+                ' Schutz nicht mehr aktivieren, weil charts dann nicht mehr selektierbar sind .  
+                ' '' wenn es geschützt war .. 
+                ''If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                ''    .Protect(Password:="x", UserInterfaceOnly:=True, _
+                ''                 AllowFormattingCells:=True, _
+                ''                 AllowInsertingColumns:=False,
+                ''                 AllowInsertingRows:=True, _
+                ''                 AllowDeletingColumns:=False, _
+                ''                 AllowDeletingRows:=True, _
+                ''                 AllowSorting:=True, _
+                ''                 AllowFiltering:=True)
+                ''    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                ''    .EnableAutoFilter = True
+                ''End If
 
             End With
 
@@ -3273,6 +3279,7 @@ Public Module awinDiagrams
 
             If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 .Unprotect(Password:="x")
+                awinSettings.meEnableSorting = True
             End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -3524,19 +3531,20 @@ Public Module awinDiagrams
 
             End If
 
-            ' wenn es geschützt war .. 
-            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                .EnableAutoFilter = True
-            End If
+            ' Schutz nicht mehr aktivieren, weil Chart dann nicht mehr selektierbar ist ... 
+            '' wenn es geschützt war .. 
+            'If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            '    .Protect(Password:="x", UserInterfaceOnly:=True, _
+            '                 AllowFormattingCells:=True, _
+            '                 AllowInsertingColumns:=False,
+            '                 AllowInsertingRows:=True, _
+            '                 AllowDeletingColumns:=False, _
+            '                 AllowDeletingRows:=True, _
+            '                 AllowSorting:=True, _
+            '                 AllowFiltering:=True)
+            '    .EnableSelection = XlEnableSelection.xlUnlockedCells
+            '    .EnableAutoFilter = True
+            'End If
 
         End With
 
@@ -3680,6 +3688,7 @@ Public Module awinDiagrams
 
             If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 .Unprotect(Password:="x")
+                awinSettings.meEnableSorting = True
             End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -3931,19 +3940,20 @@ Public Module awinDiagrams
 
             End If
 
-            ' wenn es geschützt war .. 
-            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                .EnableAutoFilter = True
-            End If
+            ' nicht mehr schützen, weil Charts dann nicht mehr selektierbar sind 
+            '' wenn es geschützt war .. 
+            'If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            '    .Protect(Password:="x", UserInterfaceOnly:=True, _
+            '                 AllowFormattingCells:=True, _
+            '                 AllowInsertingColumns:=False,
+            '                 AllowInsertingRows:=True, _
+            '                 AllowDeletingColumns:=False, _
+            '                 AllowDeletingRows:=True, _
+            '                 AllowSorting:=True, _
+            '                 AllowFiltering:=True)
+            '    .EnableSelection = XlEnableSelection.xlUnlockedCells
+            '    .EnableAutoFilter = True
+            'End If
 
         End With
 
@@ -4460,7 +4470,8 @@ Public Module awinDiagrams
             Dim wasProtected As Boolean = .ProtectContents
 
             If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Unprotect(Password:="x")
+                .Unprotect(Password:="x") ' damit Chart selektierbar ist ...
+                awinSettings.meEnableSorting = True ' damit es konsistent ist mit Menu Anzeige 
             End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -4599,19 +4610,19 @@ Public Module awinDiagrams
             DiagramList.Add(sumDiagram)
             'sumDiagram = Nothing
 
-            ' wenn es geschützt war .. 
-            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                .EnableAutoFilter = True
-            End If
+            ' '' wenn es geschützt war .. 
+            ''If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            ''    .Protect(Password:="x", UserInterfaceOnly:=True, _
+            ''                 AllowFormattingCells:=True, _
+            ''                 AllowInsertingColumns:=False,
+            ''                 AllowInsertingRows:=True, _
+            ''                 AllowDeletingColumns:=False, _
+            ''                 AllowDeletingRows:=True, _
+            ''                 AllowSorting:=True, _
+            ''                 AllowFiltering:=True)
+            ''    .EnableSelection = XlEnableSelection.xlUnlockedCells
+            ''    .EnableAutoFilter = True
+            ''End If
 
         End With
 
@@ -5014,7 +5025,42 @@ Public Module awinDiagrams
 
     End Sub
 
+    ''' <summary>
+    ''' löscht alle Charts im angegebenen Sheet 
+    ''' </summary>
+    ''' <param name="sheetName"></param>
+    ''' <remarks></remarks>
+    Public Sub deleteChartsInSheet(ByVal sheetName As String)
 
+        Dim anzDiagrams As Integer
+        Dim i As Integer = 1
+        Dim chtobj As Excel.ChartObject
+
+        Try
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(sheetName), Excel.Worksheet)
+
+                anzDiagrams = CInt(CType(.ChartObjects, Excel.ChartObjects).Count)
+
+                While i <= anzDiagrams
+
+                    Try
+                        chtobj = CType(.ChartObjects(1), Excel.ChartObject)
+                        Call awinDeleteChart(chtobj)
+                        i = i + 1
+                    Catch ex As Exception
+                        i = anzDiagrams + 1
+                    End Try
+
+
+                End While
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
 
     ''' <summary>
     ''' zeichnet alle dargestellten Portfolio ("Pf") Diagramme neu
@@ -5142,7 +5188,7 @@ Public Module awinDiagrams
 
                 Next i
 
-                ' wenn es geschützt war .. 
+                ' '' wenn es geschützt war .. 
                 If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                     .Protect(Password:="x", UserInterfaceOnly:=True, _
                                  AllowFormattingCells:=True, _

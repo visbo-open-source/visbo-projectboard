@@ -480,17 +480,28 @@ Public Class Tabelle2
                 ' das Folgende ist eigentlich eine Test Routine , die normalerweise gar nicht nötig ist 
                 ' aber für Testzwecke gut geeignet ist ...
 
-                Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                'Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
                 If summenChanged Then
                     Call updateMassEditSummenValues(pName, phaseNameID, showRangeLeft, showRangeRight, roleCostNames)
                 End If
-                Dim testValue2 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                'Dim testValue2 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
 
-                If testValue1 <> testValue2 Then
-                    Call MsgBox("Unterschiede: " & testValue1 & ", " & testValue2)
-                End If
+                'If testValue1 <> testValue2 Then
+                '    Call MsgBox("Unterschiede: " & testValue1 & ", " & testValue2)
+                'End If
 
                 visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+
+                ' aktualisieren der Charts 
+                Try
+
+                    If auslastungChanged Or summenChanged Then
+                        Call awinNeuZeichnenDiagramme(6)
+                    End If
+
+                Catch ex As Exception
+
+                End Try
 
             Else
                 Call MsgBox("bitte nur eine Zelle selektieren ...")

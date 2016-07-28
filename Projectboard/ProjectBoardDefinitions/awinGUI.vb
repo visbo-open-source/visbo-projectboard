@@ -343,6 +343,7 @@ Public Module awinGUI
 
             If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 .Unprotect(Password:="x")
+                awinSettings.meEnableSorting = True
             End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -800,18 +801,18 @@ Public Module awinGUI
             End If
 
             ' wenn es geschützt war .. 
-            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                .EnableAutoFilter = True
-            End If
+            ''If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            ''    .Protect(Password:="x", UserInterfaceOnly:=True, _
+            ''                 AllowFormattingCells:=True, _
+            ''                 AllowInsertingColumns:=False,
+            ''                 AllowInsertingRows:=True, _
+            ''                 AllowDeletingColumns:=False, _
+            ''                 AllowDeletingRows:=True, _
+            ''                 AllowSorting:=True, _
+            ''                 AllowFiltering:=True)
+            ''    .EnableSelection = XlEnableSelection.xlUnlockedCells
+            ''    .EnableAutoFilter = True
+            ''End If
 
             repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 

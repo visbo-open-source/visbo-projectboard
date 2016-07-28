@@ -129,7 +129,12 @@ Public Class frmNameSelection
             For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
                 filterDropbox.Items.Add(kvp.Key)
             Next
-            Me.rdbPhases.Checked = True
+            If Me.rdbPhases.Visible Then
+                Me.rdbPhases.Checked = True
+            Else
+                Me.rdbRoles.Checked = True
+            End If
+
         End If
 
 
