@@ -16549,8 +16549,8 @@ Public Module awinGeneralModules
                         curphaseNameID = curComment.Text
                     End If
 
-
-                    If curpName = pname And curphaseNameID = phaseNameID Then
+                    ' es soll auf jeden Fall auch die Rootphase geupdated werden ..., da ja die evtl auch als secondbest geändert wurde ...
+                    If curpName = pname And ((curphaseNameID = phaseNameID) Or (curphaseNameID = rootPhaseName)) Then
 
                         Dim curRCName As String = CStr(meWS.Cells(zeile, columnRC).value)
 
@@ -16591,7 +16591,7 @@ Public Module awinGeneralModules
                                                         Call MsgBox("Fehler bei Summenbildung ...")
                                                         tmpSum = 0
                                                     End Try
-                                                    
+
 
                                                 Else
                                                     ' Summe löschen
@@ -16737,6 +16737,7 @@ Public Module awinGeneralModules
     ''' gibt eine Zeile zurück, die zu dem angegebenen Projekt, der Phase und dem rcName eine Sammelrolle zurückgibt
     ''' Wenn mehrere mögliche Sammelrollen existieren, dann wird die erste auftretende zurückgegeben
     ''' 0, wenn in diesem Projekt zu dieser Rolle keine Sammelrolle definiert ist  
+    ''' ausserdem wird erst in der gleichen Phase gesucht, oder aber in der RootPhase
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <param name="phaseNameID"></param>
@@ -16751,49 +16752,28 @@ Public Module awinGeneralModules
         Dim chckPhNameID As String
         Dim chckRCName As String
         Dim bestName As String = ""
-        Dim secondBestName As String = ""
+        Dim secondBestzeile As Integer = 0
 
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(rcName)
 
+        If Not IsNothing(tmpRole) Then
 
-        Dim potentialParentRoles As Collection = RoleDefinitions.getSummaryRoles(rcName)
-        If potentialParentRoles.Count = 0 Then
-            curZeile = 0
-        Else
-            '
-            ' auf die Suche gehen ... 
-            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
 
-            With meWS
-                chckName = CStr(meWS.Cells(curZeile, 2).value)
+            If istSammelRolle Then
+                curZeile = 0
+            Else
+                ' nur für echte Rollen durchführen ...
+                Dim potentialParentRoles As Collection = RoleDefinitions.getSummaryRoles(rcName)
 
-                Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
-                chckPhNameID = calcHryElemKey(phaseName, False)
-                Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
-                If Not IsNothing(curComment) Then
-                    chckPhNameID = curComment.Text
-                End If
+                If potentialParentRoles.Count = 0 Then
+                    curZeile = 0
 
-                chckRCName = CStr(meWS.Cells(curZeile, 5).value)
-
-            End With
-            ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
-            Do While Not found And curZeile <= visboZustaende.meMaxZeile
-
-
-                If chckName = pName And _
-                    phaseNameID = chckPhNameID Then
-
-                    If potentialParentRoles.Contains(chckRCName) Then
-                        ' nimm jetzt einfach mal den ersten, der auftritt  ... 
-                        found = True
-                    End If
-
-                End If
-
-                If Not found Then
-
-                    curZeile = curZeile + 1
+                Else
+                    '
+                    ' auf die Suche gehen ... 
+                    Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+                    .Worksheets(arrWsNames(5)), Excel.Worksheet)
 
                     With meWS
                         chckName = CStr(meWS.Cells(curZeile, 2).value)
@@ -16808,17 +16788,66 @@ Public Module awinGeneralModules
                         chckRCName = CStr(meWS.Cells(curZeile, 5).value)
 
                     End With
+                    ' 
+                    ' jetzt wird erst geprüft, ob es eine Sammelrolle in der gleichen Phase gibt 
+                    ' dann wird geprüft , ob es eine Sammelrolle in der rootphase gibt 
+
+
+
+                    Do While Not found And curZeile <= visboZustaende.meMaxZeile
+
+
+                        If ((chckName = pName) And _
+                            ((phaseNameID = chckPhNameID) Or (rootPhaseName = chckPhNameID))) Then
+
+                            If potentialParentRoles.Contains(chckRCName) Then
+                                ' nimm jetzt einfach mal den ersten, der auftritt  ... 
+                                If phaseNameID = chckPhNameID Then
+                                    found = True
+                                Else
+                                    secondBestzeile = curZeile
+                                    ' noch weitersuchen, ob nicht noch das found-Kriterium greift ... 
+                                End If
+
+                            End If
+
+                        End If
+
+                        If Not found Then
+
+                            curZeile = curZeile + 1
+
+                            With meWS
+                                chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+                                Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                                chckPhNameID = calcHryElemKey(phaseName, False)
+                                Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                                If Not IsNothing(curComment) Then
+                                    chckPhNameID = curComment.Text
+                                End If
+
+                                chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+                            End With
+
+                        End If
+
+                    Loop
 
                 End If
 
-            Loop
-
+            End If
 
         End If
+
+        
 
 
         If found Then
             findeSammelRollenZeile = curZeile
+        ElseIf secondBestzeile > 0 Then
+            findeSammelRollenZeile = secondBestzeile
         Else
             findeSammelRollenZeile = 0
         End If

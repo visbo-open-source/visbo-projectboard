@@ -5,6 +5,8 @@
 Public Class clsVisboZustaende
 
     Private _auslastungsArray(,) As Double
+    Private _oldValue As String
+
     Public Property showTimeZoneBalken As Boolean
     Public Property projectBoardMode As Integer
 
@@ -18,6 +20,17 @@ Public Class clsVisboZustaende
     Public Property meColED As Integer
 
     Public Property oldValue As String
+        Get
+            oldValue = _oldValue
+        End Get
+        Set(value As String)
+            If IsNothing(value) Then
+                _oldValue = ""
+            Else
+                _oldValue = value
+            End If
+        End Set
+    End Property
 
     ' wird jetzt von getUpdatedAuslastungsArray übernommen ...
     ''Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer, _

@@ -1475,13 +1475,19 @@ Public Module Projekte
 
                     If changeScale Then
                         .MinimumScale = 0
-                        If Not (.MaximumScaleIsAuto) Then
-
-                            If maxscale > Math.Round(.MaximumScale + 5) Then
-                                .MaximumScale = Math.Round(maxscale + 6)
-                            End If
-                            .MaximumScaleIsAuto = True
+                        .MaximumScaleIsAuto = False
+                        If maxscale > Math.Round(.MaximumScale + 5) Then
+                            .MaximumScale = Math.Round(maxscale + 6)
                         End If
+
+
+                        'If Not (.MaximumScaleIsAuto) Then
+
+                        '    If maxscale > Math.Round(.MaximumScale + 5) Then
+                        '        .MaximumScale = Math.Round(maxscale + 6)
+                        '    End If
+                        '    .MaximumScaleIsAuto = True
+                        'End If
                     End If
 
                     If mdatenreihe.Max > .MaximumScale - 3 Then
@@ -4297,17 +4303,22 @@ Public Module Projekte
 
                     If changeScale Then
                         .MinimumScale = 0
-                        If Not (.MaximumScaleIsAuto) Then
-                            Dim tstValue As Double = .MaximumScale
+                        .MaximumScaleIsAuto = False
+                        ' Skalierung soll sich nur ändern, wenn sie größer werden muss
+                        ' ansonsten ist es besser, man erkennt die Verhältnismäßigkeit 
+                        'If Not (.MaximumScaleIsAuto) Then
 
-                            If sumdatenreihe.Max > .MaximumScale - 3 Then
-                                .MaximumScale = sumdatenreihe.Max + 3
-                            End If
-                            .MaximumScaleIsAuto = True
+                        Dim tstValue As Double = .MaximumScale
+
+                        If sumdatenreihe.Max > .MaximumScale - 3 Then
+                            .MaximumScale = sumdatenreihe.Max + 3
                         End If
+                        '.MaximumScaleIsAuto = true
+
+                        'End If
                     End If
 
-                End With
+        End With
 
             End If
 
@@ -5023,13 +5034,17 @@ Public Module Projekte
 
                     If changeScale Then
                         .MinimumScale = 0
-                        If Not (.MaximumScaleIsAuto) Then
-
-                            If sumdatenreihe.Max > .MaximumScale - 3 Then
-                                .MaximumScale = sumdatenreihe.Max + 3
-                            End If
-                            .MaximumScaleIsAuto = True
+                        .MaximumScaleIsAuto = False
+                        If sumdatenreihe.Max > .MaximumScale - 3 Then
+                            .MaximumScale = sumdatenreihe.Max + 3
                         End If
+                        'If Not (.MaximumScaleIsAuto) Then
+
+                        '    If sumdatenreihe.Max > .MaximumScale - 3 Then
+                        '        .MaximumScale = sumdatenreihe.Max + 3
+                        '    End If
+                        '    .MaximumScaleIsAuto = True
+                        'End If
                     End If
 
 
@@ -7703,33 +7718,44 @@ Public Module Projekte
 
                 If changeScale Then
 
-                    If Not (.MinimumScaleIsAuto) Then
-                        If (minscale < .MinimumScale) And (minscale < 0) Then
-                            .MinimumScale = minscale
-                        End If
-                        .MinimumScaleIsAuto = True
+                    .MinimumScaleIsAuto = False
+                    If (minscale < .MinimumScale) And (minscale < 0) Then
+                        .MinimumScale = minscale
+                    End If
+
+                    .MaximumScaleIsAuto = False
+                    If itemValue(0) > .MaximumScale - 3 Then
+                        .MaximumScale = itemValue(0) + 3
                     End If
 
 
-                    If Not (.MaximumScaleIsAuto) Then
-
-                        'If itemValue(0) > .MaximumScale - 3 Then
-                        '    .MaximumScale = itemValue(0) + 3
-                        'End If
-
-                        If itemValue(0) > .MaximumScale Then
-                            If itemValue(0) < 80 Then
-                                .MaximumScale = Math.Round(itemValue(0) / 5 + 0.6) * 5
-                            ElseIf itemValue(0) < 300 Then
-                                .MaximumScale = Math.Round(itemValue(0) / 10 + 0.6) * 10
-                            Else
-                                .MaximumScale = Math.Round(itemValue(0) / 50 + 0.6) * 50
-                            End If
-                        End If
+                    'If Not (.MinimumScaleIsAuto) Then
+                    '    If (minscale < .MinimumScale) And (minscale < 0) Then
+                    '        .MinimumScale = minscale
+                    '    End If
+                    '    .MinimumScaleIsAuto = True
+                    'End If
 
 
-                        .MaximumScaleIsAuto = True
-                    End If
+                    'If Not (.MaximumScaleIsAuto) Then
+
+                    '    'If itemValue(0) > .MaximumScale - 3 Then
+                    '    '    .MaximumScale = itemValue(0) + 3
+                    '    'End If
+
+                    '    If itemValue(0) > .MaximumScale Then
+                    '        If itemValue(0) < 80 Then
+                    '            .MaximumScale = Math.Round(itemValue(0) / 5 + 0.6) * 5
+                    '        ElseIf itemValue(0) < 300 Then
+                    '            .MaximumScale = Math.Round(itemValue(0) / 10 + 0.6) * 10
+                    '        Else
+                    '            .MaximumScale = Math.Round(itemValue(0) / 50 + 0.6) * 50
+                    '        End If
+                    '    End If
+
+
+                    '    .MaximumScaleIsAuto = True
+                    'End If
                 End If
 
             End With
@@ -13823,13 +13849,19 @@ Public Module Projekte
         Dim founddiagram As New clsDiagramm
         ' ''Dim IDkennung As String
 
+        Dim currentWsName As String
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentWsName = arrWsNames(3)
+        Else
+            currentWsName = arrWsNames(5)
+        End If
 
         If Not (hproj Is Nothing) Then
 
-            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentWsName), Excel.Worksheet)
                 Dim tmpArray() As String
                 Dim anzDiagrams As Integer
-                anzDiagrams = CType(.Chartobjects, Excel.ChartObjects).Count
+                anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
                 If anzDiagrams > 0 Then
                     For i = 1 To anzDiagrams

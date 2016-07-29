@@ -312,14 +312,25 @@ Public Class Tabelle2
                         ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
 
                         Try
-                            newDblValue = CDbl(Target.Cells(1, 1).value)
+                            If IsNothing(Target.Cells(1, 1).value) Then
+                                newDblValue = 0.0
+                            ElseIf IsNumeric(Target.Cells(1, 1).value) Then
+                                newDblValue = CDbl(Target.Cells(1, 1).value)
+                            Else
+                                newDblValue = 0.0
+                            End If
                         Catch ex As Exception
                             newDblValue = 0.0
                         End Try
 
                         Try
-                            Dim tmpWert As Double = CDbl(visboZustaende.oldValue)
-                            difference = newDblValue - tmpWert
+                            If IsNothing(visboZustaende.oldValue) Then
+                                difference = newDblValue
+                            ElseIf visboZustaende.oldValue = "" Then
+                                difference = newDblValue
+                            Else
+                                difference = newDblValue - CDbl(visboZustaende.oldValue)
+                            End If
                         Catch ex As Exception
                             difference = newDblValue
                         End Try
@@ -334,15 +345,18 @@ Public Class Tabelle2
                             If Not IsNothing(cphase) Then
 
                                 Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
-                                Dim xWerteIndexChck As Integer = monthCol - (hproj.Start + cphase.relStart - 1)
+                                ' fuer Testzwecke ... 
+                                ''Dim xWerteIndexChck As Integer = monthCol - (hproj.Start + cphase.relStart - 1)
+                                ''If xWerteIndex <> xWerteIndexChck Then
+                                ''    Call MsgBox("Kontrolle ... in Change Werte: " & xWerteIndex & ", " & _
+                                ''                 xWerteIndexChck)
+                                ''End If
+
 
                                 Dim xWerte() As Double
-                                Dim tmpSum As Double
+                                'Dim tmpSum As Double
 
-                                If xWerteIndex <> xWerteIndexChck Then
-                                    Call MsgBox("Kontrolle ... in Change Werte: " & xWerteIndex & ", " & _
-                                                 xWerteIndexChck)
-                                End If
+                                
 
                                 If isRole Then
                                     ' es handelt sich um eine gültige Rolle
@@ -352,28 +366,57 @@ Public Class Tabelle2
                                         ' nur dann muss die Sammelrolle entsprechend automatisch reduziert werden ... 
 
                                         Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, rcName)
+
                                         If zeileOFSummaryRole >= 2 And zeileOFSummaryRole <= visboZustaende.meMaxZeile Then
+
                                             Dim parentRoleName As String = CStr(meWS.Cells(zeileOFSummaryRole, columnRC).value)
+
+                                            Dim parentPhaseName As String = CStr(meWS.Cells(zeileOFSummaryRole, 4).value)
+                                            Dim parentPhaseNameID As String = calcHryElemKey(parentPhaseName, False)
+                                            Dim parentComment As Excel.Comment = CType(meWS.Cells(zeileOFSummaryRole, 4), Excel.Range).Comment
+                                            If Not IsNothing(parentComment) Then
+                                                phaseNameID = parentComment.Text
+                                            End If
+
+                                            Dim cParentPhase As clsPhase
+                                            If parentPhaseNameID = phaseNameID Then
+                                                cParentPhase = cphase
+                                            Else
+                                                cParentPhase = hproj.getPhaseByID(parentPhaseNameID)
+                                            End If
+
+                                            ' das ist der Wert, um den der Index für die Parentphase korrigiert werden muss, da ja 
+                                            ' die RootPhase wesentlich weiter links anfangen kann als die cphase
+                                            ' es ist sicher gestellt, dass nur in zulässigen Wertebereichen aktualisiert wird 
+                                            Dim offset As Integer = cphase.relStart - cParentPhase.relStart
+
                                             ' jetzt muss in der Sammel-Rolle aktualisiert werden 
-                                            Dim parentRole As clsRolle = cphase.getRole(parentRoleName)
+                                            Dim parentRole As clsRolle = Nothing
+                                            Try
+                                                parentRole = cParentPhase.getRole(parentRoleName)
+                                            Catch ex As Exception
+
+                                            End Try
+
 
                                             If IsNothing(parentRole) Then
                                                 ' nichts tun 
                                             Else
-                                                ' der Monatswert muss geändert werden 
+                                                ' der Monatswert muss in der parentRole geändert werden 
                                                 xWerte = parentRole.Xwerte
-                                                If xWerteIndex >= 0 And xWerteIndex <= xWerte.Length - 1 Then
-                                                    Dim alterWert As Double = xWerte(xWerteIndex)
-                                                    xWerte(xWerteIndex) = xWerte(xWerteIndex) - difference
-                                                    If xWerte(xWerteIndex) < 0 Then
-                                                        xWerte(xWerteIndex) = 0
+                                                If xWerteIndex + offset >= 0 And xWerteIndex + offset <= xWerte.Length - 1 Then
+                                                    Dim alterWert As Double = xWerte(xWerteIndex + offset)
+                                                    xWerte(xWerteIndex + offset) = xWerte(xWerteIndex + offset) - difference
+                                                    If xWerte(xWerteIndex + offset) < 0 Then
+                                                        xWerte(xWerteIndex + offset) = 0
                                                     End If
                                                     ' die Monatszahl und dann die Summe updaten ... 
-                                                    CType(meWS.Cells(zeileOFSummaryRole, Target.Column), Excel.Range).Value = xWerte(xWerteIndex)
+                                                    CType(meWS.Cells(zeileOFSummaryRole, Target.Column), Excel.Range).Value = xWerte(xWerteIndex + offset)
 
-                                                    tmpSum = CDbl(CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value)
-                                                    tmpSum = tmpSum - System.Math.Min(alterWert, difference)
-                                                    CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value = tmpSum
+                                                    ' das wird nachher über updateSummen gemacht 
+                                                    'tmpSum = CDbl(CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value)
+                                                    'tmpSum = tmpSum - System.Math.Min(alterWert, difference)
+                                                    'CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value = tmpSum
 
                                                     summenChanged = True
                                                 Else
@@ -406,9 +449,9 @@ Public Class Tabelle2
                                         Call MsgBox("Fehler in Übernahme Daten-Wert ...")
                                     End If
 
-                                    tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
-                                    tmpSum = tmpSum + difference
-                                    CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
+                                    'tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                                    'tmpSum = tmpSum + difference
+                                    'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
 
                                     ' bestimmt zu welchen Rollen die Auslastungs-Werte neu berechnet werden müssen ..
                                     roleCostNames = RoleDefinitions.getSummaryRoles(rcName)
@@ -446,9 +489,9 @@ Public Class Tabelle2
                                     End If
 
                                     ' jetzt die Summe neu ausgegeben ... 
-                                    tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
-                                    tmpSum = tmpSum + difference
-                                    CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
+                                    'tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                                    'tmpSum = tmpSum + difference
+                                    'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
 
                                     If Not roleCostNames.Contains(rcName) Then
                                         roleCostNames.Add(rcName, rcName)
