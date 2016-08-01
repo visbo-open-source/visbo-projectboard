@@ -193,7 +193,8 @@ Public Class Tabelle2
                                         Else
                                             ' es kam eine neue Rolle hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
                                             ' muss an dieser Stelle nur die  gar nichts gemacht werden ..
-
+                                            ' es sollen aber gleich die Auslastungs-Werte aktualisiert werden ...
+                                            auslastungChanged = True
                                         End If
 
                                         ' jetzt für die Zelle die Validation neu bestimmen, dazu muss aber der Blattschutz aufgehoben sein ...  
@@ -216,6 +217,12 @@ Public Class Tabelle2
 
                                                 .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                                                                Formula1:=tmpVal)
+
+                                                ' wenn es sich um die Projekt-Phase handelt
+                                                If phaseNameID = rootPhaseName Then
+                                                    Call updateEmptyRcCellValidations(pName, tmpVal)
+                                                End If
+
                                             Catch ex As Exception
 
                                             End Try

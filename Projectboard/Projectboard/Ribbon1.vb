@@ -7289,11 +7289,18 @@ Imports System.Windows
             width = 450
 
             With appInstance.ActiveWindow
+
                 sichtbarerBereich = .VisibleRange
-                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
-                If left < CDbl(sichtbarerBereich.Left) Then
-                    left = CDbl(sichtbarerBereich.Left) + 2
+                If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
+                    If left < CDbl(sichtbarerBereich.Left) Then
+                        left = CDbl(sichtbarerBereich.Left) + 2
+                    End If
+                Else
+                    left = 5
                 End If
+
+                
 
                 top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
                 If top < CDbl(sichtbarerBereich.Top) Then

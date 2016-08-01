@@ -11333,6 +11333,12 @@ Public Module awinGeneralModules
                 Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
                 Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
 
+                If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                    chleft = (showRangeRight - 1) * boxWidth + 4
+                Else
+                    chleft = 5
+                End If
+
                 If selectedPhases.Count > 0 Then
                     chTyp = DiagrammTypen(0)
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
@@ -15948,6 +15954,7 @@ Public Module awinGeneralModules
 
                 pStart = getColumnOfDate(hproj.startDate)
                 pEnde = getColumnOfDate(hproj.endeDate)
+                Dim defaultEmptyValidation As String = validationStrings(rcValidation(anzahlRollen + 1)) ' alle Rollen und Kostenarten 
 
                 For p = 1 To hproj.CountPhases
 
@@ -15971,11 +15978,19 @@ Public Module awinGeneralModules
                         For r = 1 To cphase.countRoles
 
 
+
+
                             Dim role As clsRolle = cphase.getRole(r)
                             Dim roleName As String = role.name
                             Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
                             Dim isSammelRolle As Boolean = RoleDefinitions.getRoledef(roleName).isCombinedRole
                             Dim xValues() As Double = role.Xwerte
+
+                            If p = 1 And cphase.countRoles = 1 And r = 1 Then
+                                ' bestimme die defaultValidation für leere Zeilen : siehe if not atleastOne ...
+                                defaultEmptyValidation = validationStrings.Item(rcValidation(roleUID)) & ";" & _
+                                    validationStrings.Item(rcValidation(0))
+                            End If
 
                             schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                             zeilensumme = schnittmenge.Sum
@@ -16075,6 +16090,7 @@ Public Module awinGeneralModules
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                     Else
                                         CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                        CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
                                     End If
 
                                 Next
@@ -16192,6 +16208,17 @@ Public Module awinGeneralModules
                             ' jetzt sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
                             ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
                             ' Schreiben der Projekt-Informationen 
+                            Dim currentValidation As String = rcValidation(anzahlRollen + 1)
+
+                            ' bestimmen, ob rootPhase nur eine Rolle hat, dann soll die Validation aus der Validation dieser Rolle plus allen Kostenarten gebildet werden ... 
+                            Try
+                                If cphase.nameID <> rootPhaseName Then
+
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
                             With CType(currentWS, Excel.Worksheet)
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
@@ -16222,7 +16249,7 @@ Public Module awinGeneralModules
                                         ' jetzt wird die ValidationList aufgebaut 
                                         'Dim tmpVal As String = validationStrings.Item(rcValidation(anzahlRollen + 1))
                                         .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                       Formula1:=validationStrings.Item(rcValidation(anzahlRollen + 1)))
+                                                                       Formula1:=defaultEmptyValidation)
                                     Catch ex As Exception
 
                                     End Try
@@ -16656,6 +16683,83 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' aktualisiert für das angegebene Projekt die Validation Strings aller leeren / empty RoleCost Felder gemäß dem übergebenen 
+    ''' dient dazu, um die Validation an der rootPhaseName Setzung zu orientieren 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="validationString"></param>
+    ''' <remarks></remarks>
+    Public Sub updateEmptyRcCellValidations(ByVal pName As String, ByVal validationString As String)
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+            ' nur dann befindet sich das Programm im MassEdit Sheet 
+
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+            If IsNothing(pName) Or IsNothing(validationString) Then
+                ' nichts tun 
+            ElseIf pName.Trim.Length = 0 Or validationString.Trim.Length = 0 Then
+                ' nichts tun 
+            Else
+                ' Update der Validations der leeren RoleCost Zuordnungen  
+                Dim columnRC As Integer = visboZustaende.meColRC
+
+                ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
+                For zeile As Integer = 2 To visboZustaende.meMaxZeile
+
+                    Dim curpName As String = CStr(meWS.Cells(zeile, 2).value)
+                    Dim curphaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                    Dim needsUpdate As Boolean = False
+
+                    ' es soll auf jeden Fall auch die Rootphase geupdated werden ..., da ja die evtl auch als secondbest geändert wurde ...
+                    If curpName = pName And curphaseName <> "." Then
+
+                        Dim curRCName As String = CStr(meWS.Cells(zeile, columnRC).value)
+
+                        If IsNothing(curRCName) Then
+                            needsUpdate = True
+                        ElseIf curRCName.Trim.Length = 0 Then
+                            needsUpdate = True
+                        End If
+
+                    End If
+
+                    If needsUpdate Then
+                        Try
+                            With CType(meWS.Cells(zeile, columnRC), Excel.Range)
+                                If Not IsNothing(.Validation) Then
+                                    .Validation.Delete()
+                                End If
+                                ' jetzt wird die ValidationList aufgebaut 
+
+                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                               Formula1:=validationString)
+
+                            End With
+                        Catch ex As Exception
+
+                        End Try
+                        
+                    End If
+
+                Next
+
+            End If
+
+
+        Else
+            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+        End If
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    ''' <summary>
     ''' prüft ob in dem aktiven Massen-Edit Sheet die übergebene Kombination nocheinmal vorkommt ... 
     ''' wenn nein: Rückgabe true
     ''' wenn ja: Rückgabe false
@@ -16777,8 +16881,15 @@ Public Module awinGeneralModules
 
                     With meWS
                         chckName = CStr(meWS.Cells(curZeile, 2).value)
+                        If IsNothing(chckName) Then
+                            chckName = ""
+                        End If
 
                         Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                        If IsNothing(phaseName) Then
+                            phaseName = ""
+                        End If
+
                         chckPhNameID = calcHryElemKey(phaseName, False)
                         Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
                         If Not IsNothing(curComment) Then
@@ -16786,6 +16897,9 @@ Public Module awinGeneralModules
                         End If
 
                         chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+                        If IsNothing(chckRCName) Then
+                            chckRCName = ""
+                        End If
 
                     End With
                     ' 
@@ -16819,8 +16933,15 @@ Public Module awinGeneralModules
 
                             With meWS
                                 chckName = CStr(meWS.Cells(curZeile, 2).value)
+                                If IsNothing(chckName) Then
+                                    chckName = ""
+                                End If
 
                                 Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                                If IsNothing(phaseName) Then
+                                    phaseName = ""
+                                End If
+
                                 chckPhNameID = calcHryElemKey(phaseName, False)
                                 Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
                                 If Not IsNothing(curComment) Then
@@ -16828,6 +16949,9 @@ Public Module awinGeneralModules
                                 End If
 
                                 chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+                                If IsNothing(chckRCName) Then
+                                    chckRCName = ""
+                                End If
 
                             End With
 
@@ -16841,7 +16965,7 @@ Public Module awinGeneralModules
 
         End If
 
-        
+
 
 
         If found Then
