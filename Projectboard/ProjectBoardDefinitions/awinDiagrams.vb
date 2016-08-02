@@ -285,8 +285,10 @@ Public Module awinDiagrams
         ' jetzt prüfen, ob es bereits gespeicherte Werte für top, left, ... gibt ;
         ' Wenn ja : übernehmen
 
-        If von > 1 Then
+        If von > 1 And visboZustaende.projectBoardMode = ptModus.graficboard Then
             left = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
+        ElseIf von > 1 Then
+            ' left unverändert lassen ..
         Else
             left = 0
         End If

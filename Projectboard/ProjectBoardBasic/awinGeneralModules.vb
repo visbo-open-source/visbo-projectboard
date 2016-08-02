@@ -16088,6 +16088,8 @@ Public Module awinGeneralModules
                                         ' erlaubter Eingabebereich grau markieren  
                                         CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+
+                                        'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                     Else
                                         CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
                                         CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""

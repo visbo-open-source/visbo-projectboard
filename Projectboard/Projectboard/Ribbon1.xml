@@ -26,19 +26,19 @@
     <tabs>
       <tab id="PTMEC" getVisible ="chckVisibility" label="Charts">
         <group id="PTMECG1" label=" ">
-          <button id="PTMEC1" label="Rollen und Kosten" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
-          <button id="PTMEC2" label="Budget/Kosten"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
+          <button id="PTMEC1" label="Rollen und Kosten" onAction="NameHierarchySelAction"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>
+          <button id="PTMEC2" label="Budget/Kosten"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>
       </group>
       </tab>
       <tab id="PTX" getVisible="chckVisibility" label ="Multiprojekt-Info">
         <group id="PTXG1" label ="Analysen">
-          <button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" supertip="es werden die Projekt-Ampeln als farbige Symbole angezeigt"/>
+          <button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" supertip="es werden die Projekt-Ampeln als farbige Symbole angezeigt."/>
           <separator id="PTXG1s1"/>
-          <button id="PTXG1B2" label="Meilenstein-Ampeln" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt"/>
+          <button id="PTXG1B2" label="Meilenstein-Ampeln" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
           <separator id="PTXG1s2"/>
           <menu id="PTXG1M1" label="Planelemente visualisieren" supertip="Meilensteine und Vorgänge visualisieren">
-            <button id="PTXG1B4" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
-            <button id="PTXG1B5" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>   
+            <button id="PTXG1B4" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen."/>
+            <button id="PTXG1B5" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie."/>   
           </menu>
         </group>
         <group id="PTPf" label="Charts">
@@ -154,8 +154,8 @@
             <button id="PT2G1M1B3" label="Variante übernehmen" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
           </menu>
           <separator id="PT2G1s1"/>
-          <button id="PT2G1M2B4" getVisible="chckVisibility" label="Zeile einfügen" onAction="PTzeileEinfuegen" supertip ="es wird eine neue Zeile mit den Daten der aktuellen Zeile eingefügt"/>
-          <button id="PT2G1M2B5" getVisible="chckVisibility" label="Zeile löschen" onAction="PTzeileLoeschen" supertip ="die Daten der aktuellen Zeile werden gelöscht"/>
+          <button id="PT2G1M2B4" getVisible="chckVisibility" label="Ressource/Kostenart hinzufügen" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
+          <button id="PT2G1M2B5" getVisible="chckVisibility" label="Ressource/Kostenart löschen" onAction="PTzeileLoeschen" supertip ="die Ressource / Kostenart der aktuellen Zeile wird aus der Projekt-Phase gelöscht."/>
           <menu id="PT2G1M2" getVisible="chckVisibility" label="Editieren">
             <!--<button id="PT2G1M2B1" label="Ressourcen und Kosten"  onAction="Tom2G1Resources" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>-->
             <button id="PT2G1M2B1" label="Ressourcen und Kosten"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
@@ -163,9 +163,9 @@
             <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" enabled ="true" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
           </menu>
           <separator id="PT2G1s2"/>
-          <checkBox id="PT6G2B3" getVisible="chckVisibility" label="prozentuale Auslastungs-Werte anzeigen" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn nicht gesetzt, werden die absoluten Werte in Personentagen angezeig die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen; andernfalls wird die prozentuale Auslastung gezeigt"/>
-          <checkBox id="PT6G2B4" getVisible="chckVisibility" label="Platzhalter Rollen automatisch reduzieren" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>
-          <checkBox id="PT6G2B5" getVisible="chckVisibility" label="Sortierung ermöglichen" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, alleridngs sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
+          <checkBox id="PT6G2B3" getVisible="chckVisibility" label="prozentuale Auslastungs-Werte anzeigen" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>
+          <checkBox id="PT6G2B4" getVisible="chckVisibility" label="Platzhalter Rollen automatisch reduzieren" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>
+          <checkBox id="PT6G2B5" getVisible="chckVisibility" label="Sortierung ermöglichen" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
           <button id="PT2G1B2" getVisible="chckVisibility" label="Fixieren" onAction="Tom2G1Beauftragen" supertip ="mit dem Fixieren können Termine von Phasen oder Meilensteinen und zugehörige Rollen- und Kostenbedarfe des Projektes nicht mehr verändert werden. Visuell ist ein fixiertes Projekt durch die eckigere Projektbalken Darstellung zu erkennen"/>
           <button id="PT2G1B3" getVisible="chckVisibility" label="Fixierung aufheben" onAction="Tom2GXBeauftragen" supertip ="mit dem Aufheben der Fixierung können Projekte bzw. Varianten in ihren Terminen und zugehörigen Rollen- und Kostenbedarfe verändert werden. Visuell ist ein nicht fixiertes Projekt durch die rundere Projektbalken Darstellung zu erkennen"/>

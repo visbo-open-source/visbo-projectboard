@@ -184,10 +184,12 @@ Public Class Tabelle2
                                         If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> newStrValue.Trim Then
                                             ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                             Try
-                                                cPhase.getRole(visboZustaende.oldValue).RollenTyp = newRoleID
                                                 auslastungChanged = True
+                                                cPhase.getRole(visboZustaende.oldValue).RollenTyp = newRoleID
                                             Catch ex As Exception
-                                                Dim a As Integer = 0
+                                                visboZustaende.oldValue = ""
+                                                ' in diesem Fall wurde nur von einer noch nicht belegten Rolle auf eine 
+                                                ' andere nicht belegte gewechselt 
                                             End Try
 
                                         Else
@@ -220,6 +222,8 @@ Public Class Tabelle2
 
                                                 ' wenn es sich um die Projekt-Phase handelt
                                                 If phaseNameID = rootPhaseName Then
+                                                    tmpVal = tmpVal & ";" & _
+                                                                validationStrings.Item(rcValidation(0))
                                                     Call updateEmptyRcCellValidations(pName, tmpVal)
                                                 End If
 
