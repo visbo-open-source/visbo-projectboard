@@ -21,10 +21,27 @@ namespace MongoDbAccess
     public class Request
     {
         public MongoClient Client { get; set; }
+
+        // neu 3.0 
+        protected static IMongoClient newClient;
+
         public MongoServer Server { get; set; }
         public MongoDatabase Database { get; set; }
+
+
+        // neu 3.0 
+        protected static IMongoDatabase newDatabase;
+
+
         public MongoCollection CollectionProjects { get; set; }
+
+        // neu 3.0
+        protected static IMongoCollection<clsProjektDB> newCollectionProjects { get; set; }
+        
         public MongoCollection CollectionConstellations { get; set; }
+        // neu 3.0 
+        protected static IMongoCollection<clsConstellationDB> newCollectionConstellations { get; set; }
+
         public MongoCollection CollectionDependencies { get; set; }
         public MongoCollection CollectionFilter { get; set; }
 
@@ -49,6 +66,7 @@ namespace MongoDbAccess
                 var connectionString = "mongodb://" + databaseURL;
                 //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
+                newClient = new MongoClient(connectionString);
             }
             else
             {
@@ -60,10 +78,16 @@ namespace MongoDbAccess
             
             Server = Client.GetServer();
             Database = Server.GetDatabase(databaseName);
+
+            // neu 3.0 
+            newDatabase = newClient.GetDatabase(databaseName);
+            newCollectionProjects = newDatabase.GetCollection<clsProjektDB>("projects");
+
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
+
         }
 
         public bool collectionEmpty(string name)
@@ -418,6 +442,50 @@ namespace MongoDbAccess
             return !CollectionConstellations.Remove(query).HasLastErrorMessage;
         }
 
+        //
+        // benennt alle Projekte mit Namen oldName um
+        // aber nur, wenn der neue Name nicht schon in der Datenbank existiert 
+        public async void renameProjectsInDB(string oldName, String newName)
+        {
+            if (projectNameAlreadyExists(newName, ""))
+            {
+                // return false;
+            }
+            
+            {
+                // erstmal das Projekt selber umbenennen 
+                string oldFullName = Projekte.calcProjektKeyDB(oldName, "");
+                string newFullName = Projekte.calcProjektKeyDB(newName, "");
+
+                // neu 3.0 
+                var filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
+                var update = Builders<clsProjektDB>.Update
+                                    .Set("name", newFullName);
+
+                var ergebnis = await newCollectionProjects.UpdateManyAsync(filter, update);
+
+                // jetzt 
+                // alle Varianten des Projektes umbenennen 
+                Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
+
+               
+                foreach (string vName in listOfVariants )
+                {
+                    oldFullName = Projekte.calcProjektKeyDB(oldName, vName);
+                    newFullName = Projekte.calcProjektKeyDB(newName, vName);
+
+                    // neu 3.0 
+                    filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
+                    update = Builders<clsProjektDB>.Update
+                                    .Set("name", newFullName);
+
+                    ergebnis = await newCollectionProjects.UpdateManyAsync(filter, update);
+                                       
+                }
+            }
+            // return true;
+        }
+
         public clsConstellations retrieveConstellationsFromDB()
         {
             var result = new clsConstellations();
@@ -437,6 +505,8 @@ namespace MongoDbAccess
             return result;
         }
 
+
+        // * speichert Dependencies in DB 
         public bool storeDependencyofPToDB(clsDependenciesOfP d)
         {
             var depDB = new clsDependenciesOfPDB();

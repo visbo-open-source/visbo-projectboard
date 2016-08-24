@@ -112,6 +112,7 @@ Imports System.Windows
 
 
 
+
         enableOnUpdate = True
 
     End Sub
@@ -711,134 +712,88 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub Tom2G1Rename(control As IRibbonControl)
 
-        Dim singleShp As Excel.Shape
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        'Dim pName As String, variantName As String
-        'Dim shapeText As String
-
-        Dim tmpshapes As Excel.Shapes
-        Dim oldKey As String, newKey As String
-        Dim erg As String = ""
-        Dim atleastOne As Boolean = False
         Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
 
-        Call projektTafelInit()
+        Dim key As String
+        Dim phaseList As New Collection
+        Dim milestoneList As New Collection
+        Dim neuerVariantenName As String = ""
+        Dim ok As Boolean = True
+        Dim zaehler As Integer = 1
+        Dim nameCollection As New Collection
+        Dim abbruch As Boolean = False
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
-
-
-        enableOnUpdate = False
 
         Try
-            tmpshapes = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes, Excel.Shapes)
-        Catch ex As Exception
-            tmpshapes = Nothing
-        End Try
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        If Not tmpshapes Is Nothing Then
+            Call projektTafelInit()
 
-            ' jetzt die Aktion durchführen ...
+            enableOnUpdate = False
+
             Try
-                For Each singleShp In tmpshapes
-
-                    Dim shapeArt As Integer
-                    shapeArt = kindOfShape(singleShp)
-
-                    With singleShp
-
-
-
-                        If isProjectType(shapeArt) Then
-
-                            ' jetzt muss Pname und Variant-Name ermittel werde 
-                            Try
-                                hproj = ShowProjekte.getProject(.Name, True)
-
-
-                                If hproj.getShapeText <> .TextFrame2.TextRange.Text Then
-                                    ' das Shape wurde vom Nutzer umbenannt 
-                                    atleastOne = True
-
-
-                                    Dim oldPname As String = hproj.name
-                                    Dim oldVname As String = hproj.variantName
-                                    Dim tmpstr(5) As String
-                                    Dim newPname As String = ""
-                                    Dim newVname As String = ""
-                                    tmpstr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
-
-                                    newPname = tmpstr(0)
-                                    If tmpstr.Length > 1 Then
-                                        newVname = tmpstr(1)
-                                    End If
-
-                                    Try
-
-
-                                        If request.pingMongoDb() Then
-
-                                            If ShowProjekte.contains(newPname) Or request.projectNameAlreadyExists(newPname, hproj.variantName) Or Len(newPname.Trim) = 0 Or IsNumeric(newPname) Then
-
-                                                ' ungültiger Name - alten Namen wiederherstellen 
-                                                .TextFrame2.TextRange.Text = hproj.getShapeText
-                                                erg = erg & oldPname & " bleibt, " & newPname & " ungültig oder existiert bereits in DB" & vbLf
-                                            Else
-                                                ' der neue Name ist gültig 
-                                                .Name = newPname
-
-                                                oldKey = calcProjektKey(hproj)
-                                                newKey = calcProjektKey(newPname, hproj.variantName)
-                                                With hproj
-                                                    .name = newPname
-                                                End With
-
-                                                ShowProjekte.Remove(oldPname)
-                                                hproj.timeStamp = Date.Now
-                                                ShowProjekte.Add(hproj)
-                                                AlleProjekte.Remove(oldKey)
-                                                AlleProjekte.Add(newKey, hproj)
-
-                                                erg = erg & oldPname & " -> " & newPname & vbLf
-
-                                            End If
-                                        Else
-                                            'Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-                                            .TextFrame2.TextRange.Text = oldPname
-                                            erg = erg & oldPname & " bleibt, " & newPname & " ungültig, DB ist nicht aktiv" & vbLf
-                                        End If
-
-                                    Catch ex1 As Exception
-                                        Call MsgBox(ex1.Message)
-                                        .TextFrame2.TextRange.Text = oldPname
-                                        erg = erg & oldPname & " bleibt, " & newPname & " ungültig" & vbLf
-                                    End Try
-
-                                End If
-                            Catch ex As Exception
-                                Call MsgBox("Fehler : zu Shape mit Namen " & .Name & " gibt es kein Projekt!")
-                            End Try
-
-
-
-                        End If
-                    End With
-                Next
+                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
             Catch ex As Exception
-                Call MsgBox("Aktion im Extended Mode nicht unterstützt ...")
+                awinSelection = Nothing
             End Try
 
+            If Not awinSelection Is Nothing Then
 
-        End If
+                For i As Integer = 1 To awinSelection.Count
+                    nameCollection.Add(awinSelection.Item(i).Name)
+                Next
 
-        If atleastOne Then
-            Call MsgBox(erg)
-        Else
-            Call MsgBox("es hat kein Rename stattgefunden")
-        End If
+                While zaehler <= nameCollection.Count And Not abbruch
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
+                    ' jetzt die Aktion durchführen ...
+                    Dim pName As String = CStr(nameCollection.Item(zaehler))
+
+                    Dim newName As String = "Test:" & pName
+
+                    hproj = ShowProjekte.getProject(pName)
+                    hproj.name = newName
+
+                    ' jetzt wird in der Datenbank umbenannt 
+                    Try
+                        If request.projectNameAlreadyExists(pName, "") Or _
+                            request.projectNameAlreadyExists(pName, hproj.variantName) Then
+
+                            Call request.renameProjectsInDB(pName, newName)
+
+                        End If
+                    Catch ex As Exception
+                        Call MsgBox("Fehlende Berechtigung?" & vbLf & ex.Message)
+                    End Try
+
+
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Try
+
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, newName, hproj.tfZeile, phaseList, milestoneList)
+
+                    Catch ex As Exception
+
+                        Call MsgBox("Fehler bei Rename Projekt: " & ex.Message)
+
+                    End Try
+
+                    zaehler = zaehler + 1
+
+                End While
+
+            Else
+                Call MsgBox("vorher Projekt selektieren ...")
+            End If
+
+            enableOnUpdate = True
+        Catch ex As Exception
+
+        End Try
+        
+
     End Sub
 
     Sub PT2ProjektNeu(control As IRibbonControl)

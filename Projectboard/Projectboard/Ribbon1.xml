@@ -179,9 +179,9 @@
           <button id="PT2G1B7" getVisible="chckVisibility" label="Extended View aufheben" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet. "/>
          
           <!--<button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
-          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
-          <separator id="PT2G1s4"/>
-          <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />-->
+          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />-->
+          <separator id="PT2G1s5"/>
+          <button id="PT2G1B8" label="Umbenennen" onAction="Tom2G1Rename" />
         </group>
         <!---->
         <group id="PT2G2" getVisible="chckVisibility" label="Multiprojekt-Szenario">
