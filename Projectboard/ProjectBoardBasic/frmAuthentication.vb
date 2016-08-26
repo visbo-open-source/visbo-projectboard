@@ -130,4 +130,8 @@ Public Class frmAuthentication
             DialogResult = System.Windows.Forms.DialogResult.Retry
         End Try
     End Sub
+
+    Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+    End Sub
 End Class

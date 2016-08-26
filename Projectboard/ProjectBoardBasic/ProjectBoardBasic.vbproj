@@ -94,6 +94,12 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="frmRenameProject.Designer.vb">
+      <DependentUpon>frmRenameProject.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmRenameProject.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmCreateLicences.Designer.vb">
       <DependentUpon>frmCreateLicences.vb</DependentUpon>
     </Compile>
@@ -324,6 +330,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjPortfolioAdmin.resx">
       <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmRenameProject.resx">
+      <DependentUpon>frmRenameProject.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmReportProfil.resx">
       <DependentUpon>frmReportProfil.vb</DependentUpon>

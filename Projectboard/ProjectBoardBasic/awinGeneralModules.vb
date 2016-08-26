@@ -8984,8 +8984,10 @@ Public Module awinGeneralModules
             If Request.pingMongoDb() Then
 
                 ' Konstellation muss aus der Datenbank gelöscht werden.
-
-                returnValue = Request.removeConstellationFromDB(activeConstellation)
+                returnValue = request.removeConstellationFromDB(activeConstellation)
+                If returnValue = False Then
+                    Call MsgBox("Fehler bei Löschen Szenario: " & activeConstellation.constellationName)
+                End If
             Else
                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
                 returnValue = False
@@ -11782,6 +11784,9 @@ Public Module awinGeneralModules
 
                     Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
                     Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, False)
+                    If returnvalue = False Then
+                        Call MsgBox("Fehler bei Schreiben Filter: " & fName)
+                    End If
                 Else
                     Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
                 End If
