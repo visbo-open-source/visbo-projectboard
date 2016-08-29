@@ -69,6 +69,22 @@ namespace MongoDbAccess
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
 
+            // wenn ein Index bereits existiert, wird er nicht mehr erzeugt ... 
+            var keys = Builders<clsProjektDB>.IndexKeys.Ascending("timestamp");
+            var ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+            string test = ergebnis;
+
+            keys = Builders<clsProjektDB>.IndexKeys.Ascending("name");
+            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+
+            keys = Builders<clsProjektDB>.IndexKeys.Ascending("variantName");
+            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+
+            keys = Builders<clsProjektDB>.IndexKeys.Ascending("startDate");
+            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+
+            keys = Builders<clsProjektDB>.IndexKeys.Ascending("endDate");
+            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
         }
 
         public bool collectionEmpty(string name)
@@ -124,25 +140,47 @@ namespace MongoDbAccess
             var result = new clsProjektDB();
             string searchstr = Projekte.calcProjektKeyDB(projectname, variantname);
 
-            var tmpListe = CollectionProjects.AsQueryable<clsProjektDB>()
-                    .Where(c => c.name == searchstr)
-                    .OrderBy(c => c.timestamp);
             
+            //var tmpErgebnis = CollectionProjects.AsQueryable<clsProjektDB>()
+            //        .Where(c => c.name == searchstr)
+            //        .OrderBy(c => c.timestamp)
+            //        .Last();
 
+            //var tmpErgebnis = (from c in CollectionProjects.AsQueryable<clsProjektDB>()
+            //        where c.name == searchstr
+            //        orderby c.timestamp
+            //        select c)
+            //        .Last();
+
+
+            var filter = Builders<clsProjektDB>.Filter.Eq("name", searchstr);
+            var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
+            //var result = await collection.Find(filter).Sort(sort).ToListAsync();
+            result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
+
+            // alternativ: 
+            //result = CollectionProjects.AsQueryable<clsProjektDB>()
+            //        .Where(c => c.name == searchstr)
+            //        .OrderBy(c => c.timestamp)
+            //        .ToList()
+            //        .Last();
+
+
+           
             // das folgende muss gemacht werden, weil der .Last Operator Fehler gibt 
-            int anzahl;
-            anzahl = tmpListe.Count();
+            //int anzahl;
+            //anzahl = tmpListe.Count();
+            
+            //int zaehler = 0;
+            //foreach (clsProjektDB p in tmpListe)
+            //{
+            //    zaehler = zaehler + 1;
+            //    if (zaehler == anzahl)
+            //    {
+            //        result = p;
+            //    }
 
-            int zaehler = 0;
-            foreach (clsProjektDB p in tmpListe)
-            {
-                zaehler = zaehler + 1;
-                if (zaehler == anzahl)
-                {
-                    result = p;
-                }
-
-            }
+            //}
             
 
             //TODO: rückumwandeln
@@ -277,53 +315,65 @@ namespace MongoDbAccess
                 int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart)+1;
                 
 
+                //var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                //            //.Where(c => c.tfSpalte >= startMonat-Module1.maxProjektdauer && c.startDate <= zeitraumEnde)
+                //            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart)
+                //            .Select(c => c.name)
+                //            .Distinct();
+
                 var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            //.Where(c => c.tfSpalte >= startMonat-Module1.maxProjektdauer && c.startDate <= zeitraumEnde)
                             .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart)
                             .Select(c => c.name)
-                            .Distinct();
+                            .Distinct()
+                            .ToList();
 
-                
                 foreach (string name in prequery)
+                
                 {
-                    // geht aktuell nicht, der .last Operator wirft einen Fehler , ist nicht implementiert 
-                    //projektDB = CollectionProjects.AsQueryable<clsProjektDB>()
+                    // im Vergleich zum alten: es muss um toList ergänzt werden :
+                    //clsProjektDB projektDB = CollectionProjects.AsQueryable<clsProjektDB>()
                     //             .Where(c => c.name == name)
                     //             .OrderBy(c => c.timestamp)
+                    //             .ToList()
                     //             .Last();
 
-                    
-                    clsProjektDB projektDB = null; 
+                    var filter = Builders<clsProjektDB>.Filter.Eq("name", name);
+                    var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
+                    //var result = await collection.Find(filter).Sort(sort).ToListAsync();
+                    clsProjektDB projektDB = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
+                                        
                     //anzahl = pruefZahl;
 
-                                                        
-                    var tmpListe = CollectionProjects.AsQueryable<clsProjektDB>()
-                                 .Where(c => c.name == name)
-                                 .OrderBy(c => c.timestamp);
+                    // nicht mehr notwendig !                                 
+                    //var tmpListe = CollectionProjects.AsQueryable<clsProjektDB>()
+                    //             .Where(c => c.name == name)
+                    //             .OrderBy(c => c.timestamp);
                     
-                    int anzahl;
-                    anzahl = tmpListe.Count();
+                    //int anzahl;
+                    //anzahl = tmpListe.Count();
 
-                    int zaehler = 0;
-                    foreach (clsProjektDB p in tmpListe)
-                    {
-                        zaehler = zaehler+1;
-                        if (zaehler == anzahl) 
-                        {
-                            projektDB = p;
-                        }
+                    //int zaehler = 0;
+                    //foreach (clsProjektDB p in tmpListe)
+                    //{
+                    //    zaehler = zaehler+1;
+                    //    if (zaehler == anzahl) 
+                    //    {
+                    //        projektDB = p;
+                    //    }
 
-                    }
+                    //}
                     
                     
-                    if (projektDB.tfSpalte + projektDB.Dauer >= startMonat)
-                    {
-                        var projekt = new clsProjekt();
-                        projektDB.copyto(ref projekt);
-                        string schluessel = projekt.name + '#' + projekt.variantName;
-                        //result.Add(projekt.Id, projekt);
-                        result.Add(schluessel, projekt);
-                    }
+                    //if (projektDB.tfSpalte + projektDB.Dauer >= startMonat)
+                    //{
+                    var projekt = new clsProjekt();
+                    projektDB.copyto(ref projekt);
+                        
+                    //string schluessel = projekt.name + '#' + projekt.variantName;
+                    string schluessel = Projekte.calcProjektKey(projekt);
+                    //result.Add(projekt.Id, projekt);
+                    result.Add(schluessel, projekt);
+                    //}
                     
                     // Ende alter Code vor Ergänzung 15.10 - jetzt wieder der richtige Code
                    

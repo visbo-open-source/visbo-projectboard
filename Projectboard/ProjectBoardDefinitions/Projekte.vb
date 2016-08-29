@@ -11966,7 +11966,7 @@ Public Module Projekte
         Dim positionsKennzahl As Double
 
         Dim notOK As Boolean = True
-
+        Dim tryExceptionCounts As Integer = 0
 
 
 
@@ -11984,10 +11984,15 @@ Public Module Projekte
 
                     Do While notOK
                         Try
-                            todoListe.Add(positionsKennzahl, .name)
-                            notOK = False
+                            If todoListe.ContainsKey(positionsKennzahl) Then
+                                positionsKennzahl = positionsKennzahl + 0.00001
+                            Else
+                                todoListe.Add(positionsKennzahl, .name)
+                                notOK = False
+                            End If
                         Catch ex As Exception
-                            positionsKennzahl = positionsKennzahl + 0.01
+                            positionsKennzahl = positionsKennzahl + 0.00001
+                            tryExceptionCounts = tryExceptionCounts + 1
                         End Try
                     Loop
 
@@ -12021,7 +12026,7 @@ Public Module Projekte
                     zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
                 Catch ex As Exception
-
+                    tryExceptionCounts = tryExceptionCounts + 1
                 End Try
 
             Next
@@ -12043,8 +12048,9 @@ Public Module Projekte
                         todoListe.Add(key, .name)
                     End With
                 Catch ex As Exception
-                    
-                    Call MsgBox("Fehler in awinZeichnePlanTafel")
+
+                    tryExceptionCounts = tryExceptionCounts + 1
+                    'Call MsgBox("Fehler in awinZeichnePlanTafel")
 
                 End Try
                 
@@ -12103,7 +12109,7 @@ Public Module Projekte
                         max = curZeile
                     End If
                 Catch ex As Exception
-
+                    tryExceptionCounts = tryExceptionCounts + 1
                 End Try
 
 
@@ -12111,7 +12117,9 @@ Public Module Projekte
             Next
         End If
 
-
+        'If tryExceptionCounts > 0 Then
+        '    Call MsgBox("Anzahl: " & tryExceptionCounts)
+        'End If
 
 
     End Sub
