@@ -10079,6 +10079,10 @@ Public Module awinGeneralModules
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
+            Case PTTvActions.chgInSession
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
             Case PTTvActions.loadPVS    ' ur: 30.01.2015: aktuell nicht benutzt!!!
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
@@ -10167,6 +10171,7 @@ Public Module awinGeneralModules
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
                         If aKtionskennung = PTTvActions.delFromSession Or _
                             aKtionskennung = PTTvActions.activateV Or _
+                            aKtionskennung = PTTvActions.chgInSession Or _
                             aKtionskennung = PTTvActions.deleteV Or _
                              aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
@@ -10180,6 +10185,14 @@ Public Module awinGeneralModules
 
                             Else
                                 nodeLevel0.Tag = "X"
+                            End If
+
+                            ' jetzt soll im Fall Bearbeiten Portfolio angezeigt werden, welche Projekte gerade in ShowProjekte sind ...
+                            ' bzw. welche quasi im NoShow sind 
+                            If aKtionskennung = PTTvActions.chgInSession Then
+                                If ShowProjekte.contains(pname) Then
+                                    nodeLevel0.Checked = True
+                                End If
                             End If
 
                             '' ''ur:10.08.2015 '' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 

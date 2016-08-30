@@ -189,6 +189,8 @@
           <separator id="PT2G2s1"/>
           <button id="PT2G2B2" label="Laden" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
           <separator id="PT2G2s2"/>
+          <button id="PT2G2B4" label="Ändern" onAction="PTAendernKonstellation" supertip ="in der Session bereits geladene Projekte können ausgeblendet / eingeblendet werden "/>
+          <separator id="PT2G2s3"/>
           <button id="PT2G2B3" label="Löschen" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Session gelöscht; damit wird lediglich die Definition des Szenarios in der Session gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
         </group>
         <group id="PT2G3" getVisible="chckVisibility" label ="Session">

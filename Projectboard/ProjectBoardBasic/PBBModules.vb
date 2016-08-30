@@ -1341,6 +1341,63 @@ Public Module PBBModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' alle aktuell in AlleProjekte geladenen PRojekte und Varianten werden angezeigt und können 
+    ''' aktiv / de-aktiv gesetzt werden 
+    ''' on-the-fly werden evtl gezeigte Portfolio Charts aktualisiert
+    ''' erst mit OK werden die Projekte gezeichnet und als lastConstellation gespeichert , oder unter dem angegebenen Namen
+    ''' </summary>
+    ''' <remarks></remarks>
+    Sub PBBChangeCurrentPortfolio()
+
+
+        'Dim returnValue As DialogResult
+
+        'Dim deleteProjects As New frmDeleteProjects
+        Dim changePortfolio As New frmProjPortfolioAdmin
+
+        ' das letzte Portfolio speichern 
+        Call storeSessionConstellation("Last")
+
+        Try
+
+            With changePortfolio
+                .Text = "Zusammenstellung im Portfolio ändern"
+                .aKtionskennung = PTTvActions.chgInSession
+                .OKButton.Text = "Übernehmen"
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
+            End With
+
+            'Call awinClearPlanTafel()
+
+            changePortfolio.Show()
+
+            'returnValue = changePortfolio.ShowDialog
+
+            '' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
+
+            'If returnValue = DialogResult.OK Then
+            '    ' das aktuelle Portfolio speichern 
+
+            '    ' dann die Projekt-Tafel neu zeichnen 
+
+            'Else
+            '    ' das last-Portfolio wiederherstellen 
+            '    Call loadSessionConstellation("Last", False, False, False)
+
+            '    ' gezeichnet werden muss nix ... 
+
+            'End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+
+    End Sub
     ''' <summary>
     ''' löscht die ausgewählten Projekte aus der Datenbank 
     ''' </summary>

@@ -11968,7 +11968,7 @@ Public Module Projekte
         Dim notOK As Boolean = True
         Dim tryExceptionCounts As Integer = 0
 
-
+        'Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
 
         If fromScratch Then
             Dim zeile As Integer
@@ -12121,6 +12121,51 @@ Public Module Projekte
         '    Call MsgBox("Anzahl: " & tryExceptionCounts)
         'End If
 
+        'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
+
+    End Sub
+
+    ''' <summary>
+    ''' schnelles Zeichnen der Projekte von Scratch bzw. Update eines Projektes 
+    ''' ist aber eigentlich nicht notwendig, weil der Perfromance Gewinn gegenüber der awinzeichnePlanTafel marginal ist
+    ''' </summary>
+    ''' <param name="fromScratch"></param>
+    ''' <remarks></remarks>
+    Public Sub awinZeichnePlanTafelNeu(ByVal fromScratch As Boolean)
+
+
+        Dim pname As String
+        Dim hproj As clsProjekt
+
+
+        Dim notOK As Boolean = True
+        Dim tryExceptionCounts As Integer = 0
+
+        Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
+
+        If fromScratch Then
+            Dim zeile As Integer = 2
+            Dim lastBU As String = ""
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                pname = kvp.Value.name
+                hproj = kvp.Value
+
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
+
+                zeile = zeile + 1
+            Next
+
+        Else
+
+            Call MsgBox("noch nicht implementiert ")
+
+        End If
+
+
+        Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
 
     End Sub
 
@@ -12135,7 +12180,8 @@ Public Module Projekte
     ''' <param name="pname"></param>
     ''' <remarks></remarks>
     Public Sub ZeichneProjektinPlanTafel(ByVal noCollection As Collection, ByVal pname As String, ByVal tryzeile As Integer, _
-                                         ByVal drawPhaseList As Collection, ByVal drawMilestoneList As Collection)
+                                         ByVal drawPhaseList As Collection, ByVal drawMilestoneList As Collection, _
+                                         Optional useTryZeileAnyway As Boolean = False)
 
 
         Dim drawphases As Boolean = awinSettings.drawphases
@@ -12216,8 +12262,12 @@ Public Module Projekte
             tryzeile = projectboardShapes.getMaxZeile
         End If
 
+        If useTryZeileAnyway Then
+            zeile = tryzeile
+        Else
+            zeile = findeMagicBoardPosition(noCollection, pname, tryzeile, start, laenge)
+        End If
 
-        zeile = findeMagicBoardPosition(noCollection, pname, tryzeile, start, laenge)
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -12778,11 +12828,12 @@ Public Module Projekte
 
     ''' <summary>
     ''' verschiebt alle Shapes, die ab vonZeile liegen um eins nach oben
-    ''' vorher wird aber geprüft, on das frei ist   
+    ''' vorher wird aber geprüft, on das frei ist 
+    ''' wenn doItAnyWay = true, wird keine Prüfung vorgenommen, ob frei ...   
     ''' </summary>
     ''' <param name="vonZeile"></param>
     ''' <remarks></remarks>
-    Public Sub moveShapesUp(ByVal vonZeile As Integer, ByVal anzahlZeilen As Integer)
+    Public Sub moveShapesUp(ByVal vonZeile As Integer, ByVal anzahlZeilen As Integer, Optional doItAnyway As Boolean = False)
 
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
@@ -12791,14 +12842,19 @@ Public Module Projekte
         Dim zielZeile As Integer = vonZeile
         Dim shapeType As Integer
         Dim hproj As clsProjekt
-
+        Dim ok As Boolean
         Dim obererRand As Double = calcZeileToYCoord(vonZeile)
         Dim differenz As Double = anzahlZeilen * boxHeight
 
         enableOnUpdate = False
 
+        If doItAnyway Then
+            ok = True
+        Else
+            ok = magicBoardZeileIstFrei(zielZeile)
+        End If
 
-        If magicBoardZeileIstFrei(zielZeile) Then
+        If ok Then
 
             Try
 
@@ -19589,7 +19645,11 @@ Public Module Projekte
 
                         If shownProject.variantName = .variantName Then
                             .show = True
-                            .zeile = shownProject.tfZeile
+                            ' Coord(0) enthält Top - Position des Shapes 
+                            .zeile = calcYCoordToZeile(projectboardShapes.getCoord(shownProject.name)(0))
+                            If .zeile < 2 Then
+                                .zeile = 0
+                            End If
                         Else
                             .show = False
                         End If

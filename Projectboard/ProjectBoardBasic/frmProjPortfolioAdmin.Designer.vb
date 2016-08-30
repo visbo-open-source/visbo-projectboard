@@ -24,8 +24,8 @@ Partial Class frmProjPortfolioAdmin
     Private Sub InitializeComponent()
         Me.TreeViewProjekte = New System.Windows.Forms.TreeView()
         Me.OKButton = New System.Windows.Forms.Button()
-        Me.filterLabel = New System.Windows.Forms.Label()
-        Me.filterDropbox = New System.Windows.Forms.ComboBox()
+        Me.txtboxLabel = New System.Windows.Forms.Label()
+        Me.txtDropbox = New System.Windows.Forms.ComboBox()
         Me.SuspendLayout()
         '
         'TreeViewProjekte
@@ -38,38 +38,38 @@ Partial Class frmProjPortfolioAdmin
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(179, 385)
+        Me.OKButton.Location = New System.Drawing.Point(175, 389)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(107, 23)
         Me.OKButton.TabIndex = 6
         Me.OKButton.Text = "Button1"
         Me.OKButton.UseVisualStyleBackColor = True
         '
-        'filterLabel
+        'txtboxLabel
         '
-        Me.filterLabel.AutoSize = True
-        Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.filterLabel.Location = New System.Drawing.Point(31, 345)
-        Me.filterLabel.Name = "filterLabel"
-        Me.filterLabel.Size = New System.Drawing.Size(91, 16)
-        Me.filterLabel.TabIndex = 33
-        Me.filterLabel.Text = "Filter-Auswahl"
+        Me.txtboxLabel.AutoSize = True
+        Me.txtboxLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtboxLabel.Location = New System.Drawing.Point(31, 327)
+        Me.txtboxLabel.Name = "txtboxLabel"
+        Me.txtboxLabel.Size = New System.Drawing.Size(72, 13)
+        Me.txtboxLabel.TabIndex = 33
+        Me.txtboxLabel.Text = "Filter-Auswahl"
         '
-        'filterDropbox
+        'txtDropbox
         '
-        Me.filterDropbox.FormattingEnabled = True
-        Me.filterDropbox.Location = New System.Drawing.Point(128, 340)
-        Me.filterDropbox.Name = "filterDropbox"
-        Me.filterDropbox.Size = New System.Drawing.Size(301, 21)
-        Me.filterDropbox.TabIndex = 34
+        Me.txtDropbox.FormattingEnabled = True
+        Me.txtDropbox.Location = New System.Drawing.Point(34, 350)
+        Me.txtDropbox.Name = "txtDropbox"
+        Me.txtDropbox.Size = New System.Drawing.Size(395, 21)
+        Me.txtDropbox.TabIndex = 34
         '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(467, 430)
-        Me.Controls.Add(Me.filterDropbox)
-        Me.Controls.Add(Me.filterLabel)
+        Me.Controls.Add(Me.txtDropbox)
+        Me.Controls.Add(Me.txtboxLabel)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.TreeViewProjekte)
         Me.Name = "frmProjPortfolioAdmin"
@@ -80,7 +80,7 @@ Partial Class frmProjPortfolioAdmin
 
     End Sub
     Public WithEvents TreeViewProjekte As System.Windows.Forms.TreeView
-    Friend WithEvents filterLabel As System.Windows.Forms.Label
-    Friend WithEvents filterDropbox As System.Windows.Forms.ComboBox
+    Friend WithEvents txtDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
+    Public WithEvents txtboxLabel As System.Windows.Forms.Label
 End Class

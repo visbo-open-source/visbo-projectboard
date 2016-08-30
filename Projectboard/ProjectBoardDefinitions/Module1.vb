@@ -441,6 +441,7 @@ Public Module Module1
         definePortfolioSE = 5
         loadPV = 6
         deleteV = 7
+        chgInSession = 8
     End Enum
 
     ''' <summary>

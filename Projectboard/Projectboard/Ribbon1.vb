@@ -257,6 +257,12 @@ Imports System.Windows
         enableOnUpdate = True
 
     End Sub
+
+    Sub PTAendernKonstellation(control As IRibbonControl)
+
+        Call PBBChangeCurrentPortfolio()
+        
+    End Sub
     Sub PTRemoveKonstellation(control As IRibbonControl)
 
         Dim ControlID As String = control.Id
@@ -278,8 +284,8 @@ Imports System.Windows
             removeFromDB = True
 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If Request.pingMongoDb() Then
-                projectConstellations = Request.retrieveConstellationsFromDB()
+            If request.pingMongoDb() Then
+                projectConstellations = request.retrieveConstellationsFromDB()
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False

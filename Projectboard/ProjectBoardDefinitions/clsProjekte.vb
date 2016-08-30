@@ -69,6 +69,25 @@ Public Class clsProjekte
 
     End Sub
 
+    ''' <summary>
+    ''' gibt die Zeile zurück, in der das Projekt auf der Projekt-Tafel gezeichnet werden soll 
+    ''' aktuell ist das die alphabetische Reihenfolge
+    ''' das muss später noch angepasst werden ... 
+    ''' </summary>
+    ''' <param name="projectName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPTZeile(ByVal projectName As String) As Integer
+        Get
+            If _allProjects.ContainsKey(projectName) Then
+                getPTZeile = _allProjects.IndexOfKey(projectName) + 2
+            Else
+                getPTZeile = 0
+            End If
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' nimmt das Projekt mit dem übergebenen Namen aus der Liste heraus  
