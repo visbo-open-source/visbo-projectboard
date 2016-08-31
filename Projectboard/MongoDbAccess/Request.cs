@@ -610,6 +610,10 @@ namespace MongoDbAccess
                             
                         }
 
+                       // jetzt müssen die Constellations aktualisiert werden ...
+
+                       // dann müssen noch die Dependencies aktualisiert werden ...
+
                         if (ok)
                         { return true; }
                         else
