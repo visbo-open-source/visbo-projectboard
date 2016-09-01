@@ -494,7 +494,7 @@ namespace MongoDbAccess
             try
             {
                 var cDB = new clsConstellationDB();
-                cDB.copyfrom(ref c);
+                cDB.copyfrom(c);
                 cDB.Id = cDB.constellationName;
 
                 bool alreadyExisting = CollectionConstellations.AsQueryable<clsConstellationDB>()
@@ -611,6 +611,39 @@ namespace MongoDbAccess
                         }
 
                        // jetzt müssen die Constellations aktualisiert werden ...
+
+                       var constellationsDB = CollectionConstellations.AsQueryable<clsConstellationDB>()
+                                 .Select(cDB => cDB);
+
+                       int zaehler = 0;
+                       int gesamt = 0; 
+
+                       foreach (clsConstellationDB cDB in constellationsDB)
+                        {
+                            var c = new clsConstellation();
+                            cDB.copyto(ref c);
+                            int a = c.rename(oldName, newName);
+
+                           if (a>0)
+                           {
+                               clsConstellationDB chgcDB = new clsConstellationDB();
+                               chgcDB.copyfrom(c);
+                               // mit Id=null kann kein Replace gemacht werden  
+                               chgcDB.Id = cDB.Id;
+
+                               var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", chgcDB.constellationName);
+                               var rResult = CollectionConstellations.ReplaceOne(filter, chgcDB);
+                               //ok = ok & (rResult.ModifiedCount > 0);
+                               ok = ok & rResult.IsAcknowledged;
+
+                               zaehler = zaehler + 1;
+                               gesamt = gesamt + a; 
+                           }
+                            
+
+                        }
+                       // Énde Aktualisierung Constellations ...
+
 
                        // dann müssen noch die Dependencies aktualisiert werden ...
 

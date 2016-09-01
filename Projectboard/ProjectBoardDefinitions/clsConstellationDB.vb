@@ -4,10 +4,10 @@
     Public constellationName As String
     Public Id As String
 
-    Sub copyfrom(ByRef c As clsConstellation)
+    Sub copyfrom(ByVal c As clsConstellation)
 
         Me.constellationName = c.constellationName
-        
+
         For Each item In c.Liste
             Dim newItem As New clsConstellationItemDB
             newItem.copyfrom(item.Value)
@@ -25,7 +25,13 @@
             Dim newItem As New clsConstellationItem
             item.copyto(newItem)
             key = item.projectName & "#" & item.variantName
-            c.Liste.Add(key, newItem)
+            If Not c.Liste.ContainsKey(key) Then
+                c.Liste.Add(key, newItem)
+            Else
+                Dim a As Integer = 0
+                'Call MsgBox("Fehler bei Aufbau Konstellation mit Elem: " & key)
+            End If
+
         Next
 
 
@@ -38,7 +44,7 @@
         Public show As Boolean
         Public zeile As Integer
 
-        Sub copyfrom(ByRef item As clsConstellationItem)
+        Sub copyfrom(ByVal item As clsConstellationItem)
 
             With item
                 Me.projectName = .projectName

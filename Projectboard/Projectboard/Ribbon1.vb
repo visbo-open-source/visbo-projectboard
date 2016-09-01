@@ -774,6 +774,12 @@ Imports System.Windows
                             Dim variantNamesCollection As Collection = AlleProjekte.getVariantNames(pName, False)
                             hproj = ShowProjekte.getProject(pName)
 
+                            ' jetzt werden alle Vorkommen in den Session Constellations umbenannt 
+                            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                                Dim anzahl As Integer = kvp.Value.rename(pName, newName)
+                            Next
+
+                            ' jetzt werden alle Vorkommen in Dependencies umbenannt 
 
                             ' jetzt wird in der Datenbank umbenannt 
                             Try
