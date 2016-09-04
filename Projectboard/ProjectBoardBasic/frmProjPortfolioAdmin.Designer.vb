@@ -26,6 +26,7 @@ Partial Class frmProjPortfolioAdmin
         Me.OKButton = New System.Windows.Forms.Button()
         Me.txtboxLabel = New System.Windows.Forms.Label()
         Me.txtDropbox = New System.Windows.Forms.ComboBox()
+        Me.considerDependencies = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'TreeViewProjekte
@@ -63,11 +64,23 @@ Partial Class frmProjPortfolioAdmin
         Me.txtDropbox.Size = New System.Drawing.Size(395, 21)
         Me.txtDropbox.TabIndex = 34
         '
+        'considerDependencies
+        '
+        Me.considerDependencies.AutoSize = True
+        Me.considerDependencies.Location = New System.Drawing.Point(251, 326)
+        Me.considerDependencies.Name = "considerDependencies"
+        Me.considerDependencies.Size = New System.Drawing.Size(178, 17)
+        Me.considerDependencies.TabIndex = 35
+        Me.considerDependencies.Text = "Abhängigkeiten berücksichtigen"
+        Me.considerDependencies.UseVisualStyleBackColor = True
+        Me.considerDependencies.Visible = False
+        '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(467, 430)
+        Me.Controls.Add(Me.considerDependencies)
         Me.Controls.Add(Me.txtDropbox)
         Me.Controls.Add(Me.txtboxLabel)
         Me.Controls.Add(Me.OKButton)
@@ -83,4 +96,5 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents txtDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
     Public WithEvents txtboxLabel As System.Windows.Forms.Label
+    Friend WithEvents considerDependencies As System.Windows.Forms.CheckBox
 End Class

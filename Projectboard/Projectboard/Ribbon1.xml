@@ -80,7 +80,7 @@
           </menu>
           <separator id="PT0G1s3"/>
           <button id="PT3G1B5" label="Zeit-Maschine" enabled ="true" onAction="awinShowTimeMachine" supertip="mit der Zeit-Maschine können zeitliche Position von Meilensteinen und Phasen von früheren Planungs-Ständen angezeigt werden"/>
-          <!--<button id="PT0G1B1" label="Abhängigkeiten"  enabled ="true" onAction="PT0ShowDependencies" supertip="die Abhängigkeiten zwischen Projekten werden über PFeile visualisiert"/>-->
+          <button id="PT0G1B1" label="Abhängigkeiten"  enabled ="true" onAction="PT0ShowDependencies" supertip="die Abhängigkeiten zwischen Projekten werden über PFeile visualisiert"/>
         </group>
         <group id="PT0G2" label ="Charts">
           <button id="PT0G1M0B2" label="Phasen Übersicht"  onAction="Tom2G2M1B1Phasen" supertip="Es wird ein Diagramm gezeichnet, das von einem selektierten Projekt alle Phasen inkl. Start und Ende-Datum aufzeigt"/>
@@ -205,14 +205,11 @@
             <button id="PT2G3M4B2" label="Charts"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
         </group>
-        <!--
-        
-      -->
-        <!--<group id="PT2G4" label="Abhängigkeiten">
+        <group id="PT2G4" label="Abhängigkeiten">
           <button id="PT2G4B1" label="Definieren"  enabled ="true" onAction="PTDefineDependencies" supertip="hier können schwache und starke Abhängigkeiten zwischen Projekten definiert werden"/>
           <separator id="PT2G4s1"/>
           <button id="PT2G4B2" label="Löschen"  enabled ="true" onAction="PTDeleteDependencies" supertip="hier können Projekt-Abhängigkeiten gelöscht werden"/>
-        </group>-->
+        </group>
       </tab>
       <!---->
       <!--<tab id ="PT3" label="Vergleichen">

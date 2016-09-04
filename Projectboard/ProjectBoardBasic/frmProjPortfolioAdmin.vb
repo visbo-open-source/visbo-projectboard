@@ -49,6 +49,8 @@ Public Class frmProjPortfolioAdmin
         appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
         If aKtionskennung = PTTvActions.chgInSession Then
+            Me.considerDependencies.Visible = True
+            Me.considerDependencies.Checked = False
             Me.txtboxLabel.Text = "Multiprojekt-Szenario"
             For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
                 If kvp.Key <> "Start" Then
@@ -337,7 +339,19 @@ Public Class frmProjPortfolioAdmin
                             Call ZeichneProjektinPlanTafel(tmpCollection, selectedProjectName, pZeile, tmpCollection, tmpCollection, True)
                         End If
 
+                        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+                        If considerDependencies.Checked Then
+                            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+                            Dim toDoListe As Collection = allDependencies.passiveListe(selectedProjectName, PTdpndncyType.inhalt)
+                            If toDoListe.Count > 0 Then
+                                For Each mprojectName As String In toDoListe
+                                    Call activateMasterProject(mprojectName)
+                                Next
 
+                            End If
+                        Else
+                            ' nichts tun 
+                        End If
                     Else
                         ' wurde abgewählt 
                         Dim pZeile As Integer
@@ -355,6 +369,20 @@ Public Class frmProjPortfolioAdmin
 
                             Call moveShapesUp(pZeile + 1, 1, True)
 
+                        End If
+
+                        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+                        If considerDependencies.Checked Then
+                            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+                            Dim toDoListe As Collection = allDependencies.activeListe(selectedProjectName, PTdpndncyType.inhalt)
+                            If toDoListe.Count > 0 Then
+                                For Each dprojectName As String In toDoListe
+                                    Call deactivateDependentProject(dprojectName)
+                                Next
+
+                            End If
+                        Else
+                            ' nichts tun 
                         End If
                     End If
 
@@ -439,6 +467,51 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    ''' <summary>
+    ''' aktiviert das Master-Projekt, wenn es nicht schon aktiviert ist ...
+    ''' </summary>
+    ''' <param name="mprojectName"></param>
+    ''' <remarks></remarks>
+    Private Sub activateMasterProject(ByVal mprojectName As String)
+
+        For i As Integer = 1 To TreeViewProjekte.GetNodeCount(False)
+            Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
+
+            If curItem.Checked Then
+                ' nichts tun 
+            Else
+                stopRecursion = False
+                curItem.Checked = True
+                stopRecursion = True
+            End If
+
+        Next
+
+        
+    End Sub
+
+    ''' <summary>
+    ''' de-aktiviert das abhängige Projekt, wenn es nicht schon de-aktiviert ist 
+    ''' </summary>
+    ''' <param name="dprojectName"></param>
+    ''' <remarks></remarks>
+    Private Sub deactivateDependentProject(ByVal dprojectName As String)
+
+        For i As Integer = 1 To TreeViewProjekte.GetNodeCount(False)
+            Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
+
+            If curItem.Text = dprojectName Then
+                If curItem.Checked Then
+                    stopRecursion = False
+                    curItem.Checked = False
+                    stopRecursion = True
+                Else
+                    ' nichts tun
+                End If
+            End If
+
+        Next
+    End Sub
     Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
 
         Dim node As TreeNode = e.Node
