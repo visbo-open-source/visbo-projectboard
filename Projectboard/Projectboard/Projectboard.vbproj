@@ -331,7 +331,7 @@
     <OptionInfer>Off</OptionInfer>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>Projectboard_1_TemporaryKey.pfx</ManifestKeyFile>
