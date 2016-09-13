@@ -3004,6 +3004,7 @@ Public Module Module1
         If Not IsNothing(pptShape) Then
             With pptShape
 
+
                 If Not IsNothing(fullBreadCrumb) Then
                     .Tags.Add("BC", fullBreadCrumb)
                 End If

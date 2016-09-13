@@ -7901,10 +7901,11 @@ Public Module Projekte
         Dim tmpCollection As New Collection
 
         '
-        Call awinClearPlanTafel()
-        Call awinZeichnePlanTafel(True)
+        'Call awinClearPlanTafel()
+        'Call awinZeichnePlanTafel(True)
 
-        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, 0, tmpCollection, tmpCollection)
+        Dim pZeile As Integer = projectboardShapes.getMaxZeile
+        Call ZeichneProjektinPlanTafel(tmpCollection, pname, pZeile, tmpCollection, tmpCollection)
 
 
         '
@@ -12632,7 +12633,15 @@ Public Module Projekte
         ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
         ShowProjekte.AddShape(pname, shpUID:=projectShape.ID.ToString)
 
+
+        ' zu guter Letzt, 
+        ' aber noch vor den Meilensteinen und Phasen  muss der Projekt-Name gezeichnet werden ; 
+        If awinSettings.drawProjectLine Then
+            Call zeichneNameInProjekt(hproj)
+        End If
+
         ' jetzt müssen ggf die noch zu zeichnenden Meilensteine und Phasen eingezeichnet werden  
+        ' das wird jetzt nach zeichneNameInProjekt gemacht, damit die Meilensteine / Phasen nicht vom Projekt-Namen überdeckt werden 
 
         Dim msNumber As Integer = 0
         If drawPhaseList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
@@ -12642,11 +12651,6 @@ Public Module Projekte
         msNumber = 0
         If drawMilestoneList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
             Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
-        End If
-
-        ' zu guter Letzt muss der Projekt-Name gezeichnet werden 
-        If awinSettings.drawProjectLine Then
-            Call zeichneNameInProjekt(hproj)
         End If
 
 

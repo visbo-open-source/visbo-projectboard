@@ -8867,7 +8867,7 @@ Public Module awinGeneralModules
 
         ' ab diesem Wert soll neu gezeichnet werden 
         Dim startOfFreeRows As Integer = projectboardShapes.getMaxZeile
-        Dim zeilenOffset As Integer = 1
+        Dim zeilenOffset As Integer = 0
 
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
@@ -8928,9 +8928,13 @@ Public Module awinGeneralModules
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         AlleProjekte.Add(kvp.Key, hproj)
                         ' jetzt die Variante aktivieren 
-                        tryZeile = startOfFreeRows + zeilenOffset
-                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
-                        zeilenOffset = zeilenOffset + 1
+                        ' aber nur wenn es auch das Flag show hat 
+                        If showIT Then
+                            tryZeile = startOfFreeRows + zeilenOffset
+                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                            zeilenOffset = zeilenOffset + 1
+                        End If
+                        
 
                     Else
                         anzErrDB = anzErrDB + 1
@@ -11162,6 +11166,7 @@ Public Module awinGeneralModules
             repObj = Nothing
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
                                                               chWidth, chHeight, False, chTyp, False)
+
 
             chtop = chtop + 5
             chleft = chleft + 7
