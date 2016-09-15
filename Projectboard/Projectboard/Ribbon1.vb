@@ -124,10 +124,11 @@ Imports System.Windows
 
         Dim loadFromDatenbank As String = "PT5G1B1"
         Dim loadConstellationFrm As New frmLoadConstellation
-
+        Dim storedAtOrBefore As Date = Date.Now
         Dim ControlID As String = control.Id
         Dim constellationName As String
-      
+        Dim timeStampsCollection As New Collection
+
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
         Dim successMessage As String = initMessage
@@ -144,6 +145,21 @@ Imports System.Windows
 
             If request.pingMongoDb() Then
                 projectConstellations = request.retrieveConstellationsFromDB()
+
+                Try
+                    timeStampsCollection = request.retrieveZeitstempelFromDB()
+                    'Dim heute As String = Date.Now.ToString
+                    If timeStampsCollection.Count > 0 Then
+                        With loadConstellationFrm
+                            .retrieveFromDB = True
+                            .listOfTimeStamps = timeStampsCollection
+                        End With
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
             End If
@@ -157,6 +173,8 @@ Imports System.Windows
             loadConstellationFrm.addToSession.Checked = False
             loadConstellationFrm.addToSession.Visible = False
         End If
+
+
 
         returnValue = loadConstellationFrm.ShowDialog
 
@@ -174,6 +192,12 @@ Imports System.Windows
             ' '' ''                Call awinLoadConstellation(constellationName, successMessage)
             ' '' ''=======
             appInstance.ScreenUpdating = False
+
+            If Not IsNothing(loadConstellationFrm.dropBoxTimeStamps.SelectedItem) Then
+                storedAtOrBefore = CDate(loadConstellationFrm.dropBoxTimeStamps.SelectedItem)
+            Else
+                storedAtOrBefore = Date.Now
+            End If
 
             Try
                 Dim boardWasEmpty As Boolean
@@ -199,9 +223,9 @@ Imports System.Windows
                     constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
 
                     If i = 1 And (boardWasEmpty Or Not (ControlID = loadFromDatenbank)) Then
-                        Call awinLoadConstellation(constellationName, successMessage)
+                        Call awinLoadConstellation(constellationName, successMessage, storedAtOrBefore)
                     Else
-                        Call awinAddConstellation(constellationName, successMessage)
+                        Call awinAddConstellation(constellationName, successMessage, storedAtOrBefore)
                     End If
 
 
@@ -783,8 +807,8 @@ Imports System.Windows
 
                             ' jetzt wird in der Datenbank umbenannt 
                             Try
-                                If request.projectNameAlreadyExists(pName, "") Or _
-                                    request.projectNameAlreadyExists(pName, hproj.variantName) Then
+                                If request.projectNameAlreadyExists(pName, "", Date.Now) Or _
+                                    request.projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
 
                                     ok = request.renameProjectsInDB(pName, newName)
                                     If Not ok Then
@@ -894,7 +918,7 @@ Imports System.Windows
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     If request.pingMongoDb() Then
 
-                        If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+                        If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
 
                             ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
@@ -1893,6 +1917,8 @@ Imports System.Windows
         Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
         appInstance.EnableEvents = False
 
+        Dim ok As Boolean = True
+
         Try
 
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
@@ -1925,32 +1951,58 @@ Imports System.Windows
                     ' nichts tun ... 
                 ElseIf RoleDefinitions.containsName(rcName) Then
                     ' es handelt sich um eine Rolle
-                    cphase.removeRoleByName(rcName)
+                    ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                                             showRangeLeft, showRangeRight, True) Then
+                        cphase.removeRoleByName(rcName)
+                    Else
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
+                                    " nicht gelöscht werden ...")
+                        ok = False
+                    End If
+
                 ElseIf CostDefinitions.containsName(rcName) Then
                     ' es handelt sih um eine Kostenart 
-                    cphase.removeCostByName(rcName)
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                                             showRangeLeft, showRangeRight, True) Then
+                        cphase.removeCostByName(rcName)
+                    Else
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf & _
+                                    " nicht gelöscht werden ...")
+                        ok = False
+                    End If
+
+
                 End If
 
-                ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
-                ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
-                If noDuplicatesInSheet(pName, phaseNameID, Nothing, zeile) Then
-                    ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
-                    ' aber die Werte müssen alle gelöscht werden 
-                    For ix As Integer = columnRC To columnEndData + 1
-                        CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
-                    Next
+
+                If ok Then
+                    ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
+                    ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
+                    If noDuplicatesInSheet(pName, phaseNameID, Nothing, zeile) Then
+                        ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
+                        ' aber die Werte müssen alle gelöscht werden 
+                        For ix As Integer = columnRC To columnEndData + 1
+                            CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
+                        Next
+                    Else
+                        CType(meWS.Rows(zeile), Excel.Range).Delete()
+                    End If
+
+                    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
+
+                    ' jetzt wird der Old-Value gesetzt 
+                    With visboZustaende
+                        .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
+                        .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
+                    End With
+
                 Else
-                    CType(meWS.Rows(zeile), Excel.Range).Delete()
+                    ' nichts tun 
                 End If
 
-                ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-                CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
-
-                ' jetzt wird der Old-Value gesetzt 
-                With visboZustaende
-                    .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
-                    .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
-                End With
+                
             Else
                 Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
             End If

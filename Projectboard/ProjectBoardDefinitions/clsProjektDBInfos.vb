@@ -85,7 +85,7 @@ Public Class clsProjektDBInfos
 
     End Property
     ''' <summary>
-    ''' fügt eine komplette Projekthistorie det ProjektDBInfo hinzu 
+    ''' fügt eine komplette Projekthistorie der ProjektDBInfo hinzu 
     ''' </summary>
     ''' <param name="pHistorie">eine nicht-leere Projekt-Historie</param>
     ''' <remarks>Exception, wenn leere Projekthistorie übergeben wird</remarks>

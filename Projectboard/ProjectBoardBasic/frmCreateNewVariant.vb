@@ -39,7 +39,7 @@ Public Class frmCreateNewVariant
             If request.pingMongoDb() Then
 
                 If Not _
-                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text) Or _
+                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or _
                      AlleProjekte.Containskey(key)) Then
 
                     ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden

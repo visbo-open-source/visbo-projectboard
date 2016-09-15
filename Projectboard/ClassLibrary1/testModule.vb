@@ -4924,7 +4924,7 @@ Public Module testModule
     '                Call MsgBox("ok, " & anzDeletedTS & " TimeStamps zu Projekt " & hproj.name & " gelöscht")
 
     '                key = calcProjektKey(hproj)
-    '                If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
+    '                If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
     '                    If AlleProjekte.Containskey(key) Then
     '                        AlleProjekte.Remove(key)
     '                        Try

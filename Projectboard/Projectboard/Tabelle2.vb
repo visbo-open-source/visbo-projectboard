@@ -3,6 +3,10 @@ Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports Microsoft.Office.Interop.Excel
 
+''' <summary>
+''' zur Behandlung der MAss-Edit Ressourcen 
+''' </summary>
+''' <remarks></remarks>
 Public Class Tabelle2
 
     Private columnStartData As Integer = 8
@@ -15,7 +19,7 @@ Public Class Tabelle2
 
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
 
-        
+
         Application.DisplayFormulaBar = False
 
         Dim formerEE As Boolean = Application.EnableEvents
@@ -37,11 +41,11 @@ Public Class Tabelle2
                 columnStartData = .meColSD
                 columnEndData = .meColED
             End With
-            
+
         Catch ex As Exception
             Call MsgBox("Fehler in Laden des Sheets ...")
         End Try
-        
+
         Try
             If awinSettings.meEnableSorting Then
                 With CType(appInstance.ActiveSheet, Excel.Worksheet)
@@ -62,7 +66,7 @@ Public Class Tabelle2
                     .EnableAutoFilter = True
                 End With
             End If
-            
+
 
         Catch ex As Exception
 
@@ -82,7 +86,7 @@ Public Class Tabelle2
         Catch ex As Exception
             Call MsgBox("Fehler bei Activate Sheet Massen-Edit" & vbLf & ex.Message)
         End Try
-        
+
         With meWS
             CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
         End With
@@ -135,7 +139,7 @@ Public Class Tabelle2
                 If Target.Column = columnRC Then
                     ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
 
-                    
+
                     newStrValue = CStr(Target.Cells(1, 1).value)
                     If isValidRCChange(newStrValue, visboZustaende.oldValue) Then
                         ' es ist eine gültige Änderung, das heisst es wurde eine Rolle in eine andere gewechselt , oder 
@@ -204,7 +208,7 @@ Public Class Tabelle2
                                         If Not awinSettings.meEnableSorting Then
                                             ' es muss der Blattschutz aufgehoben werden, nachher wieder mit diesen Einstellungen aktiviert werden ...
                                             With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                                                .UnProtect(Password:="x")
+                                                .Unprotect(Password:="x")
                                             End With
                                         End If
 
@@ -337,13 +341,16 @@ Public Class Tabelle2
                         Try
                             If IsNothing(visboZustaende.oldValue) Then
                                 difference = newDblValue
+                                visboZustaende.oldValue = "0"
                             ElseIf visboZustaende.oldValue = "" Then
                                 difference = newDblValue
+                                visboZustaende.oldValue = "0"
                             Else
                                 difference = newDblValue - CDbl(visboZustaende.oldValue)
                             End If
                         Catch ex As Exception
                             difference = newDblValue
+                            visboZustaende.oldValue = "0"
                         End Try
 
                         Dim monthCol As Integer = showRangeLeft + CInt(((Target.Column - columnStartData) / 2))
@@ -367,14 +374,16 @@ Public Class Tabelle2
                                 Dim xWerte() As Double
                                 'Dim tmpSum As Double
 
-                                
+
 
                                 If isRole Then
                                     ' es handelt sich um eine gültige Rolle
 
                                     If awinSettings.meAutoReduce Then
                                         'If awinSettings.meAutoReduce And difference > 0 Then
-                                        ' nur dann muss die Sammelrolle entsprechend automatisch reduziert werden ... 
+                                        ' nur dann muss die Sammelrolle entsprechend automatisch reduziert werden ...
+                                        ' es darf nur maximal in einem Monat das zugeordnet/ersetzt werden, was in der Parent-Rolle auch vorhanden ist
+                                        ' andernfalls wird eine ggf. unbewusste Kapa-Erhöhung vorgenommen 
 
                                         Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, rcName)
 
@@ -419,6 +428,21 @@ Public Class Tabelle2
                                                     Dim alterWert As Double = xWerte(xWerteIndex + offset)
                                                     xWerte(xWerteIndex + offset) = xWerte(xWerteIndex + offset) - difference
                                                     If xWerte(xWerteIndex + offset) < 0 Then
+                                                        ' jetzt muss der newDblValue entsprechend geändert werden 
+                                                        ' plus, weil xWerte(..) < 0 
+                                                        newDblValue = newDblValue + xWerte(xWerteIndex + offset)
+
+                                                        ' jetzt muss eine Meldung erfolgen ... 
+                                                        Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
+                                                                    "Wert wird deshalb von " & CType(Target.Cells(1, 1), Excel.Range).Value & _
+                                                                    " auf " & newDblValue & " korrigiert ")
+
+                                                        ' jetzt muss der newDblValue in das Feld geschrieben werden 
+                                                        CType(meWS.Cells(Target.Row, Target.Column), Excel.Range).Value = newDblValue
+
+                                                        ' bestimmen der neuen Differenz 
+                                                        difference = newDblValue - CDbl(visboZustaende.oldValue)
+
                                                         xWerte(xWerteIndex + offset) = 0
                                                     End If
                                                     ' die Monatszahl und dann die Summe updaten ... 
@@ -429,7 +453,11 @@ Public Class Tabelle2
                                                     'tmpSum = tmpSum - System.Math.Min(alterWert, difference)
                                                     'CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value = tmpSum
 
-                                                    summenChanged = True
+                                                    ' nur wenn die Differenz auch ungleich Null ist, muss geändert werden 
+                                                    If difference <> 0 Then
+                                                        summenChanged = True
+                                                    End If
+
                                                 Else
                                                     Call MsgBox("Fehler in Übernahme Daten-Wert ...")
                                                 End If
@@ -454,8 +482,10 @@ Public Class Tabelle2
                                     ' der Monatswert muss geändert werden 
                                     xWerte = tmpRole.Xwerte
                                     If xWerteIndex >= 0 And xWerteIndex <= xWerte.Length - 1 Then
-                                        xWerte(xWerteIndex) = newDblValue
-                                        summenChanged = True
+                                        If xWerte(xWerteIndex) <> newDblValue Then
+                                            xWerte(xWerteIndex) = newDblValue
+                                            summenChanged = True
+                                        End If
                                     Else
                                         Call MsgBox("Fehler in Übernahme Daten-Wert ...")
                                     End If
@@ -470,7 +500,9 @@ Public Class Tabelle2
                                         roleCostNames.Add(rcName, rcName)
                                     End If
 
-                                    auslastungChanged = True
+                                    If difference <> 0 Then
+                                        auslastungChanged = True
+                                    End If
 
 
                                 Else
@@ -566,7 +598,7 @@ Public Class Tabelle2
         Catch ex As Exception
             Call MsgBox("Fehler bei Massen-Edit, Ändern : " & vbLf & ex.Message)
         End Try
-        
+
         appInstance.EnableEvents = True
     End Sub
 
@@ -635,7 +667,7 @@ Public Class Tabelle2
         Catch ex As Exception
             Call MsgBox("Fehler bei Selection Change, Massen-Edit" & vbLf & ex.Message)
         End Try
-        
+
 
         appInstance.EnableEvents = True
 
@@ -711,7 +743,7 @@ Public Class Tabelle2
         Catch ex As Exception
 
         End Try
-        
+
 
         isValidSelection = result
 

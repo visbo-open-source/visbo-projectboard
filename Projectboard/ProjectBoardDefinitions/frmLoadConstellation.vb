@@ -1,6 +1,8 @@
 ﻿Public Class frmLoadConstellation
 
     Private formerselect As String
+    Public retrieveFromDB As Boolean
+    Public listOfTimeStamps As Collection
     Private Sub frmLoadConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
@@ -9,6 +11,27 @@
 
         Next
         formerselect = ""
+
+        If Not retrieveFromDB Then
+            dropBoxTimeStamps.Visible = False
+            lblStandvom.Visible = False
+        Else
+
+            Try
+                
+                dropBoxTimeStamps.Items.Clear()
+
+                For k As Integer = 1 To listOfTimeStamps.Count
+                    Dim tmpDate As Date = CDate(listOfTimeStamps.Item(k))
+                    dropBoxTimeStamps.Items.Add(tmpDate)
+                Next
+
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt ist dropBoxTimeStamps.selecteditem = Nothing ..
+        End If
 
     End Sub
 
@@ -35,6 +58,16 @@
 
     Private Sub addToSession_CheckedChanged(sender As Object, e As EventArgs) Handles addToSession.CheckedChanged
 
+
+    End Sub
+
+    Public Sub New()
+
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        InitializeComponent()
+        retrieveFromDB = False
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
 
     End Sub
 End Class

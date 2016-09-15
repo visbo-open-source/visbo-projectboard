@@ -2804,7 +2804,7 @@ Public Module Module1
             found = True
             'ElseIf request.pingMongoDb() Then
 
-            '    found = request.projectNameAlreadyExists(strName, "")
+            '    found = request.projectNameAlreadyExists(strName, "", Date.Now)
             'Else
             '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
             '    found = False

@@ -1792,6 +1792,7 @@ Public Module awinDiagrams
 
         Dim diagramTitle As String
         Dim minScale As Double
+        Dim maxscale As Double
         Dim Xdatenreihe(4) As String
         Dim valueDatenreihe1(4) As Double
         Dim valueDatenreihe2(4) As Double
@@ -1853,6 +1854,13 @@ Public Module awinDiagrams
 
         ertragsWert = budgetSum - (riskValue + pCost + oCost)
 
+        If ertragsWert < 0 Then
+            minScale = ertragsWert
+        Else
+            minScale = 0
+        End If
+
+        maxscale = budgetSum
 
         itemValue(0) = budgetSum
         itemColor(0) = ergebnisfarbe1
@@ -1994,28 +2002,30 @@ Public Module awinDiagrams
 
             End With
 
-            .HasAxis(Excel.XlAxisType.xlCategory) = True
-            .HasAxis(Excel.XlAxisType.xlValue) = False
+            ' Änderung tk: 15.9.16
+            ' das muss ja eigentlich nicht angepasst werden, da es sich hier um Update handelt ... 
+            ''.HasAxis(Excel.XlAxisType.xlCategory) = True
+            ''.HasAxis(Excel.XlAxisType.xlValue) = False
 
-            With .Axes(Excel.XlAxisType.xlCategory)
-                .HasTitle = False
-                If minScale < 0 Then
-                    .TickLabelPosition = Excel.Constants.xlLow
-                End If
-                '.MinimumScale = 0
+            ''With .Axes(Excel.XlAxisType.xlCategory)
+            ''    .HasTitle = False
+            ''    If minScale < 0 Then
+            ''        .TickLabelPosition = Excel.Constants.xlLow
+            ''    End If
+            ''    '.MinimumScale = 0
 
-            End With
+            ''End With
 
 
             Try
-                With .Axes(Excel.XlAxisType.xlValue)
-                    .HasTitle = False
-                    .HasMajorGridlines = False
-                    .hasminorgridlines = False
-                    If minScale < 0 Then
-                        .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
-                    Else
-                        .MinimumScale = 0
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+
+                    If minScale < .MinimumScale Then
+                        .MinimumScale = minScale * 1.2
+                    End If
+
+                    If maxscale > .MaximumScale Then
+                        .MaximumScale = maxscale * 1.2
                     End If
                 End With
             Catch ex As Exception
@@ -2023,11 +2033,11 @@ Public Module awinDiagrams
             End Try
 
 
-            .HasLegend = False
-            .HasTitle = True
+            ''.HasLegend = False
+            ''.HasTitle = True
 
-            .ChartTitle.Text = diagramTitle
-            .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+            '.ChartTitle.Text = diagramTitle
+            '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
 
             '
             ' tk : das gehört hier doch nicht hin , das ist doch cut&paste Fehler !? 
@@ -2897,6 +2907,7 @@ Public Module awinDiagrams
         Dim diagramTitle As String
 
         Dim minScale As Double
+        Dim maxscale As Double
         Dim Xdatenreihe(3) As String
         Dim valueDatenreihe1(3) As Double
         Dim valueDatenreihe2(3) As Double
@@ -2933,7 +2944,13 @@ Public Module awinDiagrams
 
         itemValue(0) = earnedValue
 
+        If earnedValue < 0 Then
+            minScale = earnedValue * 1.2
+        Else
+            minScale = 0
+        End If
 
+        maxscale = zeitraumBudget * 1.2
 
         If itemValue(0) >= 0 Then
             itemColor(0) = ergebnisfarbe1
@@ -2972,6 +2989,7 @@ Public Module awinDiagrams
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.ScreenUpdating = False
+
 
         If ertragsWert < 0 Then
             minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
@@ -3575,6 +3593,7 @@ Public Module awinDiagrams
         'Dim plen As Integer
         Dim i As Integer
         Dim minScale As Double
+        Dim maxScale As Double
         Dim Xdatenreihe(4) As String
         Dim valueDatenreihe1(4) As Double
         Dim valueDatenreihe2(4) As Double
@@ -3649,6 +3668,13 @@ Public Module awinDiagrams
 
         ertragsWert = budgetSum - (riskValue + pCost + oCost)
 
+        maxScale = budgetSum * 1.2
+        If ertragsWert < 0 Then
+            minScale = ertragsWert * 1.2
+        Else
+            minScale = 0
+        End If
+
 
         itemValue(0) = budgetSum
         itemColor(0) = ergebnisfarbe1
@@ -3718,11 +3744,11 @@ Public Module awinDiagrams
                 'MsgBox(" Diagramm wird bereits angezeigt ...")
             Else
 
-                If ertragsWert < 0 Then
-                    minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
-                Else
-                    minScale = 0
-                End If
+                'If ertragsWert < 0 Then
+                '    minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
+                'Else
+                '    minScale = 0
+                'End If
 
                 'Dim htxt As String
                 Dim valueCrossesNull As Boolean = False
@@ -3841,15 +3867,20 @@ Public Module awinDiagrams
                     'End With
 
                     Try
-                        With .Axes(Excel.XlAxisType.xlValue)
+                        With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                             .HasTitle = False
                             .HasMajorGridlines = False
-                            .hasminorgridlines = False
-                            If minScale < 0 Then
-                                .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
-                            Else
-                                .MinimumScale = 0
-                            End If
+                            .HasMinorGridlines = False
+                            .MinimumScale = minScale
+                            .MaximumScale = maxScale
+                            .MaximumScaleIsAuto = False
+                            .MinimumScaleIsAuto = False
+
+                            'If minScale < 0 Then
+                            '    .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
+                            'Else
+                            '    .MinimumScale = 0
+                            'End If
                         End With
                     Catch ex As Exception
 

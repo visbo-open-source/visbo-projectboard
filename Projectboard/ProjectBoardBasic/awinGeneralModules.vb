@@ -3715,10 +3715,28 @@ Public Module awinGeneralModules
 
                     ' die Farben in der Zeile zurücksetzen , aber nicht in den Datenbereichen, weil sonst die Info zu den Phasen weg ist 
                     CType(.Range(.Cells(zeile, 1), .Cells(zeile, startColumnData - 1)), Excel.Range).Interior.ColorIndex = XlColorIndex.xlColorIndexNone
+                    Dim namesOK As Boolean = True
 
-                    projectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    variantName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    phaseName = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    Try
+                        projectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                    Catch ex As Exception
+                        projectName = ""
+                        namesOK = False
+                    End Try
+
+                    Try
+                        variantName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                    Catch ex As Exception
+                        variantName = ""
+                    End Try
+
+                    Try
+                        phaseName = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                    Catch ex As Exception
+                        phaseName = ""
+                        namesOK = False
+                    End Try
+
 
                     Try
                         Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment
@@ -3731,196 +3749,207 @@ Public Module awinGeneralModules
                         phaseNameID = calcHryElemKey(phaseName, False)
                     End Try
 
-                    rcName = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    Try
+                        rcName = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    Catch ex As Exception
+                        rcName = ""
+                        namesOK = False
+                    End Try
 
-                    ok = False
+                    If namesOK Then
 
-                    Dim pKey As String = calcProjektKey(projectName, variantName)
-                    If AlleProjekte.Containskey(pKey) Then
-                        hproj = AlleProjekte.getProject(pKey)
-                        ok = True
-                    Else
-                        ' in der Datenbank nachsehen und laden ... 
-                        If Not noDB Then
+                        ok = False
 
-                            '
-                            ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            If request.pingMongoDb() Then
-
-                                If request.projectNameAlreadyExists(projectName, variantName) Then
-
-                                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                    hproj = request.retrieveOneProjectfromDB(projectName, variantName)
-                                    ' jetzt in AlleProjekte eintragen ... 
-                                    AlleProjekte.Add(calcProjektKey(hproj), hproj)
-                                    ok = True
-                                Else
-                                    ' nicht in Session, nicht in Datenbank: nicht ok !
-                                    ok = False
-                                End If
-                            Else
-                                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Massen-Edit ..")
-                            End If
-
-
+                        Dim pKey As String = calcProjektKey(projectName, variantName)
+                        If AlleProjekte.Containskey(pKey) Then
+                            hproj = AlleProjekte.getProject(pKey)
+                            ok = True
                         Else
-                            ' nicht in Session, keine Datenbank aktiv: nicht ok !
-                            ok = False
+                            ' in der Datenbank nachsehen und laden ... 
+                            If Not noDB Then
 
-                        End If
+                                '
+                                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                                If request.pingMongoDb() Then
+
+                                    If request.projectNameAlreadyExists(projectName, variantName, Date.Now) Then
+
+                                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                        hproj = request.retrieveOneProjectfromDB(projectName, variantName, Date.Now)
+                                        ' jetzt in AlleProjekte eintragen ... 
+                                        AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                        ok = True
+                                    Else
+                                        ' nicht in Session, nicht in Datenbank: nicht ok !
+                                        ok = False
+                                    End If
+                                Else
+                                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Massen-Edit ..")
+                                End If
 
 
-                    End If
-
-                    If ok Then
-
-                        If Not ImportProjekte.Containskey(pKey) Then
-                            ImportProjekte.Add(pKey, hproj)
-                        End If
-
-                        ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
-                        ' hier ist das hproj gelesen 
-                        ' jetzt prüfen, ob es die Phase gibt 
-                        Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
-                        If Not IsNothing(cphase) Then
-                            ' es gibt die Phase
-
-                            If RoleDefinitions.containsName(rcName) Then
-                                isRole = True
-                                isCost = False
-
-                            ElseIf CostDefinitions.containsName(rcName) Then
-                                isCost = True
-                                isRole = False
                             Else
-                                isCost = False
-                                isRole = False
+                                ' nicht in Session, keine Datenbank aktiv: nicht ok !
+                                ok = False
+
                             End If
 
-                            ' jetzt werden die Werte ausgelesen ... 
-                            ' die müssen an der Stelle ausgelesen werden, weil eine fehlende Rolle/kostenart nur angemeckert werden soll, 
-                            ' wenn auch tmpValues.sum > 0 
-                            ReDim tmpValues(bis - von)
-                            Dim i As Integer
 
-                            For i = 0 To bis - von
+                        End If
 
-                                Try
-                                    tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                    If tmpValues(i) < 0 Then
-                                        tmpValues(i) = 0
+                        If ok Then
+
+                            If Not ImportProjekte.Containskey(pKey) Then
+                                ImportProjekte.Add(pKey, hproj)
+                            End If
+
+                            ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
+                            ' hier ist das hproj gelesen 
+                            ' jetzt prüfen, ob es die Phase gibt 
+                            Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                            If Not IsNothing(cphase) Then
+                                ' es gibt die Phase
+
+                                If RoleDefinitions.containsName(rcName) Then
+                                    isRole = True
+                                    isCost = False
+
+                                ElseIf CostDefinitions.containsName(rcName) Then
+                                    isCost = True
+                                    isRole = False
+                                Else
+                                    isCost = False
+                                    isRole = False
+                                End If
+
+                                ' jetzt werden die Werte ausgelesen ... 
+                                ' die müssen an der Stelle ausgelesen werden, weil eine fehlende Rolle/kostenart nur angemeckert werden soll, 
+                                ' wenn auch tmpValues.sum > 0 
+                                ReDim tmpValues(bis - von)
+                                Dim i As Integer
+
+                                For i = 0 To bis - von
+
+                                    Try
+                                        tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        If tmpValues(i) < 0 Then
+                                            tmpValues(i) = 0
+                                            CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                        End If
+                                    Catch ex As Exception
                                         CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                    End If
-                                Catch ex As Exception
-                                    CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                End Try
+                                    End Try
 
-                            Next
+                                Next
 
 
-                            ' nur weitermachen, wenn es entweder eine gültige Rolle oder gültige Kostenart ist 
-                            If isRole Or isCost Then
+                                ' nur weitermachen, wenn es entweder eine gültige Rolle oder gültige Kostenart ist 
+                                If isRole Or isCost Then
 
 
-                                If tmpValues.Sum > 0 Then
+                                    If tmpValues.Sum > 0 Then
 
-                                    Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
-                                    Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate), _
-                                                               ixZeitraum, ix, anzLoops)
+                                        Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+                                        Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate), _
+                                                                   ixZeitraum, ix, anzLoops)
 
-                                    If anzLoops > 0 Then
-                                        ' es gibt eine Überdeckung
-                                        If isRole Then
-                                            Dim tmpRole As clsRolle = cphase.getRole(rcName)
-                                            ' wenn die Rolle in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
-                                            Dim didntExist As Boolean = False
+                                        If anzLoops > 0 Then
+                                            ' es gibt eine Überdeckung
+                                            If isRole Then
+                                                Dim tmpRole As clsRolle = cphase.getRole(rcName)
+                                                ' wenn die Rolle in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+                                                Dim didntExist As Boolean = False
 
-                                            If IsNothing(tmpRole) Then
-                                                didntExist = True
-                                                Dim dimension As Integer = cphase.relEnde - cphase.relStart
-                                                tmpRole = New clsRolle(dimension)
+                                                If IsNothing(tmpRole) Then
+                                                    didntExist = True
+                                                    Dim dimension As Integer = cphase.relEnde - cphase.relStart
+                                                    tmpRole = New clsRolle(dimension)
 
-                                                With tmpRole
-                                                    .RollenTyp = RoleDefinitions.getRoledef(rcName).UID
-                                                End With
-                                            End If
-
-                                            Dim xWerte() As Double = tmpRole.Xwerte
-
-                                            ' jetzt werden die Werte überschrieben ...
-                                            For al As Integer = 1 To anzLoops
-                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
-                                                    valuesDidChange = True
+                                                    With tmpRole
+                                                        .RollenTyp = RoleDefinitions.getRoledef(rcName).UID
+                                                    End With
                                                 End If
-                                                xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
-                                            Next
 
-                                            If didntExist Then
-                                                cphase.addRole(tmpRole)
-                                            End If
+                                                Dim xWerte() As Double = tmpRole.Xwerte
 
-                                        ElseIf isCost Then
-                                            Dim tmpCost As clsKostenart = cphase.getCost(rcName)
-                                            ' wenn die Kostenart in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
-                                            Dim didntExist As Boolean = False
+                                                ' jetzt werden die Werte überschrieben ...
+                                                For al As Integer = 1 To anzLoops
+                                                    If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                        valuesDidChange = True
+                                                    End If
+                                                    xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
+                                                Next
 
-                                            If IsNothing(tmpCost) Then
-                                                didntExist = True
-                                                Dim dimension As Integer = cphase.relEnde - cphase.relStart
-                                                tmpCost = New clsKostenart(dimension)
-
-                                                With tmpCost
-                                                    .KostenTyp = CostDefinitions.getCostdef(rcName).UID
-                                                End With
-                                            End If
-
-                                            Dim xWerte() As Double = tmpCost.Xwerte
-
-                                            ' jetzt werden die Werte überschrieben ...
-                                            For al As Integer = 1 To anzLoops
-                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
-                                                    valuesDidChange = True
+                                                If didntExist Then
+                                                    cphase.addRole(tmpRole)
                                                 End If
-                                                xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
-                                            Next
 
-                                            If didntExist Then
-                                                cphase.AddCost(tmpCost)
+                                            ElseIf isCost Then
+                                                Dim tmpCost As clsKostenart = cphase.getCost(rcName)
+                                                ' wenn die Kostenart in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+                                                Dim didntExist As Boolean = False
+
+                                                If IsNothing(tmpCost) Then
+                                                    didntExist = True
+                                                    Dim dimension As Integer = cphase.relEnde - cphase.relStart
+                                                    tmpCost = New clsKostenart(dimension)
+
+                                                    With tmpCost
+                                                        .KostenTyp = CostDefinitions.getCostdef(rcName).UID
+                                                    End With
+                                                End If
+
+                                                Dim xWerte() As Double = tmpCost.Xwerte
+
+                                                ' jetzt werden die Werte überschrieben ...
+                                                For al As Integer = 1 To anzLoops
+                                                    If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                        valuesDidChange = True
+                                                    End If
+                                                    xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
+                                                Next
+
+                                                If didntExist Then
+                                                    cphase.AddCost(tmpCost)
+                                                End If
+
                                             End If
 
                                         End If
-
+                                    Else
+                                        ' Löschen der Rolle bzw. Kostenart aus dieser Phase
+                                        valuesDidChange = True
+                                        If isRole Then
+                                            Call cphase.removeRoleByName(rcName)
+                                        ElseIf isCost Then
+                                            Call cphase.removeCostByName(rcName)
+                                        End If
                                     End If
+
+
                                 Else
-                                    ' Löschen der Rolle bzw. Kostenart aus dieser Phase
-                                    valuesDidChange = True
-                                    If isRole Then
-                                        Call cphase.removeRoleByName(rcName)
-                                    ElseIf isCost Then
-                                        Call cphase.removeCostByName(rcName)
+                                    ' es gibt die Rolle / Kostenart nicht 
+                                    If tmpValues.Sum > 0 Then
+                                        CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                    Else
+                                        ' keine Aktion notwendig 
                                     End If
-                                End If
 
+                                End If
 
                             Else
-                                ' es gibt die Rolle / Kostenart nicht 
-                                If tmpValues.Sum > 0 Then
-                                    CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                Else
-                                    ' keine Aktion notwendig 
-                                End If
-
+                                ' es gibt die Phase nicht 
+                                CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
                             End If
-
                         Else
-                            ' es gibt die Phase nicht 
-                            CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                            ' Projekt- Variante existiert nicht !
+                            CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
                         End If
-                    Else
-                        ' Projekt- Variante existiert nicht !
-                        CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+
                     End If
+
+                    
 
                     If valuesDidChange Then
                         hproj.diffToPrev = True
@@ -4583,10 +4612,10 @@ Public Module awinGeneralModules
                         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         If request.pingMongoDb() Then
 
-                            If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName) Then
+                            If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
 
                                 ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName)
+                                vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
 
                                 If IsNothing(vglProj) Then
                                     ' kann eigentlich nicht sein 
@@ -8734,15 +8763,14 @@ Public Module awinGeneralModules
     ''' </param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub awinLoadConstellation(ByVal constellationName As String, ByRef successMessage As String)
+    Public Sub awinLoadConstellation(ByVal constellationName As String, ByRef successMessage As String, ByVal storedAtOrBefore As Date)
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim anzErrDB As Integer = 0
-        Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
-        Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
-                                        "   Das Projekt wurde bereits beauftragt."
-
+        Dim nvErrorMessage As String = " (nicht in DB)"
+        Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
+        Dim outPutCollection = New Collection
+        Dim outputLine As String = ""
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
             activeConstellation = projectConstellations.getConstellation(constellationName)
@@ -8773,23 +8801,19 @@ Public Module awinGeneralModules
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 If request.pingMongoDb() Then
 
-                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
+                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
+                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
 
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         AlleProjekte.Add(kvp.Key, hproj)
                     Else
-                        anzErrDB = anzErrDB + 1
-                        If anzErrDB = 1 Then
-                            successMessage = successMessage & loadErrorMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
-                        Else
-                            successMessage = successMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
-                        End If
 
+                        hproj = Nothing
+                        outputLine = kvp.Value.projectName & nvErrorMessage
+                        outPutCollection.Add(outputLine)
+                        
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                         'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                     End If
@@ -8801,48 +8825,52 @@ Public Module awinGeneralModules
                 ''    Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
 
             End If
-           
-            If hproj.name = kvp.Value.projectName Then
 
-                With hproj
+            If Not IsNothing(hproj) Then
+                If hproj.name = kvp.Value.projectName Then
 
-                    ' Änderung THOMAS Start 
-                    If .Status = ProjektStatus(0) Then
-                        .startDate = kvp.Value.Start
-                    ElseIf .startDate <> kvp.Value.Start Then
-                        ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
-                        successMessage = successMessage & vbLf & vbLf & _
-                                            loadDateMessage & vbLf & _
-                                            "        " & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                    With hproj
+
+                        .tfZeile = kvp.Value.zeile
+
+                    End With
+
+                    If kvp.Value.show Then
+
+                        Try
+
+                            ShowProjekte.Add(hproj)
+
+                        Catch ex1 As Exception
+                            outputLine = hproj.name & " (konnte der Session nicht hinzugefügt werden)"
+                            outPutCollection.Add(outputLine)
+                        End Try
+
+                        ' jetzt zeichnen des Projektes 
+                        ' neu zeichnen des Projekts 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
                     End If
-                    ' Änderung THOMAS Ende 
 
-                    .StartOffset = 0
-                    .tfZeile = kvp.Value.zeile
-                End With
-
-                If kvp.Value.show Then
-
-                    Try
-
-                        ShowProjekte.Add(hproj)
-
-                    Catch ex1 As Exception
-                        Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
-                    End Try
-
-                    ' jetzt zeichnen des Projektes 
-                    ' neu zeichnen des Projekts 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
 
                 End If
-
-
             End If
+            
 
         Next
 
+        If outPutCollection.Count > 0 Then
+
+            Dim outputFormular As New frmOutputWindow
+            With outputFormular
+                .Text = "Meldungen"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " noch nicht in DB:"
+                .textCollection = outPutCollection
+                .ShowDialog()
+            End With
+            
+        End If
 
     End Sub
 
@@ -8854,15 +8882,15 @@ Public Module awinGeneralModules
     ''' <param name="constellationName"></param>
     ''' <param name="successMessage"></param>
     ''' <remarks></remarks>
-    Public Sub awinAddConstellation(ByVal constellationName As String, ByRef successMessage As String)
+    Public Sub awinAddConstellation(ByVal constellationName As String, ByRef successMessage As String, ByVal storedAtOrBefore As Date)
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim anzErrDB As Integer = 0
-        Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
-        Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
-                                        "   Das Projekt wurde bereits beauftragt."
+        Dim nvErrorMessage As String = " (nicht in DB)"
+        Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
+        Dim outPutCollection = New Collection
+        Dim outputLine As String = ""
         Dim tryZeile As Integer
 
         ' ab diesem Wert soll neu gezeichnet werden 
@@ -8910,20 +8938,20 @@ Public Module awinGeneralModules
                         zeilenOffset = zeilenOffset + 1
                     End If
 
-                    
+
                 Else
                     ' gar nichts machen
                 End If
 
-                
+
 
             Else
                 If request.pingMongoDb() Then
 
-                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
+                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
+                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
 
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         AlleProjekte.Add(kvp.Key, hproj)
@@ -8934,17 +8962,12 @@ Public Module awinGeneralModules
                             Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
                             zeilenOffset = zeilenOffset + 1
                         End If
-                        
+
 
                     Else
-                        anzErrDB = anzErrDB + 1
-                        If anzErrDB = 1 Then
-                            successMessage = successMessage & loadErrorMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
-                        Else
-                            successMessage = successMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
-                        End If
+                        hproj = Nothing
+                        outputLine = kvp.Value.projectName & nvErrorMessage
+                        outPutCollection.Add(outputLine)
 
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                         'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
@@ -8956,6 +8979,18 @@ Public Module awinGeneralModules
 
         Next
 
+
+        If outPutCollection.Count > 0 Then
+
+            Dim outputFormular As New frmOutputWindow
+            With outputFormular
+                .Text = "Meldungen"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " noch nicht in DB:"
+                .textCollection = outPutCollection
+                .ShowDialog()
+            End With
+
+        End If
 
 
     End Sub
@@ -9018,7 +9053,8 @@ Public Module awinGeneralModules
     ''' <param name="pName"></param>
     ''' <param name="vName"></param>
     ''' <remarks></remarks>
-    Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean)
+    Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean, _
+                                 ByVal storedAtORBefore As Date)
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim hproj As clsProjekt
@@ -9027,7 +9063,7 @@ Public Module awinGeneralModules
         ' ab diesem Wert soll neu gezeichnet werden 
         Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
-        hproj = request.retrieveOneProjectfromDB(pName, vName)
+        hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
 
         ' prüfen, ob AlleProjekte das Projekt bereits enthält 
         ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
@@ -9071,7 +9107,7 @@ Public Module awinGeneralModules
 
             projekthistorie.liste = request.retrieveProjectHistoryFromDB _
                                     (projectname:=pname, variantName:=variantName, _
-                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
             ' Speichern im Papierkorb 
             For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
@@ -10039,13 +10075,14 @@ Public Module awinGeneralModules
                               ByRef TreeviewProjekte As TreeView, _
                               ByRef aktuelleGesamtListe As clsProjekteAlle, _
                               ByVal aKtionskennung As Integer, _
-                              ByVal applyFilter As Boolean)
+                              ByVal applyFilter As Boolean, _
+                              ByVal storedHeute As Date)
 
         Dim nodeLevel0 As TreeNode
         Dim nodeLevel1 As TreeNode
         Dim zeitraumVon As Date = StartofCalendar
         Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
-        Dim storedHeute As Date = Now
+        'Dim storedHeute As Date = Now
         Dim storedGestern As Date = StartofCalendar
         Dim pname As String = ""
         Dim variantName As String = ""
@@ -10056,7 +10093,7 @@ Public Module awinGeneralModules
         Dim deletedProj As Integer = 0
 
 
-      
+
         ' alles zurücksetzen 
         projektHistorien.clear()
 
@@ -10076,7 +10113,7 @@ Public Module awinGeneralModules
 
                 pname = ""
                 variantName = ""
-                aktuelleGesamtListe.liste = Request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.delFromSession
@@ -10158,7 +10195,7 @@ Public Module awinGeneralModules
                         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
-                        listOfVariantNamesDB = Request.retrieveVariantNamesFromDB(pname)
+                        listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
                     End If
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 

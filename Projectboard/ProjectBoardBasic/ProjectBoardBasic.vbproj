@@ -94,6 +94,12 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="frmOutputWindow.Designer.vb">
+      <DependentUpon>frmOutputWindow.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmOutputWindow.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmRenameProject.Designer.vb">
       <DependentUpon>frmRenameProject.vb</DependentUpon>
     </Compile>
@@ -324,6 +330,9 @@
     <EmbeddedResource Include="frmNameSelection.resx">
       <DependentUpon>frmNameSelection.vb</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmOutputWindow.resx">
+      <DependentUpon>frmOutputWindow.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjekteSpeichern.resx">
       <DependentUpon>frmProjekteSpeichern.vb</DependentUpon>

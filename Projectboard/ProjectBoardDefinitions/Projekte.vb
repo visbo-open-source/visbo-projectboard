@@ -12142,7 +12142,7 @@ Public Module Projekte
         Dim notOK As Boolean = True
         Dim tryExceptionCounts As Integer = 0
 
-        Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
+        'Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
 
         If fromScratch Then
             Dim zeile As Integer = 2
@@ -12166,7 +12166,7 @@ Public Module Projekte
         End If
 
 
-        Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
+        'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
 
     End Sub
 
@@ -20429,6 +20429,7 @@ Public Module Projekte
     ''' <summary>
     ''' gibt für die Phase zurück, ob Sie in dem angegebenen Zeitraum liegt oder nicht
     ''' wenn kein Timeframe definiert ist, dann wird true zurückgegeben  
+    ''' wenn completeWithin angegeben ist, dann wird nur true zurückgegeben, wenn die Phase vollständig im Zeitraum liegt 
     ''' </summary>
     ''' <param name="projektstart">Monat, in dem das Projekt startet</param>
     ''' <param name="relstart">Relativer Monats-Index Phasenstart</param>
@@ -20439,21 +20440,37 @@ Public Module Projekte
     ''' false: wenn nicht</returns>
     ''' <remarks></remarks>
     Public Function phaseWithinTimeFrame(ByVal projektstart As Integer, ByVal relStart As Integer, ByVal relEnde As Integer, _
-                                             ByVal von As Integer, ByVal bis As Integer) As Boolean
+                                             ByVal von As Integer, ByVal bis As Integer, _
+                                             Optional completeWithin As Boolean = False) As Boolean
 
         Dim within As Boolean = False
 
-        If von = 0 And bis = 0 Then
-            ' wenn kein Zitraum definiert ist, soll true zurückgegeben werden
-            within = True
-        Else
-            If (projektstart + relStart - 1 > bis) Or (projektstart + relEnde - 1 < von) Then
-                ' dann liegt die Phase ausserhalb des betrachteten Zeitraums 
-                within = False
-            Else
+        If completeWithin Then
+            If von = 0 And bis = 0 Then
+                ' wenn kein Zeitraum definiert ist, soll true zurückgegeben werden
                 within = True
+            Else
+                If (projektstart + relStart - 1 >= von) And (projektstart + relEnde - 1 <= bis) Then
+                    ' dann liegt die Phase vollständig innerhalb des betrachteten Zeitraums 
+                    within = True
+                Else
+                    within = False
+                End If
+            End If
+        Else
+            If von = 0 And bis = 0 Then
+                ' wenn kein Zeitraum definiert ist, soll true zurückgegeben werden
+                within = True
+            Else
+                If (projektstart + relStart - 1 > bis) Or (projektstart + relEnde - 1 < von) Then
+                    ' dann liegt die Phase ausserhalb des betrachteten Zeitraums 
+                    within = False
+                Else
+                    within = True
+                End If
             End If
         End If
+        
 
 
         phaseWithinTimeFrame = within

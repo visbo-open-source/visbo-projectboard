@@ -116,16 +116,27 @@ namespace MongoDbAccess
         /** prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
          *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
          */
-        public bool projectNameAlreadyExists(string projectname, string variantname)
+        public bool projectNameAlreadyExists(string projectname, string variantname, DateTime storedAtorBefore)
         {
             bool result;
             // in der Datenbank ist der Projektname abgespeichert als projectName#variantName, wenn es einen Varianten-Namen gibt
             // nur projectname , sonst (hat historische Gründe .. weil sonst nach Einführung der Varianten alle bisherigen Projekt-Namen in der Datenbank
             // Namen geändert werden müssten .. )
 
+            if (storedAtorBefore == null)
+            {
+                //storedAtorBefore = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
+                storedAtorBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+                //storedAtorBefore = DateTime.SpecifyKind(storedAtorBefore, DateTimeKind.Utc);
+                storedAtorBefore = storedAtorBefore.ToUniversalTime();
+            }
+
             string searchstr = Projekte.calcProjektKeyDB(projectname, variantname);
             result = CollectionProjects.AsQueryable<clsProjektDB>()
-                    .Any(c => c.name == searchstr);
+                    .Any(c => (c.name == searchstr && c.timestamp <= storedAtorBefore));
 
             
             return result;
@@ -135,11 +146,22 @@ namespace MongoDbAccess
         /** liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
          *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
          */
-        public clsProjekt retrieveOneProjectfromDB(string projectname, string variantname)
+        public clsProjekt retrieveOneProjectfromDB(string projectname, string variantname, DateTime storedAtOrBefore)
         {
             var result = new clsProjektDB();
             string searchstr = Projekte.calcProjektKeyDB(projectname, variantname);
 
+            if (storedAtOrBefore == null)
+            {
+                
+                //storedAtOrBefore = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+                //storedAtOrBefore = DateTime.SpecifyKind(storedAtOrBefore, DateTimeKind.Utc); 
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
             
             //var tmpErgebnis = CollectionProjects.AsQueryable<clsProjektDB>()
             //        .Where(c => c.name == searchstr)
@@ -152,8 +174,8 @@ namespace MongoDbAccess
             //        select c)
             //        .Last();
 
-
-            var filter = Builders<clsProjektDB>.Filter.Eq("name", searchstr);
+            var builder = Builders<clsProjektDB>.Filter;
+            var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedAtOrBefore);
             var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
             //var result = await collection.Find(filter).Sort(sort).ToListAsync();
             result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
@@ -184,9 +206,18 @@ namespace MongoDbAccess
             
 
             //TODO: rückumwandeln
-            var projekt = new clsProjekt();
-            result.copyto(ref projekt);
-            return projekt;
+            if (result == null)
+            {
+                
+                return null;
+            }
+            else
+            {
+                var projekt = new clsProjekt();
+                result.copyto(ref projekt);
+                return projekt;
+            }
+            
         }
 
         /**
@@ -322,7 +353,8 @@ namespace MongoDbAccess
                 //            .Distinct();
 
                 var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart)
+                    //      .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart )
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedLatest )
                             .Select(c => c.name)
                             .Distinct()
                             .ToList();
@@ -445,7 +477,27 @@ namespace MongoDbAccess
             return result;
         }
 
-        
+        // bringt alle vorkommenden TimeStamps zurück 
+        public Collection retrieveZeitstempelFromDB()
+        {
+            var result = new Collection();
+
+
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .OrderByDescending (c => c.timestamp)
+                            .Select(c => c.timestamp)
+                            .ToList()
+                            .Distinct();
+
+            foreach (DateTime tStamp in prequery)
+            {
+                DateTime tmpStamp = tStamp.ToLocalTime();
+                result.Add(tmpStamp);
+            }
+
+            return result;
+        }   
+   
         //
         // gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
         //
@@ -467,12 +519,18 @@ namespace MongoDbAccess
             //else
             //    searchstr = projectname;
 
+            var builder = Builders<clsProjektDB>.Filter;
+            var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedLatest);
+            var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
+            //var result = await collection.Find(filter).Sort(sort).ToListAsync();
+            var projects = CollectionProjects.Find(filter).Sort(sort).ToList();
+
             //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
-            var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
-                               where e.name == searchstr
-                               // wird nicht mehr benötigt where e.variantName == variantName
-                               where e.timestamp >= storedEarliest && e.timestamp <= storedLatest
-                               select e;
+            //var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
+            //                   where e.name == searchstr
+            //                   // wird nicht mehr benötigt where e.variantName == variantName
+            //                   where e.timestamp >= storedEarliest && e.timestamp <= storedLatest
+            //                   select e;
 
             foreach (clsProjektDB p in projects)
                 {
@@ -558,7 +616,7 @@ namespace MongoDbAccess
         // aber nur, wenn der neue Name nicht schon in der Datenbank existiert 
         public bool renameProjectsInDB(string oldName, String newName)
         {
-            if (projectNameAlreadyExists(newName, ""))
+            if (projectNameAlreadyExists(newName, "", DateTime.Now))
             {
                 return false;
             }
@@ -571,7 +629,7 @@ namespace MongoDbAccess
                     string newFullName;
                     bool ok = true;
                     // erstmal das Projekt selber umbenennen , falls es in der () Variante überhaupt existiert ..
-                    if (projectNameAlreadyExists(oldName, ""))
+                    if (projectNameAlreadyExists(oldName, "", DateTime.Now))
                     {
                         oldFullName = Projekte.calcProjektKeyDB(oldName, "");
                         newFullName = Projekte.calcProjektKeyDB(newName, "");
