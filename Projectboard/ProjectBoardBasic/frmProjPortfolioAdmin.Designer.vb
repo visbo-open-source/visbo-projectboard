@@ -22,22 +22,27 @@ Partial Class frmProjPortfolioAdmin
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmProjPortfolioAdmin))
         Me.TreeViewProjekte = New System.Windows.Forms.TreeView()
         Me.OKButton = New System.Windows.Forms.Button()
-        Me.txtboxLabel = New System.Windows.Forms.Label()
-        Me.txtDropbox = New System.Windows.Forms.ComboBox()
         Me.considerDependencies = New System.Windows.Forms.CheckBox()
         Me.lblStandvom = New System.Windows.Forms.Label()
         Me.dropBoxTimeStamps = New System.Windows.Forms.ComboBox()
+        Me.dropboxScenarioNames = New System.Windows.Forms.ComboBox()
+        Me.filterIcon = New System.Windows.Forms.PictureBox()
         Me.SelectionSet = New System.Windows.Forms.PictureBox()
         Me.collapseCompletely = New System.Windows.Forms.PictureBox()
         Me.expandCompletely = New System.Windows.Forms.PictureBox()
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
+        Me.ToolTipStand = New System.Windows.Forms.ToolTip(Me.components)
+        Me.deleteFilterIcon = New System.Windows.Forms.PictureBox()
+        CType(Me.filterIcon, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.deleteFilterIcon, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'TreeViewProjekte
@@ -50,41 +55,22 @@ Partial Class frmProjPortfolioAdmin
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(175, 445)
+        Me.OKButton.Location = New System.Drawing.Point(174, 433)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(107, 23)
         Me.OKButton.TabIndex = 6
         Me.OKButton.Text = "Button1"
         Me.OKButton.UseVisualStyleBackColor = True
         '
-        'txtboxLabel
-        '
-        Me.txtboxLabel.AutoSize = True
-        Me.txtboxLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtboxLabel.Location = New System.Drawing.Point(31, 383)
-        Me.txtboxLabel.Name = "txtboxLabel"
-        Me.txtboxLabel.Size = New System.Drawing.Size(72, 13)
-        Me.txtboxLabel.TabIndex = 33
-        Me.txtboxLabel.Text = "Filter-Auswahl"
-        '
-        'txtDropbox
-        '
-        Me.txtDropbox.FormattingEnabled = True
-        Me.txtDropbox.Location = New System.Drawing.Point(34, 406)
-        Me.txtDropbox.Name = "txtDropbox"
-        Me.txtDropbox.Size = New System.Drawing.Size(395, 21)
-        Me.txtDropbox.TabIndex = 34
-        '
         'considerDependencies
         '
         Me.considerDependencies.AutoSize = True
-        Me.considerDependencies.Location = New System.Drawing.Point(257, 350)
+        Me.considerDependencies.Location = New System.Drawing.Point(249, 348)
         Me.considerDependencies.Name = "considerDependencies"
         Me.considerDependencies.Size = New System.Drawing.Size(178, 17)
         Me.considerDependencies.TabIndex = 35
         Me.considerDependencies.Text = "Abhängigkeiten berücksichtigen"
         Me.considerDependencies.UseVisualStyleBackColor = True
-        Me.considerDependencies.Visible = False
         '
         'lblStandvom
         '
@@ -99,10 +85,28 @@ Partial Class frmProjPortfolioAdmin
         'dropBoxTimeStamps
         '
         Me.dropBoxTimeStamps.FormattingEnabled = True
-        Me.dropBoxTimeStamps.Location = New System.Drawing.Point(255, 26)
+        Me.dropBoxTimeStamps.Location = New System.Drawing.Point(255, 25)
         Me.dropBoxTimeStamps.Name = "dropBoxTimeStamps"
         Me.dropBoxTimeStamps.Size = New System.Drawing.Size(172, 21)
         Me.dropBoxTimeStamps.TabIndex = 37
+        '
+        'dropboxScenarioNames
+        '
+        Me.dropboxScenarioNames.FormattingEnabled = True
+        Me.dropboxScenarioNames.Location = New System.Drawing.Point(34, 395)
+        Me.dropboxScenarioNames.Name = "dropboxScenarioNames"
+        Me.dropboxScenarioNames.Size = New System.Drawing.Size(393, 21)
+        Me.dropboxScenarioNames.TabIndex = 56
+        '
+        'filterIcon
+        '
+        Me.filterIcon.BackColor = System.Drawing.SystemColors.Control
+        Me.filterIcon.Image = Global.ProjectBoardBasic.My.Resources.Resources.funnel_add
+        Me.filterIcon.Location = New System.Drawing.Point(169, 347)
+        Me.filterIcon.Name = "filterIcon"
+        Me.filterIcon.Size = New System.Drawing.Size(16, 16)
+        Me.filterIcon.TabIndex = 57
+        Me.filterIcon.TabStop = False
         '
         'SelectionSet
         '
@@ -147,11 +151,23 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset.TabIndex = 52
         Me.SelectionReset.TabStop = False
         '
+        'deleteFilterIcon
+        '
+        Me.deleteFilterIcon.BackColor = System.Drawing.SystemColors.Control
+        Me.deleteFilterIcon.Location = New System.Drawing.Point(191, 347)
+        Me.deleteFilterIcon.Name = "deleteFilterIcon"
+        Me.deleteFilterIcon.Size = New System.Drawing.Size(16, 16)
+        Me.deleteFilterIcon.TabIndex = 59
+        Me.deleteFilterIcon.TabStop = False
+        '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(467, 489)
+        Me.ClientSize = New System.Drawing.Size(467, 473)
+        Me.Controls.Add(Me.deleteFilterIcon)
+        Me.Controls.Add(Me.filterIcon)
+        Me.Controls.Add(Me.dropboxScenarioNames)
         Me.Controls.Add(Me.SelectionSet)
         Me.Controls.Add(Me.collapseCompletely)
         Me.Controls.Add(Me.expandCompletely)
@@ -159,25 +175,23 @@ Partial Class frmProjPortfolioAdmin
         Me.Controls.Add(Me.dropBoxTimeStamps)
         Me.Controls.Add(Me.lblStandvom)
         Me.Controls.Add(Me.considerDependencies)
-        Me.Controls.Add(Me.txtDropbox)
-        Me.Controls.Add(Me.txtboxLabel)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.TreeViewProjekte)
         Me.Name = "frmProjPortfolioAdmin"
         Me.Text = "Multiprojekt-Szenario"
         Me.TopMost = True
+        CType(Me.filterIcon, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.deleteFilterIcon, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
     Public WithEvents TreeViewProjekte As System.Windows.Forms.TreeView
-    Friend WithEvents txtDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
-    Public WithEvents txtboxLabel As System.Windows.Forms.Label
     Friend WithEvents considerDependencies As System.Windows.Forms.CheckBox
     Public WithEvents lblStandvom As System.Windows.Forms.Label
     Friend WithEvents dropBoxTimeStamps As System.Windows.Forms.ComboBox
@@ -185,4 +199,8 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents collapseCompletely As System.Windows.Forms.PictureBox
     Friend WithEvents expandCompletely As System.Windows.Forms.PictureBox
     Friend WithEvents SelectionReset As System.Windows.Forms.PictureBox
+    Friend WithEvents dropboxScenarioNames As System.Windows.Forms.ComboBox
+    Friend WithEvents filterIcon As System.Windows.Forms.PictureBox
+    Friend WithEvents ToolTipStand As System.Windows.Forms.ToolTip
+    Friend WithEvents deleteFilterIcon As System.Windows.Forms.PictureBox
 End Class

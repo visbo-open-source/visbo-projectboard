@@ -14,6 +14,7 @@ Public Class frmProjPortfolioAdmin
     Private stopRecursion As Boolean = False
     Private constellationName As String = ""
 
+    Private filterIsActive As Boolean = False
     Private selectedMilestones As New Collection
     Private selectedPhases As New Collection
     Private selectedCosts As New Collection
@@ -83,24 +84,18 @@ Public Class frmProjPortfolioAdmin
         If aKtionskennung = PTTvActions.chgInSession Then
             Me.considerDependencies.Visible = True
             Me.considerDependencies.Checked = False
-            Me.txtboxLabel.Text = "Multiprojekt-Szenario"
+            Me.dropboxScenarioNames.Text = "Multiprojekt-Szenario"
             Me.OKButton.Text = "Szenario speichern"
             For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
                 If kvp.Key <> "Start" Then
-                    txtDropbox.Items.Add(kvp.Key)
+                    dropboxScenarioNames.Items.Add(kvp.Key)
                 End If
             Next
         Else
-            Me.txtboxLabel.Text = "Filter anwenden"
-
-            ' alle definierten Filter in ComboBox anzeigen
-            ' die Filter einlesen 
-            Call frmHryNameReadFilterVorlagen(PTmenue.filterdefinieren, txtDropbox)
-            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
-                txtDropbox.Items.Add(kvp.Key)
-            Next
+            ' nichts weiter tun 
+            ' die Filter-NAmen müssen aktuell nicht ausgelesen werden 
         End If
-        
+
 
 
         stopRecursion = True
@@ -117,6 +112,7 @@ Public Class frmProjPortfolioAdmin
 
 
     End Sub
+
 
     Private Sub TreeViewProjekte_AfterCheck(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterCheck
 
@@ -542,7 +538,7 @@ Public Class frmProjPortfolioAdmin
 
         Next
 
-        
+
     End Sub
 
     ''' <summary>
@@ -944,8 +940,8 @@ Public Class frmProjPortfolioAdmin
 
         ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
-            If txtDropbox.Text <> "" Then
-                currentConstellation = txtDropbox.Text
+            If dropboxScenarioNames.Text <> "" Then
+                currentConstellation = dropboxScenarioNames.Text
                 Call storeSessionConstellation(currentConstellation)
             End If
 
@@ -959,41 +955,6 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-
-    Private Sub txtDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles txtDropbox.SelectedIndexChanged
-
-        Dim latestStore As Date
-
-        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
-            latestStore = Date.Now
-        Else
-            latestStore = CDate(dropBoxTimeStamps.SelectedItem)
-        End If
-
-        If aKtionskennung = PTTvActions.chgInSession Then
-        Else
-            Dim fName As String = txtDropbox.SelectedItem.ToString
-            ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
-
-            ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
-            Call retrieveSelections(fName, PTmenue.filterAuswahl, selectedBUs, selectedTyps, _
-                                    selectedPhases, selectedMilestones, _
-                                    selectedRoles, selectedCosts)
-            ' und als "Last" gespeichert
-            Call storeFilter("Last", PTmenue.filterAuswahl, selectedBUs, selectedTyps, _
-                                    selectedPhases, selectedMilestones, _
-                                    selectedRoles, selectedCosts, False)
-
-            stopRecursion = True
-            Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                               True, latestStore)
-
-
-        End If
-        
-        stopRecursion = False
-
-    End Sub
 
     ''' <summary>
     ''' alle dargestellten Elemente im ProjektTree selektieren 
@@ -1323,4 +1284,61 @@ Public Class frmProjPortfolioAdmin
     
     
     
+    ''' <summary>
+    ''' reduziert anhand des definierten Filters die aktuelle Gesamtliste und baut den Treeview wieder auf 
+    ''' 
+    '''
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub filterIcon_Click(sender As Object, e As EventArgs) Handles filterIcon.Click
+
+        Dim filterFormular As New frmNameSelection
+
+        With filterFormular
+            .menuOption = PTmenue.filterdefinieren
+            If .ShowDialog() = Windows.Forms.DialogResult.OK Then
+
+                stopRecursion = True
+                Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                                   True, Date.Now)
+                stopRecursion = False
+
+                ' Das DeleteFilterIcon mit Bild versehen 
+                Me.deleteFilterIcon.Image = My.Resources.funnel_delete
+                Me.deleteFilterIcon.Enabled = True
+
+            End If
+        End With
+    End Sub
+
+
+    Private Sub dropBoxTimeStamps_MouseHover(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.MouseHover
+        ToolTipStand.Show("Auswahl eines Zeitstempels; im Default wird immer der letzte Stand berücksichtigt", dropBoxTimeStamps, 2000)
+    End Sub
+
+    Private Sub dropBoxTimeStamps_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.SelectedIndexChanged
+
+    End Sub
+
+    Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
+
+    End Sub
+
+    Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
+
+        aktuelleGesamtListe = AlleProjekte
+
+        stopRecursion = True
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                           False, Date.Now)
+        stopRecursion = False
+
+            ' Das DeleteFilterIcon mit Bild versehen 
+        Me.deleteFilterIcon.Image = Nothing
+        Me.deleteFilterIcon.Enabled = False
+
+        
+    End Sub
 End Class

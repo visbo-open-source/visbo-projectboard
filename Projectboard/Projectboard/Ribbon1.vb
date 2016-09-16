@@ -86,6 +86,17 @@ Imports System.Windows
                 If storeToDB Then
 
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                    ' hier muss noch geprüft werden, ob auch alle referenzierten Projekte bereits in der Datenbank existieren
+                    ' wenn nein, werden die jetzt gespeichert ... aber nur, wenn sie nicht bereits existieren ...
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+                        If Not request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
+                            ' speichern des Projektes 
+                            Call request.storeProjectToDB(kvp.Value)
+                        End If
+                    Next
+
+
                     If request.pingMongoDb() Then
                         ' prüfen, ob diese Constellation existiert ..
                         If projectConstellations.Contains(constellationName) Then
@@ -358,7 +369,7 @@ Imports System.Windows
                 ' in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
                 If storedProj = 0 Then
-                    msgresult = MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
+                    msgresult = MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte und Varianten speichern?", MsgBoxStyle.OkCancel)
 
                     If msgresult = MsgBoxResult.Ok Then
                         ' Mouse auf Wartemodus setzen
@@ -374,6 +385,40 @@ Imports System.Windows
 
             Else
                 Call MsgBox("keine Projekte zu speichern ...")
+            End If
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+        Call awinDeSelect()
+
+    End Sub
+
+    ''' <summary>
+    ''' alles, d.h Projekte, Szenarien und Abhängigkeiten speichern
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT5StoreEverything(control As IRibbonControl)
+
+        Dim storedProj As Integer = 0
+
+        Call projektTafelInit()
+
+        Try
+            If AlleProjekte.Count > 0 Then
+
+                appInstance.Cursor = Excel.XlMousePointer.xlWait
+
+                'Projekte, Szenarien und Abhängigkeiten  speichern
+                Call StoreAllProjectsinDB(True)
+
+                ' Mouse wieder auf Normalmodus setzen
+                appInstance.Cursor = Excel.XlMousePointer.xlDefault
+
+            Else
+                Call MsgBox("es gibt nichts zu speichern ...")
             End If
         Catch ex As Exception
 

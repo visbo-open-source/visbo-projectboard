@@ -219,32 +219,17 @@ Public Class frmNameSelection
 
         If Me.menuOption = PTmenue.filterdefinieren Then
 
-            filterName = filterDropbox.Text
-            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+
+
+            If Not IsNothing(filterDropbox.Text) Then
+                If filterDropbox.Text.Trim.Length > 0 Then
+                    filterName = filterDropbox.Text.Trim
+                    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, False)
-
-            'ElseIf Me.menuOption = PTmenue.visualisieren Then
-
-            '    If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-            '        (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-            '        Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-            '        ''Else
-            '        ''    filterName = filterDropbox.Text
-            '        ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            '        ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-            '        ''                                           selectedPhases, selectedMilestones, _
-            '        ''                                           selectedRoles, selectedCosts, False)
-            '    End If
-
-            ''Else    ' alle anderen PTmenues
-
-            ''    filterName = filterDropbox.Text
-            ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-            ''                                           selectedPhases, selectedMilestones, _
-            ''                                           selectedRoles, selectedCosts, False)
+                End If
+            End If
+            
         End If
 
 
@@ -367,6 +352,7 @@ Public Class frmNameSelection
         If Me.menuOption = PTmenue.excelExport Or _
             menuOption = PTmenue.filterdefinieren Or _
             (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
+            Me.DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
         Else
             ' geänderte Auswahl/Filterliste neu anzeigen

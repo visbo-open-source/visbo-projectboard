@@ -289,7 +289,8 @@
          <menu id ="PT5G2" label ="Speichern">
            <button id="Pt5G2B1" label="Multiprojekt-Szenario" onAction="PTNeueKonstellation" supertip ="die aktuelle Session mit den Verweisen auf die darin enthaltenen Projekt-Varianten wird als neues Szenario in der Datenbank gespeichert "/>
             <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
-           <button id="Pt5G2B3" label="Projekte/Varianten " onAction="PT5StoreProjects" supertip ="die ausgewählten Projekte werden mit ihrem jeweiligen Zeitstempel in der Datenbank gespeichert; wenn zu diesen Projekten Varianten definiert sind, so werden diese mitgespeichert; wenn keine Projekte selektiert wurden, so werden alle Projekte der Session mit ihren Varianten gespeichert"/>
+           <button id="Pt5G2B3" label="Projekte/Varianten " onAction="PT5StoreProjects" supertip ="alle bzw. die ausgewählten Projekte mit all ihren Varianten werden mit dem aktuellen Zeitstempel in der Datenbank gespeichert; wenn keine Projekte selektiert wurden, so werden alle Projekte der Session mit ihren Varianten gespeichert"/>
+           <button id="Pt5G2B4" label="Alles Speichern" onAction="PT5StoreEverything" supertip ="es wird die komplette Session gespeichert: alle Projekte, alle Szenarien, alle Abhängigkeiten "/>
          </menu>
          <separator id="PT5G1s2"/>
           <menu id ="PT5G3" label ="Löschen">

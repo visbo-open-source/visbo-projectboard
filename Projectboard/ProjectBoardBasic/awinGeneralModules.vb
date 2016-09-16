@@ -8767,7 +8767,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim nvErrorMessage As String = " (nicht in DB)"
+        Dim nvErrorMessage As String = ""
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
         Dim outPutCollection = New Collection
         Dim outputLine As String = ""
@@ -8811,7 +8811,7 @@ Public Module awinGeneralModules
                     Else
 
                         hproj = Nothing
-                        outputLine = kvp.Value.projectName & nvErrorMessage
+                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
                         outPutCollection.Add(outputLine)
                         
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
@@ -8842,7 +8842,7 @@ Public Module awinGeneralModules
                             ShowProjekte.Add(hproj)
 
                         Catch ex1 As Exception
-                            outputLine = hproj.name & " (konnte der Session nicht hinzugefügt werden)"
+                            outputLine = hproj.name & "(" & hproj.variantName & ")" & " (konnte der Session nicht hinzugefügt werden)"
                             outPutCollection.Add(outputLine)
                         End Try
 
@@ -8865,7 +8865,7 @@ Public Module awinGeneralModules
             Dim outputFormular As New frmOutputWindow
             With outputFormular
                 .Text = "Meldungen"
-                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " noch nicht in DB:"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:"
                 .textCollection = outPutCollection
                 .ShowDialog()
             End With
@@ -8887,7 +8887,7 @@ Public Module awinGeneralModules
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim nvErrorMessage As String = " (nicht in DB)"
+        Dim nvErrorMessage As String = ""
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
         Dim outPutCollection = New Collection
         Dim outputLine As String = ""
@@ -8966,7 +8966,8 @@ Public Module awinGeneralModules
 
                     Else
                         hproj = Nothing
-                        outputLine = kvp.Value.projectName & nvErrorMessage
+
+                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
                         outPutCollection.Add(outputLine)
 
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
@@ -8985,7 +8986,7 @@ Public Module awinGeneralModules
             Dim outputFormular As New frmOutputWindow
             With outputFormular
                 .Text = "Meldungen"
-                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " noch nicht in DB:"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:"
                 .textCollection = outPutCollection
                 .ShowDialog()
             End With
@@ -13394,7 +13395,7 @@ Public Module awinGeneralModules
                         End If
                         Call MsgBox("Projekt " & hproj.name & " kommt mehrmals vor! " & vbLf & hlptxt)
                     End If
-                    
+
 
                     ' jetzt ist sichergestellt, dass calcProjektKey nicht mehr vorkommt 
                     ImportProjekte.Add(calcProjektKey(hproj), hproj)
@@ -13424,7 +13425,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-    
+
     ''' <summary>
     ''' sucht zu der rxfTask 'task' alle Kinder und KindesKinder  und trägt diese in das Projekt 'hproj' ein 
     ''' dazu wird diese Routine rekursiv aufgerufen
@@ -13502,7 +13503,7 @@ Public Module awinGeneralModules
                     ElseIf isKnownPhName And Not isKnownMsName Then
                         isMilestone = False
 
-                    
+
                     Else
                         isMilestone = True
                     End If
@@ -13707,7 +13708,7 @@ Public Module awinGeneralModules
 
                         End If       'Ende of tobeignored phase
 
-                    
+
                     Else
                         ' ist MEILENSTEIN
 
@@ -14231,7 +14232,7 @@ Public Module awinGeneralModules
                 CType(.Rows(1), Excel.Range).Font.Bold = True
             End If
 
-            
+
             If awinSettings.fullProtocol Then
                 CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
                 CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
@@ -14261,7 +14262,7 @@ Public Module awinGeneralModules
                     CType(.Columns(10), Excel.Range).ColumnWidth = 40
                     CType(.Columns(11), Excel.Range).ColumnWidth = 40
                 End If
-                
+
             Else
                 CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
                 CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
@@ -14819,7 +14820,7 @@ Public Module awinGeneralModules
         End Try
     End Sub
 
-    
+
     ''' <summary>
     ''' schreibt eine Datei mit den monatlichen Zuordnungen Rollenbedarfe / Kosten 
     ''' Diese Datei kann editiert werden , dann wieder importiert werden 
@@ -14852,7 +14853,7 @@ Public Module awinGeneralModules
         ' jetzt schreiben der ersten Zeile 
         Dim zeile As Integer = 1
         Dim spalte As Integer = 1
-        
+
         With newWB.ActiveSheet
 
             ersteZeile = CType(.Range(.cells(1, 1), .cells(1, 6 + bis - von)), Excel.Range)
@@ -15483,7 +15484,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                
+
 
             Next p
 
@@ -15523,8 +15524,8 @@ Public Module awinGeneralModules
 
         End With
 
-     
-        
+
+
         ' jetzt wird der RoleCostInput Bereich festgelegt 
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
             Dim maxRows As Integer = .Rows.Count
@@ -15536,7 +15537,7 @@ Public Module awinGeneralModules
             .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                            Formula1:="=RollenKostenNamen")
         End With
-        
+
 
         'With CType(newWB.ActiveSheet, Excel.Worksheet)
 
@@ -16594,7 +16595,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-   
+
     ''' <summary>
     ''' aktualisiert die Summen-Werte im Massen-Edit Sheet der Ressourcen-/Kostenzuordnungen  
     ''' </summary>
@@ -16805,7 +16806,7 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                         End Try
-                        
+
                     End If
 
                 Next

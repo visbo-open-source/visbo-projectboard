@@ -4613,7 +4613,7 @@ Public Module testModule
 
 
 
-    Public Sub StoreAllProjectsinDB()
+    Public Sub StoreAllProjectsinDB(Optional everythingElse As Boolean = False)
 
         Dim jetzt As Date = Now
         Dim zeitStempel As Date
@@ -4654,45 +4654,55 @@ Public Module testModule
 
                 historicDate = historicDate.AddMonths(1)
 
-                ' jetzt werden alle definierten Constellations weggeschrieben
-
-                For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-
-                    Try
-                        If request.storeConstellationToDB(kvp.Value) Then
-                        Else
-                            Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
-                        End If
-                    Catch ex As Exception
-                        Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                        'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
-                        'Exit Sub
-                    End Try
-
-                Next
 
 
-                ' jetzt werden alle Abhängigkeiten weggeschreiben 
+                If everythingElse Then
+                    ' jetzt werden alle definierten Constellations weggeschrieben
+                    For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
-                For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+                        Try
+                            If request.storeConstellationToDB(kvp.Value) Then
+                            Else
+                                Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
+                            End If
+                        Catch ex As Exception
+                            Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
+                            'Exit Sub
+                        End Try
 
-                    Try
-                        If request.storeDependencyofPToDB(kvp.Value) Then
-                        Else
-                            Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
-                        End If
-                    Catch ex As Exception
-                        Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                        'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
-                        'Exit Sub
-                    End Try
+                    Next
 
 
-                Next
+                    ' jetzt werden alle Abhängigkeiten weggeschrieben  
+
+                    For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+
+                        Try
+                            If request.storeDependencyofPToDB(kvp.Value) Then
+                            Else
+                                Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
+                            End If
+                        Catch ex As Exception
+                            Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
+                            'Exit Sub
+                        End Try
+
+
+                    Next
+
+                End If
+                
 
                 zeitStempel = AlleProjekte.First.timeStamp
 
-                Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                If everythingElse Then
+                    Call MsgBox("ok, Szenarien und Projekte gespeichert! (Projekte inkl. Zeitstempel)" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                Else
+                    Call MsgBox("ok, Projekte mit Zeitstempel gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                End If
+
 
                 ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
                 Try
