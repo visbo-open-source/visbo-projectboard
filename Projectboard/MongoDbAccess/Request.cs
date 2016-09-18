@@ -177,34 +177,16 @@ namespace MongoDbAccess
             var builder = Builders<clsProjektDB>.Filter;
             var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedAtOrBefore);
             var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
-            //var result = await collection.Find(filter).Sort(sort).ToListAsync();
-            result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
 
-            // alternativ: 
-            //result = CollectionProjects.AsQueryable<clsProjektDB>()
-            //        .Where(c => c.name == searchstr)
-            //        .OrderBy(c => c.timestamp)
-            //        .ToList()
-            //        .Last();
-
-
-           
-            // das folgende muss gemacht werden, weil der .Last Operator Fehler gibt 
-            //int anzahl;
-            //anzahl = tmpListe.Count();
-            
-            //int zaehler = 0;
-            //foreach (clsProjektDB p in tmpListe)
-            //{
-            //    zaehler = zaehler + 1;
-            //    if (zaehler == anzahl)
-            //    {
-            //        result = p;
-            //    }
-
-            //}
-            
-
+            try
+            {
+                result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch 
+            {
+                result = null;
+            }
+                        
             //TODO: rückumwandeln
             if (result == null)
             {
@@ -234,7 +216,7 @@ namespace MongoDbAccess
                     { ping = true; }
 
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 ping = false;
             }
@@ -259,7 +241,7 @@ namespace MongoDbAccess
                 //return !CollectionProjects.Save(projektDB).HasLastErrorMessage;    
                 return true;
             }
-            catch
+            catch (Exception)
             {
                 return false;
             }
@@ -371,44 +353,26 @@ namespace MongoDbAccess
 
                     var filter = Builders<clsProjektDB>.Filter.Eq("name", name);
                     var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
-                    //var result = await collection.Find(filter).Sort(sort).ToListAsync();
-                    clsProjektDB projektDB = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
-                                        
-                    //anzahl = pruefZahl;
 
-                    // nicht mehr notwendig !                                 
-                    //var tmpListe = CollectionProjects.AsQueryable<clsProjektDB>()
-                    //             .Where(c => c.name == name)
-                    //             .OrderBy(c => c.timestamp);
-                    
-                    //int anzahl;
-                    //anzahl = tmpListe.Count();
+                    try
+                    {
+                                                                        
+                        clsProjektDB projektDB = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
+                        var projekt = new clsProjekt();
+                        projektDB.copyto(ref projekt);
 
-                    //int zaehler = 0;
-                    //foreach (clsProjektDB p in tmpListe)
-                    //{
-                    //    zaehler = zaehler+1;
-                    //    if (zaehler == anzahl) 
-                    //    {
-                    //        projektDB = p;
-                    //    }
+                        string schluessel = Projekte.calcProjektKey(projekt);
 
-                    //}
-                    
-                    
-                    //if (projektDB.tfSpalte + projektDB.Dauer >= startMonat)
-                    //{
-                    var projekt = new clsProjekt();
-                    projektDB.copyto(ref projekt);
+                        result.Add(schluessel, projekt);
                         
-                    //string schluessel = projekt.name + '#' + projekt.variantName;
-                    string schluessel = Projekte.calcProjektKey(projekt);
-                    //result.Add(projekt.Id, projekt);
-                    result.Add(schluessel, projekt);
-                    //}
+                    }
+                    catch (Exception)
+                    {
+                        
+                        // nichts tun ...
+                    }
                     
-                    // Ende alter Code vor Ergänzung 15.10 - jetzt wieder der richtige Code
-                   
+                           
                 }
             }
 
@@ -421,13 +385,7 @@ namespace MongoDbAccess
                 
                 string searchstr = Projekte.calcProjektKeyDB(projectname, variantName); 
 
-
-                //if (variantName != null && variantName.Length > 0)
-                //   searchstr = Projekte.calcProjektKey(projectname, variantName);
-                //else
-                //    searchstr = projectname;
-
-                
+                               
                 var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
                                where e.name == searchstr
                                // wird nicht mehr benötigt: where e.variantName == variantName

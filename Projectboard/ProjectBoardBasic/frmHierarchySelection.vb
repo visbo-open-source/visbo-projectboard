@@ -16,12 +16,223 @@ Public Class frmHierarchySelection
     Private selectedBUs As New Collection
     Private selectedTyps As New Collection
 
+    ' hier steht drin, mit welcher Menue-Option das Ganze aufgerufen wurde 
     Friend menuOption As Integer
+
+    ' hier steht ggf die ButtonID drin
+    Friend ribbonButtonID As String = ""
 
     ' an der aufrufenden Stelle muss hier entweder "Multiprojekt-Tafel" oder
     ' "MS Project" stehen. 
     Friend calledFrom As String
 
+
+    Private Sub defineFrmButtonVisibility()
+
+        With Me
+            If .menuOption = PTmenue.filterdefinieren Then
+
+                .Text = "Datenbank Filter definieren"
+                .OKButton.Text = "Speichern"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
+                .einstellungen.Visible = False
+
+            ElseIf .menuOption = PTmenue.visualisieren Then
+
+                .Text = "Plan-Elemente visualisieren"
+                .OKButton.Text = "Anzeigen"
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+
+            ElseIf .menuOption = PTmenue.leistbarkeitsAnalyse Then
+
+                .Text = "Leistbarkeits-Charts erstellen"
+                .OKButton.Text = "Charts erstellen"
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = True
+
+                ' Reports
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf .menuOption = PTmenue.einzelprojektReport Then
+
+                .Text = "Projekt-Varianten Report erzeugen"
+                .OKButton.Text = "Bericht erstellen"
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+
+                ' Reports
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+                .einstellungen.Visible = True
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+            ElseIf .menuOption = PTmenue.multiprojektReport Then
+
+                .Text = "Multiprojekt Reports erzeugen"
+                .OKButton.Text = "Bericht erstellen"
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+                .einstellungen.Visible = True
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf .menuOption = PTmenue.excelExport Then
+
+                .Text = "Excel Report erzeugen"
+                .OKButton.Text = "Report erstellen"
+                .statusLabel.Text = ""
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+                .einstellungen.Visible = False
+
+            ElseIf .menuOption = PTmenue.vorlageErstellen Then
+
+                .Text = "modulare Vorlagen erzeugen"
+                .OKButton.Text = "Vorlage erstellen"
+                .statusLabel.Text = ""
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf .menuOption = PTmenue.reportBHTC Then
+
+                .Text = "Projekt-Report erzeugen"
+                .OKButton.Text = "Bericht erstellen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+
+                .hryStufenLabel.Visible = False
+                .hryStufen.Value = 50
+                .hryStufen.Visible = False
+
+                ' Reports
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+                .einstellungen.Visible = True
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name Report-Profil"
+
+            End If
+
+        End With
+        
+
+    End Sub
 
 
     Private Sub frmHierarchySelection_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -57,6 +268,9 @@ Public Class frmHierarchySelection
         Cursor = Cursors.WaitCursor
 
         awinSettings.isHryNameFrmActive = True
+
+        ' Button Visibility uind Texte definieren 
+        Call defineFrmButtonVisibility()
 
         hry = New clsHierarchy
 

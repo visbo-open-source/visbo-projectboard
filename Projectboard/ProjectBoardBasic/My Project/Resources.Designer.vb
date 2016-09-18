@@ -63,6 +63,16 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
+        Friend ReadOnly Property branch() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("branch", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
         Friend ReadOnly Property funnel_add() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("funnel_add", resourceCulture)

@@ -3778,8 +3778,11 @@ Public Module awinGeneralModules
                                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
                                         hproj = request.retrieveOneProjectfromDB(projectName, variantName, Date.Now)
                                         ' jetzt in AlleProjekte eintragen ... 
-                                        AlleProjekte.Add(calcProjektKey(hproj), hproj)
-                                        ok = True
+                                        If Not IsNothing(hproj) Then
+                                            AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                            ok = True
+                                        End If
+                                        
                                     Else
                                         ' nicht in Session, nicht in Datenbank: nicht ok !
                                         ok = False
@@ -8805,9 +8808,14 @@ Public Module awinGeneralModules
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
                         hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
-
-                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                        AlleProjekte.Add(kvp.Key, hproj)
+                        If Not IsNothing(hproj) Then
+                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                            AlleProjekte.Add(kvp.Key, hproj)
+                        Else
+                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
+                            outPutCollection.Add(outputLine)
+                        End If
+                        
                     Else
 
                         hproj = Nothing
@@ -8953,16 +8961,20 @@ Public Module awinGeneralModules
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
                         hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
 
-                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                        AlleProjekte.Add(kvp.Key, hproj)
-                        ' jetzt die Variante aktivieren 
-                        ' aber nur wenn es auch das Flag show hat 
-                        If showIT Then
-                            tryZeile = startOfFreeRows + zeilenOffset
-                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
-                            zeilenOffset = zeilenOffset + 1
+                        If Not IsNothing(hproj) Then
+                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                            AlleProjekte.Add(kvp.Key, hproj)
+                            ' jetzt die Variante aktivieren 
+                            ' aber nur wenn es auch das Flag show hat 
+                            If showIT Then
+                                tryZeile = startOfFreeRows + zeilenOffset
+                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                                zeilenOffset = zeilenOffset + 1
+                            End If
+                        Else
+                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
+                            outPutCollection.Add(outputLine)
                         End If
-
 
                     Else
                         hproj = Nothing
@@ -9066,24 +9078,28 @@ Public Module awinGeneralModules
 
         hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
 
-        ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-        ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-        If AlleProjekte.Containskey(key) Then
-            AlleProjekte.Remove(key)
+
+        If Not IsNothing(hproj) Then
+            ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+            ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+            If AlleProjekte.Containskey(key) Then
+                AlleProjekte.Remove(key)
+            End If
+
+            AlleProjekte.Add(key, hproj)
+
+            If show Then
+                ' prüfen, ob es bereits in der Showprojekt enthalten ist
+                ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+                ' replaceProjectVariant
+
+                Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+
+            End If
+        Else
+            Call MsgBox("existiert nicht: " & pName & ", " & vName & " @ " & storedAtORBefore.ToString)
         End If
-
-        AlleProjekte.Add(key, hproj)
-
-        If show Then
-            ' prüfen, ob es bereits in der Showprojekt enthalten ist
-            ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
-            ' replaceProjectVariant
-
-            Call replaceProjectVariant(pName, vName, False, True, freieZeile)
-
-        End If
-
-
+        
 
     End Sub
 
@@ -10077,7 +10093,7 @@ Public Module awinGeneralModules
                               ByRef aktuelleGesamtListe As clsProjekteAlle, _
                               ByVal aKtionskennung As Integer, _
                               ByVal applyFilter As Boolean, _
-                              ByVal storedHeute As Date)
+                              ByVal storedAtOrBefore As Date)
 
         Dim nodeLevel0 As TreeNode
         Dim nodeLevel1 As TreeNode
@@ -10114,7 +10130,7 @@ Public Module awinGeneralModules
 
                 pname = ""
                 variantName = ""
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.delFromSession
@@ -10134,7 +10150,7 @@ Public Module awinGeneralModules
 
                 'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
                 ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.loadPV
@@ -10144,7 +10160,7 @@ Public Module awinGeneralModules
                 pname = ""
                 variantName = ""
 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
                 loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
 
             Case PTTvActions.activateV
@@ -11130,37 +11146,8 @@ Public Module awinGeneralModules
 
         With auswahlFormular
 
-
-            .Text = "Datenbank Filter definieren"
-
-            '.chkbxShowObjects = False
-            '.chkbxCreateCharts = False
-
-            .chkbxOneChart.Checked = False
-            .chkbxOneChart.Visible = False
-
-            .rdbBU.Visible = True
-            .pictureBU.Visible = True
-
-            .rdbTyp.Visible = True
-            .pictureTyp.Visible = True
-
-            .repVorlagenDropbox.Visible = False
-            .labelPPTVorlage.Visible = False
-
-            ' Filter
-            .filterDropbox.Visible = True
-            .filterLabel.Visible = True
-            .filterLabel.Text = "Name des Filters"
-
-            ' Auswahl Speichern
-            .auswSpeichern.Visible = False
-            .auswSpeichern.Enabled = False
-
             '.showModePortfolio = True
             .menuOption = PTmenue.filterdefinieren
-
-            .OKButton.Text = "Speichern"
 
             '.Show()
             returnValue = .ShowDialog
@@ -11493,7 +11480,10 @@ Public Module awinGeneralModules
 
         ElseIf menueOption = PTmenue.filterdefinieren Then
 
-            Call MsgBox("ok, Filter gespeichert")
+            'Call MsgBox("ok, Filter gespeichert")
+
+        ElseIf menueOption = PTmenue.sessionFilterDefinieren Then
+            ' keine Message ausgeben ...
 
         ElseIf menueOption = PTmenue.excelExport Or menueOption = PTmenue.vorlageErstellen Then
 
@@ -11803,6 +11793,7 @@ Public Module awinGeneralModules
         Dim lastFilter As clsFilter
 
         If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.sessionFilterDefinieren Or _
             menuOption = PTmenue.filterAuswahl Then
 
             If calledFromHry Then

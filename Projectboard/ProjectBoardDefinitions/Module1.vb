@@ -367,6 +367,7 @@ Public Module Module1
         meilensteinTrendanalyse = 8
         filterAuswahl = 9
         reportBHTC = 10
+        sessionFilterDefinieren = 11
     End Enum
     Public Enum PTlicense
         swimlanes = 0

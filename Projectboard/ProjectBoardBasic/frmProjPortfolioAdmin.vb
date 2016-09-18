@@ -36,6 +36,192 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    Private Sub defineButtonVisibility()
+
+        With Me
+
+            ' bei Beginn immer disabled
+            .deleteFilterIcon.Enabled = False
+
+            If aKtionskennung = PTTvActions.activateV Then
+
+                .Text = "Variante aktivieren"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = False
+                .SelectionReset.Visible = False
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+                .OKButton.Visible = False
+
+
+            ElseIf aKtionskennung = PTTvActions.chgInSession Then
+                .Text = "Zusammenstellung im Portfolio ändern"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .considerDependencies.Visible = True
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = True
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Szenario speichern"
+
+            ElseIf aKtionskennung = PTTvActions.definePortfolioDB Then
+
+            ElseIf aKtionskennung = PTTvActions.definePortfolioSE Then
+
+            ElseIf aKtionskennung = PTTvActions.deleteV Then
+
+                .Text = "Variante löschen"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+
+            ElseIf aKtionskennung = PTTvActions.delFromDB Then
+
+                .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+
+                .dropBoxTimeStamps.Visible = True
+                .lblStandvom.Visible = True
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+
+            ElseIf aKtionskennung = PTTvActions.delFromSession Then
+                .Text = "Projekte, Varianten aus der Session löschen"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+
+            ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+                .Text = "Projekte und Varianten in die Session laden "
+
+                .dropBoxTimeStamps.Visible = True
+                .lblStandvom.Visible = True
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Laden"
+
+            ElseIf aKtionskennung = PTTvActions.loadPVS Then
+
+                .Text = "Projekte und Varianten in die Session laden "
+
+                .dropBoxTimeStamps.Visible = True
+                .lblStandvom.Visible = True
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Laden"
+
+            End If
+
+        End With
+        
+
+    End Sub
+
+
     Private Sub frmDefineEditPortfolio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
@@ -46,6 +232,8 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
+        ' je nachdem, wie die Aktionskennung ist: setzen der Button Visibilitäten 
+        Call defineButtonVisibility()
 
         ' jetzt die vorkommenden Timestamps auslesen 
         ' aber nicht bei allen Aktionskennungen 
@@ -54,8 +242,7 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.delFromSession Or _
             aKtionskennung = PTTvActions.deleteV Or _
             aKtionskennung = PTTvActions.activateV Then
-            dropBoxTimeStamps.Visible = False
-            lblStandvom.Visible = False
+            
         Else
 
             Try
@@ -82,10 +269,7 @@ Public Class frmProjPortfolioAdmin
         appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
         If aKtionskennung = PTTvActions.chgInSession Then
-            Me.considerDependencies.Visible = True
-            Me.considerDependencies.Checked = False
-            Me.dropboxScenarioNames.Text = "Multiprojekt-Szenario"
-            Me.OKButton.Text = "Szenario speichern"
+            
             For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
                 If kvp.Key <> "Start" Then
                     dropboxScenarioNames.Items.Add(kvp.Key)
@@ -99,8 +283,14 @@ Public Class frmProjPortfolioAdmin
 
 
         stopRecursion = True
+        Dim storedAtOrBefore As Date
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now
+        Else
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+        End If
         Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           False, Date.Now)
+                           Me.filterIsActive, storedAtOrBefore)
         stopRecursion = False
 
         If aktuelleGesamtListe.liste.Count < 1 Then
@@ -1296,31 +1486,61 @@ Public Class frmProjPortfolioAdmin
 
         Dim filterFormular As New frmNameSelection
 
+        Me.filterIsActive = True
+
         With filterFormular
-            .menuOption = PTmenue.filterdefinieren
+            If aKtionskennung = PTTvActions.loadPV Or _
+                aKtionskennung = PTTvActions.loadPVS Or _
+                aKtionskennung = PTTvActions.delFromDB Then
+                ' damit im Filterformular unterschieden werden kann, ob der Aufruf aus dem ProjPortfolioAdmin Formular erfolgte ...
+                .actionCode = aKtionskennung
+                .menuOption = PTmenue.filterdefinieren
+            Else
+                .actionCode = aKtionskennung
+                .menuOption = PTmenue.sessionFilterDefinieren
+            End If
+
             If .ShowDialog() = Windows.Forms.DialogResult.OK Then
 
                 stopRecursion = True
+                Dim storedAtOrBefore As Date
+                If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+                    storedAtOrBefore = Date.Now
+                Else
+                    storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+                End If
                 Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                                   True, Date.Now)
+                                   Me.filterIsActive, storedAtOrBefore)
                 stopRecursion = False
 
                 ' Das DeleteFilterIcon mit Bild versehen 
                 Me.deleteFilterIcon.Image = My.Resources.funnel_delete
                 Me.deleteFilterIcon.Enabled = True
 
+
             End If
         End With
     End Sub
 
 
-    Private Sub dropBoxTimeStamps_MouseHover(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.MouseHover
-        ToolTipStand.Show("Auswahl eines Zeitstempels; im Default wird immer der letzte Stand berücksichtigt", dropBoxTimeStamps, 2000)
-    End Sub
-
+    
     Private Sub dropBoxTimeStamps_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.SelectedIndexChanged
 
+        stopRecursion = True
+
+        Dim storedAtOrBefore As Date
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now
+        Else
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+        End If
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                           Me.filterIsActive, storedAtOrBefore)
+
+        stopRecursion = False
+
     End Sub
+
 
     Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
 
@@ -1331,14 +1551,66 @@ Public Class frmProjPortfolioAdmin
         aktuelleGesamtListe = AlleProjekte
 
         stopRecursion = True
+
+        Me.filterIsActive = False
+
+        Dim storedAtOrBefore As Date
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now
+        Else
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+        End If
         Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           False, Date.Now)
+                           Me.filterIsActive, storedAtOrBefore)
         stopRecursion = False
 
             ' Das DeleteFilterIcon mit Bild versehen 
         Me.deleteFilterIcon.Image = Nothing
         Me.deleteFilterIcon.Enabled = False
 
+
+
         
+    End Sub
+
+    Private Sub dropBoxTimeStamps_MouseHover(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.MouseHover
+        ToolTipStand.Show("bis zu welchem Datum/Zeit sollen Projekte und Varianten berücksichtigt werden? im Default immer bis zum aktuellen Zeitpunkt", dropBoxTimeStamps, 2000)
+    End Sub
+
+
+    Private Sub SelectionSet_MouseHover(sender As Object, e As EventArgs) Handles SelectionSet.MouseHover
+
+    End Sub
+
+    Private Sub SelectionReset_MouseHover(sender As Object, e As EventArgs) Handles SelectionReset.MouseHover
+
+    End Sub
+
+    Private Sub collapseCompletely_MouseHover(sender As Object, e As EventArgs) Handles collapseCompletely.MouseHover
+
+    End Sub
+
+    Private Sub expandCompletely_MouseHover(sender As Object, e As EventArgs) Handles expandCompletely.MouseHover
+
+    End Sub
+
+    Private Sub filterIcon_MouseHover(sender As Object, e As EventArgs) Handles filterIcon.MouseHover
+
+    End Sub
+
+    Private Sub deleteFilterIcon_MouseHover(sender As Object, e As EventArgs) Handles deleteFilterIcon.MouseHover
+
+    End Sub
+
+    Private Sub considerDependencies_CheckedChanged(sender As Object, e As EventArgs) Handles considerDependencies.CheckedChanged
+
+    End Sub
+
+    Private Sub considerDependencies_MouseHover(sender As Object, e As EventArgs) Handles considerDependencies.MouseHover
+
+    End Sub
+
+    Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
+
     End Sub
 End Class

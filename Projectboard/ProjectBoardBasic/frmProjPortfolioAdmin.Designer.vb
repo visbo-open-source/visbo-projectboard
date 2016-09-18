@@ -30,19 +30,19 @@ Partial Class frmProjPortfolioAdmin
         Me.lblStandvom = New System.Windows.Forms.Label()
         Me.dropBoxTimeStamps = New System.Windows.Forms.ComboBox()
         Me.dropboxScenarioNames = New System.Windows.Forms.ComboBox()
+        Me.ToolTipStand = New System.Windows.Forms.ToolTip(Me.components)
+        Me.deleteFilterIcon = New System.Windows.Forms.PictureBox()
         Me.filterIcon = New System.Windows.Forms.PictureBox()
         Me.SelectionSet = New System.Windows.Forms.PictureBox()
         Me.collapseCompletely = New System.Windows.Forms.PictureBox()
         Me.expandCompletely = New System.Windows.Forms.PictureBox()
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
-        Me.ToolTipStand = New System.Windows.Forms.ToolTip(Me.components)
-        Me.deleteFilterIcon = New System.Windows.Forms.PictureBox()
+        CType(Me.deleteFilterIcon, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.filterIcon, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.deleteFilterIcon, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'TreeViewProjekte
@@ -55,9 +55,9 @@ Partial Class frmProjPortfolioAdmin
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(174, 433)
+        Me.OKButton.Location = New System.Drawing.Point(166, 433)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(107, 23)
+        Me.OKButton.Size = New System.Drawing.Size(118, 23)
         Me.OKButton.TabIndex = 6
         Me.OKButton.Text = "Button1"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -97,6 +97,16 @@ Partial Class frmProjPortfolioAdmin
         Me.dropboxScenarioNames.Name = "dropboxScenarioNames"
         Me.dropboxScenarioNames.Size = New System.Drawing.Size(393, 21)
         Me.dropboxScenarioNames.TabIndex = 56
+        '
+        'deleteFilterIcon
+        '
+        Me.deleteFilterIcon.BackColor = System.Drawing.SystemColors.Control
+        Me.deleteFilterIcon.Enabled = False
+        Me.deleteFilterIcon.Location = New System.Drawing.Point(191, 347)
+        Me.deleteFilterIcon.Name = "deleteFilterIcon"
+        Me.deleteFilterIcon.Size = New System.Drawing.Size(16, 16)
+        Me.deleteFilterIcon.TabIndex = 59
+        Me.deleteFilterIcon.TabStop = False
         '
         'filterIcon
         '
@@ -151,15 +161,6 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset.TabIndex = 52
         Me.SelectionReset.TabStop = False
         '
-        'deleteFilterIcon
-        '
-        Me.deleteFilterIcon.BackColor = System.Drawing.SystemColors.Control
-        Me.deleteFilterIcon.Location = New System.Drawing.Point(191, 347)
-        Me.deleteFilterIcon.Name = "deleteFilterIcon"
-        Me.deleteFilterIcon.Size = New System.Drawing.Size(16, 16)
-        Me.deleteFilterIcon.TabIndex = 59
-        Me.deleteFilterIcon.TabStop = False
-        '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -180,12 +181,12 @@ Partial Class frmProjPortfolioAdmin
         Me.Name = "frmProjPortfolioAdmin"
         Me.Text = "Multiprojekt-Szenario"
         Me.TopMost = True
+        CType(Me.deleteFilterIcon, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.filterIcon, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.deleteFilterIcon, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

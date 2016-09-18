@@ -9,10 +9,13 @@ Public Class frmNameSelection
     ' kann von ausserhalb gesetzt werden; gibt an ob das ganze Portfolio angezeigt werden soll
     ' oder nur die selektierten Projekte 
 
-    'Friend showModePortfolio As Boolean
+
     Friend menuOption As Integer
-    'Friend chkbxShowObjects As Boolean
-    'Friend chkbxCreateCharts As Boolean
+    Friend actionCode As String = ""
+
+    ' hier steht ggf die ButtonID drin
+    Friend ribbonButtonID As String = ""
+    
 
 
     Private allMilestones As New Collection
@@ -47,7 +50,335 @@ Public Class frmNameSelection
     End Enum
 
 
+    ' bestimmt, ob und wie die einzelnen Formular Elemente in Abhängigkeit von menuoption angezeigt werden sollen 
+    Private Sub defineFrmButtonVisibility()
+        With Me
+            If .menuOption = PTmenue.filterdefinieren Then
+                .Text = "Datenbank Filter definieren"
 
+                If .actionCode = PTTvActions.loadPV Or _
+                    .actionCode = PTTvActions.loadPVS Or _
+                    .actionCode = PTTvActions.delFromDB Then
+                    .OKButton.Text = "Anwenden"
+                Else
+                    .OKButton.Text = "Speichern"
+                End If
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = True
+                .rdbCosts.Enabled = True
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
+            ElseIf menuOption = PTmenue.sessionFilterDefinieren Then
+
+                .Text = "Session Filter definieren"
+                .OKButton.Text = "Anwenden"
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = True
+                .rdbCosts.Enabled = True
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = False
+                .filterLabel.Visible = False
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
+
+            ElseIf menuOption = PTmenue.visualisieren Then
+                .Text = "Plan-Elemente visualisieren"
+                .OKButton.Text = "Anzeigen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
+
+                ' Leistbarkeits-Charts
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.leistbarkeitsAnalyse Then
+
+                If ribbonButtonID = "PTMEC1" Then
+                    .Text = "Rollen-/Kosten-Charts erstellen"
+                Else
+                    .Text = "Leistbarkeits-Charts erstellen"
+                End If
+
+                .OKButton.Text = "Charts erstellen"
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                If ribbonButtonID = "PTMEC1" Then
+                    .rdbPhases.Visible = False
+                    .picturePhasen.Visible = False
+                    .rdbMilestones.Visible = False
+                    .pictureMilestones.Visible = False
+                End If
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
+
+                ' Leistbarkeits-Charts
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = True
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.einzelprojektReport Then
+
+                .Text = "Projekt-Varianten Report erzeugen"
+                .OKButton.Text = "Bericht erstellen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Enabled = False
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Enabled = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+
+                .einstellungen.Visible = True
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+
+            ElseIf menuOption = PTmenue.multiprojektReport Then
+
+                .Text = "Multiprojekt Reports erzeugen"
+                .OKButton.Text = "Bericht erstellen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = True
+                .rdbCosts.Enabled = True
+
+                .rdbBU.Enabled = False
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Enabled = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+
+                .einstellungen.Visible = True
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.excelExport Then
+
+                .Text = "Excel Report erzeugen"
+                .OKButton.Text = "Report erstellen"
+                .statusLabel.Text = ""
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.vorlageErstellen Then
+
+                .Text = "modulare Vorlagen erzeugen"
+                .OKButton.Text = "Vorlage erstellen"
+                .statusLabel.Text = ""
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.meilensteinTrendanalyse Then
+
+                .Text = "Meilenstein Trendanalyse erzeugen"
+                .OKButton.Text = "Anzeigen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .headerLine.Text = "Meilensteine"
+
+                .picturePhasen.Visible = False
+                .rdbPhases.Visible = False
+                .rdbPhases.Checked = False
+                .rdbPhases.Enabled = False
+
+                .pictureMilestones.Visible = False
+                .rdbMilestones.Visible = False
+                .rdbMilestones.Checked = True
+                .rdbMilestones.Enabled = False
+
+                .pictureRoles.Visible = False
+                .rdbRoles.Visible = False
+                .rdbRoles.Checked = False
+                .rdbRoles.Enabled = False
+
+                .pictureCosts.Visible = False
+                .rdbCosts.Visible = False
+                .rdbCosts.Checked = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                .auswSpeichern.Visible = False
+
+
+            End If
+
+        End With
+
+    End Sub
 
 
     ''' <summary>
@@ -86,6 +417,10 @@ Public Class frmNameSelection
             Me.Top = 60
             Me.Left = 100
         End If
+
+
+        ' hier kommt jetzt, welche Buttons sollen sichtbar sein ... 
+        Call defineFrmButtonVisibility()
 
         awinSettings.isHryNameFrmActive = True
 
@@ -217,9 +552,8 @@ Public Class frmNameSelection
             Next
         End If
 
-        If Me.menuOption = PTmenue.filterdefinieren Then
-
-
+        If Me.menuOption = PTmenue.filterdefinieren Or _
+            Me.menuOption = PTmenue.sessionFilterDefinieren Then
 
             If Not IsNothing(filterDropbox.Text) Then
                 If filterDropbox.Text.Trim.Length > 0 Then
@@ -229,7 +563,7 @@ Public Class frmNameSelection
                                                    selectedRoles, selectedCosts, False)
                 End If
             End If
-            
+
         End If
 
 
@@ -351,6 +685,7 @@ Public Class frmNameSelection
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 
         If Me.menuOption = PTmenue.excelExport Or _
             menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.sessionFilterDefinieren Or _
             (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
             Me.DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
@@ -1185,7 +1520,6 @@ Public Class frmNameSelection
                 Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
             End If
 
-            '  Call MsgBox("in filterDropbox")
         End If
 
     End Sub
@@ -1256,7 +1590,8 @@ Public Class frmNameSelection
             Next
         End If
 
-        If Me.menuOption = PTmenue.filterdefinieren Then
+        If Me.menuOption = PTmenue.filterdefinieren Or _
+            Me.menuOption = PTmenue.sessionFilterDefinieren Then
 
             filterName = filterDropbox.Text
             ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
