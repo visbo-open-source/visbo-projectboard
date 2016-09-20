@@ -70,4 +70,16 @@
         ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
 
     End Sub
+
+    Private Sub dropBoxTimeStamps_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.SelectedIndexChanged
+
+        ' den Fokus von diesem Element wegnehmen 
+        ListBox1.Focus()
+        Try
+            ListBox1.SelectedItems.Clear()
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 End Class

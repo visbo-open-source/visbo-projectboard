@@ -1539,6 +1539,9 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = False
 
+        ' Fokus an TreeViewPRojekte geben 
+        TreeViewProjekte.Focus()
+
     End Sub
 
 

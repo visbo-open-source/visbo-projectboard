@@ -3940,7 +3940,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
-        ErgebnisListeR = hproj.getUsedRollen
+        ErgebnisListeR = hproj.getRoleNames
         anzRollen = ErgebnisListeR.Count
 
         If anzRollen = 0 Then
@@ -4223,7 +4223,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
-        ErgebnisListeR = hproj.getUsedRollen
+        ErgebnisListeR = hproj.getRoleNames
         anzRollen = ErgebnisListeR.Count
 
 
@@ -4318,7 +4318,7 @@ Public Module Projekte
                         'End If
                     End If
 
-        End With
+                End With
 
             End If
 
@@ -4421,7 +4421,7 @@ Public Module Projekte
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
-       
+
 
         '
         ' hole die Projektdauer
@@ -4433,7 +4433,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeK = hproj.getUsedKosten
+        ErgebnisListeK = hproj.getCostNames
         anzKostenarten = ErgebnisListeK.Count
 
         ' es wird die Null angezeigt 
@@ -4908,7 +4908,7 @@ Public Module Projekte
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
-        
+
 
 
         Dim ErgebnisListeK As Collection
@@ -4926,7 +4926,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeK = hproj.getUsedKosten
+        ErgebnisListeK = hproj.getCostNames
         anzKostenarten = ErgebnisListeK.Count
 
         'If anzKostenarten = 0 Then
@@ -4972,7 +4972,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
 
             '' remove extra series
             Do Until .SeriesCollection.Count = 0
@@ -5174,7 +5174,7 @@ Public Module Projekte
 
         '
         ' hole die Anzahl Rollen
-        
+
         anzRollen = basicRolesCollection.Count
 
 
@@ -5184,7 +5184,7 @@ Public Module Projekte
             Exit Sub
         End If
 
-        
+
 
         Dim tmpDatenreihe() As Double
         ReDim tmpDatenreihe(anzRollen - 1)
@@ -5214,14 +5214,14 @@ Public Module Projekte
             ReDim tdatenreihe(0)
             ReDim Xdatenreihe(0)
         End If
-        
+
         ' jetzt alle Rollen, die Werte > 0 haben aufnehmen 
         For r = 1 To realAnzahl
             tdatenreihe(r - 1) = tmpDatenreihe(r - 1)
             Xdatenreihe(r - 1) = tmpNames(r - 1)
         Next
 
-        
+
 
         If auswahl = 1 Then
             titelTeile(0) = portfolioDiagrammtitel(PTpfdk.UeberAuslastung) & " (" & awinSettings.kapaEinheit & ")"
@@ -5482,7 +5482,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeR = hproj.getUsedRollen
+        ErgebnisListeR = hproj.getRoleNames
         anzRollen = ErgebnisListeR.Count
 
         If anzRollen = 0 Then
@@ -5692,7 +5692,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeR = hproj.getUsedRollen
+        ErgebnisListeR = hproj.getRoleNames
         anzRollen = ErgebnisListeR.Count
 
         ' sonst kommt der in eine Endlos Schleife, wenn keine Rollen definiert sind 
@@ -5704,7 +5704,7 @@ Public Module Projekte
             ReDim Xdatenreihe(0)
         End If
 
-        
+
 
 
         For r = 0 To anzRollen - 1
@@ -5856,7 +5856,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeK = hproj.getUsedKosten
+        ErgebnisListeK = hproj.getCostNames
         anzKostenarten = ErgebnisListeK.Count
 
         ' Änderung: es wird die Null gezeigt
@@ -6048,7 +6048,7 @@ Public Module Projekte
 
     End Sub
 
-   
+
     ''' <summary>
     ''' aktualisiert im exist. Chart die Kosten Struktur des Projektes (Pie-Chart)
     ''' Kennziffer fest = 4 (Kosten Pie)
@@ -6114,7 +6114,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeK = hproj.getUsedKosten
+        ErgebnisListeK = hproj.getCostNames
         anzKostenarten = ErgebnisListeK.Count
 
 
@@ -6130,7 +6130,7 @@ Public Module Projekte
                 ReDim tdatenreihe(0)
                 ReDim Xdatenreihe(0)
             End If
-           
+
         Else
             ' alle Kostenarten - inkl Personalkosten 
             ReDim tdatenreihe(anzKostenarten)
@@ -6234,7 +6234,7 @@ Public Module Projekte
                 '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                 '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
-            
+
 
         End With
 
@@ -6246,7 +6246,7 @@ Public Module Projekte
 
     End Sub
 
-   
+
     ''' <summary>
     ''' zeigt die Entwicklung von Werten wie Personal-Kosten, Sonstige Kosten, Budget und Ergebnis an über die gesamte Projekt-Historie an 
     ''' Voraussetzung: die Projekt-Historie ist bestimmt 
@@ -7569,7 +7569,7 @@ Public Module Projekte
                 minscale = 0
             End If
         End If
-        
+
 
 
         Dim currentWert As Double
@@ -8245,18 +8245,18 @@ Public Module Projekte
         End If
 
     End Sub
-        '
-        '
-        '
-        ''' <summary>
-        ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
-        ''' </summary>
-        ''' <param name="pName">
-        ''' gibt an , ob es der erste Aufruf war
-        ''' wenn ja, kommt erst der Bestätigungs-Dialog 
-        ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
-        ''' </param>
-        ''' <remarks></remarks>
+    '
+    '
+    '
+    ''' <summary>
+    ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
+    ''' </summary>
+    ''' <param name="pName">
+    ''' gibt an , ob es der erste Aufruf war
+    ''' wenn ja, kommt erst der Bestätigungs-Dialog 
+    ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
+    ''' </param>
+    ''' <remarks></remarks>
     Public Sub awinDeleteProjectInSession(ByVal pName As String)
 
 
@@ -8423,7 +8423,7 @@ Public Module Projekte
                             xlsCockpits.Worksheets.Application.DisplayAlerts = True
                         End If
                     Catch ex As Exception
-                   
+
                     End Try
                     'i = 1
                     'While i <= xlsCockpits.Worksheets.Count And Not wsfound
@@ -8996,8 +8996,8 @@ Public Module Projekte
         ' als erstes werden alle entweder in aktueller Stand bzw in Vorlage vorhandenen Rollen/Kostenarten gesucht  
         ' und werden in listeRollen bzw listeKosten gespeichert
 
-        listeRollen = hproj.getUsedRollen
-        listeTemp = cproj.getUsedRollen
+        listeRollen = hproj.getRoleNames
+        listeTemp = cproj.getRoleNames
         For i = 1 To listeTemp.Count
             Try
                 If Not listeRollen.Contains(CStr(listeTemp.Item(i))) Then
@@ -9009,8 +9009,8 @@ Public Module Projekte
 
         Next
 
-        listeKosten = hproj.getUsedKosten
-        listeTemp = cproj.getUsedKosten
+        listeKosten = hproj.getCostNames
+        listeTemp = cproj.getCostNames
 
         For i = 1 To listeTemp.Count
             Try
@@ -10133,7 +10133,7 @@ Public Module Projekte
         '
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
-        ErgebnisListeR = hproj.getUsedRollen
+        ErgebnisListeR = hproj.getRoleNames
         anzRollen = ErgebnisListeR.Count
 
         If anzRollen = 0 Then

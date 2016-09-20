@@ -2520,7 +2520,7 @@
     '
     ' übergibt in getUsedRollen eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
-    Public ReadOnly Property getUsedRollen() As Collection
+    Public ReadOnly Property getRoleNames() As Collection
 
         Get
             Dim phase As clsPhase
@@ -2562,7 +2562,7 @@
             End If
 
 
-            getUsedRollen = aufbauRollen
+            getRoleNames = aufbauRollen
 
         End Get
 
@@ -2641,6 +2641,64 @@
     End Property
 
     ''' <summary>
+    ''' gibt eine Liste an Meilenstein-Namen zurück (elem-Name, ohne Breadcrumb ...) 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneNames As Collection
+        Get
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim tmpCollection As New Collection
+            Dim firstMilestone As Integer = hry.getIndexOf1stMilestone
+
+
+            If firstMilestone > 0 Then
+                For ix As Integer = firstMilestone To hry.count
+                    Dim msName As String = hry.nodeItem(ix).elemName
+                    If Not tmpCollection.Contains(msName) Then
+                        tmpCollection.Add(msName, msName)
+                    End If
+                Next
+            End If
+
+
+            getMilestoneNames = tmpCollection
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Liste aller im Projekt vorkommenden Phasen Namen zurück ..
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseNames As Collection
+        Get
+
+            Dim tmpCollection As New Collection
+            Dim lastPhase As Integer = Me.hierarchy.getIndexOf1stMilestone - 1
+            If lastPhase < 0 Then
+                lastPhase = Me.hierarchy.count
+            End If
+
+
+            If lastPhase > 0 Then
+                For ix As Integer = 1 To lastPhase
+                    Dim phName As String = Me.hierarchy.nodeItem(ix).elemName
+
+                    If Not tmpCollection.Contains(phName) And phName <> elemNameOfElemID(rootPhaseName) Then
+                        tmpCollection.Add(phName, phName)
+                    End If
+                Next
+            End If
+
+            getPhaseNames = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Meilensteine zurück 
     ''' </summary>
     ''' <value></value>
@@ -2677,6 +2735,7 @@
 
     ''' <summary>
     ''' gibt zum betreffenden Projekt eine nach dem Offset aufsteigend sortierte Liste der Meilensteine zurück 
+    ''' wird benötigt, wo ein relativer Vergleich der MEilensteine erforderlich ist 
     ''' bei Gleichheit wird ein Koorktur Faktor kleiner 1 addiert, so dass es immer eindeutige Werte gibt  
     ''' </summary>
     ''' <value></value>
@@ -2950,7 +3009,7 @@
     ' übergibt in getUsedKosten eine Collection von Kostenarten Definitionen, 
     ' das sind alle Kostenarten, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
-    Public ReadOnly Property getUsedKosten() As Collection
+    Public ReadOnly Property getCostNames() As Collection
 
         Get
             Dim phase As clsPhase
@@ -2989,7 +3048,7 @@
             End If
 
 
-            getUsedKosten = aufbauKosten
+            getCostNames = aufbauKosten
 
         End Get
 
@@ -3027,7 +3086,7 @@
                 '
 
                 ' Jetzt werden die einzelnen Kostenarten auf die gleiche Art und Weise geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -3087,7 +3146,7 @@
                 '
 
                 ' Jetzt werden die einzelnen Kostenarten auf die gleiche Art und Weise geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -3136,7 +3195,7 @@
                 '
 
                 ' Jetzt werden die einzelnen Kostenarten auf die gleiche Art und Weise geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -3175,7 +3234,7 @@
             If _Dauer > 0 Then
 
                 ' Jetzt werden die einzelnen Kostenarten geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -3216,7 +3275,7 @@
                 roleSum = 0
 
                 ' Jetzt werden die einzelnen Rollen aufsummiert
-                ErgebnisListe = Me.getUsedRollen
+                ErgebnisListe = Me.getRoleNames
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen
@@ -3259,7 +3318,7 @@
 
 
                 ' Jetzt werden die einzelnen Rollen aufsummiert
-                ErgebnisListe = Me.getUsedRollen
+                ErgebnisListe = Me.getRoleNames
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen

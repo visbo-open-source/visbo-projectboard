@@ -2912,6 +2912,7 @@ Public Module Module1
         Dim lastFilter As clsFilter
 
         If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.sessionFilterDefinieren Or _
             menuOption = PTmenue.filterAuswahl Then
             lastFilter = filterDefinitions.retrieveFilter(fName)
         Else

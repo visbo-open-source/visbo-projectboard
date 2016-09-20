@@ -14905,8 +14905,8 @@ Public Module awinGeneralModules
             pStart = getColumnOfDate(kvp.Value.startDate)
             pEnde = getColumnOfDate(kvp.Value.endeDate)
 
-            usedRoles = kvp.Value.getUsedRollen
-            usedCosts = kvp.Value.getUsedKosten
+            usedRoles = kvp.Value.getRoleNames
+            usedCosts = kvp.Value.getCostNames
 
             For r = 1 To usedRoles.Count
                 tmpName = usedRoles.Item(r)

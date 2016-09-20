@@ -313,48 +313,48 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ' wurde ersetzt durch andere getPhaseNAmes
+    '' ''' <summary>
+    '' ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 
+    '' ''' </summary>
+    '' ''' <value></value>
+    '' ''' <returns></returns>
+    '' ''' <remarks></remarks>
+    ''Public ReadOnly Property getPhaseNames() As Collection
 
-    ''' <summary>
-    ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getPhaseNames() As Collection
+    ''    Get
 
-        Get
+    ''        Dim tmpListe As New Collection
+    ''        Dim cphase As clsPhase
+    ''        Dim phaseName As String
 
-            Dim tmpListe As New Collection
-            Dim cphase As clsPhase
-            Dim phaseName As String
+    ''        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+    ''            Try
+    ''                ' beginnt bei 2, weil die 1.Phase immer die mit der Projektlänge identische Phase ist ...
+    ''                For p = 2 To kvp.Value.CountPhases
+    ''                    cphase = kvp.Value.getPhase(p)
+    ''                    phaseName = cphase.name
 
-                Try
-                    ' beginnt bei 2, weil die 1.Phase immer die mit der Projektlänge identische Phase ist ...
-                    For p = 2 To kvp.Value.CountPhases
-                        cphase = kvp.Value.getPhase(p)
-                        phaseName = cphase.name
-
-                        If tmpListe.Contains(phaseName) Then
-                            ' nichts tun 
-                        Else
-                            tmpListe.Add(phaseName, phaseName)
-                        End If
-
-
-                    Next
-                Catch ex As Exception
-
-                End Try
+    ''                    If tmpListe.Contains(phaseName) Then
+    ''                        ' nichts tun 
+    ''                    Else
+    ''                        tmpListe.Add(phaseName, phaseName)
+    ''                    End If
 
 
-            Next
+    ''                Next
+    ''            Catch ex As Exception
 
-            getPhaseNames = tmpListe
+    ''            End Try
 
-        End Get
-    End Property
+
+    ''        Next
+
+    ''        getPhaseNames = tmpListe
+
+    ''    End Get
+    ''End Property
 
 
     ''' <summary>
@@ -368,40 +368,195 @@ Public Class clsProjekte
         Get
 
             Dim tmpListe As New Collection
-            Dim cphase As clsPhase
 
-            Dim msName As String
-
+            ' neu 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-                Try
-                    For p = 1 To kvp.Value.CountPhases
+                Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
 
-                        cphase = kvp.Value.getPhase(p)
-                        For r = 1 To cphase.countMilestones
-
-                            msName = cphase.getMilestone(r).name
-                            If tmpListe.Contains(msName) Then
-                            Else
-                                tmpListe.Add(msName, msName)
-                            End If
-
-                        Next
-
-                    Next
-                Catch ex As Exception
-
-                End Try
-
-
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+                
             Next
+            ' neu Ende
+
+            ' alt : ohne Ausnutzung Hierarchy ...
+            ''For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+            ''    Try
+            ''        For p = 1 To kvp.Value.CountPhases
+
+            ''            cphase = kvp.Value.getPhase(p)
+            ''            For r = 1 To cphase.countMilestones
+
+            ''                msName = cphase.getMilestone(r).name
+            ''                If tmpListe.Contains(msName) Then
+            ''                Else
+            ''                    tmpListe.Add(msName, msName)
+            ''                End If
+
+            ''            Next
+
+            ''        Next
+            ''    Catch ex As Exception
+
+            ''    End Try
+
+
+            ''Next
 
             getMilestoneNames = tmpListe
 
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Liste der vorkommenden Phasen-Namen in der Menge der Projekte an ...  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseNames() As Collection
 
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getPhaseNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getPhaseNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Rollen, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getRoleNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getRoleNames = tmpListe
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Kostenarten, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCostNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getCostNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+            getCostNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Business Units, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBUNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpBU As String = kvp.Value.businessUnit
+                If Not IsNothing(tmpBU) Then
+                    If tmpBU.Trim.Length > 0 Then
+                        If Not tmpListe.Contains(tmpBU) Then
+                            tmpListe.Add(tmpBU, tmpBU)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            getBUNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Projektvorlagen, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTypNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpTyp As String = kvp.Value.VorlagenName
+                If Not IsNothing(tmpTyp) Then
+                    If tmpTyp.Trim.Length > 0 Then
+                        If Not tmpListe.Contains(tmpTyp) Then
+                            tmpListe.Add(tmpTyp, tmpTyp)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            getTypNames = tmpListe
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die nach Namen sortierte Liste von Projekten zurück 
