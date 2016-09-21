@@ -9057,6 +9057,89 @@ Imports System.Windows
 
     End Sub
 
+    Sub PTTestFunktion7(control As IRibbonControl)
+
+        Dim hproj As clsProjekt
+
+        Dim atleastOne As Boolean = False
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        ' Testreihe 1: sind die angegebenen Rollen identisch ? 
+        Dim duration1 As Integer = 0
+        Dim duration2 As Integer = 0
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+
+            hproj = kvp.Value
+
+            Dim start1 As Integer = My.Computer.Clock.TickCount
+            Dim usedRollen1 As Collection = hproj.getRoleNames
+            Dim end1 As Integer = My.Computer.Clock.TickCount
+            duration1 = duration1 + (end1 - start1)
+
+            Dim start2 As Integer = My.Computer.Clock.TickCount
+            Dim usedRollen2 As Collection = hproj.rcLists.getRoleNames
+            Dim end2 As Integer = My.Computer.Clock.TickCount
+            duration2 = duration2 + (end2 - start2)
+
+            ' Test auf Identität der beiden usedRollen1,2
+
+            If usedRollen1.Count <> usedRollen2.Count Then
+                atleastOne = True
+            Else
+                For ix As Integer = 1 To usedRollen1.Count
+                    If CStr(usedRollen1.Item(ix)) <> CStr(usedRollen2.Item(ix)) Then
+                        atleastOne = True
+                    End If
+                Next
+            End If
+
+
+
+        Next
+
+        If atleastOne Then
+            Call MsgBox("nicht alles ok ...")
+        Else
+            Call MsgBox("alles ok ..")
+        End If
+
+        Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
+
+
+        ' Test-Zyklus 2 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' alte Methode .... 
+
+            ' mach es möglichst oft ...
+
+            For iter As Integer = 1 To 1000
+
+                For ix As Integer = 1 To RoleDefinitions.Count
+                    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
+
+                    Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID, True)
+
+                Next
+            Next
+
+
+        Else
+            Call MsgBox("zuerst Zeitraum definieren ...")
+        End If
+
+        Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
+
+        enableOnUpdate = True
+
+
+    End Sub
 
     Public Sub PTTestFunktion4(control As IRibbonControl)
 

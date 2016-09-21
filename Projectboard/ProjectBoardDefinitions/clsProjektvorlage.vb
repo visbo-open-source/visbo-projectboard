@@ -7,6 +7,9 @@
     ' Änderung tk 31.3.15 Hierachie Klasse ergänzt 
     Public hierarchy As clsHierarchy
 
+    ' Änderung tk 20.9.16 sortierte Listen, wo welche Rollen vorkommen ... 
+    Public rcLists As clsListOfCostAndRoles
+
 
 
     Private relStart As Integer
@@ -2517,6 +2520,96 @@
 
     End Property
 
+    Public ReadOnly Property getRessourcenBedarfNew(roleID As Object) As Double()
+
+        Get
+            Dim roleValues() As Double
+            Dim anzRollen As Integer
+            Dim anzPhasen As Integer
+            Dim found As Boolean
+            Dim i As Integer, p As Integer, r As Integer
+            Dim phase As clsPhase
+            Dim role As clsRolle
+            Dim lookforIndex As Boolean
+            Dim phasenStart As Integer
+            Dim tempArray As Double()
+            Dim roleUID As Integer
+            Dim roleName As String
+
+
+            If _Dauer > 0 Then
+
+                lookforIndex = IsNumeric(roleID)
+                If IsNumeric(roleID) Then
+                    roleUID = CInt(roleID)
+                    roleName = RoleDefinitions.getRoledef(roleUID).name
+                Else
+                    If RoleDefinitions.containsName(CStr(roleID)) Then
+                        roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
+                        roleName = CStr(roleID)
+                    End If
+                End If
+
+                ReDim roleValues(_Dauer - 1)
+
+                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
+                anzPhasen = listOfPhases.Count
+
+                For p = 1 To anzPhasen
+                    phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+                    With phase
+                        ' Off1
+                        anzRollen = .countRoles
+                        phasenStart = .relStart - 1
+
+                        ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
+                        ' es können Unschärfen auftreten 
+                        'phasenEnde = .relEnde - 1
+
+
+                        For r = 1 To anzRollen
+                            role = .getRole(r)
+                            found = False
+
+                            With role
+                                If lookforIndex Then
+                                    If .RollenTyp = CInt(roleID) Then
+                                        found = True
+                                    End If
+                                Else
+                                    If .name = CStr(roleID) Then
+                                        found = True
+                                    End If
+                                End If
+
+                                Dim dimension As Integer
+                                If found Then
+                                    dimension = .getDimension
+                                    ReDim tempArray(dimension)
+                                    tempArray = .Xwerte
+                                    For i = phasenStart To phasenStart + dimension
+                                        roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                                    Next i
+                                End If
+                            End With ' role
+
+                        Next r
+
+                    End With ' phase
+
+
+                Next p ' Loop über alle Phasen
+
+                getRessourcenBedarf = roleValues
+
+            Else
+                ReDim roleValues(0)
+                getRessourcenBedarf = roleValues
+            End If
+        End Get
+
+    End Property
+
     '
     ' übergibt in getUsedRollen eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
@@ -3467,6 +3560,9 @@
         AllPhases = New List(Of clsPhase)
         ' Änderung tk 31.3.15
         hierarchy = New clsHierarchy
+
+        ' Änderung / Ergänzung tk 20.09.16
+        rcLists = New clsListOfCostAndRoles
 
         relStart = 1
         _Dauer = 0
