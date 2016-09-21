@@ -8,6 +8,7 @@ using Microsoft.VisualBasic;
 
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Authentication;
 using MongoDB.Driver.Builders;
 using System.Collections;
 using MongoDB.Driver.Linq;
@@ -29,62 +30,78 @@ namespace MongoDbAccess
         //public MongoCollection CollectionDependencies { get; set; }
         //public MongoCollection CollectionFilter { get; set; }
 
-
+              
         // neu 3.0 
         protected  IMongoClient Client;
         protected  IMongoDatabase Database;
-
+        protected MongoServer Server;
         protected  IMongoCollection<clsProjektDB> CollectionProjects;
         protected  IMongoCollection<clsConstellationDB> CollectionConstellations;
         protected  IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
         protected  IMongoCollection<clsFilterDB> CollectionFilter;
-
         
         public Request(string databaseURL, string databaseName, string username, string dbPasswort)
         {
             //var databaseURL = "localhost";
             if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
-                var connectionString = "mongodb://" + databaseURL;
+                var connectionString = "mongodb://" + databaseURL + "?connectTimeoutMS=30&SocketTimeoutMS=10"; 
                 //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
-                            }
+            }
             else
+
+
             {
 
-                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;  /*Aufruf mit MongoDB mit Authentication  */
+                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
+                
             }
             
             //alt 2.x
             //Server = Client.GetServer();
             //Database = Server.GetDatabase(databaseName);
-
+  
             // neu 3.0 
             Database = Client.GetDatabase(databaseName);
             
+                      
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
 
-            // wenn ein Index bereits existiert, wird er nicht mehr erzeugt ... 
-            var keys = Builders<clsProjektDB>.IndexKeys.Ascending("timestamp");
-            var ergebnis = CollectionProjects.Indexes.CreateOne(keys);
-            string test = ergebnis;
+        }
 
-            keys = Builders<clsProjektDB>.IndexKeys.Ascending("name");
-            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
-
-            keys = Builders<clsProjektDB>.IndexKeys.Ascending("variantName");
-            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
-
-            keys = Builders<clsProjektDB>.IndexKeys.Ascending("startDate");
-            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
-
-            keys = Builders<clsProjektDB>.IndexKeys.Ascending("endDate");
-            ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+        public  bool createIndicesOnce()
+        {
+            try
+            {
+                // wenn ein Index bereits existiert, wird er nicht mehr erzeugt ... 
+                var keys = Builders<clsProjektDB>.IndexKeys.Ascending("timestamp");
+                var ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+                string test = ergebnis;
+                
+                keys = Builders<clsProjektDB>.IndexKeys.Ascending("name");
+                ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+                
+                keys = Builders<clsProjektDB>.IndexKeys.Ascending("variantName");
+                ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+                
+                keys = Builders<clsProjektDB>.IndexKeys.Ascending("startDate");
+                ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+                
+                keys = Builders<clsProjektDB>.IndexKeys.Ascending("endDate");
+                ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+           
         }
 
         public bool collectionEmpty(string name)
@@ -119,6 +136,10 @@ namespace MongoDbAccess
         public bool projectNameAlreadyExists(string projectname, string variantname, DateTime storedAtorBefore)
         {
             bool result;
+
+            try 
+            {
+          
             // in der Datenbank ist der Projektname abgespeichert als projectName#variantName, wenn es einen Varianten-Namen gibt
             // nur projectname , sonst (hat historische Gründe .. weil sonst nach Einführung der Varianten alle bisherigen Projekt-Namen in der Datenbank
             // Namen geändert werden müssten .. )
@@ -140,6 +161,11 @@ namespace MongoDbAccess
 
             
             return result;
+                  }
+            catch
+            {
+                throw new ArgumentException("Zugriff wurde von der Datenbank verweigert");
+            }
                                    
         }
 
@@ -847,7 +873,7 @@ namespace MongoDbAccess
         }
         /** löscht einen bestimmten Filter aus der Datenbank */
 
-        public bool removeFilterFromDB(clsFilterDB filter)
+        public bool removeFilterFromDB(clsFilter filter)
         {
 
             try

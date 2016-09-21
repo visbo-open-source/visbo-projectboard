@@ -407,10 +407,6 @@
       <Project>{59210896-68d1-4a34-91cc-8d015eca7061}</Project>
       <Name>WPFPieChart</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WpfWindow\WpfWindow.csproj">
-      <Project>{0934cc5e-361f-443e-8af2-2468a38214a1}</Project>
-      <Name>WpfWindow</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\navigate_right.png" />

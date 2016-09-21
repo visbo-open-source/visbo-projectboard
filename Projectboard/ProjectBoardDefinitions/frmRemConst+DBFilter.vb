@@ -1,13 +1,30 @@
 ﻿Public Class frmRemoveConstellation
     Private formerselect As String
+    Public frmOption As String
     Private Sub frmRemoveConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+        If frmOption = "DBFilter" Then
 
-            ListBox1.Items.Add(kvp.Key)
+            Me.Text = "DB-Filter löschen"
+            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.filterListe
 
-        Next
-        formerselect = ""
+                ListBox1.Items.Add(kvp.Key)
+
+            Next
+            formerselect = ""
+        End If
+
+        If frmOption = "ProjConstellation" Then
+            Me.Text = "Portfolio löschen"
+
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+
+                ListBox1.Items.Add(kvp.Key)
+
+            Next
+            formerselect = ""
+        End If
+
 
     End Sub
 

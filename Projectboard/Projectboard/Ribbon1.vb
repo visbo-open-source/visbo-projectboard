@@ -2,7 +2,8 @@
 Imports ProjectBoardBasic
 Imports ClassLibrary1
 Imports MongoDbAccess
-Imports WpfWindow
+' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
+' '' ''Imports WpfWindow
 Imports WPFPieChart
 Imports Microsoft.Office.Core
 'Imports Microsoft.Office.Interop.Excel
@@ -302,8 +303,8 @@ Imports System.Windows
 
         Dim ControlID As String = control.Id
 
-        Dim remConstellationFrm As New frmRemoveConstellation
-        Dim constellationName As String
+        Dim removeConstFilterFrm As New frmRemoveConstellation
+        Dim constFilterName As String
 
         Dim returnValue As DialogResult
 
@@ -311,11 +312,12 @@ Imports System.Windows
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-
+        Dim deleteFilter As String = "Pt6G3B5"
 
         Dim removeFromDB As Boolean
 
         If ControlID = deleteDatenbank And Not noDB Then
+            removeConstFilterFrm.frmOption = "ProjConstellation"
             removeFromDB = True
 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -325,30 +327,75 @@ Imports System.Windows
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
             End If
+
+        ElseIf ControlID = deleteFilter And Not noDB Then
+            removeConstFilterFrm.frmOption = "DBFilter"
+            removeFromDB = True
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If request.pingMongoDb() Then
+                filterDefinitions.filterListe = request.retrieveAllFilterFromDB(False)
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                removeFromDB = False
+            End If
+
         Else
             removeFromDB = False
         End If
 
         enableOnUpdate = False
 
-        returnValue = remConstellationFrm.ShowDialog
+        returnValue = removeConstFilterFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            constellationName = remConstellationFrm.ListBox1.Text
+            If ControlID = deleteDatenbank Then
 
-            Call awinRemoveConstellation(constellationName, removeFromDB)
-            Call MsgBox(constellationName & " wurde gelöscht ...")
+                constFilterName = removeConstFilterFrm.ListBox1.Text
 
-            If constellationName = currentConstellation Then
+                Call awinRemoveConstellation(constFilterName, removeFromDB)
+                Call MsgBox(constFilterName & " wurde gelöscht ...")
 
-                ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                Call storeSessionConstellation("Last")
-                currentConstellation = "Last"
-            Else
-                ' aktuelle Konstellation bleibt unverändert
+                If constFilterName = currentConstellation Then
+
+                    ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                    Call storeSessionConstellation("Last")
+                    currentConstellation = "Last"
+                Else
+                    ' aktuelle Konstellation bleibt unverändert
+                End If
+
+
             End If
+            If ControlID = deleteFilter Then
 
+                Dim removeOK As Boolean = False
+                Dim filter As clsFilter = Nothing
 
+                constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                filter = filterDefinitions.retrieveFilter(constFilterName)
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If request.pingMongoDb() Then
+
+                    ' Filter muss aus der Datenbank gelöscht werden.
+
+                    removeOK = request.removeFilterFromDB(filter)
+                    If removeOK = False Then
+                        Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
+                    Else
+                        ' DBFilter ist nun aus der DB gelöscht
+                        ' hier: wird der Filter nun noch aus der Filterliste gelöscht
+                        Call filterDefinitions.filterListe.Remove(constFilterName)
+                        Call MsgBox(constFilterName & " wurde gelöscht ...")
+                    End If
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
+                    removeOK = False
+                End If
+
+            End If
         End If
         enableOnUpdate = True
 
@@ -5736,145 +5783,145 @@ Imports System.Windows
 
 
     End Sub
-
-    ''' <summary>
-    ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
-    ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
-    ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
-    ''' wenn nichts selektiert ist: Fehler MEldung 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub PTShowMilestonesByName(control As IRibbonControl)
-
-
-
-        Dim listOfItems As New Collection
-        Dim nameList As New Collection
-        Dim title As String = "Meilensteine visualisieren"
-
-        Dim repObj As Object = Nothing
-
-        Dim singleShp As Excel.Shape
-        Dim myCollection As New Collection
-        Dim hproj As clsProjekt
-        Dim awinSelection As Excel.ShapeRange
-        Dim selektierteProjekte As New clsProjekte
-
-        Call projektTafelInit()
-
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-
-        If Not awinSelection Is Nothing Then
-
-            ' jetzt die Aktion durchführen ...
-
-            For Each singleShp In awinSelection
-
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    selektierteProjekte.Add(hproj)
-                Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-                End Try
-
-            Next
-
-            nameList = selektierteProjekte.getMilestoneNames
-
-            If nameList.Count > 0 Then
-
-                For Each tmpName As String In nameList
-                    listOfItems.Add(tmpName)
-                Next
-
-                ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
+    '' '' '' '' '' '' ''' ur: 13.09.2016: wurde durch  ersetzt
+    ' '' '' '' '' '' ''' <summary>
+    ' '' '' '' '' '' ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
+    ' '' '' '' '' '' ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
+    ' '' '' '' '' '' ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
+    ' '' '' '' '' '' ''' wenn nichts selektiert ist: Fehler MEldung 
+    ' '' '' '' '' '' ''' </summary>
+    ' '' '' '' '' '' ''' <param name="control"></param>
+    ' '' '' '' '' '' ''' <remarks></remarks>
+    ' '' '' '' '' ''Sub PTShowMilestonesByName(control As IRibbonControl)
 
 
-                With auswahlFenster
 
-                    .chTyp = DiagrammTypen(5)
+    ' '' '' '' '' ''    Dim listOfItems As New Collection
+    ' '' '' '' '' ''    Dim nameList As New Collection
+    ' '' '' '' '' ''    Dim title As String = "Meilensteine visualisieren"
 
-                End With
-                auswahlFenster.Show()
+    ' '' '' '' '' ''    Dim repObj As Object = Nothing
 
-            Else
-                Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-            End If
+    ' '' '' '' '' ''    Dim singleShp As Excel.Shape
+    ' '' '' '' '' ''    Dim myCollection As New Collection
+    ' '' '' '' '' ''    Dim hproj As clsProjekt
+    ' '' '' '' '' ''    Dim awinSelection As Excel.ShapeRange
+    ' '' '' '' '' ''    Dim selektierteProjekte As New clsProjekte
+
+    ' '' '' '' '' ''    Call projektTafelInit()
+
+    ' '' '' '' '' ''    Try
+    ' '' '' '' '' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+    ' '' '' '' '' ''    Catch ex As Exception
+    ' '' '' '' '' ''        awinSelection = Nothing
+    ' '' '' '' '' ''    End Try
+
+    ' '' '' '' '' ''    If Not awinSelection Is Nothing Then
+
+    ' '' '' '' '' ''        ' jetzt die Aktion durchführen ...
+
+    ' '' '' '' '' ''        For Each singleShp In awinSelection
+
+    ' '' '' '' '' ''            Try
+    ' '' '' '' '' ''                hproj = ShowProjekte.getProject(singleShp.Name, True)
+    ' '' '' '' '' ''                selektierteProjekte.Add(hproj)
+    ' '' '' '' '' ''            Catch ex As Exception
+    ' '' '' '' '' ''                Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+    ' '' '' '' '' ''            End Try
+
+    ' '' '' '' '' ''        Next
+
+    ' '' '' '' '' ''        nameList = selektierteProjekte.getMilestoneNames
+
+    ' '' '' '' '' ''        If nameList.Count > 0 Then
+
+    ' '' '' '' '' ''            For Each tmpName As String In nameList
+    ' '' '' '' '' ''                listOfItems.Add(tmpName)
+    ' '' '' '' '' ''            Next
+
+    ' '' '' '' '' ''            ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+    ' '' '' '' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
 
-        Else
-            Call MsgBox("Bitte mindestens ein Projekt selektieren ... ")
-            Exit Sub
-        End If
+    ' '' '' '' '' ''            With auswahlFenster
+
+    ' '' '' '' '' ''                .chTyp = DiagrammTypen(5)
+
+    ' '' '' '' '' ''            End With
+    ' '' '' '' '' ''            auswahlFenster.Show()
+
+    ' '' '' '' '' ''        Else
+    ' '' '' '' '' ''            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+    ' '' '' '' '' ''        End If
 
 
+    ' '' '' '' '' ''    Else
+    ' '' '' '' '' ''        Call MsgBox("Bitte mindestens ein Projekt selektieren ... ")
+    ' '' '' '' '' ''        Exit Sub
+    ' '' '' '' '' ''    End If
 
 
 
 
 
-    End Sub
-
-    ''' <summary>
-    ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
-    ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
-    ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
-    ''' wenn nichts selektiert ist: zeige die Namen der Meilensteine aus allen Projekten  
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Public Sub PTShowAllMilestonesByName(Control As IRibbonControl)
-
-        Dim listOfItems As New Collection
-        Dim nameList As New Collection
-        Dim title As String = "Meilensteine visualisieren"
-
-        Dim repObj As Object = Nothing
-
-        Call projektTafelInit()
-        Call awinDeSelect()
-
-        If ShowProjekte.Count > 0 Then
-            If showRangeRight - showRangeLeft > 5 Then
-
-                nameList = ShowProjekte.getMilestoneNames
-
-                If nameList.Count > 0 Then
-
-                    For Each tmpName As String In nameList
-                        listOfItems.Add(tmpName)
-                    Next
-
-                    ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-                    Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
 
-                    With auswahlFenster
+    ' '' '' '' '' ''End Sub
+    '' '' '' '' '' '' ''' ur: 13.09.2016: wurde durch ersetzt
+    ' '' '' '' '' '' ''' <summary>
+    ' '' '' '' '' '' ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
+    ' '' '' '' '' '' ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
+    ' '' '' '' '' '' ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
+    ' '' '' '' '' '' ''' wenn nichts selektiert ist: zeige die Namen der Meilensteine aus allen Projekten  
+    ' '' '' '' '' '' ''' </summary>
+    ' '' '' '' '' '' ''' <param name="control"></param>
+    ' '' '' '' '' '' ''' <remarks></remarks>
+    ' '' '' '' '' ''Public Sub PTShowAllMilestonesByName(Control As IRibbonControl)
 
-                        .chTyp = DiagrammTypen(5)
+    ' '' '' '' '' ''    Dim listOfItems As New Collection
+    ' '' '' '' '' ''    Dim nameList As New Collection
+    ' '' '' '' '' ''    Dim title As String = "Meilensteine visualisieren"
 
-                    End With
-                    auswahlFenster.Show()
+    ' '' '' '' '' ''    Dim repObj As Object = Nothing
 
-                Else
-                    Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-                End If
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-            End If
-        Else
-            Call MsgBox("Es sind keine Projekte geladen!")
-        End If
+    ' '' '' '' '' ''    Call projektTafelInit()
+    ' '' '' '' '' ''    Call awinDeSelect()
+
+    ' '' '' '' '' ''    If ShowProjekte.Count > 0 Then
+    ' '' '' '' '' ''        If showRangeRight - showRangeLeft > 5 Then
+
+    ' '' '' '' '' ''            nameList = ShowProjekte.getMilestoneNames
+
+    ' '' '' '' '' ''            If nameList.Count > 0 Then
+
+    ' '' '' '' '' ''                For Each tmpName As String In nameList
+    ' '' '' '' '' ''                    listOfItems.Add(tmpName)
+    ' '' '' '' '' ''                Next
+
+    ' '' '' '' '' ''                ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+    ' '' '' '' '' ''                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
+
+
+    ' '' '' '' '' ''                With auswahlFenster
+
+    ' '' '' '' '' ''                    .chTyp = DiagrammTypen(5)
+
+    ' '' '' '' '' ''                End With
+    ' '' '' '' '' ''                auswahlFenster.Show()
+
+    ' '' '' '' '' ''            Else
+    ' '' '' '' '' ''                Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+    ' '' '' '' '' ''            End If
+    ' '' '' '' '' ''        Else
+    ' '' '' '' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+    ' '' '' '' '' ''        End If
+    ' '' '' '' '' ''    Else
+    ' '' '' '' '' ''        Call MsgBox("Es sind keine Projekte geladen!")
+    ' '' '' '' '' ''    End If
 
 
 
-    End Sub
+    ' '' '' '' '' ''End Sub
 
     '' '' '' '' '' '' ''' ur: 10.7.2015: wurde durch awinShowMilestoneTrend ersetzt
     '' '' '' '' '' '' ''' <summary>
@@ -6166,253 +6213,262 @@ Imports System.Windows
 
     End Sub
 
-    Sub PT0VisualizePhases(control As IRibbonControl)
+    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
 
-        Dim i As Integer
-        Dim von As Integer, bis As Integer
+    ' '' ''Sub PT0VisualizePhases(control As IRibbonControl)
 
-        Dim listOfItems As New Collection
-        Dim existingNames As New Collection
+    ' '' ''    Dim i As Integer
+    ' '' ''    Dim von As Integer, bis As Integer
 
-        Dim title As String = "Phasen visualisieren"
-        Dim phaseName As String
-        Dim hproj As clsProjekt
+    ' '' ''    Dim listOfItems As New Collection
+    ' '' ''    Dim existingNames As New Collection
 
+    ' '' ''    Dim title As String = "Phasen visualisieren"
+    ' '' ''    Dim phaseName As String
+    ' '' ''    Dim hproj As clsProjekt
 
-        Dim awinSelection As Excel.ShapeRange
-        Dim selektierteProjekte As New clsProjekte
-        Dim singleshp As Excel.Shape
 
-        Call projektTafelInit()
+    ' '' ''    Dim awinSelection As Excel.ShapeRange
+    ' '' ''    Dim selektierteProjekte As New clsProjekte
+    ' '' ''    Dim singleshp As Excel.Shape
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
+    ' '' ''    Call projektTafelInit()
 
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+    ' '' ''    appInstance.EnableEvents = False
+    ' '' ''    enableOnUpdate = False
 
+    ' '' ''    Try
+    ' '' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+    ' '' ''    Catch ex As Exception
+    ' '' ''        awinSelection = Nothing
+    ' '' ''    End Try
 
-        Dim anzElem As Integer = selektierteProjekte.Count
 
-        If Not awinSelection Is Nothing Then
+    ' '' ''    Dim anzElem As Integer = selektierteProjekte.Count
 
-            ' jetzt die Aktion durchführen ...
+    ' '' ''    If Not awinSelection Is Nothing Then
 
-            For Each singleshp In awinSelection
+    ' '' ''        ' jetzt die Aktion durchführen ...
 
-                Try
-                    hproj = ShowProjekte.getProject(singleshp.Name, True)
-                    selektierteProjekte.Add(hproj)
-                Catch ex As Exception
-                    Call MsgBox("Projekt " & singleshp.Name & " nicht gefunden ...")
-                End Try
+    ' '' ''        For Each singleshp In awinSelection
 
-            Next
+    ' '' ''            Try
+    ' '' ''                hproj = ShowProjekte.getProject(singleshp.Name, True)
+    ' '' ''                selektierteProjekte.Add(hproj)
+    ' '' ''            Catch ex As Exception
+    ' '' ''                Call MsgBox("Projekt " & singleshp.Name & " nicht gefunden ...")
+    ' '' ''            End Try
 
+    ' '' ''        Next
 
-            existingNames = selektierteProjekte.getPhaseNames
 
-            If existingNames.Count > 0 Then
+    ' '' ''        existingNames = selektierteProjekte.getPhaseNames
 
-                ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
+    ' '' ''        If existingNames.Count > 0 Then
 
-                For i = 1 To PhaseDefinitions.Count
-                    phaseName = PhaseDefinitions.getPhaseDef(i).name
+    ' '' ''            ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
 
-                    If existingNames.Contains(phaseName) Then
-                        listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
-                    End If
+    ' '' ''            For i = 1 To PhaseDefinitions.Count
+    ' '' ''                phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-                Next
+    ' '' ''                If existingNames.Contains(phaseName) Then
+    ' '' ''                    listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
+    ' '' ''                End If
 
-                ' jetzt stehen in der listOfItems die Namen der Phasen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
+    ' '' ''            Next
 
-                von = showRangeLeft
-                bis = showRangeRight
-                With auswahlFenster
-                    .chTop = 50.0
-                    .chLeft = (showRangeRight - 1) * boxWidth + 4
-                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-                    .chHeight = awinSettings.ChartHoehe1
-                    .chTyp = DiagrammTypen(0)
+    ' '' ''            ' jetzt stehen in der listOfItems die Namen der Phasen 
+    ' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
-                End With
-                auswahlFenster.Show()
+    ' '' ''            von = showRangeLeft
+    ' '' ''            bis = showRangeRight
+    ' '' ''            With auswahlFenster
+    ' '' ''                .chTop = 50.0
+    ' '' ''                .chLeft = (showRangeRight - 1) * boxWidth + 4
+    ' '' ''                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+    ' '' ''                .chHeight = awinSettings.ChartHoehe1
+    ' '' ''                .chTyp = DiagrammTypen(0)
 
-            Else
-                Call MsgBox("keine Phasen vorhanden ...")
+    ' '' ''            End With
+    ' '' ''            auswahlFenster.Show()
 
-            End If
+    ' '' ''        Else
+    ' '' ''            Call MsgBox("keine Phasen vorhanden ...")
 
+    ' '' ''        End If
 
 
-        Else
 
-            Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+    ' '' ''    Else
 
-        End If
+    ' '' ''        Call MsgBox("bitte mindestens ein Projekt selektieren ...")
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
+    ' '' ''    End If
 
+    ' '' ''    enableOnUpdate = True
+    ' '' ''    appInstance.EnableEvents = True
 
 
-    End Sub
 
-    Sub PT0VisualizePhasesAll(control As IRibbonControl)
+    ' '' ''End Sub
 
-        Dim i As Integer
-        Dim von As Integer, bis As Integer
+    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
 
-        Dim listOfItems As New Collection
-        Dim existingNames As New Collection
 
-        Dim title As String = "Phasen visualisieren"
-        Dim phaseName As String
+    ' '' ''Sub PT0VisualizePhasesAll(control As IRibbonControl)
 
-        Call projektTafelInit()
-        Call awinDeSelect()
+    ' '' ''    Dim i As Integer
+    ' '' ''    Dim von As Integer, bis As Integer
 
-        If ShowProjekte.Count > 0 Then
+    ' '' ''    Dim listOfItems As New Collection
+    ' '' ''    Dim existingNames As New Collection
 
-            If showRangeRight - showRangeLeft > 5 Then
+    ' '' ''    Dim title As String = "Phasen visualisieren"
+    ' '' ''    Dim phaseName As String
 
+    ' '' ''    Call projektTafelInit()
+    ' '' ''    Call awinDeSelect()
 
-                existingNames = ShowProjekte.getPhaseNames
+    ' '' ''    If ShowProjekte.Count > 0 Then
 
-                ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
+    ' '' ''        If showRangeRight - showRangeLeft > 5 Then
 
-                For i = 1 To PhaseDefinitions.Count
-                    phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-                    If existingNames.Contains(phaseName) Then
-                        listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
-                    End If
+    ' '' ''            existingNames = ShowProjekte.getPhaseNames
 
-                Next
+    ' '' ''            ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
 
-                ' jetzt stehen in der listOfItems die Namen der Phasen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
+    ' '' ''            For i = 1 To PhaseDefinitions.Count
+    ' '' ''                phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-                von = showRangeLeft
-                bis = showRangeRight
-                With auswahlFenster
-                    .chTop = 50.0
-                    .chLeft = (showRangeRight - 1) * boxWidth + 4
-                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-                    .chHeight = awinSettings.ChartHoehe1
-                    .chTyp = DiagrammTypen(0)
+    ' '' ''                If existingNames.Contains(phaseName) Then
+    ' '' ''                    listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
+    ' '' ''                End If
 
-                End With
-                auswahlFenster.Show()
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-            End If
-        Else
-            Call MsgBox("Es sind keine Projekte geladen!")
-        End If
-    End Sub
+    ' '' ''            Next
 
+    ' '' ''            ' jetzt stehen in der listOfItems die Namen der Phasen 
+    ' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
-    Sub PT0ShowPortfolioPhasen(control As IRibbonControl)
+    ' '' ''            von = showRangeLeft
+    ' '' ''            bis = showRangeRight
+    ' '' ''            With auswahlFenster
+    ' '' ''                .chTop = 50.0
+    ' '' ''                .chLeft = (showRangeRight - 1) * boxWidth + 4
+    ' '' ''                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+    ' '' ''                .chHeight = awinSettings.ChartHoehe1
+    ' '' ''                .chTyp = DiagrammTypen(0)
 
-        Dim i As Integer
-        Dim von As Integer, bis As Integer
-        'Dim myCollection As Collection
-        Dim listOfItems As New Collection
-        'Dim left As Double, top As Double, height As Double, width As Double
+    ' '' ''            End With
+    ' '' ''            auswahlFenster.Show()
+    ' '' ''        Else
+    ' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+    ' '' ''        End If
+    ' '' ''    Else
+    ' '' ''        Call MsgBox("Es sind keine Projekte geladen!")
+    ' '' ''    End If
+    ' '' ''End Sub
 
-        Dim phaseName As String
+    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
 
-        Call projektTafelInit()
+    ' '' ''Sub PT0ShowPortfolioPhasen(control As IRibbonControl)
 
-        If ShowProjekte.Count > 0 Then
+    ' '' ''    Dim i As Integer
+    ' '' ''    Dim von As Integer, bis As Integer
+    ' '' ''    'Dim myCollection As Collection
+    ' '' ''    Dim listOfItems As New Collection
+    ' '' ''    'Dim left As Double, top As Double, height As Double, width As Double
 
-            If showRangeRight - showRangeLeft > 5 Then
+    ' '' ''    Dim phaseName As String
 
-                For i = 1 To PhaseDefinitions.Count
-                    phaseName = PhaseDefinitions.getPhaseDef(i).name
-                    Try
-                        listOfItems.Add(phaseName, phaseName)
-                    Catch ex As Exception
+    ' '' ''    Call projektTafelInit()
 
-                    End Try
+    ' '' ''    If ShowProjekte.Count > 0 Then
 
-                Next
+    ' '' ''        If showRangeRight - showRangeLeft > 5 Then
 
-                ' jetzt stehen in der listOfItems die Namen der Rollen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Phasen auswählen", "pro Item ein Chart")
+    ' '' ''            For i = 1 To PhaseDefinitions.Count
+    ' '' ''                phaseName = PhaseDefinitions.getPhaseDef(i).name
+    ' '' ''                Try
+    ' '' ''                    listOfItems.Add(phaseName, phaseName)
+    ' '' ''                Catch ex As Exception
 
-                von = showRangeLeft
-                bis = showRangeRight
-                With auswahlFenster
-                    .chTop = 50.0 + awinSettings.ChartHoehe1
-                    .chLeft = (showRangeRight - 1) * boxWidth + 4
-                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-                    .chHeight = awinSettings.ChartHoehe1
-                    .chTyp = DiagrammTypen(0)
-                End With
-                auswahlFenster.Show()
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-            End If
-        Else
-            Call MsgBox("Es sind noch keine Projekte geladen!")
-        End If
-    End Sub
+    ' '' ''                End Try
 
-    Sub PTShowMilestoneSummen(control As IRibbonControl)
+    ' '' ''            Next
 
-        Dim von As Integer, bis As Integer
+    ' '' ''            ' jetzt stehen in der listOfItems die Namen der Rollen 
+    ' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Phasen auswählen", "pro Item ein Chart")
 
-        Dim listOfItems As New Collection
+    ' '' ''            von = showRangeLeft
+    ' '' ''            bis = showRangeRight
+    ' '' ''            With auswahlFenster
+    ' '' ''                .chTop = 50.0 + awinSettings.ChartHoehe1
+    ' '' ''                .chLeft = (showRangeRight - 1) * boxWidth + 4
+    ' '' ''                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+    ' '' ''                .chHeight = awinSettings.ChartHoehe1
+    ' '' ''                .chTyp = DiagrammTypen(0)
+    ' '' ''            End With
+    ' '' ''            auswahlFenster.Show()
+    ' '' ''        Else
+    ' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+    ' '' ''        End If
+    ' '' ''    Else
+    ' '' ''        Call MsgBox("Es sind noch keine Projekte geladen!")
+    ' '' ''    End If
+    ' '' ''End Sub
 
-        Dim nameList As New Collection
+    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
 
-        Call projektTafelInit()
 
-        If ShowProjekte.Count > 0 Then
-            If showRangeRight - showRangeLeft > 5 Then
+    ' '' ''Sub PTShowMilestoneSummen(control As IRibbonControl)
 
-                nameList = ShowProjekte.getMilestoneNames
+    ' '' ''    Dim von As Integer, bis As Integer
 
-                If nameList.Count > 0 Then
+    ' '' ''    Dim listOfItems As New Collection
 
-                    For Each tmpName As String In nameList
-                        listOfItems.Add(tmpName)
-                    Next
+    ' '' ''    Dim nameList As New Collection
 
-                    ' jetzt stehen in der listOfItems die Namen der Rollen 
-                    Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Meilensteine auswählen", "pro Item ein Chart")
+    ' '' ''    Call projektTafelInit()
 
-                    von = showRangeLeft
-                    bis = showRangeRight
-                    With auswahlFenster
-                        .kennung = "sum"
-                        .chTop = 50.0 + awinSettings.ChartHoehe1
-                        .chLeft = (showRangeRight - 1) * boxWidth + 4
-                        .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-                        .chHeight = awinSettings.ChartHoehe1
-                        .chTyp = DiagrammTypen(5)
-                    End With
-                    auswahlFenster.Show()
+    ' '' ''    If ShowProjekte.Count > 0 Then
+    ' '' ''        If showRangeRight - showRangeLeft > 5 Then
 
+    ' '' ''            nameList = ShowProjekte.getMilestoneNames
 
-                Else
-                    Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-                End If
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-            End If
-        Else
-            Call MsgBox("Es sind keine Projekte geladen!")
-        End If
+    ' '' ''            If nameList.Count > 0 Then
 
-    End Sub
+    ' '' ''                For Each tmpName As String In nameList
+    ' '' ''                    listOfItems.Add(tmpName)
+    ' '' ''                Next
+
+    ' '' ''                ' jetzt stehen in der listOfItems die Namen der Rollen 
+    ' '' ''                Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Meilensteine auswählen", "pro Item ein Chart")
+
+    ' '' ''                von = showRangeLeft
+    ' '' ''                bis = showRangeRight
+    ' '' ''                With auswahlFenster
+    ' '' ''                    .kennung = "sum"
+    ' '' ''                    .chTop = 50.0 + awinSettings.ChartHoehe1
+    ' '' ''                    .chLeft = (showRangeRight - 1) * boxWidth + 4
+    ' '' ''                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+    ' '' ''                    .chHeight = awinSettings.ChartHoehe1
+    ' '' ''                    .chTyp = DiagrammTypen(5)
+    ' '' ''                End With
+    ' '' ''                auswahlFenster.Show()
+
+
+    ' '' ''            Else
+    ' '' ''                Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+    ' '' ''            End If
+    ' '' ''        Else
+    ' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+    ' '' ''        End If
+    ' '' ''    Else
+    ' '' ''        Call MsgBox("Es sind keine Projekte geladen!")
+    ' '' ''    End If
+
+    ' '' ''End Sub
 
 
     Sub PT0ShowAuslastung(control As IRibbonControl)
@@ -6548,111 +6604,117 @@ Imports System.Windows
 
     End Sub
 
-    Sub PT0ShowPersonalBedarfe(control As IRibbonControl)
-
-        Dim i As Integer
-        Dim von As Integer, bis As Integer
-        'Dim myCollection As Collection
-        Dim listOfItems As New Collection
-        'Dim left As Double, top As Double, height As Double, width As Double
-
-        Dim repObj As Object = Nothing
-        Dim title As String = "Rollen auswählen"
-
-        Call projektTafelInit()
-
-        'appInstance.ScreenUpdating = False
-        'appInstance.EnableEvents = False
-        'enableOnUpdate = False
-
-        If ShowProjekte.Count > 0 Then
-
-            If showRangeRight - showRangeLeft > 5 Then
+    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
 
 
-                For i = 1 To RoleDefinitions.Count
-                    listOfItems.Add(RoleDefinitions.getRoledef(i).name)
-                Next
+    ' '' ''Sub PT0ShowPersonalBedarfe(control As IRibbonControl)
 
-                ' jetzt stehen in der listOfItems die Namen der Rollen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
+    ' '' ''    Dim i As Integer
+    ' '' ''    Dim von As Integer, bis As Integer
+    ' '' ''    'Dim myCollection As Collection
+    ' '' ''    Dim listOfItems As New Collection
+    ' '' ''    'Dim left As Double, top As Double, height As Double, width As Double
 
-                von = showRangeLeft
-                bis = showRangeRight
-                With auswahlFenster
-                    .chTop = 100.0 + awinSettings.ChartHoehe1
-                    .chLeft = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-                    .chHeight = awinSettings.ChartHoehe1
-                    .chTyp = DiagrammTypen(1)
-                End With
+    ' '' ''    Dim repObj As Object = Nothing
+    ' '' ''    Dim title As String = "Rollen auswählen"
 
-                auswahlFenster.Show()
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-            End If
-        Else
-            Call MsgBox("Es sind noch keine Projekte geladen!")
-        End If
+    ' '' ''    Call projektTafelInit()
 
-        'appInstance.ScreenUpdating = True
-        'appInstance.EnableEvents = True
-        'enableOnUpdate = True
+    ' '' ''    'appInstance.ScreenUpdating = False
+    ' '' ''    'appInstance.EnableEvents = False
+    ' '' ''    'enableOnUpdate = False
 
-    End Sub
+    ' '' ''    If ShowProjekte.Count > 0 Then
 
-    Sub PT0ShowKostenBedarfe(control As IRibbonControl)
-
-        Dim i As Integer
-        Dim von As Integer, bis As Integer
-        'Dim myCollection As Collection
-        Dim listOfItems As New Collection
-        'Dim left As Double, top As Double, height As Double, width As Double
-        Dim repObj As Object = Nothing
-        Dim title As String = "Kostenarten auswählen"
-
-        Call projektTafelInit()
-
-        'appInstance.EnableEvents = False
-        'enableOnUpdate = False
-        If ShowProjekte.Count > 0 Then
-
-            If showRangeRight - showRangeLeft > 5 Then
-
-                For i = 1 To CostDefinitions.Count
-                    listOfItems.Add(CostDefinitions.getCostdef(i).name)
-                Next
-
-                ' jetzt stehen in der listOfItems die Namen der Rollen 
-                'Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
+    ' '' ''        If showRangeRight - showRangeLeft > 5 Then
 
 
-                von = showRangeLeft
-                bis = showRangeRight
-                With auswahlFenster
-                    .chTop = 50.0
-                    .chLeft = (showRangeRight - 1) * boxWidth + 4
-                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-                    .chHeight = awinSettings.ChartHoehe1
-                    .chTyp = DiagrammTypen(2)
+    ' '' ''            For i = 1 To RoleDefinitions.Count
+    ' '' ''                listOfItems.Add(RoleDefinitions.getRoledef(i).name)
+    ' '' ''            Next
 
-                End With
+    ' '' ''            ' jetzt stehen in der listOfItems die Namen der Rollen 
+    ' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
 
-                auswahlFenster.Show()
+    ' '' ''            von = showRangeLeft
+    ' '' ''            bis = showRangeRight
+    ' '' ''            With auswahlFenster
+    ' '' ''                .chTop = 100.0 + awinSettings.ChartHoehe1
+    ' '' ''                .chLeft = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
+    ' '' ''                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+    ' '' ''                .chHeight = awinSettings.ChartHoehe1
+    ' '' ''                .chTyp = DiagrammTypen(1)
+    ' '' ''            End With
+
+    ' '' ''            auswahlFenster.Show()
+    ' '' ''        Else
+    ' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+    ' '' ''        End If
+    ' '' ''    Else
+    ' '' ''        Call MsgBox("Es sind noch keine Projekte geladen!")
+    ' '' ''    End If
+
+    ' '' ''    'appInstance.ScreenUpdating = True
+    ' '' ''    'appInstance.EnableEvents = True
+    ' '' ''    'enableOnUpdate = True
+
+    ' '' ''End Sub
+
+    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
 
 
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum von mindestens 6 Monaten aus!")
-            End If
-        Else
-            Call MsgBox("Es sind noch keine Projekte geladen!")
-        End If
+    ' '' ''Sub PT0ShowKostenBedarfe(control As IRibbonControl)
 
-        'appInstance.EnableEvents = True
-        'enableOnUpdate = True
+    ' '' ''    Dim i As Integer
+    ' '' ''    Dim von As Integer, bis As Integer
+    ' '' ''    'Dim myCollection As Collection
+    ' '' ''    Dim listOfItems As New Collection
+    ' '' ''    'Dim left As Double, top As Double, height As Double, width As Double
+    ' '' ''    Dim repObj As Object = Nothing
+    ' '' ''    Dim title As String = "Kostenarten auswählen"
 
-    End Sub
+    ' '' ''    Call projektTafelInit()
+
+    ' '' ''    'appInstance.EnableEvents = False
+    ' '' ''    'enableOnUpdate = False
+    ' '' ''    If ShowProjekte.Count > 0 Then
+
+    ' '' ''        If showRangeRight - showRangeLeft > 5 Then
+
+    ' '' ''            For i = 1 To CostDefinitions.Count
+    ' '' ''                listOfItems.Add(CostDefinitions.getCostdef(i).name)
+    ' '' ''            Next
+
+    ' '' ''            ' jetzt stehen in der listOfItems die Namen der Rollen 
+    ' '' ''            'Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+    ' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
+
+
+    ' '' ''            von = showRangeLeft
+    ' '' ''            bis = showRangeRight
+    ' '' ''            With auswahlFenster
+    ' '' ''                .chTop = 50.0
+    ' '' ''                .chLeft = (showRangeRight - 1) * boxWidth + 4
+    ' '' ''                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+    ' '' ''                .chHeight = awinSettings.ChartHoehe1
+    ' '' ''                .chTyp = DiagrammTypen(2)
+
+    ' '' ''            End With
+
+    ' '' ''            auswahlFenster.Show()
+
+
+    ' '' ''        Else
+    ' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum von mindestens 6 Monaten aus!")
+    ' '' ''        End If
+    ' '' ''    Else
+    ' '' ''        Call MsgBox("Es sind noch keine Projekte geladen!")
+    ' '' ''    End If
+
+    ' '' ''    'appInstance.EnableEvents = True
+    ' '' ''    'enableOnUpdate = True
+
+    ' '' ''End Sub
 
     Sub PT0ShowZieleUebersicht(control As IRibbonControl)
 
