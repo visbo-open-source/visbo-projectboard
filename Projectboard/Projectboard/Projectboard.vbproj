@@ -20,7 +20,7 @@
     <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.0.4.8</ApplicationVersion>
+    <ApplicationVersion>3.0.4.11</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -344,10 +344,18 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Projectboard_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>2EF4C73E8D66954B9B5A30D7B121791DAA2FC95F</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>57D079AC4608E7A5EEAB9503591B51D9E4ADB64F</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestTimestampUrl>
+    </ManifestTimestampUrl>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />
