@@ -292,8 +292,8 @@ Imports System.Windows
 
         Dim ControlID As String = control.Id
 
-        Dim remConstellationFrm As New frmRemoveConstellation
-        Dim constellationName As String
+        Dim removeConstFilterFrm As New frmRemoveConstellation
+        Dim constFilterName As String
 
         Dim returnValue As DialogResult
 
@@ -301,11 +301,12 @@ Imports System.Windows
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-
+        Dim deleteFilter As String = "Pt6G3B5"
 
         Dim removeFromDB As Boolean
 
         If ControlID = deleteDatenbank And Not noDB Then
+            removeConstFilterFrm.frmOption = "ProjConstellation"
             removeFromDB = True
 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -315,30 +316,75 @@ Imports System.Windows
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
             End If
+
+        ElseIf ControlID = deleteFilter And Not noDB Then
+            removeConstFilterFrm.frmOption = "DBFilter"
+            removeFromDB = True
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If request.pingMongoDb() Then
+                filterDefinitions.filterListe = request.retrieveAllFilterFromDB(False)
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                removeFromDB = False
+            End If
+
         Else
             removeFromDB = False
         End If
 
         enableOnUpdate = False
 
-        returnValue = remConstellationFrm.ShowDialog
+        returnValue = removeConstFilterFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            constellationName = remConstellationFrm.ListBox1.Text
+            If ControlID = deleteDatenbank Then
 
-            Call awinRemoveConstellation(constellationName, removeFromDB)
-            Call MsgBox(constellationName & " wurde gelöscht ...")
+                constFilterName = removeConstFilterFrm.ListBox1.Text
 
-            If constellationName = currentConstellation Then
+                Call awinRemoveConstellation(constFilterName, removeFromDB)
+                Call MsgBox(constFilterName & " wurde gelöscht ...")
 
-                ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                Call storeSessionConstellation("Last")
-                currentConstellation = "Last"
-            Else
-                ' aktuelle Konstellation bleibt unverändert
+                If constFilterName = currentConstellation Then
+
+                    ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                    Call storeSessionConstellation("Last")
+                    currentConstellation = "Last"
+                Else
+                    ' aktuelle Konstellation bleibt unverändert
+                End If
+
+
             End If
+            If ControlID = deleteFilter Then
 
+                Dim removeOK As Boolean = False
+                Dim filter As clsFilter = Nothing
 
+                constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                filter = filterDefinitions.retrieveFilter(constFilterName)
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If request.pingMongoDb() Then
+
+                    ' Filter muss aus der Datenbank gelöscht werden.
+
+                    removeOK = request.removeFilterFromDB(filter)
+                    If removeOK = False Then
+                        Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
+                    Else
+                        ' DBFilter ist nun aus der DB gelöscht
+                        ' hier: wird der Filter nun noch aus der Filterliste gelöscht
+                        Call filterDefinitions.filterListe.Remove(constFilterName)
+                        Call MsgBox(constFilterName & " wurde gelöscht ...")
+                    End If
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
+                    removeOK = False
+                End If
+
+            End If
         End If
         enableOnUpdate = True
 

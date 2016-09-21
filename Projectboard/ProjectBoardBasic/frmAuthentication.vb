@@ -107,27 +107,44 @@ Public Class frmAuthentication
 
         Dim pwd As String
         Dim user As String
-        Dim projexist As Boolean
-
+       
         user = benutzer.Text
         pwd = maskedPwd.Text
+        messageBox.Text = ""
 
-
-        Try
+        Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-            projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
-            dbUsername = benutzer.Text
-            dbPasswort = maskedPwd.Text
-            messageBox.Text = ""
-            DialogResult = System.Windows.Forms.DialogResult.OK
+            Dim ok As Boolean = request.createIndicesOnce()
+            If Not ok Then
+                messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                benutzer.Text = ""
+                maskedPwd.Text = ""
+                dbUsername = benutzer.Text
+                dbPasswort = maskedPwd.Text
+                benutzer.Focus()
+                DialogResult = System.Windows.Forms.DialogResult.Retry
+            Else
+                '' ''projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
+
+                dbUsername = benutzer.Text
+                dbPasswort = maskedPwd.Text
+                messageBox.Text = ""
+                DialogResult = System.Windows.Forms.DialogResult.OK
+            End If
+            ' ''    '' ''projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
+
+            ' ''    dbUsername = benutzer.Text
+            ' ''    dbPasswort = maskedPwd.Text
+            ' ''    messageBox.Text = ""
+            ' ''    DialogResult = System.Windows.Forms.DialogResult.OK
         Catch ex As Exception
-            messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
-            benutzer.Text = ""
-            maskedPwd.Text = ""
-            dbUsername = benutzer.Text
-            dbPasswort = maskedPwd.Text
-            benutzer.Focus()
-            DialogResult = System.Windows.Forms.DialogResult.Retry
+            ' ''    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+            ' ''    benutzer.Text = ""
+            ' ''    maskedPwd.Text = ""
+            ' ''    dbUsername = benutzer.Text
+            ' ''    dbPasswort = maskedPwd.Text
+            ' ''    benutzer.Focus()
+            ' ''    DialogResult = System.Windows.Forms.DialogResult.Retry
         End Try
     End Sub
 
