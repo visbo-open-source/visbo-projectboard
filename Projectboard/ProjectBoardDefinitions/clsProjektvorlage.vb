@@ -2534,7 +2534,7 @@
             Dim phasenStart As Integer
             Dim tempArray As Double()
             Dim roleUID As Integer
-            Dim roleName As String
+            Dim roleName As String = ""
 
 
             If _Dauer > 0 Then
@@ -2600,11 +2600,11 @@
 
                 Next p ' Loop über alle Phasen
 
-                getRessourcenBedarf = roleValues
+                getRessourcenBedarfNew = roleValues
 
             Else
                 ReDim roleValues(0)
-                getRessourcenBedarf = roleValues
+                getRessourcenBedarfNew = roleValues
             End If
         End Get
 
