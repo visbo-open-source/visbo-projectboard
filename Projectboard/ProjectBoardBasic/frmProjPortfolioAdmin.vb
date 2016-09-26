@@ -756,6 +756,51 @@ Public Class frmProjPortfolioAdmin
     Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
 
         Dim node As TreeNode = e.Node
+        Dim treeLevel As Integer = node.Level
+        Dim projectName As String
+        Dim variantName As String = ""
+        Dim description As String = "-"
+        Dim hproj As clsProjekt
+
+        If aKtionskennung = PTTvActions.chgInSession Then
+            If treeLevel = 0 Then
+                projectName = node.Text
+
+                Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
+                variantName = ""
+
+                hproj = AlleProjekte.getProject(projectName, variantName)
+                If IsNothing(hproj) And variantNames.Count > 0 Then
+                    variantName = CStr(variantNames.Item(1))
+                    hproj = AlleProjekte.getProject(projectName, variantName)
+                End If
+
+                If Not IsNothing(hproj) Then
+                    If hproj.description.Length > 0 Then
+                        description = hproj.description
+                    End If
+                End If
+
+
+            ElseIf treeLevel = 1 Then
+                Dim projectNode As TreeNode = node.Parent
+                If Not IsNothing(projectNode) Then
+
+                    projectName = projectNode.Text
+                    variantName = node.Text
+                    hproj = AlleProjekte.getProject(projectName, variantName)
+
+                    If Not IsNothing(hproj) Then
+                        If hproj.description.Length > 0 Then
+                            description = hproj.description
+                        End If
+                    End If
+
+                End If
+            End If
+            ToolTipStand.Show(description, TreeViewProjekte, 6000)
+        End If
+
 
         'If node.IsSelected Then
         '    node.Expand()
@@ -783,6 +828,7 @@ Public Class frmProjPortfolioAdmin
         nodeLevel = node.Level
 
         If nodeLevel = 0 Then
+
             projName = node.Text
 
             ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 

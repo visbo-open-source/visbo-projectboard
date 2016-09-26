@@ -112,6 +112,7 @@
         <group id="PT7G1" label=" ">
           <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" supertip="eine zuvor gespeicherte Menge von Cockpits wird wieder abgerufen und auf dem Bildschirm dargestellt"/>
           <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
+          <button id="PT0G1M3B3" label="Cockpit-Charts löschen"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
         </group>
       </tab>
       <!--

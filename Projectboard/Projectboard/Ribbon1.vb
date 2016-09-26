@@ -2909,7 +2909,7 @@ Imports System.Windows
                         projectConstellations.Add(sessionConstellation)
                         Call loadSessionConstellation(scenarioName, False, False, True)
                     Else
-                        Call MsgBox("keine PRojekte importiert ...")
+                        Call MsgBox("keine Projekte importiert ...")
                     End If
 
                     'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
