@@ -1773,6 +1773,8 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PT6G3" ' Lade- und Import-Vorgänge
                     chckVisibility = False
+                Case "PT2G1B8" ' umbenennen 
+                    chckVisibility = False
                 Case Else
                     chckVisibility = True
             End Select
@@ -9140,15 +9142,8 @@ Imports System.Windows
 
             hproj = kvp.Value
 
-            Dim start1 As Integer = My.Computer.Clock.TickCount
             Dim usedRollen1 As Collection = hproj.getRoleNames
-            Dim end1 As Integer = My.Computer.Clock.TickCount
-            duration1 = duration1 + (end1 - start1)
-
-            Dim start2 As Integer = My.Computer.Clock.TickCount
             Dim usedRollen2 As Collection = hproj.rcLists.getRoleNames
-            Dim end2 As Integer = My.Computer.Clock.TickCount
-            duration2 = duration2 + (end2 - start2)
 
             ' Test auf Identität der beiden usedRollen1,2
 
@@ -9156,24 +9151,43 @@ Imports System.Windows
                 atleastOne = True
             Else
                 For ix As Integer = 1 To usedRollen1.Count
-                    If CStr(usedRollen1.Item(ix)) <> CStr(usedRollen2.Item(ix)) Then
+                    If Not usedRollen2.Contains(CStr(usedRollen1.Item(ix))) Then
+                        Dim name1 As String = CStr(usedRollen1.Item(ix))
+                        Dim name2 As String = CStr(usedRollen2.Item(ix))
                         atleastOne = True
                     End If
+                    
                 Next
             End If
 
+
+            Dim usedCost1 As Collection = hproj.getCostNames
+            Dim usedCost2 As Collection = hproj.rcLists.getCostNames
+
+            If usedCost1.Count <> usedCost2.Count Then
+                atleastOne = True
+            Else
+                For ix As Integer = 1 To usedCost1.Count
+                    If Not usedCost2.Contains(CStr(usedCost1.Item(ix))) Then
+                        Dim name1 As String = CStr(usedCost1.Item(ix))
+                        Dim name2 As String = CStr(usedCost2.Item(ix))
+                        atleastOne = True
+                    End If
+
+                Next
+            End If
 
 
         Next
 
         If atleastOne Then
-            Call MsgBox("nicht alles ok ...")
+            Call MsgBox("bei Rollen/Kosten nicht alles ok ...")
         Else
-            Call MsgBox("alles ok ..")
+            Call MsgBox("bei Rollen/Kosten alles ok ..")
         End If
 
         Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
-
+        atleastOne = False
 
         ' Test-Zyklus 2 
         If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
@@ -9181,22 +9195,65 @@ Imports System.Windows
 
             ' mach es möglichst oft ...
 
-            For iter As Integer = 1 To 1000
+            For iter As Integer = 1 To 1
 
                 For ix As Integer = 1 To RoleDefinitions.Count
                     Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
 
                     Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID, True)
+                    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonthNew(role.UID, True)
+
+                    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
+                        atleastOne = True
+                    End If
 
                 Next
+
+                If atleastOne Then
+                    Call MsgBox("Rollen-Summen nicht alles ok ...")
+                Else
+                    Call MsgBox("Rollen-Summen alles ok ..")
+                End If
+                atleastOne = False
+
+                For ix As Integer = 1 To CostDefinitions.Count
+                    Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(ix)
+
+                    Dim zeitraumBedarf() As Double = ShowProjekte.getCostValuesInMonth(cost.UID)
+                    Dim zeitraumBedarf2() As Double = ShowProjekte.getCostValuesInMonthNew(cost.UID)
+
+                    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
+                        atleastOne = True
+                    End If
+                Next
+
+                If atleastOne Then
+                    Call MsgBox("Kosten-Summen nicht alles ok ...")
+                Else
+                    Call MsgBox("Kosten-Summen alles ok ..")
+                End If
+
             Next
 
+            'Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
+
+            'For iter As Integer = 1 To 400
+
+            '    For ix As Integer = 1 To RoleDefinitions.Count
+            '        Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
+
+            '        Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonthNew(role.UID, True)
+
+            '    Next
+            'Next
+
+            Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
 
         Else
             Call MsgBox("zuerst Zeitraum definieren ...")
         End If
 
-        Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
+
 
         enableOnUpdate = True
 

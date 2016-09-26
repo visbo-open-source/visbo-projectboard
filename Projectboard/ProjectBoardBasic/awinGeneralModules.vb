@@ -12540,9 +12540,9 @@ Public Module awinGeneralModules
 
                                     ' Plausibilitäts-Check: die beiden müssen identisch sein !!
                                     ' tk Debug: 27.11.15
-                                    If elemNameOfElemID(parentNodeID) <> parentElemName Then
-                                        Call MsgBox("nicht konsistent in bmwImportProjekteITO15, zeile 663")
-                                    End If
+                                    'If elemNameOfElemID(parentNodeID) <> parentElemName Then
+                                    '    Call MsgBox("nicht konsistent in bmwImportProjekteITO15, zeile 663")
+                                    'End If
 
 
                                     ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 

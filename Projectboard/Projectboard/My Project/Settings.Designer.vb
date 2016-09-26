@@ -115,6 +115,15 @@ Partial Public NotInheritable Class MySettings
             Return CType(Me("VISBOAmpel"),String)
         End Get
     End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public ReadOnly Property visboDebug() As Boolean
+        Get
+            Return CType(Me("visboDebug"),Boolean)
+        End Get
+    End Property
 End Class
 
 Namespace My

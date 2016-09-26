@@ -2526,7 +2526,7 @@
             Dim roleValues() As Double
             Dim anzRollen As Integer
             Dim anzPhasen As Integer
-            Dim found As Boolean
+            'Dim found As Boolean
             Dim i As Integer, p As Integer, r As Integer
             Dim phase As clsPhase
             Dim role As clsRolle
@@ -2557,6 +2557,7 @@
 
                 For p = 1 To anzPhasen
                     phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+
                     With phase
                         ' Off1
                         anzRollen = .countRoles
@@ -2569,30 +2570,23 @@
 
                         For r = 1 To anzRollen
                             role = .getRole(r)
-                            found = False
 
                             With role
-                                If lookforIndex Then
-                                    If .RollenTyp = CInt(roleID) Then
-                                        found = True
-                                    End If
-                                Else
-                                    If .name = CStr(roleID) Then
-                                        found = True
-                                    End If
-                                End If
 
-                                Dim dimension As Integer
-                                If found Then
+                                If .RollenTyp = roleUID Then
+                                    Dim dimension As Integer
+
                                     dimension = .getDimension
                                     ReDim tempArray(dimension)
                                     tempArray = .Xwerte
+
                                     For i = phasenStart To phasenStart + dimension
                                         roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
                                     Next i
-                                End If
-                            End With ' role
 
+                                End If
+
+                            End With ' role
                         Next r
 
                     End With ' phase
@@ -3092,6 +3086,105 @@
             End If
 
             getKostenBedarf = costValues
+
+
+        End Get
+
+    End Property
+
+    '
+    ' übergibt in KostenBedarf die Werte der Kostenart <costId>
+    '
+    Public ReadOnly Property getKostenBedarfNew(CostID As Object) As Double()
+
+        Get
+            Dim costValues() As Double
+            Dim anzKostenarten As Integer
+            Dim anzPhasen As Integer
+            Dim found As Boolean
+            Dim i As Integer, p As Integer, k As Integer
+            Dim phase As clsPhase
+            Dim cost As clsKostenart
+            Dim lookforIndex As Boolean, isPersCost As Boolean
+            Dim phasenStart As Integer
+            Dim tempArray() As Double
+            Dim dimension As Integer
+            Dim costUID As Integer = 0
+            Dim costName As String = ""
+
+
+            If _Dauer > 0 Then
+
+                ReDim costValues(_Dauer - 1)
+
+                lookforIndex = IsNumeric(CostID)
+                isPersCost = False
+
+                If lookforIndex Then
+                    costUID = CInt(CostID)
+                    costName = CostDefinitions.getCostdef(costUID).name
+                    If CostID = CostDefinitions.Count Then
+                        isPersCost = True
+                    End If
+                Else
+                    If CostDefinitions.containsName(CStr(CostID)) Then
+                        costUID = CostDefinitions.getCostdef(CStr(CostID)).UID
+                        costName = CStr(CostID)
+                    End If
+                    If CostID = "Personalkosten" Then
+                        isPersCost = True
+                    End If
+                End If
+
+                If isPersCost Then
+                    ' costvalues = AllPersonalKosten
+                    costValues = Me.getAllPersonalKosten
+                Else
+                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithCost(costName)
+                    anzPhasen = listOfPhases.Count
+                    
+                    For p = 1 To anzPhasen
+                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+
+                        With phase
+                            ' Off1
+                            anzKostenarten = .countCosts
+                            phasenStart = .relStart - 1
+                            'phasenEnde = .relEnde - 1
+
+
+                            For k = 1 To anzKostenarten
+                                cost = .getCost(k)
+                                found = False
+
+                                With cost
+
+                                    If .KostenTyp = costUID Then
+
+                                        dimension = .getDimension
+                                        ReDim tempArray(dimension)
+                                        tempArray = .Xwerte
+
+                                        For i = phasenStart To phasenStart + dimension
+                                            costValues(i) = costValues(i) + tempArray(i - phasenStart)
+                                        Next i
+
+                                    End If
+
+                                End With ' cost
+
+                            Next k
+
+                        End With ' phase
+
+                    Next p ' Loop über alle Phasen
+                End If
+            Else
+                ReDim costValues(0)
+                costValues(0) = 0
+            End If
+
+            getKostenBedarfNew = costValues
 
 
         End Get

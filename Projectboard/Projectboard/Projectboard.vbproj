@@ -17,10 +17,10 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
+    <PublishUrl>\\KOYTEK-NAS\backup\Visbo Publish Ordner\Projectboard\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.0.4.9</ApplicationVersion>
+    <ApplicationVersion>3.0.4.10</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
