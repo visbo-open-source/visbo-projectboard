@@ -8329,7 +8329,6 @@ Public Module Projekte
     Public Sub awinStoreCockpit(ByVal cockpitname As String)
         'Dim kennung As String
 
-        Dim currentDirectoryName As String = My.Computer.FileSystem.CurrentDirectory & "\"
         Dim fileName As String
         Dim found As Boolean = False
         Dim wsfound As Boolean = False

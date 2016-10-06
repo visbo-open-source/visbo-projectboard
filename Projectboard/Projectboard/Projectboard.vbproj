@@ -17,13 +17,13 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>\\KOYTEK-NAS\backup\Visbo Publish Ordner\Projectboard\</PublishUrl>
+    <PublishUrl>\\KOYTEK-NAS\backup\test\</PublishUrl>
     <InstallUrl />
-    <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.0.4.10</ApplicationVersion>
+    <TargetCulture>de</TargetCulture>
+    <ApplicationVersion>3.0.4.37</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
-    <UpdateInterval>7</UpdateInterval>
+    <UpdateInterval>0</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>Projectboard</ProductName>
     <PublisherName />
@@ -248,6 +248,10 @@
       <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
       <Name>ClassLibrary1</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FileCopyPDA\FileCopyPDA.vbproj">
+      <Project>{7b0da877-d7c3-47a6-993b-9bb2e0c652d5}</Project>
+      <Name>FileCopyPDA</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
       <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
       <Name>MongoDbAccess</Name>
@@ -310,6 +314,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -341,10 +346,10 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
+        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files (x86)\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="453AD57C08540C0F42079FCA83BE658033F2D2F9">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
-          <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="1477224DA095CF7893DCD4FB2D03FFF48FFAABFD" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
+          <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="Tabelle3" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
         </Host>

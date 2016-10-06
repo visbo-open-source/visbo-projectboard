@@ -8,6 +8,8 @@ Imports MongoDbAccess
 
 
 
+
+
 Public Class ThisWorkbook
     ' Copyright Philipp Koytek et al. 
     ' 2012 ff
@@ -55,11 +57,11 @@ Public Class ThisWorkbook
         'Dim cbar As CommandBar
 
 
-
         appInstance = Application
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
-
+        Dim path As String = CType(appInstance.ActiveWorkbook, Excel.Workbook).Path
+        'Call MsgBox("Projectboard-Pfad f. .xlsx KOYTEK-NAS= " & path)
 
 
         ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
@@ -77,6 +79,7 @@ Public Class ThisWorkbook
 
 
         Try
+
 
             appInstance.ScreenUpdating = False
 
