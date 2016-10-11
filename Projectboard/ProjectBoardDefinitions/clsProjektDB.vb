@@ -2,6 +2,7 @@
 
     Public name As String
     Public variantName As String
+    Public variantDescription As String
     Public Risiko As Double
     Public StrategicFit As Double
 
@@ -64,6 +65,8 @@
             Me.name = calcProjektKeyDB(projekt.name, projekt.variantName)
 
             Me.variantName = .variantName
+            Me.variantDescription = .variantDescription
+
             Me.Risiko = .Risiko
             Me.StrategicFit = .StrategicFit
             Me.Erloes = .Erloes
@@ -142,6 +145,13 @@
             End If
 
             .variantName = Me.variantName
+
+            If IsNothing(Me.variantDescription) Then
+                .variantDescription = ""
+            Else
+                .variantDescription = Me.variantDescription
+            End If
+
             .Risiko = Me.Risiko
             .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes

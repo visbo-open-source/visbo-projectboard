@@ -95,7 +95,7 @@ Public Module awinDiagrams
         Dim Test As Excel.Window
 
         Try
-            Test = appInstance.ActiveWorkbook.Windows(windowNames(prctyp))
+            Test = appInstance.Workbooks.Item(myProjektTafel).Windows(windowNames(prctyp))
         Catch ex As Exception
             Exit Sub
         End Try

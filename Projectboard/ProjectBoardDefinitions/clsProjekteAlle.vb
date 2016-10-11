@@ -402,6 +402,25 @@ Public Class clsProjekteAlle
     End Property
 
     ''' <summary>
+    ''' gibt das Element zurück, das den pName, vName als Projekt- bzw. Varianten-NAme enthält
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProject(ByVal pName As String, ByVal vName As String) As clsProjekt
+        Get
+            Dim key As String = calcProjektKey(pName, vName)
+            If _allProjects.ContainsKey(key) Then
+                getProject = _allProjects(key)
+            Else
+                getProject = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt das Element zurück, das den angegebenen Schlüssel key enthält
     ''' </summary>
     ''' <param name="key">key = pName#vName</param>
@@ -411,7 +430,11 @@ Public Class clsProjekteAlle
     Public ReadOnly Property getProject(ByVal key As String) As clsProjekt
         Get
 
-            getProject = _allProjects(key)
+            If _allProjects.ContainsKey(key) Then
+                getProject = _allProjects(key)
+            Else
+                getProject = Nothing
+            End If
 
         End Get
     End Property
@@ -475,7 +498,7 @@ Public Class clsProjekteAlle
             Dim anzahl As Integer = 0
             Dim i As Integer = 0
             Dim found As Boolean = False
-            
+
             ' Positioniere i auf das erste Vorkommen von pName in der Liste 
             While i < _allProjects.Count And Not found
                 If _allProjects.ElementAt(i).Value.name = pName Then

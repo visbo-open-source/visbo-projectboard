@@ -101,6 +101,71 @@ Public Class clsListOfCostAndRoles
             getPhasesWithRoles = phaseCollection
         End Get
     End Property
+
+
+    ''' <summary>
+    ''' gibt die Phasen zurück, die diese Rolle enthalten 
+    ''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles enthalten 
+    ''' </summary>
+    ''' <param name="costName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhasesWithCost(ByVal costName As String) As Collection
+        Get
+            Dim phaseCollection As New Collection
+            Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(costName)
+
+            If Not IsNothing(cost) Then
+
+                ' dann handelt es sich schon mal um eine gültige Kostenart ...
+
+                Dim costUID As Integer = cost.UID
+                If _listOfCosts.ContainsKey(costUID) Then
+                    phaseCollection = _listOfCosts.Item(costUID)
+                Else
+                    ' nichts tun, tmpCollection ist bereits eine leere Collection 
+                End If
+
+
+            End If
+
+            getPhasesWithCost = phaseCollection
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Phasen zurück, die eine der Rollen aus der Collection enthält
+    ''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles einer der Rollen aus der Collection enthalten 
+    ''' </summary>
+    ''' <param name="costCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhasesWithCosts(ByVal costCollection As Collection) As Collection
+        Get
+            Dim phaseCollection As New Collection
+
+            If costCollection.Count > 0 Then
+
+                For Each costName As String In costCollection
+
+                    Dim teilphaseCollection As Collection = Me.getPhasesWithCost(costName)
+
+                    ' jetzt muss teilphaseCollection mit phaseCollection gemerged werden ...
+                    For Each phaseName As String In teilphaseCollection
+                        If Not phaseCollection.Contains(phaseName) Then
+                            phaseCollection.Add(phaseCollection, phaseName)
+                        End If
+                    Next
+
+                Next
+            End If
+
+            getPhasesWithCosts = phaseCollection
+        End Get
+    End Property
+
     ''' <summary>
     ''' liefert eine sortierte Collection mit allen vorkommenden Role-Names zurück
     ''' </summary>

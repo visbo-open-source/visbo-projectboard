@@ -38,11 +38,15 @@
     End Sub
 
     Public Class clsConstellationItemDB
-        Public projectName As String
-        Public variantName As String
-        Public Start As Date
-        Public show As Boolean
-        Public zeile As Integer
+        Public projectName As String = ""
+        Public variantName As String = ""
+        Public Start As Date = StartofCalendar.AddMonths(-1)
+        Public show As Boolean = True
+        Public zeile As Integer = 0
+        ' warum wird die entsprechende Projektvariante aufgenommen 
+        Public reasonToInclude As String = ""
+        ' warum wird die entsprechende Projektvariante nicht aufgenommen 
+        Public reasonToExclude As String = ""
 
         Sub copyfrom(ByVal item As clsConstellationItem)
 
@@ -52,6 +56,8 @@
                 Me.Start = .Start.ToUniversalTime
                 Me.show = .show
                 Me.zeile = .zeile
+                Me.reasonToInclude = .reasonToInclude
+                Me.reasonToExclude = .reasonToExclude
             End With
         End Sub
 
@@ -63,12 +69,14 @@
                 .Start = Me.Start.ToLocalTime
                 .show = Me.show
                 .zeile = Me.zeile
+                .reasonToInclude = Me.reasonToInclude
+                .reasonToExclude = Me.reasonToExclude
             End With
 
         End Sub
 
         Sub New()
-
+            
         End Sub
 
     End Class

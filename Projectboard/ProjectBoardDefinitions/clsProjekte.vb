@@ -20,16 +20,19 @@ Public Class clsProjekte
             Dim pname As String = project.name
             Dim shpUID As String = project.shpUID
 
-            _allProjects.Add(pname, project)
+            If Not IsNothing(project) Then
+                _allProjects.Add(pname, project)
 
-            If shpUID <> "" Then
-                _allShapes.Add(shpUID, pname)
-            End If
+                If shpUID <> "" Then
+                    _allShapes.Add(shpUID, pname)
+                End If
 
-            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
-            If Not currentConstellation.EndsWith("(*)") Then
-                currentConstellation = currentConstellation & "(*)"
+                ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
+                If Not currentConstellation.EndsWith("(*)") Then
+                    currentConstellation = currentConstellation & "(*)"
+                End If
             End If
+            
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -689,33 +692,26 @@ Public Class clsProjekte
                                         Optional ByVal tryOnceMore As Boolean = False) As clsProjekt
 
         Get
-            Try
 
+
+            If _allProjects.ContainsKey(itemName) Then
                 getProject = _allProjects.Item(itemName)
+            ElseIf tryOnceMore Then
 
-            Catch ex As Exception
-
-                If tryOnceMore Then
-
-                    Dim pName As String = extractName(itemName, PTshty.projektN)
-                    If pName.Length > 0 Then
-
-                        If _allProjects.ContainsKey(pName) Then
-                            getProject = _allProjects.Item(pName)
-                        Else
-                            Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
-                        End If
+                Dim pName As String = extractName(itemName, PTshty.projektN)
+                If pName.Length > 0 Then
+                    If _allProjects.ContainsKey(pName) Then
+                        getProject = _allProjects.Item(pName)
                     Else
                         Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
                     End If
-
                 Else
                     Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
                 End If
+            Else
+                Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+            End If
 
-
-
-            End Try
 
         End Get
 
@@ -1527,8 +1523,8 @@ Public Class clsProjekte
 
                         ' hier muss die Schleife für alle Items aus toDoCollection hin 
                         For k = 1 To toDoCollection.Count
-                            Dim curRole As String = CStr(toDoCollection.Item(k))
 
+                            Dim curRole As String = CStr(toDoCollection.Item(k))
                             tempArray = hproj.getRessourcenBedarf(curRole)
 
                             For i = 0 To anzLoops - 1
@@ -1551,6 +1547,121 @@ Public Class clsProjekte
 
 
             getRoleValuesInMonth = roleValues
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <value>String für Rollenbezeichner oder Integer für den Key der Rolle</value>
+    ''' <returns>Array, der die Werte der gefragten Rolle pro Monat des betrachteten Zeitraums enthält</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleValuesInMonthNew(ByVal roleID As Object, _
+                                                  Optional ByVal considerAllSubRoles As Boolean = False, _
+                                                  Optional ByVal type As Integer = PTcbr.all, _
+                                                  Optional ByVal excludedNames As Collection = Nothing) As Double()
+
+        Get
+            Dim roleValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim anzProjekte As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
+            Dim lookforIndex As Boolean
+            Dim tempArray() As Double
+            Dim testArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+            Dim roleName As String
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            lookforIndex = IsNumeric(roleID)
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim roleValues(zeitraum)
+
+            If lookforIndex Then
+                roleName = RoleDefinitions.getRoledef(CInt(roleID)).name
+            Else
+                roleName = CStr(roleID)
+            End If
+
+            Dim toDoCollection As New Collection
+            ' wenn considerAllSubroles  = true , dann muss 
+
+            If considerAllSubRoles Then
+                toDoCollection = RoleDefinitions.getSubRoleNamesOf(roleName, type:=type, excludedNames:=excludedNames)
+                ' Änderung tk: das Folgende darf nicht mehr drin sein, da ja das Kommando getSubRoleNamesOf jetzt alles erledigt 
+                'If Not toDoCollection.Contains(roleName) Then
+                '    toDoCollection.Add(roleName, roleName)
+                'End If
+            Else
+                toDoCollection.Add(roleName, roleName)
+            End If
+
+
+
+            anzProjekte = _allProjects.Count
+
+            ' anzPhasen = AllPhases.Count
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                Dauer = hproj.anzahlRasterElemente
+
+                ReDim tempArray(Dauer - 1)
+                ReDim testArray(Dauer - 1)
+
+                With hproj
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                End With
+
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                If anzLoops > 0 Then
+
+                    Dim listOfRoles As Collection = hproj.rcLists.getRoleNames
+
+                    Try
+
+                        ' hier muss die Schleife für alle Items aus toDoCollection hin 
+                        For k = 1 To toDoCollection.Count
+                            Dim curRole As String = CStr(toDoCollection.Item(k))
+
+
+                            If listOfRoles.Contains(curRole) Then
+                                tempArray = hproj.getRessourcenBedarfNew(curRole)
+
+                                For i = 0 To anzLoops - 1
+                                    roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
+                                Next i
+                            End If
+
+
+                        Next k
+
+
+
+                    Catch ex As Exception
+
+                    End Try
+
+
+                End If
+
+            Next kvp
+
+
+
+            getRoleValuesInMonthNew = roleValues
 
         End Get
 
@@ -2331,6 +2442,89 @@ Public Class clsProjekte
 
 
             getCostValuesInMonth = costValues
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' gibt die Gesamtkosten , Personalkosten und alle sonstigen Kosten im betrachteten Zeitraum zurück 
+    ''' bei den Personalkosten sind die Überstundensätze bzw. externen Tagessätze im Normalfall nicht berücksichtigt  
+    ''' </summary>
+    ''' <param name="CostID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCostValuesInMonthNew(CostID As Object) As Double()
+
+        Get
+            Dim costValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
+            Dim lookforIndex As Boolean
+            Dim isPersCost As Boolean
+            Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            lookforIndex = IsNumeric(CostID)
+
+            If lookforIndex Then
+                If CostID = CostDefinitions.Count Then
+                    isPersCost = True
+                End If
+            Else
+                If CostID = "Personalkosten" Then
+                    isPersCost = True
+                End If
+            End If
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim costValues(zeitraum)
+
+
+            If isPersCost Then
+                costValues = Me.getCostGpValuesInMonth
+            Else
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    hproj = kvp.Value
+
+                    Dauer = hproj.anzahlRasterElemente
+
+                    ReDim tempArray(Dauer - 1)
+
+                    With hproj
+                        prAnfang = .Start + .StartOffset
+                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                    End With
+
+                    anzLoops = 0
+                    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                    If anzLoops > 0 Then
+
+                        tempArray = hproj.getKostenBedarfNew(CostID)
+
+                        For i = 0 To anzLoops - 1
+                            costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
+                        Next i
+
+
+                    End If
+                    'hproj = Nothing
+                Next kvp
+
+            End If
+
+
+
+
+            getCostValuesInMonthNew = costValues
 
         End Get
 

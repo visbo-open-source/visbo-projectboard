@@ -182,6 +182,8 @@ Public Class clsawinSettings
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
+    Public Property visboDebug As Boolean
+
 
 
     Sub New()
@@ -300,6 +302,8 @@ Public Class clsawinSettings
 
         _useHierarchy = True
         _isHryNameFrmActive = False
+
+        _visboDebug = False
 
 
 

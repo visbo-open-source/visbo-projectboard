@@ -189,7 +189,11 @@ Public Class Tabelle2
                                             ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                             Try
                                                 auslastungChanged = True
-                                                cPhase.getRole(visboZustaende.oldValue).RollenTyp = newRoleID
+                                                Dim cRole As clsRolle = cPhase.getRole(visboZustaende.oldValue)
+
+                                                hproj.rcLists.removeRP(cRole.RollenTyp, cPhase.nameID)
+                                                cRole.RollenTyp = newRoleID
+                                                hproj.rcLists.addRP(newRoleID, cPhase.nameID)
                                             Catch ex As Exception
                                                 visboZustaende.oldValue = ""
                                                 ' in diesem Fall wurde nur von einer noch nicht belegten Rolle auf eine 
@@ -275,7 +279,10 @@ Public Class Tabelle2
                                         If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> newStrValue.Trim Then
                                             ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                             Dim newCostID As Integer = CostDefinitions.getCostdef(newStrValue).UID
-                                            cPhase.getCost(visboZustaende.oldValue).KostenTyp = newCostID
+                                            Dim cCost As clsKostenart = cPhase.getCost(visboZustaende.oldValue)
+                                            hproj.rcLists.removeCP(cCost.KostenTyp, cPhase.nameID)
+                                            cCost.KostenTyp = newCostID
+                                            hproj.rcLists.addCP(newCostID, cPhase.nameID)
                                         Else
                                             ' es kam eine neue Rolle hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
                                             ' muss an dieser Stelle noch gar nichts gemacht werden ..

@@ -80,6 +80,7 @@ Imports System.Windows
                 If controlID = speichernDatenbank And Not noDB Then
                     storeToDB = True
                 End If
+
                 Call storeSessionConstellation(constellationName)
 
 
@@ -132,6 +133,92 @@ Imports System.Windows
 
     End Sub
 
+    ''' <summary>
+    ''' speichert die ausgewählten SessionConstellations in die Datenbank 
+    ''' dabei wird sichergestellt, dass alle Projekte, die 
+    ''' noch gar nicht in der DB existieren oder die sich im Vergleich zur DB-Versaion geändert haben, 
+    ''' auch gespeichert werden 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTStoreKonstellationsToDB(control As IRibbonControl)
+
+        Dim storeConstellationFrm As New frmLoadConstellation
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        With storeConstellationFrm
+            .Text = "Szenario(s) in Datenbank speichern"
+            .constellationsToShow = projectConstellations
+            .retrieveFromDB = False
+            .lblStandvom.Visible = False
+            .dropBoxTimeStamps.Visible = False
+            .addToSession.Visible = False
+        End With
+
+        Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+
+            For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
+
+                Dim anzahlNeue As Integer = 0
+                Dim anzahlChanged As Integer = 0
+                Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
+                Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
+
+                ' jetzt müssen auch alle Projekte, die in der Constellation referenziert werden, aber noch nicht 
+                ' in der Datenbank gespeichert sind, abgespeichert werden ... 
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
+
+                    Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
+
+                    If Not IsNothing(hproj) Then
+                        If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+                            ' speichern des Projektes 
+                            If request.storeProjectToDB(hproj) Then
+                                anzahlNeue = anzahlNeue + 1
+                            End If
+                        Else
+                            ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
+                            Dim oldProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                            ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
+                            Dim anzahlUnterschiede As Integer = hproj.listOfDifferences(oldProj, True, 0, True, True).Count
+                            If anzahlUnterschiede > 0 Then
+                                If request.storeProjectToDB(hproj) Then
+                                    ' alles ok
+                                    anzahlChanged = anzahlChanged + 1
+                                Else
+                                    Call MsgBox("Fehler bei Speichern Projekt:" & vbLf & hproj.name & ", " & hproj.variantName)
+                                End If
+                            End If
+                        End If
+                    End If
+
+
+                Next
+
+                ' jetzt wird die 
+                Try
+                    If request.storeConstellationToDB(currentConstellation) Then
+                    Else
+                        Call MsgBox("Fehler in Schreiben Constellation " & currentConstellation.constellationName)
+                    End If
+                Catch ex As Exception
+                    Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                End Try
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("Szenario: " & constellationName & vbLf & _
+                                "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
+                                "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString)
+                End If
+
+            Next
+
+        End If
+
+    End Sub
+
     Sub PTLadenKonstellation(control As IRibbonControl)
 
         Dim loadFromDatenbank As String = "PT5G1B1"
@@ -156,13 +243,14 @@ Imports System.Windows
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
             If request.pingMongoDb() Then
-                projectConstellations = request.retrieveConstellationsFromDB()
+                Dim dbConstellations As clsConstellations = request.retrieveConstellationsFromDB()
 
                 Try
                     timeStampsCollection = request.retrieveZeitstempelFromDB()
                     'Dim heute As String = Date.Now.ToString
                     If timeStampsCollection.Count > 0 Then
                         With loadConstellationFrm
+                            .constellationsToShow = dbConstellations
                             .retrieveFromDB = True
                             .listOfTimeStamps = timeStampsCollection
                         End With
@@ -175,6 +263,11 @@ Imports System.Windows
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
             End If
+        Else
+            With loadConstellationFrm
+                .constellationsToShow = projectConstellations
+                .retrieveFromDB = False
+            End With
         End If
 
         enableOnUpdate = False
@@ -1773,6 +1866,8 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PT6G3" ' Lade- und Import-Vorgänge
                     chckVisibility = False
+                Case "PT2G1B8" ' umbenennen 
+                    chckVisibility = False
                 Case Else
                     chckVisibility = True
             End Select
@@ -1795,9 +1890,13 @@ Imports System.Windows
                 ' alles ok , bereits gesetzt 
 
             Else
-                showRangeLeft = ShowProjekte.getMinMonthColumn
-                showRangeRight = ShowProjekte.getMaxMonthColumn
-
+                If selectedProjekte.Count > 0 Then
+                    showRangeLeft = selectedProjekte.getMinMonthColumn
+                    showRangeRight = selectedProjekte.getMaxMonthColumn
+                Else
+                    showRangeLeft = ShowProjekte.getMinMonthColumn
+                    showRangeRight = ShowProjekte.getMaxMonthColumn
+                End If
                 Call awinShowtimezone(showRangeLeft, showRangeRight, True)
             End If
 
@@ -2907,7 +3006,7 @@ Imports System.Windows
                         projectConstellations.Add(sessionConstellation)
                         Call loadSessionConstellation(scenarioName, False, False, True)
                     Else
-                        Call MsgBox("keine PRojekte importiert ...")
+                        Call MsgBox("keine Projekte importiert ...")
                     End If
 
                     'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
@@ -9140,15 +9239,8 @@ Imports System.Windows
 
             hproj = kvp.Value
 
-            Dim start1 As Integer = My.Computer.Clock.TickCount
             Dim usedRollen1 As Collection = hproj.getRoleNames
-            Dim end1 As Integer = My.Computer.Clock.TickCount
-            duration1 = duration1 + (end1 - start1)
-
-            Dim start2 As Integer = My.Computer.Clock.TickCount
             Dim usedRollen2 As Collection = hproj.rcLists.getRoleNames
-            Dim end2 As Integer = My.Computer.Clock.TickCount
-            duration2 = duration2 + (end2 - start2)
 
             ' Test auf Identität der beiden usedRollen1,2
 
@@ -9156,24 +9248,43 @@ Imports System.Windows
                 atleastOne = True
             Else
                 For ix As Integer = 1 To usedRollen1.Count
-                    If CStr(usedRollen1.Item(ix)) <> CStr(usedRollen2.Item(ix)) Then
+                    If Not usedRollen2.Contains(CStr(usedRollen1.Item(ix))) Then
+                        Dim name1 As String = CStr(usedRollen1.Item(ix))
+                        Dim name2 As String = CStr(usedRollen2.Item(ix))
                         atleastOne = True
                     End If
+                    
                 Next
             End If
 
+
+            Dim usedCost1 As Collection = hproj.getCostNames
+            Dim usedCost2 As Collection = hproj.rcLists.getCostNames
+
+            If usedCost1.Count <> usedCost2.Count Then
+                atleastOne = True
+            Else
+                For ix As Integer = 1 To usedCost1.Count
+                    If Not usedCost2.Contains(CStr(usedCost1.Item(ix))) Then
+                        Dim name1 As String = CStr(usedCost1.Item(ix))
+                        Dim name2 As String = CStr(usedCost2.Item(ix))
+                        atleastOne = True
+                    End If
+
+                Next
+            End If
 
 
         Next
 
         If atleastOne Then
-            Call MsgBox("nicht alles ok ...")
+            Call MsgBox("bei Rollen/Kosten nicht alles ok ...")
         Else
-            Call MsgBox("alles ok ..")
+            Call MsgBox("bei Rollen/Kosten alles ok ..")
         End If
 
         Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
-
+        atleastOne = False
 
         ' Test-Zyklus 2 
         If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
@@ -9181,22 +9292,65 @@ Imports System.Windows
 
             ' mach es möglichst oft ...
 
-            For iter As Integer = 1 To 1000
+            For iter As Integer = 1 To 1
 
                 For ix As Integer = 1 To RoleDefinitions.Count
                     Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
 
                     Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID, True)
+                    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonthNew(role.UID, True)
+
+                    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
+                        atleastOne = True
+                    End If
 
                 Next
+
+                If atleastOne Then
+                    Call MsgBox("Rollen-Summen nicht alles ok ...")
+                Else
+                    Call MsgBox("Rollen-Summen alles ok ..")
+                End If
+                atleastOne = False
+
+                For ix As Integer = 1 To CostDefinitions.Count
+                    Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(ix)
+
+                    Dim zeitraumBedarf() As Double = ShowProjekte.getCostValuesInMonth(cost.UID)
+                    Dim zeitraumBedarf2() As Double = ShowProjekte.getCostValuesInMonthNew(cost.UID)
+
+                    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
+                        atleastOne = True
+                    End If
+                Next
+
+                If atleastOne Then
+                    Call MsgBox("Kosten-Summen nicht alles ok ...")
+                Else
+                    Call MsgBox("Kosten-Summen alles ok ..")
+                End If
+
             Next
 
+            'Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
+
+            'For iter As Integer = 1 To 400
+
+            '    For ix As Integer = 1 To RoleDefinitions.Count
+            '        Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
+
+            '        Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonthNew(role.UID, True)
+
+            '    Next
+            'Next
+
+            Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
 
         Else
             Call MsgBox("zuerst Zeitraum definieren ...")
         End If
 
-        Call MsgBox("jetzt ist es: " & Date.Now.ToLongTimeString)
+
 
         enableOnUpdate = True
 

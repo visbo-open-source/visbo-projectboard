@@ -67,7 +67,7 @@ Public Class frmProjPortfolioAdmin
 
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
-                .Text = "Zusammenstellung im Portfolio ändern"
+                .Text = "Zusammenstellung im Szenario ändern"
 
                 .dropBoxTimeStamps.Visible = False
                 .lblStandvom.Visible = False
@@ -300,6 +300,8 @@ Public Class frmProjPortfolioAdmin
         ' Maus auf Normalmodus zurücksetzen
         appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
 
+        ' Fokus auf was unverdächtiges setzen 
+        dropboxScenarioNames.Focus()
 
     End Sub
 
@@ -527,7 +529,12 @@ Public Class frmProjPortfolioAdmin
                 Case 0 ' Projekt ist selektiert / nicht selektiert 
 
                     Dim selectedProjectName As String = node.Text
+                    Dim variantNames As Collection = AlleProjekte.getVariantNames(selectedProjectName, False)
                     Dim selectedVariantName As String = ""
+
+                    If variantNames.Count > 0 Then
+                        selectedVariantName = CStr(variantNames.Item(1))
+                    End If
 
                     If node.Checked Then
                         ' wurde neu hinzugefügt 
@@ -547,30 +554,11 @@ Public Class frmProjPortfolioAdmin
                             selectedVariantName = getVariantNameOf(childNode.Text)
                         End If
 
+
+                        Call putProjectInShow(selectedProjectName, selectedVariantName, considerDependencies.Checked, False)
                         ' jetzt muss das Projekt aus AlleProjekte auch in ShowProjekte transferiert werden 
-                        Dim key As String = calcProjektKey(selectedProjectName, selectedVariantName)
-                        Dim hproj As clsProjekt = AlleProjekte.getProject(key)
-
-                        If Not ShowProjekte.contains(selectedProjectName) Then
-                            ShowProjekte.Add(hproj)
-                        End If
-
-                        ' jetzt muss das Projekt neu gezeichnet werden ; 
-                        ' dazu muss die Einfügestelle bestimmt werden, dann alle anderen Shapes nach unten verschoben werden 
-                        ' hier muss die Zeile über Showprojekte bestimmt werden, einfach nach der Sortier-Reihenfolge 
-                        ' das kann später dann noch angepasst werden 
-                        Dim pZeile As Integer = ShowProjekte.getPTZeile(selectedProjectName)
-                        'Dim pZeile2 As Integer = node.Index
-                        'Call MsgBox("Zeile: " & pZeile.ToString)
-
-                        If pZeile > 0 Then
-                            Dim tmpCollection As New Collection
-                            Call moveShapesDown(tmpCollection, pZeile, 1, 0)
-
-                            Call ZeichneProjektinPlanTafel(tmpCollection, selectedProjectName, pZeile, tmpCollection, tmpCollection, True)
-                        End If
-
-                        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+                        
+                        ' jetzt muss noch die TreeView ggf angepasst werden, wenn considerDependencies true ist 
                         If considerDependencies.Checked Then
                             ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
                             Dim toDoListe As Collection = allDependencies.passiveListe(selectedProjectName, PTdpndncyType.inhalt)
@@ -580,31 +568,13 @@ Public Class frmProjPortfolioAdmin
                                 Next
 
                             End If
-                        Else
-                            ' nichts tun 
                         End If
                     Else
                         ' wurde abgewählt 
-                        Dim pZeile As Integer
 
-                        If ShowProjekte.contains(selectedProjectName) Then
+                        Call putProjectInNoShow(selectedProjectName, considerDependencies.Checked, False)
 
-                            pZeile = calcYCoordToZeile(projectboardShapes.getCoord(selectedProjectName)(0))
-                            'pZeile = ShowProjekte.getPTZeile(selectedProjectName)
-                            'Call MsgBox("Zeile: " & pZeile.ToString)
-
-                            Call clearProjektinPlantafel(selectedProjectName)
-
-                            ShowProjekte.Remove(selectedProjectName)
-
-
-                            Call moveShapesUp(pZeile + 1, 1, True)
-
-                        End If
-
-                        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
                         If considerDependencies.Checked Then
-                            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
                             Dim toDoListe As Collection = allDependencies.activeListe(selectedProjectName, PTdpndncyType.inhalt)
                             If toDoListe.Count > 0 Then
                                 For Each dprojectName As String In toDoListe
@@ -612,9 +582,39 @@ Public Class frmProjPortfolioAdmin
                                 Next
 
                             End If
-                        Else
-                            ' nichts tun 
                         End If
+                        
+                        '' das Folgende wurde ersetzt durch putProjectInNoShow .. siehe oben 
+                        ''Dim pZeile As Integer
+
+                        ''If ShowProjekte.contains(selectedProjectName) Then
+
+                        ''    pZeile = calcYCoordToZeile(projectboardShapes.getCoord(selectedProjectName)(0))
+                        ''    'pZeile = ShowProjekte.getPTZeile(selectedProjectName)
+                        ''    'Call MsgBox("Zeile: " & pZeile.ToString)
+
+                        ''    Call clearProjektinPlantafel(selectedProjectName)
+
+                        ''    ShowProjekte.Remove(selectedProjectName)
+
+
+                        ''    Call moveShapesUp(pZeile + 1, 1, True)
+
+                        ''End If
+
+                        ' '' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+                        ''If considerDependencies.Checked Then
+                        ''    ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+                        ''    Dim toDoListe As Collection = allDependencies.activeListe(selectedProjectName, PTdpndncyType.inhalt)
+                        ''    If toDoListe.Count > 0 Then
+                        ''        For Each dprojectName As String In toDoListe
+                        ''            Call deactivateDependentProject(dprojectName)
+                        ''        Next
+
+                        ''    End If
+                        ''Else
+                        ''    ' nichts tun 
+                        ''End If
                     End If
 
                     ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
@@ -756,10 +756,52 @@ Public Class frmProjPortfolioAdmin
     Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
 
         Dim node As TreeNode = e.Node
+        Dim treeLevel As Integer = node.Level
+        Dim projectName As String
+        Dim variantName As String = ""
+        Dim description As String = "-"
+        Dim hproj As clsProjekt
 
-        'If node.IsSelected Then
-        '    node.Expand()
-        'End If
+
+        If treeLevel = 0 Then
+            projectName = node.Text
+
+            Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
+            variantName = ""
+
+            hproj = AlleProjekte.getProject(projectName, variantName)
+            If IsNothing(hproj) And variantNames.Count > 0 Then
+                variantName = CStr(variantNames.Item(1))
+                hproj = AlleProjekte.getProject(projectName, variantName)
+            End If
+
+            If Not IsNothing(hproj) Then
+                If hproj.description.Length > 0 Then
+                    description = hproj.description
+                End If
+            End If
+
+
+        ElseIf treeLevel = 1 Then
+            Dim projectNode As TreeNode = node.Parent
+            If Not IsNothing(projectNode) Then
+
+                projectName = projectNode.Text
+                variantName = getVariantNameOf(node.Text)
+                hproj = AlleProjekte.getProject(projectName, variantName)
+
+                If Not IsNothing(hproj) Then
+
+                    If hproj.variantDescription.Length > 0 Then
+                        description = hproj.variantDescription
+                    End If
+                End If
+
+            End If
+        End If
+
+        ToolTipStand.Show(description, TreeViewProjekte, 6000)
+
 
     End Sub
 
@@ -783,6 +825,7 @@ Public Class frmProjPortfolioAdmin
         nodeLevel = node.Level
 
         If nodeLevel = 0 Then
+
             projName = node.Text
 
             ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
@@ -857,6 +900,7 @@ Public Class frmProjPortfolioAdmin
                         nodeVariant.Tag = "X"
                     End If
 
+                   
                 Next
 
                 node.Tag = "X"
@@ -1024,7 +1068,7 @@ Public Class frmProjPortfolioAdmin
 
                         If aKtionskennung = PTTvActions.delFromSession Then
 
-                            Call awinDeleteProjectInSession(pName:=pname)
+                            Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies.Checked)
 
                         ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
@@ -1078,10 +1122,14 @@ Public Class frmProjPortfolioAdmin
                                 ' Aktion auf allen Timestamps
                                 ' lösche in Datenbank das Objekt mit DB-Namen pname#vname
 
-                                If aKtionskennung = PTTvActions.delFromDB Or _
-                                    aKtionskennung = PTTvActions.delFromSession Or _
-                                    aKtionskennung = PTTvActions.deleteV Then
+                                If aKtionskennung = PTTvActions.delFromDB Then
                                     Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
+
+                                ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+                                        aKtionskennung = PTTvActions.deleteV Then
+
+                                    Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies.Checked, vName:=variantName)
+
 
                                 ElseIf aKtionskennung = PTTvActions.loadPV Then
 
@@ -1165,6 +1213,9 @@ Public Class frmProjPortfolioAdmin
 
             If aKtionskennung = PTTvActions.chgInSession Then
 
+                ' jetzt im formular den Mauszeiger auf Warten ... setzen 
+                Me.Cursor = Cursors.WaitCursor
+
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
                     Dim pName As String = projectNode.Text
@@ -1220,9 +1271,7 @@ Public Class frmProjPortfolioAdmin
 
                 Next
 
-                ' jetzt im formular den Mauszeiger auf Warten ... setzen 
-                Me.Cursor = Cursors.WaitCursor
-
+                
                 ' jetzt muss die Plan-Tafel gelöscht werden 
                 Call awinClearPlanTafel()
 
@@ -1409,6 +1458,8 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
 
+        Me.Cursor = Cursors.WaitCursor
+
         With TreeViewProjekte
 
             ' die Behandlung von chgInSession ist etwas anders, weil sofort eine Aktion erfolgen muss ... 
@@ -1466,6 +1517,7 @@ Public Class frmProjPortfolioAdmin
 
         End With
 
+        Me.Cursor = Cursors.Default
         stopRecursion = False
 
 
@@ -1503,12 +1555,27 @@ Public Class frmProjPortfolioAdmin
             If .ShowDialog() = Windows.Forms.DialogResult.OK Then
 
                 stopRecursion = True
+
+                Me.Cursor = Cursors.WaitCursor
+
                 Dim storedAtOrBefore As Date
                 If IsNothing(dropBoxTimeStamps.SelectedItem) Then
                     storedAtOrBefore = Date.Now
                 Else
                     storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
                 End If
+
+                Dim noShowNames As Collection = getProjectNamesNotFittingToFilter("Last")
+
+                For Each noShowName As String In noShowNames
+                    Call putProjectInNoShow(noShowName, considerDependencies.Checked, False)
+                Next
+
+                ' erst am Ende alle Diagramme neu machen ...
+                If noShowNames.Count > 0 Then
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
+
                 Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
                                    Me.filterIsActive, storedAtOrBefore)
                 stopRecursion = False
@@ -1516,6 +1583,8 @@ Public Class frmProjPortfolioAdmin
                 ' Das DeleteFilterIcon mit Bild versehen 
                 Me.deleteFilterIcon.Image = My.Resources.funnel_delete
                 Me.deleteFilterIcon.Enabled = True
+
+                Me.Cursor = Cursors.Default
 
 
             End If
@@ -1528,6 +1597,8 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
 
+        Me.Cursor = Cursors.WaitCursor
+
         Dim storedAtOrBefore As Date
         If IsNothing(dropBoxTimeStamps.SelectedItem) Then
             storedAtOrBefore = Date.Now
@@ -1538,6 +1609,8 @@ Public Class frmProjPortfolioAdmin
                            Me.filterIsActive, storedAtOrBefore)
 
         stopRecursion = False
+
+        Me.Cursor = Cursors.Default
 
         ' Fokus an TreeViewPRojekte geben 
         TreeViewProjekte.Focus()
@@ -1555,6 +1628,8 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
 
+        Me.Cursor = Cursors.WaitCursor
+
         Me.filterIsActive = False
 
         Dim storedAtOrBefore As Date
@@ -1563,6 +1638,16 @@ Public Class frmProjPortfolioAdmin
         Else
             storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
         End If
+
+        ' jetzt muss der Last-Filter zurückgesetzt werden 
+        Dim emptyCollection As New Collection
+        Dim fName As String = "Last"
+
+        Dim lastFilter As New clsFilter(fName, emptyCollection, emptyCollection, emptyCollection, _
+                                        emptyCollection, emptyCollection, emptyCollection)
+        filterDefinitions.storeFilter(fName, lastFilter)
+
+
         Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
                            Me.filterIsActive, storedAtOrBefore)
         stopRecursion = False
@@ -1571,7 +1656,7 @@ Public Class frmProjPortfolioAdmin
         Me.deleteFilterIcon.Image = Nothing
         Me.deleteFilterIcon.Enabled = False
 
-
+        Me.Cursor = Cursors.Arrow
 
         
     End Sub
