@@ -60,10 +60,9 @@ Public Class ThisWorkbook
         appInstance = Application
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
+
         Dim path As String = CType(appInstance.ActiveWorkbook, Excel.Workbook).Path
-        'Call MsgBox("Projectboard-Pfad f. .xlsx KOYTEK-NAS= " & path)
-
-
+       
         ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
         ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
         ' in anderen Excel Sheets ist das weiterhin aktiv 
@@ -83,13 +82,20 @@ Public Class ThisWorkbook
 
             appInstance.ScreenUpdating = False
 
-            awinSettings.databaseURL = My.Settings.mongoDBURL
-            awinSettings.databaseName = My.Settings.mongoDBname
-            awinSettings.globalPath = My.Settings.globalPath
-            awinSettings.awinPath = My.Settings.awinPath
-            awinSettings.visboTaskClass = My.Settings.TaskClass
-            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-            awinSettings.visboAmpel = My.Settings.VISBOAmpel
+            ' hier werden die Settings aus der Datei ProjectboardConfig.xml ausgelesen.
+            ' falls die nicht funktioniert, so werden die My.Settings ausgelesen und verwendet.
+
+            If Not readawinSettings(path) Then
+
+                awinSettings.databaseURL = My.Settings.mongoDBURL
+                awinSettings.databaseName = My.Settings.mongoDBname
+                awinSettings.globalPath = My.Settings.globalPath
+                awinSettings.awinPath = My.Settings.awinPath
+                awinSettings.visboTaskClass = My.Settings.TaskClass
+                awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                awinSettings.visboAmpel = My.Settings.VISBOAmpel
+
+            End If
 
             Call awinsetTypen()
 

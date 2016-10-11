@@ -14818,8 +14818,50 @@ Public Module awinGeneralModules
 
         End Try
     End Sub
+    Public Function XMLImportPBcfg(ByVal cfgXMLfilename As String) As configuration
 
-    
+        ' XML-Datei Öffnen
+        ' A FileStream is needed to read the XML document.
+        Dim fs As New FileStream(cfgXMLfilename, FileMode.Open)
+
+        ' Declare an object variable of the type to be deserialized.
+        Dim cfgs As New configuration           ' Class configuration erzeugt aus Projectboard.dll.config
+        Try
+
+
+            ' Create an instance of the XmlSerializer class;
+            ' specify the type of object to be deserialized.
+            Dim deserializer As New XmlSerializer(GetType(configuration))
+
+
+            ' If the XML document has been altered with unknown
+            ' nodes or attributes, handle them with the
+            ' UnknownNode and UnknownAttribute events.
+            AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
+            AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
+
+
+            ' Einlesen des kompletten XML-Dokument im die Klasse rxf
+            ' Use the Deserialize method to restore the object's state with
+            ' data from the XML document. 
+            cfgs = CType(deserializer.Deserialize(fs), configuration)
+
+            XMLImportPBcfg = cfgs
+
+        Catch ex As Exception
+            XMLImportPBcfg = Nothing
+            Call MsgBox("Lesen der ProjectboardConfig.xml fehlgeschlagen")
+        End Try
+
+        ' ProjectboardConfig.xml-Datei schließen
+        fs.Close()
+
+    End Function
+
+
+
+
+
     ''' <summary>
     ''' schreibt eine Datei mit den monatlichen Zuordnungen Rollenbedarfe / Kosten 
     ''' Diese Datei kann editiert werden , dann wieder importiert werden 
@@ -14852,7 +14894,7 @@ Public Module awinGeneralModules
         ' jetzt schreiben der ersten Zeile 
         Dim zeile As Integer = 1
         Dim spalte As Integer = 1
-        
+
         With newWB.ActiveSheet
 
             ersteZeile = CType(.Range(.cells(1, 1), .cells(1, 6 + bis - von)), Excel.Range)
@@ -15483,7 +15525,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                
+
 
             Next p
 
@@ -15523,8 +15565,8 @@ Public Module awinGeneralModules
 
         End With
 
-     
-        
+
+
         ' jetzt wird der RoleCostInput Bereich festgelegt 
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
             Dim maxRows As Integer = .Rows.Count
@@ -15536,7 +15578,7 @@ Public Module awinGeneralModules
             .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                            Formula1:="=RollenKostenNamen")
         End With
-        
+
 
         'With CType(newWB.ActiveSheet, Excel.Worksheet)
 
@@ -16594,7 +16636,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-   
+
     ''' <summary>
     ''' aktualisiert die Summen-Werte im Massen-Edit Sheet der Ressourcen-/Kostenzuordnungen  
     ''' </summary>
@@ -16805,7 +16847,7 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                         End Try
-                        
+
                     End If
 
                 Next
@@ -17037,6 +17079,58 @@ Public Module awinGeneralModules
         Else
             findeSammelRollenZeile = 0
         End If
+
+    End Function
+    Public Function readawinSettings(ByVal path As String) As Boolean
+
+        
+        Dim cfgs As New configuration
+        Dim cfgFile As String = path & "\ProjectboardConfig.xml"
+
+        Dim erg As Boolean = My.Computer.FileSystem.FileExists(cfgFile)
+       
+        Try
+
+            cfgs = XMLImportPBcfg(cfgFile)
+
+            If Not IsNothing(cfgs) Then
+
+                Dim anzahlSettings As Integer = cfgs.applicationSettings.ExcelWorkbook1MySettings.Length
+
+                For i = 0 To anzahlSettings - 1
+
+                    Select Case cfgs.applicationSettings.ExcelWorkbook1MySettings(i).name
+                        Case "mongoDBURL"
+                            awinSettings.databaseURL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "mongoDBname"
+                            awinSettings.databaseName = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "globalPath"
+                            awinSettings.globalPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "awinPath"
+                            awinSettings.awinPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOTaskClass"
+                            awinSettings.visboTaskClass = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAbbreviation"
+                            awinSettings.visboAbbreviation = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpel"
+                            awinSettings.visboAmpel = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+
+                    End Select
+                Next
+
+                readawinSettings = True
+
+            Else
+
+                readawinSettings = False
+
+            End If
+
+        Catch ex As Exception
+
+            readawinSettings = False
+
+        End Try
 
     End Function
 End Module

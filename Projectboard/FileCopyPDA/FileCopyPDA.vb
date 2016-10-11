@@ -7,11 +7,11 @@ Imports Microsoft.VisualStudio.Tools.Applications
 '    Sub Execute(ByVal args As AddInPostDeploymentActionArgs) Implements IAddInPostDeploymentAction.Execute
 
 '        Dim dataDirectory As String = "Projectboard.dll.config"
-'        Dim file As String = "Projectboard.dll.config"
+'        Dim file As String = "ProjectboardConfig.xml"
 '        Dim sourcePath As String = args.AddInPath
 
 '        Dim deploymentManifestUri As Uri = args.ManifestLocation
-'        Dim destPath As String = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)
+'        Dim destPath As String = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
 '        Dim sourceFile As String = System.IO.Path.Combine(sourcePath, dataDirectory)
 '        Dim destFile As String = System.IO.Path.Combine(destPath, file)
 
@@ -26,8 +26,8 @@ Imports Microsoft.VisualStudio.Tools.Applications
 '                    Call MsgBox("destFile = " & destFile)
 
 '                    System.IO.File.Copy(sourceFile, destFile)
-'                    ServerDocument.RemoveCustomization(destFile)
-'                    ServerDocument.AddCustomization(destFile, deploymentManifestUri)
+'                    'ServerDocument.RemoveCustomization(destFile)
+'                    'ServerDocument.AddCustomization(destFile, deploymentManifestUri)
 '                Catch ex As Exception
 '                    Call MsgBox("Catchmsg = " & ex.Message)
 '                End Try

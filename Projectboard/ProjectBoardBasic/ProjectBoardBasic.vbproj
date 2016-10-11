@@ -94,6 +94,7 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="clsProjectboardConfig.vb" />
     <Compile Include="frmOutputWindow.Designer.vb">
       <DependentUpon>frmOutputWindow.vb</DependentUpon>
     </Compile>
