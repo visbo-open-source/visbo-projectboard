@@ -3778,11 +3778,8 @@ Public Module awinGeneralModules
                                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
                                         hproj = request.retrieveOneProjectfromDB(projectName, variantName, Date.Now)
                                         ' jetzt in AlleProjekte eintragen ... 
-                                        If Not IsNothing(hproj) Then
-                                            AlleProjekte.Add(calcProjektKey(hproj), hproj)
-                                            ok = True
-                                        End If
-                                        
+                                        AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                        ok = True
                                     Else
                                         ' nicht in Session, nicht in Datenbank: nicht ok !
                                         ok = False
@@ -8770,7 +8767,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim nvErrorMessage As String = ""
+        Dim nvErrorMessage As String = " (nicht in DB)"
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
         Dim outPutCollection = New Collection
         Dim outputLine As String = ""
@@ -8808,18 +8805,13 @@ Public Module awinGeneralModules
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
                         hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
-                        If Not IsNothing(hproj) Then
-                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                            AlleProjekte.Add(kvp.Key, hproj)
-                        Else
-                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
-                            outPutCollection.Add(outputLine)
-                        End If
-                        
+
+                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                        AlleProjekte.Add(kvp.Key, hproj)
                     Else
 
                         hproj = Nothing
-                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
+                        outputLine = kvp.Value.projectName & nvErrorMessage
                         outPutCollection.Add(outputLine)
                         
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
@@ -8850,7 +8842,7 @@ Public Module awinGeneralModules
                             ShowProjekte.Add(hproj)
 
                         Catch ex1 As Exception
-                            outputLine = hproj.name & "(" & hproj.variantName & ")" & " (konnte der Session nicht hinzugefügt werden)"
+                            outputLine = hproj.name & " (konnte der Session nicht hinzugefügt werden)"
                             outPutCollection.Add(outputLine)
                         End Try
 
@@ -8873,7 +8865,7 @@ Public Module awinGeneralModules
             Dim outputFormular As New frmOutputWindow
             With outputFormular
                 .Text = "Meldungen"
-                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " noch nicht in DB:"
                 .textCollection = outPutCollection
                 .ShowDialog()
             End With
@@ -8895,7 +8887,7 @@ Public Module awinGeneralModules
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim nvErrorMessage As String = ""
+        Dim nvErrorMessage As String = " (nicht in DB)"
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
         Dim outPutCollection = New Collection
         Dim outputLine As String = ""
@@ -8961,25 +8953,20 @@ Public Module awinGeneralModules
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
                         hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
 
-                        If Not IsNothing(hproj) Then
-                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                            AlleProjekte.Add(kvp.Key, hproj)
-                            ' jetzt die Variante aktivieren 
-                            ' aber nur wenn es auch das Flag show hat 
-                            If showIT Then
-                                tryZeile = startOfFreeRows + zeilenOffset
-                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
-                                zeilenOffset = zeilenOffset + 1
-                            End If
-                        Else
-                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
-                            outPutCollection.Add(outputLine)
+                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                        AlleProjekte.Add(kvp.Key, hproj)
+                        ' jetzt die Variante aktivieren 
+                        ' aber nur wenn es auch das Flag show hat 
+                        If showIT Then
+                            tryZeile = startOfFreeRows + zeilenOffset
+                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                            zeilenOffset = zeilenOffset + 1
                         End If
+
 
                     Else
                         hproj = Nothing
-
-                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
+                        outputLine = kvp.Value.projectName & nvErrorMessage
                         outPutCollection.Add(outputLine)
 
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
@@ -8998,7 +8985,7 @@ Public Module awinGeneralModules
             Dim outputFormular As New frmOutputWindow
             With outputFormular
                 .Text = "Meldungen"
-                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " noch nicht in DB:"
                 .textCollection = outPutCollection
                 .ShowDialog()
             End With
@@ -9078,28 +9065,24 @@ Public Module awinGeneralModules
 
         hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
 
-
-        If Not IsNothing(hproj) Then
-            ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-            ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-            If AlleProjekte.Containskey(key) Then
-                AlleProjekte.Remove(key)
-            End If
-
-            AlleProjekte.Add(key, hproj)
-
-            If show Then
-                ' prüfen, ob es bereits in der Showprojekt enthalten ist
-                ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
-                ' replaceProjectVariant
-
-                Call replaceProjectVariant(pName, vName, False, True, freieZeile)
-
-            End If
-        Else
-            Call MsgBox("existiert nicht: " & pName & ", " & vName & " @ " & storedAtORBefore.ToString)
+        ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+        ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+        If AlleProjekte.Containskey(key) Then
+            AlleProjekte.Remove(key)
         End If
-        
+
+        AlleProjekte.Add(key, hproj)
+
+        If show Then
+            ' prüfen, ob es bereits in der Showprojekt enthalten ist
+            ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+            ' replaceProjectVariant
+
+            Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+
+        End If
+
+
 
     End Sub
 
@@ -10093,7 +10076,7 @@ Public Module awinGeneralModules
                               ByRef aktuelleGesamtListe As clsProjekteAlle, _
                               ByVal aKtionskennung As Integer, _
                               ByVal applyFilter As Boolean, _
-                              ByVal storedAtOrBefore As Date)
+                              ByVal storedHeute As Date)
 
         Dim nodeLevel0 As TreeNode
         Dim nodeLevel1 As TreeNode
@@ -10130,7 +10113,7 @@ Public Module awinGeneralModules
 
                 pname = ""
                 variantName = ""
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.delFromSession
@@ -10150,7 +10133,7 @@ Public Module awinGeneralModules
 
                 'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
                 ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.loadPV
@@ -10160,7 +10143,7 @@ Public Module awinGeneralModules
                 pname = ""
                 variantName = ""
 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
 
             Case PTTvActions.activateV
@@ -11146,8 +11129,37 @@ Public Module awinGeneralModules
 
         With auswahlFormular
 
+
+            .Text = "Datenbank Filter definieren"
+
+            '.chkbxShowObjects = False
+            '.chkbxCreateCharts = False
+
+            .chkbxOneChart.Checked = False
+            .chkbxOneChart.Visible = False
+
+            .rdbBU.Visible = True
+            .pictureBU.Visible = True
+
+            .rdbTyp.Visible = True
+            .pictureTyp.Visible = True
+
+            .repVorlagenDropbox.Visible = False
+            .labelPPTVorlage.Visible = False
+
+            ' Filter
+            .filterDropbox.Visible = True
+            .filterLabel.Visible = True
+            .filterLabel.Text = "Name des Filters"
+
+            ' Auswahl Speichern
+            .auswSpeichern.Visible = False
+            .auswSpeichern.Enabled = False
+
             '.showModePortfolio = True
             .menuOption = PTmenue.filterdefinieren
+
+            .OKButton.Text = "Speichern"
 
             '.Show()
             returnValue = .ShowDialog
@@ -11480,10 +11492,7 @@ Public Module awinGeneralModules
 
         ElseIf menueOption = PTmenue.filterdefinieren Then
 
-            'Call MsgBox("ok, Filter gespeichert")
-
-        ElseIf menueOption = PTmenue.sessionFilterDefinieren Then
-            ' keine Message ausgeben ...
+            Call MsgBox("ok, Filter gespeichert")
 
         ElseIf menueOption = PTmenue.excelExport Or menueOption = PTmenue.vorlageErstellen Then
 
@@ -11793,7 +11802,6 @@ Public Module awinGeneralModules
         Dim lastFilter As clsFilter
 
         If menuOption = PTmenue.filterdefinieren Or _
-            menuOption = PTmenue.sessionFilterDefinieren Or _
             menuOption = PTmenue.filterAuswahl Then
 
             If calledFromHry Then
@@ -13386,7 +13394,7 @@ Public Module awinGeneralModules
                         End If
                         Call MsgBox("Projekt " & hproj.name & " kommt mehrmals vor! " & vbLf & hlptxt)
                     End If
-
+                    
 
                     ' jetzt ist sichergestellt, dass calcProjektKey nicht mehr vorkommt 
                     ImportProjekte.Add(calcProjektKey(hproj), hproj)
@@ -13416,7 +13424,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-
+    
     ''' <summary>
     ''' sucht zu der rxfTask 'task' alle Kinder und KindesKinder  und trägt diese in das Projekt 'hproj' ein 
     ''' dazu wird diese Routine rekursiv aufgerufen
@@ -13494,7 +13502,7 @@ Public Module awinGeneralModules
                     ElseIf isKnownPhName And Not isKnownMsName Then
                         isMilestone = False
 
-
+                    
                     Else
                         isMilestone = True
                     End If
@@ -13699,7 +13707,7 @@ Public Module awinGeneralModules
 
                         End If       'Ende of tobeignored phase
 
-
+                    
                     Else
                         ' ist MEILENSTEIN
 
@@ -14223,7 +14231,7 @@ Public Module awinGeneralModules
                 CType(.Rows(1), Excel.Range).Font.Bold = True
             End If
 
-
+            
             If awinSettings.fullProtocol Then
                 CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
                 CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
@@ -14253,7 +14261,7 @@ Public Module awinGeneralModules
                     CType(.Columns(10), Excel.Range).ColumnWidth = 40
                     CType(.Columns(11), Excel.Range).ColumnWidth = 40
                 End If
-
+                
             Else
                 CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
                 CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
@@ -14810,6 +14818,48 @@ Public Module awinGeneralModules
 
         End Try
     End Sub
+    Public Function XMLImportPBcfg(ByVal cfgXMLfilename As String) As configuration
+
+        ' XML-Datei Öffnen
+        ' A FileStream is needed to read the XML document.
+        Dim fs As New FileStream(cfgXMLfilename, FileMode.Open)
+
+        ' Declare an object variable of the type to be deserialized.
+        Dim cfgs As New configuration           ' Class configuration erzeugt aus Projectboard.dll.config
+        Try
+
+
+            ' Create an instance of the XmlSerializer class;
+            ' specify the type of object to be deserialized.
+            Dim deserializer As New XmlSerializer(GetType(configuration))
+
+
+            ' If the XML document has been altered with unknown
+            ' nodes or attributes, handle them with the
+            ' UnknownNode and UnknownAttribute events.
+            AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
+            AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
+
+
+            ' Einlesen des kompletten XML-Dokument im die Klasse rxf
+            ' Use the Deserialize method to restore the object's state with
+            ' data from the XML document. 
+            cfgs = CType(deserializer.Deserialize(fs), configuration)
+
+            XMLImportPBcfg = cfgs
+
+        Catch ex As Exception
+            XMLImportPBcfg = Nothing
+            Call MsgBox("Lesen der ProjectboardConfig.xml fehlgeschlagen")
+        End Try
+
+        ' ProjectboardConfig.xml-Datei schließen
+        fs.Close()
+
+    End Function
+
+
+
 
 
     ''' <summary>
@@ -14905,8 +14955,8 @@ Public Module awinGeneralModules
             pStart = getColumnOfDate(kvp.Value.startDate)
             pEnde = getColumnOfDate(kvp.Value.endeDate)
 
-            usedRoles = kvp.Value.getRoleNames
-            usedCosts = kvp.Value.getCostNames
+            usedRoles = kvp.Value.getUsedRollen
+            usedCosts = kvp.Value.getUsedKosten
 
             For r = 1 To usedRoles.Count
                 tmpName = usedRoles.Item(r)
@@ -17029,6 +17079,58 @@ Public Module awinGeneralModules
         Else
             findeSammelRollenZeile = 0
         End If
+
+    End Function
+    Public Function readawinSettings(ByVal path As String) As Boolean
+
+        
+        Dim cfgs As New configuration
+        Dim cfgFile As String = path & "\ProjectboardConfig.xml"
+
+        Dim erg As Boolean = My.Computer.FileSystem.FileExists(cfgFile)
+       
+        Try
+
+            cfgs = XMLImportPBcfg(cfgFile)
+
+            If Not IsNothing(cfgs) Then
+
+                Dim anzahlSettings As Integer = cfgs.applicationSettings.ExcelWorkbook1MySettings.Length
+
+                For i = 0 To anzahlSettings - 1
+
+                    Select Case cfgs.applicationSettings.ExcelWorkbook1MySettings(i).name
+                        Case "mongoDBURL"
+                            awinSettings.databaseURL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "mongoDBname"
+                            awinSettings.databaseName = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "globalPath"
+                            awinSettings.globalPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "awinPath"
+                            awinSettings.awinPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOTaskClass"
+                            awinSettings.visboTaskClass = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAbbreviation"
+                            awinSettings.visboAbbreviation = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpel"
+                            awinSettings.visboAmpel = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+
+                    End Select
+                Next
+
+                readawinSettings = True
+
+            Else
+
+                readawinSettings = False
+
+            End If
+
+        Catch ex As Exception
+
+            readawinSettings = False
+
+        End Try
 
     End Function
 End Module

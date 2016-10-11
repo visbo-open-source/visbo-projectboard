@@ -11,11 +11,13 @@
     <command idMso="WindowMinimize" enabled="false"/>
     <!-- Deaktiviert das Optionsmenü -->
     <command idMso="ApplicationOptionsDialog" enabled="false"/>
+    <!--<command idMso="ApplicationOptionsDialog" enabled="true"/>-->
     <!-- Deaktiviert die Beenden-Schaltfläche -->
     <command idMso="FileExit" enabled="false" />
   </commands>
   <!-- Ende Command-Ebene -->
-  <ribbon startFromScratch="true">
+  <!--<ribbon startFromScratch="false">-->
+   <ribbon startFromScratch="true">
     <contextualTabs>
       <tabSet idMso="TabSetChartTools" visible="false" />
       <tabSet idMso="TabSetDrawingTools" visible ="false" />
@@ -363,6 +365,13 @@
     <tab idMso ="TabPrint" visible ="false"/>
     <tab idMso ="TabShare" visible ="false"/>
     <tab idMso ="TabHelp" visible ="false"/>
+    <!--<tab idMso ="TabInfo" visible ="true"/>
+    <tab idMso ="TabSave" visible ="true"/>
+    <tab idMso ="TabRecent" visible ="true"/>
+    <tab idMso ="TabNew" visible ="true"/>
+    <tab idMso ="TabPrint" visible ="true"/>
+    <tab idMso ="TabShare" visible ="true"/>
+    <tab idMso ="TabHelp" visible ="true"/>-->
   </backstage>
 </customUI>
 
