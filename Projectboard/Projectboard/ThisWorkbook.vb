@@ -87,6 +87,7 @@ Public Class ThisWorkbook
             awinSettings.visboTaskClass = My.Settings.TaskClass
             awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
             awinSettings.visboAmpel = My.Settings.VISBOAmpel
+            awinSettings.visboDebug = My.Settings.VISBODebug
 
             Call awinsetTypen()
 

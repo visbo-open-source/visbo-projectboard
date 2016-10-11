@@ -715,16 +715,38 @@ Public Module awinGeneralModules
 
             globalPath = awinSettings.globalPath
 
+            ' Debug-Mode?
+            If awinSettings.visboDebug Then
+                If Not IsNothing(globalPath) Then
+                    If globalPath.Length > 0 Then
+                        Call MsgBox("GlobalPath:" & globalPath & vbLf & _
+                                    "existiert: " & My.Computer.FileSystem.DirectoryExists(globalPath).ToString)
+                    Else
+                        Call MsgBox("GlobalPath: leerer String")
+                    End If
+                Else
+                    Call MsgBox("GlobalPath: Nothing")
+                End If
+
+
+            End If
+
             ' awinPath kann relativ oder absolut angegeben sein, beides möglich
 
             Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
             awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
 
+
+
             If Not awinPath.EndsWith("\") Then
                 awinPath = awinPath & "\"
             End If
 
+            ' Debug-Mode?
+            If awinSettings.visboDebug Then
+                Call MsgBox("awinPath:" & vbLf & awinPath)
+            End If
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
                 awinPath = globalPath
@@ -742,6 +764,9 @@ Public Module awinGeneralModules
 
             If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
 
+                If awinSettings.visboDebug Then
+                    Call MsgBox("jetzt wird synchronisiert ...")
+                End If
                 Call synchronizeGlobalToLocalFolder()
 
             Else
@@ -9166,10 +9191,13 @@ Public Module awinGeneralModules
                 hproj = Nothing
             End Try
 
-            If IsNothing(hproj) Or hproj.variantName <> variantName Then
+            If IsNothing(hproj) Then
                 Dim key As String = calcProjektKey(pname, variantName)
                 AlleProjekte.Remove(key)
 
+            ElseIf hproj.variantName <> variantName Then
+                Dim key As String = calcProjektKey(pname, variantName)
+                AlleProjekte.Remove(key)
             Else
                 If variantName = "" Then
 
@@ -10085,6 +10113,56 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' liefert die Namen aller Projekte im Show, die nicht zum angegebenen Filter passen ...
+    ''' </summary>
+    ''' <param name="filterName"></param>
+    ''' <remarks></remarks>
+    Friend Function getProjectNamesNotFittingToFilter(ByVal filterName As String) As Collection
+
+        Dim nameCollection As New Collection
+        Dim filter As New clsFilter
+        Dim ok As Boolean = False
+
+        Dim todoListe As New Collection
+
+
+        filter = filterDefinitions.retrieveFilter("Last")
+
+        If IsNothing(filter) Then
+
+            ' nichts tun und Showprojekte bleibt unverändert ... 
+        Else
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                If Not filter.isEmpty Then
+                    ok = filter.doesNotBlock(kvp.Value)
+                Else
+                    ok = True
+                End If
+
+                If Not ok Then
+                    ' aus Showprojekte rausnehmen und Projekt-Tafel aktualisieren 
+                    Try
+                        nameCollection.Add(kvp.Value.name)
+                    Catch ex As Exception
+
+                    End Try
+                Else
+
+                End If
+
+            Next
+
+            ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
+
+        End If
+
+        getProjectNamesNotFittingToFilter = nameCollection
+
+    End Function
+
+    ''' <summary>
     ''' baut den aktuell gültigen Treeview auf  
     ''' </summary>
     ''' <remarks></remarks>
@@ -10203,6 +10281,8 @@ Public Module awinGeneralModules
                 Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
                 Dim showPname As Boolean
 
+                
+
                 For Each pname In projektliste
 
                     showPname = True
@@ -10224,7 +10304,10 @@ Public Module awinGeneralModules
 
                     If showPname Then
 
+                        Dim variantNames As Collection = aktuelleGesamtListe.getVariantNames(pname, True)
+
                         nodeLevel0 = .Nodes.Add(pname)
+                        
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
                         If aKtionskennung = PTTvActions.delFromSession Or _
@@ -10234,16 +10317,27 @@ Public Module awinGeneralModules
                              aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
                             aKtionskennung = PTTvActions.definePortfolioSE Then
-                            If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
-                                listOfVariantNamesDB.Count > 0 Then
+                            If variantNames.Count > 1 Then
 
                                 nodeLevel0.Tag = "P"
-                                nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                                nodeLevel1 = nodeLevel0.Nodes.Add(CStr(variantNames.Item(1)))
                                 nodeLevel1.Tag = "P"
 
                             Else
                                 nodeLevel0.Tag = "X"
                             End If
+
+                            ' tk 28.9.16 wurde durch obiges abgelöst ...
+                            ''If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
+                            ''    listOfVariantNamesDB.Count > 0 Then
+
+                            ''    nodeLevel0.Tag = "P"
+                            ''    nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                            ''    nodeLevel1.Tag = "P"
+
+                            ''Else
+                            ''    nodeLevel0.Tag = "X"
+                            ''End If
 
                             ' jetzt soll im Fall Bearbeiten Portfolio angezeigt werden, welche Projekte gerade in ShowProjekte sind ...
                             ' bzw. welche quasi im NoShow sind 
@@ -11881,6 +11975,197 @@ Public Module awinGeneralModules
 
             End If
 
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
+    ''' </summary>
+    ''' <param name="pName">
+    ''' gibt an , ob es der erste Aufruf war
+    ''' wenn ja, kommt erst der Bestätigungs-Dialog 
+    ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
+    ''' </param>
+    ''' <remarks></remarks>
+    Public Sub awinDeleteProjectInSession(ByVal pName As String,
+                                          Optional ByVal considerDependencies As Boolean = False, _
+                                          Optional ByVal upDateDiagrams As Boolean = False, _
+                                          Optional ByVal vName As String = Nothing)
+
+
+        Dim hproj As clsProjekt
+
+        Dim tmpCollection As New Collection
+
+        Dim formerEOU As Boolean = enableOnUpdate
+        enableOnUpdate = False
+
+
+        If ShowProjekte.contains(pName) Then
+
+            ' Aktuelle Konstellation ändert sich dadurch
+            If Not currentConstellation.EndsWith("(*)") Then
+                currentConstellation = currentConstellation & "(*)"
+            End If
+
+            hproj = ShowProjekte.getProject(pName)
+            If IsNothing(vName) Or vName = hproj.variantName Then
+                Call putProjectInNoShow(hproj.name, considerDependencies, upDateDiagrams)
+            End If
+
+
+        End If
+
+        ' jetzt müssen alle oder die ausgewählte Variante aus AlleProjekte gelöscht werden 
+        If IsNothing(vName) Then
+            AlleProjekte.RemoveAllVariantsOf(pName)
+        Else
+            Dim key As String = calcProjektKey(pName, vName)
+            If AlleProjekte.Containskey(key) Then
+                AlleProjekte.Remove(key)
+            End If
+        End If
+
+        enableOnUpdate = formerEOU
+
+    End Sub
+
+
+    ''' <summary>
+    ''' nimmt das angegebene Projekt aus ShowProjekte heraus
+    ''' löscht das Projekt auf der Plan-Tafel und schicbt die restlichen Projekte weiter nach oben 
+    ''' wenn considerDependencies=true: dann werden alle abhängigen Projekte, die ebenfalls im ShowProjekte sind, auch rausgenommen
+    ''' wenn upDateDiagrams=true: alle Diagramme werde neu gezeichnet  
+    ''' 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="considerDependencies"></param>
+    ''' <param name="upDateDiagrams"></param>
+    ''' <remarks></remarks>
+    Public Sub putProjectInNoShow(ByVal pName As String, ByVal considerDependencies As Boolean, ByVal upDateDiagrams As Boolean)
+
+        Dim pZeile As Integer
+        Dim tmpCollection As New Collection
+        Dim anzahlZeilen As Integer = 1
+
+        If ShowProjekte.contains(pName) Then
+
+            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+            pZeile = calcYCoordToZeile(projectboardShapes.getCoord(pName)(0))
+
+            If hproj.extendedView Then
+                anzahlZeilen = _
+                    hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
+            End If
+            
+            'pZeile = ShowProjekte.getPTZeile(selectedProjectName)
+            'Call MsgBox("Zeile: " & pZeile.ToString)
+
+            Call clearProjektinPlantafel(pName)
+
+            ShowProjekte.Remove(pName)
+
+            Call moveShapesUp(pZeile + 1, anzahlZeilen, True)
+
+        End If
+
+        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+        If considerDependencies Then
+            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+            Dim toDoListe As Collection = allDependencies.activeListe(pName, PTdpndncyType.inhalt)
+            If toDoListe.Count > 0 Then
+                For Each dprojectName As String In toDoListe
+                    Call putProjectInNoShow(dprojectName, considerDependencies, False)
+                Next
+
+            End If
+        Else
+            ' nichts tun 
+        End If
+
+        If upDateDiagrams Then
+            ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(2)
+        End If
+        
+
+    End Sub
+
+    ''' <summary>
+    ''' bringt die angegebene Projekt-Variante ins Show ... 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vNAme"></param>
+    ''' <param name="considerDependencies"></param>
+    ''' <param name="upDateDiagrams"></param>
+    ''' <remarks></remarks>
+    Public Sub putProjectInShow(ByVal pName As String, ByVal vName As String, _
+                                    ByVal considerDependencies As Boolean, _
+                                    ByVal upDateDiagrams As Boolean, _
+                                    Optional ByVal parentChoice As Boolean = False)
+
+        Dim key As String = calcProjektKey(pName, vName)
+        Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+
+
+        If IsNothing(hproj) And parentChoice Then
+            Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+            vName = CStr(variantNames.Item(1))
+            key = calcProjektKey(pName, vName)
+            hproj = AlleProjekte.getProject(key)
+        End If
+
+        ' wenn immer noch Nothing, nichts tun ... 
+        If IsNothing(hproj) Then
+            Exit Sub
+        End If
+
+        Dim anzahlZeilen As Integer = 1
+
+        If Not ShowProjekte.contains(pName) Then
+            ShowProjekte.Add(hproj)
+            Dim pZeile As Integer = ShowProjekte.getPTZeile(pName)
+            Dim tmpCollection As New Collection
+
+            If hproj.extendedView Then
+                anzahlZeilen = _
+                    hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
+            End If
+
+            If pZeile > 0 Then
+                Call moveShapesDown(tmpCollection, pZeile, anzahlZeilen, 0)
+                Call ZeichneProjektinPlanTafel(tmpCollection, pName, pZeile, tmpCollection, tmpCollection, True)
+            End If
+        End If
+
+        ' jetzt muss das Projekt neu gezeichnet werden ; 
+        ' dazu muss die Einfügestelle bestimmt werden, dann alle anderen Shapes nach unten verschoben werden 
+        ' hier muss die Zeile über Showprojekte bestimmt werden, einfach nach der Sortier-Reihenfolge 
+        ' das kann später dann noch angepasst werden 
+
+        'Dim pZeile2 As Integer = node.Index
+        'Call MsgBox("Zeile: " & pZeile.ToString)
+
+
+
+        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+        If considerDependencies Then
+            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+            Dim toDoListe As Collection = allDependencies.passiveListe(pName, PTdpndncyType.inhalt)
+            If toDoListe.Count > 0 Then
+                For Each mprojectName As String In toDoListe
+                    Call putProjectInShow(mprojectName, "", considerDependencies, False, True)
+                Next
+
+            End If
+        Else
+            ' nichts tun 
+        End If
+
+        If upDateDiagrams Then
+            ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(2)
         End If
 
     End Sub
@@ -14539,7 +14824,7 @@ Public Module awinGeneralModules
 
     End Sub
     ''' <summary>
-    ''' 
+    ''' synchronisiert die globalen mit den lokalen Konfigurations-Dateien 
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub synchronizeGlobalToLocalFolder()
@@ -14655,6 +14940,10 @@ Public Module awinGeneralModules
                     If ddiff < 0 Then
                         ' Kopieren der Datei, mit Overwrite erzwingen
                         My.Computer.FileSystem.CopyFile(srcFile, destFile, True)
+                        ' Debug Mode? 
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("kopiert von global nach local:" & hstr(hstr.Length - 1))
+                        End If
                     End If
 
                 Next srcFile
@@ -14687,6 +14976,11 @@ Public Module awinGeneralModules
                         If ddiff < 0 Then
                             ' Kopieren der Datei, mit Overwrite erzwingen
                             My.Computer.FileSystem.CopyFile(srcFile, destFile, True)
+
+                            ' Debug Mode? 
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("kopiert von global nach local:" & hstr(hstr.Length - 2) & "/" & hstr(hstr.Length - 1))
+                            End If
                         End If
 
                     Next srcFile

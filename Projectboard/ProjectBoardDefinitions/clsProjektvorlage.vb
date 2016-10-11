@@ -2605,13 +2605,14 @@
     End Property
 
     '
-    ' übergibt in getUsedRollen eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
+    ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
     Public ReadOnly Property getRoleNames() As Collection
 
         Get
             Dim phase As clsPhase
             Dim aufbauRollen As New Collection
+            Dim summaryRoles As Collection
             Dim roleName As String
             Dim hrole As clsRolle
             Dim p As Integer, r As Integer
@@ -2628,6 +2629,8 @@
                             hrole = .getRole(r)
                             If hrole.summe > 0 Then
                                 roleName = hrole.name
+
+                                summaryRoles = RoleDefinitions.getSummaryRoles(roleName)
                                 '
                                 ' das ist performanter als der Weg über try .. catch 
                                 '
@@ -2635,11 +2638,13 @@
                                     aufbauRollen.Add(roleName, roleName)
                                 End If
 
-                                'Try
-                                '    aufbauRollen.Add(roleName, roleName)
-                                'Catch ex As Exception
+                                For Each summaryRole As String In summaryRoles
+                                    If Not aufbauRollen.Contains(summaryRole) Then
+                                        aufbauRollen.Add(summaryRole, summaryRole)
+                                    End If
+                                Next
 
-                                'End Try
+                                
 
                             End If
                         Next r

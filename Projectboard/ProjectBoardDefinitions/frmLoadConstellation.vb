@@ -3,9 +3,10 @@
     Private formerselect As String
     Public retrieveFromDB As Boolean
     Public listOfTimeStamps As Collection
+    Public constellationsToShow As clsConstellations
     Private Sub frmLoadConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+        For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
             ListBox1.Items.Add(kvp.Key)
 
@@ -66,6 +67,7 @@
         ' Dieser Aufruf ist für den Designer erforderlich.
         InitializeComponent()
         retrieveFromDB = False
+        constellationsToShow = New clsConstellations
 
         ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
 

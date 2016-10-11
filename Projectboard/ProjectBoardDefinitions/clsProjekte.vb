@@ -20,16 +20,19 @@ Public Class clsProjekte
             Dim pname As String = project.name
             Dim shpUID As String = project.shpUID
 
-            _allProjects.Add(pname, project)
+            If Not IsNothing(project) Then
+                _allProjects.Add(pname, project)
 
-            If shpUID <> "" Then
-                _allShapes.Add(shpUID, pname)
-            End If
+                If shpUID <> "" Then
+                    _allShapes.Add(shpUID, pname)
+                End If
 
-            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
-            If Not currentConstellation.EndsWith("(*)") Then
-                currentConstellation = currentConstellation & "(*)"
+                ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
+                If Not currentConstellation.EndsWith("(*)") Then
+                    currentConstellation = currentConstellation & "(*)"
+                End If
             End If
+            
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -689,33 +692,26 @@ Public Class clsProjekte
                                         Optional ByVal tryOnceMore As Boolean = False) As clsProjekt
 
         Get
-            Try
 
+
+            If _allProjects.ContainsKey(itemName) Then
                 getProject = _allProjects.Item(itemName)
+            ElseIf tryOnceMore Then
 
-            Catch ex As Exception
-
-                If tryOnceMore Then
-
-                    Dim pName As String = extractName(itemName, PTshty.projektN)
-                    If pName.Length > 0 Then
-
-                        If _allProjects.ContainsKey(pName) Then
-                            getProject = _allProjects.Item(pName)
-                        Else
-                            Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
-                        End If
+                Dim pName As String = extractName(itemName, PTshty.projektN)
+                If pName.Length > 0 Then
+                    If _allProjects.ContainsKey(pName) Then
+                        getProject = _allProjects.Item(pName)
                     Else
                         Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
                     End If
-
                 Else
                     Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
                 End If
+            Else
+                Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+            End If
 
-
-
-            End Try
 
         End Get
 

@@ -25,7 +25,10 @@ Public Class clsProjekt
     'Private _ampelStatus As Integer
     'Private _ampelErlaeuterung As String
     Private _name As String
-    Private _variantName As String
+    Private _variantName As String = ""
+    Private _variantDescription As String = ""
+    ' Projektbeschreibung 
+    Private _description As String = ""
 
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
@@ -46,7 +49,7 @@ Public Class clsProjekt
     Public Property timeStamp As Date
 
     ' ergänzt am 26.10.13 - nicht in Vorlage aufgenommen, da es für jedes Projekt individuell ist 
-    Public Property description As String
+
     Public Property volume As Double
     Public Property complexity As Double
     Public Property businessUnit As String
@@ -300,6 +303,40 @@ Public Class clsProjekt
 
 
     End Sub
+    ''' <summary>
+    ''' liest / schreibt die Description eines Projektes
+    ''' stellt sicher, dass es niemals Null sein kann 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property description As String
+        Get
+            If IsNothing(_description) Then
+                _description = ""
+            End If
+            description = _description
+        End Get
+
+        Set(value As String)
+            If IsNothing(value) Then
+                _description = ""
+            Else
+                Try
+                    If value.Trim.Length > 0 Then
+                        _description = value.Trim
+
+                    Else
+                        _description = ""
+                    End If
+
+                Catch ex As Exception
+                    _description = ""
+                End Try
+            End If
+        End Set
+    End Property
+
 
     ''' <summary>
     ''' stellt sicher, daß variantName niemals Nothing sein kann
@@ -330,6 +367,47 @@ Public Class clsProjekt
 
                 Catch ex As Exception
                     _variantName = ""
+                End Try
+            End If
+
+
+        End Set
+    End Property
+
+
+
+    ''' <summary>
+    ''' stellt sicher, daß variantDescription niemals Nothing sein kann
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property variantDescription As String
+        Get
+
+            If IsNothing(_variantDescription) Then
+                _variantDescription = ""
+            End If
+            variantDescription = _variantDescription
+
+
+        End Get
+
+        Set(value As String)
+
+            If IsNothing(value) Then
+                _variantDescription = ""
+            Else
+                Try
+                    If value.Trim.Length > 0 Then
+                        _variantDescription = value.Trim
+
+                    Else
+                        _variantDescription = ""
+                    End If
+
+                Catch ex As Exception
+                    _variantDescription = ""
                 End Try
             End If
 
@@ -3769,6 +3847,7 @@ Public Class clsProjekt
         _timeStamp = Date.Now
 
         _variantName = ""
+        _variantDescription = ""
 
         '_ampelErlaeuterung = ""
         '_ampelStatus = 0

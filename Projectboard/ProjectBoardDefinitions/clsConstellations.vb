@@ -19,7 +19,13 @@
 
     Public ReadOnly Property getConstellation(name As String) As clsConstellation
         Get
-            getConstellation = allConstellations.Item(Name)
+
+            If allConstellations.ContainsKey(name) Then
+                getConstellation = allConstellations.Item(name)
+            Else
+                getConstellation = Nothing
+            End If
+
         End Get
     End Property
 

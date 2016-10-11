@@ -8248,57 +8248,7 @@ Public Module Projekte
     '
     '
     '
-    ''' <summary>
-    ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
-    ''' </summary>
-    ''' <param name="pName">
-    ''' gibt an , ob es der erste Aufruf war
-    ''' wenn ja, kommt erst der Bestätigungs-Dialog 
-    ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
-    ''' </param>
-    ''' <remarks></remarks>
-    Public Sub awinDeleteProjectInSession(ByVal pName As String)
-
-
-        Dim bestaetigeLoeschen As New frmconfirmDeletePrj
-        Dim zeile As Integer
-        Dim hproj As clsProjekt
-        Dim anzahlZeilen As Integer
-        Dim tmpCollection As New Collection
-
-        Dim formerEOU As Boolean = enableOnUpdate
-        enableOnUpdate = False
-
-        hproj = ShowProjekte.getProject(pName)
-        anzahlZeilen = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
-
-
-
-        If ShowProjekte.contains(pName) Then
-
-            ' Aktuelle Konstellation ändert sich dadurch
-            If Not currentConstellation.EndsWith("(*)") Then
-                currentConstellation = currentConstellation & "(*)"
-            End If
-
-            zeile = hproj.tfZeile
-
-            ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-            Call clearProjektinPlantafel(pName)
-
-            ShowProjekte.Remove(pName)
-
-            ' in der Projekt-Tafel den Platz nutzen ... 
-            Call moveShapesUp(zeile, anzahlZeilen)
-
-        End If
-
-
-        AlleProjekte.RemoveAllVariantsOf(pName)
-        enableOnUpdate = formerEOU
-
-    End Sub
-
+    
     Public Sub awinDeleteChart(ByRef chtobj As ChartObject)
         Dim kennung As String
         Dim hDiagramm As clsDiagramm

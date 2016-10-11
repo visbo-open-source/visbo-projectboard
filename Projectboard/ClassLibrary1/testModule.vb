@@ -8577,7 +8577,7 @@ Public Module testModule
                     CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString(formatierung)
 
                     If deltaValue > 0 Then
-                        If deltaValue > 0.05 * hErloes Then
+                        If deltaValue > 0.1 * hErloes Then
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                             awinSettings.AmpelGruen
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
@@ -8585,7 +8585,7 @@ Public Module testModule
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                         End If
-                    ElseIf deltaValue * -1 > 0.05 * hErloes Then
+                    ElseIf deltaValue * -1 > 0.1 * hErloes Then
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                             awinSettings.AmpelRot
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
@@ -8593,7 +8593,7 @@ Public Module testModule
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                     End If
 
-                    ' Termine ? 
+                    ' Termin-Delta? 
                     spalte = 10
                     deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
                     CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
@@ -8623,7 +8623,7 @@ Public Module testModule
                     End If
 
 
-                    ' Deliverables ?
+                    ' Deliverables-Delta ?
                     spalte = 11
                     Dim hAnzahl As Integer = hproj.getDeliverables.Count
                     Dim vAnzahl As Integer = vproj.getDeliverables.Count
@@ -8643,6 +8643,8 @@ Public Module testModule
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
                                 RGB(249, 249, 249)
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                        ElseIf deltaValue = 0 Then
+                            ' nichts tun ...
                         Else
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                                 awinSettings.AmpelRot

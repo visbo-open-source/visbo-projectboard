@@ -6,6 +6,7 @@ Public Class clsOpenXML
 
     Public projectName As String
     Public variantName As String
+    Public variantDescription As String
     Public timeStamp As Date
     Public ID As String
 
@@ -47,6 +48,7 @@ Public Class clsOpenXML
         With projekt
             Me.projectName = .name
             Me.variantName = .variantName
+            Me.variantDescription = .variantDescription
 
             If Not IsNothing(.timeStamp) Then
                 Me.timeStamp = .timeStamp.ToUniversalTime
@@ -132,6 +134,8 @@ Public Class clsOpenXML
 
             .name = Me.projectName
             .variantName = Me.variantName
+            .variantDescription = Me.variantDescription
+
             .timeStamp = Me.timeStamp.ToLocalTime
             .Id = Me.ID
             .Risiko = Me.risk
@@ -234,6 +238,7 @@ Public Class clsOpenXML
 
         projectName = "Testproject"
         variantName = ""
+        variantDescription = ""
         timeStamp = Date.Now
         ID = ""
 

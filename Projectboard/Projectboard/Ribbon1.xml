@@ -152,7 +152,7 @@
             <button id="PT2G1M1B0" label="neue Variante anlegen" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden. So können zunächst mehrere Varianten für ein oder mehrere Projekte erstellt werden, die dann in Folge in Optimierungs- und Leistbarkeitsanalysen verwendet werden können"/>
             <button id="PT2G1M1B1" label="Variante aktivieren" onAction="PT2VarianteAktiv" supertip ="eine Variante eines Projektes zur aktiven Variante machen bedeutet, diese Projektvariante auf der Projekttafel zu visualisieren und in den Analysen zu verwenden"/>
             <button id="PT2G1M1B2" label="Variante löschen" onAction="PT2VarianteLoeschen" supertip ="es wird die selektierte Variante des Projektes aus der Session gelöscht; in der Datenbank wird die Variante nicht gelöscht; das kann über den entsprechenden Datenbank Befehl erreicht werden "/>
-            <button id="PT2G1M1B3" label="Variante übernehmen" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
+            <button id="PT2G1M1B3" label="Variante zum Standard machen" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
           </menu>
           <separator id="PT2G1s1"/>
           <button id="PT2G1M2B4" getVisible="chckVisibility" label="Ressource/Kostenart hinzufügen" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
@@ -288,7 +288,7 @@
          </menu>
          <separator id="PT5G1s1"/>
          <menu id ="PT5G2" label ="Speichern">
-           <button id="Pt5G2B1" label="Multiprojekt-Szenario" onAction="PTNeueKonstellation" supertip ="die aktuelle Session mit den Verweisen auf die darin enthaltenen Projekt-Varianten wird als neues Szenario in der Datenbank gespeichert "/>
+           <button id="Pt5G2B1" label="Multiprojekt-Szenario" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Szenarien werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
             <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
            <button id="Pt5G2B3" label="Projekte/Varianten " onAction="PT5StoreProjects" supertip ="die ausgewählten Projekte werden mit ihrem jeweiligen Zeitstempel in der Datenbank gespeichert; wenn zu diesen Projekten Varianten definiert sind, so werden diese mitgespeichert; wenn keine Projekte selektiert wurden, so werden alle Projekte der Session mit ihren Varianten gespeichert"/>
            <button id="Pt5G2B4" label="Alles Speichern" onAction="PT5StoreEverything" supertip ="alle Projekte/Varianten sowie alle Szenarios und Filter werden gespeichert"/>
