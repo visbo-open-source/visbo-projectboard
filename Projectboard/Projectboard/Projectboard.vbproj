@@ -20,7 +20,7 @@
     <PublishUrl>\\KOYTEK-NAS\backup\test\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.0.4.39</ApplicationVersion>
+    <ApplicationVersion>3.0.4.41</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
