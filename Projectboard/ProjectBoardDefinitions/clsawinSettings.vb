@@ -1,4 +1,5 @@
-﻿Imports Microsoft.Office.Interop.Excel
+﻿
+Imports Microsoft.Office.Interop.Excel
 Imports System.Globalization
 
 Public Class clsawinSettings
@@ -40,10 +41,12 @@ Public Class clsawinSettings
     Public Property kalenderStart As Date
     Public Property zeitEinheit As String
     Public Property kapaEinheit As String
+
     Public Property databaseName As String
     Public Property databaseURL As String
     Public Property globalPath As String
     Public Property awinPath As String
+
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double
     Public Property spaltenbreite As Double

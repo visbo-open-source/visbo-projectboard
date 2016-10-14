@@ -87,7 +87,7 @@ Public Class Tabelle2
                              AllowSorting:=True, _
                              AllowFiltering:=True)
                     .EnableSelection = XlEnableSelection.xlUnlockedCells
-                    .EnableAutoFilter = True
+                    ' .EnableAutoFilter = True
                 End With
             End If
 
