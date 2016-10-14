@@ -761,6 +761,11 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
             End If
 
+
+            If Not globalPath.EndsWith("\") Then
+                globalPath = globalPath & "\"
+            End If
+
             ' Synchronization von Globalen und Lokalen Pfad
 
             If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
@@ -15539,6 +15544,51 @@ Public Module awinGeneralModules
 
         End Try
     End Sub
+    ''' <summary>
+    ''' importiert die ProjectboardConfig.xml
+    ''' </summary>
+    ''' <param name="cfgXMLfilename"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function XMLImportPBcfg(ByVal cfgXMLfilename As String) As configuration
+
+        ' XML-Datei Öffnen
+        ' A FileStream is needed to read the XML document.
+        Dim fs As New FileStream(cfgXMLfilename, FileMode.Open)
+
+        ' Declare an object variable of the type to be deserialized.
+        Dim cfgs As New configuration           ' Class configuration erzeugt aus Projectboard.dll.config
+        Try
+
+
+            ' Create an instance of the XmlSerializer class;
+            ' specify the type of object to be deserialized.
+            Dim deserializer As New XmlSerializer(GetType(configuration))
+
+
+            ' If the XML document has been altered with unknown
+            ' nodes or attributes, handle them with the
+            ' UnknownNode and UnknownAttribute events.
+            AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
+            AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
+
+
+            ' Einlesen des kompletten XML-Dokument im die Klasse rxf
+            ' Use the Deserialize method to restore the object's state with
+            ' data from the XML document. 
+            cfgs = CType(deserializer.Deserialize(fs), configuration)
+
+            XMLImportPBcfg = cfgs
+
+        Catch ex As Exception
+            XMLImportPBcfg = Nothing
+            Call MsgBox("Lesen der ProjectboardConfig.xml fehlgeschlagen")
+        End Try
+
+        ' ProjectboardConfig.xml-Datei schließen
+        fs.Close()
+
+    End Function
 
 
     ''' <summary>
@@ -17772,6 +17822,67 @@ Public Module awinGeneralModules
         Else
             findeSammelRollenZeile = 0
         End If
+
+    End Function
+    ''' <summary>
+    ''' liest, falls vorhanden aus ProjectboardConfig.xml die Settings
+    ''' wenn nicht vorhanden, gibt false zurück 
+    ''' </summary>
+    ''' <param name="path"></param>
+    ''' <returns>ob erfolgreich oder nicht </returns>
+    ''' <remarks></remarks>
+    Public Function readawinSettings(ByVal path As String) As Boolean
+
+
+        Dim cfgs As New configuration
+        Dim cfgFile As String = path & "\ProjectboardConfig.xml"
+
+        Dim erg As Boolean = My.Computer.FileSystem.FileExists(cfgFile)
+
+        Try
+
+            cfgs = XMLImportPBcfg(cfgFile)
+
+            If Not IsNothing(cfgs) Then
+
+                Dim anzahlSettings As Integer = cfgs.applicationSettings.ExcelWorkbook1MySettings.Length
+
+                For i = 0 To anzahlSettings - 1
+
+                    Select Case cfgs.applicationSettings.ExcelWorkbook1MySettings(i).name
+                        Case "mongoDBURL"
+                            awinSettings.databaseURL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "mongoDBname"
+                            awinSettings.databaseName = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "globalPath"
+                            awinSettings.globalPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "awinPath"
+                            awinSettings.awinPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOTaskClass"
+                            awinSettings.visboTaskClass = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAbbreviation"
+                            awinSettings.visboAbbreviation = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpel"
+                            awinSettings.visboAmpel = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBODebug"
+                            awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+
+                    End Select
+                Next
+
+                readawinSettings = True
+
+            Else
+
+                readawinSettings = False
+
+            End If
+
+        Catch ex As Exception
+
+            readawinSettings = False
+
+        End Try
 
     End Function
 End Module
