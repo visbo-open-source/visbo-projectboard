@@ -2607,7 +2607,15 @@
     '
     ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
-    Public ReadOnly Property getRoleNames() As Collection
+    ''' <summary>
+    ''' gibt die Liste aller im Projekt vergebenen Rollen aus; 
+    ''' wenn inCludingSumRoles = true (default : false) , dann werden auch die Summary Roles ausgegeben
+    ''' </summary>
+    ''' <param name="includingSumRoles"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleNames(Optional ByVal includingSumRoles As Boolean = False) As Collection
 
         Get
             Dim phase As clsPhase
@@ -2630,7 +2638,6 @@
                             If hrole.summe > 0 Then
                                 roleName = hrole.name
 
-                                summaryRoles = RoleDefinitions.getSummaryRoles(roleName)
                                 '
                                 ' das ist performanter als der Weg über try .. catch 
                                 '
@@ -2638,13 +2645,14 @@
                                     aufbauRollen.Add(roleName, roleName)
                                 End If
 
-                                For Each summaryRole As String In summaryRoles
-                                    If Not aufbauRollen.Contains(summaryRole) Then
-                                        aufbauRollen.Add(summaryRole, summaryRole)
-                                    End If
-                                Next
-
-                                
+                                If includingSumRoles Then
+                                    summaryRoles = RoleDefinitions.getSummaryRoles(roleName)
+                                    For Each summaryRole As String In summaryRoles
+                                        If Not aufbauRollen.Contains(summaryRole) Then
+                                            aufbauRollen.Add(summaryRole, summaryRole)
+                                        End If
+                                    Next
+                                End If
 
                             End If
                         Next r

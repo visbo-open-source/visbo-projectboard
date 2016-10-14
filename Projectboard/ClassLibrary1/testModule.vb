@@ -2437,6 +2437,16 @@ Public Module testModule
                                 End If
                                 .TextFrame2.TextRange.Text = boxName & ": " & hproj.description
 
+                                Try
+                                    If hproj.variantDescription.Length > 0 Then
+                                        .TextFrame2.TextRange.Text = boxName & ": " & hproj.description & vbLf & vbLf & _
+                                            "Varianten-Beschreibung: " & hproj.variantDescription
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+
                             Case "Stand:"
 
                                 If boxName = kennzeichnung Then

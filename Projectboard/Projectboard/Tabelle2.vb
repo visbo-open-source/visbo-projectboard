@@ -29,6 +29,29 @@ Public Class Tabelle2
         meWS = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(5)), Excel.Worksheet)
 
+        ' jetzt den Schutz aufheben , falls einer definiert ist 
+        If meWS.ProtectContents Then
+            meWS.Unprotect(Password:="x")
+        End If
+
+        ' jetzt den AutoFilter setzen 
+        Try
+            ' einen Select machen ...
+            Try
+                CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
+                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Filtersetzen und Speichern" & vbLf & ex.Message)
+        End Try
+
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
             With visboZustaende
@@ -49,7 +72,8 @@ Public Class Tabelle2
         Try
             If awinSettings.meEnableSorting Then
                 With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                    .Unprotect("x")
+                    ' braucht man nicht mehr - ist schon gemacht 
+                    '.Unprotect("x")
                     .EnableSelection = XlEnableSelection.xlNoRestrictions
                 End With
             Else
@@ -95,7 +119,7 @@ Public Class Tabelle2
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
         End If
 
-        Application.EnableEvents = True
+        Application.EnableEvents = formerEE
         'Application.ScreenUpdating = True
 
     End Sub
@@ -607,6 +631,43 @@ Public Class Tabelle2
         End Try
 
         appInstance.EnableEvents = True
+    End Sub
+
+    Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
+
+        appInstance.EnableEvents = False
+
+        ' jetzt den Schutz aufheben , falls einer definiert ist 
+        If meWS.ProtectContents Then
+            meWS.Unprotect(Password:="x")
+        End If
+
+        Try
+            ' einen Select machen ...
+            Try
+                CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt die Autofilter de-aktivieren ... 
+            If CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
+                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            ' jetzt alles löschen 
+            Try
+                meWS.UsedRange.Clear()
+            Catch ex As Exception
+
+            End Try
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Filter zurücksetzen " & vbLf & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
     End Sub
 
 

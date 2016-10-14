@@ -508,7 +508,7 @@ Public Module PBBModules
         appInstance.EnableEvents = False
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft >= minColumns - 1 Then
 
             If ControlID = "PTXG1B6" Then
                 ' Auswahl über Namen
@@ -541,7 +541,7 @@ Public Module PBBModules
 
             Call MsgBox("Es sind keine Projekte geladen!  ")
 
-        ElseIf showRangeRight - showRangeLeft <= 5 Then
+        ElseIf showRangeRight - showRangeLeft < minColumns - 1 Then
 
             Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
 

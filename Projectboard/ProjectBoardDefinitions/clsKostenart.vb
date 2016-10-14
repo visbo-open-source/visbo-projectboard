@@ -1,33 +1,41 @@
 ﻿Public Class clsKostenart
 
-    Private typus As Integer
-    Private Bedarf() As Double
+    Private _typus As Integer
+    Private _bedarf() As Double
 
     Public Property KostenTyp() As Integer
         Get
-            KostenTyp = typus
+            KostenTyp = _typus
         End Get
 
         Set(value As Integer)
-            typus = value
+            _typus = value
         End Set
 
     End Property
 
     Public ReadOnly Property getDimension As Integer
         Get
-            getDimension = Xwerte.Length - 1
+            getDimension = _bedarf.Length - 1
         End Get
     End Property
 
+
     Public Property Xwerte() As Double()
         Get
-            Xwerte = Bedarf
+            Xwerte = _bedarf
         End Get
 
         Set(values As Double())
 
-            Bedarf = values
+            Dim ub As Integer = UBound(values)
+            Dim tmpArray() As Double
+            ReDim tmpArray(ub)
+
+            For i As Integer = 0 To ub
+                tmpArray(i) = values(i)
+            Next
+            _bedarf = tmpArray
 
         End Set
 
@@ -35,24 +43,24 @@
 
     Public Property Xwerte(ByVal index As Integer) As Double
         Get
-            Xwerte = Bedarf(index)
+            Xwerte = _bedarf(index)
         End Get
 
         Set(value As Double)
-            Bedarf(index) = value
+            _bedarf(index) = value
         End Set
 
     End Property
 
     Public ReadOnly Property name() As String
         Get
-            name = CostDefinitions.getCostdef(typus).name
+            name = CostDefinitions.getCostdef(_typus).name
         End Get
     End Property
 
     Public ReadOnly Property farbe() As Object
         Get
-            farbe = CostDefinitions.getCostdef(typus).farbe
+            farbe = CostDefinitions.getCostdef(_typus).farbe
         End Get
     End Property
 
@@ -62,10 +70,10 @@
             Dim i As Integer
             Dim ende As Integer
 
-            ende = UBound(Bedarf)
+            ende = UBound(_bedarf)
             isum = 0
             For i = 0 To ende
-                isum = isum + Bedarf(i)
+                isum = isum + _bedarf(i)
             Next i
 
             summe = isum
@@ -75,8 +83,8 @@
     Public Sub CopyTo(ByRef newcost As clsKostenart)
 
         With newcost
-            .KostenTyp = typus
-            .Xwerte = Bedarf
+            .KostenTyp = _typus
+            .Xwerte = _bedarf
 
         End With
 
@@ -88,7 +96,7 @@
 
     Public Sub New(ByVal laenge As Integer)
 
-        ReDim Bedarf(laenge)
+        ReDim _bedarf(laenge)
 
     End Sub
 

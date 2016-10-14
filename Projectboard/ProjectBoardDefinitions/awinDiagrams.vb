@@ -293,7 +293,11 @@ Public Module awinDiagrams
             left = 0
         End If
 
-        width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+        Dim breite As Integer = bis - von
+        If breite < 6 Then
+            breite = 6
+        End If
+        width = 265 + (breite - 12 + 1) * boxWidth + (breite) * screen_correct
 
 
 
@@ -5130,7 +5134,7 @@ Public Module awinDiagrams
         ' 9 - Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
         ' Schutz Funktion : wenn showrangeleft = 0 und showrangeright = 0 , dann nichts tun
-        If showRangeRight - showRangeLeft >= 5 Then
+        If showRangeRight - showRangeLeft >= minColumns - 1 Then
 
             With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 

@@ -79,7 +79,7 @@
             <button id="PT0G1B9" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>
           </menu>
           <separator id="PT0G1s3"/>
-          <button id="PT3G1B5" label="Zeit-Maschine" enabled ="true" onAction="awinShowTimeMachine" supertip="mit der Zeit-Maschine können zeitliche Position von Meilensteinen und Phasen von früheren Planungs-Ständen angezeigt werden"/>
+          <button id="PT3G1B5" label="Zeit-Maschine" enabled ="false" onAction="awinShowTimeMachine" supertip="mit der Zeit-Maschine können zeitliche Position von Meilensteinen und Phasen von früheren Planungs-Ständen angezeigt werden"/>
           <!--<button id="PT0G1B1" label="Abhängigkeiten"  enabled ="true" onAction="PT0ShowDependencies" supertip="die Abhängigkeiten zwischen Projekten werden über PFeile visualisiert"/>-->
         </group>
         <group id="PT0G2" label ="Charts">

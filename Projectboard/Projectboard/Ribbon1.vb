@@ -743,7 +743,7 @@ Imports System.Windows
 
         If ShowProjekte.Count > 0 Then
 
-            If showRangeRight - showRangeLeft > 5 Then
+            If showRangeRight - showRangeLeft >= minColumns - 1 Then
 
                 Dim awinSelection As Excel.ShapeRange
 
@@ -6616,7 +6616,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                If showRangeRight - showRangeLeft < 6 Then
+                If showRangeRight - showRangeLeft < minColumns - 1 Then
                     Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
                 Else
                     Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
@@ -6654,7 +6654,7 @@ Imports System.Windows
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        If (showRangeRight - showRangeLeft) >= 6 Then
+        If (showRangeRight - showRangeLeft) >= minColumns - 1 Then
 
             If ShowProjekte.Count > 0 Then
 
@@ -6683,6 +6683,8 @@ Imports System.Windows
                         left = 0
                     End If
 
+                    Dim breite As Integer = System.Math.Max(bis - von, 6)
+                    
                     width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
 
                     Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, DiagrammTypen(1), False)
@@ -6841,7 +6843,7 @@ Imports System.Windows
         End If
 
         If relevanteProjekte.Count > 0 Then
-            If showRangeRight - showRangeLeft > 5 Then
+            If showRangeRight - showRangeLeft >= minColumns - 1 Then
 
                 ' betrachte sowohl Vergangenheit als auch Gegenwart
                 future = 0
@@ -7606,7 +7608,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                If showRangeRight - showRangeLeft < 6 Then
+                If showRangeRight - showRangeLeft < minColumns - 1 Then
                     Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
                 Else
                     Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
@@ -7670,8 +7672,8 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                If showRangeRight - showRangeLeft < 6 Then
-                    Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
+                If showRangeRight - showRangeLeft < minColumns - 1 Then
+                    Call MsgBox(" Bitte wählen Sie zuerst einen gültigen Zeitraum aus !")
                 Else
                     Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
                                 "gibt es keine Projekte ")
@@ -8824,7 +8826,7 @@ Imports System.Windows
 
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
-        If showRangeRight - showRangeLeft > 6 Then
+        If showRangeRight - showRangeLeft >= minColumns - 1 Then
 
             If ShowProjekte.Count > 0 Then
 

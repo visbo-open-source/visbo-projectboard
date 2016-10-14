@@ -590,7 +590,7 @@ Public Class frmNameSelection
             Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
             Me.menuOption = PTmenue.vorlageErstellen Then
             validOption = True
-        ElseIf showRangeRight - showRangeLeft > 5 Then
+        ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
             validOption = True
         Else
             validOption = False

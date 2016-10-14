@@ -472,14 +472,13 @@ Public Class frmHierarchySelection
         ''
         ''
         ''''
-
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
             Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
             Me.menuOption = PTmenue.vorlageErstellen Or _
             Me.menuOption = PTmenue.reportBHTC Then
             validOption = True
-        ElseIf showRangeRight - showRangeLeft > 5 Then
+        ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
             validOption = True
         Else
             validOption = False

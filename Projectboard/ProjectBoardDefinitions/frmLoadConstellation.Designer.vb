@@ -106,7 +106,7 @@ Partial Class frmLoadConstellation
         Me.Controls.Add(Me.ListBox1)
         Me.Name = "frmLoadConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-        Me.Text = "Portfolio laden "
+        Me.Text = "Szenario laden "
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

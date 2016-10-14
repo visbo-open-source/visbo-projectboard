@@ -118,6 +118,10 @@ Public Class ThisWorkbook
 
         Dim plantafel As Excel.Window
 
+        If Application.EnableEvents Then
+        Else
+            Application.EnableEvents = True
+        End If
 
         CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
 
@@ -126,6 +130,7 @@ Public Class ThisWorkbook
         plantafel = Application.ActiveWindow
 
         With plantafel
+            .DisplayHeadings = False
             .Caption = windowNames(5)
             .ScrollRow = 1
             .ScrollColumn = 1
@@ -202,7 +207,8 @@ Public Class ThisWorkbook
 
             End Try
 
-            Application.Worksheets(arrWsNames(3)).Activate()
+            ' wozu wird das denn hier benötigt ? 
+            'Application.Worksheets(arrWsNames(3)).Activate()
 
 
             appInstance.EnableEvents = False
@@ -241,7 +247,15 @@ Public Class ThisWorkbook
 
         Dim WB As Workbook
         For Each WB In Application.Workbooks
-            WB.Saved = True
+            If WB.Name = myProjektTafel Then
+                Try
+                    WB.Saved = True
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
         Next
 
 
@@ -253,7 +267,7 @@ Public Class ThisWorkbook
         '' ''Application.Wait(waitTime)
 
         Application.DisplayAlerts = False
-        Application.Quit()
+        'Application.Quit()
 
 
 
@@ -324,6 +338,13 @@ Public Class ThisWorkbook
 
 
         appInstance.ScreenUpdating = True
+
+        If Application.Workbooks.Count <= 1 Then
+            Dim a As Integer = Application.Workbooks.Count
+            'Dim name asstring = Application.Workbooks(1).name
+        End If
+        
+
 
 
     End Sub

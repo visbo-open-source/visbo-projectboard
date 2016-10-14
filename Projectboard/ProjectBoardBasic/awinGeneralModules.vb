@@ -746,6 +746,7 @@ Public Module awinGeneralModules
             ' Debug-Mode?
             If awinSettings.visboDebug Then
                 Call MsgBox("awinPath:" & vbLf & awinPath)
+                Call MsgBox("globalPath:" & vbLf & globalPath)
             End If
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
@@ -767,9 +768,20 @@ Public Module awinGeneralModules
                 If awinSettings.visboDebug Then
                     Call MsgBox("jetzt wird synchronisiert ...")
                 End If
+
                 Call synchronizeGlobalToLocalFolder()
 
             Else
+
+                If awinSettings.visboDebug Then
+                    If awinPath = globalPath Then
+                        Call MsgBox("awinPath = globalPath: keine Synchronisierung ...")
+                    Else
+                        Call MsgBox("globalPath existiert nicht: " & vbLf & globalPath)
+                    End If
+
+                End If
+
                 If My.Computer.FileSystem.DirectoryExists(awinPath) And (Dir(awinPath, vbDirectory) = "") Then
                     Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
                 End If
@@ -2329,7 +2341,7 @@ Public Module awinGeneralModules
             von = 1
         End If
 
-        If bis < von + 5 Then
+        If bis < von + minColumns - 1 Then
             noTimeFrame = True
         End If
 
@@ -3568,6 +3580,417 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+
+    ''' <summary>
+    ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
+    ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der ImportProjekte aufgeführt sind
+    ''' </summary>
+    ''' <param name="importDate"></param>
+    ''' <remarks></remarks>
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal pStatus As String, _
+                                       Optional drawPlanTafel As Boolean = True)
+
+
+        'Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
+        '                                   Optional ByVal scenarioName As String = "")
+        Dim hproj As New clsProjekt, cproj As New clsProjekt
+        Dim fullName As String, vglName As String
+        Dim pname As String
+
+
+        Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
+        Dim tafelZeile As Integer = 2
+        'Dim shpElement As Excel.Shape
+        Dim phaseList As New Collection
+        Dim milestoneList As New Collection
+        Dim wasNotEmpty As Boolean
+
+        Dim existsInSession As Boolean = False
+
+        If AlleProjekte.Count > 0 Then
+            wasNotEmpty = True
+            tafelZeile = projectboardShapes.getMaxZeile
+        Else
+            wasNotEmpty = False
+        End If
+
+
+        Dim differentToPrevious As Boolean = False
+
+        ' Änderung tk 5.6.16: 
+        'es wird jetzt getrennt zwischen dem was in einer Constellation gespeichert werden soll und dem , 
+        ' was noch in die Session importiert werden muss. 
+
+        ''If myCollection.Count <> ImportProjekte.Count Then
+        ''    Throw New ArgumentException("keine Übereinstimmung in der Anzahl gültiger/ímportierter Projekte - Abbruch!")
+        ''End If
+
+
+        anzAktualisierungen = 0
+        anzNeuProjekte = 0
+
+        Dim ok As Boolean = True
+        ' jetzt werden alle importierten Projekte bearbeitet 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
+            fullName = kvp.Key
+            hproj = kvp.Value
+
+            ok = True
+
+            Try
+                'hproj = ImportProjekte.getProject(fullName)
+                pname = hproj.name
+
+                ' Änderung tk: ist Filter aktiv ? wenn ja, muss der überprüft werden 
+                ' 18.1.15
+                If awinSettings.applyFilter Then
+
+                    Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
+                    If IsNothing(filter) Then
+                        ok = True
+                    Else
+                        ok = filter.doesNotBlock(hproj)
+                    End If
+                Else
+                    ok = True
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("Projekt " & fullName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                pname = ""
+                ok = False
+            End Try
+
+            If ok Then
+
+                ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
+                ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
+                ' wenn nein, wird es im Show-Modus ergänzt 
+
+                vglName = calcProjektKey(hproj)
+                Try
+                    cproj = AlleProjekte.getProject(vglName)
+
+                    If IsNothing(cproj) Then
+                        ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
+                        existsInSession = False
+                        If Not noDB Then
+                            cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
+                        End If
+                    Else
+                        existsInSession = True
+                    End If
+
+                    ' ist es immer noch Nothing ? 
+                    If IsNothing(cproj) Then
+                        ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
+                        If hproj.VorlagenName = "" Then
+                            Try
+                                Dim anzVorlagen = Projektvorlagen.Count
+                                Dim vproj As clsProjektvorlage
+                                hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
+
+                                For i = 1 To anzVorlagen
+                                    vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
+                                    If vproj.farbe = hproj.farbe Then
+                                        hproj.VorlagenName = vproj.VorlagenName
+                                    End If
+                                Next
+
+                            Catch ex1 As Exception
+
+                            End Try
+                        End If
+
+                        Try
+                            With hproj
+                                ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                                '.earliestStart = 0
+                                .earliestStartDate = .startDate
+
+                                .Id = vglName & "#" & importDate.ToString
+                                ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                                '.latestStart = 0
+                                .latestStartDate = .startDate
+                                ' Änderung tk 12.12.15: LeadPerson darf doch nicht auf leer gesetzt werden ...
+                                '.leadPerson = " "
+                                .shpUID = ""
+                                .StartOffset = 0
+
+                                ' ein importiertes Projekt soll normalerweise immer gleich  auf "beauftragt" gesetzt werden; 
+                                ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
+                                ' Inventur: erst mal auf geplant, sonst beauftragt 
+                                .Status = pStatus
+                                .tfZeile = tafelZeile
+                                .timeStamp = importDate
+                                .UID = cproj.UID
+
+                            End With
+
+                            ' Workaround: 
+                            Dim tmpValue As Integer = hproj.dauerInDays
+                            Call awinCreateBudgetWerte(hproj)
+                            tafelZeile = tafelZeile + 1
+
+                            anzNeuProjekte = anzNeuProjekte + 1
+                        Catch ex1 As Exception
+                            Throw New ArgumentException("Fehler bei Übernahme der Attribute des alten Projektes" & vbLf & ex1.Message)
+                        End Try
+                    Else
+
+                        ' jetzt sollen bestimmte Werte aus dem cproj übernommen werden 
+                        ' das ist dann wichtig, wenn z.Bsp nur Rplan Excel Werte eingelesen werden, die enthalten ja nix ausser Termine ...
+                        ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
+
+                        Try
+                            Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate)
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+                        Dim unterschiede As New Collection
+                        ' jetzt wird geprüft , ob die beiden Projekte von den Werten her unterschiedlich sind 
+                        ' es wird auf absolute Identität geprüft, d.h alleine wenn sich das Startdatum schon verändert gibt es Unterschiede 
+                        unterschiede = hproj.listOfDifferences(vglproj:=cproj, absolut:=True, type:=0)
+                        If unterschiede.Count > 0 Then
+                            ' das heisst, das Projekt hat sich verändert 
+                            hproj.diffToPrev = True
+                            If hproj.Status = ProjektStatus(1) Then
+                                hproj.Status = ProjektStatus(2)
+                            End If
+                        Else
+                            hproj.diffToPrev = False
+                        End If
+
+
+                        anzAktualisierungen = anzAktualisierungen + 1
+
+                        Try
+                            If existsInSession Then
+                                AlleProjekte.Remove(vglName)
+                                If ShowProjekte.contains(hproj.name) Then
+                                    ShowProjekte.Remove(hproj.name)
+                                End If
+                            End If
+                        Catch ex1 As Exception
+                            Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
+                        End Try
+
+                    End If
+
+
+                Catch ex As Exception
+
+
+
+                End Try
+
+                ' in beiden Fällen - sowohl bei neu wie auch Aktualisierung muss jetzt das Projekt 
+                ' sowohl auf der Plantafel eingetragen werden als auch in ShowProjekte und in alleProjekte eingetragen 
+
+                ' bringe das neue Projekt in Showprojekte und in AlleProjekte
+
+                If ok Then
+
+                    Try
+
+                        AlleProjekte.Add(vglName, hproj)
+                        ShowProjekte.Add(hproj)
+
+                        ' ggf Bedarfe anzeigen 
+                        If roentgenBlick.isOn Then
+                            With roentgenBlick
+                                Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
+                            End With
+
+                        End If
+
+                        ' Änderung tk 18.1.15
+                        ' kein Zeichnen - das wird am Schluss komplett gemacht 
+                        '' zeichne das neue Shape in der Plan-Tafel 
+                        '' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        '' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        'Dim tmpCollection As New Collection
+                        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
+
+                        '' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
+                        'Call awinNeuZeichnenDiagramme(2)
+                        ' Ende Änderung tk 18.1.15
+
+
+                    Catch ex As Exception
+                        'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
+                        'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
+                    End Try
+
+                End If
+
+
+            End If
+
+        Next
+
+        If ImportProjekte.Count < 1 Then
+            Call MsgBox(" es wurden keine Projekte importiert ...")
+        Else
+            Dim filterText As String
+            If awinSettings.applyFilter Then
+                filterText = " (Filter aktiviert)"
+            Else
+                filterText = " (Filter nicht aktiviert)"
+            End If
+            Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & filterText & vbLf & vbLf & _
+                        anzNeuProjekte.ToString & " neue Projekte" & vbLf & _
+                        anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
+
+            ' Änderung tk: jetzt wird das neu gezeichnet 
+
+            If drawPlanTafel Then
+                If wasNotEmpty Then
+                    Call awinClearPlanTafel()
+                End If
+
+                'Call awinZeichnePlanTafel(True)
+                Call awinZeichnePlanTafel(False)
+                Call awinNeuZeichnenDiagramme(2)
+            End If
+
+
+        End If
+
+        ImportProjekte.Clear()
+
+    End Sub
+
+    ''' <summary>
+    ''' übernimmt vom existierenden Projekt einige Werte 
+    ''' ist vor allem dann relevant wenn nur ein RPLAN Excel mit gerademal Terminen eingelesen wird ....
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="cproj"></param>
+    ''' <param name="existsInSession"></param>
+    ''' <remarks></remarks>
+    Private Sub awinAdjustValuesByExistingProj(ByRef hproj As clsProjekt, ByVal cproj As clsProjekt, _
+                                               ByVal existsInSession As Boolean, ByVal importDate As Date)
+        ' es existiert schon - deshalb müssen alle restlichen Werte aus dem cproj übernommen werden 
+        Dim vglName As String = calcProjektKey(hproj)
+
+        Try
+            With hproj
+                .farbe = cproj.farbe
+                .Schrift = cproj.Schrift
+                .Schriftfarbe = cproj.Schriftfarbe
+                .earliestStart = cproj.earliestStart
+                .earliestStartDate = cproj.earliestStartDate
+                .Id = vglName & "#" & importDate.ToString
+                .latestStart = cproj.latestStart
+                .latestStartDate = cproj.latestStartDate
+                .leadPerson = cproj.leadPerson
+
+                .StartOffset = 0
+
+                ' Änderung 28.1.14: bei einem bereits existierenden Projekt muss der Status mitübernommen werden 
+                .Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
+
+                If existsInSession Then
+                    .shpUID = cproj.shpUID
+                Else
+                    .shpUID = ""
+                End If
+
+                .tfZeile = cproj.tfZeile
+                .timeStamp = importDate
+                .UID = cproj.UID
+                .VorlagenName = cproj.VorlagenName
+
+                ' im Folgenden werden die Werte dann vom letzten stand übernommen, wenn es keine Werte in 
+                ' der Import datei dafür gab
+
+                If .StrategicFit = 0 Then
+                    .StrategicFit = cproj.StrategicFit
+                End If
+
+                If .Risiko = 0 Then
+                    .Risiko = cproj.Risiko
+                End If
+
+                If .businessUnit = "" Then
+                    .businessUnit = cproj.businessUnit
+                End If
+
+                If .description = "" Then
+                    .description = cproj.description
+                End If
+
+                If .complexity = 0 Then
+                    .complexity = cproj.complexity
+                End If
+
+                If .volume = 0 Then
+                    .volume = cproj.volume
+                End If
+
+                If cproj.Erloes > 0 Then
+                    ' dann soll der alte Wert beibehalten werden 
+                    .Erloes = cproj.Erloes
+                    If .anzahlRasterElemente = cproj.anzahlRasterElemente And Not IsNothing(cproj.budgetWerte) Then
+                        .budgetWerte = cproj.budgetWerte
+                    Else
+                        ' Workaround: 
+                        Dim tmpValue As Integer = hproj.dauerInDays
+                        Call awinCreateBudgetWerte(hproj)
+                    End If
+                End If
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler bei Übernahme der Attribute des alten Projektes" & vbLf & ex.Message)
+        End Try
+
+    End Sub
+
+
+    ''' <summary>
+    ''' wenn das Projekt mit Namen pName und Varianten-Name vName und einem TimeStamp kleiner/gleich datum in der Datenbank existiert, 
+    ''' wird das Projekt als Ergebnis zurückgegeben
+    ''' Nothing sonst 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="datum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function awinReadProjectFromDatabase(ByVal pName As String, ByVal vName As String, ByVal datum As Date) As clsProjekt
+        Dim tmpResult As clsProjekt = Nothing
+
+        '
+        ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+        Try
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If request.pingMongoDb() Then
+
+                If request.projectNameAlreadyExists(pName, vName, datum) Then
+
+                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                    tmpResult = request.retrieveOneProjectfromDB(pName, vName, datum)
+
+                Else
+                    ' nichts tun, tmpResult ist bereits Nothing 
+                End If
+            Else
+                ' nichts tun, tmpResult ist bereits Nothing 
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        awinReadProjectFromDatabase = tmpResult
+
+    End Function
 
     ''' <summary>
     ''' liest den Wert eines Cusomized Flag. Das Ergebnis ist True oder False
@@ -6504,6 +6927,18 @@ Public Module awinGeneralModules
                             hproj.variantName = ""
                         End Try
 
+                        '   Varianten-Beschreibung
+                        Try
+                            hproj.variantDescription = CType(.Range("Variant_Description").Value, String)
+                            If Not IsNothing(hproj.variantDescription) Then
+                                hproj.variantDescription = hproj.variantDescription.Trim
+                            Else
+                                hproj.variantDescription = ""
+                            End If
+
+                        Catch ex1 As Exception
+                            hproj.variantDescription = ""
+                        End Try
 
                         ' Business Unit - kein Problem wenn nicht da   
                         Try
@@ -11451,7 +11886,7 @@ Public Module awinGeneralModules
             menueOption = PTmenue.excelExport Or menueOption = PTmenue.multiprojektReport Or _
             menueOption = PTmenue.vorlageErstellen Or menueOption = PTmenue.meilensteinTrendanalyse Then
             validOption = True
-        ElseIf showRangeRight - showRangeLeft > 5 Then
+        ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
             validOption = True
         Else
             validOption = False
@@ -16154,8 +16589,23 @@ Public Module awinGeneralModules
         Try
             currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
             currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(5)), Excel.Worksheet)
-            currentWS.UsedRange.Clear()
 
+            Try
+                If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+                    CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+            Try
+                currentWS.UsedRange.Clear()
+            Catch ex As Exception
+
+            End Try
+
+            
         Catch ex As Exception
             Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
             appInstance.EnableEvents = True
@@ -16774,17 +17224,16 @@ Public Module awinGeneralModules
 
         ''End With
 
-
-
-        Try
-            ' jetzt die Autofilter aktivieren ... 
-            If Not CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
-                CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-            End If
-        Catch ex As Exception
-            appInstance.EnableEvents = True
-            Throw New ArgumentException("Fehler beim Filtersetzen und Speichern" & ex.Message)
-        End Try
+        ' wird jetzt im Activate gemacht ... 
+        ''Try
+        ''    ' jetzt die Autofilter aktivieren ... 
+        ''    If Not CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+        ''        CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+        ''    End If
+        ''Catch ex As Exception
+        ''    appInstance.EnableEvents = True
+        ''    Throw New ArgumentException("Fehler beim Filtersetzen und Speichern" & ex.Message)
+        ''End Try
 
         appInstance.EnableEvents = True
 
