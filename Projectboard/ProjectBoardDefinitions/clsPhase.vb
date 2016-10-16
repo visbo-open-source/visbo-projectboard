@@ -1150,6 +1150,9 @@ Public Class clsPhase
             _allRoles.Add(role)
         End If
 
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Me.parentProject.rcLists.addRP(role.RollenTyp, Me.nameID)
+
         ' '' Code vor dem 8.7.16
         ''If Not _allRoles.Contains(role) Then
         ''    _allRoles.Add(role)
@@ -1178,6 +1181,9 @@ Public Class clsPhase
 
         For Each tmpRole As clsRolle In toDoList
             _allRoles.Remove(tmpRole)
+            ' Änderung tk 20.09.16
+            ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+            Me.parentProject.rcLists.removeRP(tmpRole.RollenTyp, Me.nameID)
         Next
 
 
@@ -1590,6 +1596,13 @@ Public Class clsPhase
 
     End Property
 
+    ''' <summary>
+    ''' liefert die Rolle an Index-Stelle i; i darf Werte zwischen 1 und AnzahlRollen annehmen
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getRole(ByVal index As Integer) As clsRolle
 
         Get
@@ -1748,6 +1761,10 @@ Public Class clsPhase
             _allCosts.Add(cost)
         End If
 
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Me.parentProject.rcLists.addCP(cost.KostenTyp, Me.nameID)
+
+
         ' vor dem 8.7.16
         ''If Not _allCosts.Contains(cost) Then
         ''    _allCosts.Add(cost)
@@ -1775,6 +1792,8 @@ Public Class clsPhase
 
         For Each tmpCost As clsKostenart In toDoList
             _allCosts.Remove(tmpCost)
+            ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+            Me.parentProject.rcLists.removeCP(tmpCost.KostenTyp, Me.nameID)
         Next
 
 

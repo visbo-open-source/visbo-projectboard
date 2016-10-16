@@ -288,7 +288,7 @@ Partial Class frmNameSelection
         '
         'pictureBU
         '
-        Me.pictureBU.Image = CType(resources.GetObject("pictureBU.Image"), System.Drawing.Image)
+        Me.pictureBU.Image = Global.ProjectBoardBasic.My.Resources.Resources.branch
         Me.pictureBU.Location = New System.Drawing.Point(449, 21)
         Me.pictureBU.Name = "pictureBU"
         Me.pictureBU.Size = New System.Drawing.Size(33, 33)

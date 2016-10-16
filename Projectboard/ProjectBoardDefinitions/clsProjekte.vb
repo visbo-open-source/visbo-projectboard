@@ -3,9 +3,9 @@ Imports xlNS = Microsoft.Office.Interop.Excel
 
 Public Class clsProjekte
 
-    Private AllProjects As SortedList(Of String, clsProjekt)
-    Private AllShapes As SortedList(Of String, String)
-    Private AllCoord As SortedList(Of String, Double())
+    Private _allProjects As SortedList(Of String, clsProjekt)
+    Private _allShapes As SortedList(Of String, String)
+    Private _allCoord As SortedList(Of String, Double())
 
     ''' <summary>
     ''' trägt ein Projekt mit dem Schlüssel Projekt-NAme in die Liste ein 
@@ -20,16 +20,19 @@ Public Class clsProjekte
             Dim pname As String = project.name
             Dim shpUID As String = project.shpUID
 
-            AllProjects.Add(pname, project)
+            If Not IsNothing(project) Then
+                _allProjects.Add(pname, project)
 
-            If shpUID <> "" Then
-                AllShapes.Add(shpUID, pname)
-            End If
+                If shpUID <> "" Then
+                    _allShapes.Add(shpUID, pname)
+                End If
 
-            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
-            If Not currentConstellation.EndsWith("(*)") Then
-                currentConstellation = currentConstellation & "(*)"
+                ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
+                If Not currentConstellation.EndsWith("(*)") Then
+                    currentConstellation = currentConstellation & "(*)"
+                End If
             End If
+            
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -49,14 +52,14 @@ Public Class clsProjekte
     Public Sub AddShape(pname As String, shpUID As String)
 
 
-        If AllProjects.ContainsKey(pname) Then
+        If _allProjects.ContainsKey(pname) Then
             Try
-                If AllShapes.ContainsValue(pname) Then
+                If _allShapes.ContainsValue(pname) Then
                     Dim ix As Integer
-                    ix = AllShapes.IndexOfValue(pname)
-                    AllShapes.RemoveAt(ix)
+                    ix = _allShapes.IndexOfValue(pname)
+                    _allShapes.RemoveAt(ix)
                 End If
-                AllShapes.Add(shpUID, pname)
+                _allShapes.Add(shpUID, pname)
 
             Catch ex As Exception
                 Throw New ArgumentException(ex.Message)
@@ -69,6 +72,25 @@ Public Class clsProjekte
 
     End Sub
 
+    ''' <summary>
+    ''' gibt die Zeile zurück, in der das Projekt auf der Projekt-Tafel gezeichnet werden soll 
+    ''' aktuell ist das die alphabetische Reihenfolge
+    ''' das muss später noch angepasst werden ... 
+    ''' </summary>
+    ''' <param name="projectName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPTZeile(ByVal projectName As String) As Integer
+        Get
+            If _allProjects.ContainsKey(projectName) Then
+                getPTZeile = _allProjects.IndexOfKey(projectName) + 2
+            Else
+                getPTZeile = 0
+            End If
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' nimmt das Projekt mit dem übergebenen Namen aus der Liste heraus  
@@ -79,10 +101,10 @@ Public Class clsProjekte
     Public Sub Remove(projectname As String)
 
         Try
-            Dim SID As String = AllProjects.Item(projectname).shpUID
-            AllProjects.Remove(projectname)
+            Dim SID As String = _allProjects.Item(projectname).shpUID
+            _allProjects.Remove(projectname)
             If SID <> "" Then
-                AllShapes.Remove(SID)
+                _allShapes.Remove(SID)
             End If
 
             ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
@@ -107,9 +129,9 @@ Public Class clsProjekte
     Public Sub RemoveS(SID As String)
 
         Try
-            Dim pname As String = AllShapes.Item(SID)
-            AllProjects.Remove(pname)
-            AllShapes.Remove(SID)
+            Dim pname As String = _allShapes.Item(SID)
+            _allProjects.Remove(pname)
+            _allShapes.Remove(SID)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -125,8 +147,8 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public Sub Clear()
 
-        AllProjects.Clear()
-        AllShapes.Clear()
+        _allProjects.Clear()
+        _allShapes.Clear()
 
     End Sub
 
@@ -139,7 +161,7 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property contains(ByVal key As String) As Boolean
         Get
-            If AllProjects.ContainsKey(key) Then
+            If _allProjects.ContainsKey(key) Then
                 contains = True
             Else
                 contains = False
@@ -294,48 +316,48 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ' wurde ersetzt durch andere getPhaseNAmes
+    '' ''' <summary>
+    '' ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 
+    '' ''' </summary>
+    '' ''' <value></value>
+    '' ''' <returns></returns>
+    '' ''' <remarks></remarks>
+    ''Public ReadOnly Property getPhaseNames() As Collection
 
-    ''' <summary>
-    ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getPhaseNames() As Collection
+    ''    Get
 
-        Get
+    ''        Dim tmpListe As New Collection
+    ''        Dim cphase As clsPhase
+    ''        Dim phaseName As String
 
-            Dim tmpListe As New Collection
-            Dim cphase As clsPhase
-            Dim phaseName As String
+    ''        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+    ''            Try
+    ''                ' beginnt bei 2, weil die 1.Phase immer die mit der Projektlänge identische Phase ist ...
+    ''                For p = 2 To kvp.Value.CountPhases
+    ''                    cphase = kvp.Value.getPhase(p)
+    ''                    phaseName = cphase.name
 
-                Try
-                    ' beginnt bei 2, weil die 1.Phase immer die mit der Projektlänge identische Phase ist ...
-                    For p = 2 To kvp.Value.CountPhases
-                        cphase = kvp.Value.getPhase(p)
-                        phaseName = cphase.name
-
-                        If tmpListe.Contains(phaseName) Then
-                            ' nichts tun 
-                        Else
-                            tmpListe.Add(phaseName, phaseName)
-                        End If
-
-
-                    Next
-                Catch ex As Exception
-
-                End Try
+    ''                    If tmpListe.Contains(phaseName) Then
+    ''                        ' nichts tun 
+    ''                    Else
+    ''                        tmpListe.Add(phaseName, phaseName)
+    ''                    End If
 
 
-            Next
+    ''                Next
+    ''            Catch ex As Exception
 
-            getPhaseNames = tmpListe
+    ''            End Try
 
-        End Get
-    End Property
+
+    ''        Next
+
+    ''        getPhaseNames = tmpListe
+
+    ''    End Get
+    ''End Property
 
 
     ''' <summary>
@@ -349,40 +371,195 @@ Public Class clsProjekte
         Get
 
             Dim tmpListe As New Collection
-            Dim cphase As clsPhase
 
-            Dim msName As String
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
 
-                Try
-                    For p = 1 To kvp.Value.CountPhases
-
-                        cphase = kvp.Value.getPhase(p)
-                        For r = 1 To cphase.countMilestones
-
-                            msName = cphase.getMilestone(r).name
-                            If tmpListe.Contains(msName) Then
-                            Else
-                                tmpListe.Add(msName, msName)
-                            End If
-
-                        Next
-
-                    Next
-                Catch ex As Exception
-
-                End Try
-
-
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+                
             Next
+            ' neu Ende
+
+            ' alt : ohne Ausnutzung Hierarchy ...
+            ''For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+            ''    Try
+            ''        For p = 1 To kvp.Value.CountPhases
+
+            ''            cphase = kvp.Value.getPhase(p)
+            ''            For r = 1 To cphase.countMilestones
+
+            ''                msName = cphase.getMilestone(r).name
+            ''                If tmpListe.Contains(msName) Then
+            ''                Else
+            ''                    tmpListe.Add(msName, msName)
+            ''                End If
+
+            ''            Next
+
+            ''        Next
+            ''    Catch ex As Exception
+
+            ''    End Try
+
+
+            ''Next
 
             getMilestoneNames = tmpListe
 
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Liste der vorkommenden Phasen-Namen in der Menge der Projekte an ...  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseNames() As Collection
 
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getPhaseNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getPhaseNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Rollen, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getRoleNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getRoleNames = tmpListe
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Kostenarten, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCostNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getCostNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+            getCostNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Business Units, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBUNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpBU As String = kvp.Value.businessUnit
+                If Not IsNothing(tmpBU) Then
+                    If tmpBU.Trim.Length > 0 Then
+                        If Not tmpListe.Contains(tmpBU) Then
+                            tmpListe.Add(tmpBU, tmpBU)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            getBUNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Projektvorlagen, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTypNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpTyp As String = kvp.Value.VorlagenName
+                If Not IsNothing(tmpTyp) Then
+                    If tmpTyp.Trim.Length > 0 Then
+                        If Not tmpListe.Contains(tmpTyp) Then
+                            tmpListe.Add(tmpTyp, tmpTyp)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            getTypNames = tmpListe
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die nach Namen sortierte Liste von Projekten zurück 
@@ -392,7 +569,7 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property Liste() As SortedList(Of String, clsProjekt)
         Get
-            Liste = AllProjects
+            Liste = _allProjects
         End Get
         'Set(value As SortedList(Of String, clsProjekt))
         '    AllProjects = value
@@ -408,7 +585,7 @@ Public Class clsProjekte
     Public ReadOnly Property Count() As Integer
 
         Get
-            Count = AllProjects.Count
+            Count = _allProjects.Count
         End Get
 
     End Property
@@ -423,8 +600,8 @@ Public Class clsProjekte
     Public ReadOnly Property getProject(index As Integer) As clsProjekt
         Get
 
-            If index >= 1 And index <= AllProjects.Count Then
-                getProject = AllProjects.ElementAt(index - 1).Value
+            If index >= 1 And index <= _allProjects.Count Then
+                getProject = _allProjects.ElementAt(index - 1).Value
             Else
                 getProject = Nothing
             End If
@@ -467,6 +644,42 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ''' <summary>
+    ''' bestimmt die kleinste auftretende Spalten-Column über alle Projekte  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMinMonthColumn() As Integer
+        Get
+            Dim tmpMin As Integer = 10000
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                If kvp.Value.Start < tmpMin Then
+                    tmpMin = kvp.Value.Start
+                End If
+            Next
+            getMinMonthColumn = tmpMin
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' bestimmt die größte auftretende Spalten-Column über alle Projekte  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMaxMonthColumn() As Integer
+        Get
+            Dim tmpMax As Integer = 0
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                Dim endeCol As Integer = getColumnOfDate(kvp.Value.endeDate)
+                If endeCol > tmpMax Then
+                    tmpMax = endeCol
+                End If
+            Next
+            getMaxMonthColumn = tmpMax
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt das vollständige Projekt aus der Liste zurück, das den angegebenen Namen hat 
@@ -479,33 +692,26 @@ Public Class clsProjekte
                                         Optional ByVal tryOnceMore As Boolean = False) As clsProjekt
 
         Get
-            Try
 
-                getProject = AllProjects.Item(itemName)
 
-            Catch ex As Exception
+            If _allProjects.ContainsKey(itemName) Then
+                getProject = _allProjects.Item(itemName)
+            ElseIf tryOnceMore Then
 
-                If tryOnceMore Then
-
-                    Dim pName As String = extractName(itemName, PTshty.projektN)
-                    If pName.Length > 0 Then
-
-                        If AllProjects.ContainsKey(pName) Then
-                            getProject = AllProjects.Item(pName)
-                        Else
-                            Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
-                        End If
+                Dim pName As String = extractName(itemName, PTshty.projektN)
+                If pName.Length > 0 Then
+                    If _allProjects.ContainsKey(pName) Then
+                        getProject = _allProjects.Item(pName)
                     Else
                         Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
                     End If
-
                 Else
                     Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
                 End If
-                
+            Else
+                Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+            End If
 
-
-            End Try
 
         End Get
 
@@ -522,7 +728,7 @@ Public Class clsProjekte
         Get
             Dim mx As Integer = 0
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                 If kvp.Value.tfZeile > mx Then
                     mx = kvp.Value.tfZeile
                 End If
@@ -545,8 +751,8 @@ Public Class clsProjekte
             Dim pname As String
             Try
 
-                pname = AllShapes.Item(shpID)
-                getProjectS = AllProjects.Item(pname)
+                pname = _allShapes.Item(shpID)
+                getProjectS = _allProjects.Item(pname)
 
             Catch ex As Exception
                 Throw New ArgumentException("projectname nicht vorhanden")
@@ -564,7 +770,7 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property shpListe() As SortedList(Of String, String)
         Get
-            shpListe = AllShapes
+            shpListe = _allShapes
         End Get
     End Property
 
@@ -587,7 +793,7 @@ Public Class clsProjekte
 
 
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me.AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me._allProjects
 
                 With kvp.Value
 
@@ -665,7 +871,7 @@ Public Class clsProjekte
 
             suchTyp = 0
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me.AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me._allProjects
 
                 found = False
                 With kvp.Value
@@ -813,7 +1019,7 @@ Public Class clsProjekte
                         Dim Dauer As Integer
 
 
-                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                             hproj = kvp.Value
                             Dauer = hproj.anzahlRasterElemente
@@ -883,7 +1089,7 @@ Public Class clsProjekte
                                                             ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
                                                                                                                                 & ":X"
                                                         End If
-                                                        
+
                                                     End If
 
                                                     curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
@@ -904,7 +1110,7 @@ Public Class clsProjekte
                         ' Rollen
 
                         Dim Dauer As Integer
-                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                             hproj = kvp.Value
 
@@ -955,7 +1161,7 @@ Public Class clsProjekte
                         ' Kostenarten
 
                         Dim Dauer As Integer
-                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                             hproj = kvp.Value
 
@@ -1006,7 +1212,7 @@ Public Class clsProjekte
                     ElseIf prcTyp = DiagrammTypen(5) Then
                         ' Meilensteine 
 
-                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                             hproj = kvp.Value
 
@@ -1089,10 +1295,10 @@ Public Class clsProjekte
             zeitraum = showRangeRight - showRangeLeft
             ReDim milestoneValues(3, zeitraum)
 
-            anzProjekte = AllProjects.Count
+            anzProjekte = _allProjects.Count
 
             ' Schleife über alle Projekte 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                 hproj = kvp.Value
 
@@ -1168,11 +1374,11 @@ Public Class clsProjekte
             zeitraum = showRangeRight - showRangeLeft
             ReDim phasevalues(zeitraum)
 
-            anzProjekte = AllProjects.Count
+            anzProjekte = _allProjects.Count
 
             ' anzPhasen = AllPhases.Count
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                 hproj = kvp.Value
 
@@ -1291,11 +1497,11 @@ Public Class clsProjekte
 
 
 
-            anzProjekte = AllProjects.Count
+            anzProjekte = _allProjects.Count
 
             ' anzPhasen = AllPhases.Count
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                 hproj = kvp.Value
 
@@ -1317,8 +1523,8 @@ Public Class clsProjekte
 
                         ' hier muss die Schleife für alle Items aus toDoCollection hin 
                         For k = 1 To toDoCollection.Count
-                            Dim curRole As String = CStr(toDoCollection.Item(k))
 
+                            Dim curRole As String = CStr(toDoCollection.Item(k))
                             tempArray = hproj.getRessourcenBedarf(curRole)
 
                             For i = 0 To anzLoops - 1
@@ -1341,6 +1547,121 @@ Public Class clsProjekte
 
 
             getRoleValuesInMonth = roleValues
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <value>String für Rollenbezeichner oder Integer für den Key der Rolle</value>
+    ''' <returns>Array, der die Werte der gefragten Rolle pro Monat des betrachteten Zeitraums enthält</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleValuesInMonthNew(ByVal roleID As Object, _
+                                                  Optional ByVal considerAllSubRoles As Boolean = False, _
+                                                  Optional ByVal type As Integer = PTcbr.all, _
+                                                  Optional ByVal excludedNames As Collection = Nothing) As Double()
+
+        Get
+            Dim roleValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim anzProjekte As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
+            Dim lookforIndex As Boolean
+            Dim tempArray() As Double
+            Dim testArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+            Dim roleName As String
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            lookforIndex = IsNumeric(roleID)
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim roleValues(zeitraum)
+
+            If lookforIndex Then
+                roleName = RoleDefinitions.getRoledef(CInt(roleID)).name
+            Else
+                roleName = CStr(roleID)
+            End If
+
+            Dim toDoCollection As New Collection
+            ' wenn considerAllSubroles  = true , dann muss 
+
+            If considerAllSubRoles Then
+                toDoCollection = RoleDefinitions.getSubRoleNamesOf(roleName, type:=type, excludedNames:=excludedNames)
+                ' Änderung tk: das Folgende darf nicht mehr drin sein, da ja das Kommando getSubRoleNamesOf jetzt alles erledigt 
+                'If Not toDoCollection.Contains(roleName) Then
+                '    toDoCollection.Add(roleName, roleName)
+                'End If
+            Else
+                toDoCollection.Add(roleName, roleName)
+            End If
+
+
+
+            anzProjekte = _allProjects.Count
+
+            ' anzPhasen = AllPhases.Count
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                Dauer = hproj.anzahlRasterElemente
+
+                ReDim tempArray(Dauer - 1)
+                ReDim testArray(Dauer - 1)
+
+                With hproj
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                End With
+
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                If anzLoops > 0 Then
+
+                    Dim listOfRoles As Collection = hproj.rcLists.getRoleNames
+
+                    Try
+
+                        ' hier muss die Schleife für alle Items aus toDoCollection hin 
+                        For k = 1 To toDoCollection.Count
+                            Dim curRole As String = CStr(toDoCollection.Item(k))
+
+
+                            If listOfRoles.Contains(curRole) Then
+                                tempArray = hproj.getRessourcenBedarfNew(curRole)
+
+                                For i = 0 To anzLoops - 1
+                                    roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
+                                Next i
+                            End If
+
+
+                        Next k
+
+
+
+                    Catch ex As Exception
+
+                    End Try
+
+
+                End If
+
+            Next kvp
+
+
+
+            getRoleValuesInMonthNew = roleValues
 
         End Get
 
@@ -1390,7 +1711,7 @@ Public Class clsProjekte
                         schwellWerte(m) = schwellWerte(m) + hkapa
                     Next m
                 End If
-                
+
 
 
             Next r
@@ -1438,14 +1759,14 @@ Public Class clsProjekte
                     ok = False
                 End If
 
-                
+
                 If ok Then
                     For m = 0 To zeitraum
                         ' Änderung 31.5 Holen der Schwellwerte einer Phase 
                         schwellWerte(m) = schwellWerte(m) + hkapa
                     Next m
                 End If
-                
+
 
 
             Next r
@@ -1455,10 +1776,6 @@ Public Class clsProjekte
         End Get
     End Property
 
-
-    '
-    '
-    '
     ''' <summary>
     ''' gibt für die in myCollection übergebenen Rollen die Kapazitäten zurück 
     ''' wenn includingExterns = true, dann inkl der bereits beauftragten externen Ressourcen
@@ -1535,9 +1852,9 @@ Public Class clsProjekte
                         End If
 
                     End If
-                    
+
                 End If
-                
+
             Next
 
 
@@ -1576,7 +1893,7 @@ Public Class clsProjekte
             Next r
 
             ' falls es SammelRollen gibt, müssen deren externe Kapas noch berücksichtigt werden ... 
-            
+
             If includingExterns And sammelRollenCollection.Count > 0 Then
 
                 ReDim tmpValues(zeitraum)
@@ -1604,7 +1921,7 @@ Public Class clsProjekte
                 Next
 
 
-            End If 
+            End If
 
             getRoleKapasInMonth = kapaValues
         End Get
@@ -1645,7 +1962,7 @@ Public Class clsProjekte
             zeitraum = showRangeRight - showRangeLeft
             ReDim colorsInMonth(zeitraum)
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                 hproj = kvp.Value
 
                 Dauer = hproj.anzahlRasterElemente
@@ -1728,7 +2045,7 @@ Public Class clsProjekte
             ReDim budgetValues(zeitraum)
 
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                 hproj = kvp.Value
 
@@ -1812,7 +2129,7 @@ Public Class clsProjekte
             ReDim earnedValues(zeitraum)
 
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                 hproj = kvp.Value
 
                 Dauer = hproj.anzahlRasterElemente
@@ -1901,7 +2218,7 @@ Public Class clsProjekte
 
             heuteColumn = getColumnOfDate(Date.Today)
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                 hproj = kvp.Value
 
                 Dauer = hproj.anzahlRasterElemente
@@ -2091,7 +2408,7 @@ Public Class clsProjekte
                 costValues = Me.getCostGpValuesInMonth
             Else
 
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     hproj = kvp.Value
 
                     Dauer = hproj.anzahlRasterElemente
@@ -2125,6 +2442,89 @@ Public Class clsProjekte
 
 
             getCostValuesInMonth = costValues
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' gibt die Gesamtkosten , Personalkosten und alle sonstigen Kosten im betrachteten Zeitraum zurück 
+    ''' bei den Personalkosten sind die Überstundensätze bzw. externen Tagessätze im Normalfall nicht berücksichtigt  
+    ''' </summary>
+    ''' <param name="CostID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCostValuesInMonthNew(CostID As Object) As Double()
+
+        Get
+            Dim costValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
+            Dim lookforIndex As Boolean
+            Dim isPersCost As Boolean
+            Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            lookforIndex = IsNumeric(CostID)
+
+            If lookforIndex Then
+                If CostID = CostDefinitions.Count Then
+                    isPersCost = True
+                End If
+            Else
+                If CostID = "Personalkosten" Then
+                    isPersCost = True
+                End If
+            End If
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim costValues(zeitraum)
+
+
+            If isPersCost Then
+                costValues = Me.getCostGpValuesInMonth
+            Else
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    hproj = kvp.Value
+
+                    Dauer = hproj.anzahlRasterElemente
+
+                    ReDim tempArray(Dauer - 1)
+
+                    With hproj
+                        prAnfang = .Start + .StartOffset
+                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                    End With
+
+                    anzLoops = 0
+                    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                    If anzLoops > 0 Then
+
+                        tempArray = hproj.getKostenBedarfNew(CostID)
+
+                        For i = 0 To anzLoops - 1
+                            costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
+                        Next i
+
+
+                    End If
+                    'hproj = Nothing
+                Next kvp
+
+            End If
+
+
+
+
+            getCostValuesInMonthNew = costValues
 
         End Get
 
@@ -2174,7 +2574,7 @@ Public Class clsProjekte
                                                          excludedNames:=Nothing)
                 Else
                     roleValues = Me.getRoleValuesInMonth(roleName)
-                    
+
                 End If
 
                 myCollection.Add(roleName, roleName)
@@ -2277,7 +2677,7 @@ Public Class clsProjekte
                     myCollection.Clear()
                 End If
 
-                
+
                 Select Case typus
 
                     Case 0
@@ -2322,7 +2722,7 @@ Public Class clsProjekte
 
             End If
 
-            
+
 
             getAuslastungsValues = tmpValues
 
@@ -2335,13 +2735,15 @@ Public Class clsProjekte
     ''' wird für den Massenedit benötigt 
     ''' gibt pro Projekt, Phase und Rolle bzw. Kostenart eine Zeile zurück, die die absoluten Bedarfs-Werte im betrachteten Monat enthält und ausserdem 
     ''' pro Rolle die Gesamt bzw. monatl. Auslastungswerte 
+    ''' standardmäßig werden die prozentualen Auslastungswerte angezeigt; es können bei Setzung bon absoluteValues = true aich die noch freien Tage in dem Monat angezeigt werden 
     ''' </summary>
     ''' <param name="von"></param>
     ''' <param name="bis"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer) As Double(,)
+    Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer, _
+                                                 ByVal percentValues As Boolean) As Double(,)
         Get
             Dim tmpArray(,) As Double
             Dim anzahlRollen As Integer = RoleDefinitions.Count
@@ -2353,9 +2755,9 @@ Public Class clsProjekte
                 Dim roleName As String = tmpRole.name
 
                 ' nur für Testzwecke, nachher wieder rausmachen ...
-                If r <> roleUID Then
-                    Call MsgBox("RoleID ist ungleich laufender Nummer !")
-                End If
+                'If r <> roleUID Then
+                '    Call MsgBox("RoleID ist ungleich laufender Nummer !")
+                'End If
 
 
                 Dim roleValues() As Double
@@ -2382,24 +2784,116 @@ Public Class clsProjekte
                 End If
 
                 ' jetzt wird der Array aufgebaut
-                If kapaValues.Sum > 0 Then
-                    tmpArray(r - 1, 0) = roleValues.Sum / kapaValues.Sum
-                Else
-                    tmpArray(r - 1, 0) = 999 ' Kennzeichen für unendlich 
-                End If
 
-                For ix = 1 To bis - von + 1
-                    If kapaValues(ix - 1) > 0 Then
-                        tmpArray(r - 1, ix) = roleValues(ix - 1) / kapaValues(ix - 1)
+                If Not percentValues Then
+
+                    tmpArray(r - 1, 0) = kapaValues.Sum - roleValues.Sum
+                    For ix = 1 To bis - von + 1
+                        tmpArray(r - 1, ix) = kapaValues(ix - 1) - roleValues(ix - 1)
+                    Next
+
+                Else
+                    If kapaValues.Sum > 0 Then
+                        tmpArray(r - 1, 0) = roleValues.Sum / kapaValues.Sum
                     Else
-                        tmpArray(r - 1, ix) = 999 ' Kennzeichen für unendlich ...
+                        tmpArray(r - 1, 0) = 999 ' Kennzeichen für unendlich 
                     End If
 
-                Next
+                    For ix = 1 To bis - von + 1
+                        If kapaValues(ix - 1) > 0 Then
+                            tmpArray(r - 1, ix) = roleValues(ix - 1) / kapaValues(ix - 1)
+                        Else
+                            tmpArray(r - 1, ix) = 999 ' Kennzeichen für unendlich ...
+                        End If
+
+                    Next
+                End If
+
 
             Next
 
             getAuslastungsArray = tmpArray
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' wird für MassenEdit benötigt
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="percentValues"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAuslastungsArrayOfRole(ByVal roleID As Integer, ByVal von As Integer, ByVal bis As Integer, _
+                                                       ByVal percentValues As Boolean) As Double()
+        Get
+            Dim tmpArray() As Double
+            ReDim tmpArray(bis - von + 1)
+
+            Try
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleID)
+
+                Dim roleUID As Integer = tmpRole.UID
+                Dim roleName As String = tmpRole.name
+
+
+                Dim roleValues() As Double
+                Dim kapaValues() As Double
+                Dim myCollection As New Collection
+                Dim ix As Integer
+                Dim zeitraum As Integer = bis - von
+
+                Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
+                ReDim roleValues(zeitraum)
+                ReDim kapaValues(zeitraum)
+
+                myCollection.Add(roleName, roleName)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                myCollection.Clear()
+
+                If istSammelRolle Then
+                    ' alle Bedarfe berücksichtigen
+                    roleValues = Me.getRoleValuesInMonth(roleID:=roleName, considerAllSubRoles:=True, _
+                                                         type:=PTcbr.all)
+                Else
+                    roleValues = Me.getRoleValuesInMonth(roleName)
+                End If
+
+                ' jetzt wird der Array aufgebaut
+
+                If Not percentValues Then
+
+                    tmpArray(0) = kapaValues.Sum - roleValues.Sum
+                    For ix = 1 To bis - von + 1
+                        tmpArray(ix) = kapaValues(ix - 1) - roleValues(ix - 1)
+                    Next
+
+                Else
+                    If kapaValues.Sum > 0 Then
+                        tmpArray(0) = roleValues.Sum / kapaValues.Sum
+                    Else
+                        tmpArray(0) = 999 ' Kennzeichen für unendlich 
+                    End If
+
+                    For ix = 1 To bis - von + 1
+                        If kapaValues(ix - 1) > 0 Then
+                            tmpArray(ix) = roleValues(ix - 1) / kapaValues(ix - 1)
+                        Else
+                            tmpArray(ix) = 999 ' Kennzeichen für unendlich ...
+                        End If
+
+                    Next
+                End If
+
+            Catch ex As Exception
+                ReDim tmpArray(bis - von + 1)
+            End Try
+
+            getAuslastungsArrayOfRole = tmpArray
 
         End Get
     End Property
@@ -3241,8 +3735,8 @@ Public Class clsProjekte
     '' ''' <remarks></remarks>
     Public Sub New()
 
-        AllProjects = New SortedList(Of String, clsProjekt)
-        AllShapes = New SortedList(Of String, String)
+        _allProjects = New SortedList(Of String, clsProjekt)
+        _allShapes = New SortedList(Of String, String)
 
     End Sub
 

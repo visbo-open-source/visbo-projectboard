@@ -37,6 +37,8 @@ Public Class frmLoadCockpit
         Dim wsSheet As xlNS.Worksheet = Nothing
 
         appInstance.ScreenUpdating = False
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
 
         fileName = awinPath & cockpitsFile
 
@@ -66,6 +68,7 @@ Public Class frmLoadCockpit
 
             End Try
         Else
+            appInstance.EnableEvents = True
             Throw New ArgumentException("Die Datei " & fileName & " existiert nicht.")
         End If
 
@@ -79,7 +82,8 @@ Public Class frmLoadCockpit
         End While
 
         xlsCockpits.Close(SaveChanges:=False)
-        'appInstance.ScreenUpdating = True
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = True
     End Sub
 
     Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged

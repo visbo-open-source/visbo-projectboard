@@ -1,6 +1,6 @@
 ﻿Public Class clsFilterDefinitions
 
-    Private filterListe As SortedList(Of String, clsFilter)
+    Public filterListe As SortedList(Of String, clsFilter)
     Private currentFilter As String
     Private isActive As Boolean
 

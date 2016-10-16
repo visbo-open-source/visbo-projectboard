@@ -25,7 +25,10 @@ Public Class clsProjekt
     'Private _ampelStatus As Integer
     'Private _ampelErlaeuterung As String
     Private _name As String
-    Private _variantName As String
+    Private _variantName As String = ""
+    Private _variantDescription As String = ""
+    ' Projektbeschreibung 
+    Private _description As String = ""
 
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
@@ -46,7 +49,7 @@ Public Class clsProjekt
     Public Property timeStamp As Date
 
     ' ergänzt am 26.10.13 - nicht in Vorlage aufgenommen, da es für jedes Projekt individuell ist 
-    Public Property description As String
+
     Public Property volume As Double
     Public Property complexity As Double
     Public Property businessUnit As String
@@ -300,6 +303,40 @@ Public Class clsProjekt
 
 
     End Sub
+    ''' <summary>
+    ''' liest / schreibt die Description eines Projektes
+    ''' stellt sicher, dass es niemals Null sein kann 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property description As String
+        Get
+            If IsNothing(_description) Then
+                _description = ""
+            End If
+            description = _description
+        End Get
+
+        Set(value As String)
+            If IsNothing(value) Then
+                _description = ""
+            Else
+                Try
+                    If value.Trim.Length > 0 Then
+                        _description = value.Trim
+
+                    Else
+                        _description = ""
+                    End If
+
+                Catch ex As Exception
+                    _description = ""
+                End Try
+            End If
+        End Set
+    End Property
+
 
     ''' <summary>
     ''' stellt sicher, daß variantName niemals Nothing sein kann
@@ -330,6 +367,47 @@ Public Class clsProjekt
 
                 Catch ex As Exception
                     _variantName = ""
+                End Try
+            End If
+
+
+        End Set
+    End Property
+
+
+
+    ''' <summary>
+    ''' stellt sicher, daß variantDescription niemals Nothing sein kann
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property variantDescription As String
+        Get
+
+            If IsNothing(_variantDescription) Then
+                _variantDescription = ""
+            End If
+            variantDescription = _variantDescription
+
+
+        End Get
+
+        Set(value As String)
+
+            If IsNothing(value) Then
+                _variantDescription = ""
+            Else
+                Try
+                    If value.Trim.Length > 0 Then
+                        _variantDescription = value.Trim
+
+                    Else
+                        _variantDescription = ""
+                    End If
+
+                Catch ex As Exception
+                    _variantDescription = ""
                 End Try
             End If
 
@@ -1039,45 +1117,90 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestoneDate(ByVal milestoneName As String) As Date
+    Public ReadOnly Property getMilestoneDate(ByVal milestoneName As String, _
+                                              Optional breadCrumb As String = "", _
+                                              Optional lfdNr As Integer = 1) As Date
         Get
             Dim found As Boolean = False
-            Dim cphase As clsPhase
+            'Dim cphase As clsPhase
             Dim cresult As clsMeilenstein
             Dim tmpDate As Date = Nothing
             Dim p As Integer = 1
             Dim colorIndex As Integer
 
+            ' neu
+            Dim hryindices(,) As Integer = Me.hierarchy.getMilestoneIndices(milestoneName)
+            Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(milestoneName, breadCrumb)
 
-            Do While p <= Me.CountPhases And Not found
 
-                cphase = Me.getPhase(p)
+            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                cresult = cphase.getMilestone(milestoneName)
+                If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 _
+                    And mx = lfdNr - 1 Then
 
-                If Not IsNothing(cresult) Then
+                    Try
+                        cresult = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                        If Not IsNothing(cresult) Then
 
-                    colorIndex = cresult.getBewertung(1).colorIndex
-                    tmpDate = cresult.getDate.Date          ' hier wird der Zeit-Teil des MS-Datums abgeschnitten und wird nach tmpdate gespeichert
+                            colorIndex = cresult.getBewertung(1).colorIndex
+                            tmpDate = cresult.getDate.Date          ' hier wird der Zeit-Teil des MS-Datums abgeschnitten und wird nach tmpdate gespeichert
 
-                    ' jetzt wird die Ampelfarbe ins Datum kodiert 
-                    tmpDate = tmpDate.AddSeconds(colorIndex)
-                    found = True
+                            ' jetzt wird die Ampelfarbe ins Datum kodiert 
+                            tmpDate = tmpDate.AddSeconds(colorIndex)
+                            found = True
 
-                    ' jetzt wird in das Datum kodiert, ob der Meilenstein abgeschlossen sein sollte
-                    ' wenn timestamp nach dem Meilenstein-Datum steht, sollte der Meilenstein abgeschlossen sein 
-                    If DateDiff(DateInterval.Day, Me.timeStamp, tmpDate) < 0 Then
+                            ' jetzt wird in das Datum kodiert, ob der Meilenstein abgeschlossen sein sollte
+                            ' wenn timestamp nach dem Meilenstein-Datum steht, sollte der Meilenstein abgeschlossen sein 
+                            If DateDiff(DateInterval.Day, Me.timeStamp, tmpDate) < 0 Then
 
-                        ' Meilenstein Datum liegt vor dem Datum, an dem dieser Planungs-Stand abgegeben wurde
-                        tmpDate = tmpDate.AddHours(6)
+                                ' Meilenstein Datum liegt vor dem Datum, an dem dieser Planungs-Stand abgegeben wurde
+                                tmpDate = tmpDate.AddHours(6)
 
-                    End If
+                            End If
+
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
 
                 End If
 
-                p = p + 1
+            Next
 
-            Loop
+            ' neu Ende 
+
+            ' alt: bis 20.9.2016
+            ''Do While p <= Me.CountPhases And Not found
+
+            ''    cphase = Me.getPhase(p)
+
+            ''    cresult = cphase.getMilestone(milestoneName)
+
+            ''    If Not IsNothing(cresult) Then
+
+            ''        colorIndex = cresult.getBewertung(1).colorIndex
+            ''        tmpDate = cresult.getDate.Date          ' hier wird der Zeit-Teil des MS-Datums abgeschnitten und wird nach tmpdate gespeichert
+
+            ''        ' jetzt wird die Ampelfarbe ins Datum kodiert 
+            ''        tmpDate = tmpDate.AddSeconds(colorIndex)
+            ''        found = True
+
+            ''        ' jetzt wird in das Datum kodiert, ob der Meilenstein abgeschlossen sein sollte
+            ''        ' wenn timestamp nach dem Meilenstein-Datum steht, sollte der Meilenstein abgeschlossen sein 
+            ''        If DateDiff(DateInterval.Day, Me.timeStamp, tmpDate) < 0 Then
+
+            ''            ' Meilenstein Datum liegt vor dem Datum, an dem dieser Planungs-Stand abgegeben wurde
+            ''            tmpDate = tmpDate.AddHours(6)
+
+            ''        End If
+
+            ''    End If
+
+            ''    p = p + 1
+
+            ''Loop
 
             If found Then
                 getMilestoneDate = tmpDate
@@ -3724,6 +3847,7 @@ Public Class clsProjekt
         _timeStamp = Date.Now
 
         _variantName = ""
+        _variantDescription = ""
 
         '_ampelErlaeuterung = ""
         '_ampelStatus = 0

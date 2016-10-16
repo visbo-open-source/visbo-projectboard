@@ -14,7 +14,7 @@ Public Class frmProjPortfolioAdmin
     Private stopRecursion As Boolean = False
     Private constellationName As String = ""
 
-
+    Private filterIsActive As Boolean = False
     Private selectedMilestones As New Collection
     Private selectedPhases As New Collection
     Private selectedCosts As New Collection
@@ -31,7 +31,196 @@ Public Class frmProjPortfolioAdmin
         frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
         projektHistorien.clear()
 
+        ' Maus auf Normalmodus zurücksetzen
+        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+
     End Sub
+
+    Private Sub defineButtonVisibility()
+
+        With Me
+
+            ' bei Beginn immer disabled
+            .deleteFilterIcon.Enabled = False
+
+            If aKtionskennung = PTTvActions.activateV Then
+
+                .Text = "Variante aktivieren"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = False
+                .SelectionReset.Visible = False
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+                .OKButton.Visible = False
+
+
+            ElseIf aKtionskennung = PTTvActions.chgInSession Then
+                .Text = "Zusammenstellung im Szenario ändern"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .considerDependencies.Visible = True
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = True
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Szenario speichern"
+
+            ElseIf aKtionskennung = PTTvActions.definePortfolioDB Then
+
+            ElseIf aKtionskennung = PTTvActions.definePortfolioSE Then
+
+            ElseIf aKtionskennung = PTTvActions.deleteV Then
+
+                .Text = "Variante löschen"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+
+            ElseIf aKtionskennung = PTTvActions.delFromDB Then
+
+                .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+
+                .dropBoxTimeStamps.Visible = True
+                .lblStandvom.Visible = True
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+
+            ElseIf aKtionskennung = PTTvActions.delFromSession Then
+                .Text = "Projekte, Varianten aus der Session löschen"
+
+                .dropBoxTimeStamps.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+
+            ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+                .Text = "Projekte und Varianten in die Session laden "
+
+                .dropBoxTimeStamps.Visible = True
+                .lblStandvom.Visible = True
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Laden"
+
+            ElseIf aKtionskennung = PTTvActions.loadPVS Then
+
+                .Text = "Projekte und Varianten in die Session laden "
+
+                .dropBoxTimeStamps.Visible = True
+                .lblStandvom.Visible = True
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .considerDependencies.Visible = False
+                .considerDependencies.Checked = False
+
+                .dropboxScenarioNames.Visible = False
+
+
+                .OKButton.Visible = True
+                .OKButton.Text = "Laden"
+
+            End If
+
+        End With
+        
+
+    End Sub
+
 
     Private Sub frmDefineEditPortfolio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -43,21 +232,65 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
+        ' je nachdem, wie die Aktionskennung ist: setzen der Button Visibilitäten 
+        Call defineButtonVisibility()
+
+        ' jetzt die vorkommenden Timestamps auslesen 
+        ' aber nicht bei allen Aktionskennungen 
+
+        If aKtionskennung = PTTvActions.chgInSession Or _
+            aKtionskennung = PTTvActions.delFromSession Or _
+            aKtionskennung = PTTvActions.deleteV Or _
+            aKtionskennung = PTTvActions.activateV Then
+            
+        Else
+
+            Try
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim tCollection As Collection = request.retrieveZeitstempelFromDB()
+                'Dim heute As String = Date.Now.ToString
+
+                dropBoxTimeStamps.Items.Clear()
+
+                For k As Integer = 1 To tCollection.Count
+                    Dim tmpDate As Date = CDate(tCollection.Item(k))
+                    dropBoxTimeStamps.Items.Add(tmpDate)
+                Next
+
+            Catch ex As Exception
+
+            End Try
+            
+            ' jetzt ist dropBoxTimeStamps.selecteditem = Nothing ..
+        End If
+
+
         ' Maus auf Wartemodus setzen
         appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
+        If aKtionskennung = PTTvActions.chgInSession Then
+            
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                If kvp.Key <> "Start" Then
+                    dropboxScenarioNames.Items.Add(kvp.Key)
+                End If
+            Next
+        Else
+            ' nichts weiter tun 
+            ' die Filter-NAmen müssen aktuell nicht ausgelesen werden 
+        End If
 
-        ' alle definierten Filter in ComboBox anzeigen
-        ' die Filter einlesen 
-        Call frmHryNameReadFilterVorlagen(PTmenue.filterdefinieren, filterDropbox)
-        For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
-            filterDropbox.Items.Add(kvp.Key)
-        Next
 
 
         stopRecursion = True
+        Dim storedAtOrBefore As Date
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now
+        Else
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+        End If
         Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           False)
+                           Me.filterIsActive, storedAtOrBefore)
         stopRecursion = False
 
         If aktuelleGesamtListe.liste.Count < 1 Then
@@ -67,8 +300,11 @@ Public Class frmProjPortfolioAdmin
         ' Maus auf Normalmodus zurücksetzen
         appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
 
+        ' Fokus auf was unverdächtiges setzen 
+        dropboxScenarioNames.Focus()
 
     End Sub
+
 
     Private Sub TreeViewProjekte_AfterCheck(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterCheck
 
@@ -246,16 +482,27 @@ Public Class frmProjPortfolioAdmin
                     Else
 
                         ' die Standard Variante auf Checked setzen 
-                        For i = 0 To projektNode.Nodes.Count - 1
-                            If projektNode.Nodes.Item(i).Text = "()" Then
-                                projektNode.Nodes.Item(i).Checked = True
-                            End If
-                        Next
+                        ' bzw. was besser ist, den ersten Child-Knoten 
+                        ' das funktioniert nämlich auch dann, wenn keine Variante mit Name "" existiert 
+                        If projektNode.Nodes.Count > 0 Then
+                            projektNode.Nodes.Item(0).Checked = True
+                            selectedVariantName = getVariantNameOf(projektNode.Nodes.Item(0).Text)
+                        Else
+                            ' darf eigentlich gar nicht vorkommen 
+                            selectedVariantName = ""
+                        End If
+
+                        ' alt , wurde durch oberes ersetzt; Schwäche war: wenn kein Varianten-Name "" existiert 
+                        'For i = 0 To projektNode.Nodes.Count - 1
+                        '    If projektNode.Nodes.Item(i).Text = "()" Then
+                        '        projektNode.Nodes.Item(i).Checked = True
+                        '    End If
+                        'Next
 
                         ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
                         ' aber nur, wenn es nicht vorher schon die leere Variante war 
 
-                        selectedVariantName = ""
+
 
                     End If
 
@@ -273,18 +520,288 @@ Public Class frmProjPortfolioAdmin
 
             stopRecursion = False
 
+        ElseIf aKtionskennung = PTTvActions.chgInSession Then
+
+            stopRecursion = True
+
+            Select Case treeLevel
+
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                    Dim selectedProjectName As String = node.Text
+                    Dim variantNames As Collection = AlleProjekte.getVariantNames(selectedProjectName, False)
+                    Dim selectedVariantName As String = ""
+
+                    If variantNames.Count > 0 Then
+                        selectedVariantName = CStr(variantNames.Item(1))
+                    End If
+
+                    If node.Checked Then
+                        ' wurde neu hinzugefügt 
+                        ' war bereits vorher irgendwann mal eine Variante gewählt ?
+                        Dim selectionExisted As Boolean = False
+                        For j = 1 To node.Nodes.Count
+                            childNode = node.Nodes.Item(j - 1)
+                            If childNode.Checked Then
+                                selectionExisted = True
+                                selectedVariantName = getVariantNameOf(childNode.Text)
+                            End If
+                        Next
+
+                        If Not selectionExisted And node.Nodes.Count > 0 Then
+                            childNode = node.Nodes.Item(0)
+                            childNode.Checked = True
+                            selectedVariantName = getVariantNameOf(childNode.Text)
+                        End If
+
+
+                        Call putProjectInShow(selectedProjectName, selectedVariantName, considerDependencies.Checked, False)
+                        ' jetzt muss das Projekt aus AlleProjekte auch in ShowProjekte transferiert werden 
+                        
+                        ' jetzt muss noch die TreeView ggf angepasst werden, wenn considerDependencies true ist 
+                        If considerDependencies.Checked Then
+                            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+                            Dim toDoListe As Collection = allDependencies.passiveListe(selectedProjectName, PTdpndncyType.inhalt)
+                            If toDoListe.Count > 0 Then
+                                For Each mprojectName As String In toDoListe
+                                    Call activateMasterProject(mprojectName)
+                                Next
+
+                            End If
+                        End If
+                    Else
+                        ' wurde abgewählt 
+
+                        Call putProjectInNoShow(selectedProjectName, considerDependencies.Checked, False)
+
+                        If considerDependencies.Checked Then
+                            Dim toDoListe As Collection = allDependencies.activeListe(selectedProjectName, PTdpndncyType.inhalt)
+                            If toDoListe.Count > 0 Then
+                                For Each dprojectName As String In toDoListe
+                                    Call deactivateDependentProject(dprojectName)
+                                Next
+
+                            End If
+                        End If
+                        
+                        '' das Folgende wurde ersetzt durch putProjectInNoShow .. siehe oben 
+                        ''Dim pZeile As Integer
+
+                        ''If ShowProjekte.contains(selectedProjectName) Then
+
+                        ''    pZeile = calcYCoordToZeile(projectboardShapes.getCoord(selectedProjectName)(0))
+                        ''    'pZeile = ShowProjekte.getPTZeile(selectedProjectName)
+                        ''    'Call MsgBox("Zeile: " & pZeile.ToString)
+
+                        ''    Call clearProjektinPlantafel(selectedProjectName)
+
+                        ''    ShowProjekte.Remove(selectedProjectName)
+
+
+                        ''    Call moveShapesUp(pZeile + 1, 1, True)
+
+                        ''End If
+
+                        ' '' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+                        ''If considerDependencies.Checked Then
+                        ''    ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+                        ''    Dim toDoListe As Collection = allDependencies.activeListe(selectedProjectName, PTdpndncyType.inhalt)
+                        ''    If toDoListe.Count > 0 Then
+                        ''        For Each dprojectName As String In toDoListe
+                        ''            Call deactivateDependentProject(dprojectName)
+                        ''        Next
+
+                        ''    End If
+                        ''Else
+                        ''    ' nichts tun 
+                        ''End If
+                    End If
+
+                    ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
+                    Call awinNeuZeichnenDiagramme(2)
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+
+                    Dim projektNode As TreeNode = node.Parent
+                    Dim selectedVariantName As String = node.Text
+                    Dim pName As String = projektNode.Text
+
+                    ' es kann immer nur eine Variante selektiert sein; wenn die bisher aktive de-selektiert wird, 
+                    ' wird Standard auf checked gesetzt 
+
+                    If node.Checked = True Then
+
+                        ' alle anderen Varianten auf Unchecked setzen 
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            If projektNode.Nodes.Item(i).Text <> selectedVariantName Then
+                                projektNode.Nodes.Item(i).Checked = False
+                            End If
+                        Next
+
+                        ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
+                        selectedVariantName = getVariantNameOf(node.Text)
+
+
+
+                    Else
+
+                        ' die Standard Variante auf Checked setzen 
+                        ' bzw. was besser ist, den ersten Child-Knoten 
+                        ' das funktioniert nämlich auch dann, wenn keine Variante mit Name "" existiert 
+                        If projektNode.Nodes.Count > 0 Then
+                            projektNode.Nodes.Item(0).Checked = True
+                            selectedVariantName = getVariantNameOf(projektNode.Nodes.Item(0).Text)
+                        Else
+                            ' darf eigentlich gar nicht vorkommen 
+                            selectedVariantName = ""
+                        End If
+
+                        ' '' die Standard Variante auf Checked setzen 
+                        ''For i = 0 To projektNode.Nodes.Count - 1
+                        ''    If projektNode.Nodes.Item(i).Text = "()" Then
+                        ''        projektNode.Nodes.Item(i).Checked = True
+                        ''    End If
+                        ''Next
+
+                        ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
+                        ' aber nur, wenn es nicht vorher schon die leere Variante war 
+
+
+                    End If
+
+                    ' jetzt muss das bisherige aus ShowProjekte rausgenommen werden 
+                    If ShowProjekte.contains(pName) And projektNode.Checked Then
+
+                        Call replaceProjectVariant(pName, selectedVariantName, False, True, 0)
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        Call aktualisiereCharts(hproj, False)
+                        Call awinNeuZeichnenDiagramme(2)
+
+
+
+                        ' iwie Fehler 
+                        ''ShowProjekte.Remove(pName)
+
+                        ' '' jetzt muss das Projekt aus AlleProjekte auch in ShowProjekte transferiert werden 
+                        ''Dim key As String = calcProjektKey(pName, selectedVariantName)
+                        ''Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+
+                        ''If Not ShowProjekte.contains(pName) Then
+                        ''    ShowProjekte.Add(hproj)
+                        ''End If
+
+                        ''Dim tmpCollection As New Collection
+                        ''Call ZeichneProjektinPlanTafel(tmpCollection, pName, hproj.tfZeile, tmpCollection, tmpCollection, True)
+
+                        ''Call awinNeuZeichnenDiagramme(2)
+                    End If
+
+
+
+            End Select
+
+            stopRecursion = False
+
         End If
 
 
     End Sub
 
+    ''' <summary>
+    ''' aktiviert das Master-Projekt, wenn es nicht schon aktiviert ist ...
+    ''' </summary>
+    ''' <param name="mprojectName"></param>
+    ''' <remarks></remarks>
+    Private Sub activateMasterProject(ByVal mprojectName As String)
+
+        For i As Integer = 1 To TreeViewProjekte.GetNodeCount(False)
+            Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
+
+            If curItem.Checked Then
+                ' nichts tun 
+            Else
+                stopRecursion = False
+                curItem.Checked = True
+                stopRecursion = True
+            End If
+
+        Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' de-aktiviert das abhängige Projekt, wenn es nicht schon de-aktiviert ist 
+    ''' </summary>
+    ''' <param name="dprojectName"></param>
+    ''' <remarks></remarks>
+    Private Sub deactivateDependentProject(ByVal dprojectName As String)
+
+        For i As Integer = 1 To TreeViewProjekte.GetNodeCount(False)
+            Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
+
+            If curItem.Text = dprojectName Then
+                If curItem.Checked Then
+                    stopRecursion = False
+                    curItem.Checked = False
+                    stopRecursion = True
+                Else
+                    ' nichts tun
+                End If
+            End If
+
+        Next
+    End Sub
     Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
 
         Dim node As TreeNode = e.Node
+        Dim treeLevel As Integer = node.Level
+        Dim projectName As String
+        Dim variantName As String = ""
+        Dim description As String = "-"
+        Dim hproj As clsProjekt
 
-        'If node.IsSelected Then
-        '    node.Expand()
-        'End If
+
+        If treeLevel = 0 Then
+            projectName = node.Text
+
+            Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
+            variantName = ""
+
+            hproj = AlleProjekte.getProject(projectName, variantName)
+            If IsNothing(hproj) And variantNames.Count > 0 Then
+                variantName = CStr(variantNames.Item(1))
+                hproj = AlleProjekte.getProject(projectName, variantName)
+            End If
+
+            If Not IsNothing(hproj) Then
+                If hproj.description.Length > 0 Then
+                    description = hproj.description
+                End If
+            End If
+
+
+        ElseIf treeLevel = 1 Then
+            Dim projectNode As TreeNode = node.Parent
+            If Not IsNothing(projectNode) Then
+
+                projectName = projectNode.Text
+                variantName = getVariantNameOf(node.Text)
+                hproj = AlleProjekte.getProject(projectName, variantName)
+
+                If Not IsNothing(hproj) Then
+
+                    If hproj.variantDescription.Length > 0 Then
+                        description = hproj.variantDescription
+                    End If
+                End If
+
+            End If
+        End If
+
+        ToolTipStand.Show(description, TreeViewProjekte, 6000)
+
 
     End Sub
 
@@ -308,6 +825,7 @@ Public Class frmProjPortfolioAdmin
         nodeLevel = node.Level
 
         If nodeLevel = 0 Then
+
             projName = node.Text
 
             ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
@@ -316,8 +834,22 @@ Public Class frmProjPortfolioAdmin
                 variantListe = aktuelleGesamtListe.getVariantNames(projName, True)
 
                 ' hproj wird benötigt, um herauszufinden, welche Variante gerade aktiv ist
-                If aKtionskennung = PTTvActions.activateV Then
+                If aKtionskennung = PTTvActions.activateV Or _
+                    (aKtionskennung = PTTvActions.chgInSession And node.Checked) Then
                     hproj = ShowProjekte.getProject(projName)
+                ElseIf aKtionskennung = PTTvActions.chgInSession Then
+                    ' jetzt erst noch die Variante bestimmen ... 
+                    variantName = ""
+                    For j As Integer = 1 To node.Nodes.Count
+                        nodeVariant = node.Nodes.Item(j - 1)
+                        If nodeVariant.Checked Then
+                            variantName = nodeVariant.Text
+                        End If
+                    Next
+
+                    Dim tmpKey As String = calcProjektKey(projName, variantName)
+                    hproj = AlleProjekte.getProject(tmpKey)
+
                 End If
 
 
@@ -329,7 +861,8 @@ Public Class frmProjPortfolioAdmin
                     nodeVariant = node.Nodes.Add(CType(variantName, String))
 
                     ' jetzt muss gecheckt werden , ob es sich um das Aktivieren handelt oder nicht
-                    If aKtionskennung = PTTvActions.activateV Then
+                    If aKtionskennung = PTTvActions.activateV Or _
+                        aKtionskennung = PTTvActions.chgInSession Then
                         stopRecursion = True
                         If getVariantNameOf(variantName) = hproj.variantName Then
                             nodeVariant.Checked = True
@@ -367,6 +900,7 @@ Public Class frmProjPortfolioAdmin
                         nodeVariant.Tag = "X"
                     End If
 
+                   
                 Next
 
                 node.Tag = "X"
@@ -493,135 +1027,20 @@ Public Class frmProjPortfolioAdmin
         Dim pname As String, variantName As String, timestamp As Date
         'Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
+        Dim storedAtOrBefore As Date
 
         ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         ' ''Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now.AddDays(1)
+        Else
+
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+
+        End If
+
         Dim p As Integer, v As Integer, t As Integer
-
-        ' ''ur:10.08.2015 '' ''
-        ' '' '' '' Aktivieren von Varianten erfordert überhaupt keinen Button; deswegen ist das jetzt hier nicht abgefragt 
-        ' '' '' ''
-        '' '' ''If aKtionskennung = PTTvActions.definePortfolioSE Or _
-        '' '' ''    aKtionskennung = PTTvActions.definePortfolioDB Then
-        '' '' ''    '
-        '' '' ''    ' Portfolios definieren 
-        '' '' ''    '
-        '' '' ''    ' prüfen, ob diese Constellation bereits existiert ..
-
-
-        '' '' ''    If IsNothing(portfolioName.SelectedItem) Then
-        '' '' ''        constellationName = portfolioName.Text
-        '' '' ''    Else
-        '' '' ''        constellationName = portfolioName.SelectedItem.ToString
-        '' '' ''    End If
-
-        '' '' ''    If constellationName.Length = 0 Then
-        '' '' ''        Call MsgBox("bitte einen Namen angeben")
-        '' '' ''        Exit Sub
-        '' '' ''    End If
-
-        '' '' ''    If projectConstellations.Contains(constellationName) Then
-
-        '' '' ''        Try
-        '' '' ''            projectConstellations.Remove(constellationName)
-        '' '' ''        Catch ex As Exception
-
-        '' '' ''        End Try
-
-        '' '' ''    End If
-
-        '' '' ''    Dim newC As New clsConstellation
-        '' '' ''    With newC
-        '' '' ''        .constellationName = constellationName
-        '' '' ''    End With
-
-
-        '' '' ''    With TreeViewProjekte
-        '' '' ''        anzahlProjekte = .Nodes.Count
-
-        '' '' ''        For p = 1 To anzahlProjekte
-
-        '' '' ''            projektNode = .Nodes.Item(p - 1)
-        '' '' ''            pname = projektNode.Text
-        '' '' ''            variantName = ""
-
-        '' '' ''            If projektNode.Checked Then
-        '' '' ''                ' das Projekt mit Variante "" in Konstellation eintragen
-
-        '' '' ''                hproj = request.retrieveOneProjectfromDB(pname, variantName)
-
-        '' '' ''                Dim newConstellationItem As New clsConstellationItem
-
-        '' '' ''                With newConstellationItem
-        '' '' ''                    .projectName = pname
-        '' '' ''                    .show = True
-        '' '' ''                    .Start = hproj.startDate
-        '' '' ''                    .variantName = hproj.variantName
-        '' '' ''                    .zeile = portfolioZeile
-        '' '' ''                    portfolioZeile = portfolioZeile + 1
-        '' '' ''                End With
-
-        '' '' ''                newC.Add(newConstellationItem)
-
-
-        '' '' ''                ' wenn es bereits ersetzt wurde, dann stimmt anzahlVarianten = ... 
-        '' '' ''            ElseIf projektNode.Tag = "X" Then
-
-        '' '' ''                anzahlVarianten = projektNode.Nodes.Count
-
-        '' '' ''                For v = 1 To anzahlVarianten
-        '' '' ''                    variantNode = projektNode.Nodes.Item(v - 1)
-        '' '' ''                    variantName = getVariantNameOf(variantNode.Text)
-
-
-        '' '' ''                    If variantNode.Checked Then
-
-        '' '' ''                        hproj = request.retrieveOneProjectfromDB(pname, variantName)
-
-        '' '' ''                        Dim newConstellationItem As New clsConstellationItem
-
-        '' '' ''                        With newConstellationItem
-        '' '' ''                            .projectName = pname
-        '' '' ''                            .show = True
-        '' '' ''                            .Start = hproj.startDate
-        '' '' ''                            .variantName = hproj.variantName
-        '' '' ''                            .zeile = portfolioZeile
-        '' '' ''                            portfolioZeile = portfolioZeile + 1
-        '' '' ''                        End With
-
-        '' '' ''                        newC.Add(newConstellationItem)
-
-
-
-        '' '' ''                    End If
-
-        '' '' ''                Next
-        '' '' ''            End If
-
-        '' '' ''        Next
-
-
-        '' '' ''        Try
-        '' '' ''            projectConstellations.Add(newC)
-        '' '' ''            Call MsgBox("Portfolio " & constellationName & " gespeichert ...")
-        '' '' ''        Catch ex As Exception
-        '' '' ''            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-        '' '' ''        End Try
-
-        '' '' ''        ' Portfolio in die Datenbank speichern, falls Aktionskennung 
-        '' '' ''        If aKtionskennung = PTTvActions.definePortfolioDB Then
-        '' '' ''            If request.pingMongoDb() Then
-        '' '' ''                If Not request.storeConstellationToDB(newC) Then
-        '' '' ''                    Call MsgBox("Fehler beim Speichern der ProjektConstellation '" & newC.constellationName & "' in die Datenbank")
-        '' '' ''                End If
-        '' '' ''            Else
-        '' '' ''                Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-        '' '' ''            End If
-        '' '' ''        End If
-
-
-        '' '' ''    End With
 
         If aKtionskennung = PTTvActions.delFromDB Or _
             aKtionskennung = PTTvActions.delFromSession Or _
@@ -649,38 +1068,38 @@ Public Class frmProjPortfolioAdmin
 
                         If aKtionskennung = PTTvActions.delFromSession Then
 
-                            Call awinDeleteProjectInSession(pName:=pname)
+                            Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies.Checked)
 
                         ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
 
-                                For v = 1 To anzahlVarianten
+                            For v = 1 To anzahlVarianten
 
-                                    'variantNode = projektNode.Nodes.Item(v - 1)
-                                    'variantName = getVariantNameOf(variantNode.Text)
-                                    variantName = getVariantNameOf(CStr(variantListe.Item(v)))
-                                    Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
+                                'variantNode = projektNode.Nodes.Item(v - 1)
+                                'variantName = getVariantNameOf(variantNode.Text)
+                                variantName = getVariantNameOf(CStr(variantListe.Item(v)))
+                                Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
 
-                                Next
-                            
+                            Next
+
 
                         ElseIf aKtionskennung = PTTvActions.loadPV Then
 
-                           
-                                For v = 1 To anzahlVarianten
 
-                                    'variantNode = projektNode.Nodes.Item(v - 1)
-                                    'variantName = getVariantNameOf(variantNode.Text)
-                                    variantName = getVariantNameOf(CStr(variantListe.Item(v)))
+                            For v = 1 To anzahlVarianten
 
-                                    If v = 1 Then
-                                        Call loadProjectfromDB(pname, variantName, True)
-                                    Else
-                                        Call loadProjectfromDB(pname, variantName, False)
-                                    End If
+                                'variantNode = projektNode.Nodes.Item(v - 1)
+                                'variantName = getVariantNameOf(variantNode.Text)
+                                variantName = getVariantNameOf(CStr(variantListe.Item(v)))
+
+                                If v = 1 Then
+                                    Call loadProjectfromDB(pname, variantName, True, storedAtOrBefore)
+                                Else
+                                    Call loadProjectfromDB(pname, variantName, False, storedAtOrBefore)
+                                End If
 
 
-                                Next
+                            Next
 
 
 
@@ -703,14 +1122,18 @@ Public Class frmProjPortfolioAdmin
                                 ' Aktion auf allen Timestamps
                                 ' lösche in Datenbank das Objekt mit DB-Namen pname#vname
 
-                                If aKtionskennung = PTTvActions.delFromDB Or _
-                                    aKtionskennung = PTTvActions.delFromSession Or _
-                                    aKtionskennung = PTTvActions.deleteV Then
+                                If aKtionskennung = PTTvActions.delFromDB Then
                                     Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
+
+                                ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+                                        aKtionskennung = PTTvActions.deleteV Then
+
+                                    Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies.Checked, vName:=variantName)
+
 
                                 ElseIf aKtionskennung = PTTvActions.loadPV Then
 
-                                    Call loadProjectfromDB(pname, variantName, first)
+                                    Call loadProjectfromDB(pname, variantName, first, storedAtOrBefore)
                                     first = False
 
                                 End If
@@ -753,6 +1176,15 @@ Public Class frmProjPortfolioAdmin
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
 
+        ElseIf aKtionskennung = PTTvActions.chgInSession Then
+
+            If dropboxScenarioNames.Text <> "" Then
+                currentConstellation = dropboxScenarioNames.Text
+                Call storeSessionConstellation(currentConstellation)
+            End If
+
+            DialogResult = Windows.Forms.DialogResult.OK
+            MyBase.Close()
         Else
             Call MsgBox("nicht unterstützte Option in ProjPortfolio Admin Formular ...")
         End If
@@ -761,51 +1193,512 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    ' 'ur: 11.08.2015: PT-103' ''Private Sub applyFilter_CheckedChanged(sender As Object, e As EventArgs)
 
-    ' '' ''    ' der TreeView muss neu aufgebaut werden 
+    ''' <summary>
+    ''' alle dargestellten Elemente im ProjektTree selektieren 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub SelectionSet_Click(sender As Object, e As EventArgs) Handles SelectionSet.Click
 
-    ' '' ''    stopRecursion = True
-    ' '' ''    Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-    ' '' ''                       Me.applyFilter.Checked)
-    ' '' ''    stopRecursion = False
 
-
-    ' '' ''End Sub
-
-    ' ''ur: 11.08.2015: PT-103 '' ''' <summary>
-    ' '' '' ''' ruft die Eingabe Maske zum Definieren des Filters auf 
-    ' '' '' ''' </summary>
-    ' '' '' ''' <param name="sender"></param>
-    ' '' '' ''' <param name="e"></param>
-    ' '' '' ''' <remarks></remarks>
-    ' '' ''Private Sub defineFilter_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles defineFilter.LinkClicked
-
-    ' '' ''    Call defineFilterDB()
-
-    ' '' ''End Sub
-
-    Private Sub filterDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles filterDropbox.SelectedIndexChanged
-
-        Dim fName As String = filterDropbox.SelectedItem.ToString
-        ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
-
-        ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
-        Call retrieveSelections(fName, PTmenue.filterAuswahl, selectedBUs, selectedTyps, _
-                                selectedPhases, selectedMilestones, _
-                                selectedRoles, selectedCosts)
-        ' und als "Last" gespeichert
-        Call storeFilter("Last", PTmenue.filterAuswahl, selectedBUs, selectedTyps, _
-                                selectedPhases, selectedMilestones, _
-                                selectedRoles, selectedCosts, False)
+        Dim projectNode As TreeNode
 
         stopRecursion = True
-        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           True)
+
+        With TreeViewProjekte
+
+            ' die Behandlung von chgInSession ist etwas anders, weil sofort eine Aktion erfolgen muss ... 
+
+            If aKtionskennung = PTTvActions.chgInSession Then
+
+                ' jetzt im formular den Mauszeiger auf Warten ... setzen 
+                Me.Cursor = Cursors.WaitCursor
+
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+                    Dim pName As String = projectNode.Text
+
+                    ' jetzt muss die Behandlung kommen, was denn gemacht werden soll 
+                    ' ############ ChgInSession ####################################
+
+                    ' das Projekt muss in Showprojekte, aber nur wenn es nicht bereits gecheckt war 
+                    Dim variantName As String = ""
+
+                    If Not projectNode.Checked Then
+                        projectNode.Checked = True
+
+                        ' ermittle die gecheckte Variante 
+                        Dim checkedVariants As Collection = getNamesOfChildNodes(projectNode, True)
+                        If checkedVariants.Count = 0 Then
+                            ' dann muss der Varianten-Name entsprechend gesetzt werden  
+                            Dim tmpCollection As Collection = AlleProjekte.getVariantNames(pName, True)
+                            If tmpCollection.Count > 0 Then
+                                variantName = getVariantNameOf(CStr(tmpCollection.Item(1)))
+                            Else
+                                variantName = ""
+                            End If
+
+
+                        ElseIf checkedVariants.Count = 1 Then
+                            variantName = getVariantNameOf(CStr(checkedVariants.Item(1)))
+
+                        ElseIf checkedVariants.Count > 1 Then
+                            variantName = getVariantNameOf(CStr(checkedVariants.Item(1)))
+                            For k As Integer = 1 To projectNode.Nodes.Count
+                                If getVariantNameOf(projectNode.Nodes.Item(k - 1).Text) = variantName Then
+                                    projectNode.Nodes.Item(k - 1).Checked = True
+                                Else
+                                    projectNode.Nodes.Item(k - 1).Checked = False
+                                End If
+                            Next
+                        End If
+
+                        ' jetzt muss das Projekt in Showprojekte eingetragen werden bzw. das alte zuvor gelöscht werden 
+                        If ShowProjekte.contains(pName) Then
+                            ShowProjekte.Remove(pName)
+                        End If
+
+                        Dim key As String = calcProjektKey(pName, variantName)
+                        Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+
+                        ShowProjekte.Add(hproj)
+
+                    Else
+                        ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
+                    End If
+
+                Next
+
+                
+                ' jetzt muss die Plan-Tafel gelöscht werden 
+                Call awinClearPlanTafel()
+
+                ' jetzt muss die Plan-Tafel neu gezeichnet werden 
+                Call awinZeichnePlanTafelNeu(True)
+
+                ' jetzt müssen die Diagramme neu gezeichnet werden 
+                Call awinNeuZeichnenDiagramme(2)
+
+                Me.Cursor = Cursors.Default
+
+            ElseIf aKtionskennung = PTTvActions.deleteV Or _
+                aKtionskennung = PTTvActions.activateV Then
+                ' nichts tun, Alle Selektieren macht bei diesen keinen Sinn 
+
+            ElseIf aKtionskennung = PTTvActions.delFromDB Then
+                ' wenn ein Stand angegeben ist , dann sollen alle mit diesem Stand markiert werden 
+                If Not IsNothing(dropBoxTimeStamps.SelectedItem) Then
+
+                    Dim lookForTimestamp As Date = CDate(dropBoxTimeStamps.SelectedItem)
+                    Dim vergleichsString As String = lookForTimestamp.ToString
+
+                    ' jetzt wird der TreeView komplett expanded ...
+                    stopRecursion = False
+                    .ExpandAll()
+                    stopRecursion = True
+
+                    For i As Integer = 1 To .Nodes.Count
+                        projectNode = .Nodes.Item(i - 1)
+
+                        For v As Integer = 1 To projectNode.Nodes.Count
+                            Dim variantNode As TreeNode = projectNode.Nodes.Item(v - 1)
+
+                            For t As Integer = 1 To variantNode.Nodes.Count
+                                Dim tsNode As TreeNode = variantNode.Nodes.Item(t - 1)
+                                If tsNode.Text = vergleichsString Then
+                                    tsNode.Checked = True
+                                    variantNode.Checked = False
+                                    projectNode.Checked = False
+
+                                    If Not projectNode.IsExpanded Then
+                                        projectNode.Expand()
+                                    End If
+
+                                    If Not variantNode.IsExpanded Then
+                                        variantNode.Expand()
+                                    End If
+                                End If
+                            Next
+                        Next
+
+                    Next
+                Else
+                    Call MsgBox("nur aktiv in Verbindung mit einem ausgewählten Stand")
+                End If
+                
+            Else
+                ' in allen anderen Fällen: loadPV, loadPVS, delFromDB, delFromSession
+
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+                    If Not projectNode.Checked Then
+                        projectNode.Checked = True
+                    End If
+                    If projectNode.Nodes.Count > 0 Then
+                        Call Check(projectNode)
+                    End If
+                Next
+
+            End If
+
+        End With
+
         stopRecursion = False
 
-        '  Call MsgBox("in filterDropbox")
+    End Sub
 
+    ''' <summary>
+    ''' gibt die Namen der Kind-Knoten wieder, 
+    ''' alle
+    ''' nur die, die gecheckt sind  
+    ''' nur die, die nicht gecheckt sind 
+    ''' </summary>
+    ''' <param name="curNode">der aktuelle Knoten </param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getNamesOfChildNodes(ByVal curNode As TreeNode, ByVal checkState As Boolean, Optional considerAll As Boolean = False) As Collection
+        Dim tmpCollection As New Collection
+
+        Dim childNode As TreeNode
+
+        With curNode
+
+            For i As Integer = 1 To .Nodes.Count
+
+                childNode = .Nodes.Item(i - 1)
+
+                If considerAll Then
+                    tmpCollection.Add(childNode.Name)
+                Else
+                    If childNode.Checked = checkState Then
+                        tmpCollection.Add(childNode.Name)
+                    End If
+                End If
+            Next
+
+        End With
+
+        getNamesOfChildNodes = tmpCollection
+    End Function
+
+    ''' <summary>
+    ''' setzt alle Knoten im TreeView auf checked
+    ''' </summary>
+    ''' <param name="node"></param>
+    ''' <remarks></remarks>
+    Private Sub Check(ByRef node As TreeNode)
+        Dim curNode As TreeNode
+
+        With node
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If Not curNode.Checked Then
+                    curNode.Checked = True
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call Check(curNode)
+                End If
+            Next
+
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' setzt alle Knoten im TreeView auf unchecked
+    ''' </summary>
+    ''' <param name="node"></param>
+    ''' <remarks></remarks>
+    Private Sub unCheck(ByRef node As TreeNode)
+        Dim curNode As TreeNode
+
+        With node
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If curNode.Checked Then
+                    curNode.Checked = False
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call unCheck(curNode)
+                End If
+            Next
+
+        End With
+
+    End Sub
+
+
+    Private Sub expandCompletely_Click(sender As Object, e As EventArgs) Handles expandCompletely.Click
+
+        With TreeViewProjekte
+            .ExpandAll()
+        End With
+
+    End Sub
+
+    Private Sub collapseCompletely_Click(sender As Object, e As EventArgs) Handles collapseCompletely.Click
+        With TreeViewProjekte
+            .CollapseAll()
+        End With
+    End Sub
+
+    ''' <summary>
+    ''' de-selektiert alle Knoten im Formular ProjektPortfolio 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub SelectionReset_Click(sender As Object, e As EventArgs) Handles SelectionReset.Click
+
+        Dim projectNode As TreeNode
+
+        stopRecursion = True
+
+        Me.Cursor = Cursors.WaitCursor
+
+        With TreeViewProjekte
+
+            ' die Behandlung von chgInSession ist etwas anders, weil sofort eine Aktion erfolgen muss ... 
+
+            If aKtionskennung = PTTvActions.chgInSession Then
+
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+                    Dim pName As String = projectNode.Text
+
+                    ' jetzt muss die Behandlung kommen, was denn gemacht werden soll 
+                    ' ############ ChgInSession ####################################
+
+                    ' das Projekt muss in Showprojekte, aber nur wenn es nicht bereits gecheckt war 
+                    Dim variantName As String = ""
+
+                    If projectNode.Checked Then
+
+                        projectNode.Checked = False
+
+                    Else
+                        ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
+                    End If
+
+                Next
+
+                ' jetzt muss die Plan-Tafel gelöscht werden 
+                Call awinClearPlanTafel()
+
+                ' jetzt muss Showprojekte gelöscht werden 
+                ShowProjekte.Clear()
+
+                ' jetzt müssen die Diagramme neu gezeichnet werden 
+                Call awinNeuZeichnenDiagramme(2)
+
+            ElseIf aKtionskennung = PTTvActions.activateV Then
+                ' nichts tun, Alle Resetten macht bei diesen keinen Sinn 
+
+            Else
+                ' auch in den Fällen deleteV
+                ' in allen anderen Fällen: loadPV, loadPVS, delFromDB, delFromSession
+
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+                    If projectNode.Checked Then
+                        projectNode.Checked = False
+                    End If
+
+                    If projectNode.Nodes.Count > 0 Then
+                        Call unCheck(projectNode)
+                    End If
+                Next
+
+            End If
+
+        End With
+
+        Me.Cursor = Cursors.Default
+        stopRecursion = False
+
+
+    End Sub
+
+    
+    
+    
+    ''' <summary>
+    ''' reduziert anhand des definierten Filters die aktuelle Gesamtliste und baut den Treeview wieder auf 
+    ''' 
+    '''
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub filterIcon_Click(sender As Object, e As EventArgs) Handles filterIcon.Click
+
+        Dim filterFormular As New frmNameSelection
+
+        Me.filterIsActive = True
+
+        With filterFormular
+            If aKtionskennung = PTTvActions.loadPV Or _
+                aKtionskennung = PTTvActions.loadPVS Or _
+                aKtionskennung = PTTvActions.delFromDB Then
+                ' damit im Filterformular unterschieden werden kann, ob der Aufruf aus dem ProjPortfolioAdmin Formular erfolgte ...
+                .actionCode = aKtionskennung
+                .menuOption = PTmenue.filterdefinieren
+            Else
+                .actionCode = aKtionskennung
+                .menuOption = PTmenue.sessionFilterDefinieren
+            End If
+
+            If .ShowDialog() = Windows.Forms.DialogResult.OK Then
+
+                stopRecursion = True
+
+                Me.Cursor = Cursors.WaitCursor
+
+                Dim storedAtOrBefore As Date
+                If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+                    storedAtOrBefore = Date.Now
+                Else
+                    storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+                End If
+
+                Dim noShowNames As Collection = getProjectNamesNotFittingToFilter("Last")
+
+                For Each noShowName As String In noShowNames
+                    Call putProjectInNoShow(noShowName, considerDependencies.Checked, False)
+                Next
+
+                ' erst am Ende alle Diagramme neu machen ...
+                If noShowNames.Count > 0 Then
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
+
+                Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                                   Me.filterIsActive, storedAtOrBefore)
+                stopRecursion = False
+
+                ' Das DeleteFilterIcon mit Bild versehen 
+                Me.deleteFilterIcon.Image = My.Resources.funnel_delete
+                Me.deleteFilterIcon.Enabled = True
+
+                Me.Cursor = Cursors.Default
+
+
+            End If
+        End With
+    End Sub
+
+
+    
+    Private Sub dropBoxTimeStamps_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.SelectedIndexChanged
+
+        stopRecursion = True
+
+        Me.Cursor = Cursors.WaitCursor
+
+        Dim storedAtOrBefore As Date
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now
+        Else
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+        End If
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                           Me.filterIsActive, storedAtOrBefore)
+
+        stopRecursion = False
+
+        Me.Cursor = Cursors.Default
+
+        ' Fokus an TreeViewPRojekte geben 
+        TreeViewProjekte.Focus()
+
+    End Sub
+
+
+    Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
+
+    End Sub
+
+    Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
+
+        aktuelleGesamtListe = AlleProjekte
+
+        stopRecursion = True
+
+        Me.Cursor = Cursors.WaitCursor
+
+        Me.filterIsActive = False
+
+        Dim storedAtOrBefore As Date
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now
+        Else
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+        End If
+
+        ' jetzt muss der Last-Filter zurückgesetzt werden 
+        Dim emptyCollection As New Collection
+        Dim fName As String = "Last"
+
+        Dim lastFilter As New clsFilter(fName, emptyCollection, emptyCollection, emptyCollection, _
+                                        emptyCollection, emptyCollection, emptyCollection)
+        filterDefinitions.storeFilter(fName, lastFilter)
+
+
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                           Me.filterIsActive, storedAtOrBefore)
+        stopRecursion = False
+
+            ' Das DeleteFilterIcon mit Bild versehen 
+        Me.deleteFilterIcon.Image = Nothing
+        Me.deleteFilterIcon.Enabled = False
+
+        Me.Cursor = Cursors.Arrow
+
+        
+    End Sub
+
+    Private Sub dropBoxTimeStamps_MouseHover(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.MouseHover
+        ToolTipStand.Show("bis zu welchem Datum/Zeit sollen Projekte und Varianten berücksichtigt werden? im Default immer bis zum aktuellen Zeitpunkt", dropBoxTimeStamps, 2000)
+    End Sub
+
+
+    Private Sub SelectionSet_MouseHover(sender As Object, e As EventArgs) Handles SelectionSet.MouseHover
+
+    End Sub
+
+    Private Sub SelectionReset_MouseHover(sender As Object, e As EventArgs) Handles SelectionReset.MouseHover
+
+    End Sub
+
+    Private Sub collapseCompletely_MouseHover(sender As Object, e As EventArgs) Handles collapseCompletely.MouseHover
+
+    End Sub
+
+    Private Sub expandCompletely_MouseHover(sender As Object, e As EventArgs) Handles expandCompletely.MouseHover
+
+    End Sub
+
+    Private Sub filterIcon_MouseHover(sender As Object, e As EventArgs) Handles filterIcon.MouseHover
+
+    End Sub
+
+    Private Sub deleteFilterIcon_MouseHover(sender As Object, e As EventArgs) Handles deleteFilterIcon.MouseHover
+
+    End Sub
+
+    Private Sub considerDependencies_CheckedChanged(sender As Object, e As EventArgs) Handles considerDependencies.CheckedChanged
+
+    End Sub
+
+    Private Sub considerDependencies_MouseHover(sender As Object, e As EventArgs) Handles considerDependencies.MouseHover
+
+    End Sub
+
+    Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
 
     End Sub
 End Class

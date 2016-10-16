@@ -26,6 +26,8 @@ Partial Class frmLoadConstellation
         Me.OKButton = New System.Windows.Forms.Button()
         Me.Abbrechen = New System.Windows.Forms.Button()
         Me.addToSession = New System.Windows.Forms.CheckBox()
+        Me.dropBoxTimeStamps = New System.Windows.Forms.ComboBox()
+        Me.lblStandvom = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'ListBox1
@@ -34,7 +36,7 @@ Partial Class frmLoadConstellation
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.HorizontalScrollbar = True
         Me.ListBox1.ItemHeight = 16
-        Me.ListBox1.Location = New System.Drawing.Point(13, 12)
+        Me.ListBox1.Location = New System.Drawing.Point(13, 42)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.ListBox1.Size = New System.Drawing.Size(340, 180)
@@ -42,7 +44,7 @@ Partial Class frmLoadConstellation
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(65, 239)
+        Me.OKButton.Location = New System.Drawing.Point(65, 269)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(80, 22)
         Me.OKButton.TabIndex = 1
@@ -51,7 +53,7 @@ Partial Class frmLoadConstellation
         '
         'Abbrechen
         '
-        Me.Abbrechen.Location = New System.Drawing.Point(204, 239)
+        Me.Abbrechen.Location = New System.Drawing.Point(204, 269)
         Me.Abbrechen.Name = "Abbrechen"
         Me.Abbrechen.Size = New System.Drawing.Size(80, 22)
         Me.Abbrechen.TabIndex = 2
@@ -64,7 +66,7 @@ Partial Class frmLoadConstellation
         Me.addToSession.Checked = True
         Me.addToSession.CheckState = System.Windows.Forms.CheckState.Checked
         Me.addToSession.Cursor = System.Windows.Forms.Cursors.Default
-        Me.addToSession.Location = New System.Drawing.Point(13, 207)
+        Me.addToSession.Location = New System.Drawing.Point(13, 237)
         Me.addToSession.Name = "addToSession"
         Me.addToSession.RightToLeft = System.Windows.Forms.RightToLeft.Yes
         Me.addToSession.Size = New System.Drawing.Size(135, 17)
@@ -72,19 +74,39 @@ Partial Class frmLoadConstellation
         Me.addToSession.Text = "zur Session dazu laden"
         Me.addToSession.UseVisualStyleBackColor = True
         '
+        'dropBoxTimeStamps
+        '
+        Me.dropBoxTimeStamps.FormattingEnabled = True
+        Me.dropBoxTimeStamps.Location = New System.Drawing.Point(180, 11)
+        Me.dropBoxTimeStamps.Name = "dropBoxTimeStamps"
+        Me.dropBoxTimeStamps.Size = New System.Drawing.Size(172, 21)
+        Me.dropBoxTimeStamps.TabIndex = 39
+        '
+        'lblStandvom
+        '
+        Me.lblStandvom.AutoSize = True
+        Me.lblStandvom.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblStandvom.Location = New System.Drawing.Point(119, 14)
+        Me.lblStandvom.Name = "lblStandvom"
+        Me.lblStandvom.Size = New System.Drawing.Size(61, 13)
+        Me.lblStandvom.TabIndex = 38
+        Me.lblStandvom.Text = "Stand vom:"
+        '
         'frmLoadConstellation
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(366, 290)
+        Me.ClientSize = New System.Drawing.Size(366, 305)
+        Me.Controls.Add(Me.dropBoxTimeStamps)
+        Me.Controls.Add(Me.lblStandvom)
         Me.Controls.Add(Me.addToSession)
         Me.Controls.Add(Me.Abbrechen)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
         Me.Name = "frmLoadConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-        Me.Text = "Portfolio laden "
+        Me.Text = "Szenario laden "
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -93,4 +115,6 @@ Partial Class frmLoadConstellation
     Public WithEvents OKButton As System.Windows.Forms.Button
     Public WithEvents Abbrechen As System.Windows.Forms.Button
     Public WithEvents addToSession As System.Windows.Forms.CheckBox
+    Public WithEvents lblStandvom As System.Windows.Forms.Label
+    Public WithEvents dropBoxTimeStamps As System.Windows.Forms.ComboBox
 End Class

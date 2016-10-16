@@ -8,6 +8,8 @@ Imports MongoDbAccess
 
 
 
+
+
 Public Class ThisWorkbook
     ' Copyright Philipp Koytek et al. 
     ' 2012 ff
@@ -55,13 +57,12 @@ Public Class ThisWorkbook
         'Dim cbar As CommandBar
 
 
-
         appInstance = Application
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
 
-
-
+        Dim path As String = CType(appInstance.ActiveWorkbook, Excel.Workbook).Path
+       
         ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
         ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
         ' in anderen Excel Sheets ist das weiterhin aktiv 
@@ -78,15 +79,23 @@ Public Class ThisWorkbook
 
         Try
 
+
             appInstance.ScreenUpdating = False
 
-            awinSettings.databaseURL = My.Settings.mongoDBURL
-            awinSettings.databaseName = My.Settings.mongoDBname
-            awinSettings.globalPath = My.Settings.globalPath
-            awinSettings.awinPath = My.Settings.awinPath
-            awinSettings.visboTaskClass = My.Settings.TaskClass
-            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-            awinSettings.visboAmpel = My.Settings.VISBOAmpel
+            ' hier werden die Settings aus der Datei ProjectboardConfig.xml ausgelesen.
+            ' falls die nicht funktioniert, so werden die My.Settings ausgelesen und verwendet.
+
+            If Not readawinSettings(path) Then
+
+                awinSettings.databaseURL = My.Settings.mongoDBURL
+                awinSettings.databaseName = My.Settings.mongoDBname
+                awinSettings.globalPath = My.Settings.globalPath
+                awinSettings.awinPath = My.Settings.awinPath
+                awinSettings.visboTaskClass = My.Settings.TaskClass
+                awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                awinSettings.visboDebug = My.Settings.VISBODebug
+
+            End If
 
             Call awinsetTypen()
 
@@ -117,6 +126,10 @@ Public Class ThisWorkbook
 
         Dim plantafel As Excel.Window
 
+        If Application.EnableEvents Then
+        Else
+            Application.EnableEvents = True
+        End If
 
         CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
 
@@ -125,6 +138,7 @@ Public Class ThisWorkbook
         plantafel = Application.ActiveWindow
 
         With plantafel
+            .DisplayHeadings = False
             .Caption = windowNames(5)
             .ScrollRow = 1
             .ScrollColumn = 1
@@ -201,7 +215,8 @@ Public Class ThisWorkbook
 
             End Try
 
-            Application.Worksheets(arrWsNames(3)).Activate()
+            ' wozu wird das denn hier benötigt ? 
+            'Application.Worksheets(arrWsNames(3)).Activate()
 
 
             appInstance.EnableEvents = False
@@ -240,7 +255,15 @@ Public Class ThisWorkbook
 
         Dim WB As Workbook
         For Each WB In Application.Workbooks
-            WB.Saved = True
+            If WB.Name = myProjektTafel Then
+                Try
+                    WB.Saved = True
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
         Next
 
 
@@ -252,7 +275,7 @@ Public Class ThisWorkbook
         '' ''Application.Wait(waitTime)
 
         Application.DisplayAlerts = False
-        Application.Quit()
+        'Application.Quit()
 
 
 
@@ -323,6 +346,13 @@ Public Class ThisWorkbook
 
 
         appInstance.ScreenUpdating = True
+
+        If Application.Workbooks.Count <= 1 Then
+            Dim a As Integer = Application.Workbooks.Count
+            'Dim name asstring = Application.Workbooks(1).name
+        End If
+        
+
 
 
     End Sub

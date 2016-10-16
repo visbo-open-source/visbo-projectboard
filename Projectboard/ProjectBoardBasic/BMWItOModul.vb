@@ -1535,4 +1535,35 @@ Public Module BMWItOModul
         Call MsgBox("ok, Report exportiert")
 
     End Sub
+
+    ''' <summary>
+    ''' testet die Konsistenz der Positionierungs-Informationen in projectboardshapes, im Projekt und in Showprojekte 
+    ''' allerdings ist Showprojekte aktuell nicht wirklich relevant ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub testConsistencyOfPT1()
+        Dim atleastOne As Boolean = False
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            Dim zeile1 As Integer = kvp.Value.tfZeile
+            Dim zeile2 As Integer = ShowProjekte.getPTZeile(kvp.Key)
+            If zeile1 <> zeile2 Then
+                Call MsgBox("ungleich 1/2: " & kvp.Key & ": " & zeile1.ToString & " , " & zeile2.ToString)
+                atleastOne = True
+            End If
+
+            Dim coord() As Double = projectboardShapes.getCoord(kvp.Key)
+            Dim zeile3 As Integer = calcYCoordToZeile(coord(0))
+
+            If zeile1 <> zeile3 Then
+                Call MsgBox("ungleich 1/3: " & kvp.Key & ": " & zeile1.ToString & " , " & zeile3.ToString)
+                atleastOne = True
+            End If
+
+        Next
+
+        If Not atleastOne Then
+            Call MsgBox("alles i.O")
+        End If
+    End Sub
 End Module

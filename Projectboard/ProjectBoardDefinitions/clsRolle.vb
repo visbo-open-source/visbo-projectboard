@@ -1,8 +1,8 @@
 ﻿Imports System.Math
 Public Class clsRolle
 
-    Private typus As Integer
-    Private Bedarf() As Double
+    Private _typus As Integer
+    Private _bedarf() As Double
     Private _isCalculated As Boolean
 
 
@@ -18,13 +18,13 @@ Public Class clsRolle
     Public Property RollenTyp() As Integer
         Get
 
-            RollenTyp = typus
+            RollenTyp = _typus
 
         End Get
 
         Set(value As Integer)
 
-            typus = value
+            _typus = value
 
         End Set
     End Property
@@ -33,18 +33,25 @@ Public Class clsRolle
     '
     Public ReadOnly Property getDimension As Integer
         Get
-            getDimension = Xwerte.Length - 1
+            getDimension = _bedarf.Length - 1
         End Get
     End Property
 
     Public Property Xwerte() As Double()
         Get
-            Xwerte = Bedarf
+            Xwerte = _bedarf
         End Get
 
         Set(values As Double())
 
-            Bedarf = values
+            Dim ub As Integer = UBound(values)
+            Dim tmpArray() As Double
+            ReDim tmpArray(ub)
+
+            For i As Integer = 0 To ub
+                tmpArray(i) = values(i)
+            Next
+            _bedarf = tmpArray
 
         End Set
 
@@ -53,11 +60,11 @@ Public Class clsRolle
     Public Property Xwerte(ByVal index As Integer) As Double
 
         Get
-            Xwerte = Bedarf(index)
+            Xwerte = _bedarf(index)
         End Get
 
         Set(value As Double)
-            Bedarf(index) = value
+            _bedarf(index) = value
         End Set
 
     End Property
@@ -68,7 +75,7 @@ Public Class clsRolle
 
         Get
 
-            name = RoleDefinitions.getRoledef(typus).name
+            name = RoleDefinitions.getRoledef(_typus).name
 
         End Get
 
@@ -80,7 +87,7 @@ Public Class clsRolle
 
         Get
 
-            farbe = RoleDefinitions.getRoledef(typus).farbe
+            farbe = RoleDefinitions.getRoledef(_typus).farbe
 
         End Get
 
@@ -92,7 +99,7 @@ Public Class clsRolle
 
         Get
 
-            Startkapa = RoleDefinitions.getRoledef(typus).Startkapa
+            Startkapa = RoleDefinitions.getRoledef(_typus).Startkapa
 
         End Get
 
@@ -128,7 +135,7 @@ Public Class clsRolle
 
         Get
 
-            tagessatzIntern = RoleDefinitions.getRoledef(typus).tagessatzIntern
+            tagessatzIntern = RoleDefinitions.getRoledef(_typus).tagessatzIntern
 
         End Get
 
@@ -140,7 +147,7 @@ Public Class clsRolle
 
         Get
 
-            tagessatzExtern = RoleDefinitions.getRoledef(typus).tagessatzExtern
+            tagessatzExtern = RoleDefinitions.getRoledef(_typus).tagessatzExtern
 
         End Get
 
@@ -156,11 +163,11 @@ Public Class clsRolle
             Dim i As Integer
             Dim ende As Integer
 
-            ende = UBound(Bedarf)
+            ende = UBound(_bedarf)
             isum = 0
 
             For i = 0 To ende
-                isum = isum + Bedarf(i)
+                isum = isum + _bedarf(i)
             Next i
 
             summe = isum
@@ -173,8 +180,8 @@ Public Class clsRolle
     Public Sub CopyTo(ByRef newrole As clsRolle)
 
         With newrole
-            .RollenTyp = typus
-            .Xwerte = Bedarf
+            .RollenTyp = _typus
+            .Xwerte = _bedarf
         End With
 
     End Sub
@@ -200,7 +207,7 @@ Public Class clsRolle
 
 
         ReDim newValues(newLength - 1)
-        oldLength = UBound(Bedarf) + 1
+        oldLength = UBound(_bedarf) + 1
 
         ' wenn keine Änderung vorzunehmen ist, dann Exit ... 
         If newLength = oldLength Then
@@ -209,15 +216,15 @@ Public Class clsRolle
 
         oldSum = 0.0
         For i = 0 To oldLength - 1
-            oldSum = oldSum + Bedarf(i)
+            oldSum = oldSum + _bedarf(i)
         Next
 
         Dim avg As Double
         Dim min As Double, max As Double
 
         avg = Round(oldSum / oldLength, 0)
-        min = Bedarf.Min
-        max = Bedarf.Max
+        min = _bedarf.Min
+        max = _bedarf.Max
 
         newSum = newLength / oldLength * oldSum
         typus = definecharacteristics(min, max, avg)
@@ -236,7 +243,7 @@ Public Class clsRolle
                 Case 1
                     ' aufsteigend ...
                     While i <= oldLength - 2 And Not found
-                        If Bedarf(i) < avg And Bedarf(i + 1) >= avg Then
+                        If _bedarf(i) < avg And _bedarf(i + 1) >= avg Then
                             found = True
                         Else
                             i = i + 1
@@ -244,7 +251,7 @@ Public Class clsRolle
                     End While
                     ' jetzt werden die neuen Werte eingefügt 
                     For ix = 0 To i
-                        newValues(ix) = Bedarf(ix)
+                        newValues(ix) = _bedarf(ix)
                     Next ix
                     For ix = i + 1 To i + diff
                         newValues(ix) = avg
@@ -254,7 +261,7 @@ Public Class clsRolle
                     End If
 
                     For ix = i + diff + 1 To newLength
-                        newValues(ix) = Bedarf(ix - diff)
+                        newValues(ix) = _bedarf(ix - diff)
                     Next ix
                 Case 2
                     ' die Buckel Funktion 
@@ -262,7 +269,7 @@ Public Class clsRolle
                         ' es ist einfach - nur Felder ergänzen ...
 
                         For ix = 0 To oldLength
-                            newValues(ix) = Bedarf(ix)
+                            newValues(ix) = _bedarf(ix)
                         Next ix
 
                         For ix = oldLength + 1 To newLength
@@ -272,7 +279,7 @@ Public Class clsRolle
                         ' jetzt muss im linken Teil und im rechten Teil abwechselnd ergänzt werden 
                         lefti = 0
                         While lefti <= oldLength - 2 And Not found
-                            If Bedarf(lefti) < avg And Bedarf(lefti + 1) >= avg Then
+                            If _bedarf(lefti) < avg And _bedarf(lefti + 1) >= avg Then
                                 found = True
                             Else
                                 lefti = lefti + 1
@@ -281,7 +288,7 @@ Public Class clsRolle
 
                         righti = oldLength
                         While righti >= 1 And Not found
-                            If Bedarf(righti) < avg And Bedarf(righti - 1) >= avg Then
+                            If _bedarf(righti) < avg And _bedarf(righti - 1) >= avg Then
                                 found = True
                             Else
                                 righti = righti - 1
@@ -316,27 +323,27 @@ Public Class clsRolle
                         lValues(anzLinks) = lValues(anzLinks) + korrfaktor
 
                         For ix = 0 To lefti
-                            newValues(ix) = Bedarf(ix)
+                            newValues(ix) = _bedarf(ix)
                         Next
                         For ix = lefti + 1 To lefti + anzLinks
                             newValues(ix) = lValues(ix - lefti)
                         Next
                         For ix = lefti + 1 To righti
-                            newValues(ix + anzLinks) = Bedarf(ix)
+                            newValues(ix + anzLinks) = _bedarf(ix)
                         Next
                         For ix = righti + anzLinks + 1 To righti + anzLinks + anzRechts
                             newValues(ix) = rValues(ix - righti - anzLinks)
                         Next
 
                         For ix = righti + anzLinks + anzRechts + 1 To anzLinks + anzRechts + oldLength - 1
-                            newValues(ix) = Bedarf(ix - anzLinks - anzRechts)
+                            newValues(ix) = _bedarf(ix - anzLinks - anzRechts)
                         Next
 
                     End If
                 Case 3
                     ' absteigend ...
                     While i <= oldLength - 2 And Not found
-                        If Bedarf(i) > avg And Bedarf(i + 1) <= avg Then
+                        If _bedarf(i) > avg And _bedarf(i + 1) <= avg Then
                             found = True
                         Else
                             i = i + 1
@@ -344,7 +351,7 @@ Public Class clsRolle
                     End While
                     ' jetzt werden die neuen Werte eingefügt 
                     For ix = 0 To i
-                        newValues(ix) = Bedarf(ix)
+                        newValues(ix) = _bedarf(ix)
                     Next ix
 
                     For ix = i + 1 To i + diff
@@ -356,7 +363,7 @@ Public Class clsRolle
                     End If
 
                     For ix = i + diff + 1 To newLength
-                        newValues(ix) = Bedarf(ix - diff)
+                        newValues(ix) = _bedarf(ix - diff)
                     Next ix
 
             End Select
@@ -369,7 +376,7 @@ Public Class clsRolle
 
             diff = oldLength - newLength
             Dim korrfaktor As Double
-            Dim abzug As Double = Bedarf(i)
+            Dim abzug As Double = _bedarf(i)
             Dim righthand As Boolean = True
             Dim tmpWert As Integer = diff
 
@@ -380,7 +387,7 @@ Public Class clsRolle
                 Case 1
                     ' aufsteigend ...
                     While i <= oldLength - 2 And Not found
-                        If Bedarf(i) < avg And Bedarf(i + 1) >= avg Then
+                        If _bedarf(i) < avg And _bedarf(i + 1) >= avg Then
                             found = True
                         Else
                             i = i + 1
@@ -397,20 +404,20 @@ Public Class clsRolle
                             righthand = False
                             If righti + 1 <= oldLength Then
                                 righti = righti + 1
-                                abzug = abzug + Bedarf(righti - 1)
+                                abzug = abzug + _bedarf(righti - 1)
                             Else
                                 lefti = lefti - 1
                                 If lefti < -1 Then
                                     Call MsgBox("Fehler in clsRolle, adjustlength, verkürzen 001")
                                     lefti = 0
                                 End If
-                                abzug = abzug + Bedarf(lefti + 1)
+                                abzug = abzug + _bedarf(lefti + 1)
                             End If
                         Else
                             righthand = True
                             If lefti >= 0 Then
                                 lefti = lefti - 1
-                                abzug = abzug + Bedarf(lefti + 1)
+                                abzug = abzug + _bedarf(lefti + 1)
                                 righthand = True
                             Else
                                 righti = righti + 1
@@ -418,7 +425,7 @@ Public Class clsRolle
                                     Call MsgBox("Fehler in clsRolle, adjustlength, verkürzen 002")
                                     righti = oldLength
                                 End If
-                                abzug = abzug + Bedarf(righti - 1)
+                                abzug = abzug + _bedarf(righti - 1)
                             End If
 
                         End If
@@ -428,11 +435,11 @@ Public Class clsRolle
                     korrfaktor = appInstance.WorksheetFunction.Round(abzug - diff * avg, 0)
 
                     For ix = 0 To lefti
-                        newValues(ix) = Bedarf(ix)
+                        newValues(ix) = _bedarf(ix)
                     Next ix
 
                     For ix = righti To oldLength - 1
-                        newValues(ix - diff) = Bedarf(ix)
+                        newValues(ix - diff) = _bedarf(ix)
                     Next ix
 
 
@@ -520,7 +527,7 @@ Public Class clsRolle
                         ' es ist einfach - nur aufbauen ....
 
                         For ix = 0 To newLength
-                            newValues(ix) = Bedarf(ix)
+                            newValues(ix) = _bedarf(ix)
                         Next ix
 
 
@@ -528,7 +535,7 @@ Public Class clsRolle
                         ' jetzt muss im linken Teil und im rechten Teil abwechselnd gelöscht werden  
                         lefti = 0
                         While lefti <= oldLength - 2 And Not found
-                            If Bedarf(lefti) < avg And Bedarf(lefti + 1) >= avg Then
+                            If _bedarf(lefti) < avg And _bedarf(lefti + 1) >= avg Then
                                 found = True
                             Else
                                 lefti = lefti + 1
@@ -537,7 +544,7 @@ Public Class clsRolle
 
                         righti = oldLength
                         While righti >= 1 And Not found
-                            If Bedarf(righti) < avg And Bedarf(righti - 1) >= avg Then
+                            If _bedarf(righti) < avg And _bedarf(righti - 1) >= avg Then
                                 found = True
                             Else
                                 righti = righti - 1
@@ -561,7 +568,7 @@ Public Class clsRolle
                         Dim lefthandRight As Boolean = True
                         Dim righthandLeft As Boolean = True
 
-                        abzug = Bedarf(lefti)
+                        abzug = _bedarf(lefti)
                         leftil = lefti - 1
                         leftir = lefti + 1
 
@@ -574,7 +581,7 @@ Public Class clsRolle
                                     If lefthandRight Then
 
                                         If leftir + 1 <= rightil Then
-                                            abzug = abzug + Bedarf(leftir)
+                                            abzug = abzug + _bedarf(leftir)
                                             leftir = leftir + 1
                                             nothingDone = False
                                         End If
@@ -582,7 +589,7 @@ Public Class clsRolle
                                         lefthandRight = False
                                     Else
                                         If leftil >= 0 Then
-                                            abzug = abzug + Bedarf(leftil)
+                                            abzug = abzug + _bedarf(leftil)
                                             leftil = leftil - 1
                                             nothingDone = False
                                         End If
@@ -596,7 +603,7 @@ Public Class clsRolle
 
                                     If rightil = rightir Then
                                         ' das erste Auftreten ...
-                                        abzug = abzug + Bedarf(righti)
+                                        abzug = abzug + _bedarf(righti)
                                         rightil = righti - 1
                                         rightir = righti + 1
                                         nothingDone = False
@@ -605,7 +612,7 @@ Public Class clsRolle
                                     Else
                                         If righthandLeft Then
                                             If rightil - 1 >= leftir Then
-                                                abzug = abzug + Bedarf(rightil)
+                                                abzug = abzug + _bedarf(rightil)
                                                 rightil = rightil - 1
                                                 nothingDone = False
                                             End If
@@ -613,12 +620,12 @@ Public Class clsRolle
                                             righthandLeft = False
                                         Else
                                             If rightir <= oldLength - 1 Then
-                                                abzug = abzug + Bedarf(rightir)
+                                                abzug = abzug + _bedarf(rightir)
                                                 rightir = rightir + 1
                                                 nothingDone = False
                                             Else
                                                 If rightil - 1 >= leftir Then
-                                                    abzug = abzug + Bedarf(rightil)
+                                                    abzug = abzug + _bedarf(rightil)
                                                     rightil = rightil - 1
                                                     nothingDone = False
                                                 End If
@@ -641,17 +648,17 @@ Public Class clsRolle
                         Dim nx As Integer = 0
 
                         For ix = 0 To leftil
-                            newValues(nx) = Bedarf(ix)
+                            newValues(nx) = _bedarf(ix)
                             nx = nx + 1
                         Next
 
                         For ix = leftir To rightil
-                            newValues(nx) = Bedarf(ix)
+                            newValues(nx) = _bedarf(ix)
                             nx = nx + 1
                         Next
 
                         For ix = rightir To oldLength - 1
-                            newValues(nx) = Bedarf(ix)
+                            newValues(nx) = _bedarf(ix)
                             nx = nx + 1
                         Next
 
@@ -687,7 +694,7 @@ Public Class clsRolle
 
                     ' absteigend ...
                     While i <= oldLength - 2 And Not found
-                        If Bedarf(i) >= avg And Bedarf(i + 1) < avg Then
+                        If _bedarf(i) >= avg And _bedarf(i + 1) < avg Then
                             found = True
                         Else
                             i = i + 1
@@ -702,20 +709,20 @@ Public Class clsRolle
                             righthand = False
                             If righti + 1 <= oldLength Then
                                 righti = righti + 1
-                                abzug = abzug + Bedarf(righti - 1)
+                                abzug = abzug + _bedarf(righti - 1)
                             Else
                                 lefti = lefti - 1
                                 If lefti < -1 Then
                                     Call MsgBox("Fehler in clsRolle, adjustlength, verkürzen 001")
                                     lefti = 0
                                 End If
-                                abzug = abzug + Bedarf(lefti + 1)
+                                abzug = abzug + _bedarf(lefti + 1)
                             End If
                         Else
                             righthand = True
                             If lefti >= 0 Then
                                 lefti = lefti - 1
-                                abzug = abzug + Bedarf(lefti + 1)
+                                abzug = abzug + _bedarf(lefti + 1)
                                 righthand = True
                             Else
                                 righti = righti + 1
@@ -723,7 +730,7 @@ Public Class clsRolle
                                     Call MsgBox("Fehler in clsRolle, adjustlength, verkürzen 002")
                                     righti = oldLength
                                 End If
-                                abzug = abzug + Bedarf(righti - 1)
+                                abzug = abzug + _bedarf(righti - 1)
                             End If
 
                         End If
@@ -733,11 +740,11 @@ Public Class clsRolle
                     korrfaktor = appInstance.WorksheetFunction.Round(abzug - diff * avg, 0)
 
                     For ix = 0 To lefti
-                        newValues(ix) = Bedarf(ix)
+                        newValues(ix) = _bedarf(ix)
                     Next ix
 
                     For ix = righti To oldLength - 1
-                        newValues(ix - diff) = Bedarf(ix)
+                        newValues(ix - diff) = _bedarf(ix)
                     Next ix
 
 
@@ -831,23 +838,23 @@ Public Class clsRolle
     ''' </summary>
     Private Function definecharacteristics(min As Double, max As Double, avg As Double) As Integer
 
-        Dim bereich As Integer = CInt(UBound(Bedarf) / 4)
+        Dim bereich As Integer = CInt(UBound(_bedarf) / 4)
         Dim i As Integer
         Dim minvorne As Boolean = False, minhinten As Boolean = False, _
             maxvorne As Boolean = False, maxhinten As Boolean = False
 
         For i = 0 To bereich
-            If Bedarf(i) = min Then
+            If _bedarf(i) = min Then
                 minvorne = True
-            ElseIf Bedarf(i) = max Then
+            ElseIf _bedarf(i) = max Then
                 maxvorne = True
             End If
         Next i
 
-        For i = UBound(Bedarf) - bereich To UBound(Bedarf)
-            If Bedarf(i) = min Then
+        For i = UBound(_bedarf) - bereich To UBound(_bedarf)
+            If _bedarf(i) = min Then
                 minhinten = True
-            ElseIf Bedarf(i) = max Then
+            ElseIf _bedarf(i) = max Then
                 maxhinten = True
             End If
         Next
@@ -868,7 +875,7 @@ Public Class clsRolle
 
     Public Sub New(ByVal laenge As Integer)
 
-        ReDim Bedarf(laenge)
+        ReDim _bedarf(laenge)
         _isCalculated = False
 
     End Sub

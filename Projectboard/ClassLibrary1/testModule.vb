@@ -2437,6 +2437,16 @@ Public Module testModule
                                 End If
                                 .TextFrame2.TextRange.Text = boxName & ": " & hproj.description
 
+                                Try
+                                    If hproj.variantDescription.Length > 0 Then
+                                        .TextFrame2.TextRange.Text = boxName & ": " & hproj.description & vbLf & vbLf & _
+                                            "Varianten-Beschreibung: " & hproj.variantDescription
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+
                             Case "Stand:"
 
                                 If boxName = kennzeichnung Then
@@ -4613,7 +4623,7 @@ Public Module testModule
 
 
 
-    Public Sub StoreAllProjectsinDB()
+    Public Sub StoreAllProjectsinDB(Optional everythingElse As Boolean = False)
 
         Dim jetzt As Date = Now
         Dim zeitStempel As Date
@@ -4654,45 +4664,55 @@ Public Module testModule
 
                 historicDate = historicDate.AddMonths(1)
 
-                ' jetzt werden alle definierten Constellations weggeschrieben
-
-                For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-
-                    Try
-                        If request.storeConstellationToDB(kvp.Value) Then
-                        Else
-                            Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
-                        End If
-                    Catch ex As Exception
-                        Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                        'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
-                        'Exit Sub
-                    End Try
-
-                Next
 
 
-                ' jetzt werden alle Abhängigkeiten weggeschreiben 
+                If everythingElse Then
+                    ' jetzt werden alle definierten Constellations weggeschrieben
+                    For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
-                For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+                        Try
+                            If request.storeConstellationToDB(kvp.Value) Then
+                            Else
+                                Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
+                            End If
+                        Catch ex As Exception
+                            Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
+                            'Exit Sub
+                        End Try
 
-                    Try
-                        If request.storeDependencyofPToDB(kvp.Value) Then
-                        Else
-                            Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
-                        End If
-                    Catch ex As Exception
-                        Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                        'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
-                        'Exit Sub
-                    End Try
+                    Next
 
 
-                Next
+                    ' jetzt werden alle Abhängigkeiten weggeschrieben  
+
+                    For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+
+                        Try
+                            If request.storeDependencyofPToDB(kvp.Value) Then
+                            Else
+                                Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
+                            End If
+                        Catch ex As Exception
+                            Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
+                            'Exit Sub
+                        End Try
+
+
+                    Next
+
+                End If
+                
 
                 zeitStempel = AlleProjekte.First.timeStamp
 
-                Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                If everythingElse Then
+                    Call MsgBox("ok, Szenarien und Projekte gespeichert! (Projekte inkl. Zeitstempel)" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                Else
+                    Call MsgBox("ok, Projekte mit Zeitstempel gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                End If
+
 
                 ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
                 Try
@@ -4924,7 +4944,7 @@ Public Module testModule
     '                Call MsgBox("ok, " & anzDeletedTS & " TimeStamps zu Projekt " & hproj.name & " gelöscht")
 
     '                key = calcProjektKey(hproj)
-    '                If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
+    '                If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
     '                    If AlleProjekte.Containskey(key) Then
     '                        AlleProjekte.Remove(key)
     '                        Try
@@ -5482,13 +5502,13 @@ Public Module testModule
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
                                   Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -8378,8 +8398,15 @@ Public Module testModule
                 ' hat das Projekt bereits eine Historie ? 
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+
+                If awinSettings.compareWithStandardVariant Then
+                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
                                                                     storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                Else
+                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                End If
+                
                 'If vergleichstyp = PThis.letzterStand Then
                 '    vproj = projekthistorie.Last
 
@@ -8397,7 +8424,7 @@ Public Module testModule
                         End If
                     End If
                 End If
-                
+
 
 
             End If
@@ -8560,7 +8587,7 @@ Public Module testModule
                     CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString(formatierung)
 
                     If deltaValue > 0 Then
-                        If deltaValue > 0.05 * hErloes Then
+                        If deltaValue > 0.1 * hErloes Then
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                             awinSettings.AmpelGruen
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
@@ -8568,7 +8595,7 @@ Public Module testModule
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                         End If
-                    ElseIf deltaValue * -1 > 0.05 * hErloes Then
+                    ElseIf deltaValue * -1 > 0.1 * hErloes Then
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                             awinSettings.AmpelRot
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
@@ -8576,7 +8603,7 @@ Public Module testModule
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                     End If
 
-                    ' Termine ? 
+                    ' Termin-Delta? 
                     spalte = 10
                     deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
                     CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
@@ -8606,7 +8633,7 @@ Public Module testModule
                     End If
 
 
-                    ' Deliverables ?
+                    ' Deliverables-Delta ?
                     spalte = 11
                     Dim hAnzahl As Integer = hproj.getDeliverables.Count
                     Dim vAnzahl As Integer = vproj.getDeliverables.Count
@@ -8626,6 +8653,8 @@ Public Module testModule
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
                                 RGB(249, 249, 249)
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                        ElseIf deltaValue = 0 Then
+                            ' nichts tun ...
                         Else
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                                 awinSettings.AmpelRot
@@ -8646,7 +8675,7 @@ Public Module testModule
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                     End If
 
-                    
+
 
                 End With
 
@@ -9390,12 +9419,12 @@ Public Module testModule
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -10375,13 +10404,13 @@ Public Module testModule
                 Dim errmsg As String = ""
                 Do While Not achieved And anzahlVersuche < 10
                     Try
-                        Call Sleep(100)
+                        'Call Sleep(100)
                         .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
                           Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message
-                        Call Sleep(100)
+                        'Call Sleep(100)
                         anzahlVersuche = anzahlVersuche + 1
                     End Try
                 Loop

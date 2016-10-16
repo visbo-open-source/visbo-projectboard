@@ -1,4 +1,5 @@
-﻿Imports Microsoft.Office.Interop.Excel
+﻿
+Imports Microsoft.Office.Interop.Excel
 Imports System.Globalization
 
 Public Class clsawinSettings
@@ -40,10 +41,12 @@ Public Class clsawinSettings
     Public Property kalenderStart As Date
     Public Property zeitEinheit As String
     Public Property kapaEinheit As String
+
     Public Property databaseName As String
     Public Property databaseURL As String
     Public Property globalPath As String
     Public Property awinPath As String
+
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double
     Public Property spaltenbreite As Double
@@ -149,8 +152,20 @@ Public Class clsawinSettings
     ' Milestone/Phasen Filter für die Multiprojektsicht blockiert wird oder nicht 
     Public Property mppProjectsWithNoMPmayPass As Boolean
 
+    ' Settings für Massen-Edit Funktionen 
+    ' Anzeigen der prozentualen Auslastung bzw. der absoluten "freien" bzw. "überbelegten" Kapazitäten 
+    Public Property mePrzAuslastung As Boolean
+    ' sollen Zuweisungen zu Rollen automatisch ggf vorhandene Sammelrollen Zuweisungen ersetzen  
+    Public Property meAutoReduce As Boolean
+    ' soll in der Massen-Edit Funktion die Sortierung enabled sein ? 
+    Public Property meEnableSorting As Boolean
+
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
+
+    ' Setting, ob bei Vergleichen mit früheren Ständen mit der standard-Variante verglichen werden soll 
+    ' oder mit einem früheren Stand der Variante
+    Public Property compareWithStandardVariant As Boolean
 
     ' Settings für MSProject-AddIn und ImportMSProject
     Public Property visboTaskClass As String
@@ -166,6 +181,8 @@ Public Class clsawinSettings
 
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
+
+    Public Property visboDebug As Boolean
 
 
 
@@ -269,9 +286,15 @@ Public Class clsawinSettings
 
         _mppProjectsWithNoMPmayPass = False
 
+        ' Settings für online MassenEdit 
+        _mePrzAuslastung = True
+        _meAutoReduce = True
+        _meEnableSorting = False
+
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True
 
+        _compareWithStandardVariant = True
 
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True
@@ -279,6 +302,8 @@ Public Class clsawinSettings
 
         _useHierarchy = True
         _isHryNameFrmActive = False
+
+        _visboDebug = False
 
 
 

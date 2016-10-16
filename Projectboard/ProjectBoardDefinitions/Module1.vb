@@ -33,9 +33,13 @@ Public Module Module1
     Public iWertFarbe As Object
     'Public HoehePrcChart As Double
 
+
     Public myProjektTafel As String = ""
     Public myCustomizationFile As String
     Public myLogfile As String
+
+    ' gibt an, in welchem Modus sich aktuell die Projekt-Tafe befindet 
+    Public currentProjektTafelModus As Integer
 
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
     Public repMessages As clsReportMessages
@@ -158,6 +162,7 @@ Public Module Module1
     Public Const punktName As String = "."
     Public Const punktNameDB As String = "~|°"
 
+    Public Const minColumns As Integer = 2
 
     ' diese Konstante legt die Einrücktiefe fest. Das wird benötigt beim Exportieren von Projekte in ein File, ebenso beim Importieren von Datei
     Public Const einrückTiefe As Integer = 2
@@ -200,6 +205,10 @@ Public Module Module1
         bool = 2
     End Enum
 
+    Public Enum ptModus
+        graficboard = 0
+        massEditRessCost = 1
+    End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
     Public Enum ptRplanNamen
@@ -359,6 +368,7 @@ Public Module Module1
         meilensteinTrendanalyse = 8
         filterAuswahl = 9
         reportBHTC = 10
+        sessionFilterDefinieren = 11
     End Enum
     Public Enum PTlicense
         swimlanes = 0
@@ -433,6 +443,7 @@ Public Module Module1
         definePortfolioSE = 5
         loadPV = 6
         deleteV = 7
+        chgInSession = 8
     End Enum
 
     ''' <summary>
@@ -2795,7 +2806,7 @@ Public Module Module1
             found = True
             'ElseIf request.pingMongoDb() Then
 
-            '    found = request.projectNameAlreadyExists(strName, "")
+            '    found = request.projectNameAlreadyExists(strName, "", Date.Now)
             'Else
             '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
             '    found = False
@@ -2902,6 +2913,7 @@ Public Module Module1
         Dim lastFilter As clsFilter
 
         If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.sessionFilterDefinieren Or _
             menuOption = PTmenue.filterAuswahl Then
             lastFilter = filterDefinitions.retrieveFilter(fName)
         Else
@@ -2994,6 +3006,7 @@ Public Module Module1
 
         If Not IsNothing(pptShape) Then
             With pptShape
+
 
                 If Not IsNothing(fullBreadCrumb) Then
                     .Tags.Add("BC", fullBreadCrumb)

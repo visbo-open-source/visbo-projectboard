@@ -11,8 +11,8 @@ Imports System.Math
 ''' 
 Public Class clsProjektShapes
 
-    Private AllShapes As SortedList(Of String, Double())
-    
+    Private _allShapes As SortedList(Of String, Double())
+
 
     ''' <summary>
     ''' gibt die Zeile zurück, ab der nach unten in der Projekttafel frei ist
@@ -26,7 +26,7 @@ Public Class clsProjektShapes
         Get
             Dim maxzeile As Integer = 1
 
-            For Each shpElem As KeyValuePair(Of String, Double()) In AllShapes
+            For Each shpElem As KeyValuePair(Of String, Double()) In _allShapes
 
                 If shpElem.Value.Length > 3 Then
                     If CInt(1 + (shpElem.Value(0) + shpElem.Value(2) - topOfMagicBoard) / boxHeight) > maxzeile Then
@@ -53,7 +53,7 @@ Public Class clsProjektShapes
         Get
 
             Try
-                contains = AllShapes.ContainsKey(suchName)
+                contains = _allShapes.ContainsKey(suchName)
             Catch ex As Exception
                 contains = False
             End Try
@@ -330,11 +330,11 @@ Public Class clsProjektShapes
             shpCoord(3) = .Width
         End With
 
-        If AllShapes.ContainsKey(key) Then
+        If _allShapes.ContainsKey(key) Then
             ' existiert schon 
-            AllShapes.Item(key) = shpCoord
+            _allShapes.Item(key) = shpCoord
         Else
-            AllShapes.Add(key, shpCoord)
+            _allShapes.Add(key, shpCoord)
         End If
 
     End Sub
@@ -366,7 +366,7 @@ Public Class clsProjektShapes
             For Each elem As Excel.Shape In shapeGruppe
 
                 If typCollection.Contains(elem.AlternativeText) Then
-                    done = Me.AllShapes.Remove(elem.Name)
+                    done = Me._allShapes.Remove(elem.Name)
                     elem.Delete()
                 Else
                     nameCollection.Add(elem.Name, elem.Name)
@@ -565,7 +565,7 @@ Public Class clsProjektShapes
 
             Dim tmpCollection As New Collection
 
-            For Each kvp As KeyValuePair(Of String, Double()) In Me.AllShapes
+            For Each kvp As KeyValuePair(Of String, Double()) In Me._allShapes
                 If extractName(kvp.Key, PTshty.projektN) = pName And kvp.Key <> pName Then
                     tmpCollection.Add(kvp.Key)
                 End If
@@ -608,7 +608,7 @@ Public Class clsProjektShapes
         Try
 
             shpElement.Delete()
-            done = Me.AllShapes.Remove(shpName)
+            done = Me._allShapes.Remove(shpName)
 
         Catch ex As Exception
 
@@ -621,7 +621,7 @@ Public Class clsProjektShapes
                 For Each childName In todoListe2
 
                     Try
-                        done = Me.AllShapes.Remove(childName)
+                        done = Me._allShapes.Remove(childName)
                     Catch ex2 As Exception
 
                     End Try
@@ -646,7 +646,14 @@ Public Class clsProjektShapes
     ''' <remarks></remarks>
     Public ReadOnly Property getCoord(ByVal shpName As String) As Double()
         Get
-            getCoord = AllShapes.Item(shpName)
+            Dim tmpCoord() As Double
+            ReDim tmpCoord(3)
+            If _allShapes.ContainsKey(shpName) Then
+                getCoord = _allShapes.Item(shpName)
+            Else
+                getCoord = tmpCoord
+            End If
+
         End Get
     End Property
 
@@ -690,7 +697,7 @@ Public Class clsProjektShapes
 
 
         Try
-            oldCoord = AllShapes.Item(key)
+            oldCoord = _allShapes.Item(key)
 
             ' Top überprüfen
             If Abs(oldCoord(0) - shpCoord(0)) > tolY Then
@@ -748,7 +755,7 @@ Public Class clsProjektShapes
 
 
     Public Sub clear()
-        AllShapes.Clear()
+        _allShapes.Clear()
     End Sub
 
     ''' <summary>
@@ -788,7 +795,7 @@ Public Class clsProjektShapes
                 moveAllowed = False
             End If
 
-            oldCoord = AllShapes(key:=shpElement.Name)
+            oldCoord = _allShapes(key:=shpElement.Name)
 
         Catch ex As Exception
             Exit Sub
@@ -1289,7 +1296,7 @@ Public Class clsProjektShapes
     End Sub
 
     Public Sub New()
-        AllShapes = New SortedList(Of String, Double())
+        _allShapes = New SortedList(Of String, Double())
     End Sub
 
     '  

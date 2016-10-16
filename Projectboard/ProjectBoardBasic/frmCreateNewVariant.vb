@@ -16,6 +16,8 @@ Public Class frmCreateNewVariant
         Me.Top = frmCoord(PTfrm.createVariant, PTpinfo.top)
         Me.Left = frmCoord(PTfrm.createVariant, PTpinfo.left)
 
+        txtDescription.Text = ""
+
         If multiSelect Then
             infoText.Text = "den oben angegebenen Namen für alle selektierten Projekte verwenden"
             Label3.Visible = False
@@ -39,7 +41,7 @@ Public Class frmCreateNewVariant
             If request.pingMongoDb() Then
 
                 If Not _
-                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text) Or _
+                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or _
                      AlleProjekte.Containskey(key)) Then
 
                     ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
@@ -55,7 +57,13 @@ Public Class frmCreateNewVariant
             End If
         Else
             ' es wird ohne Datenbank gearbeitet
-            ok = True
+            If Not AlleProjekte.Containskey(key) Then
+                ' Projekt-Variante existiert noch nicht in der Session, kann also eingetragen werden
+                ok = True
+            Else
+                Call MsgBox(" Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                            "existiert bereits in der Session!")
+            End If
         End If
       
         If ok Then
