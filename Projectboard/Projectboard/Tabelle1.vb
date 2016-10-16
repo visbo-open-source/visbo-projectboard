@@ -13,6 +13,7 @@ Public Class Tabelle1
     Private Sub Tabelle1_ActivateEvent() Handles Me.ActivateEvent
         Dim a As Integer
 
+
         Try
             Application.DisplayFormulaBar = False
 
@@ -36,8 +37,10 @@ Public Class Tabelle1
             ' nur eine Dummy Zuweisung, um ggf später hier einen Haltepunkt setzen zu können
             Dim b As Integer = a
         End Try
-        
 
+        If appInstance.ScreenUpdating = False Then
+            appInstance.ScreenUpdating = True
+        End If
 
     End Sub
 

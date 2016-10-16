@@ -1983,6 +1983,8 @@ Imports System.Windows
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
+        appInstance.ScreenUpdating = False
+        ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             .Activate()
         End With

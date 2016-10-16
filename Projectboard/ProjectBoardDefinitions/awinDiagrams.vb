@@ -876,12 +876,12 @@ Public Module awinDiagrams
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -2262,12 +2262,12 @@ Public Module awinDiagrams
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -2629,12 +2629,12 @@ Public Module awinDiagrams
                         Dim errmsg As String = ""
                         Do While Not achieved And anzahlVersuche < 10
                             Try
-                                Call Sleep(100)
+                                'Call Sleep(100)
                                 .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                                 achieved = True
                             Catch ex As Exception
                                 errmsg = ex.Message
-                                Call Sleep(100)
+                                'Call Sleep(100)
                                 anzahlVersuche = anzahlVersuche + 1
                             End Try
                         Loop
@@ -3484,12 +3484,12 @@ Public Module awinDiagrams
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -3906,12 +3906,12 @@ Public Module awinDiagrams
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -4358,12 +4358,12 @@ Public Module awinDiagrams
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -4598,12 +4598,12 @@ Public Module awinDiagrams
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop

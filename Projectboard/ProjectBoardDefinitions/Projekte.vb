@@ -245,12 +245,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -533,12 +533,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -782,12 +782,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -1148,12 +1148,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -2550,12 +2550,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -3243,12 +3243,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -3523,12 +3523,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -4035,12 +4035,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -4543,12 +4543,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -5330,12 +5330,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -5597,12 +5597,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -6005,12 +6005,12 @@ Public Module Projekte
                         Dim errmsg As String = ""
                         Do While Not achieved And anzahlVersuche < 10
                             Try
-                                Call Sleep(100)
+                                'Call Sleep(100)
                                 .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                                 achieved = True
                             Catch ex As Exception
                                 errmsg = ex.Message
-                                Call Sleep(100)
+                                'Call Sleep(100)
                                 anzahlVersuche = anzahlVersuche + 1
                             End Try
                         Loop
@@ -6410,12 +6410,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -6719,12 +6719,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -7038,12 +7038,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -7260,7 +7260,7 @@ Public Module Projekte
                         newChart = CType(appInstance.Charts.Add, Microsoft.Office.Interop.Excel.Chart)
                         achieved = True
                     Catch ex As Exception
-                        Call Sleep(100)
+                        'Call Sleep(100)
                         anzahlVersuche = anzahlVersuche + 1
                     End Try
                 Loop
@@ -7415,12 +7415,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -9491,12 +9491,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -10217,12 +10217,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop
@@ -10323,12 +10323,12 @@ Public Module Projekte
                     Dim errmsg As String = ""
                     Do While Not achieved And anzahlVersuche < 10
                         Try
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
-                            Call Sleep(100)
+                            'Call Sleep(100)
                             anzahlVersuche = anzahlVersuche + 1
                         End Try
                     Loop

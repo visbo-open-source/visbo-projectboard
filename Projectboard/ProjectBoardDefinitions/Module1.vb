@@ -162,7 +162,7 @@ Public Module Module1
     Public Const punktName As String = "."
     Public Const punktNameDB As String = "~|°"
 
-    Public Const minColumns As Integer = 3
+    Public Const minColumns As Integer = 2
 
     ' diese Konstante legt die Einrücktiefe fest. Das wird benötigt beim Exportieren von Projekte in ein File, ebenso beim Importieren von Datei
     Public Const einrückTiefe As Integer = 2
