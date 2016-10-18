@@ -25,7 +25,7 @@ Public Class frmShowProjCharacteristics
 
         'Call aktualisiereCharts(hproj, False)
 
-        'With appInstance.Worksheets(arrWsNames(3))
+        'With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
         '    Dim tmpArray() As String
         '    Dim anzDiagrams As Integer
         '    anzDiagrams = .Chartobjects.count
@@ -123,7 +123,7 @@ Public Class frmShowProjCharacteristics
 
 
         End With
-        
+
 
 
 
@@ -171,7 +171,7 @@ Public Class frmShowProjCharacteristics
 
     End Sub
 
-    
+
 
     Private Sub frmShowProjCharacteristics_Load(sender As Object, e As EventArgs) Handles Me.Load
         'Dim pShape As Excel.Shape
@@ -244,12 +244,14 @@ Public Class frmShowProjCharacteristics
 
         Dim tmpProj As clsProjekt
 
-        Try
-            tmpProj = projekthistorie.beauftragung
-            valueBeauftragung = nrSnapshots - projekthistorie.currentIndex
-        Catch ex As Exception
+
+        tmpProj = projekthistorie.beauftragung
+        If IsNothing(tmpProj) Then
             valueBeauftragung = -1
-        End Try
+        Else
+            valueBeauftragung = nrSnapshots - projekthistorie.currentIndex
+        End If
+
 
 
 
@@ -263,7 +265,7 @@ Public Class frmShowProjCharacteristics
         '
         ' hier wird bestimmt, welche Skalierungsfaktoren überhaupt bereücksicht werden müssen 
         '
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then
@@ -318,7 +320,7 @@ Public Class frmShowProjCharacteristics
             Dim tmpValues() As Double
             ReDim tmpValues(kvp.Value.anzahlRasterElemente - 1)
 
-            
+
             ' Phasen Darstellung
 
             If necessary(0) Then
@@ -341,11 +343,11 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 1) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 1) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 1) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 1) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 1) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 1) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 1) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -359,11 +361,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 2) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 2) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 2) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 2) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 2) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 2) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 2) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 2) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 2) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 2) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -377,11 +382,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 3) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 3) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 3) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 3) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 3) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 3) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 3) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 3) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 3) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 3) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -395,11 +403,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = tmpValues.Max
                 If currentvalue > minmaxScales(1, 4) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 4) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 4) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 4) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 4) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 4) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 4) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 4) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 4) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 4) = Round(currentvalue)
                     End If
                 End If
             End If
@@ -418,11 +429,14 @@ Public Class frmShowProjCharacteristics
                 currentvalue = erloes
                 If currentvalue > minmaxScales(1, 6) Then
                     If currentvalue < 80 Then
-                        minmaxScales(1, 6) = Round(currentvalue / 5 + 0.6) * 5
+                        'minmaxScales(1, 6) = Round(currentvalue / 5 + 0.6) * 5
+                        minmaxScales(1, 6) = Round(currentvalue)
                     ElseIf currentvalue < 300 Then
-                        minmaxScales(1, 6) = Round(currentvalue / 10 + 0.6) * 10
+                        'minmaxScales(1, 6) = Round(currentvalue / 10 + 0.6) * 10
+                        minmaxScales(1, 6) = Round(currentvalue)
                     Else
-                        minmaxScales(1, 6) = Round(currentvalue / 50 + 0.6) * 50
+                        'minmaxScales(1, 6) = Round(currentvalue / 50 + 0.6) * 50
+                        minmaxScales(1, 6) = Round(currentvalue)
                     End If
                 End If
 
@@ -430,11 +444,14 @@ Public Class frmShowProjCharacteristics
                     currentvalue = erloes - gesamtKosten * (1 + .risikoKostenfaktor)
                     If currentvalue < minmaxScales(0, 6) Then
                         If currentvalue < -300 Then
-                            minmaxScales(0, 6) = Round(currentvalue / 50 - 0.6) * 50
+                            'minmaxScales(0, 6) = Round(currentvalue / 50 - 0.6) * 50
+                            minmaxScales(0, 6) = Round(currentvalue)
                         ElseIf currentvalue < -80 Then
-                            minmaxScales(0, 6) = Round(currentvalue / 10 - 0.6) * 10
+                            'minmaxScales(0, 6) = Round(currentvalue / 10 - 0.6) * 10
+                            minmaxScales(0, 6) = Round(currentvalue)
                         Else
-                            minmaxScales(0, 6) = Round(currentvalue / 5 - 0.6) * 5
+                            'minmaxScales(0, 6) = Round(currentvalue / 5 - 0.6) * 5
+                            minmaxScales(0, 6) = Round(currentvalue)
                         End If
                     End If
                 End With
@@ -444,7 +461,7 @@ Public Class frmShowProjCharacteristics
         '
         ' jetzt werden wieder alle relevanten Diagramme durchgegangen, um sie auf die entsprechende Skalierung zu setzen ...
         '
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then

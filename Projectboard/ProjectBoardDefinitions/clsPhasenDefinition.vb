@@ -40,31 +40,25 @@
     ''' liest die Farbe entsprechend der Definition der Darstellungsklasse 
     ''' wenn es die nicht gibt, wird der Default für diese Phase verwendet  
     ''' </summary>
-    ''' <value>setzt den Default Wert der Farbe für diese Phase, unabhängig von der Darstellungsklasse</value>
+    ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property farbe As Long
+    Public ReadOnly Property farbe As Long
         Get
-            'Try
-
+            
             If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
                 _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
             Else
-                _farbe = awinSettings.AmpelNichtBewertet
-            End If
+                '' ' ???? UR: 02.03.2016
+                ''_farbe = awinSettings.AmpelNichtBewertet
+                _farbe = awinSettings.missingDefinitionColor
 
-            'Catch ex As Exception
-            '    _farbe = awinSettings.AmpelNichtBewertet
-            'End Try
+            End If
 
             farbe = _farbe
 
         End Get
-        Set(value As Long)
-
-            _farbe = value
-
-        End Set
+        
     End Property
 
 
@@ -77,6 +71,36 @@
             uuid = value
         End Set
     End Property
+
+    ''' <summary>
+    ''' kopiert in Me die Werte der übergebenen Phasen-Definition
+    ''' wenn der optionale Name angegeben ist, wird dieser Name, 
+    ''' nicht der Name der übergebenen Phasen-Definition angegeben  
+    ''' </summary>
+    ''' <param name="phDef"></param>
+    ''' <remarks></remarks>
+    Public Sub copyFrom(ByVal phDef As clsPhasenDefinition, Optional ByVal newName As String = "")
+
+        If Not IsNothing(phDef) Then
+            With Me
+
+                If newName = "" Then
+                    .name = phDef.name
+                Else
+                    .name = newName
+                End If
+                .schwellWert = phDef.schwellWert
+                .shortName = phDef.shortName
+                .darstellungsKlasse = phDef.darstellungsKlasse
+                '.farbe = phDef.farbe
+
+            End With
+        Else
+            Throw New ArgumentException("Phase-Definition in Kopier-Funktion ist Nothing")
+        End If
+        
+
+    End Sub
 
     Public Sub New()
 

@@ -11,15 +11,23 @@ Public Class clsMeilensteine
     Public Sub Add(milestone As clsMeilensteinDefinition)
 
         'Dim key As String = calcKey(milestone.name, milestone.belongsTo)
-        Dim key As String = milestone.name
 
-        If allMilestones.ContainsKey(key) Then
-            Throw New ArgumentException("Identifier " & key & _
-                                        " existiert bereits!")
+
+        If Not IsNothing(milestone) Then
+            Dim key As String = milestone.name
+            If allMilestones.ContainsKey(key) Then
+                ' einfach nichts machen 
+                'Throw New ArgumentException("Identifier " & key & _
+                '                            " existiert bereits!")
+            Else
+                allMilestones.Add(key, milestone)
+            End If
+
         Else
-            allMilestones.Add(key, milestone)
+            ' nichts machen
+            'Throw New ArgumentException("Meilenstein Definition ist Nothing")
         End If
-
+        
 
     End Sub
 
@@ -190,6 +198,24 @@ Public Class clsMeilensteine
                 appearanceID = defaultMilestoneAppearance
             End If
 
+            '' ''Dim ok As Boolean = False
+            '' ''While Not ok
+            '' ''    Try
+            '' ''        ' jetzt ist in der AppearanceID was drin ... 
+            '' ''        getShape = appearanceDefinitions.Item(appearanceID).form
+            '' ''        If Not IsNothing(getShape) Then
+            '' ''            ok = True
+            '' ''        Else
+            '' ''            Call MsgBox("nothing")
+            '' ''        End If
+            '' ''    Catch ex As Exception
+            '' ''        Call MsgBox("getshape fehlerhaft")
+            '' ''        getShape = Nothing
+            '' ''    End Try
+
+            '' ''End While
+
+
             ' jetzt ist in der AppearanceID was drin ... 
             getShape = appearanceDefinitions.Item(appearanceID).form
 
@@ -198,7 +224,7 @@ Public Class clsMeilensteine
 
     ''' <summary>
     ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
-    ''' wenn er nicht gefunden wird: "n.a."
+    ''' wenn er nicht gefunden wird: "-"
     ''' </summary>
     ''' <param name="name">Langname Meilenstein</param>
     ''' <value></value>
@@ -206,7 +232,7 @@ Public Class clsMeilensteine
     ''' <remarks></remarks>
     Public ReadOnly Property getAbbrev(ByVal name As String) As String
         Get
-            Dim msAbbrev As String = "n.a."
+            Dim msAbbrev As String = name
 
             'Dim key As String = calcKey(name, belongsTo)
 
@@ -219,8 +245,23 @@ Public Class clsMeilensteine
         End Get
     End Property
 
+
     Public Sub New()
         allMilestones = New SortedList(Of String, clsMeilensteinDefinition)
+    End Sub
+
+    ''' <summary>
+    ''' löscht die Meilenstein-Definition mit dem übergebenen Namen aus der Liste , sofern vorhanden
+    ''' wenn nicht vorhanden, keine Änderung; aber auch keine Mitteilung 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <remarks></remarks>
+    Public Sub remove(ByVal name As String)
+
+        If allMilestones.ContainsKey(name) Then
+            allMilestones.Remove(name)
+        End If
+
     End Sub
 
     Public Sub Clear()

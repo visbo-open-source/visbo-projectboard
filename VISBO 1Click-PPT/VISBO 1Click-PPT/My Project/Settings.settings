@@ -1,0 +1,21 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="" GeneratedClassName="MySettings" UseMySettingsClassName="true">
+  <Profiles />
+  <Settings>
+    <Setting Name="globalPath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="awinPath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">MS Project VISBO ADDIn</Value>
+    </Setting>
+    <Setting Name="TaskClass" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">VISBO Task Class</Value>
+    </Setting>
+    <Setting Name="VISBOAbbreviation" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">VISBO Alias</Value>
+    </Setting>
+    <Setting Name="VISBOAmpel" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">VISBO Ampel</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

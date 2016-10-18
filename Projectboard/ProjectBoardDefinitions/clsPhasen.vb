@@ -4,12 +4,25 @@ Public Class clsPhasen
     Private AllPhasen As SortedList(Of String, clsPhasenDefinition)
 
 
+    ''' <summary>
+    ''' nimmt die Phase auf; wenn der Name bereits vergeben ist, wird nichts gemacht ...
+    ''' wenn PhaseDef = Nothing, wird auch nichts gemacht 
+    ''' es werden keine Exceptions geworfen; wenn man an der Aufruf Stelle wissen muss, ob der Name vergeben ist, muss über .contains geprüft werden 
+    ''' </summary>
+    ''' <param name="phaseDef"></param>
+    ''' <remarks></remarks>
     Public Sub Add(phaseDef As clsPhasenDefinition)
 
-
-        If Not AllPhasen.ContainsKey(phaseDef.name) Then
-            AllPhasen.Add(phaseDef.name, phaseDef)
+        If Not IsNothing(phaseDef) Then
+            If Not AllPhasen.ContainsKey(phaseDef.name) Then
+                AllPhasen.Add(phaseDef.name, phaseDef)
+            Else
+                ' nichts tun , ist ja schon da 
+            End If
+        Else
+            ' nichts tun , es ist ja nichts aufzunehmen  
         End If
+        
 
 
     End Sub
@@ -21,6 +34,7 @@ Public Class clsPhasen
         End Get
 
     End Property
+
 
     Public ReadOnly Property Contains(name As String) As Boolean
         Get
@@ -64,15 +78,15 @@ Public Class clsPhasen
 
     ''' <summary>
     ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
-    ''' wenn er nicht gefunden wird: "n.a."
+    ''' wenn er nicht gefunden wird: 
     ''' </summary>
-    ''' <param name="name">Langname Meilenstein</param>
+    ''' <param name="name">Langname Phase</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getAbbrev(ByVal name As String) As String
         Get
-            Dim msAbbrev As String = "n.a."
+            Dim msAbbrev As String = name
 
             'Dim key As String = calcKey(name, belongsTo)
 
@@ -112,20 +126,58 @@ Public Class clsPhasen
 
             End If
 
+            ' ''Dim ok As Boolean = False
+            ' ''While Not ok
+            ' ''    Try
+            ' ''        ' jetzt ist in der AppearanceID was drin ... 
+            ' ''        getShape = appearanceDefinitions.Item(appearanceID).form
+            ' ''        If Not IsNothing(getShape) Then
+            ' ''            ok = True
+            ' ''        Else
+            ' ''            Call MsgBox("nothing")
+            ' ''        End If
+            ' ''    Catch ex As Exception
+            ' ''        Call MsgBox("getshape fehlerhaft")
+            ' ''        getShape = Nothing
+            ' ''    End Try
+
+            ' ''End While
+
             ' jetzt ist in der AppearanceID was drin ... 
             getShape = appearanceDefinitions.Item(appearanceID).form
 
         End Get
     End Property
 
+    ''' <summary>
+    ''' löscht die Phasen-Definition mit dem übergebenen Namen aus der Liste , sofern vorhanden
+    ''' wenn nicht vorhanden, keine Änderung; aber auch keine Mitteilung 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <remarks></remarks>
+    Public Sub remove(ByVal name As String)
+
+        If AllPhasen.ContainsKey(name) Then
+            AllPhasen.Remove(name)
+        End If
+
+    End Sub
+    
+    ''' <summary>
+    ''' leert die komplette Liste 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub Clear()
+
+        AllPhasen.Clear()
+
+    End Sub
+
+
     Public Sub New()
 
         AllPhasen = New SortedList(Of String, clsPhasenDefinition)
 
-    End Sub
-    Public Sub Clear()
-
-        AllPhasen.Clear()
 
     End Sub
 End Class

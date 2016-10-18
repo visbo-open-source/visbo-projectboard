@@ -7,6 +7,11 @@
     ' Änderung tk 31.3.15 Hierachie Klasse ergänzt 
     Public hierarchy As clsHierarchy
 
+    ' Änderung tk 20.9.16 sortierte Listen, wo welche Rollen vorkommen ... 
+    Public rcLists As clsListOfCostAndRoles
+
+
+
     Private relStart As Integer
     Private uuid As Long
     ' als Friend deklariert, damit sie aus der Klasse clsProjekt, die von clsProjektvorlage erbt , erreichbar ist
@@ -14,6 +19,626 @@
     Private _earliestStart As Integer
     Private _latestStart As Integer
     Private _budgetWerte() As Double
+
+
+    ' Hinzufügen von Custom Feldern beliebiger Anzahl 
+    ' ein CustomFeld eines bestimmten Typs darf nur einmal vorkommen 
+    Private _customDblFields As SortedList(Of Integer, Double)
+    Private _customStringFields As SortedList(Of Integer, String)
+    Private _customBoolFields As SortedList(Of Integer, Boolean)
+
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der Double Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customDblFields As SortedList(Of Integer, Double)
+        Get
+
+            If IsNothing(_customDblFields) Then
+                _customDblFields = New SortedList(Of Integer, Double)
+            End If
+
+            customDblFields = _customDblFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der String Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customStringFields As SortedList(Of Integer, String)
+        Get
+
+            If IsNothing(_customStringFields) Then
+                _customStringFields = New SortedList(Of Integer, String)
+            End If
+
+            customStringFields = _customStringFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der bool'schen Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customBoolFields As SortedList(Of Integer, Boolean)
+        Get
+
+            If IsNothing(_customBoolFields) Then
+                _customBoolFields = New SortedList(Of Integer, Boolean)
+            End If
+
+            customBoolFields = _customBoolFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Wert für das Double Custom-Field mit Identifier UID zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomDField(ByVal uid As Integer) As Double
+        Get
+            Dim tmpValue As Double = Nothing
+
+            If _customDblFields.ContainsKey(uid) Then
+                tmpValue = _customDblFields.Item(uid)
+            End If
+
+            getCustomDField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Wert des Double Custom-Fields mit NAme cfName zurück; Nothing, wenn es nicht existiert 
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomDField(ByVal cfName As String) As Double
+        Get
+            Dim tmpValue As Double = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.Dbl)
+
+            If _customDblFields.ContainsKey(uid) Then
+                tmpValue = _customDblFields.Item(uid)
+            End If
+
+            getCustomDField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an Double CustomFields ein neues hinzu
+    ''' wenn das CustomField gar nicht definiert ist: Exception
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default 0.0  angenommen 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomDField(ByVal uid As Integer, ByVal value As Double)
+
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
+
+        If IsNothing(value) Then
+            value = 0.0
+        End If
+
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.Dbl Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customDblFields.ContainsKey(uid) Then
+                    _customDblFields.Item(uid) = value
+                Else
+                    _customDblFields.Add(uid, value)
+                End If
+            End If
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht Dbl):" & uid.ToString)
+        End If
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' gibt den Wert für das String Custom-Field mit Identifier UID zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomSField(ByVal uid As Integer) As String
+        Get
+            Dim tmpValue As String = Nothing
+
+            If _customStringFields.ContainsKey(uid) Then
+                tmpValue = _customStringFields.Item(uid)
+            End If
+
+            getCustomSField = tmpValue
+
+        End Get
+    End Property
+
+
+    
+    ''' <summary>
+    ''' gibt den Wert des String Custom-Fields mit Name cfName zurück; Nothing, wenn es nicht existiert
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomSField(ByVal cfName As String) As String
+        Get
+            Dim tmpValue As String = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.Str)
+
+            If _customStringFields.ContainsKey(UID) Then
+                tmpValue = _customStringFields.Item(UID)
+            End If
+
+            getCustomSField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an String CustomFields ein neues hinzu
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default "?"  angenommen 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomSField(ByVal uid As Integer, ByVal value As String)
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
+
+        If IsNothing(value) Then
+            value = ""
+        End If
+
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.Str Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customStringFields.ContainsKey(uid) Then
+                    _customStringFields.Item(uid) = value
+                Else
+                    _customStringFields.Add(uid, value)
+                End If
+            End If
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht String):" & uid.ToString)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt den Wert für das Bool Custom-Field mit  Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomBField(ByVal uid As Integer) As Boolean
+        Get
+            Dim tmpValue As Boolean = Nothing
+
+            If _customBoolFields.ContainsKey(uid) Then
+                tmpValue = _customBoolFields.Item(uid)
+            End If
+
+            getCustomBField = tmpValue
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt den Wert des Bool Custom-Fields mit NAme cfName zurück; Nothing, wenn es nicht existiert 
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomBField(ByVal cfName As String) As Boolean
+        Get
+            Dim tmpValue As Boolean = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.bool)
+
+            If _customBoolFields.ContainsKey(uid) Then
+                tmpValue = _customBoolFields.Item(uid)
+            End If
+
+            getCustomBField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an bool'schen CustomFields ein neues hinzu
+    ''' wenn das CustomField gar nicht definiert ist: Exception
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default Wert false angenommen 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomBField(ByVal uid As Integer, ByVal value As Boolean)
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
+
+        If IsNothing(value) Then
+            value = False
+        End If
+
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.bool Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customBoolFields.ContainsKey(uid) Then
+                    _customBoolFields.Item(uid) = value
+                Else
+                    _customBoolFields.Add(uid, value)
+                End If
+            End If
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht bool):" & uid.ToString)
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt den kürzesten eindeutigen Namen für das Element zurück, der sich finden lässt
+    ''' optional kann die SwimlaneID mitgegeben werden - dann wird nur nach eindeutigen Namen innerhalb der swimlanes gesucht 
+    ''' wenn das Element eh eindeutig ist im Projekt, dann wird nur der Elem-Name zurückgegeben 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBestNameOfID(ByVal nameID As String, _
+                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean, _
+                                             Optional ByVal swimlaneID As String = rootPhaseName) As String
+        Get
+            Dim elemName As String = elemNameOfElemID(nameID)
+            Dim isMilestone As Boolean
+            Dim curBC As String = ""
+            Dim oldBC As String = ""
+            Dim anzElements As Integer
+            Dim anzElementsBefore As Integer
+            Dim level As Integer = 1
+            Dim tmpName As String = elemName
+            Dim rootreached As Boolean = False
+            Dim description1 As String = "", description2 As String = elemName
+            Dim phDef As clsPhasenDefinition
+            Dim swlBC As String = ""
+
+
+
+            isMilestone = elemIDIstMeilenstein(nameID)
+
+            If swimlaneID = rootPhaseName Then
+                swlBC = ""
+            Else
+                If istElemID(swimlaneID) Then
+                    swlBC = calcHryFullname(elemNameOfElemID(swimlaneID), _
+                                                  Me.hierarchy.getBreadCrumb(swimlaneID))
+                End If
+            End If
+
+            Try
+                If isMilestone Then
+
+                    ' Änderung tk: es wird der eindeutige Namen unterhalb der swimlaneID gesucht  
+                    'Dim milestoneIndices(,) As Integer = Me.getMilestoneIndices(elemName, "")
+                    Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(elemName, swlBC)
+                    anzElements = CInt(milestoneIndices.Length / 2)
+
+                    If anzElements > 1 Then
+
+                        anzElementsBefore = anzElements
+
+                        Do Until anzElements = 1 Or rootreached
+                            curBC = Me.hierarchy.getBreadCrumb(nameID, level)
+
+                            If oldBC = curBC Then
+                                rootreached = True
+                            Else
+                                oldBC = curBC
+                            End If
+
+                            If Not rootreached Then
+                                milestoneIndices = Me.hierarchy.getMilestoneIndices(elemName, curBC)
+                                anzElements = CInt(milestoneIndices.Length / 2)
+                                If anzElements < anzElementsBefore Then
+                                    anzElementsBefore = anzElements
+                                    tmpName = calcHryFullname(elemName, curBC)
+                                End If
+                            End If
+
+                            level = level + 1
+
+                        Loop
+                    Else
+                        tmpName = elemName
+                    End If
+
+
+                Else
+                    ' es handelt sich um eine Phase
+                    'Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, "")
+                    ' Änderung tk: es wird der eindeutige Namen unterhalb der swimlaneID gesucht  
+                    Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(elemName, swlBC)
+                    anzElements = phaseIndices.Length
+
+                    If anzElements > 1 Then
+
+                        anzElementsBefore = anzElements
+
+                        Do Until anzElements = 1 Or rootreached
+                            curBC = Me.hierarchy.getBreadCrumb(nameID, level)
+
+                            If oldBC = curBC Then
+                                rootreached = True
+                            Else
+                                oldBC = curBC
+                            End If
+
+                            If Not rootreached Then
+                                phaseIndices = Me.hierarchy.getPhaseIndices(elemName, curBC)
+                                anzElements = phaseIndices.Length
+                                If anzElements < anzElementsBefore Then
+                                    anzElementsBefore = anzElements
+                                    tmpName = calcHryFullname(elemName, curBC)
+                                End If
+                            End If
+
+                            level = level + 1
+
+                        Loop
+                    Else
+                        tmpName = elemName
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt wird unterschieden, ob Abbrev gezeigt werden soll oder Standard Name ... 
+            If ShowStdNames Then
+                If showAbbrev Then
+
+                    If awinSettings.showBestName And Not awinSettings.drawphases Then
+                        ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
+                        ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
+                        Call splitHryFullnameTo2(tmpName, description2, description1)
+
+                        Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
+
+                        ' jetzt den Abbrev String zusammensetzen 
+                        Dim newDesc1 As String = ""
+                        For i As Integer = 1 To tmpStr.Length
+                            Dim tmpPhName As String = tmpStr(i - 1)
+                            phDef = PhaseDefinitions.getPhaseDef(tmpPhName)
+
+                            If IsNothing(phDef) Then
+                                If i = 1 And tmpPhName <> elemNameOfElemID(rootPhaseName) And tmpPhName <> "" Then
+                                    ' den tmpPhName eintragen 
+                                    newDesc1 = tmpPhName
+                                ElseIf i > 1 Then
+                                    newDesc1 = newDesc1 & tmpPhName
+                                End If
+
+                            Else
+                                If i = 1 Then
+                                    If phDef.shortName = "" Then
+                                        newDesc1 = tmpPhName
+                                    Else
+                                        newDesc1 = phDef.shortName
+                                    End If
+
+                                Else
+                                    If phDef.shortName = "" Then
+                                        newDesc1 = newDesc1 & tmpPhName
+                                    Else
+                                        newDesc1 = newDesc1 & "-" & phDef.shortName
+                                    End If
+
+                                End If
+                            End If
+
+                        Next
+                        description1 = newDesc1
+
+                        If isMilestone Then
+
+                            Dim msDef As clsMeilensteinDefinition
+                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            If IsNothing(msDef) Then
+                                msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
+                            End If
+
+                            If IsNothing(msDef) Then
+                                ' nichts zu tun
+                            Else
+                                If IsNothing(msDef.shortName) Then
+                                    'description2 = "-"
+                                Else
+                                    If msDef.shortName = "" Then
+                                        'description2 = "-"
+                                    Else
+                                        description2 = msDef.shortName
+                                    End If
+
+                                End If
+                            End If
+
+                        Else
+
+                            phDef = PhaseDefinitions.getPhaseDef(description2)
+                            If IsNothing(phDef) Then
+
+                                phDef = missingPhaseDefinitions.getPhaseDef(description2)
+                            End If
+
+                            If IsNothing(phDef) Then
+                                ' nichts zu tun
+                            Else
+
+                                If IsNothing(phDef.shortName) Then
+                                    'description2 = "-"
+                                Else
+                                    If phDef.shortName = "" Then
+                                        'description2 = "-"
+                                    Else
+                                        description2 = phDef.shortName
+                                    End If
+
+                                End If
+                            End If
+
+                        End If
+                    Else
+                        description1 = ""
+
+                        If isMilestone Then
+
+                            Dim msDef As clsMeilensteinDefinition
+                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            If IsNothing(msDef) Then
+                                msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
+                            End If
+
+                            If IsNothing(msDef) Then
+                                'description2 = "-"
+                            Else
+
+                                If IsNothing(msDef.shortName) Then
+                                    'description2 = "-"
+                                Else
+                                    If msDef.shortName = "" Then
+                                        'description2 = msDef.name
+                                    Else
+                                        description2 = msDef.shortName
+                                    End If
+
+                                End If
+                            End If
+
+                        Else
+
+                            phDef = PhaseDefinitions.getPhaseDef(description2)
+                            If IsNothing(phDef) Then
+
+                                phDef = missingPhaseDefinitions.getPhaseDef(description2)
+                            End If
+
+                            If IsNothing(phDef) Then
+                                'description2 = "-"
+                            Else
+
+                                If IsNothing(phDef.shortName) Then
+                                    'description2 = "-"
+                                Else
+                                    If phDef.shortName = "" Then
+                                        'description2 = phDef.name
+                                    Else
+                                        description2 = phDef.shortName
+                                    End If
+
+                                End If
+                            End If
+
+                        End If
+
+
+                    End If
+                Else
+
+                    Call splitHryFullnameTo2(tmpName, description2, description1)
+                    Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
+
+                    ' jetzt den Std-Name zusammensetzen 
+                    Dim newDesc1 As String = ""
+                    For i As Integer = 1 To tmpStr.Length
+                        Dim tmpPhName As String = tmpStr(i - 1)
+
+                        If i = 1 Then
+                            If tmpPhName = elemNameOfElemID(rootPhaseName) Then
+                                ' nichts tun
+                            Else
+                                newDesc1 = tmpPhName
+                            End If
+                        ElseIf i > 1 Then
+                            newDesc1 = newDesc1 & "-" & tmpPhName
+                        End If
+
+                    Next
+                    description1 = newDesc1
+
+
+                End If
+            Else
+                If isMilestone Then
+                    description2 = Me.getMilestoneByID(nameID).originalName
+                Else
+                    description2 = Me.getPhaseByID(nameID).originalName
+                End If
+            End If
+
+            Dim description As String = ""
+            Try
+                If description1 <> "" Then
+                    description = description1 & "-" & description2
+                Else
+                    description = description2
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            getBestNameOfID = description
+
+        End Get
+    End Property
 
 
     ''' <summary>
@@ -50,6 +675,14 @@
         Dim phaseEnde As Double
         Dim maxM As Integer
 
+
+        ' wenn der Origname gesetzt werden soll ...
+        If origName <> "" Then
+            If phase.originalName <> origName Then
+                phase.originalName = origName
+            End If
+        End If
+
         With phase
 
             phaseEnde = .startOffsetinDays + .dauerInDays - 1
@@ -78,11 +711,13 @@
                 .elemName = phase.name
             End If
 
-            If origName = "" Then
-                .origName = .elemName
-            Else
-                .origName = origName
-            End If
+            ' Änderung tk 29.5.16 origName ist nicht mehr Bestandteil von HierarchyNode, 
+            ' sondern von clsPhase
+            'If origName = "" Then
+            '    .origName = .elemName
+            'Else
+            '    .origName = origName
+            'End If
 
             .indexOfElem = Me.CountPhases
 
@@ -149,16 +784,31 @@
 
         If deleteAllChilds Then
 
-            ' jetzt alle Kinder löschen  
-            For i As Integer = 1 To elemNode.childCount
-                childNodeID = elemNode.getChild(i)
+            Dim k As Integer = 1
+
+
+            ' jetzt alle Kinder löschen
+            While elemNode.childCount > 0
+
+                childNodeID = elemNode.getChild(k)
                 If elemIDIstMeilenstein(childNodeID) Then
                     ' lösche Meilenstein 
                     Me.removeMeilenstein(childNodeID)
                 Else
                     Me.removePhase(childNodeID, True)
+
                 End If
-            Next
+            End While
+
+            '' '' ''For i As Integer = 1 To elemNode.childCount
+            '' '' ''    childNodeID = elemNode.getChild(i)
+            '' '' ''    If elemIDIstMeilenstein(childNodeID) Then
+            '' '' ''         lösche Meilenstein 
+            '' '' ''        Me.removeMeilenstein(childNodeID)
+            '' '' ''    Else
+            '' '' ''        Me.removePhase(childNodeID, True)
+            '' '' ''    End If
+            '' '' ''Next
         Else
             ' hier alle Kinder umhängen: die bekommen die ParentID statt nameID als ihren neuen Vater 
             For i As Integer = 1 To elemNode.childCount
@@ -184,6 +834,71 @@
 
 
     End Sub
+
+    ''' <summary>
+    ''' gibt zu einer als als voller Name (Breadcrumb + Elemename) übergebenen Phase zurück, ob die so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    '''  
+    ''' </summary>
+    ''' <param name="fullName">der volle Name, das heisst Breadcrum plus Name</param>
+    ''' <param name="strict">gibt an, ob der volle Breadcrumb berücksichtigt werden soll oder nur der Name</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPhase(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cphase As clsPhase = Me.getPhase(elemName, breadcrumb, 1)
+            If IsNothing(cphase) Then
+                containsPhase = False
+            Else
+                containsPhase = True
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu einem als als voller Name (Breadcrumb + Elemename) übergebenen Meilenstein zurück, ob der so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    ''' </summary>
+    ''' <param name="fullName"></param>
+    ''' <param name="strict"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsMilestone(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cMilestone As clsMeilenstein = Me.getMilestone(elemName, breadcrumb, 1)
+            If IsNothing(cMilestone) Then
+                containsMilestone = False
+            Else
+                containsMilestone = True
+            End If
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' entfernt den Meilenstein mit der übergebenen nameID 
@@ -223,11 +938,11 @@
         ' in der Hierarchie-Liste löschen 
         Me.hierarchy.removeAt(indexInHierarchy - 1)
 
-        Dim cPhase As clsPhase = Me.getPhase(parentID)
+        Dim cPhase As clsPhase = Me.getPhaseByID(parentID)
 
         ' in der Meilenstein-Liste der Phase löschen 
         cPhase.removeMilestoneAt(indexInMilestoneList - 1)
-        
+
         ' jetzt in der Hierarchie alle Meilenstein-Verweise, die größer als indexInMilestoneList sind, um eins erniedrigen 
         Me.hierarchy.updateMeilensteinVerweise(indexInMilestoneList, parentID, -1)
 
@@ -337,6 +1052,39 @@
     End Property
 
     ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="msName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <param name="lfdNr"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneOffsetToProjectStart(ByVal msName As String, Optional ByVal breadcrumb As String = "", Optional ByVal lfdNr As Integer = 1) As Long
+        Get
+            Dim tmpMilestone As clsMeilenstein = Nothing
+            Dim found As Boolean = False
+
+            Dim milestoneIndices(,) As Integer
+            milestoneIndices = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
+
+            If lfdNr > CInt(milestoneIndices.Length / 2) Or lfdNr < 1 Then
+                ' kein gültiger Meilenstein 
+            Else
+                If milestoneIndices(0, lfdNr - 1) > 0 And milestoneIndices(1, lfdNr - 1) > 0 Then
+                    ' nur dann existiert dieser Meilenstein
+                    tmpMilestone = Me.getMilestone(milestoneIndices(0, lfdNr - 1), milestoneIndices(1, lfdNr - 1))
+                End If
+
+            End If
+
+            getMilestoneOffsetToProjectStart = tmpMilestone.offset + tmpMilestone.Parent.startOffsetinDays
+
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt den Meilenstein zurück, der in der Phase mit Index PhaseIndex, 
     ''' und dort in der Meilenstein Liste mit Index milestoneIndex vorkommt  
     ''' </summary>
@@ -366,7 +1114,7 @@
     End Property
 
 
-    Public Property farbe() As Object
+    Public Property farbe() As Integer
 
     Public Property Schrift() As Integer
 
@@ -418,7 +1166,7 @@
 
             'parentID = Me.hierarchy.getParentIDOfID(oldPhase.nameID)
 
-            oldPhase.CopyTo(newphase)
+            oldPhase.copyTo(newphase)
             newproject.AddPhase(newphase)
             'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
         Next p
@@ -470,6 +1218,7 @@
         Dim newphase As clsPhase
         Dim headPhase As clsPhase
         Dim elemID As String
+        Dim parentPhase As clsPhase
 
 
         moduleDauerInDays = endOffset - modulStartOffset + 1
@@ -489,7 +1238,22 @@
                 elemID = project.hierarchy.findUniqueElemKey(moduleName, False)
                 headPhase.nameID = elemID
 
+                ' Änderung tk 17.11.15: die Phase 0 Ressourcen und Kosten übernehmen ..
+                AllPhases.Item(0).korrCopyTo(headPhase, correctFactor, elemID)
+
                 headPhase.changeStartandDauer(modulStartOffset, CLng(Me.dauerInDays * correctFactor))
+                parentPhase = project.getPhaseByID(parentID)
+                ' jetzt werden die Earliest und latest Spielräume für die Headphase, dann für die einzelnen Module eingetragen 
+
+                headPhase.earliestStart = parentPhase.startOffsetinDays - headPhase.startOffsetinDays
+                If headPhase.earliestStart > 0 Then
+                    headPhase.earliestStart = 0
+                End If
+
+                headPhase.latestStart = parentPhase.startOffsetinDays + parentPhase.dauerInDays _
+                                - (headPhase.startOffsetinDays + headPhase.dauerInDays)
+
+
 
                 project.AddPhase(headPhase, origName:=moduleName, _
                        parentID:=parentID)
@@ -526,6 +1290,25 @@
             Else
                 tmpParentID = parentNameIDs(currentLevel - 1)
             End If
+
+            parentPhase = project.getPhaseByID(tmpParentID)
+            ' jetzt werden die Earliest und latest Spielräume für die Headphase, dann für die einzelnen Module eingetragen 
+
+            newphase.earliestStart = parentPhase.startOffsetinDays - newphase.startOffsetinDays
+            If newphase.earliestStart > 0 Then
+                newphase.earliestStart = 0
+            End If
+
+            Try
+                newphase.latestStart = parentPhase.startOffsetinDays + parentPhase.dauerInDays _
+                            - (newphase.startOffsetinDays + newphase.dauerInDays)
+            Catch ex As Exception
+                Dim a = 2
+            End Try
+
+
+
+
             project.AddPhase(phase:=newphase, origName:="", parentID:=tmpParentID)
         Next p
 
@@ -552,7 +1335,7 @@
             With copiedNode
                 .elemName = curNode.elemName
                 .indexOfElem = curNode.indexOfElem
-                .origName = curNode.origName
+                '.origName = curNode.origName
                 .parentNodeKey = curNode.parentNodeKey
                 ' jetzt die Kinder kopieren 
                 For cx As Integer = 1 To curNode.childCount
@@ -645,7 +1428,7 @@
     End Property
 
     ''' <summary>
-    ''' gibt die Phase mit Index zurück, wenn Index kleiner bzw. gleich oder größer Anzahl Phasen, 
+    ''' gibt die Phase mit Index zurück, wenn Index kleiner bzw. gleich 1 oder größer Anzahl Phasen, 
     ''' dann Nothing 
     ''' </summary>
     ''' <param name="index"></param>
@@ -678,7 +1461,7 @@
 
     ''' <summary>
     ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
-    ''' so wird er ersetzt durch alle Elem-IDs, diesen Namen tragen 
+    ''' so wird er ersetzt durch alle Elem-IDs, die diesen Namen tragen 
     ''' es wird sichergestellt, dass jede ID tatsächlich nur einmal aufgeführt ist 
     ''' </summary>
     ''' <param name="namenListe"></param>
@@ -703,13 +1486,26 @@
 
                 If istElemID(itemName) Then
 
+                    Dim ok As Boolean = True
                     If namesAreMilestones Then
-                        sortDate = Me.getMilestoneByID(itemName).getDate
+                        Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(itemName)
+                        If Not IsNothing(cMilestone) Then
+                            sortDate = cMilestone.getDate
+                        Else
+                            ok = False
+                        End If
+
                     Else
-                        sortDate = Me.getPhaseByID(itemName).getStartDate
+                        Dim cphase As clsPhase = Me.getPhaseByID(itemName)
+                        If Not IsNothing(cphase) Then
+                            sortDate = cphase.getStartDate
+                        Else
+                            ok = False
+                        End If
+
                     End If
 
-                    If Not tmpSortList.ContainsValue(itemName) Then
+                    If ok And Not tmpSortList.ContainsValue(itemName) Then
 
                         Do While tmpSortList.ContainsKey(sortDate)
                             sortDate = sortDate.AddMilliseconds(1)
@@ -718,9 +1514,7 @@
                         tmpSortList.Add(sortDate, itemName)
 
                     End If
-                    'If Not iDCollection.Contains(itemName) Then
-                    '    iDCollection.Add(itemName, itemName)
-                    'End If
+
 
                 Else
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
@@ -748,9 +1542,6 @@
 
                                     End If
 
-                                    'If Not iDCollection.Contains(iDItem) Then
-                                    '    iDCollection.Add(iDItem, iDItem)
-                                    'End If
 
                                 Catch ex As Exception
 
@@ -801,6 +1592,640 @@
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' gibt zurück, ob die Parent-Phase mit ID=parentID identisch zur Phase mit Name elemName, startdate, endDate ist) 
+    ''' </summary>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="startDate">Start-Datum der Phase</param>
+    ''' <param name="endDate">Ende-Datum der Phase</param>
+    ''' <param name="tolerance" >tolerance = 1.0: bedeutet, daß 100% üÜbereinstimmung vorliegen muss</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isCloneToParent(ByVal elemName As String, ByVal parentID As String, ByVal startDate As Date, ByVal endDate As Date, _
+                                         Optional ByVal tolerance As Double = 1.0) As Boolean
+
+        Dim parentPhase As clsPhase = Me.getPhaseByID(parentID)
+        Dim istIdentisch As Boolean = False
+
+        If Not IsNothing(parentPhase) Then
+
+            Dim parentStartDate As Date = parentPhase.getStartDate
+            Dim parentEndDate As Date = parentPhase.getEndDate
+
+            Dim ueberdeckung As Double = calcPhaseUeberdeckung(parentStartDate, parentEndDate, _
+                                                                startDate, endDate)
+
+            If elemNameOfElemID(parentID) = elemName And ueberdeckung >= tolerance Then
+                istIdentisch = True
+            Else
+                istIdentisch = False
+            End If
+
+
+        Else
+            istIdentisch = False
+        End If
+
+        isCloneToParent = istIdentisch
+
+    End Function
+
+    ''' <summary>
+    ''' gibt die ID des Sibling Elements zurück, das von Namen, Start , Ausdehnung innerhalb der Toleranz identisch ist 
+    ''' leerer String, wenn das Element nicht existiert
+    ''' </summary>
+    ''' <param name="parentID">ID in der Hierachy vom Parent-Knoten</param>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="startDate">Start-Datum der Phase</param>
+    ''' <param name="endDate">Ende-Datum der Phase</param>
+    ''' <param name="tolerance">Toleranz, innerhalb der die Überdeckung als identisch gilt; ohne Angabe wird nur 100% Überdeckung als identisch angesehen</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getDuplicatePhaseSiblingID(ByVal elemName As String, ByVal parentID As String, ByVal startDate As Date, ByVal endDate As Date, _
+                                             Optional ByVal tolerance As Double = 1.0) As String
+
+        Dim parentNode As clsHierarchyNode = Me.hierarchy.nodeItem(parentID)
+        Dim siblingID As String
+        Dim identicalID As String = ""
+
+        Dim anzahlKinder As Integer = parentNode.childCount
+        Dim istIdentisch As Boolean = False
+        Dim currentChildNr As Integer = 1
+
+        Dim siblingPhase As clsPhase = Me.getPhaseByID(parentID)
+
+        Do While Not istIdentisch And currentChildNr <= anzahlKinder
+
+            siblingID = parentNode.getChild(currentChildNr)
+
+            If Not elemIDIstMeilenstein(siblingID) Then
+
+                siblingPhase = Me.getPhaseByID(siblingID)
+
+                If Not IsNothing(siblingPhase) Then
+
+                    Dim siblingStartDate As Date = siblingPhase.getStartDate
+                    Dim siblingEndDate As Date = siblingPhase.getEndDate
+
+                    Dim ueberdeckung As Double = calcPhaseUeberdeckung(siblingStartDate, siblingEndDate, _
+                                                                        startDate, endDate)
+
+                    If siblingPhase.name = elemName And ueberdeckung >= tolerance Then
+                        istIdentisch = True
+                        identicalID = siblingID
+                    Else
+                        istIdentisch = False
+                    End If
+
+
+                Else
+                    istIdentisch = False
+                End If
+
+            End If
+
+            currentChildNr = currentChildNr + 1
+
+        Loop
+
+
+        getDuplicatePhaseSiblingID = identicalID
+
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="parentID"></param>
+    ''' <param name="msName"></param>
+    ''' <param name="msDate"></param>
+    ''' <param name="toleranceInDays"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getDuplicateMsSiblingID(ByVal msName As String, ByVal parentID As String, ByVal msDate As Date, _
+                                                  Optional ByVal toleranceInDays As Integer = 0) As String
+
+        Dim parentNode As clsHierarchyNode = Me.hierarchy.nodeItem(parentID)
+        Dim siblingID As String
+        Dim identicalID As String = ""
+
+        Dim anzahlKinder As Integer = parentNode.childCount
+        Dim istIdentisch As Boolean = False
+        Dim currentChildNr As Integer = 1
+
+        Dim siblingMilestone As clsMeilenstein
+
+        Do While Not istIdentisch And currentChildNr <= anzahlKinder
+
+            siblingID = parentNode.getChild(currentChildNr)
+
+            If elemIDIstMeilenstein(siblingID) Then
+
+                siblingMilestone = Me.getMilestoneByID(siblingID)
+
+                If Not IsNothing(siblingMilestone) Then
+
+                    Dim siblingDate As Date = siblingMilestone.getDate
+
+                    Dim diffInDays = DateDiff(DateInterval.Day, siblingDate, msDate)
+                    If diffInDays < 0 Then
+                        diffInDays = diffInDays * -1
+                    End If
+
+                    If diffInDays <= toleranceInDays And siblingMilestone.name = msName Then
+                        istIdentisch = True
+                        identicalID = siblingMilestone.nameID
+                    Else
+                        istIdentisch = False
+                    End If
+
+                Else
+                    istIdentisch = False
+                End If
+
+            End If
+
+            currentChildNr = currentChildNr + 1
+
+        Loop
+
+
+        getDuplicateMsSiblingID = identicalID
+
+
+    End Function
+
+    ''' <summary>
+    ''' gibt true zurück, wenn es sich um eine Phase der Gliederungsebene 1 handelt, also Kind-Phase der rootphase ist
+    ''' gibt false sonst zurück
+    ''' wenn BHTC Schema = true, dann muss es ein Kind der ersten oder zweiten Hierarchie Ebene handeln   
+    ''' </summary>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="isBHTCSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isSwimlaneOrSegment(ByVal elemName As String, Optional ByVal isBHTCSchema As Boolean = False) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+            Dim itemNameID As String
+            Dim childNameID As String
+            Dim fullBC As String
+            Dim fullChildBC As String
+
+            elemName = elemName & "#"
+
+            If isBHTCSchema Then
+                ' noch nicht implementiert 
+                Dim found As Boolean = False
+                Dim ix As Integer = 1
+
+                Do While ix <= ChildCollection.Count And Not found
+                    itemNameID = CStr(ChildCollection.Item(ix))
+                    fullBC = Me.getBcElemName(itemNameID)
+
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        found = True
+                    Else
+                        If Not elemIDIstMeilenstein(itemNameID) Then
+                            Dim childChildCollection As Collection = Me.hierarchy.getChildIDsOf(itemNameID, False)
+                            ' Schleife über das KindesKin
+                            For Each childNameID In childChildCollection
+                                fullChildBC = Me.getBcElemName(childNameID)
+                                If fullChildBC.EndsWith(elemName) Then
+                                    tmpResult = True
+                                    found = True
+                                    Exit For
+                                End If
+                            Next
+
+                        End If
+
+                    End If
+                    ix = ix + 1
+                Loop
+
+
+            Else
+
+                For Each itemNameID In ChildCollection
+                    fullBC = Me.getBcElemName(itemNameID)
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        Exit For
+                    End If
+                Next
+
+            End If
+
+            isSwimlaneOrSegment = tmpResult
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 
+    ''' dabei wird unterschieden, ob es sich um das BHTC Schema handelt oder um eine freie Swimlane Definition handelt  
+    ''' </summary>
+    ''' <param name="considerAll">sollen alle Swimlanes betrachtet werden</param>
+    ''' <param name="breadCrumbArray">enthält eine Liste der vollständigen Breadcrumbs aller gewählten Elemente </param>
+    ''' <param name="isBhtcSchema">gibt an, ob die Swimlanes dadurch bestimmt sind, dass sie auf der 2. Ebene sind oder ob alles als Swimlane behandelt wird, was erst bei der 2.Stufe (wie bei BHTC) 
+    ''' in einer ersten Implementierung wird Level2 betrachtet</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSwimLanesCount(ByVal considerAll As Boolean, _
+                                               ByVal breadCrumbArray() As String, _
+                                               ByVal isBhtcSchema As Boolean) As Integer
+        Get
+            Dim anzSwimlanes As Integer = 0
+            Dim parentNameID As String = rootPhaseName
+
+            Dim sptr As Integer
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
+
+            If IsNothing(breadCrumbArray) Then
+                sptr = -1
+            Else
+                sptr = breadCrumbArray.Length - 1
+            End If
+
+            If Not isBhtcSchema Then
+                ' ist jetzt implementiert ...  
+                Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                For Each childObj As Object In ChildCollection
+                    Dim swimlaneID As String = CStr(childObj)
+                    fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                    If considerAll Then
+                        anzSwimlanes = anzSwimlanes + 1
+                    Else
+                        ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                        Dim found As Boolean = False
+                        Dim index = 0
+                        Do While Not found And index <= sptr
+                            If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                found = True
+                            Else
+                                index = index + 1
+                            End If
+                        Loop
+                        If found Then
+                            anzSwimlanes = anzSwimlanes + 1
+                        End If
+                    End If
+                    ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                Next
+
+            Else
+                Dim ankerName As String = "BHTC milestones"
+                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+
+
+                If Not IsNothing(ankerPhase) Then
+                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                End If
+
+                If parentNameID.Length > 1 Then
+
+                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
+
+                    For Each obj As Object In segmentCollection
+                        Dim sgementNameID As String = CStr(obj)
+                        Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(sgementNameID, False)
+
+                        For Each childObj As Object In ChildCollection
+                            Dim swimlaneID As String = CStr(childObj)
+                            fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                            If considerAll Then
+                                anzSwimlanes = anzSwimlanes + 1
+                            Else
+                                ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                                Dim found As Boolean = False
+                                Dim index = 0
+                                Do While Not found And index <= sptr
+                                    If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                        found = True
+                                    Else
+                                        index = index + 1
+                                    End If
+                                Loop
+                                If found Then
+                                    anzSwimlanes = anzSwimlanes + 1
+                                End If
+                            End If
+                            ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                        Next
+
+                    Next
+
+                End If
+
+
+
+            End If
+
+            getSwimLanesCount = anzSwimlanes
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl der Segmente, das heisst die Anzahl Phasen auf Hierarchie-Stufe 1 zurück 
+    ''' </summary>
+    ''' <param name="considerAll">sollen alle Elemente betrachtet werden </param>
+    ''' <param name="breadCrumbArray">es sollen nur die Elemente betrachtet werden, die </param>
+    ''' <param name="isBhtcSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSegmentsCount(ByVal considerAll As Boolean, _
+                                                   ByVal breadCrumbArray() As String, _
+                                                   ByVal isBhtcSchema As Boolean) As Integer
+        Get
+
+            Dim ankerName As String = "BHTC milestones"
+            Dim anzSegments = 0
+            Dim sptr As Integer
+
+            If Not IsNothing(breadCrumbArray) Then
+                sptr = breadCrumbArray.Length - 1
+            Else
+                sptr = -1
+            End If
+
+            Dim fullSwlBreadCrumb As String
+
+
+            If Not isBhtcSchema Then
+                anzSegments = 0
+            Else
+                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+                Dim parentNameID As String = ""
+
+                If Not IsNothing(ankerPhase) Then
+                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                End If
+
+                If parentNameID.Length > 1 Then
+
+                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                    For Each obj As Object In segmentCollection
+                        Dim segmentNameID As String = CStr(obj)
+                        fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
+
+                        If considerAll Then
+                            anzSegments = anzSegments + 1
+                        Else
+                            ' ist eines der Elemente im aktuellen Segment enthalten ? 
+                            Dim found As Boolean = False
+                            Dim index = 0
+                            Do While Not found And index <= sptr
+                                If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                    found = True
+                                Else
+                                    index = index + 1
+                                End If
+                            Loop
+                            If found Then
+                                anzSegments = anzSegments + 1
+                            End If
+                        End If
+
+                    Next
+
+                End If
+
+            End If
+
+            getSegmentsCount = anzSegments
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück; index läuft von 1..Anzahl 
+    ''' Nothing, wenn es die entsprechende Swimlane gar nicht gibt  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <param name="considerAll">sollen alle betrachtet werden</param>
+    ''' <param name="breadCrumbArray">enthält die Breadcrumbs der zu betrachtenden Swimlanes</param>
+    ''' <param name="isBhtcSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSwimlane(ByVal index As Integer, ByVal considerAll As Boolean, _
+                                               ByVal breadCrumbArray() As String, _
+                                               ByVal isBhtcSchema As Boolean) As clsPhase
+        Get
+
+            Dim tmpPhase As clsPhase = Nothing
+            Dim ankerName As String = "BHTC milestones"
+            Dim parentNameID As String = rootPhaseName
+
+            Dim anzSwimlanes As Integer = 0
+            Dim sptr As Integer = -1
+
+            If Not IsNothing(breadCrumbArray) Then
+                sptr = breadCrumbArray.Length - 1
+            End If
+
+
+
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
+
+            If index > 0 Then
+
+                If Not isBhtcSchema Then
+
+                    Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                    For Each childObj As Object In ChildCollection
+                        Dim swimlaneID As String = CStr(childObj)
+                        fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                        If considerAll Then
+                            anzSwimlanes = anzSwimlanes + 1
+                            If index = anzSwimlanes Then
+                                ' das ist jetzt die Phase 
+                                tmpPhase = Me.getPhaseByID(swimlaneID)
+                                Exit For
+                            End If
+                        Else
+                            ' ist eines der Elemente in der Swimlane enthalten ? 
+                            Dim found As Boolean = False
+                            Dim ix = 0
+                            Do While Not found And ix <= sptr
+                                If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                    found = True
+                                Else
+                                    ix = ix + 1
+                                End If
+                            Loop
+                            If found Then
+                                anzSwimlanes = anzSwimlanes + 1
+                                If index = anzSwimlanes Then
+                                    ' das ist jetzt die Phase 
+                                    tmpPhase = Me.getPhaseByID(swimlaneID)
+                                    Exit For
+                                End If
+                            End If
+                        End If
+                        ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                    Next
+
+                Else
+                    Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+
+                    If Not IsNothing(ankerPhase) Then
+                        parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                    End If
+
+                    If parentNameID.Length > 1 Then
+
+                        Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
+
+                        For Each obj As Object In segmentCollection
+                            Dim segmentNameID As String = CStr(obj)
+                            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(segmentNameID, False)
+
+                            For Each childObj As Object In ChildCollection
+                                Dim swimlaneID As String = CStr(childObj)
+                                fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                                If considerAll Then
+                                    anzSwimlanes = anzSwimlanes + 1
+                                    If index = anzSwimlanes Then
+                                        ' das ist jetzt die Phase 
+                                        tmpPhase = Me.getPhaseByID(swimlaneID)
+                                        Exit For
+                                    End If
+                                Else
+                                    ' ist eines der Elemente in der Swimlane enthalten ? 
+                                    Dim found As Boolean = False
+                                    Dim ix = 0
+                                    Do While Not found And ix <= sptr
+                                        If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                            found = True
+                                        Else
+                                            ix = ix + 1
+                                        End If
+                                    Loop
+                                    If found Then
+                                        anzSwimlanes = anzSwimlanes + 1
+                                        If index = anzSwimlanes Then
+                                            ' das ist jetzt die Phase 
+                                            tmpPhase = Me.getPhaseByID(swimlaneID)
+                                            Exit For
+                                        End If
+                                    End If
+                                End If
+                                ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                            Next
+
+                            If index = anzSwimlanes Then
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+
+                End If
+
+            End If
+
+            getSwimlane = tmpPhase
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt für eine übergebene ID den vollen BreadCrum+ElemName zurück
+    ''' den Abschluss bildet stets ein #, damit über ..startwith festgestellt werden kann, ob ein Element Kind eines anderen ist 
+    ''' ?, wenn PhaseID nicht existiert 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBcElemName(ByVal nameID As String) As String
+        Get
+
+            Dim elemName As String = ""
+            Dim fullName As String = "?"
+
+            If istElemID(nameID) Then
+                elemName = elemNameOfElemID(nameID)
+                fullName = calcHryFullname(elemName, _
+                                              Me.hierarchy.getBreadCrumb(nameID)) & "#"
+            End If
+
+            getBcElemName = fullName
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' liefert einen Array zurück, der die Breadcrumbs inkl. der Namen der in selectedPhaseIDs und selectedMilestoneIDs übergebenen 
+    ''' Elemente enthält 
+    ''' </summary>
+    ''' <param name="selectedPhaseIDs">Liste der PhaseIDs</param>
+    ''' <param name="selectedMilestoneIDs">Liste der MilestoneIDs</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBreadCrumbArray(ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection) As String()
+        Get
+            ' im Array suchfeld sind die 
+            Dim suchDimension As Integer = selectedPhaseIDs.Count + selectedMilestoneIDs.Count - 1
+
+
+            If suchDimension >= 0 Then
+                Dim suchFeld(suchDimension) As String
+                Dim elemID As String = ""
+                Dim sptr As Integer = 0
+
+                ' suchfeld aufbauen 
+                For i As Integer = 1 To selectedPhaseIDs.Count
+                    elemID = CStr(selectedPhaseIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
+                    sptr = sptr + 1
+                Next
+
+                For i As Integer = 1 To selectedMilestoneIDs.Count
+                    elemID = CStr(selectedMilestoneIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
+                    sptr = sptr + 1
+                Next
+
+                sptr = sptr - 1
+                getBreadCrumbArray = suchFeld
+
+            Else
+                getBreadCrumbArray = Nothing
+            End If
+
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt alle Phasen bzw. Milestone ElemIDs in einer Collection zurück 
     ''' die Milestones gehen alle mit 1§ los, die Phasen alle mit 0§; 
@@ -825,6 +2250,7 @@
                 If firstIX < 0 Then
                     ' es gibt keine Meilensteine 
                 Else
+
                     For mx = firstIX To lastIX
                         elemID = Me.hierarchy.getIDAtIndex(mx)
 
@@ -839,16 +2265,14 @@
 
                         End If
 
-                        'If Not iDCollection.Contains(elemID) Then
-                        '    iDCollection.Add(elemID, elemID)
-                        'End If
                     Next
+
                 End If
             Else
                 ' Phasen holen
                 firstIX = 1
                 lastIX = Me.hierarchy.getIndexOf1stMilestone - 1
-                
+
                 If lastIX < 0 Then
                     ' es gibt keine Meilensteine, sondern nur Phasen 
                     lastIX = Me.hierarchy.count
@@ -871,9 +2295,6 @@
 
                     End If
 
-                    'If Not iDCollection.Contains(elemID) Then
-                    '    iDCollection.Add(elemID, elemID)
-                    'End If
                 Next
 
             End If
@@ -1062,11 +2483,11 @@
 
                             With role
                                 If lookforIndex Then
-                                    If .RollenTyp = roleID Then
+                                    If .RollenTyp = CInt(roleID) Then
                                         found = True
                                     End If
                                 Else
-                                    If .name = roleID Then
+                                    If .name = CStr(roleID) Then
                                         found = True
                                     End If
                                 End If
@@ -1099,14 +2520,107 @@
 
     End Property
 
+    Public ReadOnly Property getRessourcenBedarfNew(roleID As Object) As Double()
+
+        Get
+            Dim roleValues() As Double
+            Dim anzRollen As Integer
+            Dim anzPhasen As Integer
+            'Dim found As Boolean
+            Dim i As Integer, p As Integer, r As Integer
+            Dim phase As clsPhase
+            Dim role As clsRolle
+            Dim lookforIndex As Boolean
+            Dim phasenStart As Integer
+            Dim tempArray As Double()
+            Dim roleUID As Integer
+            Dim roleName As String = ""
+
+
+            If _Dauer > 0 Then
+
+                lookforIndex = IsNumeric(roleID)
+                If IsNumeric(roleID) Then
+                    roleUID = CInt(roleID)
+                    roleName = RoleDefinitions.getRoledef(roleUID).name
+                Else
+                    If RoleDefinitions.containsName(CStr(roleID)) Then
+                        roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
+                        roleName = CStr(roleID)
+                    End If
+                End If
+
+                ReDim roleValues(_Dauer - 1)
+
+                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
+                anzPhasen = listOfPhases.Count
+
+                For p = 1 To anzPhasen
+                    phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+
+                    With phase
+                        ' Off1
+                        anzRollen = .countRoles
+                        phasenStart = .relStart - 1
+
+                        ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
+                        ' es können Unschärfen auftreten 
+                        'phasenEnde = .relEnde - 1
+
+
+                        For r = 1 To anzRollen
+                            role = .getRole(r)
+
+                            With role
+
+                                If .RollenTyp = roleUID Then
+                                    Dim dimension As Integer
+
+                                    dimension = .getDimension
+                                    ReDim tempArray(dimension)
+                                    tempArray = .Xwerte
+
+                                    For i = phasenStart To phasenStart + dimension
+                                        roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                                    Next i
+
+                                End If
+
+                            End With ' role
+                        Next r
+
+                    End With ' phase
+
+
+                Next p ' Loop über alle Phasen
+
+                getRessourcenBedarfNew = roleValues
+
+            Else
+                ReDim roleValues(0)
+                getRessourcenBedarfNew = roleValues
+            End If
+        End Get
+
+    End Property
+
     '
-    ' übergibt in getUsedRollen eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
+    ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
-    Public ReadOnly Property getUsedRollen() As Collection
+    ''' <summary>
+    ''' gibt die Liste aller im Projekt vergebenen Rollen aus; 
+    ''' wenn inCludingSumRoles = true (default : false) , dann werden auch die Summary Roles ausgegeben
+    ''' </summary>
+    ''' <param name="includingSumRoles"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleNames(Optional ByVal includingSumRoles As Boolean = False) As Collection
 
         Get
             Dim phase As clsPhase
             Dim aufbauRollen As New Collection
+            Dim summaryRoles As Collection
             Dim roleName As String
             Dim hrole As clsRolle
             Dim p As Integer, r As Integer
@@ -1123,6 +2637,7 @@
                             hrole = .getRole(r)
                             If hrole.summe > 0 Then
                                 roleName = hrole.name
+
                                 '
                                 ' das ist performanter als der Weg über try .. catch 
                                 '
@@ -1130,11 +2645,14 @@
                                     aufbauRollen.Add(roleName, roleName)
                                 End If
 
-                                'Try
-                                '    aufbauRollen.Add(roleName, roleName)
-                                'Catch ex As Exception
-
-                                'End Try
+                                If includingSumRoles Then
+                                    summaryRoles = RoleDefinitions.getSummaryRoles(roleName)
+                                    For Each summaryRole As String In summaryRoles
+                                        If Not aufbauRollen.Contains(summaryRole) Then
+                                            aufbauRollen.Add(summaryRole, summaryRole)
+                                        End If
+                                    Next
+                                End If
 
                             End If
                         Next r
@@ -1144,7 +2662,7 @@
             End If
 
 
-            getUsedRollen = aufbauRollen
+            getRoleNames = aufbauRollen
 
         End Get
 
@@ -1213,10 +2731,69 @@
                 Next p
 
             Else
-                Throw New Exception("es gibt keine Meilensteine")
+                ReDim tmpvalues(0)
+                tmpvalues(0) = 0
             End If
 
             getMilestoneColors = tmpvalues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Liste an Meilenstein-Namen zurück (elem-Name, ohne Breadcrumb ...) 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneNames As Collection
+        Get
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim tmpCollection As New Collection
+            Dim firstMilestone As Integer = hry.getIndexOf1stMilestone
+
+
+            If firstMilestone > 0 Then
+                For ix As Integer = firstMilestone To hry.count
+                    Dim msName As String = hry.nodeItem(ix).elemName
+                    If Not tmpCollection.Contains(msName) Then
+                        tmpCollection.Add(msName, msName)
+                    End If
+                Next
+            End If
+
+
+            getMilestoneNames = tmpCollection
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Liste aller im Projekt vorkommenden Phasen Namen zurück ..
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseNames As Collection
+        Get
+
+            Dim tmpCollection As New Collection
+            Dim lastPhase As Integer = Me.hierarchy.getIndexOf1stMilestone - 1
+            If lastPhase < 0 Then
+                lastPhase = Me.hierarchy.count
+            End If
+
+
+            If lastPhase > 0 Then
+                For ix As Integer = 1 To lastPhase
+                    Dim phName As String = Me.hierarchy.nodeItem(ix).elemName
+
+                    If Not tmpCollection.Contains(phName) And phName <> elemNameOfElemID(rootPhaseName) Then
+                        tmpCollection.Add(phName, phName)
+                    End If
+                Next
+            End If
+
+            getPhaseNames = tmpCollection
 
         End Get
     End Property
@@ -1242,15 +2819,11 @@
                     tmpDate = cresult.getDate
 
                     Dim ok As Boolean = False
-                    Do Until ok
-                        Try
-                            tmpValues.Add(tmpDate, cresult.nameID)
-                            ok = True
-                        Catch ex As Exception
-                            tmpDate = tmpDate.AddSeconds(1)
-                        End Try
+                    Do While tmpValues.ContainsKey(tmpDate)
+                        tmpDate = tmpDate.AddMilliseconds(1)
                     Loop
-
+                    ' jetzt gibt es tmpdate noch nicht in der Liste ...
+                    tmpValues.Add(tmpDate, cresult.nameID)
                 Next r
 
             Next p
@@ -1259,6 +2832,94 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zum betreffenden Projekt eine nach dem Offset aufsteigend sortierte Liste der Meilensteine zurück 
+    ''' wird benötigt, wo ein relativer Vergleich der MEilensteine erforderlich ist 
+    ''' bei Gleichheit wird ein Koorktur Faktor kleiner 1 addiert, so dass es immer eindeutige Werte gibt  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneOffsets As SortedList(Of Double, String)
+        Get
+            Dim tmpValues As New SortedList(Of Double, String)
+            Dim tmpOffset As Double
+            Dim cphase As clsPhase
+            Dim cresult As clsMeilenstein
+
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+
+                For r = 1 To cphase.countMilestones
+                    cresult = cphase.getMilestone(r)
+                    tmpOffset = cphase.startOffsetinDays + cresult.offset
+
+                    Dim korrFaktor As Double = 0.5
+                    Do While tmpValues.ContainsKey(tmpOffset)
+                        tmpOffset = tmpOffset + korrFaktor
+                        korrFaktor = (1 - korrFaktor) * 0.5
+                    Loop
+                    ' jetzt gibt es tmpOffset noch nicht in der Liste ...
+                    tmpValues.Add(tmpOffset, cresult.nameID)
+                Next r
+
+            Next p
+
+            getMilestoneOffsets = tmpValues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine sortierte Liste an Deliverables zurück; 
+    ''' sortier-Kriterium ist der Name des Deliverables, value ist die nameID
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getDeliverables As SortedList(Of String, String)
+        Get
+            Dim tmpValues As New SortedList(Of String, String)
+            Dim tmpDeliverable As String
+            Dim tmpNameID As String
+            Dim cphase As clsPhase
+            Dim cresult As clsMeilenstein
+
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+
+                For r = 1 To cphase.countMilestones
+                    cresult = cphase.getMilestone(r)
+                    tmpNameID = cresult.nameID
+
+                    For d = 1 To cresult.countDeliverables
+                        tmpDeliverable = cresult.getDeliverable(d)
+                        If tmpValues.ContainsKey(tmpDeliverable) Then
+                            tmpDeliverable = tmpDeliverable & "(" & tmpNameID & ")"
+                        Else
+                            ' nichts tun, Deliverable existiert noch nicht ...
+                        End If
+
+                        ' jetzt ist sichergestellt, dass das Deliverable noch nicht existiert 
+                        ' bzw. das Deliverable dieser NameID bereits aufgenommen ist 
+                        If Not tmpValues.ContainsKey(tmpDeliverable) Then
+                            tmpValues.Add(tmpDeliverable, tmpNameID)
+                        Else
+                            ' nichts mehr tun - Deliverable dieser NameID ist schon drin 
+
+                        End If
+                    Next d
+
+                Next r
+
+            Next p
+
+            getDeliverables = tmpValues
+
+        End Get
+    End Property
+
     '
     ' übergibt in getPersonalKosten die Personal Kosten der Rolle <roleid> über den Projektzeitraum
     '
@@ -1445,10 +3106,109 @@
     End Property
 
     '
+    ' übergibt in KostenBedarf die Werte der Kostenart <costId>
+    '
+    Public ReadOnly Property getKostenBedarfNew(CostID As Object) As Double()
+
+        Get
+            Dim costValues() As Double
+            Dim anzKostenarten As Integer
+            Dim anzPhasen As Integer
+            Dim found As Boolean
+            Dim i As Integer, p As Integer, k As Integer
+            Dim phase As clsPhase
+            Dim cost As clsKostenart
+            Dim lookforIndex As Boolean, isPersCost As Boolean
+            Dim phasenStart As Integer
+            Dim tempArray() As Double
+            Dim dimension As Integer
+            Dim costUID As Integer = 0
+            Dim costName As String = ""
+
+
+            If _Dauer > 0 Then
+
+                ReDim costValues(_Dauer - 1)
+
+                lookforIndex = IsNumeric(CostID)
+                isPersCost = False
+
+                If lookforIndex Then
+                    costUID = CInt(CostID)
+                    costName = CostDefinitions.getCostdef(costUID).name
+                    If CostID = CostDefinitions.Count Then
+                        isPersCost = True
+                    End If
+                Else
+                    If CostDefinitions.containsName(CStr(CostID)) Then
+                        costUID = CostDefinitions.getCostdef(CStr(CostID)).UID
+                        costName = CStr(CostID)
+                    End If
+                    If CostID = "Personalkosten" Then
+                        isPersCost = True
+                    End If
+                End If
+
+                If isPersCost Then
+                    ' costvalues = AllPersonalKosten
+                    costValues = Me.getAllPersonalKosten
+                Else
+                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithCost(costName)
+                    anzPhasen = listOfPhases.Count
+                    
+                    For p = 1 To anzPhasen
+                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+
+                        With phase
+                            ' Off1
+                            anzKostenarten = .countCosts
+                            phasenStart = .relStart - 1
+                            'phasenEnde = .relEnde - 1
+
+
+                            For k = 1 To anzKostenarten
+                                cost = .getCost(k)
+                                found = False
+
+                                With cost
+
+                                    If .KostenTyp = costUID Then
+
+                                        dimension = .getDimension
+                                        ReDim tempArray(dimension)
+                                        tempArray = .Xwerte
+
+                                        For i = phasenStart To phasenStart + dimension
+                                            costValues(i) = costValues(i) + tempArray(i - phasenStart)
+                                        Next i
+
+                                    End If
+
+                                End With ' cost
+
+                            Next k
+
+                        End With ' phase
+
+                    Next p ' Loop über alle Phasen
+                End If
+            Else
+                ReDim costValues(0)
+                costValues(0) = 0
+            End If
+
+            getKostenBedarfNew = costValues
+
+
+        End Get
+
+    End Property
+
+    '
     ' übergibt in getUsedKosten eine Collection von Kostenarten Definitionen, 
     ' das sind alle Kostenarten, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
-    Public ReadOnly Property getUsedKosten() As Collection
+    Public ReadOnly Property getCostNames() As Collection
 
         Get
             Dim phase As clsPhase
@@ -1487,7 +3247,7 @@
             End If
 
 
-            getUsedKosten = aufbauKosten
+            getCostNames = aufbauKosten
 
         End Get
 
@@ -1525,7 +3285,7 @@
                 '
 
                 ' Jetzt werden die einzelnen Kostenarten auf die gleiche Art und Weise geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -1585,7 +3345,7 @@
                 '
 
                 ' Jetzt werden die einzelnen Kostenarten auf die gleiche Art und Weise geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -1634,7 +3394,7 @@
                 '
 
                 ' Jetzt werden die einzelnen Kostenarten auf die gleiche Art und Weise geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -1673,7 +3433,7 @@
             If _Dauer > 0 Then
 
                 ' Jetzt werden die einzelnen Kostenarten geholt
-                ErgebnisListe = Me.getUsedKosten
+                ErgebnisListe = Me.getCostNames
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
@@ -1714,7 +3474,7 @@
                 roleSum = 0
 
                 ' Jetzt werden die einzelnen Rollen aufsummiert
-                ErgebnisListe = Me.getUsedRollen
+                ErgebnisListe = Me.getRoleNames
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen
@@ -1757,7 +3517,7 @@
 
 
                 ' Jetzt werden die einzelnen Rollen aufsummiert
-                ErgebnisListe = Me.getUsedRollen
+                ErgebnisListe = Me.getRoleNames
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen
@@ -1899,87 +3659,6 @@
 
     End Property
 
-    'Public Property Start() As Integer
-
-    '    Get
-    '        Start = _Start
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If _Status = ProjektStatus(1) Or _Status = ProjektStatus(2) Or _
-    '                                         _Status = ProjektStatus(2) Then
-    '            Call MsgBox("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-
-    '        ElseIf value < _Start + _earliestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt vor dem bisher zugelassenen frühestmöglichen Startzeitpunkt ...")
-
-    '        ElseIf value > _Start + _latestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt nach dem bisher zugelassenen spätestmöglichen Startzeitpunkt ...")
-
-    '        Else
-    '            Dim absEarliest As Integer
-    '            Dim absLatest As Integer
-    '            Dim earliestDate As Date
-    '            Dim newDate As Date = StartofCalendar.AddMonths(value - 1)
-    '            Dim Heute As Date = Now
-
-    '            If DateDiff(DateInterval.Month, newDate, Heute) < 0 Then
-    '                Call MsgBox("der neue Startzeitpunkt liegt in der Vergangenheit ...")
-    '            Else
-    '                absEarliest = _Start + _earliestStart
-    '                absLatest = _Start + _latestStart
-
-    '                earliestDate = StartofCalendar.AddMonths(absEarliest - 1)
-    '                Dim DifferenceInMonths As Long = DateDiff(DateInterval.Month, earliestDate, Heute)
-
-    '                If DifferenceInMonths < 0 Then
-    '                    ' frühestmöglicher Startzeitpunkt ist der aktuelle Monat
-    '                    absEarliest = DateDiff(DateInterval.Month, Heute, StartofCalendar) + 1
-    '                End If
-
-    '                _Start = value
-    '                _earliestStart = absEarliest - _Start
-    '                _latestStart = absLatest - _Start
-    '            End If
-
-
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property Status() As String
-    '    Get
-    '        Status = _Status
-    '    End Get
-    '    Set(value As String)
-    '        If value = ProjektStatus(0) Then
-    '            _Status = value
-    '        ElseIf value = ProjektStatus(1) Or value = ProjektStatus(2) Or _
-    '                                           value = ProjektStatus(3) Then
-    '            _Status = value
-    '            _earliestStart = 0
-    '            _latestStart = 0
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für Status")
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property StartOffset As Integer
-    '    Get
-    '        StartOffset = _StartOffset
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If value >= _earliestStart And value <= _latestStart Then
-    '            _StartOffset = value
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für StartOffset ...")
-    '        End If
-    '    End Set
-
-    'End Property
-
 
 
     Public Sub New()
@@ -1988,6 +3667,9 @@
         ' Änderung tk 31.3.15
         hierarchy = New clsHierarchy
 
+        ' Änderung / Ergänzung tk 20.09.16
+        rcLists = New clsListOfCostAndRoles
+
         relStart = 1
         _Dauer = 0
         '_StartOffset = 0
@@ -1995,20 +3677,17 @@
         _earliestStart = 0
         _latestStart = 0
         '_Status = ProjektStatus(0)
+        Schrift = 12
+        Schriftfarbe = RGB(0, 0, 0)
+
+        ' die CustomFields initialisieren 
+        _customDblFields = New SortedList(Of Integer, Double)
+        _customStringFields = New SortedList(Of Integer, String)
+        _customBoolFields = New SortedList(Of Integer, Boolean)
+
 
     End Sub
 
-    'Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
 
-    '    AllPhases = New List(Of clsPhase)
-    '    relStart = 1
-    '    iDauer = 0
-    '    _StartOffset = 0
-    '    _Start = projektStart
-    '    _earliestStart = earliestValue
-    '    _latestStart = latestValue
-    '    _Status = ProjektStatus(0)
-
-    'End Sub
 
 End Class

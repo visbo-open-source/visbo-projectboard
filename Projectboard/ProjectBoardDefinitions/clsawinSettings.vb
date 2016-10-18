@@ -1,4 +1,8 @@
-﻿Public Class clsawinSettings
+﻿
+Imports Microsoft.Office.Interop.Excel
+Imports System.Globalization
+
+Public Class clsawinSettings
     ' Chart Settings 
     Public Property fontsizeTitle As Integer
     Public Property fontsizeLegend As Integer
@@ -12,6 +16,7 @@
     Public Property SollIstFarbeC As Long
     Public Property SollIstFarbeArea As Long
     Public Property timeSpanColor As Long
+    Public Property missingDefinitionColor As Long
     Public Property showTimeSpanInPT As Boolean
 
     Public Property AmpelGruen As Long
@@ -22,7 +27,7 @@
     Public Property glowColor As Long
 
     ' hier werden die Settings gesetzt  
-    
+
     ' Settings für die Projekteingabe
     Public Property lastProjektTyp As String
     Public Property lastModulTyp As String
@@ -36,9 +41,12 @@
     Public Property kalenderStart As Date
     Public Property zeitEinheit As String
     Public Property kapaEinheit As String
+
     Public Property databaseName As String
     Public Property databaseURL As String
+    Public Property globalPath As String
     Public Property awinPath As String
+
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double
     Public Property spaltenbreite As Double
@@ -80,8 +88,30 @@
 
     ' Settings für Import / Export
     Public Property EinzelRessExport As Integer
-    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
+    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Liste der bekannten Definitionen  eingetragen werden sollen
     Public Property addMissingPhaseMilestoneDef As Boolean
+    ' Setting, ob die NAmen eines Templates auf alle Fälle in die Phasedefinitions / MilestoneDefinitions aufgenommen werden soll oder nicht 
+    Public Property alwaysAcceptTemplateNames As Boolean
+    ' Setting, das regelt, ob unbekannte Namen by default in die Projekt-Struktur aufgenommen werden
+    ' sie werden aber auf alle Fälle nicht (!) in die PhaseDefinitions aufgenommen; 
+    ' Ausnahme: wenn es sich um ein Template handelt, und alwaysAcceptTemplateNames = true
+
+    ' soll beim rxf-, BMW Excel Import das volle Protokoll ausgegeben werden 
+    Public Property fullProtocol As Boolean
+
+    ' im BMW Import Kontext wichtiges Settings
+    Property importTyp As Integer
+
+    ' steuert, ob Kinder, die  Duplikate von ihren Eltern sind, eliminiert werden sollen  
+    ' Duplikat heisst: gleicher Name und gleicher Termin 
+    Property eliminateDuplicates As Boolean
+
+    Public Property importUnknownNames As Boolean
+    ' wird beim Import verwendet; steuert, ob beim Import aus MS Project, RPLAN, Excel Files eindeutige Namen 
+    ' für gleichlautende Geschwisternamen generiert werden  
+    Public Property createUniqueSiblingNames As Boolean
+
+    Public Property readWriteMissingDefinitions As Boolean = False
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -89,6 +119,10 @@
 
     Public Property costToleranzRel As Double
     Public Property costToleranzAbs As Double
+
+    ' Settings für Default Meilenstein bzw Phasen Settings 
+    Public Property defaultMilestoneClass As String
+    Public Property defaultPhaseClass As String
 
     ' Settings für Multiprojekt-Sichten
     Public Property mppShowAllIfOne As Boolean
@@ -104,9 +138,43 @@
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
     Public Property mppExtendedMode As Boolean
+    Public Property mppShowHorizontals As Boolean
+    Public Property mppUseAbbreviation As Boolean
+    Public Property mppUseOriginalNames As Boolean
+    Public Property mppKwInMilestone As Boolean
+    Public Property mppUseInnerText As Boolean ' steuert, ob der Beschriftungstext im Balken stattfinden soll 
+    ' steuert, ob die Texte smart positioniert werden sollen oder nicht
+    Public Property mppSmartTxtPositioning As Boolean
+    ' enable Smart Powerpoint
+    Public Property mppEnableSmartPPT As Boolean
+
+    ' steuert in der Methode clsFilter.doesnotBlock, ob ein Projekt, das keine Phasen/Meilensteine enthält, vom 
+    ' Milestone/Phasen Filter für die Multiprojektsicht blockiert wird oder nicht 
+    Public Property mppProjectsWithNoMPmayPass As Boolean
+
+    ' Settings für Massen-Edit Funktionen 
+    ' Anzeigen der prozentualen Auslastung bzw. der absoluten "freien" bzw. "überbelegten" Kapazitäten 
+    Public Property mePrzAuslastung As Boolean
+    ' sollen Zuweisungen zu Rollen automatisch ggf vorhandene Sammelrollen Zuweisungen ersetzen  
+    Public Property meAutoReduce As Boolean
+    ' soll in der Massen-Edit Funktion die Sortierung enabled sein ? 
+    Public Property meEnableSorting As Boolean
+
+    ' Settings für Report-Message-Language
+    Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
+
+    ' Setting, ob bei Vergleichen mit früheren Ständen mit der standard-Variante verglichen werden soll 
+    ' oder mit einem früheren Stand der Variante
+    Public Property compareWithStandardVariant As Boolean
+
+    ' Settings für MSProject-AddIn und ImportMSProject
+    Public Property visboTaskClass As String
+    Public Property visboAbbreviation As String
+    Public Property visboAmpel As String
 
     ' Settings für Einzelprojekt-Reports
-    Public Property eppExtendedMode As Boolean
+    ' tk 7.2.16 ist überflüssig
+    'Public Property eppExtendedMode As Boolean
 
     ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
     Public Property isHryNameFrmActive As Boolean
@@ -114,9 +182,9 @@
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
-    ' im BMW Import Kontext wichtiges Settings
-    Property importTyp As Integer
-    Property eliminateDuplicates As Boolean
+    Public Property visboDebug As Boolean
+
+
 
     Sub New()
 
@@ -133,6 +201,7 @@
         _SollIstFarbeC = RGB(80, 240, 80)
         _SollIstFarbeArea = RGB(200, 200, 200)
         _timeSpanColor = RGB(242, 242, 242)
+        _missingDefinitionColor = XlRgbColor.rgbCoral
         _showTimeSpanInPT = True
 
 
@@ -171,6 +240,17 @@
         ' Settings für Import / Export 
         _EinzelRessExport = 0
         _addMissingPhaseMilestoneDef = False
+        _alwaysAcceptTemplateNames = False
+        _fullProtocol = False
+        _importTyp = 1
+
+        _eliminateDuplicates = True
+        _importUnknownNames = True
+        _createUniqueSiblingNames = True
+
+        ' sollen die MissingDefinitions rausgeschrieben werden ...
+        _readWriteMissingDefinitions = False
+
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02
@@ -178,7 +258,11 @@
         _costToleranzRel = 0.02
         _costToleranzAbs = 2
 
-        ' Settings für Multiprojekt Sichten 
+        ' Settings fürp Default Meilenstein bzw. Phasen-Klassen Namen
+        _defaultMilestoneClass = ""
+        _defaultPhaseClass = ""
+
+        ' Settings für Einzel- und Multiprojekt Sichten 
         _mppShowAllIfOne = False
         _mppShowMsDate = True
         _mppShowMsName = True
@@ -188,14 +272,29 @@
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
         _mppShowLegend = False
-        _mppFullyContained = True
+        _mppFullyContained = False
         _mppSortiertDauer = False
         _mppOnePage = False
         _mppExtendedMode = False
+        _mppShowHorizontals = False
+        _mppUseAbbreviation = True
+        _mppUseOriginalNames = False
+        _mppKwInMilestone = False
+        _mppUseInnerText = False
+        _mppSmartTxtPositioning = True
+        _mppEnableSmartPPT = True
+
+        _mppProjectsWithNoMPmayPass = False
+
+        ' Settings für online MassenEdit 
+        _mePrzAuslastung = True
+        _meAutoReduce = True
+        _meEnableSorting = False
 
         ' Settings für Einzelprojekt-Reports
-        _eppExtendedMode = True
+        '_eppExtendedMode = True
 
+        _compareWithStandardVariant = True
 
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True
@@ -204,9 +303,8 @@
         _useHierarchy = True
         _isHryNameFrmActive = False
 
-        ' im Kontext BMW Import wichtige Settings
-        _importTyp = 1
-        _eliminateDuplicates = True
+        _visboDebug = False
+
 
 
     End Sub

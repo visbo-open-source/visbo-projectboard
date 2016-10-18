@@ -59,7 +59,35 @@ Public Module awinGUI
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
 
+        ' Check zu Beginn: gibt es überhaupt etwas zu tun ? 
+        ' wenn nein, sofortiger Exit 
+        If ProjektListe.Count = 0 Then
+            Exit Sub
+        End If
 
+
+
+        'Dim allOK As Boolean = False
+        ' wenn der Charttype nicht bekannt ist : sofortiger Exit 
+        If charttype = PTpfdk.FitRisiko Or _
+            charttype = PTpfdk.FitRisikoDependency Or _
+            charttype = PTpfdk.ZeitRisiko Or _
+            charttype = PTpfdk.ComplexRisiko Or _
+            charttype = PTpfdk.FitRisikoVol Or _
+            charttype = PTpfdk.Dependencies Then
+
+            'allOK = True
+        Else
+            Exit Sub
+        End If
+
+        Dim currentSheetName As String
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(3)
+        Else
+            currentSheetName = arrWsNames(5)
+        End If
 
         appInstance.ScreenUpdating = False
 
@@ -93,92 +121,27 @@ Public Module awinGUI
             kennung = calcChartKennung("pf", charttype, ProjektListe)
         End If
 
-        Select Case charttype
-            Case PTpfdk.FitRisiko
+        ' Änderung tk
+        ' das folgende hängt ja nur ab von Charttype , deswegen ist das immer identisch 
+        ' ausserdem ist jetzt sicher, dass charttype ein zulässiger Wert ist
+        ' andernfalls wäre das Programm schon beendet
+        If isProjektCharakteristik Then
+            If ProjektListe.Count = 1 Then
+                titelTeile(0) = portfolioDiagrammtitel(charttype) & " " & hproj.getShapeText & vbLf
+                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
-                If isProjektCharakteristik Then
-                    If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & " " & hproj.getShapeText & vbLf
-                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+            Else
+                titelTeile(0) = portfolioDiagrammtitel(charttype) & vbLf
+                titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+            End If
 
-                    Else
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf
-                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                    End If
+        Else
+            titelTeile(0) = portfolioDiagrammtitel(charttype) & vbLf
+            titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+        End If
 
-                Else
-                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf
-                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                End If
 
-            Case PTpfdk.ZeitRisiko
 
-                If isProjektCharakteristik Then
-                    If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & " " & hproj.getShapeText & vbLf
-                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-
-                    Else
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf
-                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                    End If
-
-                Else
-                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf
-                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                End If
-
-            Case PTpfdk.ComplexRisiko
-
-                If isProjektCharakteristik Then
-                    If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & " " & hproj.getShapeText & vbLf
-                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-
-                    Else
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf
-                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                    End If
-
-                Else
-                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf
-                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                End If
-
-            Case PTpfdk.FitRisikoVol
-                If isProjektCharakteristik Then
-                    If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & " " & hproj.getShapeText & vbLf
-                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-
-                    Else
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf
-                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                    End If
-
-                Else
-                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf
-                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                End If
-
-            Case PTpfdk.Dependencies
-                ' neuer Typ: 8.3.14 Abhängigkeiten
-                If isProjektCharakteristik Then
-                    If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & " " & hproj.getShapeText & vbLf
-                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-
-                    Else
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf
-                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                    End If
-
-                Else
-                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf
-                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-                End If
-
-        End Select
 
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeilLaengen(1) = titelTeile(1).Length
@@ -198,7 +161,9 @@ Public Module awinGUI
             ReDim positionValues(ProjektListe.Count - 1)
         Catch ex As Exception
 
-            Throw New ArgumentException("Fehler in CreatePortfolioDiagramm " & ex.Message)
+            appInstance.ScreenUpdating = True
+            'Throw New ArgumentException("Fehler in CreatePortfolioDiagramm " & ex.Message)
+            Throw New ArgumentException(repMessages.getmsg(70) & ex.Message)
 
         End Try
 
@@ -291,6 +256,21 @@ Public Module awinGUI
                                 PfChartBubbleNames(anzBubbles) = .name & _
                                     " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")"
                             End If
+
+                        Case PTpfdk.FitRisikoDependency
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
+                            ' wird immer um 1 erhöht, damit der kleinste Wert 1 ist 
+                            bubbleValues(anzBubbles) = allDependencies.activeNumber(pname, PTdpndncyType.inhalt) + 1
+                            nameValues(anzBubbles) = .name
+                            If singleProject Then
+                                PfChartBubbleNames(anzBubbles) = " "
+                            Else
+                                'PfChartBubbleNames(anzBubbles) = .name & _
+                                '    " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & " Abh.)"
+                                PfChartBubbleNames(anzBubbles) = .name & _
+                                    " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & repMessages.getmsg(71)
+                            End If
+
                         Case PTpfdk.FitRisikoVol
 
                             xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
@@ -357,7 +337,15 @@ Public Module awinGUI
 
 
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+            Dim wasProtected As Boolean = .ProtectContents
+
+            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                .Unprotect(Password:="x")
+                awinSettings.meEnableSorting = True
+            End If
+
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -368,6 +356,7 @@ Public Module awinGUI
                 If chtobjName = .ChartObjects(i).name Then
                     found = True
                     repChart = CType(.ChartObjects(i), Excel.ChartObject)
+                    appInstance.ScreenUpdating = True
                     Exit Sub
                 Else
                     i = i + 1
@@ -451,22 +440,34 @@ Public Module awinGUI
                             .HasDataLabel = False
                         End If
 
-                        .Interior.Color = colorValues(i - 1)
-
-                        ' Änderung wenn ampeln gezeigt werden sollen ...
                         If awinSettings.mppShowAmpel Then
-
-                            With .Format.Glow
-                                .Color.RGB = CInt(ampelValues(i - 1))
-                                .Transparency = 0
-                                .Radius = 3
-                            End With
-
+                            .Interior.Color = ampelValues(i - 1)
+                        Else
+                            .Interior.Color = colorValues(i - 1)
                         End If
+
+
+                        ' alt: 
+                        ' Änderung 30.12.15 
+                        'If awinSettings.mppShowAmpel Then
+
+                        '    With .Format.Glow
+                        '        .Color.RGB = CInt(ampelValues(i - 1))
+                        '        .Transparency = 0
+                        '        .Radius = 3
+                        '    End With
+
+                        'End If
+                        ' Ende Änderung 30.12.15
 
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
-                            .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Try
+                                .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Catch ex As Exception
+
+                            End Try
+
                         End If
 
                     End With
@@ -521,7 +522,28 @@ Public Module awinGUI
                             .MinimumScale = 0
                             .MaximumScale = 11
                             With .AxisTitle
-                                .Characters.text = "strategischer Fit"
+                                '.Characters.text = "strategischer Fit"
+                                .Characters.text = repMessages.getmsg(72)
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+
+                            End With
+
+                        End With
+
+                    Case PTpfdk.FitRisikoDependency
+                        With .Axes(Excel.XlAxisType.xlCategory)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = 11
+                            With .AxisTitle
+                                '.Characters.text = "strategischer Fit"
+                                .Characters.text = repMessages.getmsg(72)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -541,7 +563,8 @@ Public Module awinGUI
                             .MinimumScale = 0
                             .MaximumScale = 11
                             With .AxisTitle
-                                .Characters.text = "strategischer Fit"
+                                '.Characters.text = "strategischer Fit"
+                                .Characters.text = repMessages.getmsg(72)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -559,9 +582,10 @@ Public Module awinGUI
                         With .Axes(Excel.XlAxisType.xlCategory)
                             .HasTitle = True
                             .MinimumScale = 15.0
-                            .MaximumScale = System.Math.Round(xAchsenValues.Max / 10 + 0.5) * 10
+                            .MaximumScale = System.Math.Round(xAchsenValues.Max)
                             With .AxisTitle
-                                .Characters.text = "Projekt-Dauer"
+                                '.Characters.text = "Projekt-Dauer"
+                                .Characters.text = repMessages.getmsg(73)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -580,7 +604,8 @@ Public Module awinGUI
                             .MinimumScale = 0
                             .MaximumScale = 1.1
                             With .AxisTitle
-                                .Characters.text = "Komplexität"
+                                '.Characters.text = "Komplexität"
+                                .Characters.text = repMessages.getmsg(74)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -600,7 +625,8 @@ Public Module awinGUI
                             .MaximumScale = passiveMax + 1
 
                             With .AxisTitle
-                                .Characters.text = "Abhängigkeit"
+                                '.Characters.text = "Abhängigkeit"
+                                .Characters.text = repMessages.getmsg(75)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -627,7 +653,8 @@ Public Module awinGUI
 
                             ' .ReversePlotOrder = True
                             With .AxisTitle
-                                .Characters.Text = "Ausstrahlung"
+                                '.Characters.Text = "Ausstrahlung"
+                                .Characters.Text = repMessages.getmsg(76)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -646,7 +673,8 @@ Public Module awinGUI
                             .MaximumScale = 11
                             ' .ReversePlotOrder = True
                             With .AxisTitle
-                                .Characters.text = "Risiko"
+                                '.Characters.text = "Risiko"
+                                .Characters.text = repMessages.getmsg(77)
                                 .Characters.Font.Size = titlefontsize
                                 .Characters.Font.Bold = False
                             End With
@@ -671,7 +699,26 @@ Public Module awinGUI
 
                 ' Events disablen, wegen Report erstellen
                 appInstance.EnableEvents = False
-                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                Dim achieved As Boolean = False
+                Dim anzahlVersuche As Integer = 0
+                Dim errmsg As String = ""
+                Do While Not achieved And anzahlVersuche < 10
+                    Try
+                        'Call Sleep(100)
+                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
+                        achieved = True
+                    Catch ex As Exception
+                        errmsg = ex.Message
+                        'Call Sleep(100)
+                        anzahlVersuche = anzahlVersuche + 1
+                    End Try
+                Loop
+
+                If Not achieved Then
+                    Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                End If
+
                 appInstance.EnableEvents = formerEE
                 ' Events sind wieder zurückgesetzt
             End With
@@ -753,6 +800,20 @@ Public Module awinGUI
                 DiagramList.Add(pfDiagram)
             End If
 
+            ' wenn es geschützt war .. 
+            ''If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            ''    .Protect(Password:="x", UserInterfaceOnly:=True, _
+            ''                 AllowFormattingCells:=True, _
+            ''                 AllowInsertingColumns:=False,
+            ''                 AllowInsertingRows:=True, _
+            ''                 AllowDeletingColumns:=False, _
+            ''                 AllowDeletingRows:=True, _
+            ''                 AllowSorting:=True, _
+            ''                 AllowFiltering:=True)
+            ''    .EnableSelection = XlEnableSelection.xlUnlockedCells
+            ''    .EnableAutoFilter = True
+            ''End If
+
             repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
         End With
@@ -770,7 +831,7 @@ Public Module awinGUI
     ''' <param name="bubbleColor">gibt an, ob di eAMpelfarbe des Projekts gezeigt werden soll</param>
     ''' <remarks></remarks>
     '''
-    Sub awinUpdatePortfolioDiagrams(ByRef chtobj As ChartObject, bubbleColor As Integer)
+    Sub awinUpdatePortfolioDiagrams(ByVal chtobj As ChartObject, bubbleColor As Integer)
 
         Dim i As Integer
         Dim pname As String
@@ -820,6 +881,21 @@ Public Module awinGUI
         End If
         charttype = CInt(tmpstr(1))
 
+        'Dim allOK As Boolean = False
+        ' wenn der Charttype nicht bekannt ist : sofortiger Exit 
+        If charttype = PTpfdk.FitRisiko Or _
+            charttype = PTpfdk.FitRisikoDependency Or _
+            charttype = PTpfdk.ZeitRisiko Or _
+            charttype = PTpfdk.ComplexRisiko Or _
+            charttype = PTpfdk.FitRisikoVol Or _
+            charttype = PTpfdk.Dependencies Then
+
+            'allOK = True
+        Else
+            Exit Sub
+        End If
+
+
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
         ' event. für eine Erweiterung benötigt
 
@@ -835,7 +911,8 @@ Public Module awinGUI
             ReDim PfChartBubbleNames(ShowProjekte.Count - 1)
             ReDim positionValues(ShowProjekte.Count - 1)
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in UpdatePortfolioDiagramm " & ex.Message)
+            'Throw New ArgumentException("Fehler in UpdatePortfolioDiagramm " & ex.Message)
+            Throw New ArgumentException(repMessages.getmsg(78) & ex.Message)
         End Try
 
 
@@ -946,6 +1023,17 @@ Public Module awinGUI
                             PfChartBubbleNames(anzBubbles) = hproj.name & _
                                     " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")" 'Strategie/Rsiko
 
+                        Case PTpfdk.FitRisikoDependency
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
+                            ' wird immer um 1 erhöht, damit der kleinste Wert 1 ist 
+                            bubbleValues(anzBubbles) = allDependencies.activeNumber(pname, PTdpndncyType.inhalt) + 1
+                            nameValues(anzBubbles) = .name
+
+                            'PfChartBubbleNames(anzBubbles) = .name & _
+                            '        " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & " Abh.)"
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                                   " (" & Format(bubbleValues(anzBubbles) - 1, "##0") & repMessages.getmsg(71)
+
                         Case PTpfdk.FitRisikoVol
 
                             xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
@@ -992,31 +1080,37 @@ Public Module awinGUI
             End Try
         Next
 
-        Select Case charttype
-            Case PTpfdk.FitRisiko
 
-                diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+        ' Änderung tk 7.1.16
+        ' das hängt ja nur von charttype ab ... 
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
-            Case PTpfdk.FitRisikoVol
+        ' ab 7.1.16 auskommentiert 
+        'Select Case charttype
+        '    Case PTpfdk.FitRisiko
 
-                diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+        '        diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
-            Case PTpfdk.ZeitRisiko
+        '    Case PTpfdk.FitRisikoVol
 
-                diagramTitle = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+        '        diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
-            Case PTpfdk.ComplexRisiko
+        '    Case PTpfdk.ZeitRisiko
 
-                diagramTitle = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+        '        diagramTitle = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
-            Case PTpfdk.Dependencies
-                ' neuer Typ: 8.3.14 Abhängigkeiten
+        '    Case PTpfdk.ComplexRisiko
 
-                diagramTitle = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+        '        diagramTitle = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
-            Case Else
-                diagramTitle = "Chart-Typ existiert nicht"
-        End Select
+        '    Case PTpfdk.Dependencies
+        '        ' neuer Typ: 8.3.14 Abhängigkeiten
+
+        '        diagramTitle = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+
+        '    Case Else
+        '        diagramTitle = "Chart-Typ existiert nicht"
+        'End Select
 
 
         ' bestimmen der besten Position für die Werte ...
@@ -1195,24 +1289,36 @@ Public Module awinGUI
                             .HasDataLabel = False
                         End If
 
-                        .Interior.Color = colorValues(i - 1)
+                        ' Änderung 30.12.15 
+                        If awinSettings.mppShowAmpel Then
+                            .Interior.Color = ampelValues(i - 1)
+                        Else
+                            .Interior.Color = colorValues(i - 1)
+                        End If
+
 
                         ' Änderung wenn ampeln gezeigt werden sollen ...
 
-                        If awinSettings.mppShowAmpel Then
+                        'If awinSettings.mppShowAmpel Then
 
-                            With .Format.Glow
-                                .Color.RGB = CInt(ampelValues(i - 1))
-                                .Transparency = 0
-                                .Radius = 3
-                            End With
+                        '    With .Format.Glow
+                        '        .Color.RGB = CInt(ampelValues(i - 1))
+                        '        .Transparency = 0
+                        '        .Radius = 3
+                        '    End With
 
-                        End If
+                        'End If
+                        ' Ende Äderung 30.12.15
 
-                        
+
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
-                            .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Try
+                                .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Catch ex As Exception
+
+                            End Try
+
                         End If
                     End With
                 Next i

@@ -4,10 +4,10 @@
     Public constellationName As String
     Public Id As String
 
-    Sub copyfrom(ByRef c As clsConstellation)
+    Sub copyfrom(ByVal c As clsConstellation)
 
         Me.constellationName = c.constellationName
-        
+
         For Each item In c.Liste
             Dim newItem As New clsConstellationItemDB
             newItem.copyfrom(item.Value)
@@ -25,20 +25,30 @@
             Dim newItem As New clsConstellationItem
             item.copyto(newItem)
             key = item.projectName & "#" & item.variantName
-            c.Liste.Add(key, newItem)
+            If Not c.Liste.ContainsKey(key) Then
+                c.Liste.Add(key, newItem)
+            Else
+                Dim a As Integer = 0
+                'Call MsgBox("Fehler bei Aufbau Konstellation mit Elem: " & key)
+            End If
+
         Next
 
 
     End Sub
 
     Public Class clsConstellationItemDB
-        Public projectName As String
-        Public variantName As String
-        Public Start As Date
-        Public show As Boolean
-        Public zeile As Integer
+        Public projectName As String = ""
+        Public variantName As String = ""
+        Public Start As Date = StartofCalendar.AddMonths(-1)
+        Public show As Boolean = True
+        Public zeile As Integer = 0
+        ' warum wird die entsprechende Projektvariante aufgenommen 
+        Public reasonToInclude As String = ""
+        ' warum wird die entsprechende Projektvariante nicht aufgenommen 
+        Public reasonToExclude As String = ""
 
-        Sub copyfrom(ByRef item As clsConstellationItem)
+        Sub copyfrom(ByVal item As clsConstellationItem)
 
             With item
                 Me.projectName = .projectName
@@ -46,6 +56,8 @@
                 Me.Start = .Start.ToUniversalTime
                 Me.show = .show
                 Me.zeile = .zeile
+                Me.reasonToInclude = .reasonToInclude
+                Me.reasonToExclude = .reasonToExclude
             End With
         End Sub
 
@@ -57,12 +69,14 @@
                 .Start = Me.Start.ToLocalTime
                 .show = Me.show
                 .zeile = Me.zeile
+                .reasonToInclude = Me.reasonToInclude
+                .reasonToExclude = Me.reasonToExclude
             End With
 
         End Sub
 
         Sub New()
-
+            
         End Sub
 
     End Class

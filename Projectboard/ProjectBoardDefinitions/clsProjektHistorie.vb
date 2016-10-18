@@ -26,7 +26,12 @@
                 getZeitraum = _liste.First.Value.timeStamp.ToShortDateString & " - " & _
                               _liste.Last.Value.timeStamp.ToShortDateString
             Else
-                Throw New ArgumentException("Historie enthält weniger als 2 Einträge")
+                If _liste.Count > 0 Then
+                    getZeitraum = _liste.First.Value.timeStamp.ToShortDateString & " - " & _
+                              _liste.First.Value.timeStamp.ToShortDateString
+                Else
+                    getZeitraum = "keine Historie vorhanden ..."
+                End If
             End If
 
         End Get
@@ -70,7 +75,7 @@
             Loop
 
             If Not found Then
-                Throw New ArgumentException("es gibt keinen letzten Freigabe Stand")
+                letzteFreigabe = Nothing
             Else
                 _currentIndex = index
                 letzteFreigabe = _liste.ElementAt(index).Value
@@ -105,7 +110,7 @@
             Loop
 
             If abbruch Then
-                Throw New ArgumentException("es gibt keine Beauftragung")
+                beauftragung = Nothing
             Else
                 _currentIndex = index
                 beauftragung = _liste.ElementAt(index).Value
@@ -534,7 +539,11 @@
     ''' <remarks></remarks>
     Public ReadOnly Property First As clsProjekt
         Get
-            First = _liste.First.Value
+            If _liste.Count > 0 Then
+                First = _liste.First.Value
+            Else
+                First = Nothing
+            End If
             _currentIndex = 0
         End Get
     End Property
@@ -548,8 +557,15 @@
     ''' <remarks></remarks>
     Public ReadOnly Property Last As clsProjekt
         Get
-            Last = _liste.Last.Value
-            _currentIndex = _liste.Count - 1
+
+            If _liste.Count > 0 Then
+                Last = _liste.Last.Value
+                _currentIndex = _liste.Count - 1
+            Else
+                Last = Nothing
+                _currentIndex = 0
+            End If
+            
 
         End Get
     End Property

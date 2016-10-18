@@ -9,10 +9,14 @@ Public Class frmNameSelection
     ' kann von ausserhalb gesetzt werden; gibt an ob das ganze Portfolio angezeigt werden soll
     ' oder nur die selektierten Projekte 
 
-    'Friend showModePortfolio As Boolean
+
     Friend menuOption As Integer
-    'Friend chkbxShowObjects As Boolean
-    'Friend chkbxCreateCharts As Boolean
+    Friend actionCode As Integer
+
+
+    ' hier steht ggf die ButtonID drin
+    Friend ribbonButtonID As String = ""
+    
 
 
     Private allMilestones As New Collection
@@ -47,7 +51,335 @@ Public Class frmNameSelection
     End Enum
 
 
+    ' bestimmt, ob und wie die einzelnen Formular Elemente in Abhängigkeit von menuoption angezeigt werden sollen 
+    Private Sub defineFrmButtonVisibility()
+        With Me
+            If .menuOption = PTmenue.filterdefinieren Then
+                .Text = "Datenbank Filter definieren"
 
+                If .actionCode = PTTvActions.loadPV Or _
+                    .actionCode = PTTvActions.loadPVS Or _
+                    .actionCode = PTTvActions.delFromDB Then
+                    .OKButton.Text = "Anwenden"
+                Else
+                    .OKButton.Text = "Speichern"
+                End If
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = True
+                .rdbCosts.Enabled = True
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
+            ElseIf menuOption = PTmenue.sessionFilterDefinieren Then
+
+                .Text = "Session Filter definieren"
+                .OKButton.Text = "Anwenden"
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = True
+                .rdbCosts.Enabled = True
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = False
+                .filterLabel.Visible = False
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
+
+            ElseIf menuOption = PTmenue.visualisieren Then
+                .Text = "Plan-Elemente visualisieren"
+                .OKButton.Text = "Anzeigen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
+
+                ' Leistbarkeits-Charts
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.leistbarkeitsAnalyse Then
+
+                If ribbonButtonID = "PTMEC1" Then
+                    .Text = "Rollen-/Kosten-Charts erstellen"
+                Else
+                    .Text = "Leistbarkeits-Charts erstellen"
+                End If
+
+                .OKButton.Text = "Charts erstellen"
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                If ribbonButtonID = "PTMEC1" Then
+                    .rdbPhases.Visible = False
+                    .picturePhasen.Visible = False
+                    .rdbMilestones.Visible = False
+                    .pictureMilestones.Visible = False
+                End If
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
+
+                ' Leistbarkeits-Charts
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = True
+
+                ' Reports 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.einzelprojektReport Then
+
+                .Text = "Projekt-Varianten Report erzeugen"
+                .OKButton.Text = "Bericht erstellen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Enabled = False
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Enabled = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+
+                .einstellungen.Visible = True
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+
+            ElseIf menuOption = PTmenue.multiprojektReport Then
+
+                .Text = "Multiprojekt Reports erzeugen"
+                .OKButton.Text = "Bericht erstellen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = True
+                .rdbCosts.Enabled = True
+
+                .rdbBU.Enabled = False
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Enabled = False
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+
+                .einstellungen.Visible = True
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.excelExport Then
+
+                .Text = "Excel Report erzeugen"
+                .OKButton.Text = "Report erstellen"
+                .statusLabel.Text = ""
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.vorlageErstellen Then
+
+                .Text = "modulare Vorlagen erzeugen"
+                .OKButton.Text = "Vorlage erstellen"
+                .statusLabel.Text = ""
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Auswahl"
+
+            ElseIf menuOption = PTmenue.meilensteinTrendanalyse Then
+
+                .Text = "Meilenstein Trendanalyse erzeugen"
+                .OKButton.Text = "Anzeigen"
+
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .headerLine.Text = "Meilensteine"
+
+                .picturePhasen.Visible = False
+                .rdbPhases.Visible = False
+                .rdbPhases.Checked = False
+                .rdbPhases.Enabled = False
+
+                .pictureMilestones.Visible = False
+                .rdbMilestones.Visible = False
+                .rdbMilestones.Checked = True
+                .rdbMilestones.Enabled = False
+
+                .pictureRoles.Visible = False
+                .rdbRoles.Visible = False
+                .rdbRoles.Checked = False
+                .rdbRoles.Enabled = False
+
+                .pictureCosts.Visible = False
+                .rdbCosts.Visible = False
+                .rdbCosts.Checked = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                .auswSpeichern.Visible = False
+
+
+            End If
+
+        End With
+
+    End Sub
 
 
     ''' <summary>
@@ -64,7 +396,7 @@ Public Class frmNameSelection
         awinSettings.isHryNameFrmActive = False
 
         ' Falls einzelne Projekte selektiert waren, so wird diese Selection hier aufgehoben
-        If selectedProjekte.Count > 0 Then
+        If selectedProjekte.Count > 0 And visboZustaende.projectBoardMode = ptModus.graficboard Then
             Call awinDeSelect()
         End If
 
@@ -87,6 +419,10 @@ Public Class frmNameSelection
             Me.Left = 100
         End If
 
+
+        ' hier kommt jetzt, welche Buttons sollen sichtbar sein ... 
+        Call defineFrmButtonVisibility()
+
         awinSettings.isHryNameFrmActive = True
 
         statusLabel.Text = ""
@@ -94,9 +430,11 @@ Public Class frmNameSelection
 
 
         ' jetzt werden anhand des letzten Filters die Collections gesetzt 
+
         Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
-                                selectedPhases, selectedMilestones, _
-                                selectedRoles, selectedCosts)
+                            selectedPhases, selectedMilestones, _
+                            selectedRoles, selectedCosts)
+
 
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
         ' in letztem Fall werden nur die mit Multiprojekt angezeigt 
@@ -109,7 +447,8 @@ Public Class frmNameSelection
         Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
 
         ' alle definierten Filter in ComboBox anzeigen
-        If Me.menuOption = PTmenue.filterdefinieren Then
+        If Me.menuOption = PTmenue.filterdefinieren Or _
+            Me.menuOption = PTmenue.sessionFilterDefinieren Then
 
             For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
                 filterDropbox.Items.Add(kvp.Key)
@@ -129,7 +468,12 @@ Public Class frmNameSelection
             For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
                 filterDropbox.Items.Add(kvp.Key)
             Next
-            Me.rdbPhases.Checked = True
+            If Me.rdbPhases.Visible Then
+                Me.rdbPhases.Checked = True
+            Else
+                Me.rdbRoles.Checked = True
+            End If
+
         End If
 
 
@@ -146,7 +490,11 @@ Public Class frmNameSelection
 
         Dim filterName As String = ""
         Dim lastFilter As String = "Last"
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
+
+        Dim formerEoU As Boolean = enableOnUpdate
         enableOnUpdate = False
 
         statusLabel.Text = ""
@@ -208,34 +556,18 @@ Public Class frmNameSelection
             Next
         End If
 
-        If Me.menuOption = PTmenue.filterdefinieren Then
+        If Me.menuOption = PTmenue.filterdefinieren Or _
+            Me.menuOption = PTmenue.sessionFilterDefinieren Then
 
-            filterName = filterDropbox.Text
-            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+            If Not IsNothing(filterDropbox.Text) Then
+                If filterDropbox.Text.Trim.Length > 0 Then
+                    filterName = filterDropbox.Text.Trim
+                    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, False)
-
-        ElseIf Me.menuOption = PTmenue.visualisieren Then
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-                ''Else
-                ''    filterName = filterDropbox.Text
-                ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-                ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                ''                                           selectedPhases, selectedMilestones, _
-                ''                                           selectedRoles, selectedCosts, False)
+                End If
             End If
 
-            ''Else    ' alle anderen PTmenues
-
-            ''    filterName = filterDropbox.Text
-            ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-            ''                                           selectedPhases, selectedMilestones, _
-            ''                                           selectedRoles, selectedCosts, False)
         End If
 
 
@@ -258,7 +590,7 @@ Public Class frmNameSelection
             Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
             Me.menuOption = PTmenue.vorlageErstellen Then
             validOption = True
-        ElseIf showRangeRight - showRangeLeft > 5 Then
+        ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
             validOption = True
         Else
             validOption = False
@@ -304,8 +636,9 @@ Public Class frmNameSelection
                         Me.Cursor = Cursors.WaitCursor
                         AbbrButton.Text = "Abbrechen"
 
-                        backgroundRunning = True
+                        'Call PPTstarten()
 
+                        backgroundRunning = True
 
                         BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
@@ -330,21 +663,35 @@ Public Class frmNameSelection
         Else
 
             ' die Aktion Subroutine aufrufen 
-            Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
-                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+            '
+            ' hier unterscheiden, was denn gewünscht wird; dann nur das übergeben 
+            Dim tmpCollection As New Collection
+            If rdbPhases.Checked Or rdbMilestones.Checked Then
+                Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
+                            tmpCollection, tmpCollection, Me.chkbxOneChart.Checked, filterName)
+            ElseIf rdbRoles.Checked Then
+                Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
+                            selectedRoles, tmpCollection, Me.chkbxOneChart.Checked, filterName)
+            ElseIf rdbCosts.Checked Then
+                Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
+                            tmpCollection, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+            End If
+            
 
         End If
 
 
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formerEoU
 
 
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 
         If Me.menuOption = PTmenue.excelExport Or _
             menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.sessionFilterDefinieren Or _
             (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
+            Me.DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
         Else
             ' geänderte Auswahl/Filterliste neu anzeigen
@@ -384,30 +731,48 @@ Public Class frmNameSelection
             selNameListBox.Items.Clear()
             filterBox.Text = ""
 
-            'chkbxOneChart.Text = "Alles in einem Chart"
 
+            If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                ' immer die AlleProjekte hernehmen 
+                If selectedProjekte.Count > 0 Then
+                    allPhases = selectedProjekte.getPhaseNames
+                ElseIf AlleProjekte.Count > 0 Then
+                    allPhases = AlleProjekte.getPhaseNames
+                Else
+                    ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                    allPhases.Clear()
+                End If
 
+            ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                ' 
+                If selectedProjekte.Count > 0 Then
+                    allPhases = selectedProjekte.getPhaseNames
+                Else
+                    ' eigentlich sollten hier alle Phasen der Datenbank stehen ... 
+                    For i As Integer = 1 To PhaseDefinitions.Count
+                        Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                        If Not allPhases.Contains(tmpName) Then
+                            allPhases.Add(tmpName, tmpName)
+                        End If
+                    Next
+                End If
 
-
-            If selectedProjekte.Count > 0 Then
-                allPhases = selectedProjekte.getPhaseNames
-            ElseIf ShowProjekte.Count > 0 Then
-                allPhases = ShowProjekte.getPhaseNames
             Else
-                For i As Integer = 1 To PhaseDefinitions.Count
-                    Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                    If Not allPhases.Contains(tmpName) Then
-                        allPhases.Add(tmpName, tmpName)
-                    End If
-                Next
+                ' alle anderen Optionen
+                If selectedProjekte.Count > 0 Then
+                    allPhases = selectedProjekte.getPhaseNames
+                ElseIf ShowProjekte.Count > 0 Then
+                    allPhases = ShowProjekte.getPhaseNames
+                Else
+                    For i As Integer = 1 To PhaseDefinitions.Count
+                        Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                        If Not allPhases.Contains(tmpName) Then
+                            allPhases.Add(tmpName, tmpName)
+                        End If
+                    Next
+                End If
+
             End If
-
-
-            'If allPhases.Count = 0 Then
-            '    For i = 1 To PhaseDefinitions.Count
-            '        allPhases.Add(CStr(PhaseDefinitions.getPhaseDef(i).name))
-            '    Next
-            'End If
 
 
             Call rebuildFormerState(PTauswahlTyp.phase)
@@ -440,29 +805,49 @@ Public Class frmNameSelection
 
             filterBox.Text = ""
 
-            'chkbxOneChart.Text = "Alles in einem Chart"
+            If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                ' immer die AlleProjekte hernehmen 
+                If selectedProjekte.Count > 0 Then
+                    allMilestones = selectedProjekte.getMilestoneNames
+                ElseIf AlleProjekte.Count > 0 Then
+                    allMilestones = AlleProjekte.getMilestoneNames
+                Else
+                    ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                    allMilestones.Clear()
+                End If
 
+            ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                ' 
+                If selectedProjekte.Count > 0 Then
+                    allMilestones = selectedProjekte.getMilestoneNames
+                Else
+                    ' eigentlich sollten hier alle Meilensteine der Datenbank stehen ... 
+                    For i As Integer = 1 To MilestoneDefinitions.Count
+                        Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
+                        If Not allMilestones.Contains(tmpName) Then
+                            allMilestones.Add(tmpName, tmpName)
+                        End If
+                    Next
+                End If
 
-            If selectedProjekte.Count > 0 Then
-                allMilestones = selectedProjekte.getMilestoneNames
-            ElseIf ShowProjekte.Count > 0 Then
-                allMilestones = ShowProjekte.getMilestoneNames
             Else
-                For i As Integer = 1 To MilestoneDefinitions.Count
-                    Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
-                    If Not allMilestones.Contains(tmpName) Then
-                        allMilestones.Add(tmpName, tmpName)
-                    End If
-                Next
+                ' alle anderen Optionen
+                If selectedProjekte.Count > 0 Then
+                    allMilestones = selectedProjekte.getMilestoneNames
+                ElseIf ShowProjekte.Count > 0 Then
+                    allMilestones = ShowProjekte.getMilestoneNames
+                Else
+                    For i As Integer = 1 To MilestoneDefinitions.Count
+                        Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
+                        If Not allMilestones.Contains(tmpName) Then
+                            allMilestones.Add(tmpName, tmpName)
+                        End If
+                    Next
+                End If
+
             End If
 
-            '' hier muss alles eingetragen werden, was an Meilensteinen da ist ... 
-            'If allMilestones.Count = 0 Then
 
-            '    For i As Integer = 1 To MilestoneDefinitions.Count
-            '        allMilestones.Add(MilestoneDefinitions.elementAt(i - 1).name)
-            '    Next
-            'End If
 
             Call rebuildFormerState(PTauswahlTyp.meilenstein)
 
@@ -486,7 +871,6 @@ Public Class frmNameSelection
     ''' <remarks></remarks>
     Private Sub rdbRoles_CheckedChanged(sender As Object, e As EventArgs) Handles rdbRoles.CheckedChanged
 
-        Dim i As Integer
 
         statusLabel.Text = ""
         filterBox.Enabled = True
@@ -503,16 +887,52 @@ Public Class frmNameSelection
                 'chkbxOneChart.Text = "Alles in einem Chart"
 
 
-                If allRoles.Count = 0 Then
-                    For i = 1 To RoleDefinitions.Count
-                        allRoles.Add(RoleDefinitions.getRoledef(i).name)
-                    Next
+                ' jetzt nur die Rollen anbieten, die auch vorkommen 
+                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                    ' immer die AlleProjekte hernehmen 
+                    If selectedProjekte.Count > 0 Then
+                        allRoles = selectedProjekte.getRoleNames
+                    ElseIf AlleProjekte.Count > 0 Then
+                        allRoles = AlleProjekte.getRoleNames
+                    Else
+                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                        allRoles.Clear()
+                    End If
+
+                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                    ' 
+                    If selectedProjekte.Count > 0 Then
+                        allRoles = selectedProjekte.getRoleNames
+                    Else
+                        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                        For i As Integer = 1 To RoleDefinitions.Count
+                            Dim tmpName As String = RoleDefinitions.getRoledef(i).name
+                            If Not allRoles.Contains(tmpName) Then
+                                allRoles.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                Else
+                    ' alle anderen Optionen
+                    If selectedProjekte.Count > 0 Then
+                        allRoles = selectedProjekte.getRoleNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allRoles = ShowProjekte.getRoleNames
+                    Else
+                        For i As Integer = 1 To RoleDefinitions.Count
+                            Dim tmpName As String = RoleDefinitions.getRoledef(i).name
+                            If Not allRoles.Contains(tmpName) Then
+                                allRoles.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
                 End If
 
 
+
                 Call rebuildFormerState(PTauswahlTyp.Rolle)
-
-
 
             Else
                 ' Merken, was ggf. das Filterkriterium war 
@@ -536,7 +956,6 @@ Public Class frmNameSelection
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub rdbCosts_CheckedChanged(sender As Object, e As EventArgs) Handles rdbCosts.CheckedChanged
-        Dim i As Integer
 
         statusLabel.Text = ""
         filterBox.Enabled = True
@@ -552,11 +971,49 @@ Public Class frmNameSelection
                 filterBox.Text = ""
                 'chkbxOneChart.Text = "Alles in einem Chart"
 
-                If allCosts.Count = 0 Then
-                    For i = 1 To CostDefinitions.Count
-                        allCosts.Add(CostDefinitions.getCostdef(i).name)
-                    Next
+                ' jetzt nur die Kosten anbieten, die auch vorkommen 
+                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                    ' immer die AlleProjekte hernehmen 
+                    If selectedProjekte.Count > 0 Then
+                        allCosts = selectedProjekte.getCostNames
+                    ElseIf AlleProjekte.Count > 0 Then
+                        allCosts = AlleProjekte.getCostNames()
+                    Else
+                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                        allCosts.Clear()
+                    End If
+
+                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                    ' 
+                    If selectedProjekte.Count > 0 Then
+                        allCosts = selectedProjekte.getCostNames
+                    Else
+                        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                        For i As Integer = 1 To CostDefinitions.Count - 1
+                            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                            If Not allCosts.Contains(tmpName) Then
+                                allCosts.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                Else
+                    ' alle anderen Optionen
+                    If selectedProjekte.Count > 0 Then
+                        allCosts = selectedProjekte.getCostNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allCosts = ShowProjekte.getCostNames
+                    Else
+                        For i As Integer = 1 To CostDefinitions.Count - 1
+                            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                            If Not allCosts.Contains(tmpName) Then
+                                allCosts.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
                 End If
+
 
                 Call rebuildFormerState(PTauswahlTyp.Kostenart)
 
@@ -582,8 +1039,7 @@ Public Class frmNameSelection
     ''' <remarks></remarks>
     Private Sub rdbBU_CheckedChanged(sender As Object, e As EventArgs) Handles rdbBU.CheckedChanged
 
-        Dim i As Integer
-
+        
         statusLabel.Text = ""
         filterBox.Enabled = True
 
@@ -597,14 +1053,45 @@ Public Class frmNameSelection
                 selNameListBox.Items.Clear()
                 filterBox.Text = ""
 
-                If allBUs.Count = 0 Then
-                    For i = 1 To businessUnitDefinitions.Count
-                        allBUs.Add(CStr(businessUnitDefinitions.ElementAt(i - 1).Value.name))
-                    Next
+                ' jetzt nur die BUs anbieten, die auch vorkommen 
+                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                    ' immer die AlleProjekte hernehmen 
+                    If selectedProjekte.Count > 0 Then
+                        allBUs = selectedProjekte.getBUNames
+                    ElseIf AlleProjekte.Count > 0 Then
+                        allBUs = AlleProjekte.getBUNames()
+                    Else
+                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                        allBUs.Clear()
+                    End If
 
-                    ' den Fall noch vorsehen, dass etwas unknown ist ... 
-                    If Not allBUs.Contains("unknown") Then
-                        allBUs.Add("unknown")
+                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                    ' 
+                    If selectedProjekte.Count > 0 Then
+                        allBUs = selectedProjekte.getBUNames
+                    Else
+                        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                        For i As Integer = 1 To businessUnitDefinitions.Count
+                            Dim tmpName As String = CStr(businessUnitDefinitions.ElementAt(i - 1).Value.name)
+                            If Not allBUs.Contains(tmpName) Then
+                                allBUs.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                Else
+                    ' alle anderen Optionen
+                    If selectedProjekte.Count > 0 Then
+                        allBUs = selectedProjekte.getBUNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allBUs = ShowProjekte.getBUNames
+                    Else
+                        For i As Integer = 1 To businessUnitDefinitions.Count
+                            Dim tmpName As String = CStr(businessUnitDefinitions.ElementAt(i - 1).Value.name)
+                            If Not allBUs.Contains(tmpName) Then
+                                allBUs.Add(tmpName, tmpName)
+                            End If
+                        Next
                     End If
 
                 End If
@@ -628,7 +1115,6 @@ Public Class frmNameSelection
 
     Private Sub rdbTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbTyp.CheckedChanged
 
-        Dim i As Integer
 
         statusLabel.Text = ""
         filterBox.Enabled = True
@@ -645,18 +1131,49 @@ Public Class frmNameSelection
                 filterBox.Text = ""
                 'chkbxOneChart.Text = "Alles in einem Chart"
 
-                If allTyps.Count = 0 Then
+                ' jetzt nur die BUs anbieten, die auch vorkommen 
+                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                    ' immer die AlleProjekte hernehmen 
+                    If selectedProjekte.Count > 0 Then
+                        allTyps = selectedProjekte.getTypNames
+                    ElseIf AlleProjekte.Count > 0 Then
+                        allTyps = AlleProjekte.getTypNames
+                    Else
+                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                        allTyps.Clear()
+                    End If
 
-                    For i = 1 To Projektvorlagen.Count
-                        allTyps.Add(Projektvorlagen.Liste.ElementAt(i - 1).Key)
-                    Next
+                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                    ' 
+                    If selectedProjekte.Count > 0 Then
+                        allTyps = selectedProjekte.getTypNames
+                    Else
+                        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                        For i As Integer = 1 To Projektvorlagen.Count
+                            Dim tmpName As String = CStr(Projektvorlagen.Liste.ElementAt(i - 1).Key)
+                            If Not allTyps.Contains(tmpName) Then
+                                allTyps.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
 
-                    ' den Fall noch vorsehen, dass etwas unknown ist ... 
-                    If Not allTyps.Contains("unknown") Then
-                        allTyps.Add("unknown")
+                Else
+                    ' alle anderen Optionen
+                    If selectedProjekte.Count > 0 Then
+                        allTyps = selectedProjekte.getTypNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allTyps = ShowProjekte.getTypNames
+                    Else
+                        For i As Integer = 1 To Projektvorlagen.Count
+                            Dim tmpName As String = CStr(Projektvorlagen.Liste.ElementAt(i - 1).Key)
+                            If Not allTyps.Contains(tmpName) Then
+                                allTyps.Add(tmpName, tmpName)
+                            End If
+                        Next
                     End If
 
                 End If
+
 
                 Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
 
@@ -1177,7 +1694,6 @@ Public Class frmNameSelection
                 Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
             End If
 
-            '  Call MsgBox("in filterDropbox")
         End If
 
     End Sub
@@ -1248,7 +1764,8 @@ Public Class frmNameSelection
             Next
         End If
 
-        If Me.menuOption = PTmenue.filterdefinieren Then
+        If Me.menuOption = PTmenue.filterdefinieren Or _
+            Me.menuOption = PTmenue.sessionFilterDefinieren Then
 
             filterName = filterDropbox.Text
             ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
@@ -1294,6 +1811,10 @@ Public Class frmNameSelection
 
         End If
 
+
+    End Sub
+
+    Private Sub nameListBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles nameListBox.SelectedIndexChanged
 
     End Sub
 End Class

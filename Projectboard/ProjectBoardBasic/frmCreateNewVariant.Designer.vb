@@ -23,13 +23,15 @@ Partial Class frmCreateNewVariant
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
+        Me.infoText = New System.Windows.Forms.Label()
         Me.newVariant = New System.Windows.Forms.TextBox()
         Me.projektName = New System.Windows.Forms.TextBox()
         Me.variantenName = New System.Windows.Forms.TextBox()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.OKButton = New System.Windows.Forms.Button()
+        Me.lblDescription = New System.Windows.Forms.Label()
+        Me.txtDescription = New System.Windows.Forms.TextBox()
         Me.SuspendLayout()
         '
         'Label1
@@ -41,14 +43,14 @@ Partial Class frmCreateNewVariant
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "Neue Variante:"
         '
-        'Label2
+        'infoText
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(12, 81)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(319, 13)
-        Me.Label2.TabIndex = 1
-        Me.Label2.Text = "Die neue Variante wird auf Basis dieser Projekt-Variante angelegt: "
+        Me.infoText.AutoSize = True
+        Me.infoText.Location = New System.Drawing.Point(12, 139)
+        Me.infoText.Name = "infoText"
+        Me.infoText.Size = New System.Drawing.Size(319, 13)
+        Me.infoText.TabIndex = 1
+        Me.infoText.Text = "Die neue Variante wird auf Basis dieser Projekt-Variante angelegt: "
         '
         'newVariant
         '
@@ -60,7 +62,7 @@ Partial Class frmCreateNewVariant
         'projektName
         '
         Me.projektName.Enabled = False
-        Me.projektName.Location = New System.Drawing.Point(110, 112)
+        Me.projektName.Location = New System.Drawing.Point(110, 170)
         Me.projektName.Name = "projektName"
         Me.projektName.Size = New System.Drawing.Size(211, 20)
         Me.projektName.TabIndex = 3
@@ -68,7 +70,7 @@ Partial Class frmCreateNewVariant
         'variantenName
         '
         Me.variantenName.Enabled = False
-        Me.variantenName.Location = New System.Drawing.Point(110, 142)
+        Me.variantenName.Location = New System.Drawing.Point(110, 200)
         Me.variantenName.Name = "variantenName"
         Me.variantenName.Size = New System.Drawing.Size(211, 20)
         Me.variantenName.TabIndex = 4
@@ -76,7 +78,7 @@ Partial Class frmCreateNewVariant
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(12, 116)
+        Me.Label3.Location = New System.Drawing.Point(12, 174)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(43, 13)
         Me.Label3.TabIndex = 5
@@ -85,7 +87,7 @@ Partial Class frmCreateNewVariant
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(12, 146)
+        Me.Label4.Location = New System.Drawing.Point(12, 204)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(49, 13)
         Me.Label4.TabIndex = 6
@@ -93,38 +95,61 @@ Partial Class frmCreateNewVariant
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(143, 185)
+        Me.OKButton.Location = New System.Drawing.Point(165, 241)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(75, 23)
         Me.OKButton.TabIndex = 7
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
+        'lblDescription
+        '
+        Me.lblDescription.AutoSize = True
+        Me.lblDescription.Location = New System.Drawing.Point(12, 66)
+        Me.lblDescription.Name = "lblDescription"
+        Me.lblDescription.Size = New System.Drawing.Size(95, 13)
+        Me.lblDescription.TabIndex = 8
+        Me.lblDescription.Text = "Kurzbeschreibung:"
+        '
+        'txtDescription
+        '
+        Me.txtDescription.Location = New System.Drawing.Point(110, 66)
+        Me.txtDescription.Multiline = True
+        Me.txtDescription.Name = "txtDescription"
+        Me.txtDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.txtDescription.Size = New System.Drawing.Size(211, 58)
+        Me.txtDescription.TabIndex = 9
+        '
         'frmCreateNewVariant
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(350, 229)
+        Me.ClientSize = New System.Drawing.Size(350, 279)
+        Me.Controls.Add(Me.txtDescription)
+        Me.Controls.Add(Me.lblDescription)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.Label4)
         Me.Controls.Add(Me.Label3)
         Me.Controls.Add(Me.variantenName)
         Me.Controls.Add(Me.projektName)
         Me.Controls.Add(Me.newVariant)
-        Me.Controls.Add(Me.Label2)
+        Me.Controls.Add(Me.infoText)
         Me.Controls.Add(Me.Label1)
         Me.Name = "frmCreateNewVariant"
         Me.Text = "Neue Variante anlegen"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
     Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents Label2 As System.Windows.Forms.Label
-    Friend WithEvents newVariant As System.Windows.Forms.TextBox
+    Friend WithEvents infoText As System.Windows.Forms.Label
     Friend WithEvents projektName As System.Windows.Forms.TextBox
     Friend WithEvents variantenName As System.Windows.Forms.TextBox
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents OKButton As System.Windows.Forms.Button
+    Public WithEvents newVariant As System.Windows.Forms.TextBox
+    Friend WithEvents lblDescription As System.Windows.Forms.Label
+    Public WithEvents txtDescription As System.Windows.Forms.TextBox
 End Class

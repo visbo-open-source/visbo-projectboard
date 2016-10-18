@@ -86,6 +86,180 @@ Public Class clsProjekteAlle
 
 
     ''' <summary>
+    ''' gibt eine Liste der vorkommenden Meilenstein Namen in der Menge von Projekte zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneNames() As Collection
+
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+            getMilestoneNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Liste der vorkommenden Phasen-Namen in der Menge der Projekte an ...  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseNames() As Collection
+
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getPhaseNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getPhaseNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Rollen, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getRoleNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getRoleNames = tmpListe
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Kostenarten, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCostNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getCostNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+            getCostNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Business Units, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBUNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpBU As String = kvp.Value.businessUnit
+                If Not IsNothing(tmpBU) Then
+                    If tmpBU.Trim.Length > 0 Then
+                        If Not tmpListe.Contains(tmpBU) Then
+                            tmpListe.Add(tmpBU, tmpBU)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            getBUNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen der Projektvorlagen, die in der Menge von Projekten vorkommen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTypNames() As Collection
+        Get
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpTyp As String = kvp.Value.VorlagenName
+                If Not IsNothing(tmpTyp) Then
+                    If tmpTyp.Trim.Length > 0 Then
+                        If Not tmpListe.Contains(tmpTyp) Then
+                            tmpListe.Add(tmpTyp, tmpTyp)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            getTypNames = tmpListe
+
+        End Get
+    End Property
+    ''' <summary>
     ''' gibt die Namen der existierenden Varianten in einer Liste zurück 
     ''' die "leere" Variante wird als () zurückgegeben , alle anderen Varianten als (Variante-Name)
     ''' Voraussetzung: _allprojects ist eine sortierte Liste
@@ -228,6 +402,25 @@ Public Class clsProjekteAlle
     End Property
 
     ''' <summary>
+    ''' gibt das Element zurück, das den pName, vName als Projekt- bzw. Varianten-NAme enthält
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProject(ByVal pName As String, ByVal vName As String) As clsProjekt
+        Get
+            Dim key As String = calcProjektKey(pName, vName)
+            If _allProjects.ContainsKey(key) Then
+                getProject = _allProjects(key)
+            Else
+                getProject = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt das Element zurück, das den angegebenen Schlüssel key enthält
     ''' </summary>
     ''' <param name="key">key = pName#vName</param>
@@ -237,7 +430,11 @@ Public Class clsProjekteAlle
     Public ReadOnly Property getProject(ByVal key As String) As clsProjekt
         Get
 
-            getProject = _allProjects(key)
+            If _allProjects.ContainsKey(key) Then
+                getProject = _allProjects(key)
+            Else
+                getProject = Nothing
+            End If
 
         End Get
     End Property
@@ -301,7 +498,7 @@ Public Class clsProjekteAlle
             Dim anzahl As Integer = 0
             Dim i As Integer = 0
             Dim found As Boolean = False
-            
+
             ' Positioniere i auf das erste Vorkommen von pName in der Liste 
             While i < _allProjects.Count And Not found
                 If _allProjects.ElementAt(i).Value.name = pName Then

@@ -1,4 +1,8 @@
-﻿Imports ProjectBoardDefinitions
+﻿
+'Option Explicit On
+'Option Strict On
+
+Imports ProjectBoardDefinitions
 Imports MongoDbAccess
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop
@@ -6,7 +10,20 @@ Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports System.Windows
 Imports System.Windows.Forms
-'Imports Excel = Microsoft.Office.Interop.Excel
+
+Imports System
+Imports System.Runtime.Serialization
+Imports System.Xml
+Imports System.Xml.Serialization
+Imports System.IO
+Imports System.Drawing
+Imports System.Globalization
+
+Imports Microsoft.VisualBasic
+Imports ProjectBoardBasic
+Imports System.Security.Principal
+
+
 
 
 Public Module awinGeneralModules
@@ -22,10 +39,10 @@ Public Module awinGeneralModules
         Budget = 7
         Risiko = 8
         Strategie = 9
-        Volumen = 10
-        Komplexitaet = 11
-        Businessunit = 12
-        Beschreibung = 13
+        Kapazitaet = 10
+        Businessunit = 11
+        Beschreibung = 12
+        KostenExtern = 13
     End Enum
 
     Private Enum ptModuleSpalten
@@ -36,23 +53,255 @@ Public Module awinGeneralModules
         strategicFit = 4
         risiko = 5
         volume = 6
+        budget = 7
     End Enum
 
+    ' Änderung tk: ist ersetzt worden durch writePhaseMilestoneDefinitions
+
+    ' ''' <summary>
+    ' ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
+    ' ''' das Customization File 
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    'Public Sub awinWritePhaseDefinitions()
+
+    '    Dim phaseDefs As Excel.Range
+    '    Dim milestoneDefs As Excel.Range
+    '    'Dim foundRow As Integer
+    '    Dim phName As String, phColor As Long
+    '    Dim lastrow As Excel.Range
+
+    '    'appInstance.ScreenUpdating = False
+    '    appInstance.EnableEvents = False
+
+
+
+    '    ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
+    '    ' das File 
+    '    Try
+    '        appInstance.Workbooks.Open(awinPath & customizationFile)
+
+    '    Catch ex As Exception
+    '        Call MsgBox("Customization File nicht gefunden - Abbruch")
+    '        Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+    '    End Try
+
+    '    appInstance.Workbooks(myCustomizationFile).Activate()
+    '    Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+    '                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+    '    phaseDefs = wsName4.Range("awin_Phasen_Definition")
+
+    '    Dim anzZeilen As Integer = phaseDefs.Rows.Count
+    '    lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
+
+    '    Dim vglsListe As New SortedList(Of String, String)
+    '    Dim ergStr As String
+
+    '    For Each c As Excel.Range In phaseDefs
+    '        Try
+    '            ergStr = CStr(c.Value).Trim
+
+    '            If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
+
+    '                vglsListe.Add(ergStr, ergStr)
+
+    '            End If
+    '        Catch ex As Exception
+
+    '        End Try
+
+    '    Next
+
+
+    '    ' jetzt muss getestet werden, ob jede Phase in PhaseDefinitions bereits in der Customization vorkommt 
+
+    '    Dim i As Integer
+    '    Dim darstellungsKlasse As String
+    '    For i = 1 To PhaseDefinitions.Count
+
+    '        With PhaseDefinitions.getPhaseDef(i)
+    '            phName = .name
+    '            phColor = CLng(PhaseDefinitions.getPhaseDef(i).farbe)
+    '            darstellungsKlasse = .darstellungsKlasse
+    '        End With
+
+
+    '        If vglsListe.ContainsKey(phName) Then
+    '            ' nichts zu tun 
+    '        Else
+    '            ' eintragen 
+    '            lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
+    '            CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+
+
+    '        End If
+
+
+
+    '    Next i
+
+
+    '    If awinSettings.addMissingPhaseMilestoneDef Then
+
+    '        'jede Phase, die noch nicht in dem CustomizationFile ist, wird noch hinzugefügt 
+    '        ' und in die PhaseDefinitions eingetragen
+
+    '        For mPh As Integer = 1 To missingPhaseDefinitions.Count
+
+    '            Dim missPhaseDef As clsPhasenDefinition = missingPhaseDefinitions.getPhaseDef(mPh)
+
+    '            With missPhaseDef
+    '                phName = .name
+    '                phColor = CLng(missingPhaseDefinitions.getPhaseDef(mPh).farbe)
+    '                darstellungsKlasse = .darstellungsKlasse
+    '            End With
+
+
+    '            If vglsListe.ContainsKey(phName) Then
+    '                ' nichts zu tun 
+    '            Else
+    '                ' eintragen 
+    '                lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
+    '                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+
+    '                Try
+    '                    PhaseDefinitions.Add(missPhaseDef)
+    '                Catch ex As Exception
+
+    '                End Try
+
+
+
+    '            End If
+
+
+    '        Next mPh
+
+    '        missingPhaseDefinitions.Clear()
+
+    '    End If
+
+    '    ' jetzt noch die Meilensteine schreiben 
+    '    ' awin_Meilenstein_Definition
+
+    '    milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
+    '    anzZeilen = milestoneDefs.Rows.Count
+    '    lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
+
+    '    ' jetzt muss getestet werden, ob jede Meilenstein  in MilestoneDefinitions bereits in der Customization vorkommt 
+
+    '    vglsListe.Clear()
+
+    '    For Each c As Excel.Range In milestoneDefs
+    '        Try
+    '            ergStr = CStr(c.Value).Trim
+
+    '            If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
+
+    '                vglsListe.Add(ergStr, ergStr)
+
+    '            End If
+    '        Catch ex As Exception
+
+    '        End Try
+
+    '    Next
+
+
+    '    Dim msName As String
+    '    Dim shortName As String
+    '    Dim belongsTo As String
+
+
+    '    For i = 1 To MilestoneDefinitions.Count
+
+    '        With MilestoneDefinitions.elementAt(i - 1)
+    '            msName = .name
+    '            shortName = .shortName
+    '            belongsTo = .belongsTo
+    '            darstellungsKlasse = .darstellungsKlasse
+    '        End With
+
+    '        If vglsListe.ContainsKey(msName) Then
+    '            ' nichts zu tun 
+    '        Else
+    '            ' eintragen 
+    '            lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
+    '            CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+
+    '        End If
+
+
+
+    '    Next i
+
+
+    '    If awinSettings.addMissingPhaseMilestoneDef Then
+
+    '        ' die Meilensteine, die noch nicht in MilestoneDefinitions enthalten sind, werden nun in CustomizationFile eingetragen 
+    '        ' und in die MilestoneDefinitions
+
+    '        For mMs As Integer = 1 To missingMilestoneDefinitions.Count
+
+    '            Dim msDef As clsMeilensteinDefinition = missingMilestoneDefinitions.elementAt(mMs - 1)
+    '            With msDef
+    '                msName = .name
+    '                shortName = .shortName
+    '                belongsTo = .belongsTo
+    '                darstellungsKlasse = .darstellungsKlasse
+    '            End With
+
+    '            If vglsListe.ContainsKey(msName) Then
+    '                ' nichts zu tun 
+    '            Else
+    '                ' eintragen 
+    '                lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
+    '                CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+    '                If Not MilestoneDefinitions.Contains(msDef.name) Then
+    '                    MilestoneDefinitions.Add(msDef)
+    '                End If
+
+
+    '            End If
+
+    '        Next mMs
+    '        missingMilestoneDefinitions.Clear()
+
+    '    End If
+
+
+    '    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+    '    'appInstance.ScreenUpdating = True
+    '    appInstance.EnableEvents = True
+
+    'End Sub
 
     ''' <summary>
-    ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
+    ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
     ''' das Customization File 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub awinWritePhaseDefinitions()
+    Public Sub awinWritePhaseMilestoneDefinitions(Optional ByVal writeMappings As Boolean = False)
 
-        Dim phaseDefs As Excel.Range
-        Dim milestoneDefs As Excel.Range
-        'Dim foundRow As Integer
-        Dim phName As String, phColor As Long
-        Dim lastrow As Excel.Range
-
-        'appInstance.ScreenUpdating = False
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.ScreenUpdating = False
         appInstance.EnableEvents = False
 
 
@@ -64,203 +313,388 @@ Public Module awinGeneralModules
 
         Catch ex As Exception
             Call MsgBox("Customization File nicht gefunden - Abbruch")
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = formerSU
             Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
         End Try
 
         appInstance.Workbooks(myCustomizationFile).Activate()
-        Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-        phaseDefs = wsName4.Range("awin_Phasen_Definition")
-
-        Dim anzZeilen As Integer = phaseDefs.Rows.Count
-        lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
-
-        Dim vglsListe As New SortedList(Of String, String)
-        Dim ergStr As String
-
-        For Each c As Excel.Range In phaseDefs
-            Try
-                ergStr = CStr(c.Value).Trim
-
-                If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
-
-                    vglsListe.Add(ergStr, ergStr)
-
-                End If
-            Catch ex As Exception
-
-            End Try
-
-        Next
-
-
-        ' jetzt muss getestet werden, ob jede Phase in PhaseDefinitions bereits in der Customization vorkommt 
-
-        Dim i As Integer
-        Dim darstellungsKlasse As String
-        For i = 1 To PhaseDefinitions.Count
-
-            With PhaseDefinitions.getPhaseDef(i)
-                phName = .name
-                phColor = CLng(PhaseDefinitions.getPhaseDef(i).farbe)
-                darstellungsKlasse = .darstellungsKlasse
-            End With
-
-
-            If vglsListe.ContainsKey(phName) Then
-                ' nichts zu tun 
-            Else
-                ' eintragen 
-                lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
-                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-
-            End If
-
-
-
-        Next i
-
-
-        If awinSettings.addMissingPhaseMilestoneDef Then
-
-            'jede Phase, die noch nicht in dem CustomizationFile ist, wird noch hinzugefügt 
-            ' und in die PhaseDefinitions eingetragen
-
-            For mPh As Integer = 1 To missingPhaseDefinitions.Count
-
-                Dim missPhaseDef As clsPhasenDefinition = missingPhaseDefinitions.getPhaseDef(mPh)
-
-                With missPhaseDef
-                    phName = .name
-                    phColor = CLng(missingPhaseDefinitions.getPhaseDef(mPh).farbe)
-                    darstellungsKlasse = .darstellungsKlasse
-                End With
-
-
-                If vglsListe.ContainsKey(phName) Then
-                    ' nichts zu tun 
-                Else
-                    ' eintragen 
-                    lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
-                    CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                    PhaseDefinitions.Add(missPhaseDef)
-
-                End If
-
-
-            Next mPh
-
-            missingPhaseDefinitions.Clear()
-
+        ' schreibe die Phase- und MilestoneDefinitions
+        Call WriteDefinitions(False)
+        ' schreibe - in Abhängigkeit von dem Parameter . die MissingPhase- und MissingMilestone-Definitions
+        If awinSettings.readWriteMissingDefinitions Then
+            Call WriteDefinitions(True)
         End If
 
-        ' jetzt noch die Meilensteine schreiben 
-        ' awin_Meilenstein_Definition
 
-        milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
-        anzZeilen = milestoneDefs.Rows.Count
-        lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
+        ' prüfen , ob die Mappings-Behandlung auch gemacht werden soll ...
+        If writeMappings Then
 
-        ' jetzt muss getestet werden, ob jede Meilenstein  in MilestoneDefinitions bereits in der Customization vorkommt 
+            '
+            ' jetzt werden erstmal die Phase Mappings geschrieben  
+            '
+            Dim wsName8 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(8)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Dim area As Excel.Range
+            Dim letzteZeile As Integer
+            Dim aktuelleZeile As Integer
 
-        vglsListe.Clear()
+            With wsName8
 
-        For Each c As Excel.Range In milestoneDefs
-            Try
-                ergStr = CStr(c.Value).Trim
+                ' Synonyme schreiben 
+                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row), _
+                                                CInt(CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row))
 
-                If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
-
-                    vglsListe.Add(ergStr, ergStr)
-
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 1), .Cells(letzteZeile, 2)), Excel.Range)
+                    ' alte Synonym / regEX Area löschen
+                    area.Clear()
                 End If
-            Catch ex As Exception
+                
 
-            End Try
+                ' neue Area definieren
+                area = CType(.Range(.Cells(3, 1), .Cells(phaseMappings.countSynonyms + phaseMappings.countRegEx + 4, 2)), Excel.Range)
 
-        Next
+                aktuelleZeile = 1
+                For ix As Integer = 1 To phaseMappings.countSynonyms
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = phaseMappings.getSynonymMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = phaseMappings.getSynonymMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+
+                ' regular expressions schreiben 
+                For ix As Integer = 1 To phaseMappings.countRegEx
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = phaseMappings.getRegExMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = phaseMappings.getRegExMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
 
 
-        Dim msName As String
-        Dim shortName As String
-        Dim belongsTo As String
+                ' ignoreNames schreiben 
+                letzteZeile = CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
+                ' alte area löschen
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 6), .Cells(letzteZeile, 6)), Excel.Range)
+                    area.Clear()
+                End If
+                
+                area = CType(.Range(.Cells(3, 6), .Cells(phaseMappings.countIgnore + 4, 6)), Excel.Range)
+                aktuelleZeile = 1
 
-        For i = 1 To MilestoneDefinitions.Count
-
-            With MilestoneDefinitions.elementAt(i - 1)
-                msName = .name
-                shortName = .shortName
-                belongsTo = .belongsTo
-                darstellungsKlasse = .darstellungsKlasse
+                For ix As Integer = 1 To phaseMappings.countIgnore
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = phaseMappings.getIgnoreElement(ix - 1)
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
             End With
 
-            If vglsListe.ContainsKey(msName) Then
-                ' nichts zu tun 
-            Else
-                ' eintragen 
-                lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
-                CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+            '
+            ' jetzt werden erstmal die Phase Mappings geschrieben  
+            '
+            Dim wsName10 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(10)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            End If
+            With wsName10
+
+                ' Synonyme schreiben 
+                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row), _
+                                                CInt(CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row))
 
 
-
-        Next i
-
-
-        If awinSettings.addMissingPhaseMilestoneDef Then
-
-            ' die Meilensteine, die noch nicht in MilestoneDefinitions enthalten sind, werden nun in CustomizationFile eingetragen 
-            ' und in die MilestoneDefinitions
-
-            For mMs As Integer = 1 To missingMilestoneDefinitions.Count
-
-                Dim msDef As clsMeilensteinDefinition = missingMilestoneDefinitions.elementAt(mMs - 1)
-                With msDef
-                    msName = .name
-                    shortName = .shortName
-                    belongsTo = .belongsTo
-                    darstellungsKlasse = .darstellungsKlasse
-                End With
-
-                If vglsListe.ContainsKey(msName) Then
-                    ' nichts zu tun 
-                Else
-                    ' eintragen 
-                    lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
-                    CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                    MilestoneDefinitions.Add(msDef)
-
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 1), .Cells(letzteZeile, 2)), Excel.Range)
+                    ' alte Area löschen
+                    area.Clear()
                 End If
+                
 
-            Next mMs
-            missingMilestoneDefinitions.Clear()
+                ' neue Area definieren
+                area = CType(.Range(.Cells(3, 1), .Cells(milestoneMappings.countSynonyms + milestoneMappings.countRegEx + 4, 2)), Excel.Range)
+
+                aktuelleZeile = 1
+                For ix As Integer = 1 To milestoneMappings.countSynonyms
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = milestoneMappings.getSynonymMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = milestoneMappings.getSynonymMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+
+                ' regular expressions schreiben 
+                For ix As Integer = 1 To milestoneMappings.countRegEx
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = milestoneMappings.getRegExMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = milestoneMappings.getRegExMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+
+                ' ignoreNames schreiben 
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 6), .Cells(letzteZeile, 6)), Excel.Range)
+                    ' alte Area löschen
+                    area.Clear()
+                End If
+                
+                area = CType(.Range(.Cells(3, 6), .Cells(milestoneMappings.countIgnore + 4, 6)), Excel.Range)
+                aktuelleZeile = 1
+
+                For ix As Integer = 1 To milestoneMappings.countIgnore
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = milestoneMappings.getIgnoreElement(ix - 1)
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+            End With
+
 
         End If
 
 
         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-        'appInstance.ScreenUpdating = True
         appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = formerSU
 
+    End Sub
+
+    ''' <summary>
+    ''' schreibt die Phase-/MilestoneDefinitions bzw. die missingPhase- Milestone-Definitions
+    ''' missingDefinitions werden in WorkSheet MissingDefinitions geschrieben 
+    ''' </summary>
+    ''' <param name="writeMissingDefinitions"></param>
+    ''' <remarks></remarks>
+    Private Sub WriteDefinitions(Optional ByVal writeMissingDefinitions As Boolean = False)
+
+        Dim phaseDefs As Excel.Range
+        Dim milestoneDefs As Excel.Range
+        'Dim foundRow As Integer
+        Dim phName As String
+        Dim lastrow As Excel.Range
+        Dim firstrow As Excel.Range
+        Dim tmpAnzahl As Integer
+
+        Dim msName As String
+        Dim shortName As String
+
+        Dim darstellungsKlasse As String
+
+        Dim wsName4 As Excel.Worksheet 
+
+        ' beim Starten der Projekt-Tafel wird sichergestellt, dass auch das Worksheet MissingDefinitions = arrwsnames(15) existiert ...
+        ' inkl der Namen der Phase- und MilestoneDefinitions
+        If writeMissingDefinitions Then
+            Try
+                wsName4 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                                               Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Catch ex As Exception
+                Exit Sub
+            End Try
+            
+        Else
+            wsName4 = CType(appInstance.Worksheets(arrWsNames(4)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+        End If
+
+        If writeMissingDefinitions Then
+            Try
+                phaseDefs = wsName4.Range("Missing_Phasen_Definition")
+            Catch ex As Exception
+                Exit Sub
+            End Try
+
+        Else
+            phaseDefs = wsName4.Range("awin_Phasen_Definition")
+        End If
+
+
+        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
+        Dim anzZeilen As Integer = phaseDefs.Rows.Count
+        lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
+        firstrow = CType(phaseDefs.Rows(1), Excel.Range)
+
+
+        ' das folgende muss nur gemacht werden, wenn die PhaseDefinitions geschrieben werden ... 
+        ' jetzt wird geprüft, ob die missingPhaseDefinitions in PhaseDefinitions übertragen werden 
+        If awinSettings.addMissingPhaseMilestoneDef Then
+
+            For ix As Integer = 1 To missingPhaseDefinitions.Count
+                Try
+                    PhaseDefinitions.Add(missingPhaseDefinitions.getPhaseDef(ix))
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            missingPhaseDefinitions.Clear()
+
+            ' jetzt die Meilensteine
+            For ix As Integer = 1 To missingMilestoneDefinitions.Count
+                Try
+                    MilestoneDefinitions.Add(missingMilestoneDefinitions.getMilestoneDef(ix))
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            missingMilestoneDefinitions.Clear()
+
+        End If
+
+        ' jetzt können erst die PhaseDefinitions, dann die MilestoneDefinitions geschrieben werden 
+
+
+
+        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
+        ' anzZeilen muss immer um 2 größer sein als die Anzahl der Definitionen ; 
+        ' die erste und letzte Zeile des Bereichs sind leer  
+
+        Dim anzDefinitions As Integer = PhaseDefinitions.Count
+
+        If writeMissingDefinitions Then
+            anzDefinitions = missingPhaseDefinitions.Count
+        Else
+            anzDefinitions = PhaseDefinitions.Count
+        End If
+
+
+        If anzZeilen = anzDefinitions + 2 Then
+        ElseIf anzZeilen < anzDefinitions + 2 Then
+            ' Zeilen einfügen 
+
+            tmpAnzahl = anzDefinitions + 2 - anzZeilen
+            For ix As Integer = 1 To tmpAnzahl
+                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Next
+
+            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
+            anzZeilen = phaseDefs.Rows.Count
+
+        Else
+            ' Zeilen löschen
+            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
+
+            For ix As Integer = 1 To tmpAnzahl
+                CType(phaseDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            Next
+
+            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
+            anzZeilen = phaseDefs.Rows.Count
+
+        End If
+
+        ' jetzt können die Phase-Definitions in den Range geschrieben werden 
+        ' und zwar so, dass sie mit der 2. Zeile beginnen 
+
+
+        For ix As Integer = 1 To anzDefinitions
+
+            If writeMissingDefinitions Then
+                With missingPhaseDefinitions.getPhaseDef(ix)
+                    phName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            Else
+                With PhaseDefinitions.getPhaseDef(ix)
+                    phName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            End If
+            
+
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = phName.ToString
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
+
+
+        Next ix
+
+        '
+        ' jetzt werden die Meilensteine geschrieben 
+        '
+
+        ' erste , letzte Zeile des Meilenstein Ranges setzen 
+        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
+
+        If writeMissingDefinitions Then
+            Try
+                milestoneDefs = wsName4.Range("Missing_Meilenstein_Definition")
+            Catch ex As Exception
+                Exit Sub
+            End Try
+
+        Else
+            milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
+        End If
+
+        anzZeilen = milestoneDefs.Rows.Count
+        lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
+        firstrow = CType(milestoneDefs.Rows(1), Excel.Range)
+
+
+        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
+        If writeMissingDefinitions Then
+            anzDefinitions = missingMilestoneDefinitions.Count
+        Else
+            anzDefinitions = MilestoneDefinitions.Count
+        End If
+
+        If anzZeilen = anzDefinitions + 2 Then
+        ElseIf anzZeilen < anzDefinitions + 2 Then
+            ' Zeilen einfügen 
+
+            tmpAnzahl = anzDefinitions + 2 - anzZeilen
+
+            For ix As Integer = 1 To tmpAnzahl
+                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Next
+
+            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
+            anzZeilen = milestoneDefs.Rows.Count
+
+
+        Else
+            ' Zeilen löschen
+            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
+
+            For ix As Integer = 1 To tmpAnzahl
+                CType(milestoneDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            Next
+
+            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
+            anzZeilen = milestoneDefs.Rows.Count
+
+        End If
+
+        ' jetzt können die Meilenstein-Definitions in den Range geschrieben werden 
+
+
+        For ix As Integer = 1 To anzDefinitions
+
+            If writeMissingDefinitions Then
+                With missingMilestoneDefinitions.getMilestoneDef(ix)
+                    msName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            Else
+                With MilestoneDefinitions.getMilestoneDef(ix)
+                    msName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            End If
+            
+
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = msName.ToString
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
+
+
+        Next ix
+
+
+
+        '
+        ' Ende der Behandlung der Phasen-/Meilenstein Behandlung 
     End Sub
 
     ''' <summary>
@@ -268,67 +702,566 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub awinsetTypen()
-
-        Dim i As Integer
-        Dim xlsCustomization As Excel.Workbook = Nothing
-
-        ReDim importOrdnerNames(5)
-        ReDim exportOrdnerNames(4)
+        Try
 
 
-        ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
-        'awinPath = appInstance.ActiveWorkbook.Path & "\"
+            Dim i As Integer
+            Dim xlsCustomization As Excel.Workbook = Nothing
 
-        If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
-            awinPath = awinSettings.awinPath
-        Else
-
-            Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
-
-        End If
+            ReDim importOrdnerNames(7)
+            ReDim exportOrdnerNames(5)
 
 
 
-        importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
-        importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
-        importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
-        importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
-        importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
-        importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
+            globalPath = awinSettings.globalPath
 
-        exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
-        exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
-        exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
-        exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
-        exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
-
-
-        StartofCalendar = StartofCalendar.Date
-
-        ProjektStatus(0) = "geplant"
-        ProjektStatus(1) = "beauftragt"
-        ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
-        ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
-        ProjektStatus(4) = "abgeschlossen"
+            ' Debug-Mode?
+            If awinSettings.visboDebug Then
+                If Not IsNothing(globalPath) Then
+                    If globalPath.Length > 0 Then
+                        Call MsgBox("GlobalPath:" & globalPath & vbLf & _
+                                    "existiert: " & My.Computer.FileSystem.DirectoryExists(globalPath).ToString)
+                    Else
+                        Call MsgBox("GlobalPath: leerer String")
+                    End If
+                Else
+                    Call MsgBox("GlobalPath: Nothing")
+                End If
 
 
-        DiagrammTypen(0) = "Phase"
-        DiagrammTypen(1) = "Rolle"
-        DiagrammTypen(2) = "Kostenart"
-        DiagrammTypen(3) = "Portfolio"
-        DiagrammTypen(4) = "Ergebnis"
-        DiagrammTypen(5) = "Meilenstein"
-        DiagrammTypen(6) = "Meilenstein Trendanalyse"
+            End If
 
-        ergebnisChartName(0) = "Earned Value"
-        ergebnisChartName(1) = "Earned Value - gewichtet"
-        ergebnisChartName(2) = "Verbesserungs-Potential"
-        ergebnisChartName(3) = "Risiko-Abschlag"
+            ' awinPath kann relativ oder absolut angegeben sein, beides möglich
 
-        ReDim portfolioDiagrammtitel(20)
-        portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
+            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+
+            awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+
+
+
+            If Not awinPath.EndsWith("\") Then
+                awinPath = awinPath & "\"
+            End If
+
+            ' Debug-Mode?
+            If awinSettings.visboDebug Then
+                Call MsgBox("awinPath:" & vbLf & awinPath)
+                Call MsgBox("globalPath:" & vbLf & globalPath)
+            End If
+
+            If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
+                awinPath = globalPath
+            ElseIf globalPath = "" And (awinPath <> "" And My.Computer.FileSystem.DirectoryExists(awinPath)) Then
+                globalPath = awinPath
+            ElseIf globalPath = "" Or awinPath = "" Then
+                Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
+            End If
+
+            If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
+                Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+            End If
+
+
+            If Not globalPath.EndsWith("\") Then
+                globalPath = globalPath & "\"
+            End If
+
+            ' Synchronization von Globalen und Lokalen Pfad
+
+            If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("jetzt wird synchronisiert ...")
+                End If
+
+                Call synchronizeGlobalToLocalFolder()
+
+            Else
+
+                If awinSettings.visboDebug Then
+                    If awinPath = globalPath Then
+                        Call MsgBox("awinPath = globalPath: keine Synchronisierung ...")
+                    Else
+                        Call MsgBox("globalPath existiert nicht: " & vbLf & globalPath)
+                    End If
+
+                End If
+
+                If My.Computer.FileSystem.DirectoryExists(awinPath) And (Dir(awinPath, vbDirectory) = "") Then
+                    Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
+                End If
+
+            End If
+
+
+            ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
+
+            reportOrdnerName = awinPath & "Reports\"
+            Try
+                My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+            Catch ex As Exception
+
+            End Try
+
+            importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
+            importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
+            importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
+            importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
+            importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+            importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
+            importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
+            importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\massEdit"
+
+            exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
+            exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
+            exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
+            exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
+            exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
+            exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\massEdit"
+
+            ' jetzt werden die Directories alle angelegt, sofern Sie nicht schon existieren ... 
+            For di As Integer = 0 To importOrdnerNames.Length - 1
+                Try
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(di))
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            For di As Integer = 0 To exportOrdnerNames.Length - 1
+                Try
+                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            StartofCalendar = StartofCalendar.Date
+
+            LizenzKomponenten(PTSWKomp.ProjectAdmin) = "ProjectAdmin"
+            LizenzKomponenten(PTSWKomp.Swimlanes2) = "Swimlanes2"
+            LizenzKomponenten(PTSWKomp.Premium) = "Premium"
+            LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
+            LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
+            LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
+
+
+            ProjektStatus(0) = "geplant"
+            ProjektStatus(1) = "beauftragt"
+            ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
+            ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
+            ProjektStatus(4) = "abgeschlossen"
+
+            ''ReportLang(PTSprache.deutsch) = "de"
+            ''ReportLang(PTSprache.englisch) = "en"
+            ''ReportLang(PTSprache.französisch) = "fr"
+            ''ReportLang(PTSprache.spanisch) = "es"
+
+
+
+            DiagrammTypen(0) = "Phase"
+            DiagrammTypen(1) = "Rolle"
+            DiagrammTypen(2) = "Kostenart"
+            DiagrammTypen(3) = "Portfolio"
+            DiagrammTypen(4) = "Ergebnis"
+            DiagrammTypen(5) = "Meilenstein"
+            DiagrammTypen(6) = "Meilenstein Trendanalyse"
+
+            Try
+                ''repCult = CultureInfo.CurrentCulture
+                'repCult = ReportLang(PTSprache.englisch)
+                repCult = ReportLang(PTSprache.deutsch)
+
+
+                repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+
+                Call setLanguageMessages()
+
+            Catch ex As Exception
+
+            End Try
+
+            autoSzenarioNamen(0) = "vor Optimierung"
+            autoSzenarioNamen(1) = "1. Optimum"
+            autoSzenarioNamen(2) = "2. Optimum"
+            autoSzenarioNamen(3) = "3. Optimum"
+
+            windowNames(0) = "Cockpit Phasen"
+            windowNames(1) = "Cockpit Rollen"
+            windowNames(2) = "Cockpit Kosten"
+            windowNames(3) = "Cockpit Wertigkeit"
+            windowNames(4) = "Cockpit Ergebnisse"
+            windowNames(5) = "Projekt Tafel"
+
+            '
+            ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
+            '
+            arrWsNames(1) = "Portfolio"
+            arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
+            arrWsNames(3) = "Tabelle1"
+            arrWsNames(4) = "Einstellungen"
+            arrWsNames(5) = "Tabelle2"
+            arrWsNames(6) = "Edit Allgemein"
+            arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
+            arrWsNames(8) = "Phasen-Mappings"
+            arrWsNames(9) = "Tabelle3"
+            arrWsNames(10) = "Meilenstein-Mappings"
+            arrWsNames(11) = "Projekt editieren"
+            arrWsNames(12) = "Lizenzen"
+            arrWsNames(13) = "Projekt iErloese"
+            arrWsNames(14) = "Objekte"
+            arrWsNames(15) = "missing Definitions"
+
+
+            awinSettings.applyFilter = False
+
+            showRangeLeft = 0
+            showRangeRight = 0
+
+            'selectedRoleNeeds = 0
+            'selectedCostNeeds = 0
+
+            ' bestimmen der maximalen Breite und Höhe 
+            Dim formerSU As Boolean = appInstance.ScreenUpdating
+            appInstance.ScreenUpdating = False
+
+
+            ' um dahinter temporär die Darstellungsklassen kopieren zu können  
+            Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+
+            With appInstance.ActiveWindow
+
+
+                If .WindowState = Excel.XlWindowState.xlMaximized Then
+                    maxScreenHeight = .Height
+                    maxScreenWidth = .Width
+                Else
+                    Dim formerState As Excel.XlWindowState = .WindowState
+                    .WindowState = Excel.XlWindowState.xlMaximized
+                    maxScreenHeight = .Height
+                    maxScreenWidth = .Width
+                    .WindowState = formerState
+                End If
+
+
+            End With
+
+            miniHeight = maxScreenHeight / 6
+            miniWidth = maxScreenWidth / 10
+
+
+
+            Dim oGrenze As Integer = UBound(frmCoord, 1)
+            ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
+            For i = 0 To oGrenze
+                frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
+                frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
+            Next
+
+            ' jetzt setzen der Werte für Status-Information und Milestone-Information
+            frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
+            frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+            frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
+            frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+            ' With listOfWorkSheets(arrWsNames(4))
+
+            ' Logfile öffnen und ggf. initialisieren
+            Call logfileOpen()
+
+
+            ' Auslesen des Window Namens 
+            Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+            Dim myUser As New WindowsIdentity(accountToken)
+            myWindowsName = myUser.Name
+            Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+
+            '' '--------------------------------------------------------------------------------
+            '   Testen, ob der User die passende Lizenz besitzt
+            '' '--------------------------------------------------------------------------------
+            Dim user As String = myWindowsName
+            Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
+
+            ' Lesen des Lizenzen-Files
+
+            Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+
+            ' Prüfen der Lizenzen
+            If Not lizenzen.validLicence(user, komponente) Then
+
+                Call logfileSchreiben("Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
+
+                ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+
+
+            Else            ' Lizenz ist ok
+
+                ' hier muss jetzt das Customization File aufgemacht werden ...
+                Try
+                    xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
+                    myCustomizationFile = appInstance.ActiveWorkbook.Name
+                Catch ex As Exception
+                    appInstance.ScreenUpdating = formerSU
+                    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+                End Try
+
+                Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
+                '' ''Try
+                '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
+                '' ''    If awinSettings.databaseName = "" Then
+                '' ''        awinSettings.databaseName = "VisboTest"
+                '' ''    End If
+                '' ''Catch ex As Exception
+
+                '' ''    awinSettings.databaseName = "VisboTest"
+                '' ''    'appInstance.ScreenUpdating = formerSU
+                '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
+                '' ''End Try
+
+                If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                    noDB = False
+
+                    ' ur: 23.01.2015: Abfragen der Login-Informationen
+                    loginErfolgreich = loginProzedur()
+
+
+                    If Not loginErfolgreich Then
+                        ' Customization-File wird geschlossen
+                        xlsCustomization.Close(SaveChanges:=False)
+                        Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
+                        Call logfileSchliessen()
+                        appInstance.Quit()
+                        Exit Sub
+
+                    End If
+
+                End If
+
+
+                Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                Try
+                    ' Aufbauen der Darstellungsklassen  
+                    Call aufbauenAppearanceDefinitions(wsName7810)
+
+                    ' Auslesen der BusinessUnit Definitionen
+                    Call readBusinessUnitDefinitions(wsName4)
+
+                    ' Auslesen der Phasen Definitionen 
+                    Call readPhaseDefinitions(wsName4)
+
+                    ' Auslesen der Meilenstein Definitionen 
+                    Call readMilestoneDefinitions(wsName4)
+
+
+                    ' Auslesen der Rollen Definitionen 
+                    Call readRoleDefinitions(wsName4)
+
+                    ' Auslesen der Kosten Definitionen 
+                    Call readCostDefinitions(wsName4)
+
+                    ' Auslesen der Custom Field Definitions
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    ' auslesen der anderen Informationen 
+                    Call readOtherDefinitions(wsName4)
+
+                    ' sollen die missingDefinitions gelesen / geschrieben werden 
+                    Dim needToBeSaved As Boolean = False
+                    If awinSettings.readWriteMissingDefinitions Then
+                        Try
+                            Dim wsName15 As Excel.Worksheet
+                            Try
+
+                                wsName15 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                                ' Auslesen der MissingPhase Definitionen 
+                                Call readPhaseDefinitions(wsName15, True)
+
+                                ' Auslesen der Meilenstein Definitionen 
+                                Call readMilestoneDefinitions(wsName15, True)
+                            Catch ex1 As Exception
+
+                                ' wenn das Sheet nicht existiert, muss es angelegt werden 
+                                needToBeSaved = True
+                                wsName15 = appInstance.Worksheets.Add(Count:=appInstance.Worksheets.Count + 1)
+                                wsName15.Name = arrWsNames(15)
+                                With wsName15
+
+                                    Dim tmpRange As Excel.Range = .Range(.Cells(1, 2), .Cells(2, 2))
+                                    tmpRange.Offset(0, -1).Value = "unbekannte Phasen-/Vorgangs-Namen"
+                                    .Names.Add(Name:="Missing_Phasen_Definition", RefersToR1C1:=tmpRange)
+
+                                    tmpRange = .Range(.Cells(4, 2), .Cells(5, 2))
+                                    tmpRange.Offset(0, -1).Value = "unbekannte Meilenstein-Namen"
+                                    .Names.Add(Name:="Missing_Meilenstein_Definition", RefersToR1C1:=tmpRange)
+                                End With
+
+                            End Try
+
+
+
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
+
+
+                    ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                    Call readNameMappings(wsName7810, phaseMappings)
+
+
+                    ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                    Call readNameMappings(wsName7810, milestoneMappings)
+
+                    ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
+                    appInstance.EnableEvents = False
+                    CType(appInstance.Worksheets(arrWsNames(7)), _
+                    Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
+
+                    ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                    appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=needToBeSaved) ' ur: 6.5.2014 savechanges hinzugefügt; tk 1.3.16 needtobesaved hinzugefügt
+                    appInstance.EnableEvents = True
+
+
+                    ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
+                    appearanceDefinitions.Clear()
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    Call aufbauenAppearanceDefinitions(wsName7810)
+
+
+                    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
+                    Call readRessourcenDetails()
+
+
+                    ' jetzt werden die Modul-Vorlagen ausgelesen 
+                    Call readVorlagen(True)
+
+                    ' jetzt werden die Projekt-Vorlagen ausgelesen 
+                    Call readVorlagen(False)
+
+                    Dim a As Integer = Projektvorlagen.Count
+                    Dim b As Integer = ModulVorlagen.Count
+
+                    ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
+                    ' Beschriftung des Kalenders
+                    appInstance.EnableEvents = False
+                    Call prepareProjektTafel()
+
+
+                    projectBoardSheet.Activate()
+                    appInstance.EnableEvents = True
+
+                    If Not noDB Then
+                        ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
+                        Call readInitConstellations()
+                    End If
+
+
+                Catch ex As Exception
+                    appInstance.ScreenUpdating = formerSU
+                    appInstance.EnableEvents = True
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+                ' Logfile wird geschlossen
+                Call logfileSchliessen()
+
+
+            End If    ' else-Zweig von Lizenzprüfung
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in awinsettypen " & vbLf & ex.Message)
+            Throw New ArgumentException("Fehler in awinsettypen " & vbLf & ex.Message)
+        End Try
+
+    End Sub
+
+
+    ''' <summary>
+    ''' setzt die Messages je nach Sprache 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub setLanguageMessages()
+        'ergebnisChartName(0) = "Earned Value"
+        'ergebnisChartName(1) = "Earned Value - gewichtet"
+        'ergebnisChartName(2) = "Verbesserungs-Potential"
+        'ergebnisChartName(3) = "Risiko-Abschlag"
+
+        ergebnisChartName(0) = repMessages.getmsg(54)
+        'Call MsgBox(ergebnisChartName(0))
+        ergebnisChartName(1) = repMessages.getmsg(55)
+        ergebnisChartName(2) = repMessages.getmsg(56)
+        ergebnisChartName(3) = repMessages.getmsg(57)
+
+        ' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+        summentitel1 = repMessages.getmsg(249)
+        summentitel2 = repMessages.getmsg(250)
+        summentitel3 = repMessages.getmsg(251)
+        summentitel4 = repMessages.getmsg(252)
+        summentitel5 = repMessages.getmsg(253)
+        summentitel6 = repMessages.getmsg(254)
+        summentitel7 = repMessages.getmsg(255)
+        summentitel8 = repMessages.getmsg(256)
+        summentitel9 = repMessages.getmsg(257)
+        summentitel10 = repMessages.getmsg(258)
+        summentitel11 = repMessages.getmsg(259)
+
+
+
+        ReDim portfolioDiagrammtitel(21)
+        'portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+        'portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+        'portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+        'portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+        'portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+        'portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+        'portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+        'portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
+        'portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+        'portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+        'portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+        'portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
+        'portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
+        'portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
+        'portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
+        'portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
+        'portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
+
+        portfolioDiagrammtitel(PTpfdk.Phasen) = repMessages.getmsg(58)
+        portfolioDiagrammtitel(PTpfdk.Rollen) = repMessages.getmsg(59)
+        portfolioDiagrammtitel(PTpfdk.Kosten) = repMessages.getmsg(60)
         portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
         portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
         portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
@@ -336,252 +1269,23 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
         portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
         portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
-        portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
-        portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+        portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = repMessages.getmsg(61)
+        portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = repMessages.getmsg(62)
         portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
         portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
-        portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
-        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
-        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
-        portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
-
-
-        autoSzenarioNamen(0) = "vor Optimierung"
-        autoSzenarioNamen(1) = "1. Optimum"
-        autoSzenarioNamen(2) = "2. Optimum"
-        autoSzenarioNamen(3) = "3. Optimum"
-
-        windowNames(0) = "Cockpit Phasen"
-        windowNames(1) = "Cockpit Rollen"
-        windowNames(2) = "Cockpit Kosten"
-        windowNames(3) = "Cockpit Wertigkeit"
-        windowNames(4) = "Cockpit Ergebnisse"
-        windowNames(5) = "Projekt Tafel"
-
-        '
-        ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
-        '
-        arrWsNames(1) = "Portfolio"
-        arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
-        arrWsNames(3) = "Tabelle1"
-        arrWsNames(4) = "Einstellungen"
-        arrWsNames(5) = "Tabelle2"
-        arrWsNames(6) = "Edit Allgemein"
-        arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
-        arrWsNames(8) = "Phasen-Mappings"
-        arrWsNames(9) = "Tabelle3"
-        arrWsNames(10) = "Meilenstein-Mappings"
-        arrWsNames(11) = "Projekt editieren"
-        arrWsNames(12) = "Projektdefinition Erloese"
-        arrWsNames(13) = "Projekt iErloese"
-        arrWsNames(14) = "Objekte"
-        arrWsNames(15) = "Portfolio Vorlage"
-
-
-        awinSettings.applyFilter = False
-
-        showRangeLeft = 0
-        showRangeRight = 0
-
-        'selectedRoleNeeds = 0
-        'selectedCostNeeds = 0
-
-        ' bestimmen der maximalen Breite und Höhe 
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        appInstance.ScreenUpdating = False
-
-
-        ' um dahinter temporär die Darstellungsklassen kopieren zu können  
-        Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-
-
-        With appInstance.ActiveWindow
-
-
-            If .WindowState = Excel.XlWindowState.xlMaximized Then
-                maxScreenHeight = .Height
-                maxScreenWidth = .Width
-            Else
-                Dim formerState As Excel.XlWindowState = .WindowState
-                .WindowState = Excel.XlWindowState.xlMaximized
-                maxScreenHeight = .Height
-                maxScreenWidth = .Width
-                .WindowState = formerState
-            End If
-
-
-        End With
-
-        miniHeight = maxScreenHeight / 6
-        miniWidth = maxScreenWidth / 10
-
-
-
-        Dim oGrenze As Integer = UBound(frmCoord, 1)
-        ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
-        For i = 0 To oGrenze
-            frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
-            frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
-        Next
-
-        ' jetzt setzen der Werte für Status-Information und Milestone-Information
-        frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
-        frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-        frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
-        frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-        ' With listOfWorkSheets(arrWsNames(4))
-
-        ' Logfile öffnen und ggf. initialisieren
-        Call logfileOpen()
-
-
-        ' hier muss jetzt das Customization File aufgemacht werden ...
-        Try
-            xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
-            myCustomizationFile = appInstance.ActiveWorkbook.Name
-        Catch ex As Exception
-            appInstance.ScreenUpdating = formerSU
-            Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-        End Try
-
-        Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-        ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
-        '' ''Try
-        '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
-        '' ''    If awinSettings.databaseName = "" Then
-        '' ''        awinSettings.databaseName = "VisboTest"
-        '' ''    End If
-        '' ''Catch ex As Exception
-
-        '' ''    awinSettings.databaseName = "VisboTest"
-        '' ''    'appInstance.ScreenUpdating = formerSU
-        '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
-        '' ''End Try
-
-
-
-        ' ur: 23.01.2015: Abfragen der Login-Informationen
-        loginErfolgreich = loginProzedur()
-
-        
-        If Not loginErfolgreich Then
-            ' Customization-File wird geschlossen
-            xlsCustomization.Close(SaveChanges:=False)
-            Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
-            Call logfileSchliessen()
-            appInstance.Quit()
-            Exit Sub
-        Else
-
-       
-
-
-            Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-            Try
-                ' Aufbauen der Darstellungsklassen  
-                Call aufbauenAppearanceDefinitions(wsName7810)
-
-                ' Auslesen der BusinessUnit Definitionen
-                Call readBusinessUnitDefinitions(wsName4)
-
-                ' Auslesen der Phasen Definitionen 
-                Call readPhaseDefinitions(wsName4)
-
-                ' Auslesen der Meilenstein Definitionen 
-                Call readMilestoneDefinitions(wsName4)
-
-                ' Auslesen der Rollen Definitionen 
-                Call readRoleDefinitions(wsName4)
-
-                ' Auslesen der Kosten Definitionen 
-                Call readCostDefinitions(wsName4)
-
-                ' auslesen der anderen Informationen 
-                Call readOtherDefinitions(wsName4)
-
-                ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                Call readNameMappings(wsName7810, phaseMappings)
-
-
-                ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                Call readNameMappings(wsName7810, milestoneMappings)
-
-                ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
-                appInstance.EnableEvents = False
-                CType(appInstance.Worksheets(arrWsNames(7)), _
-                Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
-
-                ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-                appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
-                appInstance.EnableEvents = True
-
-
-                ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
-                appearanceDefinitions.Clear()
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-                Call aufbauenAppearanceDefinitions(wsName7810)
-
-
-                ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                Call readRessourcenDetails()
-
-
-                ' jetzt werden die Modul-Vorlagen ausgelesen 
-                Call readVorlagen(True)
-
-                ' jetzt werden die Projekt-Vorlagen ausgelesen 
-                Call readVorlagen(False)
-
-                Dim a As Integer = Projektvorlagen.Count
-                Dim b As Integer = ModulVorlagen.Count
-
-                ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
-                ' Beschriftung des Kalenders
-                appInstance.EnableEvents = False
-                Call prepareProjektTafel()
-
-
-                projectBoardSheet.Activate()
-                appInstance.EnableEvents = True
-
-                ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
-                Call readInitConstellations()
-
-            Catch ex As Exception
-                appInstance.ScreenUpdating = formerSU
-                appInstance.EnableEvents = True
-                Throw New ArgumentException(ex.Message)
-            End Try
-
-            ' Logfile wird geschlossen
-            Call logfileSchliessen()
-
-
-        End If  ' von "if Login erfolgt"
-
+        portfolioDiagrammtitel(PTpfdk.Meilenstein) = repMessages.getmsg(63)
+        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = repMessages.getmsg(64)
+        portfolioDiagrammtitel(PTpfdk.Dependencies) = repMessages.getmsg(65)
+        portfolioDiagrammtitel(PTpfdk.betterWorseL) = repMessages.getmsg(66)
+        portfolioDiagrammtitel(PTpfdk.betterWorseB) = repMessages.getmsg(67)
+        portfolioDiagrammtitel(PTpfdk.Budget) = repMessages.getmsg(68)
+        portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = repMessages.getmsg(69)
 
     End Sub
-
     ''' <summary>
     ''' liest die Business Unit Definitionen aus der awinsetTypen
     ''' die globale Variable businessUnitDefinitions wird dabei befüllt
+    ''' die erste und letzte Zeile des Range wird ignoriert 
     ''' </summary>
     ''' <param name="wsname">Name des Excel Worksheets, das die Infos im aktuellen Workbook enthält</param>
     ''' <remarks></remarks>
@@ -589,124 +1293,177 @@ Public Module awinGeneralModules
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
         businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
-        With wsname
-            '
-            ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
-            '
-            Dim index As Integer = 1
-            Dim tmpBU As clsBusinessUnit
 
-            For Each c As Excel.Range In .Range("awin_BusinessUnit_Definitions")
+        Try
 
-                tmpBU = New clsBusinessUnit
+            With wsname
+                '
+                ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
+                '
+                Dim index As Integer = 1
+                Dim tmpBU As clsBusinessUnit
 
-                Try
+                Dim BURange As Excel.Range = CType(.Range("awin_BusinessUnit_Definitions"), Excel.Range)
+                Dim anzZeilen As Integer = BURange.Rows.Count
 
-                    tmpBU.name = CType(c.Value, String).Trim
-                    tmpBU.color = CLng(c.Interior.Color)
-                    businessUnitDefinitions.Add(index, tmpBU)
-                    index = index + 1
+                For i As Integer = 2 To anzZeilen - 1
 
-                Catch ex As Exception
-                    ' nichts tun ...
-                    index = index + 1
-                End Try
+                    tmpBU = New clsBusinessUnit
 
-            Next
+                    Try
+                        tmpBU.name = CStr(BURange.Cells(i, 1).value).Trim
+                        tmpBU.color = CLng(BURange.Cells(i, 1).Interior.color)
 
-        End With
+                        If tmpBU.name.Length > 0 Then
+                            businessUnitDefinitions.Add(i - 1, tmpBU)
+                        End If
+
+                    Catch ex As Exception
+                        ' nichts tun ...
+
+                    End Try
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Customization-File: BU Definition")
+        End Try
+
 
     End Sub
-    
+
     ''' <summary>
     ''' liest die Phasen Definitionen aus 
     ''' baut die globale Variable PhaseDefinitions auf 
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet)
+    Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
-        Dim i As Integer = 0
         Dim hphase As clsPhasenDefinition
         Dim tmpStr As String = ""
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Phasen_Definition")
+        Try
 
-                If CStr(c.Value) <> "" Then
-                    i = i + 1
-                    tmpStr = CType(c.Value, String)
-                    ' das neue ...
-                    hphase = New clsPhasenDefinition
-                    With hphase
-                        .farbe = CLng(c.Interior.Color)
-                        .name = tmpStr.Trim
-                        .UID = i
+            With wsname
 
-                        ' hat die Phase einen Schwellwert ? 
-                        Try
-                            If CInt(c.Offset(0, 1).Value) > 0 Then
-                                .schwellWert = CInt(c.Offset(0, 1).Value)
-                            End If
-                        Catch ex As Exception
+                Dim phaseRange As Excel.Range
 
-                        End Try
-
-                        ' ist die Phase eine special Phase ? 
-                        Try
-                            If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
-                                specialListofPhases.Add(hphase.name, hphase.name)
-                            End If
-                        Catch ex As Exception
-                        End Try
-
-
-
-                        ' hat die Phase eine Abkürzung ? 
-                        Dim abbrev As String = ""
-                        If Not IsNothing(c.Offset(0, 5).Value) Then
-                            abbrev = CStr(c.Offset(0, 5).Value).Trim
-                        End If
-
-                        .shortName = abbrev
-
-
-                        ' hat die Phase eine Darstellungsklasse ? 
-                        Try
-                            Dim darstellungsklasse As String
-                            If Not IsNothing(c.Offset(0, 6).Value) Then
-
-                                If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
-                                    darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                    If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
-                                        .darstellungsKlasse = darstellungsklasse
-                                    Else
-                                        .darstellungsKlasse = ""
-                                    End If
-                                End If
-
-                            End If
-
-                        Catch ex As Exception
-                            .darstellungsKlasse = ""
-                        End Try
-
-
-
-                    End With
-
+                If missingDefinitions Then
                     Try
-                        PhaseDefinitions.Add(hphase)
+                        phaseRange = .Range("Missing_Phasen_Definition")
                     Catch ex As Exception
-
+                        Exit Sub
                     End Try
 
-
+                Else
+                    phaseRange = .Range("awin_Phasen_Definition")
                 End If
 
-            Next c
+                Dim anzZeilen As Integer = phaseRange.Rows.Count
+                Dim c As Excel.Range
 
-        End With
+                For iZeile As Integer = 2 To anzZeilen - 1
+
+                    c = CType(phaseRange.Cells(iZeile, 1), Excel.Range)
+
+                    If Not IsNothing(c.Value) Then
+
+                        If CStr(c.Value) <> "" Then
+                            tmpStr = CType(c.Value, String)
+                            ' das neue ...
+                            hphase = New clsPhasenDefinition
+                            With hphase
+                                '.farbe = CLng(c.Interior.Color)
+                                .name = tmpStr.Trim
+                                .UID = iZeile - 1
+
+                                ' hat die Phase einen Schwellwert ? 
+                                Try
+                                    If CInt(c.Offset(0, 1).Value) > 0 Then
+                                        .schwellWert = CInt(c.Offset(0, 1).Value)
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                ' ist die Phase eine special Phase ? 
+                                Try
+                                    If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
+                                        specialListofPhases.Add(hphase.name, hphase.name)
+                                    End If
+                                Catch ex As Exception
+                                End Try
+
+
+
+                                ' hat die Phase eine Abkürzung ? 
+                                Dim abbrev As String = ""
+                                If Not IsNothing(c.Offset(0, 5).Value) Then
+                                    abbrev = CStr(c.Offset(0, 5).Value).Trim
+                                End If
+
+                                .shortName = abbrev
+
+
+                                ' hat die Phase eine Darstellungsklasse ? 
+                                Try
+                                    Dim darstellungsklasse As String
+                                    If Not IsNothing(c.Offset(0, 6).Value) Then
+
+                                        If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                            darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                            If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                                .darstellungsKlasse = darstellungsklasse
+                                            Else
+                                                .darstellungsKlasse = ""
+                                            End If
+                                        End If
+
+                                    End If
+
+                                Catch ex As Exception
+                                    .darstellungsKlasse = ""
+                                End Try
+
+
+
+                            End With
+
+                            Try
+                                If missingDefinitions Then
+
+                                    missingPhaseDefinitions.Add(hphase)
+
+                                Else
+
+                                    PhaseDefinitions.Add(hphase)
+
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+
+                        End If
+
+                    End If
+
+
+                Next
+
+
+            End With
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("Fehler in Customization File: Phasen")
+
+        End Try
+
 
     End Sub
 
@@ -715,92 +1472,129 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet)
+    Private Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim i As Integer = 0
         Dim hMilestone As clsMeilensteinDefinition
         Dim tmpStr As String
 
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Meilenstein_Definition")
+        Try
 
-                ' hier muss das Aufbauen der MilestoneDefinitions gemacht werden  
-                If CStr(c.Value) <> "" Then
-                    i = i + 1
-                    tmpStr = CType(c.Value, String)
-                    ' das neue ...
-                    hMilestone = New clsMeilensteinDefinition
-                    With hMilestone
-                        .name = tmpStr.Trim
-                        .UID = i
+            With wsname
 
-                        ' hat der Milestone einen Schwellwert ? 
+                Dim milestoneRange As Excel.Range
 
-                        If IsNothing(c.Offset(0, 1).Value) Then
-                        ElseIf IsNumeric(c.Offset(0, 1).Value) Then
-                            If CInt(c.Offset(0, 1).Value) > 0 Then
-                                .schwellWert = CInt(c.Offset(0, 1).Value)
-                            End If
-                        End If
-
-
-                        ' hat der Milestone einen Bezug ? 
-                        Dim bezug As String = ""
-                        If Not IsNothing(c.Offset(0, 4).Value) Then
-
-                            bezug = CStr(c.Offset(0, 4).Value).Trim
-
-                            If PhaseDefinitions.Contains(bezug) Then
-                            Else
-                                bezug = ""
-                            End If
-
-                        End If
-
-                        .belongsTo = bezug
-
-                        ' hat der Milestone eine Abkürzung ? 
-                        Dim abbrev As String = ""
-                        If Not IsNothing(c.Offset(0, 5).Value) Then
-                            abbrev = CStr(c.Offset(0, 5).Value).Trim
-                        End If
-
-                        .shortName = abbrev
-
-
-                        ' hat der Milestone eine Darstellungsklasse ? 
-
-                        Dim darstellungsklasse As String = ""
-                        If Not IsNothing(c.Offset(0, 6).Value) Then
-
-                            If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
-                                darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
-                                    .darstellungsKlasse = darstellungsklasse
-                                Else
-                                    .darstellungsKlasse = ""
-                                End If
-                            End If
-
-                        End If
-
-
-
-                    End With
-
+                If missingDefinitions Then
                     Try
-                        MilestoneDefinitions.Add(hMilestone)
+                        milestoneRange = .Range("Missing_Meilenstein_Definition")
                     Catch ex As Exception
-
+                        Exit Sub
                     End Try
 
-
+                Else
+                    milestoneRange = .Range("awin_Meilenstein_Definition")
                 End If
 
-            Next
+                Dim anzZeilen As Integer = milestoneRange.Rows.Count
+                Dim c As Excel.Range
 
-        End With
+                For iZeile As Integer = 2 To anzZeilen - 1
+
+                    c = CType(milestoneRange.Cells(iZeile, 1), Excel.Range)
+
+                    ' hier muss das Aufbauen der MilestoneDefinitions gemacht werden  
+                    If Not IsNothing(c.Value) Then
+
+                        If CStr(c.Value) <> "" Then
+                            i = i + 1
+                            tmpStr = CType(c.Value, String)
+                            ' das neue ...
+                            hMilestone = New clsMeilensteinDefinition
+                            With hMilestone
+                                .name = tmpStr.Trim
+                                .UID = i
+
+                                ' hat der Milestone einen Schwellwert ? 
+
+                                If IsNothing(c.Offset(0, 1).Value) Then
+                                ElseIf IsNumeric(c.Offset(0, 1).Value) Then
+                                    If CInt(c.Offset(0, 1).Value) > 0 Then
+                                        .schwellWert = CInt(c.Offset(0, 1).Value)
+                                    End If
+                                End If
+
+
+                                ' hat der Milestone einen Bezug ? 
+                                Dim bezug As String = ""
+                                If Not IsNothing(c.Offset(0, 4).Value) Then
+
+                                    bezug = CStr(c.Offset(0, 4).Value).Trim
+
+                                    If PhaseDefinitions.Contains(bezug) Then
+                                    Else
+                                        bezug = ""
+                                    End If
+
+                                End If
+
+                                .belongsTo = bezug
+
+                                ' hat der Milestone eine Abkürzung ? 
+                                Dim abbrev As String = ""
+                                If Not IsNothing(c.Offset(0, 5).Value) Then
+                                    abbrev = CStr(c.Offset(0, 5).Value).Trim
+                                End If
+
+                                .shortName = abbrev
+
+
+                                ' hat der Milestone eine Darstellungsklasse ? 
+
+                                Dim darstellungsklasse As String = ""
+                                If Not IsNothing(c.Offset(0, 6).Value) Then
+
+                                    If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                        darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                        If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                            .darstellungsKlasse = darstellungsklasse
+                                        Else
+                                            .darstellungsKlasse = ""
+                                        End If
+                                    End If
+
+                                End If
+
+
+
+                            End With
+
+                            Try
+                                If missingDefinitions Then
+                                    missingMilestoneDefinitions.Add(hMilestone)
+                                Else
+                                    MilestoneDefinitions.Add(hMilestone)
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+
+                        End If
+
+                    End If
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("Fehler in Customization File: Meilensteine")
+
+        End Try
+
 
     End Sub
 
@@ -815,72 +1609,160 @@ Public Module awinGeneralModules
         '
         ' Rollen Definitionen auslesen - im bereich awin_Rollen_Definition
         '
-        Dim i As Integer = 0
+        Dim index As Integer = 0
         Dim tmpStr As String
         Dim hrole As clsRollenDefinition
 
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Rollen_Definition")
-                If CStr(c.Value) <> "" Then
-                    i = i + 1
-                    tmpStr = CType(c.Value, String)
-                    If i = 1 Then
-                        rollenKapaFarbe = c.Offset(0, 1).Interior.Color
+        Try
+
+
+            With wsname
+
+                Dim rolesRange As Excel.Range = .Range("awin_Rollen_Definition")
+                Dim anzZeilen As Integer = rolesRange.Rows.Count
+                Dim c As Excel.Range
+
+
+                For i = 2 To anzZeilen - 1
+
+                    c = CType(rolesRange.Cells(i, 1), Excel.Range)
+
+                    If CStr(c.Value) <> "" Then
+                        index = index + 1
+                        tmpStr = CType(c.Value, String)
+                        If index = 1 Then
+                            rollenKapaFarbe = c.Offset(0, 1).Interior.Color
+                        End If
+
+
+                        ' jetzt kommt die Rollen Definition 
+                        hrole = New clsRollenDefinition
+                        Dim cp As Integer
+                        With hrole
+                            .name = tmpStr.Trim
+                            .Startkapa = CDbl(c.Offset(0, 1).Value)
+                            .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+
+                            Try
+                                If CDbl(c.Offset(0, 3).Value) = 0.0 Then
+                                    .tagessatzExtern = .tagessatzIntern * 1.35
+                                Else
+                                    .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
+                                End If
+                            Catch ex As Exception
+                                .tagessatzExtern = .tagessatzIntern * 1.35
+                            End Try
+
+                            ' Auslesen der zukünftigen Kapazität
+                            ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
+                            For cp = 1 To 240
+
+                                .kapazitaet(cp) = .Startkapa
+                                .externeKapazitaet(cp) = 0.0
+
+                            Next
+                            .farbe = c.Interior.Color
+                            .UID = index
+                        End With
+
+                        '
+                        RoleDefinitions.Add(hrole)
+                        'hrole = Nothing
+
                     End If
 
+                Next
 
-                    ' jetzt kommt die Rollen Definition 
-                    hrole = New clsRollenDefinition
-                    Dim cp As Integer
-                    With hrole
-                        .name = tmpStr.Trim
-                        .Startkapa = CDbl(c.Offset(0, 1).Value)
-                        .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+            End With
 
-                        Try
-                            If CDbl(c.Offset(0, 3).Value) = 0.0 Then
-                                .tagessatzExtern = .tagessatzIntern * 1.35
-                            Else
-                                .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
-                            End If
-                        Catch ex As Exception
-                            .tagessatzExtern = .tagessatzIntern * 1.35
-                        End Try
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Customization-File: Rolle")
+        End Try
 
-                        ' Auslesen der zukünftigen Kapazität
-                        ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
-                        For cp = 1 To 240
-                            .kapazitaet(cp) = .Startkapa
-                            .externeKapazitaet(cp) = 0.0
 
-                            ' Änderung 29.5.14 Wurde ersetzt durch das Auslesen der Rollen-Kapa Files
-                            ' siehe weiter unten 
-                            '.kapazitaet(cp) = CType(c.Offset(0, 3 + cp).Value, Double)
-                            'If .kapazitaet(cp) < 0 Then
-                            '    ' Kapa kann nicht negative sein
-                            '    ' wenn nichts angegeben wird, soll die Startkapa verwendet werden 
-                            '    .kapazitaet(cp) = .Startkapa
-                            'End If
-                        Next
-                        .farbe = c.Interior.Color
-                        .UID = i
-                    End With
-
-                    ' später, wenn die Customization File bereits geschlossen ist, werden die 
-                    ' evtl vorhandenen Rolle Kapazität Files ausgelesen 
-
-                    RoleDefinitions.Add(hrole)
-                    'hrole = Nothing
-
-                End If
-
-            Next c
-
-        End With
-        
 
     End Sub
+
+
+    ''' <summary>
+    ''' liest die optional vorhandenen Custom Field Definitionen aus 
+    ''' </summary>
+    ''' <param name="wsname"></param>
+    ''' <remarks></remarks>
+    Private Sub readCustomFieldDefinitions(wsname As Excel.Worksheet)
+
+        '
+        ' Custom Field Definitions Definitionen auslesen - im bereich awin_CustomField_Definitions
+        '
+
+        Try
+
+
+            With wsname
+
+                Dim customFieldRange As Excel.Range = .Range("awin_CustomField_Definitions")
+                Dim anzZeilen As Integer = customFieldRange.Rows.Count
+                Dim c As Excel.Range
+
+
+                For i = 2 To anzZeilen - 1
+                    c = CType(customFieldRange.Cells(i, 1), Excel.Range)
+
+                    Dim uid As Integer = i - 1
+                    Dim cfType As Integer = -1
+                    Dim cfName As String = ""
+                    Dim ok As Boolean = False
+                    Try
+                        cfName = CStr(CType(customFieldRange.Cells(i, 1), Excel.Range).Value)
+                        cfType = CInt(CType(customFieldRange.Cells(i, 2), Excel.Range).Value)
+                        ok = True
+                    Catch ex As Exception
+
+                    End Try
+
+                    If ok And cfName <> "" And isValidCustomField(cfType) Then
+
+                        ' jetzt die CustomField Definition hinzufügen 
+                        Try
+                            customFieldDefinitions.add(cfName, cfType, uid)
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+                    End If
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Customization-File: Custom Field Definitions")
+        End Try
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt zurück, ob die übergebene Zahl ein gültiger CustomField Typ ist
+    ''' </summary>
+    ''' <param name="id"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidCustomField(ByVal id As Integer) As Boolean
+
+        If id = ptCustomFields.bool Or _
+            id = ptCustomFields.Str Or
+            id = ptCustomFields.Dbl Then
+            isValidCustomField = True
+        Else
+            isValidCustomField = False
+        End If
+
+    End Function
 
 
     ''' <summary>
@@ -892,37 +1774,49 @@ Public Module awinGeneralModules
     Private Sub readCostDefinitions(ByVal wsname As Excel.Worksheet)
 
 
-        Dim i As Integer = 0
+        Dim index As Integer = 0
         Dim hcost As clsKostenartDefinition
         Dim tmpStr As String
 
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Kosten_Definition")
+        Try
 
-                If CStr(c.Value) <> "" Or i > 0 Then
-                    i = i + 1
+            With wsname
 
+                Dim costRange As Excel.Range = .Range("awin_Kosten_Definition")
+                Dim anzZeilen As Integer = costRange.Rows.Count
+                Dim c As Excel.Range
 
-                    ' jetzt kommt die Kostenarten Definition
-                    hcost = New clsKostenartDefinition
-                    With hcost
-                        If CStr(c.Value) <> "" Then
-                            tmpStr = CType(c.Value, String)
-                            .name = tmpStr.Trim
-                        Else
-                            .name = "Personalkosten"
-                        End If
-                        .farbe = c.Interior.Color
-                        .UID = i
-                    End With
+                For i As Integer = 2 To anzZeilen - 1
 
-                    CostDefinitions.Add(hcost)
-                End If
+                    c = CType(costRange.Cells(i, 1), Excel.Range)
+                    If CStr(c.Value) <> "" Or index > 0 Then
+                        index = index + 1
 
-            Next c
+                        ' jetzt kommt die Kostenarten Definition
+                        hcost = New clsKostenartDefinition
+                        With hcost
+                            If CStr(c.Value) <> "" Then
+                                tmpStr = CType(c.Value, String)
+                                .name = tmpStr.Trim
+                            Else
+                                .name = "Personalkosten"
+                            End If
+                            .farbe = c.Interior.Color
+                            .UID = index
+                        End With
 
-        End With
+                        CostDefinitions.Add(hcost)
+                    End If
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in Customization File: Kosten")
+        End Try
+
 
     End Sub
 
@@ -976,6 +1870,15 @@ Public Module awinGeneralModules
                     Throw New ArgumentException("Customization File fehlerhaft - Farben fehlen ... " & vbLf & ex.Message)
                 End Try
 
+                Try
+                    awinSettings.missingDefinitionColor = CLng(.Range("MissingDefinitionColor").Interior.Color)
+                    ' ''If awinSettings.missingDefinitionColor = XlRgbColor.rgbWhite Then
+                    ' ''    Call MsgBox("leeres missingDefinitionColor - Feld in customizationfile " & awinSettings.missingDefinitionColor.ToString)
+                    ' ''End If
+                Catch ex As Exception
+
+                End Try
+
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
                 weightStrategicFit = CDbl(.Range("WeightStrategicFit").Value)
@@ -996,6 +1899,66 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
 
+            ' gibt es die Einstellung für ProjectWithNoMPmayPass
+
+            Try
+                awinSettings.mppProjectsWithNoMPmayPass = CBool(.Range("passFilterWithNoMPs").Value)
+            Catch ex As Exception
+                awinSettings.mppProjectsWithNoMPmayPass = False
+            End Try
+
+
+            ' ist Einstellung für volles Protokoll vorhanden ? 
+            Try
+
+                awinSettings.fullProtocol = CBool(.Range("volles_Protokol").Value)
+            Catch ex As Exception
+                awinSettings.fullProtocol = False
+            End Try
+
+            ' Einstellung für addMissingDefinitions
+            Try
+                awinSettings.addMissingPhaseMilestoneDef = CBool(.Range("addMissingDefinitions").Value)
+            Catch ex As Exception
+                awinSettings.addMissingPhaseMilestoneDef = False
+            End Try
+
+            ' Einstellung für alwaysAcceptTemplate Names 
+            Try
+                awinSettings.alwaysAcceptTemplateNames = CBool(.Range("alywaysAcceptTemplateDefs").Value)
+            Catch ex As Exception
+                awinSettings.alwaysAcceptTemplateNames = False
+            End Try
+
+            ' Einstellungen, um Duplikate zu eliminieren ; 
+            Try
+                awinSettings.eliminateDuplicates = CBool(.Range("eliminate_Duplicates").Value)
+            Catch ex As Exception
+                awinSettings.eliminateDuplicates = True
+            End Try
+
+            ' Einstellungen, um unbekannte Namen zu importieren 
+            Try
+                awinSettings.importUnknownNames = CBool(.Range("importUnknownNames").Value)
+            Catch ex As Exception
+                awinSettings.importUnknownNames = True
+            End Try
+
+            ' Einstellung, um Geschwister-Namen immer eindeutig zu machen
+            Try
+                awinSettings.createUniqueSiblingNames = CBool(.Range("uniqueSiblingNames").Value)
+            Catch ex As Exception
+                awinSettings.createUniqueSiblingNames = True
+            End Try
+
+            ' Einstellung, um das Lesen / Schreiben von MissingDefinitions zu steuern 
+            Try
+                awinSettings.readWriteMissingDefinitions = CBool(.Range("RW_MissingDefinitions").Value)
+            Catch ex As Exception
+                awinSettings.readWriteMissingDefinitions = False
+            End Try
+
+
             StartofCalendar = awinSettings.kalenderStart
             StartofCalendar = StartofCalendar.ToLocalTime()
 
@@ -1013,7 +1976,7 @@ Public Module awinGeneralModules
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
         End With
-        
+
 
     End Sub
 
@@ -1161,13 +2124,16 @@ Public Module awinGeneralModules
                 If isModulVorlage Then
                     If ModulVorlagen.Count > 0 Then
                         awinSettings.lastModulTyp = ModulVorlagen.Liste.ElementAt(0).Value.VorlagenName
-                        Call awinWritePhaseDefinitions()
+                        ' Änderung tk 26.11.15 muss doch hier gar nicht gemacht werden .. erst mit Beenden des Wörterbuchs bzw. Beenden der Applikation
+                        'Call awinWritePhaseDefinitions()
+                        'Call awinWritePhaseMilestoneDefinitions 
                     End If
 
                 Else
                     If Projektvorlagen.Count > 0 Then
                         awinSettings.lastProjektTyp = Projektvorlagen.Liste.ElementAt(0).Value.VorlagenName
-                        Call awinWritePhaseDefinitions()
+                        'Call awinWritePhaseDefinitions()
+                        'Call awinWritePhaseMilestoneDefinitions 
                     End If
 
                 End If
@@ -1185,7 +2151,7 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("der Vorlagen Ordner fehlt:" & vbLf & dirName)
             End If
         End If
-        
+
 
     End Sub
 
@@ -1203,7 +2169,7 @@ Public Module awinGeneralModules
             CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook).Activate()
         End If
 
-        Dim wsName3 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), _
+        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
         Dim tmpRange As Excel.Range
@@ -1219,13 +2185,19 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar
                     CType(.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(1)
                     rng = .Range(.Cells(1, 1), .Cells(1, 2))
-                    rng.NumberFormat = "mmm-yy"
+                    '' Deutsches Format:
+                    'rng.NumberFormat = "[$-407]mmm yy;@"
+                    ' Englische Format:
+                    rng.NumberFormat = "[$-409]mmm yy;@"
 
-                    Dim destinationRange As Excel.Range = .Range(.Cells(1, 1), .Cells(1, 480))
+                    Dim destinationRange As Excel.Range = .Range(.Cells(1, 1), .Cells(1, 720))
                     With destinationRange
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                        .NumberFormat = "mmm-yy"
+                        '' Deutsches Format: 
+                        'rng.NumberFormat = "[$-407]mmm yy;@"
+                        ' Englische Format:
+                        .NumberFormat = "[$-409]mmm yy;@"
                         .WrapText = False
                         .Orientation = 90
                         .AddIndent = False
@@ -1357,7 +2329,8 @@ Public Module awinGeneralModules
     '
     '
     '
-    Public Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer)
+    Public Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer, _
+                                  Optional ByVal noFurtherActions As Boolean = False)
 
         'Dim k As Integer
 
@@ -1373,7 +2346,7 @@ Public Module awinGeneralModules
             von = 1
         End If
 
-        If bis < von + 5 Then
+        If bis < von + minColumns - 1 Then
             noTimeFrame = True
         End If
 
@@ -1392,9 +2365,12 @@ Public Module awinGeneralModules
             '
             ' wenn roentgenblick.ison , werden Bedarfe angezeigt - die müssen hier ausgeblendet werden - nachher mit den neuen Werten eingeblendet werden
             '
+
             If roentgenBlick.isOn And ShowProjekte.Count > 0 Then
                 Call awinNoshowProjectNeeds()
             End If
+
+
 
             '
             ' aktualisieren der Showtime zone, erst die alte ausblenden , dann die neue einblenden
@@ -1417,63 +2393,63 @@ Public Module awinGeneralModules
                         Call awinNoshowProjectNeeds()
                     End If
                 End With
-                
-
-                Else
-                    Call awinShowtimezone(von, bis, True)
 
 
-                    showRangeLeft = von
-                    showRangeRight = bis
+            Else
+                Call awinShowtimezone(von, bis, True)
 
 
-                    ' jetzt werden - falls nötig die Projekte nachgeladen ... 
-                    Try
-                        If awinSettings.applyFilter Then
-                            ' vorher hiess das loadprojectsonChange - jetzt ist es so: 
-                            ' wenn applyFilter = true, dann soll nachgeladen werden unter Anwendung 
-                            ' des Filters "Last"
-                            Dim filter As New clsFilter
-                            filter = filterDefinitions.retrieveFilter("Last")
-                            Call awinProjekteImZeitraumLaden(awinSettings.databaseName, filter)
-
-                            '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
-                            'DeletedProjekte.Clear()
-
-                            '
-                            '   wenn "selectedRoleNeeds" ungleich Null ist, werden Bedarfe angezeigt - die müssen hier wieder - mit den neuen Daten für show_range_lefet, .._right eingeblendet werden
-                            '
-                            If roentgenBlick.isOn Then
-                                With roentgenBlick
-                                    Call awinShowProjectNeeds1(mycollection:=.myCollection, type:=.type)
-                                End With
-                            End If
+                showRangeLeft = von
+                showRangeRight = bis
 
 
+                ' jetzt werden - falls nötig die Projekte nachgeladen ... 
+                Try
+                    If awinSettings.applyFilter Then
+                        ' vorher hiess das loadprojectsonChange - jetzt ist es so: 
+                        ' wenn applyFilter = true, dann soll nachgeladen werden unter Anwendung 
+                        ' des Filters "Last"
+                        Dim filter As New clsFilter
+                        filter = filterDefinitions.retrieveFilter("Last")
+                        Call awinProjekteImZeitraumLaden(awinSettings.databaseName, filter)
 
-                            '
-                            ' wenn diagramme angezeigt sind - aktualisieren dieser Diagramme
-                            '
+                        '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
+                        'DeletedProjekte.Clear()
 
-
-
+                        '
+                        '   wenn "selectedRoleNeeds" ungleich Null ist, werden Bedarfe angezeigt - die müssen hier wieder - mit den neuen Daten für show_range_lefet, .._right eingeblendet werden
+                        '
+                        If roentgenBlick.isOn Then
+                            With roentgenBlick
+                                Call awinShowProjectNeeds1(mycollection:=.myCollection, type:=.type)
+                            End With
                         End If
 
-                        ' betrachteter Zeitraum wurde geändert - typus = 4
-                        Call awinNeuZeichnenDiagramme(4)
 
 
-                    Catch ex As Exception
-                        Call MsgBox(ex.Message)
-                    End Try
-                End If
+                        '
+                        ' wenn diagramme angezeigt sind - aktualisieren dieser Diagramme
+                        '
 
 
 
+                    End If
+
+                    ' betrachteter Zeitraum wurde geändert - typus = 4
+                    Call awinNeuZeichnenDiagramme(4)
 
 
-
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
             End If
+
+
+
+
+
+
+        End If
 
 
 
@@ -1758,7 +2734,7 @@ Public Module awinGeneralModules
                                     Dim hphase As clsPhasenDefinition
                                     hphase = New clsPhasenDefinition
 
-                                    hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
+                                    'hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
                                     hphase.name = phaseName
                                     hphase.UID = phaseIX
                                     phaseIX = phaseIX + 1
@@ -1867,11 +2843,1598 @@ Public Module awinGeneralModules
 
 
     End Sub
+    Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef importdate As Date)
+
+        Dim prj As MSProject.Application
+        Dim msproj As MSProject.Project
+        Dim i As Integer = 1
+        Dim lastphase As clsPhase
+        Dim lasthrchyNode As clsHierarchyNode
+        Dim lastelemID As String = ""
+        Dim lastlevel As Integer = 0
+        Dim Xwerte() As Double
+        Dim active_proj As String = ""      ' Name des aktuell aktiven Projektes
+
+        ' hier wird eingetragen, welches vordefinierte Flag das customized Field VISBO usw. repräsentiert
+        Dim visboflag As MSProject.PjField = Nothing
+        Dim visbo_taskclass As MSProject.PjField = Nothing
+        Dim visbo_abbrev As MSProject.PjField = Nothing
+        Dim visbo_ampel As MSProject.PjField = Nothing
+
+        ' Liste, die aufgebaut wird beim Einlesen der Tasks. Hier wird vermerkt, welche Task das Visbo-Flag mit YES und welche mit NO
+        ' gesetzt hat d.h. berücksichtigt werden soll
+        ' Diese Liste enthält keine Elemente, wenn das VISBO-Flag nicht definiert ist
+        Dim visboFlagListe As New SortedList(Of String, Boolean)
+
+        Try
+
+            'On Error Resume Next
+            Try
+                prj = CType(GetObject(, "msproject.application"), MSProject.Application)
+            Catch ex As Exception
+                prj = CType(CreateObject("msproject.application"), MSProject.Application)
+
+                If IsNothing(prj) Then
+                    Call MsgBox("MSproject ist nicht installiert")
+                    Exit Sub
+                End If
+            End Try
+
+            If modus <> "BHTC" Then
+
+                ' ''prj.FileOpen(Name:="\\KOYTEK-NAS\backup\Ute\VISBO\MS Project Beispiele\ute.mpp", _
+                ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
+
+                prj.FileOpen(Name:=filename, _
+                            ReadOnly:=True, FormatID:="MSProject.MPP")
 
 
-    Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
+            End If
+
+
+            Dim anzProj As Integer = prj.Projects.Count
+
+            If anzProj > 0 Then
+
+
+                ' VISBO-Flag dient dazu, Tasks, die nicht benötigt werden in der MultiprojektPlanung nicht mit einzulesen
+                ' in die Projekt-Tafel
+
+                ' Ist dieses VISBO-Flag definiert?
+                Dim pjFlag As String = ""
+
+                Try
+                    visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
+                    pjFlag = prj.FieldConstantToFieldName(visboflag)
+
+                Catch ex As Exception
+                    visboflag = 0
+                End Try
+
+                Try
+                    visbo_taskclass = CType(prj.FieldNameToFieldConstant(awinSettings.visboTaskClass, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_taskclass = 0
+                End Try
+                Try
+                    visbo_abbrev = CType(prj.FieldNameToFieldConstant(awinSettings.visboAbbreviation, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_abbrev = 0
+                End Try
+                Try
+                    visbo_ampel = CType(prj.FieldNameToFieldConstant(awinSettings.visboAmpel, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_ampel = 0
+                End Try
+               
+                If modus = "BHTC" Then
+                    ' In Missing..Definitions sind noch die Definitionen des vorausgegangenen Projekts definiert.
+                    ' Diese sollen nicht mehr aktiv sein.
+                    missingPhaseDefinitions.Clear()
+                    missingMilestoneDefinitions.Clear()
+                    '' Einlesen des aktiven Projekts
+                    msproj = prj.ActiveProject
+                Else
+                    '' Einlesen des zuletzt gelesenen Projekts
+                    msproj = prj.Projects.Item(anzProj)
+
+                End If
+
+                ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
+                '' ''For proj_i = beginnProjekt To endeProjekt
+
+            
+
+                hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
+
+                Dim ProjektdauerIndays As Integer = calcDauerIndays(hproj.startDate, CDate(msproj.Finish))
+                Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
+
+                ' Projektname ohne "."
+                Dim hhstr() As String
+                hhstr = Split(msproj.Name, ".", -1)
+                hproj.name = hhstr(0)
+                'hproj.idauer = DateDiff(DateInterval.Month, CType(msproj.DefaultFinishTime, Date), CType(msproj.DefaultStartTime, Date))
+
+                '' '' merken für BHTC, da hier der Report für das aktive Projekt gemacht werden soll 
+                ' ''If prj.ActiveProject.Name = msproj.Name Then
+                ' ''    active_proj = hproj.name
+                ' ''End If
+
+                Dim anzSubprojects As Integer = msproj.Subprojects.Count
+
+                hproj.description = msproj.ProjectNotes
+                hproj.UID = msproj.UniqueID
+                Dim hrsPerDay As Double = msproj.HoursPerDay
+
+                Dim projUID As Object = msproj.DatabaseProjectUniqueID
+
+                ' ------------------------------------------------------------------------------------------------------
+                ' Erzeugen und eintragen der Projekt-Phase (= erste Phase mit Dauer des Projekts)
+                ' ------------------------------------------------------------------------------------------------------
+                Try
+                    Dim cphase As New clsPhase(hproj)
+
+                    ' ProjektPhase wird erzeugt
+                    cphase = New clsPhase(parent:=hproj)
+                    cphase.nameID = rootPhaseName
+
+                    ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
+                    With cphase
+                        .nameID = rootPhaseName
+                        Dim cphaseStartOffset As Integer = 0
+                        .changeStartandDauer(cphaseStartOffset, ProjektdauerIndays)
+                    End With
+                    ' rootPhaseName - Phase wird hinzugefügt
+                    hproj.AddPhase(cphase)
+
+                Catch ex1 As Exception
+                    Throw New ArgumentException("Fehler in awinImportMSProject, Erzeugen ProjektPhase")
+                End Try
+
+
+
+
+                Dim anzTasks As Integer = msproj.Tasks.Count
+                anzTasks = msproj.NumberOfTasks
+
+           
+                Dim resPool As MSProject.Resources = msproj.Resources
+
+                Dim res(resPool.Count) As Object
+                For i = 1 To resPool.Count
+                    res(i) = resPool.Item(i)
+                Next
+
+
+                For i = 1 To anzTasks
+
+                    Dim msTask As MSProject.Task
+
+                    Dim cphase As New clsPhase(parent:=hproj)
+
+
+                    msTask = msproj.Tasks.Item(i)
+
+                  
+
+
+                    ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
+                    ' oder: ob eine Task auf dem kritischen Pfad liegt
+
+                    ' Wenn sumTask = true, dann ist die aktuelle Task eine Summary-Task
+                    Dim sumTask As Boolean = CType(msTask.Summary, Boolean)
+
+                    ' Herausfinden der Hierarchiestufe
+                    Dim hstr() As String = Split(msTask.WBS, ".", -1)
+                    Dim tasklevel As Integer = hstr.Count
+
+
+                    ' hier muss der Uniquename(ID) erzeugt werden evt. aus PhaseDefinitions
+
+                    If Not CType(msTask.Milestone, Boolean) _
+                        Or _
+                        (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
+
+                        ' Ergänzung tk für Demo BHTC 
+                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                        Dim origPhName As String = msTask.Name
+                        msTask.Name = phaseMappings.mapToStdName("", msTask.Name)
+
+                        ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
+                        If Not PhaseDefinitions.Contains(msTask.Name) Then
+                            Dim newPhaseDef As New clsPhasenDefinition
+                            newPhaseDef.name = msTask.Name
+                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                            Else
+                                newPhaseDef.shortName = msTask.Name
+                            End If
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                            Else
+                                newPhaseDef.darstellungsKlasse = ""
+                            End If
+
+                            newPhaseDef.UID = PhaseDefinitions.Count + 1
+                            'PhaseDefinitions.Add(newPhaseDef)
+                            missingPhaseDefinitions.Add(newPhaseDef)
+                        End If
+
+                        With cphase
+
+                            If Not istElemID(msTask.Name) Then
+                                .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
+                            End If
+
+                            If visboflag <> 0 Then          ' VISBO-Flag ist definiert
+
+                                Dim hflag As Boolean = readCustomflag(msTask, visboflag)
+
+                                ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                                'visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = pbYes)
+                                visboFlagListe.Add(.nameID, hflag)
+
+                            End If
+
+                            ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
+                            Dim cphaseStartOffset As Long
+                            Dim dauerIndays As Long
+                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
+                            dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
+                            .changeStartandDauer(cphaseStartOffset, dauerIndays)
+                            .offset = 0
+
+                            ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
+                            Dim phaseStartdate As Date = .getStartDate
+                            Dim phaseEnddate As Date = .getEndDate
+
+
+                            Dim anzRessources As Integer = msTask.Resources.Count
+
+                            ' Resourcen je MSTask durchgehen
+                            Dim j As Integer = 0
+                            Dim ccost As clsKostenart = Nothing
+                            Dim crole As clsRolle = Nothing
+
+
+
+                            Dim ass As MSProject.Assignment
+
+                            For Each ass In msTask.Assignments
+
+
+                                Dim msRess As MSProject.Resource = ass.Resource
+
+                                Select Case ass.Resource.Type
+                                    Case MSProject.PjResourceTypes.pjResourceTypeMaterial To _
+                                       MSProject.PjResourceTypes.pjResourceTypeCost
+                                        Try
+
+                                            Dim k As Integer = 0
+
+                                            If CostDefinitions.containsName(ass.ResourceName) Then
+                                                k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                            Else
+                                                ' Kostenart existiert noch nicht
+                                                ' wird hier neu aufgenommen
+                                                Dim newCostDef As New clsKostenartDefinition
+                                                newCostDef.name = ass.ResourceName
+                                                newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
+                                                newCostDef.UID = CostDefinitions.Count + 1
+                                                If Not missingCostDefinitions.containsName(newCostDef.name) Then
+                                                    missingCostDefinitions.Add(newCostDef)
+                                                End If
+
+                                                CostDefinitions.Add(newCostDef)
+
+                                                ' Änderung tk: muss auf costdefinitions gesetzt werden 
+                                                ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                            End If
+
+                                            Dim work As Double = CType(ass.Work, Double)
+                                            Dim cost As Double = CType(ass.Cost, Double)
+
+                                            Dim startdate As Date = CDate(msTask.Start)
+                                            Dim endedate As Date = CDate(msTask.Finish)
+
+                                            Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                            Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                            Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+
+                                            If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                anzdays = 1
+                                                anzmonth = 1
+                                            End If
+                                            If anzdays > 0 And anzmonth = 0 Then
+                                                anzmonth = 1
+                                            End If
+
+
+                                            ReDim Xwerte(anzmonth - 1)
+
+                                            Dim m As Integer
+                                            For m = 1 To anzmonth
+
+                                                Try
+                                                    Xwerte(m - 1) = CType(cost / anzmonth, Double)
+                                                Catch ex As Exception
+                                                    Xwerte(m - 1) = 0.0
+                                                End Try
+
+                                            Next m
+
+                                            ccost = New clsKostenart(anzmonth - 1)
+
+                                            With ccost
+                                                .KostenTyp = k
+                                                .Xwerte = Xwerte
+                                            End With
+
+
+                                            With cphase
+                                                .AddCost(ccost)
+                                            End With
+                                        Catch ex As Exception
+                                            '
+                                            ' handelt es sich um die Kostenart Definition?
+                                            '
+                                        End Try
+                                        'Call MsgBox("Kosten = " & ass.ResourceName)
+
+                                    Case MSProject.PjResourceTypes.pjResourceTypeWork
+
+                                        Try
+                                            Dim r As Integer = 0
+
+
+                                            If RoleDefinitions.containsName(ass.ResourceName) Then
+                                                r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                            Else
+                                                ' Rolle existiert noch nicht
+                                                ' wird hier neu aufgenommen
+
+                                                Dim newRoleDef As New clsRollenDefinition
+                                                newRoleDef.name = ass.ResourceName
+                                                newRoleDef.farbe = RGB(120, 120, 120)
+                                                newRoleDef.Startkapa = 200000
+
+                                                ' OvertimeRate in Tagessatz umrechnen
+                                                Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
+                                                hoverstr = Split(hoverstr(0), "CHF", -1)
+                                                newRoleDef.tagessatzExtern = CType(hoverstr(1), Double) * msproj.HoursPerDay
+
+                                                ' StandardRate in Tagessatz umrechnen
+                                                Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
+                                                hstdstr = Split(hstdstr(0), "CHF", -1)
+                                                newRoleDef.tagessatzIntern = CType(hstdstr(1), Double) * msproj.HoursPerDay
+
+                                                newRoleDef.UID = RoleDefinitions.Count + 1
+                                                If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
+                                                    missingRoleDefinitions.Add(newRoleDef)
+                                                End If
+
+                                                RoleDefinitions.Add(newRoleDef)
+
+                                                ' Änderung tk: das muss von roledefinitions geholt werden ...
+                                                ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                            End If
+
+
+
+                                            Dim work As Double = CType(ass.Work, Double)
+                                            'Dim duration As Double = CType(ass.Duration, Double)
+                                            Dim unit As Double = CType(ass.Units, Double)
+
+
+                                            Dim startdate As Date = CDate(msTask.Start)
+                                            Dim endedate As Date = CDate(msTask.Finish)
+
+                                            ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
+                                            ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
+                                            ' die Berechnung Datediff ergibt aber nur 1 Monat '
+                                            'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                            'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                            'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+
+                                            'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                            '    anzdays = 1
+                                            '    anzmonth = 1
+                                            'End If
+                                            'If anzdays > 0 And anzmonth = 0 Then
+                                            '    anzmonth = 1
+                                            'End If
+
+
+                                            'ReDim Xwerte(anzmonth - 1)
+                                            ' Ende Auskommentierung tk  
+
+                                            ' tk Anpassung ...
+                                            Dim oldWerte(0) As Double
+                                            Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+                                            oldWerte(0) = work
+                                            ReDim Xwerte(anzmonth - 1)
+                                            Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+
+
+                                            For m As Integer = 1 To anzmonth
+                                                Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
+                                            Next
+
+                                            ' Ende tk Anpassung
+
+
+                                            ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
+                                            'For m As Integer = 1 To anzmonth
+
+                                            '    Try
+                                            '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
+                                            '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
+
+                                            '    Catch ex As Exception
+                                            '        Xwerte(m - 1) = 0.0
+                                            '    End Try
+
+                                            'Next m
+
+                                            ' Check , um Unterschiede in der Summe herausfinden zu können
+                                            ' die waren immer 0 ... 
+                                            'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
+
+                                            crole = New clsRolle(anzmonth - 1)
+                                            With crole
+                                                .RollenTyp = r
+                                                .Xwerte = Xwerte
+                                            End With
+
+                                            With cphase
+                                                .addRole(crole)
+                                            End With
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                        'Call MsgBox("Work = " & ass.ResourceName & " mit " & CStr(ass.Work) & "Arbeit")
+                                End Select
+                            Next ass
+
+
+                            ' Hierarchie-Aufbau
+                            Dim cphaseParent As Object = msTask.Parent
+
+                            Dim hrchynode As New clsHierarchyNode
+                            hrchynode.elemName = cphase.name
+
+                            If tasklevel = 0 Then
+                                hrchynode.parentNodeKey = ""
+
+                            ElseIf tasklevel = 1 Then
+                                hrchynode.parentNodeKey = rootPhaseName
+
+                            ElseIf tasklevel - lastlevel = 1 Then
+                                hrchynode.parentNodeKey = lastelemID
+
+                            ElseIf tasklevel - lastlevel = 0 Then
+                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                            ElseIf lastlevel - tasklevel >= 1 Then
+                                Dim hilfselemID As String = lastelemID
+                                For l As Integer = 1 To lastlevel - tasklevel
+                                    hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                Next l
+                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                            Else
+                                Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+                            End If
+
+                            hproj.AddPhase(cphase, origName:=origPhName, parentID:=hrchynode.parentNodeKey)
+
+                            ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
+                            hrchynode.indexOfElem = hproj.AllPhases.Count
+                            ' merken von letzem Element (Knoten,Phase,Meilenstein)
+                            lasthrchyNode = hrchynode
+                            lastelemID = cphase.nameID
+                            lastphase = cphase
+                            lastlevel = tasklevel
+                        End With
+
+
+                        Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
+
+                    Else
+                        ' mstask ist ein Meilenstein und kein Summary-Meilenstein
+
+
+                        ' Ergänzung tk für Demo BHTC 
+                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                        Dim origMsName As String = msTask.Name
+                        msTask.Name = milestoneMappings.mapToStdName("", msTask.Name)
+                        '
+
+
+                        Dim hierarchy As String = msTask.WBS
+                        'Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
+                        Dim msPhase As clsPhase = Nothing
+                        Dim parentID As String = rootPhaseName
+
+                        lastlevel = hproj.hierarchy.getIndentLevel(lastelemID)
+
+                        If lastlevel = -1 Then          ' lastelemID existiert in der hierarchy nicht, also wird Meilenstein der Rootphase zugeordnet
+                            parentID = rootPhaseName
+
+                        ElseIf tasklevel = lastlevel Then
+                            parentID = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                        ElseIf tasklevel > lastlevel Then
+                            parentID = lastelemID
+
+                        ElseIf tasklevel = 1 And tasklevel < lastlevel Then
+                            parentID = rootPhaseName
+
+                        ElseIf lastlevel - tasklevel >= 1 Then
+                            Dim hilfselemID As String = lastelemID
+                            For l As Integer = 1 To lastlevel - tasklevel
+                                hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                            Next l
+                            parentID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+
+                        End If
+
+                        msPhase = hproj.getPhaseByID(parentID)
+
+                        Dim cmilestone As New clsMeilenstein(msPhase)
+
+
+                        ' prüfen, ob MeilensteinDefinition bereits vorhanden
+                        If Not MilestoneDefinitions.Contains(msTask.Name) Then
+                            Dim msDef As New clsMeilensteinDefinition
+                            msDef.belongsTo = msPhase.name
+                            msDef.name = msTask.Name
+                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                msDef.shortName = msTask.GetField(visbo_abbrev)
+                            Else
+                                msDef.shortName = ""
+                            End If
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                msDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                            Else
+                                msDef.darstellungsKlasse = ""
+                            End If
+
+                            msDef.schwellWert = 0
+                            msDef.UID = MilestoneDefinitions.Count + 1
+                            'MilestoneDefinitions.Add(msDef)
+                            Try
+                                missingMilestoneDefinitions.Add(msDef)
+                            Catch ex As Exception
+                            End Try
+
+
+                        End If
+
+                        ' MeilensteinDefinition vorhanden?
+                        If MilestoneDefinitions.Contains(msTask.Name) _
+                            Or missingMilestoneDefinitions.Contains(msTask.Name) Then
+
+                            Dim msBewertung As New clsBewertung
+                            cmilestone.setDate = CType(msTask.Start, Date)
+                            cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
+                            msBewertung.description = msTask.Notes
+                            If visbo_ampel <> 0 Then
+
+                                Dim visboAmpel As String = msTask.GetField(visbo_ampel)
+
+                                Select Case visboAmpel
+
+                                    Case "none"
+                                        msBewertung.colorIndex = PTfarbe.none
+                                    Case "red"
+                                        msBewertung.colorIndex = PTfarbe.red
+                                    Case "green"
+                                        msBewertung.colorIndex = PTfarbe.green
+                                    Case "yellow"
+                                        msBewertung.colorIndex = PTfarbe.yellow
+                                    Case Else
+                                        msBewertung.colorIndex = PTfarbe.none
+
+                                End Select
+
+                            Else
+                                msBewertung.colorIndex = PTfarbe.none
+                            End If
+
+                            cmilestone.addBewertung(msBewertung)
+
+
+                            If visboflag <> 0 Then        ' Ist VISBO-flag definiert?
+
+                                Dim hflag As Boolean = readCustomflag(msTask, visboflag)
+                                ' Liste, ob Meilenstein in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                                visboFlagListe.Add(cmilestone.nameID, hflag)
+                            End If
+
+                            Try
+                                With msPhase
+                                    .addMilestone(cmilestone, origName:=origMsName)
+                                End With
+                            Catch ex1 As Exception
+                                Throw New Exception(ex1.Message)
+                            End Try
+                        Else
+                            Throw New ArgumentException("Fehler: Meilenstein konnte nicht gefunden werden")
+                        End If
+                    End If
+
+                    '' Testweise hier eingetragen
+
+                    Dim anzVorgaenger As Integer = msTask.PredecessorTasks.Count
+                    Dim anzNachfolger As Integer = msTask.SuccessorTasks.Count
+                    Dim dependencies As MSProject.TaskDependencies = msTask.TaskDependencies
+
+                    Dim startTask As Date = CType(msTask.Start, Date)
+                    Dim endeTask As Date = CType(msTask.Finish, Date)
+
+
+
+
+                Next i          ' Ende Schleife über alle Tasks/Phasen eines Projektes
+
+                Dim ele_i As Integer = 0
+                Dim msStart As Integer = hproj.hierarchy.getIndexOf1stMilestone
+
+                ' Liste der Phasen/Meilensteine durchgehen und die Phasen/Meilensteine die den visbo-Flag nicht gesetzt haben aus der Hierarchie löschen
+                For ele_i = 0 To visboFlagListe.Count - 1
+
+                    Dim elemID As String = visboFlagListe.ElementAt(ele_i).Key
+                    If hproj.hierarchy.containsKey(elemID) Then
+
+                        If Not visboFlagListe.ElementAt(ele_i).Value Then
+
+                            If elemIDIstMeilenstein(elemID) Then
+
+                                ' Meilenstein muss entfernt werden
+
+                                Dim hrchynode As clsHierarchyNode = hproj.hierarchy.nodeItem(elemID)
+                                If hrchynode.childCount > 0 Then
+                                    Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                Else
+                                    hproj.removeMeilenstein(elemID)
+                                End If
+
+                            Else        ' Element elemID ist eine Phase
+
+
+                                If isRemovable(elemID, hproj, visboFlagListe) Then
+
+                                    ' es wird die Phase elemID mit allen seinen Kindern gelöscht
+                                    hproj.removePhase(elemID, True)
+
+                                    ' ''Call MsgBox("isRemovable = true" & vbLf & _
+                                    ' ''            elemID & " kann entfernt werden")
+                                Else
+
+                                    '' ''Call MsgBox("isRemovable = false" & vbLf & _
+                                    '' ''            elemID & " kann nicht entfernt werden ")
+
+                                End If
+                            End If
+
+                        Else
+                            ' Phase/Meilenstein bleibt erhalten
+                        End If
+
+                    Else
+                        ' Element elemID wurde bereits entfernt '
+                        ' Call MsgBox("das Element elemID= " & elemID & " wurde bereits entfernt")
+                    End If
+
+                Next  ' Schleife über alle Phasen/Meilensteine zum entfernern derer, die VISBO-Flag nicht gesetzt haben
+
+                Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+                If AlleProjekte.Containskey(key) Then
+                    AlleProjekte.Remove(key)
+                End If
+
+                AlleProjekte.Add(key, hproj)
+
+                If modus = "BHTC" Then
+                    ' Alle Projekte entfernen
+                    ShowProjekte.Clear()
+                End If
+
+                If Not ShowProjekte.contains(hproj.name) Then
+                    ShowProjekte.Add(hproj)
+                Else
+                    ShowProjekte.Remove(hproj.name)
+                    ShowProjekte.Add(hproj)
+                    'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
+                End If
+
+
+                If modus <> "BHTC" Then
+
+                    prj.FileExit(MSProject.PjSaveType.pjDoNotSave)
+                    ' ''Else
+                    ' ''    ' aktives Projekt durch hproj zurück an anrufende Routine übergeben
+
+                    ' ''    If ShowProjekte.contains(active_proj) Then
+                    ' ''        hproj = ShowProjekte.getProject(active_proj)
+                    ' ''    End If
+
+                End If
+
+            Else
+
+                Call MsgBox("Bitte zunächst ein Projekt öffnen !")
+
+            End If
+        Catch ex As Exception
+            Call MsgBox(ex)
+        End Try
+
+        enableOnUpdate = True
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
+    ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der ImportProjekte aufgeführt sind
+    ''' </summary>
+    ''' <param name="importDate"></param>
+    ''' <remarks></remarks>
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal pStatus As String, _
+                                       Optional drawPlanTafel As Boolean = True)
+
+
+        'Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
+        '                                   Optional ByVal scenarioName As String = "")
+        Dim hproj As New clsProjekt, cproj As New clsProjekt
+        Dim fullName As String, vglName As String
+        Dim pname As String
+
+
+        Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
+        Dim tafelZeile As Integer = 2
+        'Dim shpElement As Excel.Shape
+        Dim phaseList As New Collection
+        Dim milestoneList As New Collection
+        Dim wasNotEmpty As Boolean
+
+        Dim existsInSession As Boolean = False
+
+        If AlleProjekte.Count > 0 Then
+            wasNotEmpty = True
+            tafelZeile = projectboardShapes.getMaxZeile
+        Else
+            wasNotEmpty = False
+        End If
+
+
+        Dim differentToPrevious As Boolean = False
+
+        ' Änderung tk 5.6.16: 
+        'es wird jetzt getrennt zwischen dem was in einer Constellation gespeichert werden soll und dem , 
+        ' was noch in die Session importiert werden muss. 
+
+        ''If myCollection.Count <> ImportProjekte.Count Then
+        ''    Throw New ArgumentException("keine Übereinstimmung in der Anzahl gültiger/ímportierter Projekte - Abbruch!")
+        ''End If
+
+
+        anzAktualisierungen = 0
+        anzNeuProjekte = 0
+
+        Dim ok As Boolean = True
+        ' jetzt werden alle importierten Projekte bearbeitet 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
+            fullName = kvp.Key
+            hproj = kvp.Value
+
+            ok = True
+
+            Try
+                'hproj = ImportProjekte.getProject(fullName)
+                pname = hproj.name
+
+                ' Änderung tk: ist Filter aktiv ? wenn ja, muss der überprüft werden 
+                ' 18.1.15
+                If awinSettings.applyFilter Then
+
+                    Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
+                    If IsNothing(filter) Then
+                        ok = True
+                    Else
+                        ok = filter.doesNotBlock(hproj)
+                    End If
+                Else
+                    ok = True
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("Projekt " & fullName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                pname = ""
+                ok = False
+            End Try
+
+            If ok Then
+
+                ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
+                ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
+                ' wenn nein, wird es im Show-Modus ergänzt 
+
+                vglName = calcProjektKey(hproj)
+                Try
+                    cproj = AlleProjekte.getProject(vglName)
+
+                    If IsNothing(cproj) Then
+                        ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
+                        existsInSession = False
+                        If Not noDB Then
+                            cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
+                        End If
+                    Else
+                        existsInSession = True
+                    End If
+
+                    ' ist es immer noch Nothing ? 
+                    If IsNothing(cproj) Then
+                        ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
+                        If hproj.VorlagenName = "" Then
+                            Try
+                                Dim anzVorlagen = Projektvorlagen.Count
+                                Dim vproj As clsProjektvorlage
+                                hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
+
+                                For i = 1 To anzVorlagen
+                                    vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
+                                    If vproj.farbe = hproj.farbe Then
+                                        hproj.VorlagenName = vproj.VorlagenName
+                                    End If
+                                Next
+
+                            Catch ex1 As Exception
+
+                            End Try
+                        End If
+
+                        Try
+                            With hproj
+                                ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                                '.earliestStart = 0
+                                .earliestStartDate = .startDate
+
+                                .Id = vglName & "#" & importDate.ToString
+                                ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                                '.latestStart = 0
+                                .latestStartDate = .startDate
+                                ' Änderung tk 12.12.15: LeadPerson darf doch nicht auf leer gesetzt werden ...
+                                '.leadPerson = " "
+                                .shpUID = ""
+                                .StartOffset = 0
+
+                                ' ein importiertes Projekt soll normalerweise immer gleich  auf "beauftragt" gesetzt werden; 
+                                ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
+                                ' Inventur: erst mal auf geplant, sonst beauftragt 
+                                .Status = pStatus
+                                .tfZeile = tafelZeile
+                                .timeStamp = importDate
+                                .UID = cproj.UID
+
+                            End With
+
+                            ' Workaround: 
+                            Dim tmpValue As Integer = hproj.dauerInDays
+                            Call awinCreateBudgetWerte(hproj)
+                            tafelZeile = tafelZeile + 1
+
+                            anzNeuProjekte = anzNeuProjekte + 1
+                        Catch ex1 As Exception
+                            Throw New ArgumentException("Fehler bei Übernahme der Attribute des alten Projektes" & vbLf & ex1.Message)
+                        End Try
+                    Else
+
+                        ' jetzt sollen bestimmte Werte aus dem cproj übernommen werden 
+                        ' das ist dann wichtig, wenn z.Bsp nur Rplan Excel Werte eingelesen werden, die enthalten ja nix ausser Termine ...
+                        ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
+
+                        Try
+                            Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate)
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+                        Dim unterschiede As New Collection
+                        ' jetzt wird geprüft , ob die beiden Projekte von den Werten her unterschiedlich sind 
+                        ' es wird auf absolute Identität geprüft, d.h alleine wenn sich das Startdatum schon verändert gibt es Unterschiede 
+                        unterschiede = hproj.listOfDifferences(vglproj:=cproj, absolut:=True, type:=0)
+                        If unterschiede.Count > 0 Then
+                            ' das heisst, das Projekt hat sich verändert 
+                            hproj.diffToPrev = True
+                            If hproj.Status = ProjektStatus(1) Then
+                                hproj.Status = ProjektStatus(2)
+                            End If
+                        Else
+                            hproj.diffToPrev = False
+                        End If
+
+
+                        anzAktualisierungen = anzAktualisierungen + 1
+
+                        Try
+                            If existsInSession Then
+                                AlleProjekte.Remove(vglName)
+                                If ShowProjekte.contains(hproj.name) Then
+                                    ShowProjekte.Remove(hproj.name)
+                                End If
+                            End If
+                        Catch ex1 As Exception
+                            Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
+                        End Try
+
+                    End If
+
+
+                Catch ex As Exception
+
+
+
+                End Try
+
+                ' in beiden Fällen - sowohl bei neu wie auch Aktualisierung muss jetzt das Projekt 
+                ' sowohl auf der Plantafel eingetragen werden als auch in ShowProjekte und in alleProjekte eingetragen 
+
+                ' bringe das neue Projekt in Showprojekte und in AlleProjekte
+
+                If ok Then
+
+                    Try
+
+                        AlleProjekte.Add(vglName, hproj)
+                        ShowProjekte.Add(hproj)
+
+                        ' ggf Bedarfe anzeigen 
+                        If roentgenBlick.isOn Then
+                            With roentgenBlick
+                                Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
+                            End With
+
+                        End If
+
+                        ' Änderung tk 18.1.15
+                        ' kein Zeichnen - das wird am Schluss komplett gemacht 
+                        '' zeichne das neue Shape in der Plan-Tafel 
+                        '' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        '' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        'Dim tmpCollection As New Collection
+                        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
+
+                        '' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
+                        'Call awinNeuZeichnenDiagramme(2)
+                        ' Ende Änderung tk 18.1.15
+
+
+                    Catch ex As Exception
+                        'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
+                        'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
+                    End Try
+
+                End If
+
+
+            End If
+
+        Next
+
+        If ImportProjekte.Count < 1 Then
+            Call MsgBox(" es wurden keine Projekte importiert ...")
+        Else
+            Dim filterText As String
+            If awinSettings.applyFilter Then
+                filterText = " (Filter aktiviert)"
+            Else
+                filterText = " (Filter nicht aktiviert)"
+            End If
+            Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & filterText & vbLf & vbLf & _
+                        anzNeuProjekte.ToString & " neue Projekte" & vbLf & _
+                        anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
+
+            ' Änderung tk: jetzt wird das neu gezeichnet 
+
+            If drawPlanTafel Then
+                If wasNotEmpty Then
+                    Call awinClearPlanTafel()
+                End If
+
+                'Call awinZeichnePlanTafel(True)
+                Call awinZeichnePlanTafel(False)
+                Call awinNeuZeichnenDiagramme(2)
+            End If
+
+
+        End If
+
+        ImportProjekte.Clear()
+
+    End Sub
+
+    ''' <summary>
+    ''' übernimmt vom existierenden Projekt einige Werte 
+    ''' ist vor allem dann relevant wenn nur ein RPLAN Excel mit gerademal Terminen eingelesen wird ....
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="cproj"></param>
+    ''' <param name="existsInSession"></param>
+    ''' <remarks></remarks>
+    Private Sub awinAdjustValuesByExistingProj(ByRef hproj As clsProjekt, ByVal cproj As clsProjekt, _
+                                               ByVal existsInSession As Boolean, ByVal importDate As Date)
+        ' es existiert schon - deshalb müssen alle restlichen Werte aus dem cproj übernommen werden 
+        Dim vglName As String = calcProjektKey(hproj)
+
+        Try
+            With hproj
+                .farbe = cproj.farbe
+                .Schrift = cproj.Schrift
+                .Schriftfarbe = cproj.Schriftfarbe
+                .earliestStart = cproj.earliestStart
+                .earliestStartDate = cproj.earliestStartDate
+                .Id = vglName & "#" & importDate.ToString
+                .latestStart = cproj.latestStart
+                .latestStartDate = cproj.latestStartDate
+                .leadPerson = cproj.leadPerson
+
+                .StartOffset = 0
+
+                ' Änderung 28.1.14: bei einem bereits existierenden Projekt muss der Status mitübernommen werden 
+                .Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
+
+                If existsInSession Then
+                    .shpUID = cproj.shpUID
+                Else
+                    .shpUID = ""
+                End If
+
+                .tfZeile = cproj.tfZeile
+                .timeStamp = importDate
+                .UID = cproj.UID
+                .VorlagenName = cproj.VorlagenName
+
+                ' im Folgenden werden die Werte dann vom letzten stand übernommen, wenn es keine Werte in 
+                ' der Import datei dafür gab
+
+                If .StrategicFit = 0 Then
+                    .StrategicFit = cproj.StrategicFit
+                End If
+
+                If .Risiko = 0 Then
+                    .Risiko = cproj.Risiko
+                End If
+
+                If .businessUnit = "" Then
+                    .businessUnit = cproj.businessUnit
+                End If
+
+                If .description = "" Then
+                    .description = cproj.description
+                End If
+
+                If .complexity = 0 Then
+                    .complexity = cproj.complexity
+                End If
+
+                If .volume = 0 Then
+                    .volume = cproj.volume
+                End If
+
+                If cproj.Erloes > 0 Then
+                    ' dann soll der alte Wert beibehalten werden 
+                    .Erloes = cproj.Erloes
+                    If .anzahlRasterElemente = cproj.anzahlRasterElemente And Not IsNothing(cproj.budgetWerte) Then
+                        .budgetWerte = cproj.budgetWerte
+                    Else
+                        ' Workaround: 
+                        Dim tmpValue As Integer = hproj.dauerInDays
+                        Call awinCreateBudgetWerte(hproj)
+                    End If
+                End If
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler bei Übernahme der Attribute des alten Projektes" & vbLf & ex.Message)
+        End Try
+
+    End Sub
+
+
+    ''' <summary>
+    ''' wenn das Projekt mit Namen pName und Varianten-Name vName und einem TimeStamp kleiner/gleich datum in der Datenbank existiert, 
+    ''' wird das Projekt als Ergebnis zurückgegeben
+    ''' Nothing sonst 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="datum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function awinReadProjectFromDatabase(ByVal pName As String, ByVal vName As String, ByVal datum As Date) As clsProjekt
+        Dim tmpResult As clsProjekt = Nothing
+
+        '
+        ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+        Try
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If request.pingMongoDb() Then
+
+                If request.projectNameAlreadyExists(pName, vName, datum) Then
+
+                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                    tmpResult = request.retrieveOneProjectfromDB(pName, vName, datum)
+
+                Else
+                    ' nichts tun, tmpResult ist bereits Nothing 
+                End If
+            Else
+                ' nichts tun, tmpResult ist bereits Nothing 
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        awinReadProjectFromDatabase = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' liest den Wert eines Cusomized Flag. Das Ergebnis ist True oder False
+    ''' </summary>
+    ''' <param name="msTask"></param>
+    ''' <param name="visboflag"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function readCustomflag(ByVal msTask As MSProject.Task, ByVal visboflag As MSProject.PjField) As Boolean
+
+        Dim tskflag As Boolean = True
+        Select Case visboflag
+            Case MSProject.PjField.pjTaskFlag1
+                tskflag = msTask.Flag1
+            Case MSProject.PjField.pjTaskFlag2
+                tskflag = msTask.Flag2
+            Case MSProject.PjField.pjTaskFlag3
+                tskflag = msTask.Flag3
+            Case MSProject.PjField.pjTaskFlag4
+                tskflag = msTask.Flag4
+            Case MSProject.PjField.pjTaskFlag5
+                tskflag = msTask.Flag5
+            Case MSProject.PjField.pjTaskFlag6
+                tskflag = msTask.Flag6
+            Case MSProject.PjField.pjTaskFlag7
+                tskflag = msTask.Flag7
+            Case MSProject.PjField.pjTaskFlag8
+                tskflag = msTask.Flag8
+            Case MSProject.PjField.pjTaskFlag9
+                tskflag = msTask.Flag9
+            Case MSProject.PjField.pjTaskFlag10
+                tskflag = msTask.Flag10
+            Case MSProject.PjField.pjTaskFlag11
+                tskflag = msTask.Flag11
+            Case MSProject.PjField.pjTaskFlag12
+                tskflag = msTask.Flag12
+            Case MSProject.PjField.pjTaskFlag13
+                tskflag = msTask.Flag13
+            Case MSProject.PjField.pjTaskFlag14
+                tskflag = msTask.Flag14
+            Case MSProject.PjField.pjTaskFlag15
+                tskflag = msTask.Flag15
+            Case MSProject.PjField.pjTaskFlag16
+                tskflag = msTask.Flag16
+            Case MSProject.PjField.pjTaskFlag17
+                tskflag = msTask.Flag17
+            Case MSProject.PjField.pjTaskFlag18
+                tskflag = msTask.Flag18
+            Case MSProject.PjField.pjTaskFlag19
+                tskflag = msTask.Flag19
+            Case MSProject.PjField.pjTaskFlag20
+                tskflag = msTask.Flag230
+
+        End Select
+        readCustomflag = tskflag
+    End Function
+
+    ''' <summary>
+    ''' Prüft, ob eine Phase (elemID) aus dem Projekt hproj gelöscht werden kann, 
+    ''' da weder sie selbst betrachtet werden soll, noch all ihre Kinder
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="liste"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    '''
+    Public Function isRemovable(ByVal elemID As String, ByVal hproj As clsProjekt, ByVal liste As SortedList(Of String, Boolean)) As Boolean
+
+        Dim ind As Integer = 1
+        Dim hrchynode As clsHierarchyNode = Nothing
+        Dim result As Boolean
+
+        result = True
+
+        Try
+
+            hrchynode = hproj.hierarchy.nodeItem(elemID)
+            If hrchynode.childCount = 0 Then
+                result = result And Not liste(elemID)
+            End If
+            If hrchynode.childCount > 0 And result Then
+
+                While result And ind <= hrchynode.childCount
+
+                    Dim nodeID As String = hrchynode.getChild(ind)
+                    result = result And liste.ContainsKey(nodeID) And Not liste(nodeID)
+                    result = result And isRemovable(nodeID, hproj, liste)
+                    ind = ind + 1
+
+                End While
+
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei der Prüfung, ob das Element elemID= " & elemID & " entfernt werden kann")
+            Throw New ArgumentException("Fehler bei der Prüfung, ob das Element elemID entfernt werden kann")
+        End Try
+
+        isRemovable = result
+
+    End Function
+
+    ''' <summary>
+    ''' liest alle in der Massen-Edit referenzierten Projekte ein und ersetzt die Werte dafür  
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub importiereMassenEdit()
+
+        Dim projectName As String = ""
+        Dim variantName As String = ""
+
+        Dim phaseName As String = ""
+        Dim phaseNameID As String = ""
+        Dim rcName As String = ""
+
+        Dim isRole As Boolean = False
+        Dim isCost As Boolean = False
+
+        Dim zeile As Integer = 2
+        Dim spalte As Integer = 1
+        Dim lastRow As Integer
+
+        Dim startColumnData As Integer
+        Dim endColumnData As Integer
+
+        Dim tmpValues() As Double = Nothing
+
+        Dim von As Integer, bis As Integer
+        Dim vonDate As Date, bisDate As Date
+        Dim ok As Boolean = False
+        Dim hproj As clsProjekt = Nothing
+        Dim vproj As clsProjekt = Nothing
+
+        Try
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("VISBO"), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            With activeWSListe
+
+                startColumnData = CType(.Range("StartData"), Excel.Range).Column
+                endColumnData = CType(.Range("EndData"), Excel.Range).Column
+
+                vonDate = CType(CType(.Range("StartData"), Excel.Range).Value, Date)
+                bisDate = CType(CType(.Range("EndData"), Excel.Range).Value, Date)
+
+                von = getColumnOfDate(vonDate)
+                bis = getColumnOfDate(bisDate)
+
+                ' jetzt die TimeZone markieren , ohne die sonstigen Konsequenzen .. 
+                ' überlegen, ob hier nicht awinchangeTimeSpan aufgerufen werden sollte ...
+
+                Call awinShowtimezone(von, bis, True)
+                showRangeLeft = von
+                showRangeRight = bis
+
+                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                ' jetzt Zeile für Zeile auslesen 
+                While zeile <= lastRow
+
+                    Dim valuesDidChange As Boolean = False
+
+                    Try
+
+                    Catch ex As Exception
+                        ' dann ist irgendwo was schief gegangen ... 
+
+                    End Try
+
+                    ' die Farben in der Zeile zurücksetzen , aber nicht in den Datenbereichen, weil sonst die Info zu den Phasen weg ist 
+                    CType(.Range(.Cells(zeile, 1), .Cells(zeile, startColumnData - 1)), Excel.Range).Interior.ColorIndex = XlColorIndex.xlColorIndexNone
+                    Dim namesOK As Boolean = True
+
+                    Try
+                        projectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                    Catch ex As Exception
+                        projectName = ""
+                        namesOK = False
+                    End Try
+
+                    Try
+                        variantName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                    Catch ex As Exception
+                        variantName = ""
+                    End Try
+
+                    Try
+                        phaseName = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                    Catch ex As Exception
+                        phaseName = ""
+                        namesOK = False
+                    End Try
+
+
+                    Try
+                        Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment
+                        If Not IsNothing(cellComment) Then
+                            phaseNameID = cellComment.Text
+                        Else
+                            phaseNameID = calcHryElemKey(phaseName, False)
+                        End If
+                    Catch ex As Exception
+                        phaseNameID = calcHryElemKey(phaseName, False)
+                    End Try
+
+                    Try
+                        rcName = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    Catch ex As Exception
+                        rcName = ""
+                        namesOK = False
+                    End Try
+
+                    If namesOK Then
+
+                        ok = False
+
+                        Dim pKey As String = calcProjektKey(projectName, variantName)
+                        If AlleProjekte.Containskey(pKey) Then
+                            hproj = AlleProjekte.getProject(pKey)
+                            ok = True
+                        Else
+                            ' in der Datenbank nachsehen und laden ... 
+                            If Not noDB Then
+
+                                '
+                                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                                If request.pingMongoDb() Then
+
+                                    If request.projectNameAlreadyExists(projectName, variantName, Date.Now) Then
+
+                                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                        hproj = request.retrieveOneProjectfromDB(projectName, variantName, Date.Now)
+                                        ' jetzt in AlleProjekte eintragen ... 
+                                        If Not IsNothing(hproj) Then
+                                            AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                            ok = True
+                                        End If
+                                        
+                                    Else
+                                        ' nicht in Session, nicht in Datenbank: nicht ok !
+                                        ok = False
+                                    End If
+                                Else
+                                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Massen-Edit ..")
+                                End If
+
+
+                            Else
+                                ' nicht in Session, keine Datenbank aktiv: nicht ok !
+                                ok = False
+
+                            End If
+
+
+                        End If
+
+                        If ok Then
+
+                            If Not ImportProjekte.Containskey(pKey) Then
+                                ImportProjekte.Add(pKey, hproj)
+                            End If
+
+                            ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
+                            ' hier ist das hproj gelesen 
+                            ' jetzt prüfen, ob es die Phase gibt 
+                            Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                            If Not IsNothing(cphase) Then
+                                ' es gibt die Phase
+
+                                If RoleDefinitions.containsName(rcName) Then
+                                    isRole = True
+                                    isCost = False
+
+                                ElseIf CostDefinitions.containsName(rcName) Then
+                                    isCost = True
+                                    isRole = False
+                                Else
+                                    isCost = False
+                                    isRole = False
+                                End If
+
+                                ' jetzt werden die Werte ausgelesen ... 
+                                ' die müssen an der Stelle ausgelesen werden, weil eine fehlende Rolle/kostenart nur angemeckert werden soll, 
+                                ' wenn auch tmpValues.sum > 0 
+                                ReDim tmpValues(bis - von)
+                                Dim i As Integer
+
+                                For i = 0 To bis - von
+
+                                    Try
+                                        tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        If tmpValues(i) < 0 Then
+                                            tmpValues(i) = 0
+                                            CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                        End If
+                                    Catch ex As Exception
+                                        CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                    End Try
+
+                                Next
+
+
+                                ' nur weitermachen, wenn es entweder eine gültige Rolle oder gültige Kostenart ist 
+                                If isRole Or isCost Then
+
+
+                                    If tmpValues.Sum > 0 Then
+
+                                        Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+                                        Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate), _
+                                                                   ixZeitraum, ix, anzLoops)
+
+                                        If anzLoops > 0 Then
+                                            ' es gibt eine Überdeckung
+                                            If isRole Then
+                                                Dim tmpRole As clsRolle = cphase.getRole(rcName)
+                                                ' wenn die Rolle in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+                                                Dim didntExist As Boolean = False
+
+                                                If IsNothing(tmpRole) Then
+                                                    didntExist = True
+                                                    Dim dimension As Integer = cphase.relEnde - cphase.relStart
+                                                    tmpRole = New clsRolle(dimension)
+
+                                                    With tmpRole
+                                                        .RollenTyp = RoleDefinitions.getRoledef(rcName).UID
+                                                    End With
+                                                End If
+
+                                                Dim xWerte() As Double = tmpRole.Xwerte
+
+                                                ' jetzt werden die Werte überschrieben ...
+                                                For al As Integer = 1 To anzLoops
+                                                    If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                        valuesDidChange = True
+                                                    End If
+                                                    xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
+                                                Next
+
+                                                If didntExist Then
+                                                    cphase.addRole(tmpRole)
+                                                End If
+
+                                            ElseIf isCost Then
+                                                Dim tmpCost As clsKostenart = cphase.getCost(rcName)
+                                                ' wenn die Kostenart in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+                                                Dim didntExist As Boolean = False
+
+                                                If IsNothing(tmpCost) Then
+                                                    didntExist = True
+                                                    Dim dimension As Integer = cphase.relEnde - cphase.relStart
+                                                    tmpCost = New clsKostenart(dimension)
+
+                                                    With tmpCost
+                                                        .KostenTyp = CostDefinitions.getCostdef(rcName).UID
+                                                    End With
+                                                End If
+
+                                                Dim xWerte() As Double = tmpCost.Xwerte
+
+                                                ' jetzt werden die Werte überschrieben ...
+                                                For al As Integer = 1 To anzLoops
+                                                    If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+                                                        valuesDidChange = True
+                                                    End If
+                                                    xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
+                                                Next
+
+                                                If didntExist Then
+                                                    cphase.AddCost(tmpCost)
+                                                End If
+
+                                            End If
+
+                                        End If
+                                    Else
+                                        ' Löschen der Rolle bzw. Kostenart aus dieser Phase
+                                        valuesDidChange = True
+                                        If isRole Then
+                                            Call cphase.removeRoleByName(rcName)
+                                        ElseIf isCost Then
+                                            Call cphase.removeCostByName(rcName)
+                                        End If
+                                    End If
+
+
+                                Else
+                                    ' es gibt die Rolle / Kostenart nicht 
+                                    If tmpValues.Sum > 0 Then
+                                        CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                    Else
+                                        ' keine Aktion notwendig 
+                                    End If
+
+                                End If
+
+                            Else
+                                ' es gibt die Phase nicht 
+                                CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                            End If
+                        Else
+                            ' Projekt- Variante existiert nicht !
+                            CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+                        End If
+
+                    End If
+
+                    
+
+                    If valuesDidChange Then
+                        hproj.diffToPrev = True
+                    End If
+
+                    zeile = zeile + 1
+
+                End While
+
+
+            End With
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Import der Massen-Edit Datei" & vbLf & ex.Message)
+        End Try
+
+
+
+    End Sub
+    ''' <summary>
+    ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
+    ''' stellt sie in ImportProjekte 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub awinImportProjektInventur()
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
+        Dim variantName As String = ""
         Dim vorlageName As String = ""
         Dim start As Date, inputStart As Date
         Dim startElem As String = ""
@@ -1880,10 +4443,20 @@ Public Module awinGeneralModules
         Dim budget As Double
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
-        Dim volume As Double, complexity As Double
+        Dim capacityNeeded As String = ""
+        Dim externCostInput As String = ""
+        Dim externCost As Double = 0.0
+        'Dim volume As Double, complexity As Double
         Dim description As String = ""
         Dim businessUnit As String = ""
+        Dim createdProjects As Integer = 0
+        Dim responsiblePerson As String = ""
+        Dim custFields As New Collection
+        ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
+        Dim nrOfStdColumns As Integer = 15
+
         Dim lastRow As Integer
+        Dim lastColumn As Integer
         'Dim startSpalte As Integer
         Dim vglName As String = ""
         Dim hproj As clsProjekt
@@ -1895,21 +4468,24 @@ Public Module awinGeneralModules
         Dim vorgabeDauer As Double
         Dim abstandAnfang As Double
         Dim abstandEnde As Double
+        Dim lastSpaltenValue As Integer
 
         Dim dauerFaktor As Double = 1.0
         Dim refProj As New clsProjekt
 
         Dim firstZeile As Excel.Range
-        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
-        Dim tmpName As String = ""
+        ' Änderung tk 5.6.16 wird jetzt an der Aufruf Schnittstelle gemacht 
+        ''Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+        ''Dim tmpName As String = ""
 
-        ' bestimme den Namen des Szenarios - das ist gleich der NAme der Excel Datei 
-        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
-        tmpName = ""
-        For ih As Integer = 0 To positionIX
-            tmpName = tmpName & scenarioName.Chars(ih)
-        Next
-        scenarioName = tmpName.Trim
+        ' ''Dim namesForConstellation As New Collection
+        ' '' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
+        ''Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+        ''tmpName = ""
+        ''For ih As Integer = 0 To positionIX
+        ''    tmpName = tmpName & scenarioName.Chars(ih)
+        ''Next
+        ''scenarioName = tmpName.Trim
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
@@ -1917,24 +4493,24 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(13) As String
-        suchstr(ptInventurSpalten.Name) = "Name"
-        suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
-        suchstr(ptInventurSpalten.Start) = "Start-Datum"
-        suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
-        suchstr(ptInventurSpalten.startElement) = "Bezug Start"
-        suchstr(ptInventurSpalten.endElement) = "Bezug Ende"
-        suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
-        suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
-        suchstr(ptInventurSpalten.Risiko) = "Risiko"
-        suchstr(ptInventurSpalten.Strategie) = "Strategie"
-        suchstr(ptInventurSpalten.Volumen) = "Volumen"
-        suchstr(ptInventurSpalten.Komplexitaet) = "Komplexität"
-        suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
-        suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
+        ' später, um mal das Einlesen einigermaßen intelligent zu machen .... 
+        'Dim suchstr(1) As String
+        'suchstr(ptInventurSpalten.Name) = "Name"
+        'suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
+        'suchstr(ptInventurSpalten.Start) = "Start-Datum"
+        'suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
+        'suchstr(ptInventurSpalten.startElement) = "Bezug Start"
+        'suchstr(ptInventurSpalten.endElement) = "Bezug Ende"
+        'suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
+        'suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
+        'suchstr(ptInventurSpalten.Risiko) = "Risiko"
+        'suchstr(ptInventurSpalten.Strategie) = "Strategie"
+        'suchstr(ptInventurSpalten.Kapazitaet) = "benötigte Kapazität"
+        'suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
+        'suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
 
 
-        Dim inputColumns(11) As Integer
+        'Dim inputColumns(11) As Integer
 
 
 
@@ -1945,233 +4521,626 @@ Public Module awinGeneralModules
 
                 firstZeile = CType(.Rows(1), Excel.Range)
 
-                ' jetzt werden die Spalten bestimmt 
-                Try
-                    For i As Integer = 0 To 11
-                        inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
-                    Next
-                Catch ex As Exception
+                ' für später ... siehe oben, intelligent ...
+                '' jetzt werden die Spalten bestimmt 
+                'Try
+                '    For i As Integer = 0 To 13
+                '        inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
+                '    Next
+                'Catch ex As Exception
 
-                End Try
+                'End Try
 
-
+                'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
+                lastColumn = firstZeile.Columns.Count
+                lastColumn = CType(firstZeile, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+                lastColumn = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
                 lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 While zeile <= lastRow
                     ok = False
                     Dim sMilestone As clsMeilenstein = Nothing
                     Dim eMilestone As clsMeilenstein = Nothing
+                    ' Kommentare zurücksetzen ...
+                    Try
+                        CType(.Range(.Cells(zeile, 1), .Cells(zeile, lastColumn)), Global.Microsoft.Office.Interop.Excel.Range).ClearComments()
+                    Catch ex As Exception
 
+                    End Try
+
+                    ' hier muss jetzt alles zurückgesetzt werden 
+                    ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
-                    If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
-
-                        vproj = Projektvorlagen.getProject(vorlageName)
-                        refProj = New clsProjekt
-                        vproj.copyTo(refProj)
-                        refProj.startDate = Date.Now
+                    If IsNothing(pName) Then
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
+                    ElseIf pName.Trim.Length < 2 Then
 
                         Try
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
+                        Catch ex As Exception
 
-                            start = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            ende = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            startElem = CStr(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            endElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            risk = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            sfit = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            'vglName = pName.Trim & "#" & ""
-                            vglName = calcProjektKey(pName.Trim, scenarioName)
-                            inputStart = start
-                            inputEnde = ende
+                        End Try
+                       
 
-                            If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
+                    Else
+                        variantName = ""
+                        custFields.Clear()
+                        capacityNeeded = ""
 
-                                If DateDiff(DateInterval.Day, start, ende) > 0 Then
-                                    ' nichts tun , Ende-Datum ist ein gültiges Datum
-                                    ok = True
-                                ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
-                                    ' auch Ende ist ein gültiges Datum , liegt nur vor Start
-                                    ' also vertauschen der beiden 
-                                    Dim tmpDate As Date = ende
-                                    ende = start
-                                    start = tmpDate
-                                    ok = True
-                                Else
-                                    ' Ende Datum wird anhand der Laufzeit der Vorlage oder der Dauer berechnet
-                                    If dauer > 0 Then
-                                        ProjektdauerIndays = dauer
-                                    Else
-                                        ProjektdauerIndays = vproj.dauerInDays
+                        ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
+                        Try
+                            Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
+                            If tmpStr.Length > 1 Then
+                                pName = tmpStr(0)
+                                variantName = tmpStr(1).Trim
+                            End If
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            variantName = ""
+                        End Try
+
+                        vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        lastSpaltenValue = spalte + 1
+
+                        If IsNothing(vorlageName) Then
+                            CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        ElseIf vorlageName.Trim.Length = 0 Then
+                            CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        Else
+                            If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
+
+                                vproj = Projektvorlagen.getProject(vorlageName)
+                                refProj = New clsProjekt
+                                vproj.copyTo(refProj)
+                                refProj.startDate = Date.Now
+
+                                Try
+
+                                    lastSpaltenValue = spalte + 2
+                                    responsiblePerson = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    lastSpaltenValue = spalte + 3
+                                    start = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If start < StartofCalendar Then
+                                        Throw New ArgumentException("Datum vor Kalender-Start")
                                     End If
-                                    ende = calcDatum(start, ProjektdauerIndays)
-                                    ok = True
-                                End If
 
-                            ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
-                                ' hier ist Start kein gültiges Datum innerhalb der Projekt-Tafel 
-                                ' Start Datum wird anhand der Laufzeit der Vorlage berechnet
-                                If dauer > 0 Then
-                                    ProjektdauerIndays = -1 * dauer
-                                Else
-                                    ProjektdauerIndays = -1 * vproj.dauerInDays
-                                End If
+                                    lastSpaltenValue = spalte + 4
+                                    ende = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If ende < StartofCalendar Then
+                                        Throw New ArgumentException("Datum vor Kalender-Start")
+                                    End If
 
-                                start = calcDatum(ende, ProjektdauerIndays)
+                                    lastSpaltenValue = spalte + 5
+                                    startElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                                If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
-                                    ' Start ist ein korrektes Datum 
-                                    ok = True
-                                Else
-                                    CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "Start liegt vor Kalender-Start "
+                                    lastSpaltenValue = spalte + 6
+                                    endElem = CStr(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    lastSpaltenValue = spalte + 7
+                                    dauer = CInt(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    lastSpaltenValue = spalte + 8
+                                    budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If budget < 0 Then
+                                        Throw New ArgumentException("negative Werte nicht zugelassen!")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 9
+                                    capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If Not isValidRoleCostInput(capacityNeeded, True) Then
+                                        Throw New ArgumentException("ungültige Kapa-Angabe")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 10
+                                    externCostInput = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If Not isValidRoleCostInput(externCostInput, False) Then
+                                        Throw New ArgumentException("ungültige Kosten-Angabe")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 11
+                                    risk = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If risk < 0 Or risk > 10.0 Then
+                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
+                                    End If
+
+                                    lastSpaltenValue = spalte + 12
+                                    sfit = CDbl(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If sfit < 0 Or risk > 10.0 Then
+                                        Throw New ArgumentException("Kennzahl muss zwischen [0 und 10] liegen")
+                                    End If
+
+
+                                    lastSpaltenValue = spalte + 13
+                                    businessUnit = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If Not IsNothing(businessUnit) Then
+                                        Dim bi As Integer = 0
+                                        Dim found As Boolean = False
+                                        While bi <= businessUnitDefinitions.Count - 1 And Not found
+                                            If businessUnitDefinitions.ElementAt(bi).Value.name = businessUnit Then
+                                                found = True
+                                            Else
+                                                bi = bi + 1
+                                            End If
+                                        End While
+
+                                        If Not found Then
+                                            Throw New ArgumentException("Business Unit unbekannt ..")
+                                        End If
+                                    End If
+                                    
+
+                                    lastSpaltenValue = spalte + 14
+                                    description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                    If lastColumn > nrOfStdColumns Then
+                                        ' es gibt evtl Custom fields 
+                                        For i As Integer = nrOfStdColumns To lastColumn - 1
+
+                                            Try
+                                                Dim cfName As String = CStr(CType(.Cells(1, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
+
+                                                If uniqueID > 0 Then
+                                                    ' es ist eine Custom Field
+
+                                                    Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+                                                    Dim cfValue As Object = Nothing
+                                                    Dim tstStr As String
+
+                                                    Select Case cfType
+                                                        Case ptCustomFields.Str
+                                                            lastSpaltenValue = spalte + i
+                                                            cfValue = CStr(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                        Case ptCustomFields.Dbl
+                                                            lastSpaltenValue = spalte + i
+                                                            cfValue = CDbl(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                        Case ptCustomFields.bool
+                                                            lastSpaltenValue = spalte + i
+                                                            cfValue = CBool(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                    End Select
+
+                                                    Dim cfObj As New clsCustomField
+                                                    With cfObj
+                                                        .uid = uniqueID
+                                                        .wert = cfValue
+                                                        tstStr = CStr(.wert)
+                                                    End With
+                                                    custFields.Add(cfObj)
+                                                End If
+                                            Catch ex As Exception
+                                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            End Try
+
+                                        Next
+                                    End If
+
+                                    vglName = calcProjektKey(pName.Trim, variantName)
+                                    inputStart = start
+                                    inputEnde = ende
+
+                                    If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
+
+                                        If DateDiff(DateInterval.Day, start, ende) > 0 Then
+                                            ' nichts tun , Ende-Datum ist ein gültiges Datum
+                                            ok = True
+                                        ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
+                                            ' auch Ende ist ein gültiges Datum , liegt nur vor Start
+                                            ' also vertauschen der beiden 
+                                            Dim tmpDate As Date = ende
+                                            ende = start
+                                            start = tmpDate
+                                            ok = True
+                                        Else
+                                            ' Ende Datum wird anhand der Laufzeit der Vorlage oder der Dauer berechnet
+                                            If dauer > 0 Then
+                                                ProjektdauerIndays = dauer
+                                            Else
+                                                ProjektdauerIndays = vproj.dauerInDays
+                                            End If
+                                            ende = calcDatum(start, ProjektdauerIndays)
+                                            ok = True
+                                        End If
+
+                                    ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
+                                        ' hier ist Start kein gültiges Datum innerhalb der Projekt-Tafel 
+                                        ' Start Datum wird anhand der Laufzeit der Vorlage berechnet
+                                        If dauer > 0 Then
+                                            ProjektdauerIndays = -1 * dauer
+                                        Else
+                                            ProjektdauerIndays = -1 * vproj.dauerInDays
+                                        End If
+
+                                        start = calcDatum(ende, ProjektdauerIndays)
+
+                                        If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
+                                            ' Start ist ein korrektes Datum 
+                                            ok = True
+                                        Else
+                                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "Start liegt vor Kalender-Start "
+                                            ok = False
+                                        End If
+
+                                    Else
+                                        CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "ungültiges Start- und Ende-Datum"
+                                        ok = False
+                                    End If
+
+                                Catch ex As Exception
+
                                     ok = False
-                                End If
+                                    'Call MsgBox(ex.Message)
+                                    CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                    CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                End Try
+
+                                ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
+
+                                vorgabeDauer = calcDauerIndays(start, ende)
+                                Try
+
+                                    If Not IsNothing(startElem) Then
+                                        If startElem.Trim.Length > 0 Then
+                                            sMilestone = refProj.getMilestone(startElem)
+                                        End If
+                                    End If
+
+                                    If Not IsNothing(endElem) Then
+                                        If endElem.Trim.Length > 0 Then
+                                            eMilestone = refProj.getMilestone(endElem)
+                                        End If
+                                    End If
+
+                                    ' jetzt werden Start und Ende ggf neu bestimmt, so dass die Bezugs-Elemente genau so liegen 
+                                    If Not IsNothing(sMilestone) Then
+                                        abstandAnfang = DateDiff(DateInterval.Day, refProj.startDate, sMilestone.getDate) * -1
+                                        If Not IsNothing(eMilestone) Then
+                                            abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
+                                            refDauer = calcDauerIndays(sMilestone.getDate, eMilestone.getDate)
+                                        Else
+                                            refDauer = calcDauerIndays(sMilestone.getDate, refProj.endeDate)
+                                        End If
+                                    Else
+                                        If Not IsNothing(eMilestone) Then
+                                            abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
+                                            refDauer = calcDauerIndays(refProj.startDate, eMilestone.getDate)
+                                        Else
+                                            refDauer = vorgabeDauer
+                                        End If
+                                    End If
+
+                                    If refDauer < 0 Then
+                                        refDauer = -1 * refDauer
+                                    ElseIf refDauer = 0 Then
+                                        refDauer = vorgabeDauer
+                                    End If
+
+                                    dauerFaktor = vorgabeDauer / refDauer
+
+                                    ' rechne den neuen Start aus 
+                                    If Not IsNothing(sMilestone) Then
+                                        start = start.AddDays(CInt(dauerFaktor * abstandAnfang))
+                                        ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
+                                    ElseIf Not IsNothing(eMilestone) Then
+                                        ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
+                                    End If
+
+                                Catch ex As Exception
+                                    ' nichts tn 
+                                End Try
+
 
                             Else
-                                CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "ungültiges Start- und Ende-Datum"
+                                'CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
+                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                 ok = False
                             End If
 
-                        Catch ex As Exception
-                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
-                            ok = False
-                        End Try
+                            ' jetzt die Aktion durchführen, wenn alles ok 
+                            If ok Then
 
-                        ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
+                                'Projekt anlegen ,Verschiebung um 
+                                hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                        vorgabeDauer = calcDauerIndays(start, ende)
-                        Try
-                            
-                            If Not IsNothing(startElem) Then
-                                If startElem.Trim.Length > 0 Then
-                                    sMilestone = refProj.getMilestone(startElem)
-                                End If
-                            End If
+                                ' #####################################################################
+                                ' Erstellen des Projekts nach den Angaben aus der Batch-Datei 
+                                '
+                                hproj = erstelleInventurProjekt(pName, vorlageName, variantName, _
+                                                             start, ende, budget, zeile, sfit, risk, _
+                                                             capacityNeeded, externCostInput, businessUnit, description, custFields, _
+                                                             responsiblePerson)
 
-                            If Not IsNothing(endElem) Then
-                                If endElem.Trim.Length > 0 Then
-                                    eMilestone = refProj.getMilestone(endElem)
-                                End If
-                            End If
 
-                            ' jetzt werden Start und Ende ggf neu bestimmt, so dass die Bezugs-Elemente genau so liegen 
-                            If Not IsNothing(sMilestone) Then
-                                abstandAnfang = DateDiff(DateInterval.Day, refProj.startDate, sMilestone.getDate) * -1
-                                If Not IsNothing(eMilestone) Then
-                                    abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
-                                    refDauer = calcDauerIndays(sMilestone.getDate, eMilestone.getDate)
+                                If Not IsNothing(hproj) Then
+                                    createdProjects = createdProjects + 1
+                                    ' immer als Fixiertes Projekt darstellen ..
+                                    hproj.Status = ProjektStatus(1)
+
+                                    'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
+                                    If Not IsNothing(sMilestone) Then
+                                        If DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart) <> 0 Then
+                                            'Call MsgBox("Differenz Start:" & DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart))
+                                            hproj.getMilestone(startElem).setDate = inputStart
+                                        End If
+                                    End If
+
+                                    If Not IsNothing(eMilestone) Then
+                                        If DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde) <> 0 Then
+                                            'Call MsgBox("Differenz Ende:" & DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde))
+                                            hproj.getMilestone(endElem).setDate = inputEnde
+                                        End If
+                                    End If
+
                                 Else
-                                    refDauer = calcDauerIndays(sMilestone.getDate, refProj.endeDate)
+                                    ok = False
+                                    CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                    CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
                                 End If
-                            Else
-                                If Not IsNothing(eMilestone) Then
-                                    abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
-                                    refDauer = calcDauerIndays(refProj.startDate, eMilestone.getDate)
-                                Else
-                                    refDauer = vorgabeDauer
+
+
+                                If ok Then ' wenn es nicht explizit auf false gesetzt wurde, ist es an dieser Stelle immer noch true 
+                                    Dim pkey As String = ""
+                                    If Not hproj Is Nothing Then
+                                        Try
+                                            pkey = calcProjektKey(hproj)
+
+                                            If ImportProjekte.Containskey(pkey) Then
+                                                CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
+                                            Else
+                                                ImportProjekte.Add(pkey, hproj)
+                                            End If
+
+
+                                            'myCollection.Add(calcProjektKey(hproj))
+                                        Catch ex As Exception
+                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                        End Try
+
+                                    End If
+
                                 End If
-                            End If
-
-                            If refDauer < 0 Then
-                                refDauer = -1 * refDauer
-                            ElseIf refDauer = 0 Then
-                                refDauer = vorgabeDauer
-                            End If
-
-                            dauerFaktor = vorgabeDauer / refDauer
-
-                            ' rechne den neuen Start aus 
-                            If Not IsNothing(sMilestone) Then
-                                start = start.AddDays(CInt(dauerFaktor * abstandAnfang))
-                                ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
-                            ElseIf Not IsNothing(eMilestone) Then
-                                ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
-                            End If
-
-                        Catch ex As Exception
-
-                        End Try
-                        
-
-                    Else
-                        CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
-                        ok = False
-                    End If
-
-                    ' jetzt die Aktion durchführen, wenn alles ok 
-                    If ok Then
-                        If AlleProjekte.Containskey(vglName) Then
-                            ' nichts tun ...
-                            Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
-                        Else
-                            'Projekt anlegen ,Verschiebung um 
-                            hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
-
-                            Dim variantName As String
-                            If scenarioName = "Init" Then
-                                variantName = ""
-                            Else
-                                variantName = scenarioName
-                            End If
-                            Call erstelleInventurProjekt(hproj, pName, vorlageName, variantName, _
-                                                         start, ende, budget, zeile, sfit, risk, _
-                                                         volume, complexity, businessUnit, description)
-
-                            'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
-                            If Not IsNothing(sMilestone) Then
-                                If DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart) <> 0 Then
-                                    'Call MsgBox("Differenz Start:" & DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart))
-                                    hproj.getMilestone(startElem).setDate = inputStart
-                                End If
-                            End If
-
-                            If Not IsNothing(eMilestone) Then
-                                If DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde) <> 0 Then
-                                    'Call MsgBox("Differenz Ende:" & DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde))
-                                    hproj.getMilestone(endElem).setDate = inputEnde
-                                End If
-                            End If
-
-                            If Not hproj Is Nothing Then
-                                Try
-                                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                                    myCollection.Add(calcProjektKey(hproj))
-                                Catch ex As Exception
-
-                                End Try
 
                             End If
-
                         End If
+
+                        
                     End If
+                    
 
-
-
+                    geleseneProjekte = geleseneProjekte + 1
                     zeile = zeile + 1
 
                 End While
 
 
-
-
-
             End With
         Catch ex As Exception
-            Throw New Exception("Fehler in Szenario-Datei")
+
+            Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
         End Try
 
-        ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
-        If ImportProjekte.Count > 0 Then
-            Call storeSessionConstellation(ShowProjekte, scenarioName, ImportProjekte)
-        End If
+        
+        Call MsgBox("gelesen: " & geleseneProjekte & vbLf & _
+                    "erzeugt: " & createdProjects & vbLf & _
+                    "importiert: " & ImportProjekte.Count)
 
     End Sub
+
+    ''' <summary>
+    ''' bestimmt, ob es sich um einen gültigen Kapazitäts- bzw Kosten-Input String handelt
+    ''' alle Rollen- bzw Kostenart Namen bekannt, alle Werte >= 0 
+    ''' </summary>
+    ''' <param name="inputStr"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidRoleCostInput(ByVal inputStr As String, ByVal checkRoles As Boolean) As Boolean
+        Dim resultValue As Boolean = True
+        Dim anzDefinitions As Integer
+
+        If checkRoles Then
+            anzDefinitions = RoleDefinitions.Count
+        Else
+            anzDefinitions = CostDefinitions.Count
+        End If
+
+
+        If Not IsNothing(inputStr) Then
+            If inputStr.Trim.Length > 0 Then
+
+                Dim completeStr() As String = inputStr.Split(New Char() {CType("#", Char)}, 100)
+
+
+                ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
+                Dim i As Integer = 1
+                While i <= completeStr.Length And resultValue = True
+
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+
+                    If roleCostStr.Length = 2 Then
+
+                        Try
+                            Dim roleCostName As String = roleCostStr(0).Trim
+                            Dim roleCostSum As Double = CDbl(roleCostStr(1).Trim)
+                            If checkRoles Then
+                                If RoleDefinitions.containsName(roleCostName) And roleCostSum >= 0 Then
+                                    ' ok, nichts tun 
+                                Else
+                                    resultValue = False
+                                End If
+
+                            Else
+                                If CostDefinitions.containsName(roleCostName) And roleCostSum >= 0 Then
+                                    ' ok, nichts tun 
+                                Else
+                                    resultValue = False
+                                End If
+
+                            End If
+
+                        Catch ex As Exception
+                            resultValue = False
+                        End Try
+
+                    ElseIf roleCostStr.Length = 1 And anzDefinitions >= 1 Then
+                        ' es muss sich um eine Zahl größer 0 handeln, Rolle 1 wird angenommen 
+
+                        Try
+                            If CDbl(roleCostStr(0).Trim) >= 0 Then
+                                ' ok, nichts tun
+                            Else
+                                resultValue = False
+                            End If
+                        Catch ex As Exception
+                            resultValue = False
+                        End Try
+
+                    Else
+                        resultValue = False
+                    End If
+
+                    i = i + 1
+
+                End While
+
+
+
+            Else
+                ' leerer String, ok 
+                resultValue = True
+            End If
+        Else
+            ' Nothing, ok 
+            resultValue = True
+        End If
+
+        isValidRoleCostInput = resultValue
+
+    End Function
+
+    ''' <summary>
+    ''' diese Funktion verarbeitet die Import Projekte 
+    ''' wenn sie schon in der Datenbank bzw Session existieren und unterschiedlich sind: es wird eine Variante angelegt, die so heisst wie das Scenario 
+    ''' wenn sie bereits existieren und identisch sind: in AlleProjekte holen, wenn nicht schon geschehen
+    ''' wenn sie noch nicht existieren: in AlleProjekte anlegen
+    ''' in jedem Fall: eine Constellation mit dem Namen cName anlegen
+    ''' </summary>
+    ''' <param name="cName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function verarbeiteImportProjekte(ByVal cName As String, _
+                                             Optional ByVal noComparison As Boolean = False) As clsConstellation
+        Dim newC As New clsConstellation
+        newC.constellationName = cName
+        Dim vglProj As clsProjekt
+        Dim lfdZeilenNr As Integer = 2
+        Dim ok As Boolean
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+
+            Dim impProjekt As clsProjekt = kvp.Value
+            Dim importKey As String = calcProjektKey(impProjekt)
+
+            vglProj = Nothing
+
+            If noComparison Then
+                ' nicht vergleichen, einfach in AlleProjekte rein machen 
+                If AlleProjekte.Containskey(importKey) Then
+                    AlleProjekte.Remove(importKey)
+                End If
+                AlleProjekte.Add(importKey, impProjekt)
+            Else
+                ' jetzt muss ggf verglichen werden 
+                If AlleProjekte.Containskey(importKey) Then
+
+                    vglProj = AlleProjekte.getProject(importKey)
+
+                Else
+                    ' nicht in der Session, aber ist es in der Datenbank ?  
+
+                    If Not noDB Then
+
+                        '
+                        ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If request.pingMongoDb() Then
+
+                            If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
+
+                                ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
+
+                                If IsNothing(vglProj) Then
+                                    ' kann eigentlich nicht sein 
+                                    ok = False
+                                Else
+                                    ' jetzt in AlleProjekte eintragen ... 
+                                    AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+
+                                End If
+                            Else
+                                ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
+                                AlleProjekte.Add(importKey, impProjekt)
+                            End If
+                        Else
+                            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
+                        End If
+
+
+                    Else
+                        ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
+                        AlleProjekte.Add(importKey, impProjekt)
+
+                    End If
+
+
+                End If
+
+            End If
+
+            
+
+            ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
+            If Not IsNothing(vglProj) And Not noComparison Then
+
+                Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
+
+                If unterschiede.Count > 0 Then
+                    ' es gibt Unterschiede, also muss eine Variante angelegt werden 
+
+                    impProjekt.variantName = cName
+                    importKey = calcProjektKey(impProjekt)
+
+                    ' wenn die Variante bereits in der Session existiert ..
+                    ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                    If AlleProjekte.Containskey(importKey) Then
+                        AlleProjekte.Remove(importKey)
+                    End If
+
+                    ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
+                    AlleProjekte.Add(importKey, impProjekt)
+                End If
+            End If
+
+            ' Aufnehmen in Constellation
+            Dim newCItem As New clsConstellationItem
+            newCItem.projectName = impProjekt.name
+            newCItem.variantName = impProjekt.variantName
+            newCItem.show = True
+            newCItem.Start = impProjekt.startDate
+            newCItem.zeile = lfdZeilenNr
+            newC.Add(newCItem)
+
+            lfdZeilenNr = lfdZeilenNr + 1
+
+        Next
+
+        verarbeiteImportProjekte = newC
+
+    End Function
 
     Public Sub awinImportModule(ByRef myCollection As Collection)
 
@@ -2196,6 +5165,7 @@ Public Module awinGeneralModules
         Dim ProjektdauerIndays As Integer = 0
         Dim ok As Boolean = False
 
+        Dim fullProjectNames As New Collection
         Dim firstZeile As Excel.Range
 
         Dim scenarioName As String = appInstance.ActiveWorkbook.Name
@@ -2215,7 +5185,7 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(6) As String
+        Dim suchstr(7) As String
         suchstr(ptModuleSpalten.produktlinie) = "Produktlinie"
         suchstr(ptModuleSpalten.name) = "Name"
         suchstr(ptModuleSpalten.projektTyp) = "Projekt-Typ"
@@ -2223,9 +5193,10 @@ Public Module awinGeneralModules
         suchstr(ptModuleSpalten.strategicFit) = "strat. Bedeutung"
         suchstr(ptModuleSpalten.risiko) = "Risiko der Umsetzung"
         suchstr(ptModuleSpalten.volume) = "Produktions-Volumen"
+        suchstr(ptModuleSpalten.budget) = "Budget"
 
 
-        Dim inputColumns(6) As Integer
+        Dim inputColumns(7) As Integer
 
 
 
@@ -2238,7 +5209,7 @@ Public Module awinGeneralModules
 
                 ' jetzt werden die Spalten bestimmt 
                 Try
-                    For i As Integer = 0 To 6
+                    For i As Integer = 0 To 7
                         inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
                     Next
                 Catch ex As Exception
@@ -2299,7 +5270,7 @@ Public Module awinGeneralModules
                                 projectEndDate = tmpDate
                             End If
                         End If
-                        
+
                     Next
 
 
@@ -2311,7 +5282,7 @@ Public Module awinGeneralModules
                             start = projectStartDate
                             ende = projectEndDate
                             dauer = calcDauerIndays(start, ende)
-                            budget = 0
+                            budget = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.budget)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             risk = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.risiko)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             sfit = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.strategicFit)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             volume = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.volume)), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -2386,98 +5357,134 @@ Public Module awinGeneralModules
                             ' nichts tun ...
                             Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
                         Else
-                            'Projekt anlegen ,Verschiebung um 
-                            hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
+                            Try
+                                fullProjectNames.Add(vglName, vglName)
+                                'Projekt anlegen ,Verschiebung um 
+                                hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                            Call erstelleInventurProjekt(hproj, pName, vorlagenName, scenarioName, _
-                                                         start, ende, budget, zeile, sfit, risk, _
-                                                         volume, complexity, businessUnit, description)
-                            projectStartDate = start
-                            projectEndDate = ende
+                                Dim capacityNeeded As String = ""
+                                hproj = erstelleInventurProjekt(pName, vorlagenName, scenarioName, _
+                                                             start, ende, budget, zeile, sfit, risk, _
+                                                             capacityNeeded, Nothing, businessUnit, description)
 
-                        End If
-                    End If
-
-                    Dim phaseName As String = ""
-                    Dim scaleRule As Integer
-                    Dim moduleNames() As String
-                    Dim moduleName As String
-                    Dim allNames As String
-                    Dim planModul As clsProjektvorlage
-
-                    ' jetzt müssen die Module ergänzt werden 
-                    For i As Integer = 1 To anzahlPhasenToAdd
-
-                        start = CDate(CType(.Cells(zeile, firstC + 1 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        ende = CDate(CType(.Cells(zeile, firstC + 2 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
-
-                        Dim startOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, start))
-                        Dim endOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, ende))
-
-
-                        Try
-                            phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
-                            If phaseName = "-" Or endOffset - startOffset = 0 Then
-                                allesOK = False
-                            Else
-                                allesOK = True
-                            End If
-                        Catch ex As Exception
-                            allesOK = False
-                        End Try
-
-
-                        If allesOK Then
-                            scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-
-                            ' jetzt müssen die einzelnen Module ausgelesen werden 
-                            moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
-                            Dim anzahl As Integer = moduleNames.Length
-
-                            For ix As Integer = 1 To anzahl
-                                moduleName = moduleNames(ix - 1)
-                                If ModulVorlagen.Contains(moduleName) Then
-                                    planModul = ModulVorlagen.getProject(moduleName)
-                                    Dim parentID As String = rootPhaseName
-
-                                    Dim parentPhase As clsPhase
-                                    Dim elemID As String = ""
-
-                                    If Not IsNothing(phaseName) Then
-
-                                        If phaseName.Length > 0 Then
-                                            parentPhase = New clsPhase(parent:=hproj)
-                                            elemID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
-                                            parentPhase.nameID = elemID
-                                            parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
-
-                                            hproj.AddPhase(parentPhase, origName:=phaseName, _
-                                                   parentID:=parentID)
-
-                                            parentID = elemID
-
-                                            planModul.moduleCopyTo(hproj, parentID, moduleName, startOffset, endOffset, True)
-                                        End If
-                                    End If
+                                If Not IsNothing(hproj) Then
+                                    projectStartDate = start
+                                    projectEndDate = ende
+                                Else
+                                    ok = False
                                 End If
-                            Next
+                                
+                            Catch ex As Exception
+                                ok = False
+                            End Try
+                            
+
                         End If
-                    Next
-
-                    ' jetzt die Projekt eintragen 
-                    If Not hproj Is Nothing Then
-                        Try
-                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                            myCollection.Add(calcProjektKey(hproj))
-                        Catch ex As Exception
-
-                        End Try
-
                     End If
 
+                    If ok Then
 
+                        Dim phaseName As String = ""
+                        Dim scaleRule As Integer
+                        Dim moduleNames() As String
+                        Dim moduleName As String
+                        Dim allNames As String
+                        Dim planModul As clsProjektvorlage
+
+                        ' jetzt müssen die Module ergänzt werden 
+                        For i As Integer = 1 To anzahlPhasenToAdd
+
+                            start = CDate(CType(.Cells(zeile, firstC + 1 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            ende = CDate(CType(.Cells(zeile, firstC + 2 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+
+                            Dim startOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, start))
+                            Dim endOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, ende))
+
+
+                            Try
+                                phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                                If phaseName = "-" Or endOffset - startOffset = 0 Then
+                                    allesOK = False
+                                    phaseName = "-"
+                                Else
+                                    allesOK = True
+                                End If
+                            Catch ex As Exception
+                                allesOK = False
+                            End Try
+
+                            Dim parentPhase As clsPhase = Nothing
+
+
+
+                            If allesOK Then
+
+                                '
+                                ' jetzt muss die aufnehmende Phase erstmal angelegt werden 
+                                '
+                                If Not IsNothing(phaseName) Then
+
+                                    If phaseName.Length > 0 Then
+
+                                        parentPhase = New clsPhase(parent:=hproj)
+                                        parentPhase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+                                        parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+
+                                        hproj.AddPhase(parentPhase, origName:=phaseName, _
+                                               parentID:=rootPhaseName)
+
+                                    End If
+
+                                End If
+
+
+                                scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                                ' jetzt müssen die einzelnen Module ausgelesen werden 
+                                ' aber nur, wenn überhaupt was drin steht und das auch als Modul existiert ...
+                                '
+                                If Not IsNothing(allNames) Then
+
+                                    If Not allNames.Trim.Length = 0 Then
+
+                                        moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
+                                        Dim anzahl As Integer = moduleNames.Length
+
+                                        For ix As Integer = 1 To anzahl
+                                            moduleName = moduleNames(ix - 1)
+                                            If ModulVorlagen.Contains(moduleName) Then
+                                                planModul = ModulVorlagen.getProject(moduleName)
+
+                                                If Not IsNothing(parentPhase) Then
+
+                                                    planModul.moduleCopyTo(hproj, parentPhase.nameID, moduleName, startOffset, endOffset, True)
+
+                                                End If
+                                            End If
+                                        Next
+
+                                    End If
+
+                                End If
+
+                            End If
+                        Next
+
+                        ' jetzt die Projekt eintragen 
+                        If Not hproj Is Nothing Then
+                            Try
+                                ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                myCollection.Add(calcProjektKey(hproj))
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+
+                    End If
+                    
                     zeile = zeile + 1
 
                 End While
@@ -2494,7 +5501,7 @@ Public Module awinGeneralModules
 
         ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
         If ImportProjekte.Count > 0 Then
-            Call storeSessionConstellation(ShowProjekte, scenarioName, ImportProjekte)
+            Call storeSessionConstellation(scenarioName, fullProjectNames)
         End If
 
         currentConstellation = scenarioName
@@ -2543,7 +5550,7 @@ Public Module awinGeneralModules
             Dim anzRules As Integer = currentElem.count
             Dim currentRule As clsAddElementRuleItem
             Dim found As Boolean = False
-            
+
             Dim i As Integer = 1
 
             Do While i <= currentElem.count And Not found
@@ -2666,7 +5673,7 @@ Public Module awinGeneralModules
                 Dim found As Boolean = False
 
                 If IsNothing(topPhase.getMilestone(currentElem.name)) Then
-                    ' nur wenn der nicht schon exitistiert, soll er auch erzeugt werden ... 
+                    ' nur wenn der nicht schon existiert, soll er auch erzeugt werden ... 
 
                     Do While offs <= currentElem.count And Not found
                         Dim ok As Boolean = False
@@ -2718,7 +5725,8 @@ Public Module awinGeneralModules
                                     abstandsText = currentRule.offset.ToString & " Tage"
                                 End If
                                 .description = " = " & currentRule.referenceName & abstandsText
-                                .deliverables = currentElem.deliverables
+                                ' Änderung tk 29.5.16 deliverables ist jetzt Bestandteil von clsMeilenstein
+                                '.deliverables = currentElem.deliverables
                             End With
 
 
@@ -3283,7 +6291,7 @@ Public Module awinGeneralModules
                                     dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
 
                                     .changeStartandDauer(startOffset, dauerIndays)
-                                    .Offset = 0
+                                    .offset = 0
 
                                     ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
                                     Dim phaseStartdate As Date = .getStartDate
@@ -3305,7 +6313,7 @@ Public Module awinGeneralModules
                                         '
                                         ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
                                         '
-                                        If RoleDefinitions.Contains(hname) Then
+                                        If RoleDefinitions.containsName(hname) Then
                                             Try
                                                 r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -3322,8 +6330,9 @@ Public Module awinGeneralModules
                                                     End Try
 
                                                 Next m
-
-                                                crole = New clsRolle(ende - anfang + 1)
+                                                ' tk: das muss doch eigentlich heissen: end-anfag !? 
+                                                'crole = New clsRolle(ende - anfang + 1)
+                                                crole = New clsRolle(ende - anfang)
                                                 With crole
                                                     .RollenTyp = r
                                                     .Xwerte = Xwerte
@@ -3338,7 +6347,7 @@ Public Module awinGeneralModules
                                                 '
                                             End Try
 
-                                        ElseIf CostDefinitions.Contains(hname) Then
+                                        ElseIf CostDefinitions.containsName(hname) Then
 
                                             Try
 
@@ -3356,7 +6365,9 @@ Public Module awinGeneralModules
 
                                                 Next m
 
-                                                ccost = New clsKostenart(ende - anfang + 1)
+                                                ' Änderung tk: 26.7 
+                                                'ccost = New clsKostenart(ende - anfang + 1)
+                                                ccost = New clsKostenart(ende - anfang)
                                                 With ccost
                                                     .KostenTyp = k
                                                     .Xwerte = Xwerte
@@ -3808,9 +6819,11 @@ Public Module awinGeneralModules
 
         Dim zeile As Integer, spalte As Integer
         Dim hproj As New clsProjekt
-        Dim hwert As Integer
         Dim ProjektdauerIndays As Integer = 0
         Dim endedateProjekt As Date
+
+        Dim ampelFarbe As Integer
+        Dim ampelText As String
 
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet
@@ -3871,14 +6884,15 @@ Public Module awinGeneralModules
 
 
                     ' Ampel-Farbe
-                    hwert = CType(.Range("Bewertung").Value, Integer)
-
-                    If hwert >= 0 And hwert <= 3 Then
-                        hproj.ampelStatus = hwert
+                    ampelFarbe = CType(.Range("Bewertung").Value, Integer)
+                    If ampelFarbe >= 0 And ampelFarbe <= 3 Then
+                        hproj.ampelStatus = ampelFarbe
                     End If
 
+                    
                     ' Ampel-Bewertung 
-                    hproj.ampelErlaeuterung = CType(.Range("BewertgErläuterung").Value, String)
+                    ampelText = CType(.Range("BewertgErläuterung").Value, String)
+                    hproj.ampelErlaeuterung = ampelText
 
 
                 End With
@@ -3918,6 +6932,18 @@ Public Module awinGeneralModules
                             hproj.variantName = ""
                         End Try
 
+                        '   Varianten-Beschreibung
+                        Try
+                            hproj.variantDescription = CType(.Range("Variant_Description").Value, String)
+                            If Not IsNothing(hproj.variantDescription) Then
+                                hproj.variantDescription = hproj.variantDescription.Trim
+                            Else
+                                hproj.variantDescription = ""
+                            End If
+
+                        Catch ex1 As Exception
+                            hproj.variantDescription = ""
+                        End Try
 
                         ' Business Unit - kein Problem wenn nicht da   
                         Try
@@ -3938,19 +6964,59 @@ Public Module awinGeneralModules
                         hproj.StrategicFit = CDbl(.Range("Strategischer_Fit").Value)
 
 
-                        '' Komplexitätszahl - kein Problem, wenn nicht da  --- BMW---
-                        'Try
-                        '    hproj.complexity = CType(.Range("Complexity").Value, Double)
-                        'Catch ex As Exception
-                        '    hproj.complexity = 0.5 ' Default
-                        'End Try
+                        ' Ergänzung tk 19.5 es können hier auch sogenannte Custom Fields eingelesen werden ...
+                        Try
+                            Dim cfRange As Excel.Range = CType(.Range("IndivName2"), Excel.Range)
+                            Dim startzeile As Integer = cfRange.Row
+                            Dim cfValueColumn As Integer = cfRange.Column
+                            Dim lastZeile As Integer = CInt(CType(.Cells(10000, 2), Excel.Range).End(XlDirection.xlUp).Row)
 
-                        '' Volumen - kein Problem, wenn nicht da    --- BMW ---
-                        'Try
-                        '    hproj.volume = CType(.Range("Volume").Value, Double)
-                        'Catch ex As Exception
-                        '    hproj.volume = 10 ' Default
-                        'End Try
+                            ' jetzt die Custom-Fields einlesen 
+                            For i As Integer = startzeile To lastZeile
+
+                                Try
+
+                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value).Trim
+                                    Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
+
+                                    If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
+                                        Dim cfType As Integer = customFieldDefinitions.getTyp(cfUid)
+
+                                        If Not IsNothing(cfType) Then
+                                            Select Case cfType
+                                                Case ptCustomFields.Str
+                                                    Dim cfvalue As String = CStr(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomSField(cfUid, cfvalue)
+                                                Case ptCustomFields.Dbl
+                                                    Dim cfvalue As Double = CDbl(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomDField(cfUid, cfvalue)
+                                                Case ptCustomFields.bool
+                                                    Dim cfvalue As Boolean = CBool(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                    hproj.addSetCustomBField(cfUid, cfvalue)
+                                                Case Else
+                                                    ' Custom Field Type nicht bekannt ...
+                                                    Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
+                                            End Select
+                                        Else
+                                            ' Custom Field UID nicht existent ...
+                                            Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                        End If
+                                    Else
+                                        ' Custom Field Definition nicht bekannt ...
+                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
+
+                            Next
+
+
+                        Catch ex As Exception
+
+                        End Try
+
 
 
                     End With
@@ -4173,7 +7239,8 @@ Public Module awinGeneralModules
 
                                         cphase = New clsPhase(parent:=hproj)
 
-                                        If PhaseDefinitions.Contains(objectName) Then
+                                        If PhaseDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
                                             With cphase
                                                 .nameID = hproj.hierarchy.findUniqueElemKey(objectName, False)
@@ -4229,10 +7296,40 @@ Public Module awinGeneralModules
                                         End If
 
                                     ElseIf isMeilenstein Then
-                                        If MilestoneDefinitions.Contains(objectName) Then
+                                        If MilestoneDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
-                                            phaseNameID = lastPhase.nameID
-                                            cMilestone = New clsMeilenstein(parent:=lastPhase)
+                                            Dim hrchynode As New clsHierarchyNode
+                                            hrchynode.elemName = cphase.name
+
+                                            If aktLevel = 0 Then
+                                                ' Fehler, denn Meilenstein kann nicht parallel zu Rootphase sein??
+                                                Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName), hproj.name, anzFehler)
+                                                Throw New ArgumentException("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName)
+
+                                            ElseIf aktLevel = 1 Then
+                                                phaseNameID = rootPhaseName
+
+                                            ElseIf aktLevel - lastLevel = 1 Then
+                                                phaseNameID = lastelemID
+
+                                            ElseIf aktLevel - lastLevel = 0 Then
+                                                phaseNameID = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                                            ElseIf lastLevel - aktLevel >= 1 Then
+                                                hilfselemID = lastelemID
+                                                For l As Integer = 1 To lastLevel - aktLevel
+                                                    hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                                Next l
+                                                phaseNameID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                            Else
+                                                Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName), hproj.name, anzFehler)
+                                                Throw New ArgumentException("Fehler, Lesen Termine:  Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName)
+                                            End If
+
+
+                                            Dim hilfsPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                                            cMilestone = New clsMeilenstein(parent:=hproj.getPhaseByID(phaseNameID))
                                             cBewertung = New clsBewertung
 
                                             milestoneName = objectName.Trim
@@ -4242,21 +7339,21 @@ Public Module awinGeneralModules
                                             ' muss abgebrochen werden 
 
                                             If Not awinSettings.milestoneFreeFloat And _
-                                                (DateDiff(DateInterval.Day, cphase.getStartDate, milestoneDate) < 0 Or _
-                                                 DateDiff(DateInterval.Day, cphase.getEndDate, milestoneDate) > 0) Then
+                                                (DateDiff(DateInterval.Day, hilfsPhase.getStartDate, milestoneDate) < 0 Or _
+                                                 DateDiff(DateInterval.Day, hilfsPhase.getEndDate, milestoneDate) > 0) Then
 
                                                 Call logfileSchreiben(("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                                    milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
+                                                                    milestoneName & " nicht innerhalb " & hilfsPhase.name & vbLf & _
                                                                          "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
                                                 Throw New Exception("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                                    milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
+                                                                    milestoneName & " nicht innerhalb " & hilfsPhase.name & vbLf & _
                                                                          "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
                                             End If
 
 
                                             ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                             If DateDiff(DateInterval.Month, hproj.startDate, milestoneDate) < -1 Then
-                                                milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                                                milestoneDate = hproj.startDate.AddDays(hilfsPhase.startOffsetinDays + hilfsPhase.dauerInDays)
                                             Else
                                                 If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
                                                     Call logfileSchreiben(("Fehler, Lesen Termine: der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
@@ -4266,12 +7363,51 @@ Public Module awinGeneralModules
                                             End If
 
                                             ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                                            bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
-                                            explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                            Try
+                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                                If IsNothing(bewertungsAmpel) Then
+                                                    bewertungsAmpel = 0
+                                                End If
+                                            Catch ex As Exception
+                                                bewertungsAmpel = 0
+                                            End Try
 
-                                            ' Ergänzung tk 2.11 deliverables ergänzt 
-                                            deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                            Try
+                                                explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                                If IsNothing(explanation) Then
+                                                    explanation = ""
+                                                End If
+                                            Catch ex As Exception
+                                                explanation = ""
+                                            End Try
 
+                                            Try
+                                                ' Ergänzung tk 2.11 deliverables ergänzt 
+                                                deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                                If IsNothing(deliverables) Then
+                                                    deliverables = ""
+                                                End If
+                                            Catch ex As Exception
+                                                deliverables = ""
+                                            End Try
+                                           
+
+
+                                            ' tk 29.5.16
+                                            ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
+                                            Try
+                                                If deliverables.Trim.Length > 0 Then
+                                                    Dim splitStr() As String = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+
+                                                    ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
+                                                    For ix As Integer = 1 To splitStr.Length
+                                                        cMilestone.addDeliverable(splitStr(ix - 1))
+                                                    Next
+                                                End If
+                                            Catch ex As Exception
+
+                                            End Try
+                                            
                                             If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
                                                 ' es gibt keine Bewertung
                                                 bewertungsAmpel = 0
@@ -4282,7 +7418,6 @@ Public Module awinGeneralModules
                                                 .colorIndex = bewertungsAmpel
                                                 .datum = importDatum
                                                 .description = explanation
-                                                .deliverables = deliverables
                                             End With
 
 
@@ -4419,7 +7554,7 @@ Public Module awinGeneralModules
                         Else
                             ressOff = gefundenRange.Column - rng.Column - 1
                             ressSumOffset = gefundenRange.Column - rng.Column - 2
-                            Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
+                            'Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
 
                         End If
 
@@ -4518,10 +7653,19 @@ Public Module awinGeneralModules
 
                                     ' in cphase wird die Phase mit Namen phaseName, bereits über Termine in der Hierarchie des Projekts eingetragen
                                     ' gespeichert
+                                    ' das muss später überprüft werden können, um ggf gleichnamige Phasen in einer Breadcrumb Stufe richtig zuordnen zu können
+
+                                    ' wenn in einer und derselben Hierarchy-Stufe mehrere gleichnamige Phasen vorkommen, so muss später anhand der Liste der 
+                                    ' Phase-Nummern geprüft werden, welche denn die richtige Phase ist 
+                                    Dim phaseIndex() As Integer
+
                                     If phaseName = hproj.name Or phaseName = elemNameOfElemID(rootPhaseName) Then
 
                                         cphase = hproj.getPhaseByID(rootPhaseName)
-
+                                        ReDim phaseIndex(0)
+                                        phaseIndex(0) = 1
+                                        'das ist derselbe Effekt wie der untenstehende Befehl, nur schneller; und das Ergebnis muss ja gleich sein 
+                                        ' phaseIndex = hproj.hierarchy.getPhaseIndices(cphase.name, "")
 
                                     Else
 
@@ -4549,13 +7693,16 @@ Public Module awinGeneralModules
 
                                         ' Prüfung, ob die Phase phaseName in der bereits aus Termine bestehenden Hierarchie mit dem gleiche breadcrumb existiert, sonst Fehler
 
+
+
                                         If Not hproj.hierarchy.containsPhase(phaseName, breadcrumb) Then
 
+                                            ReDim phaseIndex(0)
                                             Call logfileSchreiben("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'", hproj.name, anzFehler)
                                             Throw New ArgumentException("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'")
                                         Else
 
-                                            Dim phaseIndex() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                                            phaseIndex = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
                                             cphase = hproj.getPhase(phaseIndex(0))
                                             cphaseLevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
@@ -4624,9 +7771,19 @@ Public Module awinGeneralModules
 
 
                                     ' Prüfung, ob die Phase cphase in Termine und Ressourcen übereinstimmt in relStart und relEnde
+                                    Dim rightOneFound As Boolean = (anfang = cphase.relStart And ende = cphase.relEnde)
+                                    Dim tmpIX As Integer = 1
+
+                                    If phaseIndex.Length > 1 Then
+                                        While Not rightOneFound And tmpIX <= phaseIndex.Length - 1
+                                            cphase = hproj.getPhase(phaseIndex(tmpIX))
+                                            rightOneFound = (anfang = cphase.relStart And ende = cphase.relEnde)
+                                            tmpIX = tmpIX + 1
+                                        End While
+                                    End If
 
 
-                                    If Not (anfang = cphase.relStart And ende = cphase.relEnde) Then
+                                    If Not rightOneFound Then
 
                                         'Call MsgBox("Fehler beim Lesen der Ressourcen: die Dauer der Phase " & cphase.name & "' ist fehlerhaft")
                                         Throw New ArgumentException("Fehler beim Lesen der Ressourcen: die Dauer der Phase '" & cphase.name & "' ist fehlerhaft")
@@ -4652,7 +7809,7 @@ Public Module awinGeneralModules
                                             '
                                             ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
                                             '
-                                            If RoleDefinitions.Contains(hname) Then
+                                            If RoleDefinitions.containsName(hname) Then
                                                 Try
                                                     r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
@@ -4719,7 +7876,9 @@ Public Module awinGeneralModules
 
                                                     End If
 
-                                                    crole = New clsRolle(ende - anfang + 1)
+                                                    ' das muss doch eigentlich heissen: ende - anfang !? 
+                                                    'crole = New clsRolle(ende - anfang + 1)
+                                                    crole = New clsRolle(ende - anfang)
                                                     With crole
                                                         .RollenTyp = r
                                                         .Xwerte = Xwerte
@@ -4733,7 +7892,7 @@ Public Module awinGeneralModules
                                                     Throw New Exception(ex.Message)
                                                 End Try
 
-                                            ElseIf CostDefinitions.Contains(hname) Then
+                                            ElseIf CostDefinitions.containsName(hname) Then
 
                                                 Try
 
@@ -4798,7 +7957,8 @@ Public Module awinGeneralModules
 
                                                     End If
 
-                                                    ccost = New clsKostenart(ende - anfang + 1)
+                                                    'ccost = New clsKostenart(ende - anfang + 1)
+                                                    ccost = New clsKostenart(ende - anfang)
                                                     With ccost
                                                         .KostenTyp = k
                                                         .Xwerte = Xwerte
@@ -4847,6 +8007,14 @@ Public Module awinGeneralModules
             Throw New ArgumentException("Fehler in awinImportProjectmitHrchy '" & hproj.name & "' " & vbLf & ex.Message)
         End Try
 
+        ' da Ampelfarbe , Beschreibung jetzt in Phase ist, muss das hier , nach Einlesen der Phasen
+        If ampelFarbe >= 0 And ampelFarbe <= 3 Then
+            hproj.ampelStatus = ampelFarbe
+        End If
+
+        hproj.ampelErlaeuterung = ampelText
+
+
         If isTemplate Then
             ' hier müssen die Werte für die Vorlage übergeben werden.
             Dim projVorlage As New clsProjektvorlage
@@ -4866,1010 +8034,1010 @@ Public Module awinGeneralModules
 
     End Sub
 
-    ''' <summary>
-    ''' liest einen ProjektSteckbrief mit Hierarchie ein, vor mit PT113 die Spalte Summe hinzugefügt wurde
-    ''' </summary>
-    ''' <param name="hprojekt"></param>
-    ''' <param name="hprojTemp"></param>
-    ''' <param name="isTemplate"></param>
-    ''' <param name="importDatum"></param>
-    ''' <remarks></remarks>
-    Public Sub awinImportProjectmitHrchy_beforePT113(ByRef hprojekt As clsProjekt, ByRef hprojTemp As clsProjektvorlage, ByVal isTemplate As Boolean, ByVal importDatum As Date)
+    ' '' ''' <summary>
+    ' '' ''' liest einen ProjektSteckbrief mit Hierarchie ein, vor mit PT113 die Spalte Summe hinzugefügt wurde
+    ' '' ''' </summary>
+    ' '' ''' <param name="hprojekt"></param>
+    ' '' ''' <param name="hprojTemp"></param>
+    ' '' ''' <param name="isTemplate"></param>
+    ' '' ''' <param name="importDatum"></param>
+    ' '' ''' <remarks></remarks>
+    ' ''Public Sub awinImportProjectmitHrchy_beforePT113(ByRef hprojekt As clsProjekt, ByRef hprojTemp As clsProjektvorlage, ByVal isTemplate As Boolean, ByVal importDatum As Date)
 
-        Dim zeile As Integer, spalte As Integer
-        Dim hproj As New clsProjekt
-        Dim hwert As Integer
-        Dim anzFehler As Integer = 0
-        Dim ProjektdauerIndays As Integer = 0
-        Dim endedateProjekt As Date
+    ' ''    Dim zeile As Integer, spalte As Integer
+    ' ''    Dim hproj As New clsProjekt
+    ' ''    Dim hwert As Integer
+    ' ''    Dim anzFehler As Integer = 0
+    ' ''    Dim ProjektdauerIndays As Integer = 0
+    ' ''    Dim endedateProjekt As Date
 
 
-        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
+    ' ''    ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
-        zeile = 1
-        spalte = 1
-        ' ------------------------------------------------------------------------------------------------------
-        ' Einlesen der Stammdaten
-        ' ------------------------------------------------------------------------------------------------------
+    ' ''    zeile = 1
+    ' ''    spalte = 1
+    ' ''    ' ------------------------------------------------------------------------------------------------------
+    ' ''    ' Einlesen der Stammdaten
+    ' ''    ' ------------------------------------------------------------------------------------------------------
 
-        Try
-            Dim wsGeneralInformation As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Stammdaten"), _
-                Global.Microsoft.Office.Interop.Excel.Worksheet)
-            With wsGeneralInformation
+    ' ''    Try
+    ' ''        Dim wsGeneralInformation As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Stammdaten"), _
+    ' ''            Global.Microsoft.Office.Interop.Excel.Worksheet)
+    ' ''        With wsGeneralInformation
 
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
+    ' ''            .Unprotect(Password:="x")       ' Blattschutz aufheben
 
-                ' Projekt-Name auslesen
-                hproj.name = CType(.Range("Projekt_Name").Value, String)
-                hproj.farbe = .Range("Projekt_Name").Interior.Color
-                hproj.Schriftfarbe = .Range("Projekt_Name").Font.Color
-                hproj.Schrift = CInt(.Range("Projekt_Name").Font.Size)
+    ' ''            ' Projekt-Name auslesen
+    ' ''            hproj.name = CType(.Range("Projekt_Name").Value, String)
+    ' ''            hproj.farbe = .Range("Projekt_Name").Interior.Color
+    ' ''            hproj.Schriftfarbe = .Range("Projekt_Name").Font.Color
+    ' ''            hproj.Schrift = CInt(.Range("Projekt_Name").Font.Size)
 
 
-                ' Kurzbeschreibung, kein Problem, wenn nicht da ...
-                Try
-                    hproj.description = CType(.Range("ProjektBeschreibung").Value, String)
-                Catch ex As Exception
+    ' ''            ' Kurzbeschreibung, kein Problem, wenn nicht da ...
+    ' ''            Try
+    ' ''                hproj.description = CType(.Range("ProjektBeschreibung").Value, String)
+    ' ''            Catch ex As Exception
 
-                End Try
+    ' ''            End Try
 
 
-                ' Verantwortlich - kein Problem wenn nicht da 
-                Try
-                    hproj.leadPerson = CType(.Range("Projektleiter").Value, String)
-                Catch ex As Exception
+    ' ''            ' Verantwortlich - kein Problem wenn nicht da 
+    ' ''            Try
+    ' ''                hproj.leadPerson = CType(.Range("Projektleiter").Value, String)
+    ' ''            Catch ex As Exception
 
-                End Try
+    ' ''            End Try
 
 
-                ' Start
-                hproj.startDate = CType(.Range("StartDatum").Value, Date)
+    ' ''            ' Start
+    ' ''            hproj.startDate = CType(.Range("StartDatum").Value, Date)
 
-                ' Ende
+    ' ''            ' Ende
 
-                endedateProjekt = CType(.Range("EndeDatum").Value, Date)  ' Projekt-Ende für spätere Verwendung merken
-                ProjektdauerIndays = calcDauerIndays(hproj.startDate, endedateProjekt)
-                Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
+    ' ''            endedateProjekt = CType(.Range("EndeDatum").Value, Date)  ' Projekt-Ende für spätere Verwendung merken
+    ' ''            ProjektdauerIndays = calcDauerIndays(hproj.startDate, endedateProjekt)
+    ' ''            Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
 
-                ' Budget
-                Try
-                    hproj.Erloes = CType(.Range("Budget").Value, Double)
-                Catch ex1 As Exception
+    ' ''            ' Budget
+    ' ''            Try
+    ' ''                hproj.Erloes = CType(.Range("Budget").Value, Double)
+    ' ''            Catch ex1 As Exception
 
-                End Try
+    ' ''            End Try
 
 
-                ' Ampel-Farbe
-                hwert = CType(.Range("Bewertung").Value, Integer)
+    ' ''            ' Ampel-Farbe
+    ' ''            hwert = CType(.Range("Bewertung").Value, Integer)
 
-                If hwert >= 0 And hwert <= 3 Then
-                    hproj.ampelStatus = hwert
-                End If
+    ' ''            If hwert >= 0 And hwert <= 3 Then
+    ' ''                hproj.ampelStatus = hwert
+    ' ''            End If
 
-                ' Ampel-Bewertung 
-                hproj.ampelErlaeuterung = CType(.Range("BewertgErläuterung").Value, String)
+    ' ''            ' Ampel-Bewertung 
+    ' ''            hproj.ampelErlaeuterung = CType(.Range("BewertgErläuterung").Value, String)
 
 
-            End With
-        Catch ex As Exception
-            Throw New ArgumentException("Fehler in awinImportProject, Lesen Stammdaten")
-        End Try
+    ' ''        End With
+    ' ''    Catch ex As Exception
+    ' ''        Throw New ArgumentException("Fehler in awinImportProject, Lesen Stammdaten")
+    ' ''    End Try
 
-        ' ------------------------------------------------------------------------------------------------------
-        ' Einlesen der Attribute
-        ' ------------------------------------------------------------------------------------------------------
+    ' ''    ' ------------------------------------------------------------------------------------------------------
+    ' ''    ' Einlesen der Attribute
+    ' ''    ' ------------------------------------------------------------------------------------------------------
 
-        Try
-            Dim wsAttribute As Excel.Worksheet
-            Try
-                wsAttribute = CType(appInstance.ActiveWorkbook.Worksheets("Attribute"), _
-                   Global.Microsoft.Office.Interop.Excel.Worksheet)
-            Catch ex As Exception
-                wsAttribute = Nothing
-            End Try
+    ' ''    Try
+    ' ''        Dim wsAttribute As Excel.Worksheet
+    ' ''        Try
+    ' ''            wsAttribute = CType(appInstance.ActiveWorkbook.Worksheets("Attribute"), _
+    ' ''               Global.Microsoft.Office.Interop.Excel.Worksheet)
+    ' ''        Catch ex As Exception
+    ' ''            wsAttribute = Nothing
+    ' ''        End Try
 
-            If Not IsNothing(wsAttribute) Then
+    ' ''        If Not IsNothing(wsAttribute) Then
 
-                With wsAttribute
-
-                    .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-
-                    '   Varianten-Name
-                    Try
-                        hproj.variantName = CType(.Range("Variant_Name").Value, String)
-                        hproj.variantName = hproj.variantName.Trim
-                        If hproj.variantName.Length = 0 Then
-                            hproj.variantName = ""
-                        End If
-                    Catch ex1 As Exception
-                        hproj.variantName = ""
-                    End Try
-
-
-                    ' Business Unit - kein Problem wenn nicht da   
-                    Try
-                        hproj.businessUnit = CType(.Range("Business_Unit").Value, String)
-                    Catch ex As Exception
-
-                    End Try
-
-                    ' Status    ist ein read-only Feld
-                    hproj.Status = ProjektStatus(1)
-                    ' hproj.Status = .Range("Status").Value
+    ' ''            With wsAttribute
+
+    ' ''                .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+
+    ' ''                '   Varianten-Name
+    ' ''                Try
+    ' ''                    hproj.variantName = CType(.Range("Variant_Name").Value, String)
+    ' ''                    hproj.variantName = hproj.variantName.Trim
+    ' ''                    If hproj.variantName.Length = 0 Then
+    ' ''                        hproj.variantName = ""
+    ' ''                    End If
+    ' ''                Catch ex1 As Exception
+    ' ''                    hproj.variantName = ""
+    ' ''                End Try
+
+
+    ' ''                ' Business Unit - kein Problem wenn nicht da   
+    ' ''                Try
+    ' ''                    hproj.businessUnit = CType(.Range("Business_Unit").Value, String)
+    ' ''                Catch ex As Exception
+
+    ' ''                End Try
+
+    ' ''                ' Status    ist ein read-only Feld
+    ' ''                hproj.Status = ProjektStatus(1)
+    ' ''                ' hproj.Status = .Range("Status").Value
 
-                    ' Risiko
-                    hproj.Risiko = CDbl(.Range("Risiko").Value)
+    ' ''                ' Risiko
+    ' ''                hproj.Risiko = CDbl(.Range("Risiko").Value)
 
 
-                    ' Strategic Fit
-                    hproj.StrategicFit = CDbl(.Range("Strategischer_Fit").Value)
+    ' ''                ' Strategic Fit
+    ' ''                hproj.StrategicFit = CDbl(.Range("Strategischer_Fit").Value)
 
 
-                    '' Komplexitätszahl - kein Problem, wenn nicht da  --- BMW---
-                    'Try
-                    '    hproj.complexity = CType(.Range("Complexity").Value, Double)
-                    'Catch ex As Exception
-                    '    hproj.complexity = 0.5 ' Default
-                    'End Try
+    ' ''                '' Komplexitätszahl - kein Problem, wenn nicht da  --- BMW---
+    ' ''                'Try
+    ' ''                '    hproj.complexity = CType(.Range("Complexity").Value, Double)
+    ' ''                'Catch ex As Exception
+    ' ''                '    hproj.complexity = 0.5 ' Default
+    ' ''                'End Try
 
-                    '' Volumen - kein Problem, wenn nicht da    --- BMW ---
-                    'Try
-                    '    hproj.volume = CType(.Range("Volume").Value, Double)
-                    'Catch ex As Exception
-                    '    hproj.volume = 10 ' Default
-                    'End Try
+    ' ''                '' Volumen - kein Problem, wenn nicht da    --- BMW ---
+    ' ''                'Try
+    ' ''                '    hproj.volume = CType(.Range("Volume").Value, Double)
+    ' ''                'Catch ex As Exception
+    ' ''                '    hproj.volume = 10 ' Default
+    ' ''                'End Try
 
 
 
-                End With
-            End If
-        Catch ex As Exception
-            Throw New ArgumentException("Fehler in awinImportProject, Lesen Attribute")
-        End Try
+    ' ''            End With
+    ' ''        End If
+    ' ''    Catch ex As Exception
+    ' ''        Throw New ArgumentException("Fehler in awinImportProject, Lesen Attribute")
+    ' ''    End Try
 
 
-        ' ------------------------------------------------------------------------------------------------------
-        ' Einlesen der Ressourcen
-        ' ------------------------------------------------------------------------------------------------------
-        Dim wsRessourcen As Excel.Worksheet
-        Try
-            wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), _
-                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
-        Catch ex As Exception
-            wsRessourcen = Nothing
-            ' ------------------------------------------------------------------------------------------------------
-            ' Erzeugen und eintragen der Projekt-Phase (= erste Phase mit Dauer des Projekts)
-            ' ------------------------------------------------------------------------------------------------------
-            Try
-                Dim cphase As New clsPhase(hproj)
+    ' ''    ' ------------------------------------------------------------------------------------------------------
+    ' ''    ' Einlesen der Ressourcen
+    ' ''    ' ------------------------------------------------------------------------------------------------------
+    ' ''    Dim wsRessourcen As Excel.Worksheet
+    ' ''    Try
+    ' ''        wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), _
+    ' ''                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+    ' ''    Catch ex As Exception
+    ' ''        wsRessourcen = Nothing
+    ' ''        ' ------------------------------------------------------------------------------------------------------
+    ' ''        ' Erzeugen und eintragen der Projekt-Phase (= erste Phase mit Dauer des Projekts)
+    ' ''        ' ------------------------------------------------------------------------------------------------------
+    ' ''        Try
+    ' ''            Dim cphase As New clsPhase(hproj)
 
-                ' ProjektPhase wird erzeugt
-                cphase = New clsPhase(parent:=hproj)
-                cphase.nameID = rootPhaseName
+    ' ''            ' ProjektPhase wird erzeugt
+    ' ''            cphase = New clsPhase(parent:=hproj)
+    ' ''            cphase.nameID = rootPhaseName
 
-                ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
-                With cphase
-                    .nameID = rootPhaseName
-                    Dim startOffset As Integer = 0
-                    .changeStartandDauer(startOffset, ProjektdauerIndays)
-                End With
-                ' ProjektPhase wird hinzugefügt
-                hproj.AddPhase(cphase)
-
-            Catch ex1 As Exception
-                Throw New ArgumentException("Fehler in awinImportProject, Erzeugen ProjektPhase")
-            End Try
-
-        End Try
-
-        If Not IsNothing(wsRessourcen) Then
-
-            Try
-                With wsRessourcen
-                    Dim rng As Excel.Range
-                    Dim zelle As Excel.Range
-                    Dim chkPhase As Boolean = True
-                    Dim chkRolle As Boolean = True
-                    Dim firsttime As Boolean = False
-                    Dim added As Boolean = True
-                    Dim Xwerte As Double()
-                    Dim crole As clsRolle
-                    Dim cphase As New clsPhase(hproj)
-                    Dim lastphase As clsPhase
-                    Dim lasthrchyNode As clsHierarchyNode
-                    Dim lastelemID As String = ""
-                    Dim ccost As clsKostenart
-                    Dim phaseName As String = ""
-                    Dim aktLevel As Integer = 0   'speichert den Level direkt nach dem Lesen der Phase
-                    Dim cphaseLevel As Integer = 0 'speichert den Level der momentan in cphase gespeicherten Phase
-                    Dim lastlevel As Integer = 0  'speichert den Level des vorausgehenden elements
-
-                    Dim anfang As Integer, ende As Integer  ', projDauer As Integer
-
-                    Dim farbeAktuell As Object
-                    Dim r As Integer, k As Integer
-
-
-                    .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-
-                    Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
-
-                    rng = .Range("Phasen_des_Projekts")
-
-                    Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
-                    hstr = elemNameOfElemID(rootPhaseName)
-
-                    If CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
-
-
-                        ' ProjektPhase wird hinzugefügt
-                        cphase = New clsPhase(parent:=hproj)
-                        added = False
-
-
-                        ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
-                        With cphase
-                            .nameID = rootPhaseName
-                            Dim startOffset As Integer = 0
-                            .changeStartandDauer(startOffset, ProjektdauerIndays)
-                            Dim phaseStartdate As Date = .getStartDate
-                            Dim phaseEnddate As Date = .getEndDate
-                            firsttime = True
-                        End With
-                        'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
-
-                    End If
-
-                    zeile = 0
-
-                    For Each zelle In rng
-
-                        zeile = zeile + 1
-
-                        ' nachsehen, ob Phase angegeben oder Rolle/Kosten
-                        hstr = CStr(zelle.Value)
-                        Dim x As Integer = CInt(zelle.IndentLevel)
-                        If x Mod einrückTiefe <> 0 Then
-                            Throw New ArgumentException("die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
-                        End If
-                        aktLevel = CInt(x / einrückTiefe)
-
-                        If Len(CType(zelle.Value, String)) > 0 Then
-                            phaseName = CType(zelle.Value, String).Trim
-                        Else
-                            phaseName = ""
-                        End If
-
-                        ' hier wird die Rollen bzw Kosten Information ausgelesen
-                        Dim hname As String
-                        Try
-                            hname = CType(zelle.Offset(0, 1).Value, String).Trim
-                        Catch ex1 As Exception
-                            hname = ""
-                        End Try
-
-                        If Len(phaseName) > 0 And Len(hname) <= 0 Then
-                            chkPhase = True
-                            chkRolle = False
-                            If Not firsttime Then
-                                firsttime = True
-                            End If
-                        End If
-
-                        If Len(phaseName) <= 0 And Len(hname) > 0 Then
-                            If zeile = 1 Then
-                                Call MsgBox(" es fehlt die ProjektPhase")
-                            Else
-                                chkPhase = False
-                                chkRolle = True
-                            End If
-                        Else
-                        End If
-
-                        If Len(phaseName) > 0 And Len(hname) > 0 Then
-                            chkPhase = True
-                            chkRolle = True
-                        End If
-
-                        If Len(phaseName) <= 0 And Len(hname) <= 0 Then
-                            chkPhase = False
-                            chkRolle = False
-                            ' beim 1.mal: abspeichern der letzten Phase mit Ihren Rollen
-                            ' beim 2.mal: for - Schleife abbrechen
-                        End If
-
-                        Select Case chkPhase
-                            Case True
-                                If Not added Then
-                                    ' '' ''  hproj.AddPhase(cphase)
-
-                                    Dim hrchynode As New clsHierarchyNode
-                                    hrchynode.elemName = cphase.name
-
-
-                                    If cphaseLevel = 0 Then
-                                        hrchynode.parentNodeKey = ""
-
-                                    ElseIf cphaseLevel = 1 Then
-                                        hrchynode.parentNodeKey = rootPhaseName
-
-                                    ElseIf cphaseLevel - lastlevel = 1 Then
-                                        hrchynode.parentNodeKey = lastelemID
-
-                                    ElseIf cphaseLevel - lastlevel = 0 Then
-                                        hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
-
-                                    ElseIf lastlevel - cphaseLevel >= 1 Then
-                                        Dim hilfselemID As String = lastelemID
-                                        For l As Integer = 1 To lastlevel - cphaseLevel
-                                            hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
-                                        Next l
-                                        hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
-                                    Else
-                                        Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
-                                    End If
-
-                                    hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
-
-                                    ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
-                                    hrchynode.indexOfElem = hproj.AllPhases.Count
-                                    ' merken von letzem Element (Knoten,Phase,Meilenstein)
-                                    lasthrchyNode = hrchynode
-                                    lastelemID = cphase.nameID
-                                    lastphase = cphase
-                                    lastlevel = cphaseLevel
-                                End If
-
-
-                                cphase = New clsPhase(parent:=hproj)
-                                added = False
-
-                                ' Auslesen der Phasen Dauer
-                                anfang = 1  ' anfang enthält den rel.Anfang einer Phase
-                                Try
-                                    While CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 And
-                                        Not (CType(zelle.Offset(0, anfang + 1).Value, String) = "x")
-                                        anfang = anfang + 1
-                                    End While
-                                Catch ex As Exception
-                                    Throw New ArgumentException("Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
-                                                                "Bitte überprüfen Sie dies.")
-                                End Try
-
-                                ende = anfang + 1
-
-                                If CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 Then
-                                    While CType(zelle.Offset(0, ende + 1).Value, String) = "x"
-                                        ende = ende + 1
-                                    End While
-                                    ende = ende - 1
-                                Else
-                                    farbeAktuell = zelle.Offset(0, anfang + 1).Interior.Color
-                                    While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
-
-                                        ende = ende + 1
-                                    End While
-                                    ende = ende - 1
-                                End If
-
-                                With cphase
-                                    If phaseName = hproj.name Or phaseName = elemNameOfElemID(rootPhaseName) Then
-                                        .nameID = rootPhaseName
-                                        ' nichts tun, die erste Phase hat dann schon ihren richtigen Namen 
-                                    Else
-                                        .nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
-                                    End If
-                                    cphaseLevel = aktLevel
-
-                                    ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
-                                    Dim startOffset As Long
-                                    Dim dauerIndays As Long
-                                    startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                    dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
-
-                                    .changeStartandDauer(startOffset, dauerIndays)
-                                    .Offset = 0
-
-                                    ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
-                                    Dim phaseStartdate As Date = .getStartDate
-                                    Dim phaseEnddate As Date = .getEndDate
-
-                                End With
-                                Select Case chkRolle
-                                    Case True
-                                        Throw New ArgumentException("Rollen/Kosten-Bedarfe zur Phase '" & phaseName & "' bitte in die darauffolgenden Zeilen eintragen")
-                                    Case False  ' es wurde nur eine Phase angegeben: korrekt
-
-                                End Select
-
-                            Case False ' auslesen Rollen- bzw. Kosten-Information
-
-                                Select Case chkRolle
-                                    Case True
-                                        ' hier wird die Rollen bzw Kosten Information ausgelesen
-                                        '
-                                        ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
-                                        '
-                                        If RoleDefinitions.Contains(hname) Then
-                                            Try
-                                                r = CInt(RoleDefinitions.getRoledef(hname).UID)
-
-                                                ReDim Xwerte(ende - anfang)
-
-
-                                                Dim m As Integer
-                                                For m = anfang To ende
-
-                                                    Try
-                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
-                                                    Catch ex As Exception
-                                                        Xwerte(m - anfang) = 0.0
-                                                    End Try
-
-                                                Next m
-
-                                                crole = New clsRolle(ende - anfang + 1)
-                                                With crole
-                                                    .RollenTyp = r
-                                                    .Xwerte = Xwerte
-                                                End With
-
-                                                With cphase
-                                                    .addRole(crole)
-                                                End With
-                                            Catch ex As Exception
-                                                '
-                                                ' handelt es sich um die Kostenart Definition?
-                                                '
-                                            End Try
-
-                                        ElseIf CostDefinitions.Contains(hname) Then
-
-                                            Try
-
-                                                k = CInt(CostDefinitions.getCostdef(hname).UID)
-
-                                                ReDim Xwerte(ende - anfang)
-
-                                                Dim m As Integer
-                                                For m = anfang To ende
-                                                    Try
-                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
-                                                    Catch ex As Exception
-                                                        Xwerte(m - anfang) = 0.0
-                                                    End Try
-
-                                                Next m
-
-                                                ccost = New clsKostenart(ende - anfang + 1)
-                                                With ccost
-                                                    .KostenTyp = k
-                                                    .Xwerte = Xwerte
-                                                End With
-
-
-                                                With cphase
-                                                    .AddCost(ccost)
-                                                End With
-
-                                            Catch ex As Exception
-
-                                            End Try
-
-                                        End If
-
-                                    Case False  ' es wurde weder Phase noch Rolle angegeben. 
-                                        If firsttime Then
-                                            firsttime = False
-                                        Else 'beim 2. mal: letzte Phase hinzufügen; ENDE von For-Schleife for each Zelle
-                                            '''''hproj.AddPhase(cphase)
-
-                                            Dim hrchynode As New clsHierarchyNode
-                                            hrchynode.elemName = cphase.name
-
-
-                                            If cphaseLevel = 0 Then
-                                                hrchynode.parentNodeKey = ""
-
-                                            ElseIf cphaseLevel = 1 Then
-                                                hrchynode.parentNodeKey = rootPhaseName
-
-                                            ElseIf cphaseLevel - lastlevel = 1 Then
-                                                hrchynode.parentNodeKey = lastelemID
-
-                                            ElseIf cphaseLevel - lastlevel = 0 Then
-                                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
-
-                                            ElseIf lastlevel - cphaseLevel >= 1 Then
-                                                Dim hilfselemID As String = lastelemID
-                                                For l As Integer = 1 To lastlevel - cphaseLevel
-                                                    hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
-                                                Next l
-                                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
-                                            Else
-                                                Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
-                                            End If
-
-                                            hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
-
-                                            Exit For
-                                        End If
-
-                                End Select
-
-                        End Select
-
-                    Next zelle
-
-
-                End With
-            Catch ex As Exception
-                Throw New ArgumentException("Fehler in awinImportProject, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
-            End Try
+    ' ''            ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
+    ' ''            With cphase
+    ' ''                .nameID = rootPhaseName
+    ' ''                Dim startOffset As Integer = 0
+    ' ''                .changeStartandDauer(startOffset, ProjektdauerIndays)
+    ' ''            End With
+    ' ''            ' ProjektPhase wird hinzugefügt
+    ' ''            hproj.AddPhase(cphase)
+
+    ' ''        Catch ex1 As Exception
+    ' ''            Throw New ArgumentException("Fehler in awinImportProject, Erzeugen ProjektPhase")
+    ' ''        End Try
+
+    ' ''    End Try
+
+    ' ''    If Not IsNothing(wsRessourcen) Then
+
+    ' ''        Try
+    ' ''            With wsRessourcen
+    ' ''                Dim rng As Excel.Range
+    ' ''                Dim zelle As Excel.Range
+    ' ''                Dim chkPhase As Boolean = True
+    ' ''                Dim chkRolle As Boolean = True
+    ' ''                Dim firsttime As Boolean = False
+    ' ''                Dim added As Boolean = True
+    ' ''                Dim Xwerte As Double()
+    ' ''                Dim crole As clsRolle
+    ' ''                Dim cphase As New clsPhase(hproj)
+    ' ''                Dim lastphase As clsPhase
+    ' ''                Dim lasthrchyNode As clsHierarchyNode
+    ' ''                Dim lastelemID As String = ""
+    ' ''                Dim ccost As clsKostenart
+    ' ''                Dim phaseName As String = ""
+    ' ''                Dim aktLevel As Integer = 0   'speichert den Level direkt nach dem Lesen der Phase
+    ' ''                Dim cphaseLevel As Integer = 0 'speichert den Level der momentan in cphase gespeicherten Phase
+    ' ''                Dim lastlevel As Integer = 0  'speichert den Level des vorausgehenden elements
+
+    ' ''                Dim anfang As Integer, ende As Integer  ', projDauer As Integer
+
+    ' ''                Dim farbeAktuell As Object
+    ' ''                Dim r As Integer, k As Integer
+
+
+    ' ''                .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+
+    ' ''                Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
+
+    ' ''                rng = .Range("Phasen_des_Projekts")
+
+    ' ''                Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
+    ' ''                hstr = elemNameOfElemID(rootPhaseName)
+
+    ' ''                If CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
+
+
+    ' ''                    ' ProjektPhase wird hinzugefügt
+    ' ''                    cphase = New clsPhase(parent:=hproj)
+    ' ''                    added = False
+
+
+    ' ''                    ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
+    ' ''                    With cphase
+    ' ''                        .nameID = rootPhaseName
+    ' ''                        Dim startOffset As Integer = 0
+    ' ''                        .changeStartandDauer(startOffset, ProjektdauerIndays)
+    ' ''                        Dim phaseStartdate As Date = .getStartDate
+    ' ''                        Dim phaseEnddate As Date = .getEndDate
+    ' ''                        firsttime = True
+    ' ''                    End With
+    ' ''                    'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
+
+    ' ''                End If
+
+    ' ''                zeile = 0
+
+    ' ''                For Each zelle In rng
+
+    ' ''                    zeile = zeile + 1
+
+    ' ''                    ' nachsehen, ob Phase angegeben oder Rolle/Kosten
+    ' ''                    hstr = CStr(zelle.Value)
+    ' ''                    Dim x As Integer = CInt(zelle.IndentLevel)
+    ' ''                    If x Mod einrückTiefe <> 0 Then
+    ' ''                        Throw New ArgumentException("die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
+    ' ''                    End If
+    ' ''                    aktLevel = CInt(x / einrückTiefe)
+
+    ' ''                    If Len(CType(zelle.Value, String)) > 0 Then
+    ' ''                        phaseName = CType(zelle.Value, String).Trim
+    ' ''                    Else
+    ' ''                        phaseName = ""
+    ' ''                    End If
+
+    ' ''                    ' hier wird die Rollen bzw Kosten Information ausgelesen
+    ' ''                    Dim hname As String
+    ' ''                    Try
+    ' ''                        hname = CType(zelle.Offset(0, 1).Value, String).Trim
+    ' ''                    Catch ex1 As Exception
+    ' ''                        hname = ""
+    ' ''                    End Try
+
+    ' ''                    If Len(phaseName) > 0 And Len(hname) <= 0 Then
+    ' ''                        chkPhase = True
+    ' ''                        chkRolle = False
+    ' ''                        If Not firsttime Then
+    ' ''                            firsttime = True
+    ' ''                        End If
+    ' ''                    End If
+
+    ' ''                    If Len(phaseName) <= 0 And Len(hname) > 0 Then
+    ' ''                        If zeile = 1 Then
+    ' ''                            Call MsgBox(" es fehlt die ProjektPhase")
+    ' ''                        Else
+    ' ''                            chkPhase = False
+    ' ''                            chkRolle = True
+    ' ''                        End If
+    ' ''                    Else
+    ' ''                    End If
+
+    ' ''                    If Len(phaseName) > 0 And Len(hname) > 0 Then
+    ' ''                        chkPhase = True
+    ' ''                        chkRolle = True
+    ' ''                    End If
+
+    ' ''                    If Len(phaseName) <= 0 And Len(hname) <= 0 Then
+    ' ''                        chkPhase = False
+    ' ''                        chkRolle = False
+    ' ''                        ' beim 1.mal: abspeichern der letzten Phase mit Ihren Rollen
+    ' ''                        ' beim 2.mal: for - Schleife abbrechen
+    ' ''                    End If
+
+    ' ''                    Select Case chkPhase
+    ' ''                        Case True
+    ' ''                            If Not added Then
+    ' ''                                ' '' ''  hproj.AddPhase(cphase)
+
+    ' ''                                Dim hrchynode As New clsHierarchyNode
+    ' ''                                hrchynode.elemName = cphase.name
+
+
+    ' ''                                If cphaseLevel = 0 Then
+    ' ''                                    hrchynode.parentNodeKey = ""
+
+    ' ''                                ElseIf cphaseLevel = 1 Then
+    ' ''                                    hrchynode.parentNodeKey = rootPhaseName
+
+    ' ''                                ElseIf cphaseLevel - lastlevel = 1 Then
+    ' ''                                    hrchynode.parentNodeKey = lastelemID
+
+    ' ''                                ElseIf cphaseLevel - lastlevel = 0 Then
+    ' ''                                    hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+    ' ''                                ElseIf lastlevel - cphaseLevel >= 1 Then
+    ' ''                                    Dim hilfselemID As String = lastelemID
+    ' ''                                    For l As Integer = 1 To lastlevel - cphaseLevel
+    ' ''                                        hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+    ' ''                                    Next l
+    ' ''                                    hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
+    ' ''                                Else
+    ' ''                                    Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+    ' ''                                End If
+
+    ' ''                                hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
+
+    ' ''                                ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
+    ' ''                                hrchynode.indexOfElem = hproj.AllPhases.Count
+    ' ''                                ' merken von letzem Element (Knoten,Phase,Meilenstein)
+    ' ''                                lasthrchyNode = hrchynode
+    ' ''                                lastelemID = cphase.nameID
+    ' ''                                lastphase = cphase
+    ' ''                                lastlevel = cphaseLevel
+    ' ''                            End If
+
+
+    ' ''                            cphase = New clsPhase(parent:=hproj)
+    ' ''                            added = False
+
+    ' ''                            ' Auslesen der Phasen Dauer
+    ' ''                            anfang = 1  ' anfang enthält den rel.Anfang einer Phase
+    ' ''                            Try
+    ' ''                                While CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 And
+    ' ''                                    Not (CType(zelle.Offset(0, anfang + 1).Value, String) = "x")
+    ' ''                                    anfang = anfang + 1
+    ' ''                                End While
+    ' ''                            Catch ex As Exception
+    ' ''                                Throw New ArgumentException("Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
+    ' ''                                                            "Bitte überprüfen Sie dies.")
+    ' ''                            End Try
+
+    ' ''                            ende = anfang + 1
+
+    ' ''                            If CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 Then
+    ' ''                                While CType(zelle.Offset(0, ende + 1).Value, String) = "x"
+    ' ''                                    ende = ende + 1
+    ' ''                                End While
+    ' ''                                ende = ende - 1
+    ' ''                            Else
+    ' ''                                farbeAktuell = zelle.Offset(0, anfang + 1).Interior.Color
+    ' ''                                While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
+
+    ' ''                                    ende = ende + 1
+    ' ''                                End While
+    ' ''                                ende = ende - 1
+    ' ''                            End If
+
+    ' ''                            With cphase
+    ' ''                                If phaseName = hproj.name Or phaseName = elemNameOfElemID(rootPhaseName) Then
+    ' ''                                    .nameID = rootPhaseName
+    ' ''                                    ' nichts tun, die erste Phase hat dann schon ihren richtigen Namen 
+    ' ''                                Else
+    ' ''                                    .nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+    ' ''                                End If
+    ' ''                                cphaseLevel = aktLevel
+
+    ' ''                                ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
+    ' ''                                Dim startOffset As Long
+    ' ''                                Dim dauerIndays As Long
+    ' ''                                startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
+    ' ''                                dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
+
+    ' ''                                .changeStartandDauer(startOffset, dauerIndays)
+    ' ''                                .offset = 0
+
+    ' ''                                ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
+    ' ''                                Dim phaseStartdate As Date = .getStartDate
+    ' ''                                Dim phaseEnddate As Date = .getEndDate
+
+    ' ''                            End With
+    ' ''                            Select Case chkRolle
+    ' ''                                Case True
+    ' ''                                    Throw New ArgumentException("Rollen/Kosten-Bedarfe zur Phase '" & phaseName & "' bitte in die darauffolgenden Zeilen eintragen")
+    ' ''                                Case False  ' es wurde nur eine Phase angegeben: korrekt
+
+    ' ''                            End Select
+
+    ' ''                        Case False ' auslesen Rollen- bzw. Kosten-Information
+
+    ' ''                            Select Case chkRolle
+    ' ''                                Case True
+    ' ''                                    ' hier wird die Rollen bzw Kosten Information ausgelesen
+    ' ''                                    '
+    ' ''                                    ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
+    ' ''                                    '
+    ' ''                                    If RoleDefinitions.Contains(hname) Then
+    ' ''                                        Try
+    ' ''                                            r = CInt(RoleDefinitions.getRoledef(hname).UID)
+
+    ' ''                                            ReDim Xwerte(ende - anfang)
+
+
+    ' ''                                            Dim m As Integer
+    ' ''                                            For m = anfang To ende
+
+    ' ''                                                Try
+    ' ''                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+    ' ''                                                Catch ex As Exception
+    ' ''                                                    Xwerte(m - anfang) = 0.0
+    ' ''                                                End Try
+
+    ' ''                                            Next m
+
+    ' ''                                            crole = New clsRolle(ende - anfang + 1)
+    ' ''                                            With crole
+    ' ''                                                .RollenTyp = r
+    ' ''                                                .Xwerte = Xwerte
+    ' ''                                            End With
+
+    ' ''                                            With cphase
+    ' ''                                                .addRole(crole)
+    ' ''                                            End With
+    ' ''                                        Catch ex As Exception
+    ' ''                                            '
+    ' ''                                            ' handelt es sich um die Kostenart Definition?
+    ' ''                                            '
+    ' ''                                        End Try
+
+    ' ''                                    ElseIf CostDefinitions.Contains(hname) Then
+
+    ' ''                                        Try
+
+    ' ''                                            k = CInt(CostDefinitions.getCostdef(hname).UID)
+
+    ' ''                                            ReDim Xwerte(ende - anfang)
+
+    ' ''                                            Dim m As Integer
+    ' ''                                            For m = anfang To ende
+    ' ''                                                Try
+    ' ''                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+    ' ''                                                Catch ex As Exception
+    ' ''                                                    Xwerte(m - anfang) = 0.0
+    ' ''                                                End Try
+
+    ' ''                                            Next m
+
+    ' ''                                            ccost = New clsKostenart(ende - anfang + 1)
+    ' ''                                            With ccost
+    ' ''                                                .KostenTyp = k
+    ' ''                                                .Xwerte = Xwerte
+    ' ''                                            End With
+
+
+    ' ''                                            With cphase
+    ' ''                                                .AddCost(ccost)
+    ' ''                                            End With
+
+    ' ''                                        Catch ex As Exception
+
+    ' ''                                        End Try
+
+    ' ''                                    End If
+
+    ' ''                                Case False  ' es wurde weder Phase noch Rolle angegeben. 
+    ' ''                                    If firsttime Then
+    ' ''                                        firsttime = False
+    ' ''                                    Else 'beim 2. mal: letzte Phase hinzufügen; ENDE von For-Schleife for each Zelle
+    ' ''                                        '''''hproj.AddPhase(cphase)
+
+    ' ''                                        Dim hrchynode As New clsHierarchyNode
+    ' ''                                        hrchynode.elemName = cphase.name
+
+
+    ' ''                                        If cphaseLevel = 0 Then
+    ' ''                                            hrchynode.parentNodeKey = ""
+
+    ' ''                                        ElseIf cphaseLevel = 1 Then
+    ' ''                                            hrchynode.parentNodeKey = rootPhaseName
+
+    ' ''                                        ElseIf cphaseLevel - lastlevel = 1 Then
+    ' ''                                            hrchynode.parentNodeKey = lastelemID
+
+    ' ''                                        ElseIf cphaseLevel - lastlevel = 0 Then
+    ' ''                                            hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+    ' ''                                        ElseIf lastlevel - cphaseLevel >= 1 Then
+    ' ''                                            Dim hilfselemID As String = lastelemID
+    ' ''                                            For l As Integer = 1 To lastlevel - cphaseLevel
+    ' ''                                                hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+    ' ''                                            Next l
+    ' ''                                            hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
+    ' ''                                        Else
+    ' ''                                            Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+    ' ''                                        End If
+
+    ' ''                                        hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
+
+    ' ''                                        Exit For
+    ' ''                                    End If
+
+    ' ''                            End Select
+
+    ' ''                    End Select
+
+    ' ''                Next zelle
+
+
+    ' ''            End With
+    ' ''        Catch ex As Exception
+    ' ''            Throw New ArgumentException("Fehler in awinImportProject, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
+    ' ''        End Try
 
-        End If
+    ' ''    End If
 
-        '' hier wurde jetzt die Reihenfolge geändert - erst werden die Phasen Definitionen eingelesen ..
-
-        '' jetzt werden die Daten für die Phasen sowie die Termine/Deliverables eingelesen 
+    ' ''    '' hier wurde jetzt die Reihenfolge geändert - erst werden die Phasen Definitionen eingelesen ..
+
+    ' ''    '' jetzt werden die Daten für die Phasen sowie die Termine/Deliverables eingelesen 
 
-        Try
-            Dim wsTermine As Excel.Worksheet
-            Try
-                wsTermine = CType(appInstance.ActiveWorkbook.Worksheets("Termine"), _
-                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
-            Catch ex As Exception
-                wsTermine = Nothing
-            End Try
+    ' ''    Try
+    ' ''        Dim wsTermine As Excel.Worksheet
+    ' ''        Try
+    ' ''            wsTermine = CType(appInstance.ActiveWorkbook.Worksheets("Termine"), _
+    ' ''                                                         Global.Microsoft.Office.Interop.Excel.Worksheet)
+    ' ''        Catch ex As Exception
+    ' ''            wsTermine = Nothing
+    ' ''        End Try
 
-            If Not IsNothing(wsTermine) Then
-                Try
-                    With wsTermine
-                        Dim lastrow As Integer
-                        Dim phaseNameID As String
-                        Dim milestoneName As String
-                        Dim milestoneDate As Date
-                        Dim resultVerantwortlich As String = ""
-                        Dim bewertungsAmpel As Integer
-                        Dim explanation As String
-                        Dim deliverables As String
-                        Dim bewertungsdatum As Date = importDatum
-                        Dim Nummer As String
-                        Dim tbl As Excel.Range
-                        Dim rowOffset As Integer
-                        Dim columnOffset As Integer
+    ' ''        If Not IsNothing(wsTermine) Then
+    ' ''            Try
+    ' ''                With wsTermine
+    ' ''                    Dim lastrow As Integer
+    ' ''                    Dim phaseNameID As String
+    ' ''                    Dim milestoneName As String
+    ' ''                    Dim milestoneDate As Date
+    ' ''                    Dim resultVerantwortlich As String = ""
+    ' ''                    Dim bewertungsAmpel As Integer
+    ' ''                    Dim explanation As String
+    ' ''                    Dim deliverables As String
+    ' ''                    Dim bewertungsdatum As Date = importDatum
+    ' ''                    Dim Nummer As String
+    ' ''                    Dim tbl As Excel.Range
+    ' ''                    Dim rowOffset As Integer
+    ' ''                    Dim columnOffset As Integer
 
 
-                        .Unprotect(Password:="x")       ' Blattschutz aufheben
+    ' ''                    .Unprotect(Password:="x")       ' Blattschutz aufheben
 
-                        tbl = .Range("ErgebnTabelle")
-                        rowOffset = tbl.Row
-                        columnOffset = tbl.Column
+    ' ''                    tbl = .Range("ErgebnTabelle")
+    ' ''                    rowOffset = tbl.Row
+    ' ''                    columnOffset = tbl.Column
 
-                        lastrow = CInt(CType(.Cells(2000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
+    ' ''                    lastrow = CInt(CType(.Cells(2000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
 
-                        ' ur: 12.05.2015: hier wurde die Sortierung der ErgebnTabelle entfernt
+    ' ''                    ' ur: 12.05.2015: hier wurde die Sortierung der ErgebnTabelle entfernt
 
-                        Dim cphase As clsPhase = Nothing
-                        Dim breadCrumb As String = ""
-                        Dim lastLevel As Integer = 0
+    ' ''                    Dim cphase As clsPhase = Nothing
+    ' ''                    Dim breadCrumb As String = ""
+    ' ''                    Dim lastLevel As Integer = 0
 
-                        For zeile = rowOffset To lastrow
+    ' ''                    For zeile = rowOffset To lastrow
 
 
-                            Dim cMilestone As clsMeilenstein
-                            Dim cBewertung As clsBewertung
+    ' ''                        Dim cMilestone As clsMeilenstein
+    ' ''                        Dim cBewertung As clsBewertung
 
-                            Dim objectName As String
-                            Dim startDate As Date, endeDate As Date
-                            ' 
-                            Dim errMessage As String = ""
-                            Dim aktLevel As Integer = 0
+    ' ''                        Dim objectName As String
+    ' ''                        Dim startDate As Date, endeDate As Date
+    ' ''                        ' 
+    ' ''                        Dim errMessage As String = ""
+    ' ''                        Dim aktLevel As Integer = 0
 
-                            Dim isPhase As Boolean = False
-                            Dim isMeilenstein As Boolean = False
-                            Dim cphaseExisted As Boolean = True
+    ' ''                        Dim isPhase As Boolean = False
+    ' ''                        Dim isMeilenstein As Boolean = False
+    ' ''                        Dim cphaseExisted As Boolean = True
 
-                            '' ''If zeile = 68 Then
-                            '' ''    zeile = 68
-                            '' ''End If
-                            Try
-                                ' Wenn es keine Phasen gibt in diesem Projekt, so wird trotzdem die Phase1, die ProjektPhase erzeugt.
+    ' ''                        '' ''If zeile = 68 Then
+    ' ''                        '' ''    zeile = 68
+    ' ''                        '' ''End If
+    ' ''                        Try
+    ' ''                            ' Wenn es keine Phasen gibt in diesem Projekt, so wird trotzdem die Phase1, die ProjektPhase erzeugt.
 
-                                If hproj.AllPhases.Count = 0 Then
-                                    Dim duration As Integer
-                                    Dim offset As Integer
+    ' ''                            If hproj.AllPhases.Count = 0 Then
+    ' ''                                Dim duration As Integer
+    ' ''                                Dim offset As Integer
 
-                                    ' Erzeuge ProjektPhase mit Länge des Projekts
-                                    cphase = New clsPhase(parent:=hproj)
-                                    cphase.nameID = rootPhaseName
-                                    'cphaseExisted = False       ' Phase existiert noch nicht
+    ' ''                                ' Erzeuge ProjektPhase mit Länge des Projekts
+    ' ''                                cphase = New clsPhase(parent:=hproj)
+    ' ''                                cphase.nameID = rootPhaseName
+    ' ''                                'cphaseExisted = False       ' Phase existiert noch nicht
 
-                                    offset = 0
+    ' ''                                offset = 0
 
-                                    If ProjektdauerIndays < 1 Or offset < 0 Then
-                                        Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
-                                                            offset.ToString & ", " & duration.ToString)
-                                    End If
+    ' ''                                If ProjektdauerIndays < 1 Or offset < 0 Then
+    ' ''                                    Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+    ' ''                                                        offset.ToString & ", " & duration.ToString)
+    ' ''                                End If
 
-                                    cphase.changeStartandDauer(offset, ProjektdauerIndays)
-                                    hproj.AddPhase(cphase)
+    ' ''                                cphase.changeStartandDauer(offset, ProjektdauerIndays)
+    ' ''                                hproj.AddPhase(cphase)
 
-                                End If                            'Phase 1 ist nun angelegt
+    ' ''                            End If                            'Phase 1 ist nun angelegt
 
 
-                                Try
-                                    ' String aus erster Spalte der Tabelle lesen
+    ' ''                            Try
+    ' ''                                ' String aus erster Spalte der Tabelle lesen
 
-                                    objectName = CType(CType(.Cells(zeile, columnOffset), Excel.Range).Value, String).Trim
+    ' ''                                objectName = CType(CType(.Cells(zeile, columnOffset), Excel.Range).Value, String).Trim
 
-                                    ' Level abfragen
+    ' ''                                ' Level abfragen
 
-                                    Dim x As Integer = CInt(CType(.Cells(zeile, columnOffset), Excel.Range).IndentLevel)
-                                    If x Mod einrückTiefe <> 0 Then
-                                        Throw New ArgumentException("die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
-                                    End If
-                                    aktLevel = CInt(x / einrückTiefe)
+    ' ''                                Dim x As Integer = CInt(CType(.Cells(zeile, columnOffset), Excel.Range).IndentLevel)
+    ' ''                                If x Mod einrückTiefe <> 0 Then
+    ' ''                                    Throw New ArgumentException("die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
+    ' ''                                End If
+    ' ''                                aktLevel = CInt(x / einrückTiefe)
 
 
-                                Catch ex As Exception
-                                    objectName = Nothing
-                                    Throw New Exception("In Tabelle 'Termine' ist der PhasenName nicht angegeben ")
-                                    Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
-                                End Try
+    ' ''                            Catch ex As Exception
+    ' ''                                objectName = Nothing
+    ' ''                                Throw New Exception("In Tabelle 'Termine' ist der PhasenName nicht angegeben ")
+    ' ''                                Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
+    ' ''                            End Try
 
 
-                                Try
-                                    startDate = CDate(CType(.Cells(zeile, columnOffset + 2), Excel.Range).Value)
-                                Catch ex As Exception
-                                    startDate = Date.MinValue
-                                End Try
+    ' ''                            Try
+    ' ''                                startDate = CDate(CType(.Cells(zeile, columnOffset + 2), Excel.Range).Value)
+    ' ''                            Catch ex As Exception
+    ' ''                                startDate = Date.MinValue
+    ' ''                            End Try
 
 
-                                If objectName = elemNameOfElemID(rootPhaseName) Or PhaseDefinitions.Contains(objectName) Then
+    ' ''                            If objectName = elemNameOfElemID(rootPhaseName) Or PhaseDefinitions.Contains(objectName) Then
 
-                                    isPhase = True
-                                    isMeilenstein = False
+    ' ''                                isPhase = True
+    ' ''                                isMeilenstein = False
 
 
-                                ElseIf startDate <> Date.MinValue Then
-                                    Throw New ArgumentException("'" & objectName & "' ist eine Phase, die nicht im CustomizationFile definiert ist. Bitte korrigieren Sie dies!")
-                                Else
+    ' ''                            ElseIf startDate <> Date.MinValue Then
+    ' ''                                Throw New ArgumentException("'" & objectName & "' ist eine Phase, die nicht im CustomizationFile definiert ist. Bitte korrigieren Sie dies!")
+    ' ''                            Else
 
-                                    isPhase = False
-                                    isMeilenstein = True
+    ' ''                                isPhase = False
+    ' ''                                isMeilenstein = True
 
-                                End If
+    ' ''                            End If
 
 
-                                '  ur: 12.05.2015: Änderung, damit Meilensteine, die den gleichen Namen haben wie Phasen, trotzdem als Meilensteine erkannt werden.
-                                '                 gilt aktuell aber nur für den BMW-Import
-                                If awinSettings.importTyp = 2 Then
-                                    If PhaseDefinitions.Contains(objectName) _
-                                        And startDate = Date.MinValue Then
+    ' ''                            '  ur: 12.05.2015: Änderung, damit Meilensteine, die den gleichen Namen haben wie Phasen, trotzdem als Meilensteine erkannt werden.
+    ' ''                            '                 gilt aktuell aber nur für den BMW-Import
+    ' ''                            If awinSettings.importTyp = 2 Then
+    ' ''                                If PhaseDefinitions.Contains(objectName) _
+    ' ''                                    And startDate = Date.MinValue Then
 
-                                        isPhase = False
-                                        isMeilenstein = True
-                                    End If
-                                End If
+    ' ''                                    isPhase = False
+    ' ''                                    isMeilenstein = True
+    ' ''                                End If
+    ' ''                            End If
 
-                                Try
-                                    endeDate = CDate(CType(.Cells(zeile, columnOffset + 3), Excel.Range).Value)
-                                Catch ex As Exception
-                                    endeDate = Date.MinValue
-                                End Try
+    ' ''                            Try
+    ' ''                                endeDate = CDate(CType(.Cells(zeile, columnOffset + 3), Excel.Range).Value)
+    ' ''                            Catch ex As Exception
+    ' ''                                endeDate = Date.MinValue
+    ' ''                            End Try
 
 
-                                If DateDiff(DateInterval.Day, hproj.startDate, startDate) < 0 Then
-                                    ' kein gültiges Startdatum angegeben
+    ' ''                            If DateDiff(DateInterval.Day, hproj.startDate, startDate) < 0 Then
+    ' ''                                ' kein gültiges Startdatum angegeben
 
-                                    If startDate <> Date.MinValue Then
-                                        cphase = Nothing
-                                        Throw New Exception("Die Phase '" & objectName & "' beginnt vor dem Projekt !" & vbLf &
-                                                     "Bitte korrigieren Sie dies in der Datei'" & hproj.name & ".xlsx'")
-                                    Else
-                                        ' objectName ist ein Meilenstein
+    ' ''                                If startDate <> Date.MinValue Then
+    ' ''                                    cphase = Nothing
+    ' ''                                    Throw New Exception("Die Phase '" & objectName & "' beginnt vor dem Projekt !" & vbLf &
+    ' ''                                                 "Bitte korrigieren Sie dies in der Datei'" & hproj.name & ".xlsx'")
+    ' ''                                Else
+    ' ''                                    ' objectName ist ein Meilenstein
 
-                                        'ur: 1.6.2015   Meilenstein hat den Namen einer Phase
-                                        If PhaseDefinitions.Contains(objectName) _
-                                            And startDate = Date.MinValue Then
+    ' ''                                    'ur: 1.6.2015   Meilenstein hat den Namen einer Phase
+    ' ''                                    If PhaseDefinitions.Contains(objectName) _
+    ' ''                                        And startDate = Date.MinValue Then
 
-                                            isPhase = False
-                                            isMeilenstein = True
-                                        End If
+    ' ''                                        isPhase = False
+    ' ''                                        isMeilenstein = True
+    ' ''                                    End If
 
-                                        'ur:12.05.2015:
-                                        ' '' '' ''If IsNothing(cphase) Then
-                                        ' '' '' ''    If hproj.AllPhases.Count > 0 Then
-                                        ' '' '' ''        cphase = hproj.getPhase(1)
-                                        ' '' '' ''    Else
-                                        ' '' '' ''        ' Erzeuge ProjektPhase mit Länge des Projekts
+    ' ''                                    'ur:12.05.2015:
+    ' ''                                    ' '' '' ''If IsNothing(cphase) Then
+    ' ''                                    ' '' '' ''    If hproj.AllPhases.Count > 0 Then
+    ' ''                                    ' '' '' ''        cphase = hproj.getPhase(1)
+    ' ''                                    ' '' '' ''    Else
+    ' ''                                    ' '' '' ''        ' Erzeuge ProjektPhase mit Länge des Projekts
 
-                                        ' '' '' ''    End If
+    ' ''                                    ' '' '' ''    End If
 
-                                        ' '' '' ''End If
-                                    End If
+    ' ''                                    ' '' '' ''End If
+    ' ''                                End If
 
 
-                                    'isPhase = False
+    ' ''                                'isPhase = False
 
-                                Else
-                                    'objectName ist eine Phase
-                                    'isPhase = True
+    ' ''                            Else
+    ' ''                                'objectName ist eine Phase
+    ' ''                                'isPhase = True
 
-                                    ' ist der Phasen Name in der Liste der definitionen überhaupt bekannt ? 
-                                    If Not PhaseDefinitions.Contains(objectName) Then
+    ' ''                                ' ist der Phasen Name in der Liste der definitionen überhaupt bekannt ? 
+    ' ''                                If Not PhaseDefinitions.Contains(objectName) Then
 
-                                        ' jetzt noch prüfen, ob es sich um die Phase (1) handelt, dann kann sie ja nicht in der PhaseDefinitions enthalten sein  ..
-                                        If elemNameOfElemID(rootPhaseName) = objectName Or hproj.name = objectName Then
-                                            ' alles ok
-                                        Else
-                                            Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
-                                                           "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
+    ' ''                                    ' jetzt noch prüfen, ob es sich um die Phase (1) handelt, dann kann sie ja nicht in der PhaseDefinitions enthalten sein  ..
+    ' ''                                    If elemNameOfElemID(rootPhaseName) = objectName Or hproj.name = objectName Then
+    ' ''                                        ' alles ok
+    ' ''                                    Else
+    ' ''                                        Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
+    ' ''                                                       "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
 
-                                        End If
+    ' ''                                    End If
 
-                                    End If
+    ' ''                                End If
 
-                                    ' an dieser stelle ist sichergestellt, daß der Phasen Name bekannt ist
-                                    ' Prüfen, ob diese Phase bereits in hproj über das ressourcen Sheet angelegt wurde 
-                                    ' tk: dieser Befehl holt jetzt die erste Phase mit deisem NAmen, berücksichtigt aber noch nicht die Position ind er Hierarchie; 
-                                    ' das muss noch ergänzt werden 
-                                    If hproj.name = objectName Or elemNameOfElemID(rootPhaseName) = objectName Then
-                                        cphase = hproj.getPhaseByID(rootPhaseName)
-                                        breadCrumb = ""
-                                    Else
+    ' ''                                ' an dieser stelle ist sichergestellt, daß der Phasen Name bekannt ist
+    ' ''                                ' Prüfen, ob diese Phase bereits in hproj über das ressourcen Sheet angelegt wurde 
+    ' ''                                ' tk: dieser Befehl holt jetzt die erste Phase mit deisem NAmen, berücksichtigt aber noch nicht die Position ind er Hierarchie; 
+    ' ''                                ' das muss noch ergänzt werden 
+    ' ''                                If hproj.name = objectName Or elemNameOfElemID(rootPhaseName) = objectName Then
+    ' ''                                    cphase = hproj.getPhaseByID(rootPhaseName)
+    ' ''                                    breadCrumb = ""
+    ' ''                                Else
 
-                                        If aktLevel > lastLevel Then
+    ' ''                                    If aktLevel > lastLevel Then
 
-                                            If breadCrumb = "" Then
-                                                breadCrumb = "."
-                                            Else
-                                                breadCrumb = breadCrumb & "#" & cphase.name
-                                            End If
+    ' ''                                        If breadCrumb = "" Then
+    ' ''                                            breadCrumb = "."
+    ' ''                                        Else
+    ' ''                                            breadCrumb = breadCrumb & "#" & cphase.name
+    ' ''                                        End If
 
-                                        ElseIf aktLevel = lastLevel Then
-                                            ' aktlevel = lastlevel: also nicht tun
-                                        Else
+    ' ''                                    ElseIf aktLevel = lastLevel Then
+    ' ''                                        ' aktlevel = lastlevel: also nicht tun
+    ' ''                                    Else
 
-                                            While aktLevel < lastLevel
-                                                Dim hstr As String = ""
-                                                Call splitHryFullnameTo2(breadCrumb, hstr, breadCrumb)
-                                                lastLevel = lastLevel - 1
-                                            End While
+    ' ''                                        While aktLevel < lastLevel
+    ' ''                                            Dim hstr As String = ""
+    ' ''                                            Call splitHryFullnameTo2(breadCrumb, hstr, breadCrumb)
+    ' ''                                            lastLevel = lastLevel - 1
+    ' ''                                        End While
 
-                                        End If
-                                        cphase = hproj.getPhase(objectName, breadCrumb)
+    ' ''                                    End If
+    ' ''                                    cphase = hproj.getPhase(objectName, breadCrumb)
 
-                                        If IsNothing(cphase) Then
-                                            If aktLevel <> hproj.hierarchy.getIndentLevel(cphase.nameID) Then
+    ' ''                                    If IsNothing(cphase) Then
+    ' ''                                        If aktLevel <> hproj.hierarchy.getIndentLevel(cphase.nameID) Then
 
-                                                ' ur: 11.05.2015: fehler, wenn die Phase nicht exisitiert, 
-                                                '               nicht erzeugen
-                                                ' Phase existiert nicht mit dem gleichen Breadcrumb
-                                                Throw New ArgumentException("Die Phase '" & objectName & "' existiert nicht in dieser angegebenen Stufe" & vbLf & _
-                                                                            "Bitte korrigieren Sie die Importdatei!" & "BreadCrumb = " & breadCrumb)
+    ' ''                                            ' ur: 11.05.2015: fehler, wenn die Phase nicht exisitiert, 
+    ' ''                                            '               nicht erzeugen
+    ' ''                                            ' Phase existiert nicht mit dem gleichen Breadcrumb
+    ' ''                                            Throw New ArgumentException("Die Phase '" & objectName & "' existiert nicht in dieser angegebenen Stufe" & vbLf & _
+    ' ''                                                                        "Bitte korrigieren Sie die Importdatei!" & "BreadCrumb = " & breadCrumb)
 
-                                            End If
+    ' ''                                        End If
 
 
 
-                                        End If
+    ' ''                                    End If
 
-                                    End If
+    ' ''                                End If
 
 
-                                End If
+    ' ''                            End If
 
-                                If isPhase Then  'xxxx Phase
-                                    Try
+    ' ''                            If isPhase Then  'xxxx Phase
+    ' ''                                Try
 
-                                        Dim duration As Long
-                                        Dim offset As Long
+    ' ''                                    Dim duration As Long
+    ' ''                                    Dim offset As Long
 
 
 
-                                        duration = calcDauerIndays(startDate, endeDate)
-                                        offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
+    ' ''                                    duration = calcDauerIndays(startDate, endeDate)
+    ' ''                                    offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
 
 
-                                        If duration < 1 Or offset < 0 Then
-                                            If startDate = Date.MinValue And endeDate = Date.MinValue Then
-                                                Throw New Exception(" zu '" & objectName & "' wurde kein Datum eingetragen!")
-                                            Else
-                                                Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
-                                                                    offset.ToString & ", " & duration.ToString)
-                                            End If
-                                        End If
+    ' ''                                    If duration < 1 Or offset < 0 Then
+    ' ''                                        If startDate = Date.MinValue And endeDate = Date.MinValue Then
+    ' ''                                            Throw New Exception(" zu '" & objectName & "' wurde kein Datum eingetragen!")
+    ' ''                                        Else
+    ' ''                                            Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+    ' ''                                                                offset.ToString & ", " & duration.ToString)
+    ' ''                                        End If
+    ' ''                                    End If
 
-                                        cphase.changeStartandDauer(offset, duration)
+    ' ''                                    cphase.changeStartandDauer(offset, duration)
 
-                                        ' jetzt wird auf Inkonsistenz geprüft 
-                                        Dim inkonsistent As Boolean = False
+    ' ''                                    ' jetzt wird auf Inkonsistenz geprüft 
+    ' ''                                    Dim inkonsistent As Boolean = False
 
-                                        If cphase.countRoles > 0 Or cphase.countCosts > 0 Then
-                                            ' prüfen , ob es Inkonsistenzen gibt ? 
-                                            Dim r As Integer
-                                            For r = 1 To cphase.countRoles
-                                                If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                    inkonsistent = True
-                                                End If
-                                            Next
+    ' ''                                    If cphase.countRoles > 0 Or cphase.countCosts > 0 Then
+    ' ''                                        ' prüfen , ob es Inkonsistenzen gibt ? 
+    ' ''                                        Dim r As Integer
+    ' ''                                        For r = 1 To cphase.countRoles
+    ' ''                                            If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+    ' ''                                                inkonsistent = True
+    ' ''                                            End If
+    ' ''                                        Next
 
-                                            Dim k As Integer
-                                            For k = 1 To cphase.countCosts
-                                                If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                    inkonsistent = True
-                                                End If
-                                            Next
-                                        End If
+    ' ''                                        Dim k As Integer
+    ' ''                                        For k = 1 To cphase.countCosts
+    ' ''                                            If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+    ' ''                                                inkonsistent = True
+    ' ''                                            End If
+    ' ''                                        Next
+    ' ''                                    End If
 
-                                        If inkonsistent Then
-                                            anzFehler = anzFehler + 1
-                                            Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
-                                                                 "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
-                                        End If
-                                        ' '' '' ''If Not cphaseExisted Then
-                                        ' '' '' ''    ' ur: 11.05.2015: parentID bestimmen fehlt hier noch
-                                        ' '' '' ''    hproj.AddPhase(cphase, parentID:=rootPhaseName)
-                                        ' '' '' ''End If
+    ' ''                                    If inkonsistent Then
+    ' ''                                        anzFehler = anzFehler + 1
+    ' ''                                        Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
+    ' ''                                                             "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+    ' ''                                    End If
+    ' ''                                    ' '' '' ''If Not cphaseExisted Then
+    ' ''                                    ' '' '' ''    ' ur: 11.05.2015: parentID bestimmen fehlt hier noch
+    ' ''                                    ' '' '' ''    hproj.AddPhase(cphase, parentID:=rootPhaseName)
+    ' ''                                    ' '' '' ''End If
 
 
-                                    Catch ex As Exception
-                                        Throw New Exception(ex.Message)
-                                    End Try
+    ' ''                                Catch ex As Exception
+    ' ''                                    Throw New Exception(ex.Message)
+    ' ''                                End Try
 
-                                Else
+    ' ''                            Else
 
-                                    If aktLevel > lastLevel Then
+    ' ''                                If aktLevel > lastLevel Then
 
-                                        If breadCrumb = "" Then
-                                            breadCrumb = "."
-                                        Else
-                                            breadCrumb = breadCrumb & "#" & cphase.name
-                                        End If
+    ' ''                                    If breadCrumb = "" Then
+    ' ''                                        breadCrumb = "."
+    ' ''                                    Else
+    ' ''                                        breadCrumb = breadCrumb & "#" & cphase.name
+    ' ''                                    End If
 
-                                    ElseIf aktLevel = lastLevel Then
-                                        ' aktlevel = lastlevel: also nicht tun
-                                    Else
+    ' ''                                ElseIf aktLevel = lastLevel Then
+    ' ''                                    ' aktlevel = lastlevel: also nicht tun
+    ' ''                                Else
 
-                                        While aktLevel < lastLevel
-                                            Dim hstr As String = ""
-                                            Call splitHryFullnameTo2(breadCrumb, hstr, breadCrumb)
-                                            lastLevel = lastLevel - 1
-                                        End While
+    ' ''                                    While aktLevel < lastLevel
+    ' ''                                        Dim hstr As String = ""
+    ' ''                                        Call splitHryFullnameTo2(breadCrumb, hstr, breadCrumb)
+    ' ''                                        lastLevel = lastLevel - 1
+    ' ''                                    End While
 
-                                    End If
+    ' ''                                End If
 
-                                    phaseNameID = cphase.nameID
-                                    cMilestone = New clsMeilenstein(parent:=cphase)
-                                    cBewertung = New clsBewertung
+    ' ''                                phaseNameID = cphase.nameID
+    ' ''                                cMilestone = New clsMeilenstein(parent:=cphase)
+    ' ''                                cBewertung = New clsBewertung
 
-                                    milestoneName = objectName.Trim
-                                    milestoneDate = endeDate
+    ' ''                                milestoneName = objectName.Trim
+    ' ''                                milestoneDate = endeDate
 
-                                    ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
-                                    ' muss abgebrochen werden 
+    ' ''                                ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
+    ' ''                                ' muss abgebrochen werden 
 
-                                    If Not awinSettings.milestoneFreeFloat And _
-                                        (DateDiff(DateInterval.Day, cphase.getStartDate, milestoneDate) < 0 Or _
-                                         DateDiff(DateInterval.Day, cphase.getEndDate, milestoneDate) > 0) Then
-                                        Throw New Exception("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                            milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
-                                                                 "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
-                                    End If
+    ' ''                                If Not awinSettings.milestoneFreeFloat And _
+    ' ''                                    (DateDiff(DateInterval.Day, cphase.getStartDate, milestoneDate) < 0 Or _
+    ' ''                                     DateDiff(DateInterval.Day, cphase.getEndDate, milestoneDate) > 0) Then
+    ' ''                                    Throw New Exception("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+    ' ''                                                        milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
+    ' ''                                                             "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+    ' ''                                End If
 
 
-                                    ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
-                                    If DateDiff(DateInterval.Month, hproj.startDate, milestoneDate) < -1 Then
-                                        milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
-                                    Else
-                                        If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                            Call MsgBox("der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
-                                                        "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
-                                        End If
+    ' ''                                ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
+    ' ''                                If DateDiff(DateInterval.Month, hproj.startDate, milestoneDate) < -1 Then
+    ' ''                                    milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+    ' ''                                Else
+    ' ''                                    If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
+    ' ''                                        Call MsgBox("der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
+    ' ''                                                    "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
+    ' ''                                    End If
 
-                                    End If
+    ' ''                                End If
 
-                                    ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                                    Try
-                                        bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
-                                    Catch ex As Exception
-                                        bewertungsAmpel = 0
-                                    End Try
+    ' ''                                ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
+    ' ''                                Try
+    ' ''                                    bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+    ' ''                                Catch ex As Exception
+    ' ''                                    bewertungsAmpel = 0
+    ' ''                                End Try
 
-                                    explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+    ' ''                                explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
 
-                                    ' Ergänzung tk 2.11 deliverables ergänzt 
-                                    deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+    ' ''                                ' Ergänzung tk 2.11 deliverables ergänzt 
+    ' ''                                deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
 
 
-                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                        ' es gibt keine Bewertung
-                                        bewertungsAmpel = 0
-                                    End If
-                                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                                    With cBewertung
-                                        '.bewerterName = resultVerantwortlich
-                                        .colorIndex = bewertungsAmpel
-                                        .datum = importDatum
-                                        .description = explanation
-                                        .deliverables = deliverables
-                                    End With
+    ' ''                                If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+    ' ''                                    ' es gibt keine Bewertung
+    ' ''                                    bewertungsAmpel = 0
+    ' ''                                End If
+    ' ''                                ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+    ' ''                                With cBewertung
+    ' ''                                    '.bewerterName = resultVerantwortlich
+    ' ''                                    .colorIndex = bewertungsAmpel
+    ' ''                                    .datum = importDatum
+    ' ''                                    .description = explanation
+    ' ''                                    .deliverables = deliverables
+    ' ''                                End With
 
 
 
-                                    With cMilestone
-                                        .setDate = milestoneDate
-                                        '.verantwortlich = resultVerantwortlich
-                                        .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
-                                        If Not cBewertung Is Nothing Then
-                                            .addBewertung(cBewertung)
-                                        End If
-                                    End With
+    ' ''                                With cMilestone
+    ' ''                                    .setDate = milestoneDate
+    ' ''                                    '.verantwortlich = resultVerantwortlich
+    ' ''                                    .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
+    ' ''                                    If Not cBewertung Is Nothing Then
+    ' ''                                        .addBewertung(cBewertung)
+    ' ''                                    End If
+    ' ''                                End With
 
 
-                                    Try
-                                        With hproj.getPhaseByID(phaseNameID)
-                                            .addMilestone(cMilestone)
-                                        End With
-                                    Catch ex1 As Exception
-                                        Throw New Exception(ex1.Message)
-                                    End Try
+    ' ''                                Try
+    ' ''                                    With hproj.getPhaseByID(phaseNameID)
+    ' ''                                        .addMilestone(cMilestone)
+    ' ''                                    End With
+    ' ''                                Catch ex1 As Exception
+    ' ''                                    Throw New Exception(ex1.Message)
+    ' ''                                End Try
 
 
 
-                                End If
+    ' ''                            End If
 
-                            Catch ex As Exception
-                                If zeile <> lastrow Then
-                                    ' beim lesen des ImportFiles ist ein Fehler aufgetreten
-                                    Throw New Exception(ex.Message)
-                                End If
-                                ' letzte belegte Zeile wurde bereits bearbeitet.
-                                zeile = lastrow + 1 ' erzwingt das Ende der For - Schleife
-                                Nummer = Nothing
+    ' ''                        Catch ex As Exception
+    ' ''                            If zeile <> lastrow Then
+    ' ''                                ' beim lesen des ImportFiles ist ein Fehler aufgetreten
+    ' ''                                Throw New Exception(ex.Message)
+    ' ''                            End If
+    ' ''                            ' letzte belegte Zeile wurde bereits bearbeitet.
+    ' ''                            zeile = lastrow + 1 ' erzwingt das Ende der For - Schleife
+    ' ''                            Nummer = Nothing
 
 
-                            End Try
+    ' ''                        End Try
 
-                            lastLevel = aktLevel                ' indentlevel merken
-                        Next
+    ' ''                        lastLevel = aktLevel                ' indentlevel merken
+    ' ''                    Next
 
-                    End With
-                Catch ex As Exception
-                    Throw New Exception(ex.Message)
-                End Try
+    ' ''                End With
+    ' ''            Catch ex As Exception
+    ' ''                Throw New Exception(ex.Message)
+    ' ''            End Try
 
-            End If
-            If anzFehler > 0 Then
-                Call MsgBox("Anzahl Fehler bei Import der Termine von " & hproj.name & " : " & anzFehler)
-            End If
+    ' ''        End If
+    ' ''        If anzFehler > 0 Then
+    ' ''            Call MsgBox("Anzahl Fehler bei Import der Termine von " & hproj.name & " : " & anzFehler)
+    ' ''        End If
 
-        Catch ex As Exception
-            Throw New Exception(ex.Message)
-        End Try
+    ' ''    Catch ex As Exception
+    ' ''        Throw New Exception(ex.Message)
+    ' ''    End Try
 
-        If isTemplate Then
-            ' hier müssen die Werte für die Vorlage übergeben werden.
-            Dim projVorlage As New clsProjektvorlage
-            projVorlage.VorlagenName = hproj.name
-            projVorlage.Schrift = hproj.Schrift
-            projVorlage.Schriftfarbe = hproj.Schriftfarbe
-            projVorlage.farbe = hproj.farbe
-            projVorlage.earliestStart = -6
-            projVorlage.latestStart = 6
-            projVorlage.AllPhases = hproj.AllPhases
-            projVorlage.hierarchy = hproj.hierarchy
-            hprojTemp = projVorlage
+    ' ''    If isTemplate Then
+    ' ''        ' hier müssen die Werte für die Vorlage übergeben werden.
+    ' ''        Dim projVorlage As New clsProjektvorlage
+    ' ''        projVorlage.VorlagenName = hproj.name
+    ' ''        projVorlage.Schrift = hproj.Schrift
+    ' ''        projVorlage.Schriftfarbe = hproj.Schriftfarbe
+    ' ''        projVorlage.farbe = hproj.farbe
+    ' ''        projVorlage.earliestStart = -6
+    ' ''        projVorlage.latestStart = 6
+    ' ''        projVorlage.AllPhases = hproj.AllPhases
+    ' ''        projVorlage.hierarchy = hproj.hierarchy
+    ' ''        hprojTemp = projVorlage
 
-        Else
-            hprojekt = hproj
-        End If
+    ' ''    Else
+    ' ''        hprojekt = hproj
+    ' ''    End If
 
-    End Sub
+    ' ''End Sub
 
     ''' <summary>
     ''' lädt die jeweils letzten PName/Variante Projekte aus MongoDB in alleProjekte
@@ -6063,16 +9231,14 @@ Public Module awinGeneralModules
     ''' </param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub awinLoadConstellation(ByVal constellationName As String, ByRef successMessage As String)
+    Public Sub awinLoadConstellation(ByVal constellationName As String, ByRef successMessage As String, ByVal storedAtOrBefore As Date)
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim anzErrDB As Integer = 0
-        Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
-        Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
-                                        "   Das Projekt wurde bereits beauftragt."
-
+        Dim nvErrorMessage As String = ""
+        Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
+        Dim outPutCollection = New Collection
+        Dim outputLine As String = ""
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
             activeConstellation = projectConstellations.getConstellation(constellationName)
@@ -6082,7 +9248,7 @@ Public Module awinGeneralModules
         End Try
 
         ' die aktuelle Konstellation in "Last" speichern 
-        Call storeSessionConstellation(ShowProjekte, "Last")
+        Call storeSessionConstellation("Last")
 
         ShowProjekte.Clear()
 
@@ -6097,68 +9263,87 @@ Public Module awinGeneralModules
             If AlleProjekte.Containskey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
-            Else
+
+            ElseIf Not noDB Then
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 If request.pingMongoDb() Then
 
-                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
+                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
-
-                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                        AlleProjekte.Add(kvp.Key, hproj)
-                    Else
-                        anzErrDB = anzErrDB + 1
-                        If anzErrDB = 1 Then
-                            successMessage = successMessage & loadErrorMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
+                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
+                        If Not IsNothing(hproj) Then
+                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                            AlleProjekte.Add(kvp.Key, hproj)
                         Else
-                            successMessage = successMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
+                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
+                            outPutCollection.Add(outputLine)
                         End If
+                        
+                    Else
 
+                        hproj = Nothing
+                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
+                        outPutCollection.Add(outputLine)
+                        
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                         'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                     End If
                 Else
                     Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                 End If
+
+                ''Else      ' not noDB
+                ''    Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+
             End If
-            If hproj.name = kvp.Value.projectName Then
 
-                With hproj
+            If Not IsNothing(hproj) Then
+                If hproj.name = kvp.Value.projectName Then
 
-                    ' Änderung THOMAS Start 
-                    If .Status = ProjektStatus(0) Then
-                        .startDate = kvp.Value.Start
-                    ElseIf .startDate <> kvp.Value.Start Then
-                        ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
-                        successMessage = successMessage & vbLf & vbLf & _
-                                            loadDateMessage & vbLf & _
-                                            "        " & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                    With hproj
+
+                        .tfZeile = kvp.Value.zeile
+
+                    End With
+
+                    If kvp.Value.show Then
+
+                        Try
+
+                            ShowProjekte.Add(hproj)
+
+                        Catch ex1 As Exception
+                            outputLine = hproj.name & "(" & hproj.variantName & ")" & " (konnte der Session nicht hinzugefügt werden)"
+                            outPutCollection.Add(outputLine)
+                        End Try
+
+                        ' jetzt zeichnen des Projektes 
+                        ' neu zeichnen des Projekts 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
                     End If
-                    ' Änderung THOMAS Ende 
 
-                    .StartOffset = 0
-                    .tfZeile = kvp.Value.zeile
-                End With
-
-                If kvp.Value.show Then
-
-                    Try
-
-                        ShowProjekte.Add(hproj)
-
-                    Catch ex1 As Exception
-                        Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
-                    End Try
 
                 End If
-
             End If
+            
 
         Next
 
+        If outPutCollection.Count > 0 Then
+
+            Dim outputFormular As New frmOutputWindow
+            With outputFormular
+                .Text = "Meldungen"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:"
+                .textCollection = outPutCollection
+                .ShowDialog()
+            End With
+            
+        End If
 
     End Sub
 
@@ -6170,19 +9355,20 @@ Public Module awinGeneralModules
     ''' <param name="constellationName"></param>
     ''' <param name="successMessage"></param>
     ''' <remarks></remarks>
-    Public Sub awinAddConstellation(ByVal constellationName As String, ByRef successMessage As String)
+    Public Sub awinAddConstellation(ByVal constellationName As String, ByRef successMessage As String, ByVal storedAtOrBefore As Date)
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim anzErrDB As Integer = 0
-        Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
-        Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
-                                        "   Das Projekt wurde bereits beauftragt."
+        Dim nvErrorMessage As String = ""
+        Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
+        Dim outPutCollection = New Collection
+        Dim outputLine As String = ""
         Dim tryZeile As Integer
 
         ' ab diesem Wert soll neu gezeichnet werden 
         Dim startOfFreeRows As Integer = projectboardShapes.getMaxZeile
+        Dim zeilenOffset As Integer = 0
 
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
@@ -6193,49 +9379,73 @@ Public Module awinGeneralModules
         End Try
 
         ' die aktuelle Konstellation in "Last" speichern 
-        Call storeSessionConstellation(ShowProjekte, "Last")
+        Call storeSessionConstellation("Last")
 
         ' jetzt werden die einzelnen Projekte dazugeholt 
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
+            Dim showIT As Boolean = kvp.Value.show
+
             If AlleProjekte.Containskey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
 
-                ' wenn es bereits in Showprojekte ist , gar nichts machen
-                If ShowProjekte.contains(hproj.name) Then
-                    tryZeile = ShowProjekte.getProject(hproj.name).tfZeile
+                If showIT Then
+
+                    If ShowProjekte.contains(hproj.name) Then
+
+                        Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
+                        If shownProject.variantName = hproj.variantName Then
+                            ' es wird bereits gezeigt, nichts machen ...
+                        Else
+                            tryZeile = shownProject.tfZeile
+                            ' jetzt die Variante aktivieren 
+                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        End If
+
+                    Else
+                        'tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                        tryZeile = startOfFreeRows + zeilenOffset
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        zeilenOffset = zeilenOffset + 1
+                    End If
+
+
                 Else
-                    tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                    ' gar nichts machen
                 End If
 
-                ' jetzt die Variante aktivieren 
-                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+
 
             Else
                 If request.pingMongoDb() Then
 
-                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
+                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
+                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
 
-                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                        AlleProjekte.Add(kvp.Key, hproj)
-                        ' jetzt die Variante aktivieren 
-                        tryZeile = kvp.Value.zeile + startOfFreeRows - 1
-                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                        If Not IsNothing(hproj) Then
+                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                            AlleProjekte.Add(kvp.Key, hproj)
+                            ' jetzt die Variante aktivieren 
+                            ' aber nur wenn es auch das Flag show hat 
+                            If showIT Then
+                                tryZeile = startOfFreeRows + zeilenOffset
+                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                                zeilenOffset = zeilenOffset + 1
+                            End If
+                        Else
+                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
+                            outPutCollection.Add(outputLine)
+                        End If
 
                     Else
-                        anzErrDB = anzErrDB + 1
-                        If anzErrDB = 1 Then
-                            successMessage = successMessage & loadErrorMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
-                        Else
-                            successMessage = successMessage & vbLf & _
-                                                   "        " & kvp.Value.projectName
-                        End If
+                        hproj = Nothing
+
+                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
+                        outPutCollection.Add(outputLine)
 
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                         'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
@@ -6247,6 +9457,18 @@ Public Module awinGeneralModules
 
         Next
 
+
+        If outPutCollection.Count > 0 Then
+
+            Dim outputFormular As New frmOutputWindow
+            With outputFormular
+                .Text = "Meldungen"
+                .lblOutput.Text = "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:"
+                .textCollection = outPutCollection
+                .ShowDialog()
+            End With
+
+        End If
 
 
     End Sub
@@ -6264,7 +9486,7 @@ Public Module awinGeneralModules
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
         ' prüfen, ob diese Constellation überhaupt existiert ..
         Try
@@ -6275,11 +9497,14 @@ Public Module awinGeneralModules
         End Try
 
         If deleteDB Then
-            If request.pingMongoDb() Then
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If Request.pingMongoDb() Then
 
                 ' Konstellation muss aus der Datenbank gelöscht werden.
-
                 returnValue = request.removeConstellationFromDB(activeConstellation)
+                If returnValue = False Then
+                    Call MsgBox("Fehler bei Löschen Szenario: " & activeConstellation.constellationName)
+                End If
             Else
                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
                 returnValue = False
@@ -6306,7 +9531,8 @@ Public Module awinGeneralModules
     ''' <param name="pName"></param>
     ''' <param name="vName"></param>
     ''' <remarks></remarks>
-    Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean)
+    Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean, _
+                                 ByVal storedAtORBefore As Date)
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim hproj As clsProjekt
@@ -6315,26 +9541,30 @@ Public Module awinGeneralModules
         ' ab diesem Wert soll neu gezeichnet werden 
         Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
-        hproj = request.retrieveOneProjectfromDB(pName, vName)
+        hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
 
-        ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-        ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-        If AlleProjekte.Containskey(key) Then
-            AlleProjekte.Remove(key)
+
+        If Not IsNothing(hproj) Then
+            ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+            ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+            If AlleProjekte.Containskey(key) Then
+                AlleProjekte.Remove(key)
+            End If
+
+            AlleProjekte.Add(key, hproj)
+
+            If show Then
+                ' prüfen, ob es bereits in der Showprojekt enthalten ist
+                ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+                ' replaceProjectVariant
+
+                Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+
+            End If
+        Else
+            Call MsgBox("existiert nicht: " & pName & ", " & vName & " @ " & storedAtORBefore.ToString)
         End If
-
-        AlleProjekte.Add(key, hproj)
-
-        If show Then
-            ' prüfen, ob es bereits in der Showprojekt enthalten ist
-            ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
-            ' replaceProjectVariant
-
-            Call replaceProjectVariant(pName, vName, False, True, freieZeile)
-
-        End If
-
-
+        
 
     End Sub
 
@@ -6359,7 +9589,7 @@ Public Module awinGeneralModules
 
             projekthistorie.liste = request.retrieveProjectHistoryFromDB _
                                     (projectname:=pname, variantName:=variantName, _
-                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
             ' Speichern im Papierkorb 
             For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
@@ -6374,13 +9604,18 @@ Public Module awinGeneralModules
             Next
 
             ' jetzt alle Timestamps in der Datenbank löschen 
-            If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+            Try
+                If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
                                                   storedEarliest:=projekthistorie.First.timeStamp, _
                                                   storedLatest:=projekthistorie.Last.timeStamp) Then
 
-            Else
-                Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName)
-            End If
+                Else
+                    Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName)
+                End If
+            Catch ex As Exception
+
+            End Try
+
 
 
         ElseIf kennung = PTTvActions.delFromSession Or _
@@ -6396,10 +9631,13 @@ Public Module awinGeneralModules
                 hproj = Nothing
             End Try
 
-            If IsNothing(hproj) Or hproj.variantName <> variantName Then
+            If IsNothing(hproj) Then
                 Dim key As String = calcProjektKey(pname, variantName)
                 AlleProjekte.Remove(key)
 
+            ElseIf hproj.variantName <> variantName Then
+                Dim key As String = calcProjektKey(pname, variantName)
+                AlleProjekte.Remove(key)
             Else
                 If variantName = "" Then
 
@@ -7141,6 +10379,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' liest die im Diretory ../ressource manager liegenden detaillierten Kapa files zu den Rollen aus
     ''' und hinterlegt es an entsprechender Stelle im hrole.kapazitaet
+    ''' wenn die Details als Rollen angelegt sind, dann werden diese Rollen gleich mitausgelesen 
     ''' </summary>
     ''' <param name="hrole"></param>
     ''' <remarks></remarks>
@@ -7157,6 +10396,8 @@ Public Module awinGeneralModules
         Dim tmpDate As Date
         Dim tmpKapa As Double
         Dim extTmpKapa As Double
+        Dim lastSpalte As Integer
+
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -7182,6 +10423,70 @@ Public Module awinGeneralModules
 
                     currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
                     summenZeile = currentWS.Range("intern_sum").Row
+                    lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+
+                    ' bevor jetzt die eigentliche Kapa dieser Rolle aus intern_sum ausgelesen wird, wird geschaut, ob 
+                    ' es eine zusammengesetzte Rolle ist
+                    ' das wird dadurch entschieden, ob bis zur summenzeile bekannte Rollen auftauchen. Das sind dann die Sub-Roles 
+
+
+                    Dim atleastOneSubRole As Boolean = False
+                    Dim aktzeile As Integer = 2
+                    Do While aktzeile < summenZeile
+
+                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, spalte - 1), Excel.Range).Value)
+
+                        If Not IsNothing(subRoleName) Then
+                            subRoleName = subRoleName.Trim
+                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                                Try
+                                    atleastOneSubRole = True
+                                    ' es ist eine Sub-Rolle
+
+                                    hrole.addSubRole(subRole.UID, subRoleName, RoleDefinitions.Count)
+
+                                    spalte = 2
+                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+
+                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
+                                            spalte < 241 And spalte <= lastSpalte
+                                        index = getColumnOfDate(tmpDate)
+                                        tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                            subRole.kapazitaet(index) = tmpKapa
+                                        End If
+
+                                        spalte = spalte + 1
+                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                    Loop
+
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End If
+
+                        End If
+
+                        aktzeile = aktzeile + 1
+                        ' jetzt spalte wieder auf 2 setzen 
+                        spalte = 2
+                    Loop
+
+                    ' die internen Kapas einer Sammelrolle sind NULL 
+                    If atleastOneSubRole Then
+                        For i As Integer = 1 To 240
+                            hrole.kapazitaet(i) = 0
+                        Next
+                    End If
+                    
+
+
                     Try
                         extSummenZeile = currentWS.Range("extern_sum").Row
                     Catch ex As Exception
@@ -7191,18 +10496,32 @@ Public Module awinGeneralModules
                     tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
                     Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
-                            spalte < 241
+                            spalte < 241 And spalte <= lastSpalte
                         index = getColumnOfDate(tmpDate)
                         tmpKapa = CDbl(CType(currentWS.Cells(summenZeile, spalte), Excel.Range).Value)
+
+
                         If extSummenZeile > 0 Then
                             extTmpKapa = CDbl(CType(currentWS.Cells(extSummenZeile, spalte), Excel.Range).Value)
                         Else
                             extTmpKapa = 0.0
                         End If
 
-                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                            hrole.kapazitaet(index) = tmpKapa
-                            hrole.externeKapazitaet(index) = extTmpKapa
+                        If index <= 240 And index > 0 Then
+
+                            If atleastOneSubRole Then
+                                ' alles ist Null , wird erst später aufgrund der Sub-Rollen berechnet 
+                            Else
+                                If tmpKapa >= 0 Then
+                                    hrole.kapazitaet(index) = tmpKapa
+                                End If
+                            End If
+
+                            If extTmpKapa >= 0 Then
+                                hrole.externeKapazitaet(index) = extTmpKapa
+                            End If
+
+
                         End If
 
                         spalte = spalte + 1
@@ -7234,6 +10553,56 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' liefert die Namen aller Projekte im Show, die nicht zum angegebenen Filter passen ...
+    ''' </summary>
+    ''' <param name="filterName"></param>
+    ''' <remarks></remarks>
+    Friend Function getProjectNamesNotFittingToFilter(ByVal filterName As String) As Collection
+
+        Dim nameCollection As New Collection
+        Dim filter As New clsFilter
+        Dim ok As Boolean = False
+
+        Dim todoListe As New Collection
+
+
+        filter = filterDefinitions.retrieveFilter("Last")
+
+        If IsNothing(filter) Then
+
+            ' nichts tun und Showprojekte bleibt unverändert ... 
+        Else
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                If Not filter.isEmpty Then
+                    ok = filter.doesNotBlock(kvp.Value)
+                Else
+                    ok = True
+                End If
+
+                If Not ok Then
+                    ' aus Showprojekte rausnehmen und Projekt-Tafel aktualisieren 
+                    Try
+                        nameCollection.Add(kvp.Value.name)
+                    Catch ex As Exception
+
+                    End Try
+                Else
+
+                End If
+
+            Next
+
+            ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
+
+        End If
+
+        getProjectNamesNotFittingToFilter = nameCollection
+
+    End Function
+
+    ''' <summary>
     ''' baut den aktuell gültigen Treeview auf  
     ''' </summary>
     ''' <remarks></remarks>
@@ -7241,25 +10610,24 @@ Public Module awinGeneralModules
                               ByRef TreeviewProjekte As TreeView, _
                               ByRef aktuelleGesamtListe As clsProjekteAlle, _
                               ByVal aKtionskennung As Integer, _
-                              ByVal applyFilter As Boolean)
+                              ByVal applyFilter As Boolean, _
+                              ByVal storedAtOrBefore As Date)
 
         Dim nodeLevel0 As TreeNode
         Dim nodeLevel1 As TreeNode
         Dim zeitraumVon As Date = StartofCalendar
         Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
-        Dim storedHeute As Date = Now
+        'Dim storedHeute As Date = Now
         Dim storedGestern As Date = StartofCalendar
         Dim pname As String = ""
         Dim variantName As String = ""
         Dim loadErrorMsg As String = ""
-        Dim listOfVariantNamesDB As Collection
+        Dim listOfVariantNamesDB As New Collection
 
 
         Dim deletedProj As Integer = 0
 
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
         ' alles zurücksetzen 
         projektHistorien.clear()
@@ -7275,29 +10643,42 @@ Public Module awinGeneralModules
         Select Case aKtionskennung
 
             Case PTTvActions.delFromDB
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
                 pname = ""
                 variantName = ""
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.delFromSession
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
+            Case PTTvActions.chgInSession
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
             Case PTTvActions.loadPVS    ' ur: 30.01.2015: aktuell nicht benutzt!!!
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
                 pname = ""
                 variantName = ""
 
                 'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
                 ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.loadPV
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
                 pname = ""
                 variantName = ""
 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
                 loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
 
             Case PTTvActions.activateV
@@ -7340,10 +10721,19 @@ Public Module awinGeneralModules
                 Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
                 Dim showPname As Boolean
 
+                
+
                 For Each pname In projektliste
 
                     showPname = True
-                    listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
+                    If noDB Then
+                        listOfVariantNamesDB.Clear()
+                    Else
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
+                        listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
+                    End If
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
                     If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then
@@ -7354,24 +10744,47 @@ Public Module awinGeneralModules
 
                     If showPname Then
 
+                        Dim variantNames As Collection = aktuelleGesamtListe.getVariantNames(pname, True)
+
                         nodeLevel0 = .Nodes.Add(pname)
+                        
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
                         If aKtionskennung = PTTvActions.delFromSession Or _
                             aKtionskennung = PTTvActions.activateV Or _
+                            aKtionskennung = PTTvActions.chgInSession Or _
                             aKtionskennung = PTTvActions.deleteV Or _
                              aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
                             aKtionskennung = PTTvActions.definePortfolioSE Then
-                            If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
-                                listOfVariantNamesDB.Count > 0 Then
+                            If variantNames.Count > 1 Then
 
                                 nodeLevel0.Tag = "P"
-                                nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                                nodeLevel1 = nodeLevel0.Nodes.Add(CStr(variantNames.Item(1)))
                                 nodeLevel1.Tag = "P"
 
                             Else
                                 nodeLevel0.Tag = "X"
+                            End If
+
+                            ' tk 28.9.16 wurde durch obiges abgelöst ...
+                            ''If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
+                            ''    listOfVariantNamesDB.Count > 0 Then
+
+                            ''    nodeLevel0.Tag = "P"
+                            ''    nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                            ''    nodeLevel1.Tag = "P"
+
+                            ''Else
+                            ''    nodeLevel0.Tag = "X"
+                            ''End If
+
+                            ' jetzt soll im Fall Bearbeiten Portfolio angezeigt werden, welche Projekte gerade in ShowProjekte sind ...
+                            ' bzw. welche quasi im NoShow sind 
+                            If aKtionskennung = PTTvActions.chgInSession Then
+                                If ShowProjekte.contains(pname) Then
+                                    nodeLevel0.Checked = True
+                                End If
                             End If
 
                             '' ''ur:10.08.2015 '' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
@@ -7554,6 +10967,8 @@ Public Module awinGeneralModules
 
         Dim appDefinition As clsAppearance
         Dim errMsg As String = ""
+        Dim firstMilestone As Boolean = True
+        Dim firstPhase As Boolean = True
 
         With ws
 
@@ -7573,6 +10988,15 @@ Public Module awinGeneralModules
 
                         Try
                             appearanceDefinitions.Add(.name, appDefinition)
+
+                            If .isMilestone And firstMilestone Then
+                                awinSettings.defaultMilestoneClass = .name
+                                firstMilestone = False
+
+                            ElseIf Not .isMilestone And firstPhase Then
+                                awinSettings.defaultPhaseClass = .name
+                                firstPhase = False
+                            End If
                         Catch ex As Exception
                             errMsg = "Mehrfach Definition in den Darstellungsklassen ... " & vbLf & _
                                          "bitte korrigieren"
@@ -7597,25 +11021,34 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Function loginProzedur() As Boolean
 
-        appInstance.EnableEvents = True
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
 
         Dim loginDialog As New frmAuthentication
         Dim returnValue As DialogResult
+        Dim i As Integer = 0
 
         returnValue = DialogResult.Retry
 
-        While returnValue = DialogResult.Retry
+        ' ur: 30.6.2016: Login-Versuche auf fünf limitiert
+        While returnValue = DialogResult.Retry And i < 5
 
             returnValue = loginDialog.ShowDialog
-
+            i = i + 1
         End While
 
-        If returnValue = DialogResult.Abort Then
+        If returnValue = DialogResult.Abort Or i >= 5 Then
             'Call MsgBox("Customization-File schließen")
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
             Return False
         Else
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
             Return True
         End If
+
     End Function
 
     ''' <summary>
@@ -7727,9 +11160,10 @@ Public Module awinGeneralModules
             CType(.Cells(zeile, spalte + 4), Excel.Range).Value = "strat. Bedeutung"
             CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "Risiko der Umsetzung"
             CType(.Cells(zeile, spalte + 6), Excel.Range).Value = "Produktions-Volumen"
+            CType(.Cells(zeile, spalte + 7), Excel.Range).Value = "Budget"
 
 
-            spalte = spalte + 7
+            spalte = spalte + 8
 
 
             ' hier muss noch korrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 
@@ -7803,9 +11237,12 @@ Public Module awinGeneralModules
                 ' Produktions-Volumen schreiben 
                 CType(.Cells(zeile, spalte + 6), Excel.Range).Value = kvp.Value.volume
 
+                ' Budget schreiben 
+                CType(.Cells(zeile, spalte + 7), Excel.Range).Value = ""
+
                 ' Phasen Information schreiben
 
-                spalte = spalte + 7
+                spalte = spalte + 8
 
 
                 ' hier muss noch korrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 
@@ -7827,7 +11264,7 @@ Public Module awinGeneralModules
                     If Not IsNothing(cphase) Then
                         Try
 
-                            phaseName = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                            phaseName = kvp.Value.getBestNameOfID(cphase.nameID, True, False)
                             startDate = cphase.getStartDate
                             endDate = cphase.getEndDate
 
@@ -8243,37 +11680,8 @@ Public Module awinGeneralModules
 
         With auswahlFormular
 
-
-            .Text = "Datenbank Filter definieren"
-
-            '.chkbxShowObjects = False
-            '.chkbxCreateCharts = False
-
-            .chkbxOneChart.Checked = False
-            .chkbxOneChart.Visible = False
-
-            .rdbBU.Visible = True
-            .pictureBU.Visible = True
-
-            .rdbTyp.Visible = True
-            .pictureTyp.Visible = True
-
-            .repVorlagenDropbox.Visible = False
-            .labelPPTVorlage.Visible = False
-
-            ' Filter
-            .filterDropbox.Visible = True
-            .filterLabel.Visible = True
-            .filterLabel.Text = "Name des Filters"
-
-            ' Auswahl Speichern
-            .auswSpeichern.Visible = False
-            .auswSpeichern.Enabled = False
-
             '.showModePortfolio = True
             .menuOption = PTmenue.filterdefinieren
-
-            .OKButton.Text = "Speichern"
 
             '.Show()
             returnValue = .ShowDialog
@@ -8318,6 +11726,7 @@ Public Module awinGeneralModules
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
                                                               chWidth, chHeight, False, chTyp, False)
 
+
             chtop = chtop + 5
             chleft = chleft + 7
         Else
@@ -8349,10 +11758,12 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
 
-        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
 
-            Dim dirname As String
-            Dim dateiName As String = ""
+        Dim dirname As String
+        Dim dateiName As String = ""
+
+
+        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
 
             If menuOption = PTmenue.multiprojektReport Then
                 dirname = awinPath & RepPortfolioVorOrdner
@@ -8374,8 +11785,23 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-        Else
+        ElseIf menuOption = PTmenue.reportBHTC Then
 
+            dirname = awinPath & RepProjectVorOrdner
+
+            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+            Try
+
+                Dim i As Integer
+                For i = 1 To listOfVorlagen.Count
+
+                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    repVorlagenDropbox.Items.Add(dateiName)
+
+                Next i
+            Catch ex As Exception
+
+            End Try
 
         End If
 
@@ -8393,48 +11819,57 @@ Public Module awinGeneralModules
         ' einlesen und anzeigen der in der Datenbank definierten Filter
         If menuOption = PTmenue.filterdefinieren Then
 
+            If Not noDB Then
+                ' Filter mit Namen "fName" in DB speichern
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
+                ' Datenbank ist gestartet
+                If request.pingMongoDb() Then
 
-            ' Datenbank ist gestartet
-            If request.pingMongoDb() Then
-
-                Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(False)
-                For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
-                    If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
-                        filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
-                    End If
-                Next
+                    Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(False)
+                    For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
+                        If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
+                            filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
+                        End If
+                    Next
+                Else
+                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                End If
             Else
-                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+
             End If
+
         Else
             If menuOption = PTmenue.visualisieren Or _
                 menuOption = PTmenue.multiprojektReport Or _
                 menuOption = PTmenue.einzelprojektReport Or _
                 menuOption = PTmenue.leistbarkeitsAnalyse Then
 
-                ' allee Filter aus DB lesen
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If Not noDB Then
 
-                ' Datenbank ist gestartet
-                If request.pingMongoDb() Then
+                    ' allee Filter aus DB lesen
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
-                    For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
+                    ' Datenbank ist gestartet
+                    If request.pingMongoDb() Then
 
-                        If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
-                            selFilterDefinitions.Liste.Add(kvp.Key, kvp.Value)
-                        End If
+                        Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
+                        For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
 
-                    Next
-                Else
-                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                            If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
+                                selFilterDefinitions.Liste.Add(kvp.Key, kvp.Value)
+                            End If
+
+                        Next
+                    Else
+                        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                    End If
+
                 End If
             End If
         End If
+
 
     End Sub
 
@@ -8456,7 +11891,7 @@ Public Module awinGeneralModules
             menueOption = PTmenue.excelExport Or menueOption = PTmenue.multiprojektReport Or _
             menueOption = PTmenue.vorlageErstellen Or menueOption = PTmenue.meilensteinTrendanalyse Then
             validOption = True
-        ElseIf showRangeRight - showRangeLeft > 5 Then
+        ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
             validOption = True
         Else
             validOption = False
@@ -8476,6 +11911,12 @@ Public Module awinGeneralModules
                 ' Window Position festlegen
                 Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
                 Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+
+                If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                    chleft = (showRangeRight - 1) * boxWidth + 4
+                Else
+                    chleft = 5
+                End If
 
                 If selectedPhases.Count > 0 Then
                     chTyp = DiagrammTypen(0)
@@ -8573,7 +12014,10 @@ Public Module awinGeneralModules
 
         ElseIf menueOption = PTmenue.filterdefinieren Then
 
-            Call MsgBox("ok, Filter gespeichert")
+            'Call MsgBox("ok, Filter gespeichert")
+
+        ElseIf menueOption = PTmenue.sessionFilterDefinieren Then
+            ' keine Message ausgeben ...
 
         ElseIf menueOption = PTmenue.excelExport Or menueOption = PTmenue.vorlageErstellen Then
 
@@ -8653,7 +12097,7 @@ Public Module awinGeneralModules
 
                     Try
 
-                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        hproj = ShowProjekte.getProject(singleShp.Name, True)
                         nameList = hproj.getMilestones
                         listOfItems = hproj.getElemIdsOf(selectedMilestones, True)
 
@@ -8883,6 +12327,7 @@ Public Module awinGeneralModules
         Dim lastFilter As clsFilter
 
         If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.sessionFilterDefinieren Or _
             menuOption = PTmenue.filterAuswahl Then
 
             If calledFromHry Then
@@ -8909,18 +12354,26 @@ Public Module awinGeneralModules
 
             filterDefinitions.storeFilter(fName, lastFilter)
 
-            ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If Not noDB Then
 
-            ' Datenbank ist gestartet
-            If request.pingMongoDb() Then
 
-                Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
-                Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, False)
-            Else
-                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                ' Filter mit Namen "fName" in DB speichern
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                ' Datenbank ist gestartet
+                If request.pingMongoDb() Then
+
+                    Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
+                    Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, False)
+                    If returnvalue = False Then
+                        Call MsgBox("Fehler bei Schreiben Filter: " & fName)
+                    End If
+                Else
+                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                End If
+
+
             End If
-
 
         Else        ' nicht menuOption = PTmenue.filterdefinieren
 
@@ -8945,21 +12398,2403 @@ Public Module awinGeneralModules
             End If
 
             selFilterDefinitions.storeFilter(fName, lastFilter)
-            ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            ' Datenbank ist gestartet
-            If request.pingMongoDb() Then
+            If Not noDB Then
 
-                Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
-                Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, True)
-            Else
-                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                ' Filter mit Namen "fName" in DB speichern
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                ' Datenbank ist gestartet
+                If request.pingMongoDb() Then
+
+                    Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
+                    Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, True)
+                Else
+                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                End If
+
             End If
 
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
+    ''' </summary>
+    ''' <param name="pName">
+    ''' gibt an , ob es der erste Aufruf war
+    ''' wenn ja, kommt erst der Bestätigungs-Dialog 
+    ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
+    ''' </param>
+    ''' <remarks></remarks>
+    Public Sub awinDeleteProjectInSession(ByVal pName As String,
+                                          Optional ByVal considerDependencies As Boolean = False, _
+                                          Optional ByVal upDateDiagrams As Boolean = False, _
+                                          Optional ByVal vName As String = Nothing)
+
+
+        Dim hproj As clsProjekt
+
+        Dim tmpCollection As New Collection
+
+        Dim formerEOU As Boolean = enableOnUpdate
+        enableOnUpdate = False
+
+
+        If ShowProjekte.contains(pName) Then
+
+            ' Aktuelle Konstellation ändert sich dadurch
+            If Not currentConstellation.EndsWith("(*)") Then
+                currentConstellation = currentConstellation & "(*)"
+            End If
+
+            hproj = ShowProjekte.getProject(pName)
+            If IsNothing(vName) Or vName = hproj.variantName Then
+                Call putProjectInNoShow(hproj.name, considerDependencies, upDateDiagrams)
+            End If
+
+
+        End If
+
+        ' jetzt müssen alle oder die ausgewählte Variante aus AlleProjekte gelöscht werden 
+        If IsNothing(vName) Then
+            AlleProjekte.RemoveAllVariantsOf(pName)
+        Else
+            Dim key As String = calcProjektKey(pName, vName)
+            If AlleProjekte.Containskey(key) Then
+                AlleProjekte.Remove(key)
+            End If
+        End If
+
+        enableOnUpdate = formerEOU
+
+    End Sub
+
+
+    ''' <summary>
+    ''' nimmt das angegebene Projekt aus ShowProjekte heraus
+    ''' löscht das Projekt auf der Plan-Tafel und schicbt die restlichen Projekte weiter nach oben 
+    ''' wenn considerDependencies=true: dann werden alle abhängigen Projekte, die ebenfalls im ShowProjekte sind, auch rausgenommen
+    ''' wenn upDateDiagrams=true: alle Diagramme werde neu gezeichnet  
+    ''' 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="considerDependencies"></param>
+    ''' <param name="upDateDiagrams"></param>
+    ''' <remarks></remarks>
+    Public Sub putProjectInNoShow(ByVal pName As String, ByVal considerDependencies As Boolean, ByVal upDateDiagrams As Boolean)
+
+        Dim pZeile As Integer
+        Dim tmpCollection As New Collection
+        Dim anzahlZeilen As Integer = 1
+
+        If ShowProjekte.contains(pName) Then
+
+            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+            pZeile = calcYCoordToZeile(projectboardShapes.getCoord(pName)(0))
+
+            If hproj.extendedView Then
+                anzahlZeilen = _
+                    hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
+            End If
+            
+            'pZeile = ShowProjekte.getPTZeile(selectedProjectName)
+            'Call MsgBox("Zeile: " & pZeile.ToString)
+
+            Call clearProjektinPlantafel(pName)
+
+            ShowProjekte.Remove(pName)
+
+            Call moveShapesUp(pZeile + 1, anzahlZeilen, True)
+
+        End If
+
+        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+        If considerDependencies Then
+            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+            Dim toDoListe As Collection = allDependencies.activeListe(pName, PTdpndncyType.inhalt)
+            If toDoListe.Count > 0 Then
+                For Each dprojectName As String In toDoListe
+                    Call putProjectInNoShow(dprojectName, considerDependencies, False)
+                Next
+
+            End If
+        Else
+            ' nichts tun 
+        End If
+
+        If upDateDiagrams Then
+            ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(2)
+        End If
+        
+
+    End Sub
+
+    ''' <summary>
+    ''' bringt die angegebene Projekt-Variante ins Show ... 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vNAme"></param>
+    ''' <param name="considerDependencies"></param>
+    ''' <param name="upDateDiagrams"></param>
+    ''' <remarks></remarks>
+    Public Sub putProjectInShow(ByVal pName As String, ByVal vName As String, _
+                                    ByVal considerDependencies As Boolean, _
+                                    ByVal upDateDiagrams As Boolean, _
+                                    Optional ByVal parentChoice As Boolean = False)
+
+        Dim key As String = calcProjektKey(pName, vName)
+        Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+
+
+        If IsNothing(hproj) And parentChoice Then
+            Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+            vName = CStr(variantNames.Item(1))
+            key = calcProjektKey(pName, vName)
+            hproj = AlleProjekte.getProject(key)
+        End If
+
+        ' wenn immer noch Nothing, nichts tun ... 
+        If IsNothing(hproj) Then
+            Exit Sub
+        End If
+
+        Dim anzahlZeilen As Integer = 1
+
+        If Not ShowProjekte.contains(pName) Then
+            ShowProjekte.Add(hproj)
+            Dim pZeile As Integer = ShowProjekte.getPTZeile(pName)
+            Dim tmpCollection As New Collection
+
+            If hproj.extendedView Then
+                anzahlZeilen = _
+                    hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
+            End If
+
+            If pZeile > 0 Then
+                Call moveShapesDown(tmpCollection, pZeile, anzahlZeilen, 0)
+                Call ZeichneProjektinPlanTafel(tmpCollection, pName, pZeile, tmpCollection, tmpCollection, True)
+            End If
+        End If
+
+        ' jetzt muss das Projekt neu gezeichnet werden ; 
+        ' dazu muss die Einfügestelle bestimmt werden, dann alle anderen Shapes nach unten verschoben werden 
+        ' hier muss die Zeile über Showprojekte bestimmt werden, einfach nach der Sortier-Reihenfolge 
+        ' das kann später dann noch angepasst werden 
+
+        'Dim pZeile2 As Integer = node.Index
+        'Call MsgBox("Zeile: " & pZeile.ToString)
+
+
+
+        ' jetzt muss noch geprüft werden , ob considerDependencies true ist 
+        If considerDependencies Then
+            ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
+            Dim toDoListe As Collection = allDependencies.passiveListe(pName, PTdpndncyType.inhalt)
+            If toDoListe.Count > 0 Then
+                For Each mprojectName As String In toDoListe
+                    Call putProjectInShow(mprojectName, "", considerDependencies, False, True)
+                Next
+
+            End If
+        Else
+            ' nichts tun 
+        End If
+
+        If upDateDiagrams Then
+            ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(2)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' verallgemeinerte Import Routine, ähnlich wie BMWimport
+    ''' wenn treatAsPhases = true, werden die einzelnen Pläne als Sammelvorgänge innerhalb ein und desselben Projektes aufgefasst  
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <param name="isVorlage"></param>
+    ''' <remarks></remarks>
+    Public Sub rplanExcelImport(ByRef myCollection As Collection, ByVal isVorlage As Boolean, ByVal dateiname As String)
+
+        Dim phaseHierarhy(9) As String
+        Dim currentHierarchy As Integer = 0
+        Dim zeile As Integer, spalte As Integer
+        Dim pName As String = " "
+        Dim phaseName As String = " "
+        Dim currentDateiName As String
+        Dim isMilestone As Boolean
+
+        Dim lastRow As Integer
+
+        Dim hproj As clsProjekt
+        Dim vproj As clsProjektvorlage
+        Dim vglName As String = ""
+        Dim vglProj As New clsProjekt
+        Dim geleseneProjekte As Integer
+        Dim projektFarbe As Object
+        Dim anfang As Integer, ende As Integer
+        Dim cphase As clsPhase
+        Dim cmilestone As clsMeilenstein
+        Dim cbewertung As clsBewertung
+        Dim ix As Integer
+        Dim tmpStr(20) As String
+        Dim completeName As String
+        Dim nameSopTyp As String = " "
+        Dim nameProduktlinie As String = ""
+        Dim defaultBU As String = ""
+
+        Dim startDate As Date, endDate As Date
+        Dim startoffset As Long, duration As Long
+        Dim vorlagenName As String = ""
+        Dim variantenName As String = ""
+
+        Dim itemName As String = ""
+        Dim zufall As New Random(10)
+        Dim itemDauer As Integer
+        Dim colProtocol As Integer
+
+        Dim schriftGroesse As Integer
+        Dim schriftfarbe As Long
+
+        ' Kennungen für die BMW Projekte
+        Dim typKennung As String = ""
+        Dim anlaufKennung As String = ""
+        Dim anzProcessedElements As Integer = 0
+        Dim anzSubstituted As Integer = 0
+        Dim anzIgnored As Integer = 0
+        Dim anzCorrect As Integer = 0
+
+        ' 
+        Dim logMessage As String = ""
+
+        ' ur: 1.12.2015: wird nun Public awinSettings.fullProtokoll As Boolean = True  
+        ' und damit global definiert, da auch in RXFImport benötigt.
+        ' Dim fullProtocol As Boolean = True
+
+
+        Dim milestoneIX As Integer = MilestoneDefinitions.Count + 1
+        Dim phaseIX As Integer = PhaseDefinitions.Count + 1
+        ' wird benötigt, um bei Phasen, die als doppelt erkannt wurden alle darunter liegenden Elemente auch zu ignorieren 
+        Dim lastDuplicateIndent As Integer = 1000000
+
+        ' bestimmen, des eventuell benötigten VariantenName. Dieser wird aus dem Dateinamen erstellt
+        Dim tmpStrNew() As String
+        tmpStrNew = Split(dateiname, "\", -1)
+        variantenName = tmpStrNew(tmpStrNew.Length - 1)
+
+
+        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
+
+        Dim colName As Integer
+        Dim colAnfang As Integer
+        Dim colEnde As Integer
+        Dim colDauer As Integer
+        Dim colProduktlinie As Integer
+        Dim colAbbrev As Integer = -1
+        Dim colVorgangsKlasse As Integer = -1
+        Dim firstZeile As Excel.Range
+        Dim protocolRange As Excel.Range
+
+
+        Dim suchstr(7) As String
+        suchstr(ptRplanNamen.Name) = "Name"
+        suchstr(ptRplanNamen.Anfang) = "Anfang"
+        suchstr(ptRplanNamen.Ende) = "Ende"
+        suchstr(ptRplanNamen.Beschreibung) = "Beschreibung"
+        suchstr(ptRplanNamen.Vorgangsklasse) = "Vorgangsklasse"
+        suchstr(ptRplanNamen.Produktlinie) = "Spalte A"
+        suchstr(ptRplanNamen.Protocol) = "Übernommen als"
+        suchstr(ptRplanNamen.Dauer) = "Dauer"
+
+
+        zeile = 2
+        spalte = 5
+        geleseneProjekte = 0
+
+        ' wie lautet der aktuelle Dateiname ? 
+        currentDateiName = CType(appInstance.ActiveWorkbook, Excel.Workbook).Name
+
+        ' wie lautet ggf der Default Produktlinien Name ? 
+        Dim i As Integer
+        Dim found As Boolean = False
+        Dim tmpName As String
+        i = 1
+        While i <= businessUnitDefinitions.Count And Not found
+
+            tmpName = businessUnitDefinitions.ElementAt(i - 1).Value.name
+            If currentDateiName.Contains(tmpName) Then
+                defaultBU = tmpName
+                found = True
+            Else
+                i = i + 1
+            End If
+
+        End While
+
+
+
+        Dim aktivesSheet As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet, _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        With aktivesSheet
+            firstZeile = CType(.Rows(1), Excel.Range)
+        End With
+
+
+
+        ' diese Daten müssen vorhanden sein - andernfalls Abbruch 
+        Try
+            colName = firstZeile.Find(What:=suchstr(ptRplanNamen.Name), LookAt:=XlLookAt.xlWhole).Column
+            colAnfang = firstZeile.Find(What:=suchstr(ptRplanNamen.Anfang), LookAt:=XlLookAt.xlWhole).Column
+            colEnde = firstZeile.Find(What:=suchstr(ptRplanNamen.Ende), LookAt:=XlLookAt.xlWhole).Column
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
+        End Try
+
+        Try
+            colDauer = firstZeile.Find(What:=suchstr(ptRplanNamen.Dauer), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colDauer = -1
+        End Try
+
+
+        Try
+            colProduktlinie = firstZeile.Find(What:=suchstr(ptRplanNamen.Produktlinie), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colProduktlinie = -1
+        End Try
+
+        ' diese Daten können vorhanden sein - wenn nicht, weitermachen ...  
+        Try
+            colAbbrev = firstZeile.Find(What:=suchstr(ptRplanNamen.Beschreibung), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptRplanNamen.Vorgangsklasse), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+
+        With aktivesSheet
+
+            lastRow = System.Math.Max(CType(.Cells(40000, colName), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row, _
+                                          CType(.Cells(40000, colAnfang), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row)
+        End With
+
+
+
+
+        ' Hier wird die Stelle und die Informationen für das Visbo Protocoll ermittelt und gesetzt 
+        Dim protocolCellName As String = "VISBO_Protocol"
+        Dim pCell As Excel.Range
+
+        With aktivesSheet
+            Try
+                colProtocol = .Range(protocolCellName).Column
+                protocolRange = CType(.Range(.Cells(1, colProtocol - 3), .Cells(lastRow + 10, colProtocol + 200)), Excel.Range)
+                protocolRange.Clear()
+                protocolRange.Interior.Color = RGB(255, 255, 255)
+                protocolRange.ClearFormats()
+
+            Catch ex As Exception
+                Try
+                    colProtocol = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column + 4
+                Catch ex1 As Exception
+                    colProtocol = 20
+                End Try
+                pCell = .Range(.Cells(1, colProtocol), .Cells(1, colProtocol))
+                appInstance.ActiveWorkbook.Names.Add(Name:=protocolCellName, RefersToR1C1:=pCell)
+
+                ' dann müssen auch die Spaltenbreiten gesetzt werden 
+                Dim tmpRange As Excel.Range
+                With aktivesSheet
+
+                    For i = -3 To 9
+                        tmpRange = CType(aktivesSheet.Columns(colProtocol + i), Excel.Range)
+                        tmpRange.ColumnWidth = 40
+                    Next
+
+
+                End With
+
+            End Try
+
+
+        End With
+
+
+        ' Die Überschriften für das Protokoll werden alle wieder gesetzt 
+        With aktivesSheet
+
+
+            If awinSettings.fullProtocol Then
+
+                CType(.Cells(1, colProtocol), Excel.Range).Value = "Projekt"
+                CType(.Cells(1, colProtocol + 1), Excel.Range).Value = "Hierarchie"
+                CType(.Cells(1, colProtocol + 2), Excel.Range).Value = "Plan-Element"
+                CType(.Cells(1, colProtocol + 3), Excel.Range).Value = "Klasse"
+                CType(.Cells(1, colProtocol + 4), Excel.Range).Value = "Abkürzung"
+                CType(.Cells(1, colProtocol + 5), Excel.Range).Value = "Quelle"
+                CType(.Cells(1, colProtocol + 8), Excel.Range).Value = "PT Hierarchie"
+                CType(.Cells(1, colProtocol + 9), Excel.Range).Value = "PT Klasse"
+            End If
+
+            ' wird immer geschrieben 
+            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptRplanNamen.Protocol)
+            CType(.Cells(1, colProtocol + 7), Excel.Range).Value = "Grund"
+
+        End With
+
+        Try
+
+            With aktivesSheet
+
+                Try
+                    projektFarbe = CType(aktivesSheet.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color
+                    ' das Folgende wird nur für die Projekt-Vorlagen benötigt (isVorlage = true) 
+                    schriftfarbe = CLng(CType(aktivesSheet.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Font.Color)
+                    schriftGroesse = CInt(CType(aktivesSheet.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Font.Size)
+
+                Catch ex As Exception
+                    projektFarbe = CType(aktivesSheet.Cells(zeile, 1), Excel.Range).Interior.ColorIndex
+                End Try
+
+
+                While zeile <= lastRow
+
+                    ' wenn es mit einem neuen Projekt beginnt, muss der lastDuplicateIndent zurückgesetzt sein 
+                    lastDuplicateIndent = 1000000
+
+                    ix = zeile + 1
+
+                    Dim zellenFarbe As Long = CLng(CType(.Cells(ix, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color)
+                    Do While zellenFarbe <> CLng(projektFarbe) And (ix <= lastRow)
+                        ix = ix + 1
+                        zellenFarbe = CLng(CType(.Cells(ix, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color)
+                    Loop
+
+                    anfang = zeile + 1
+                    ende = ix - 1
+
+                    ' hier wird Name, Typ, SOP, Business Unit, vname, Start-Datum, Dauer der Phase(1) ausgelesen  
+
+                    ' ur: 24.06.2016:testweise auskomentiert
+                    ' '' ''endDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colEnde).value)
+                    ' '' ''startDate = CDate(.Cells(RowIndex:=zeile, ColumnIndex:=colAnfang).value)
+
+                    ' '' ''completeName = CStr(.Cells(RowIndex:=zeile, ColumnIndex:=colName).value)
+
+                    startDate = CDate(CType(.Cells(zeile, colAnfang), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    endDate = CDate(CType(.Cells(zeile, colEnde), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    completeName = CStr(CType(.Cells(zeile, colName), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+
+                    Dim tmpvalue As String
+                    Dim tmp2Str() As String
+
+                    If colDauer > 0 Then
+
+                        Try
+                            tmpvalue = CStr(CType(aktivesSheet.Cells(zeile, colDauer), Excel.Range).Value).Trim
+                            tmp2Str = tmpvalue.Trim.Split(New Char() {CChar(" ")}, 5)
+                            itemDauer = CInt(tmp2Str(0))
+                        Catch ex As Exception
+                            itemDauer = -1
+                        End Try
+                    End If
+
+
+                    duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
+                    If duration < 0 Then
+                        startDate = endDate
+                        duration = -1 * duration
+                        endDate = startDate.AddDays(duration)
+                    End If
+
+                    tmpStr = completeName.Trim.Split(New Char() {CChar("["), CChar("]")}, 5)
+
+                    ' PT-71 Änderung 22.1.15 (tk) Der Projekt-Name soll der RPLAN Name sein 
+                    'pName = tmpStr(0).Trim
+                    ' damit alt: 
+                    ' jetzt doch wieder hereingenommen, weil sich von einem Monat auf den anderen ein und dasselbe Projekte im SOP ändert .... 
+                    Dim doADD As Boolean = False
+
+
+                    pName = tmpStr(0)
+
+
+
+                    ' prüfen, ob das Projekt überhaupt vollständig im Kalender liegt 
+                    ' wenn nein, dann nicht importieren 
+                    If DateDiff(DateInterval.Day, StartofCalendar, startDate) < 0 Then
+
+
+                        Call MsgBox("Projekt liegt vor dem Kalender-Anfang und wird deshalb nicht importiert")
+
+
+                    Else
+                        '
+                        ' jetzt wird das Projekt angelegt 
+                        '
+                        hproj = New clsProjekt
+
+
+                        Try
+
+                            hproj.name = pName
+                            hproj.startDate = startDate
+                            ' Projekte sollten erstmal nicht verschoben werden können
+                            ' dazu muss eine Variante erzeugt werden , die kann dann verschoben werden 
+                            hproj.Status = ProjektStatus(1)
+
+                            If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
+                                hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
+                                hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
+                            Else
+                                hproj.earliestStartDate = startDate
+                                hproj.latestStartDate = startDate
+                            End If
+
+                            hproj.StrategicFit = zufall.NextDouble * 10
+                            hproj.Risiko = zufall.NextDouble * 10
+                            hproj.volume = zufall.NextDouble * 1000000
+                            hproj.complexity = zufall.NextDouble
+                            hproj.businessUnit = defaultBU
+                            hproj.description = ""
+
+                            hproj.Erloes = 0.0
+
+
+                        Catch ex As Exception
+                            Throw New Exception("in erstelle Import RPLAN Excel Projekte: " & vbLf & ex.Message)
+                        End Try
+
+                        ' jetzt wird die Import Hierarchie angelegt 
+                        Dim pHierarchy As New clsImportFileHierarchy
+                        Dim origHierarchy As New clsImportFileHierarchy
+
+                        ' jetzt wird die Projekt-Hierarchie neu angelegt 
+                        ' die erste Phase, die sogenannte Root Phase hat immer diesen Namen: 
+
+                        ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
+                        cphase = New clsPhase(parent:=hproj)
+                        cphase.nameID = rootPhaseName
+                        startoffset = 0
+                        duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
+                        cphase.changeStartandDauer(startoffset, duration)
+
+                        hproj.AddPhase(cphase)
+
+                        Try
+                            pHierarchy.add(cphase, rootPhaseName, 0)
+                            origHierarchy.add(cphase, rootPhaseName, 0)
+                        Catch ex As Exception
+
+                        End Try
+
+                        Dim itemStartDate As Date
+                        Dim itemEndDate As Date
+                        Dim ok As Boolean = True
+
+                        Dim curZeile As Integer
+                        Dim txtVorgangsKlasse As String
+                        Dim origVorgangsKlasse As String
+                        Dim txtAbbrev As String
+                        ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
+                        Dim origItem As String = ""
+
+                        ' 
+                        ' Schleife, um alle Elemente des Projektes auszulesen
+                        ' hier werden jetzt die einzelnen Zeilen = Phasen oder Meilensteine ausgelesen 
+                        For curZeile = anfang To ende
+
+                            origVorgangsKlasse = ""
+                            txtVorgangsKlasse = ""
+                            txtAbbrev = ""
+                            logMessage = ""
+
+                            Dim indentLevel As Integer
+
+                            Try
+
+                                Dim tmpName2 As String = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
+
+                                tmpStr = tmpName2.Split(New Char() {CChar("["), CChar("]")}, 5)
+                                origItem = tmpStr(0)
+
+                                If origItem.Trim.Length = 0 Then
+
+                                    'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                    '            "leerer String wird ignoriert .."
+                                    logMessage = "leerer String wird ignoriert .."
+                                    ok = False
+
+                                Else
+
+                                    ' bestimme den Indent-Level 
+                                    indentLevel = pHierarchy.getLevel(origItem)
+                                    ' hier checken, ob indentlevel > lastduplicateIndent; 
+                                    ' wenn ja, dann protokollieren, Next for und lastduplicateIndent wieder auf hohen Wert setzen
+
+                                    If indentLevel > lastDuplicateIndent Then
+                                        ' Skip , weil es sich dann um Elemente handelt, deren Parent Phase als Duplikat ignoriert wurde 
+                                        ' Protokollieren ...
+
+                                        'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                        '            "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
+
+                                        logMessage = "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
+                                        ok = False
+
+                                    Else
+                                        lastDuplicateIndent = 1000000
+
+                                        itemName = origItem.Trim
+
+                                        anzProcessedElements = anzProcessedElements + 1
+
+
+                                        If awinSettings.fullProtocol Then
+
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 2), Excel.Range).Value = origItem.Trim
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
+                                        End If
+
+
+
+                                        ' Änderung 26.1.15 Ignorieren 
+
+                                        itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                        itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+
+                                        If DateDiff(DateInterval.Day, itemStartDate, itemEndDate) = 0 Then
+                                            isMilestone = True
+                                        Else
+                                            isMilestone = False
+                                        End If
+
+                                        If itemName = "Projektphasen" Then
+                                            Try
+                                                Dim tmpBU As String
+                                                If colProduktlinie > 0 Then
+                                                    tmpBU = CStr(CType(.Cells(curZeile, colProduktlinie), Excel.Range).Value).Trim
+                                                Else
+                                                    tmpBU = ""
+                                                End If
+
+
+                                                ' gibt es die Business Unit ? 
+                                                found = False
+                                                Dim bix As Integer = 1
+
+                                                If tmpBU.Length > 0 Then
+                                                    While bix <= businessUnitDefinitions.Count And Not found
+                                                        If businessUnitDefinitions.ElementAt(bix - 1).Value.name = tmpBU Then
+
+                                                            found = True
+                                                            hproj.businessUnit = tmpBU
+
+                                                            If awinSettings.fullProtocol Then
+
+                                                                CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = tmpBU
+                                                            End If
+
+
+                                                        Else
+                                                            bix = bix + 1
+                                                        End If
+                                                    End While
+                                                End If
+
+
+                                                If Not found And awinSettings.fullProtocol Then
+
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
+
+                                                End If
+
+                                            Catch ex1 As Exception
+
+                                            End Try
+                                        End If
+
+                                        ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
+                                        If isMilestone Then
+                                            If MilestoneDefinitions.Contains(itemName) Then
+                                                ok = True
+                                            ElseIf milestoneMappings.tobeIgnored(itemName) Then
+                                                'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                                '                "nicht zugelassen (lt. Wörterbuch ignorieren)"
+
+                                                logMessage = "nicht zugelassen (lt. Wörterbuch ignorieren)"
+                                                ok = False
+                                                lastDuplicateIndent = indentLevel
+                                            Else
+                                                ok = True
+                                            End If
+
+
+                                        Else
+
+                                            If PhaseDefinitions.Contains(itemName) Then
+                                                ok = True
+                                            ElseIf phaseMappings.tobeIgnored(itemName) Then
+                                                'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                                '                "nicht zugelassen (lt. Wörterbuch ignorieren)"
+                                                logMessage = "nicht zugelassen (lt. Wörterbuch ignorieren)"
+                                                lastDuplicateIndent = indentLevel
+                                                ok = False
+                                            Else
+                                                ok = True
+
+                                            End If
+
+                                        End If
+
+                                    End If
+
+                                End If
+
+                            Catch ex As Exception
+                                itemName = ""
+                                ok = False
+                            End Try
+
+
+                            If ok Then
+
+
+                                startoffset = DateDiff(DateInterval.Day, hproj.startDate, itemStartDate)
+                                duration = DateDiff(DateInterval.Day, itemStartDate, itemEndDate) + 1
+
+
+                                ' jetzt werden vorgangsklasse und Abkürzung rausgelesen 
+                                If colVorgangsKlasse > 0 Then
+                                    Try
+
+                                        origVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
+                                        If duration > 1 Then
+                                            txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, False)
+                                            'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                            '        "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                        Else
+                                            txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, True)
+                                            'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                            '        "auf folgende Meilenstein Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                        End If
+
+
+
+
+                                    Catch ex As Exception
+
+                                        'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                        '            "Fehler bei Abbildung auf Darstellungsklasse ... " & txtVorgangsKlasse.Trim
+
+                                    End Try
+                                End If
+
+
+                                ' jetzt wird die Abkürzung rausgelesen 
+                                If colAbbrev > 0 Then
+                                    Try
+
+                                        txtAbbrev = CStr((CType(.Cells(curZeile, colAbbrev), Excel.Range).Value)).Trim
+
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
+
+                                '
+                                ' jetzt muss protokolliert werden 
+                                Dim oLevel As Integer
+                                oLevel = origHierarchy.getLevel(origItem)
+                                Dim oBreadCrumb As String = origHierarchy.getFootPrint(oLevel)
+
+
+                                If awinSettings.fullProtocol Then
+
+                                    ' Original Footprint
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 1), Excel.Range).Value = oBreadCrumb
+                                    ' Textvorgangsklasse
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 3), Excel.Range).Value = origVorgangsKlasse
+                                    ' Abkürzung
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 4), Excel.Range).Value = txtAbbrev
+                                End If
+
+
+                                ' jetzt muss ggf die Phase in die Orig Hierarchie aufgenommen werden 
+                                If Not isMilestone Then
+
+                                    Dim ophase As clsPhase
+                                    ophase = New clsPhase(parent:=hproj)
+                                    ophase.nameID = calcHryElemKey(origItem.Trim, False)
+                                    'ophase.changeStartandDauer(startoffset, duration)
+
+                                    Try
+                                        origHierarchy.add(ophase, "dummy", oLevel)
+                                    Catch ex As Exception
+
+                                    End Try
+
+
+                                End If
+
+                                Dim stdName As String
+                                Dim parentElemName As String
+                                Dim parentNodeID As String
+                                Dim elemID As String
+
+                                ' If duration > 1 Or itemDauer > 0 Then
+                                If duration > 1 Then
+                                    ' es handelt sich um eine Phase 
+
+
+                                    parentElemName = pHierarchy.getPhaseBeforeLevel(indentLevel).name
+                                    ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
+                                    parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
+
+                                    ' Plausibilitäts-Check: die beiden müssen identisch sein !!
+                                    ' tk Debug: 27.11.15
+                                    'If elemNameOfElemID(parentNodeID) <> parentElemName Then
+                                    '    Call MsgBox("nicht konsistent in bmwImportProjekteITO15, zeile 663")
+                                    'End If
+
+
+                                    ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
+                                    Try
+
+                                        If Not PhaseDefinitions.Contains(itemName) Then
+                                            stdName = phaseMappings.mapToStdName(parentElemName, itemName)
+                                        Else
+                                            stdName = itemName
+                                        End If
+
+                                    Catch ex As Exception
+                                        stdName = itemName
+                                    End Try
+
+
+                                    Dim ok1 As Boolean = True
+
+
+                                    'Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
+                                    Dim parentPhase As clsPhase = pHierarchy.getPhaseBeforeLevel(indentLevel)
+                                    Dim parentphaseName As String = ""
+
+                                    If Not IsNothing(parentPhase) Then
+                                        parentphaseName = parentPhase.name
+                                    End If
+
+
+                                    ' sollen Duplikate eliminiert werden ?
+                                    If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(stdName, False)) Then
+                                        ' nur dann kann es Duplikate geben 
+                                        If hproj.isCloneToParent(stdName, parentPhase.nameID, itemStartDate, itemEndDate, 0.97) Then
+                                            ok1 = False
+                                            logMessage = stdName & " ist Duplikat zu Parent " & parentPhase.name & " und wird ignoriert "
+
+                                        Else
+                                            Dim duplicateSiblingID As String = hproj.getDuplicatePhaseSiblingID(stdName, parentPhase.nameID, _
+                                                                                                                 itemStartDate, itemEndDate, 0.97)
+
+                                            If duplicateSiblingID = "" Then
+                                                ok1 = True
+                                            Else
+                                                ok1 = False
+                                                logMessage = stdName & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                                             " und wird ignoriert "
+                                            End If
+                                        End If
+
+
+
+                                    End If
+
+
+
+                                    ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
+                                    Dim ok2 As Boolean = True
+                                    If Not PhaseDefinitions.Contains(stdName) And ok1 Then
+
+                                        Dim hphaseDef As clsPhasenDefinition
+                                        hphaseDef = New clsPhasenDefinition
+
+                                        hphaseDef.darstellungsKlasse = txtVorgangsKlasse
+                                        hphaseDef.shortName = txtAbbrev
+                                        hphaseDef.name = stdName
+                                        hphaseDef.UID = phaseIX
+                                        phaseIX = phaseIX + 1
+
+
+                                        If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
+                                            ' in die Phase-Definitions aufnehmen 
+                                            Try
+                                                PhaseDefinitions.Add(hphaseDef)
+                                            Catch ex As Exception
+                                            End Try
+                                        Else
+                                            ' in Abhängigkeit vom Setting die Elemente aufnehmen oder nicht 
+                                            Try
+                                                If awinSettings.importUnknownNames Then
+                                                    ok2 = True
+                                                Else
+                                                    ok2 = False
+                                                    logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
+                                                End If
+                                                missingPhaseDefinitions.Add(hphaseDef)
+                                            Catch ex As Exception
+                                            End Try
+
+
+                                        End If
+
+                                    End If
+
+                                    ' hier muss noch der letzte Check rein 
+
+                                    If ok1 And ok2 Then
+
+                                        ' hier muss jetzt überprüft werden, ob es Geschwister mit gleichen Namen gibt
+                                        ' wenn ja , wird an den stdName solange eine ldfNR Ergänzung rangemacht, bis der NAme innerhalb der 
+                                        ' Geschwistergruppe eindeutig ist
+
+                                        ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase 
+                                        If awinSettings.createUniqueSiblingNames Then
+                                            stdName = hproj.hierarchy.findUniqueGeschwisterName(parentNodeID, stdName, False)
+                                        End If
+
+                                        elemID = hproj.hierarchy.findUniqueElemKey(stdName, False)
+
+                                        ' das muss auf alle Fälle gemacht werden 
+                                        cphase = New clsPhase(parent:=hproj)
+
+                                        ' Änderung tk: jetzt muss die elemID in den Phasen Namen 
+                                        cphase.nameID = elemID
+                                        cphase.changeStartandDauer(startoffset, duration)
+
+                                        ' der Aufbau der Hierarchie erfolgt in addphase
+                                        hproj.AddPhase(cphase, origName:=origItem.Trim, _
+                                                       parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
+
+                                        ' wird übernommen als 
+                                        CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName
+
+                                        Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
+
+
+                                        If awinSettings.fullProtocol Then
+
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                        End If
+                                        ' neuer Breadcrumb 
+                                        'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+
+                                        If stdName.Trim <> origItem.Trim Then
+                                            ' es hat eine Ersetzung stattgefunden 
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            anzSubstituted = anzSubstituted + 1
+                                        ElseIf PhaseDefinitions.Contains(stdName.Trim) Then
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGruen
+                                            anzCorrect = anzCorrect + 1
+                                        Else
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                        End If
+
+                                        ' nur wenn es aufgenommen ist, sollte es in die Hierarchie aufgenommen werden 
+                                        Try
+                                            pHierarchy.add(cphase, elemID, indentLevel)
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    Else
+
+                                        CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                        CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = logMessage
+                                        lastDuplicateIndent = indentLevel
+
+                                        anzIgnored = anzIgnored + 1
+
+                                    End If
+
+
+                                ElseIf duration = 1 Then
+                                    ' hier kommt die Behandlung eines Meilensteins
+
+
+                                    Try
+
+                                        Dim bewertungsAmpel As Integer = 0
+                                        Dim explanation As String = ""
+
+                                        ' hole die Parentphase
+                                        cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
+                                        cmilestone = New clsMeilenstein(parent:=cphase)
+                                        cbewertung = New clsBewertung
+
+
+                                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                        With cbewertung
+                                            '.bewerterName = resultVerantwortlich
+                                            .colorIndex = bewertungsAmpel
+                                            .datum = Date.Now
+                                            .description = explanation
+                                        End With
+
+
+                                        parentElemName = cphase.name
+                                        ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
+
+                                        Try
+                                            If Not MilestoneDefinitions.Contains(itemName) Then
+                                                stdName = milestoneMappings.mapToStdName(parentElemName, itemName)
+                                            Else
+                                                stdName = itemName
+                                            End If
+
+                                        Catch ex As Exception
+                                            stdName = itemName
+                                        End Try
+
+                                        Dim ok1 As Boolean = True
+
+                                        If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(stdName, True)) Then
+                                            ' nur dann kann es Duplikate geben 
+                                            Dim duplicateSiblingID As String = hproj.getDuplicateMsSiblingID(stdName, cphase.nameID, _
+                                                                                                                 itemStartDate, 0)
+
+                                            If duplicateSiblingID = "" Then
+                                                ok1 = True
+                                            Else
+                                                ok1 = False
+                                                logMessage = stdName & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                                             " und wird ignoriert "
+                                            End If
+
+                                        End If
+
+
+                                        ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist
+                                        Dim ok2 As Boolean = True
+                                        If Not MilestoneDefinitions.Contains(stdName) And ok1 Then
+
+                                            Dim hMilestoneDef As New clsMeilensteinDefinition
+
+                                            With hMilestoneDef
+                                                .name = stdName
+                                                .belongsTo = parentElemName
+                                                .shortName = txtAbbrev
+                                                .darstellungsKlasse = txtVorgangsKlasse
+                                                .UID = milestoneIX
+                                            End With
+
+                                            milestoneIX = milestoneIX + 1
+
+                                            If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
+                                                ' in die Milestone-Definitions aufnehmen 
+                                                Try
+                                                    MilestoneDefinitions.Add(hMilestoneDef)
+                                                Catch ex As Exception
+                                                End Try
+
+                                            Else
+
+                                                logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
+
+                                                ' in die Missing Milestone-Definitions aufnehmen 
+                                                Try
+                                                    ' das Element aufnehmen, in Abhängigkeit vom Setting 
+                                                    If awinSettings.importUnknownNames Then
+                                                        ok2 = True
+                                                    Else
+                                                        ok2 = False
+                                                    End If
+
+                                                    missingMilestoneDefinitions.Add(hMilestoneDef)
+                                                Catch ex As Exception
+                                                End Try
+                                            End If
+
+
+                                        End If
+
+                                        If ok1 And ok2 Then
+
+
+                                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilenstein und Phase 
+                                            If awinSettings.createUniqueSiblingNames Then
+                                                stdName = hproj.hierarchy.findUniqueGeschwisterName(cphase.nameID, stdName, True)
+                                            End If
+
+                                            elemID = hproj.hierarchy.findUniqueElemKey(stdName, True)
+
+
+                                            With cmilestone
+                                                .nameID = elemID
+                                                .setDate = itemEndDate
+                                                If Not cbewertung Is Nothing Then
+                                                    .addBewertung(cbewertung)
+                                                End If
+                                            End With
+
+                                            If IsNothing(cphase.getMilestone(cmilestone.nameID)) Then
+
+                                                With cphase
+                                                    .addMilestone(cmilestone, origName:=origItem.Trim)
+                                                End With
+
+                                                ' Protokollieren
+                                                CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName.Trim
+
+                                                ' neuer Breadcrumb 
+                                                'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                                Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
+
+
+                                                If awinSettings.fullProtocol Then
+
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                                End If
+
+                                                If stdName.Trim <> origItem.Trim Then
+                                                    ' es hat eine Ersetzung stattgefunden 
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                    anzSubstituted = anzSubstituted + 1
+                                                ElseIf MilestoneDefinitions.Contains(stdName.Trim) Then
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGruen
+                                                    anzCorrect = anzCorrect + 1
+                                                Else
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGruen
+
+                                                End If
+
+
+                                            Else
+
+                                                ' Meilenstein existiert in dieser Phase bereits .... 
+                                                CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                                        stdName.Trim & " existiert bereits: Datum 1: " & cphase.getMilestone(stdName).getDate.ToShortDateString & _
+                                                        "   , Datum 2: " & cmilestone.getDate.ToShortDateString
+
+                                            End If
+                                        Else
+
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = logMessage
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                            anzIgnored = anzIgnored + 1
+
+                                        End If
+
+
+                                    Catch ex As Exception
+                                        CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                                            "Fehler in Zeile " & zeile & ", Item-Name: " & itemName
+                                        CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                    End Try
+
+
+                                End If
+
+                            Else
+                                CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = logMessage
+                                CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                anzIgnored = anzIgnored + 1
+                            End If
+
+                        Next
+
+
+                        If Not isVorlage Then
+
+                            Try
+                                Dim sopDate As Date = hproj.getMilestone("SOP").getDate
+
+                                If DateDiff(DateInterval.Month, StartofCalendar, sopDate) > 0 Then
+                                    Dim sopMonth As Integer = sopDate.Month
+                                    If sopMonth >= 3 And sopMonth <= 6 Then
+                                        anlaufKennung = "03"
+                                    ElseIf sopMonth >= 7 And sopMonth <= 10 Then
+                                        anlaufKennung = "07"
+                                    Else
+                                        anlaufKennung = "11"
+                                    End If
+                                Else
+                                    anlaufKennung = "?"
+                                End If
+
+                            Catch ex As Exception
+                                anlaufKennung = "?"
+                            End Try
+
+                            ' jetzt wird die Vorlagen Kennung bestimmt 
+                            Dim tstphase As clsPhase = Nothing
+                            Dim relNr As String
+                            tstphase = hproj.getPhase("Systemgestaltung")
+
+                            If IsNothing(tstphase) Then
+                                tstphase = hproj.getPhase("I500")
+                                If IsNothing(tstphase) Then
+                                    tstphase = hproj.getPhase("I300")
+                                    If IsNothing(tstphase) Then
+                                        relNr = "rel 4 "
+                                    Else
+                                        relNr = "rel 5 "
+                                    End If
+                                Else
+                                    relNr = "rel 5 "
+                                End If
+                            Else
+                                relNr = "rel 5 "
+                            End If
+
+                            vorlagenName = relNr & typKennung & "-" & anlaufKennung
+                            Try
+                                vorlagenName = vorlagenName.Trim
+                            Catch ex As Exception
+                                vorlagenName = "unknown"
+                            End Try
+
+                            If Projektvorlagen.Contains(vorlagenName) Then
+                                hproj.VorlagenName = vorlagenName
+                            Else
+                                hproj.VorlagenName = vorlagenName & "*"
+                            End If
+
+                        End If
+
+                        Try
+
+                            If isVorlage Then
+                                hproj.farbe = projektFarbe
+                                hproj.Schrift = schriftGroesse
+                                hproj.Schriftfarbe = schriftfarbe
+                            Else
+
+                                If Projektvorlagen.Contains(vorlagenName) Then
+                                    vproj = Projektvorlagen.getProject(vorlagenName)
+
+                                    hproj.farbe = vproj.farbe
+                                    hproj.Schrift = vproj.Schrift
+                                    hproj.Schriftfarbe = vproj.Schriftfarbe
+                                    hproj.earliestStart = vproj.earliestStart
+                                    hproj.latestStart = vproj.latestStart
+
+                                    'ElseIf Projektvorlagen.Contains("unknown") Then
+                                    '    vproj = Projektvorlagen.getProject("unknown")
+                                Else
+                                    'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
+                                    hproj.farbe = awinSettings.AmpelNichtBewertet
+                                    hproj.Schrift = Projektvorlagen.getProject(0).Schrift
+                                    hproj.Schriftfarbe = RGB(10, 10, 10)
+                                    hproj.earliestStart = 0
+                                    hproj.latestStart = 0
+
+                                End If
+
+
+
+
+                            End If
+
+                        Catch ex As Exception
+                            Throw New Exception(ex.Message)
+                        End Try
+
+
+                        If Not isVorlage And awinSettings.fullProtocol Then
+
+                            ' jetzt werden Projekt-Name, Business Unit und Vorlagen-Kennung weggeschreiben 
+                            CType(aktivesSheet.Cells(anfang - 1, colProtocol - 3), Excel.Range).Value = hproj.name
+                            CType(aktivesSheet.Cells(anfang - 1, colProtocol - 2), Excel.Range).Value = hproj.VorlagenName
+                            CType(aktivesSheet.Cells(anfang - 1, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
+                        End If
+
+                        ' jetzt muss das Projekt eingetragen werden 
+                        ' ####################################################################
+                        ' prüfen ob das Projekt bereits in Session oder Datenbank existiert 
+
+                        vglName = calcProjektKey(hproj.name, hproj.variantName)
+                        ' 
+                        If ImportProjekte.Containskey(vglName) Then
+
+                            ' dann existiert es bereits in der Session
+
+                            vglProj = ImportProjekte.getProject(vglName)
+                            If IsNothing(vglProj) Then
+                                ' dieser Fall kann eigentlich gar nicht auftreten ... ? 
+                                Call MsgBox("Fehler mit " & vglName)
+
+                            Else
+                                ' prüfen, ob es unterschiedlich ist; 
+                                ' wenn ja , dann wird es unter dem Varianten Namen Datei-Name angelegt
+                                ' wenn der auch schon existiert, dann Fehler udn nichts anlegen ...
+                                Dim unterschiede As Collection = hproj.listOfDifferences(vglProj, True, 0)
+
+                                If unterschiede.Count > 0 Then
+                                    '' '' '' es gibt Unterschiede, also muss eine Variante angelegt werden 
+                                    If hproj.variantName <> variantenName Then
+                                        hproj.variantName = variantenName
+                                        vglName = calcProjektKey(hproj.name, hproj.variantName)
+
+                                        ' wenn die Variante bereits in der Session existiert ..
+                                        ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                                        If AlleProjekte.Containskey(vglName) Then
+                                            AlleProjekte.Remove(vglName)
+                                        End If
+
+                                    Else
+                                        ' in diesem Fall wird die Variante über hproj neu angelegt 
+                                        AlleProjekte.Remove(vglName)
+                                    End If
+
+                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
+
+                                    Try
+                                        myCollection.Add(vglName, vglName)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Else
+                                    ' Projekt in der Form existiert bereits , keine Neu-Anlage
+                                    ' es muss sichergestellt sein, dass es angezeigt wird und die Portfolio Definition entsprechend angepasst wird 
+                                    ok = False
+                                    hproj = vglProj
+
+                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, hproj.tfZeile)
+
+                                    Try
+                                        myCollection.Add(vglName, vglName)
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
+                            End If
+
+
+                        End If
+
+
+
+                        If Not ImportProjekte.Containskey(calcProjektKey(hproj)) Then
+                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                            myCollection.Add(calcProjektKey(hproj))
+
+                        End If
+
+                        zeile = ende + 1
+
+                    End If
+
+                End While
+
+                ' jetzt wird die Statistik geschreiben ....
+                'CType(activeWSListe.Cells(1, colProtocol + 10), Excel.Range).Value = "Anzahl Insgesamt"
+                'CType(activeWSListe.Cells(2, colProtocol + 10), Excel.Range).Value = anzProcessedElements
+
+                'CType(activeWSListe.Cells(1, colProtocol + 11), Excel.Range).Value = "Original Namen"
+                'CType(activeWSListe.Cells(2, colProtocol + 11), Excel.Range).Value = anzCorrect
+
+                'CType(activeWSListe.Cells(1, colProtocol + 12), Excel.Range).Value = "Korrigierte Namen"
+                'CType(activeWSListe.Cells(2, colProtocol + 12), Excel.Range).Value = anzSubstituted
+
+                'CType(activeWSListe.Cells(1, colProtocol + 13), Excel.Range).Value = "Ignorierte Namen"
+                'CType(activeWSListe.Cells(2, colProtocol + 13), Excel.Range).Value = anzIgnored
+
+                '
+                ' jetzt werden die Missing Phase- und Milestone Definitions noch weggeschrieben 
+                '
+
+                ' aber nur, wenn awinSettings.fullProtokoll = true 
+
+
+                If awinSettings.fullProtocol Then
+
+
+                    Dim tmpzeile As Integer
+                    tmpzeile = 1
+
+                    Dim wsName As String = "unbekannte Phasen"
+                    Dim txtrange As Excel.Range
+                    Dim tmpWS As Excel.Worksheet
+
+                    If missingPhaseDefinitions.Count > 0 Then
+                        Try
+                            tmpWS = CType(appInstance.ActiveWorkbook.Worksheets(wsName), Excel.Worksheet)
+                            With tmpWS
+                                txtrange = .Range(.Cells(1, 1), .Cells(5000, 8))
+                            End With
+                            txtrange.Clear()
+                        Catch ex As Exception
+                            tmpWS = CType(appInstance.ActiveWorkbook.Worksheets.Add(After:=aktivesSheet), Excel.Worksheet)
+                            tmpWS.Name = wsName
+                        End Try
+
+
+                        CType(tmpWS.Cells(tmpzeile, 1), Excel.Range).Value = "Phasen-Name"
+                        CType(tmpWS.Cells(tmpzeile, 6), Excel.Range).Value = "Abkürzung"
+                        CType(tmpWS.Cells(tmpzeile, 7), Excel.Range).Value = "Darstellungsklasse"
+
+
+                        Dim phDef As clsPhasenDefinition
+                        For i = 1 To missingPhaseDefinitions.Count
+
+                            phDef = missingPhaseDefinitions.getPhaseDef(i)
+                            CType(tmpWS.Cells(tmpzeile + i, 1), Excel.Range).Value = phDef.name
+                            CType(tmpWS.Cells(tmpzeile + i, 6), Excel.Range).Value = phDef.shortName
+                            CType(tmpWS.Cells(tmpzeile + i, 7), Excel.Range).Value = phDef.darstellungsKlasse
+
+                        Next
+                    End If
+
+
+
+                    '
+                    ' jetzt werden die Missing Milestone Definitions noch weggeschrieben 
+                    '
+                    If missingMilestoneDefinitions.Count > 0 Then
+
+                        tmpzeile = 1
+
+                        wsName = "unbekannte Meilensteine"
+
+                        Try
+                            tmpWS = CType(appInstance.ActiveWorkbook.Worksheets(wsName), Excel.Worksheet)
+                            With tmpWS
+                                txtrange = .Range(.Cells(1, 1), .Cells(5000, 8))
+                            End With
+                            txtrange.Clear()
+                        Catch ex As Exception
+                            tmpWS = CType(appInstance.ActiveWorkbook.Worksheets.Add(After:=aktivesSheet), Excel.Worksheet)
+                            tmpWS.Name = wsName
+                        End Try
+
+
+                        CType(tmpWS.Cells(tmpzeile, 1), Excel.Range).Value = "Meilenstein-Name"
+                        CType(tmpWS.Cells(tmpzeile, 5), Excel.Range).Value = "Bezug"
+                        CType(tmpWS.Cells(tmpzeile, 6), Excel.Range).Value = "Abkürzung"
+                        CType(tmpWS.Cells(tmpzeile, 7), Excel.Range).Value = "Darstellungsklasse"
+
+
+                        Dim msDef As clsMeilensteinDefinition
+                        For i = 1 To missingMilestoneDefinitions.Count
+
+                            msDef = missingMilestoneDefinitions.getMilestoneDef(i)
+                            If Not IsNothing(msDef) Then
+                                CType(tmpWS.Cells(tmpzeile + i, 1), Excel.Range).Value = msDef.name
+                                CType(tmpWS.Cells(tmpzeile + i, 5), Excel.Range).Value = msDef.belongsTo
+                                CType(tmpWS.Cells(tmpzeile + i, 6), Excel.Range).Value = msDef.shortName
+                                CType(tmpWS.Cells(tmpzeile + i, 7), Excel.Range).Value = msDef.darstellungsKlasse
+                            End If
+
+
+                        Next
+
+
+                    End If
+
+                End If
+
+                If appInstance.ActiveSheet.name <> aktivesSheet.Name Then
+                    aktivesSheet.Activate()
+                End If
+
+            End With
+        Catch ex As Exception
+            Throw New Exception("Fehler in Datei " & vbLf & ex.Message & vbLf & _
+                                 currentDateiName & vbLf)
+        End Try
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' Einlesen eines RXF-Files (XML-Ausleitung von RPLAN) und dazu ein Protokoll in Tabellenblatt 'xmlfilename'protokoll in Datei Logfile
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <param name="xmlfilename"></param>Name des RXF-Files
+    ''' <param name="isVorlage"></param>Ist Vorlage, oder nicht
+    ''' <remarks></remarks>
+    Sub RXFImport(ByRef myCollection As Collection, ByVal xmlfilename As String, _
+                  ByVal isVorlage As Boolean, ByRef protokollliste As SortedList(Of Integer, clsProtokoll))
+        ' akt. Name zum Zweck des Fehlersuchens
+        Dim aktuellerName As String = ""
+
+        'Variablen-Definitionen für Projectboard 
+
+        Dim hproj As clsProjekt
+
+        Dim vproj As clsProjektvorlage
+        Dim vorlagenName As String = ""
+
+        Dim ProjektdauerinDays As Integer = 0
+        Dim cphase As clsPhase = Nothing
+
+        Dim parentphase As clsPhase = Nothing
+        Dim lastphase As clsPhase = Nothing
+
+        Dim parentelemID As String = ""
+        Dim lastelemID As String = ""
+
+        Dim cBewertung As clsBewertung = Nothing
+
+        Dim milestoneName As String = ""
+
+        ' Ersetzen eines bestimmten Strings in der kompletten Datei 'xmlfilename'
+        ' Zurückgeben des Namens der neuen Datei 'newXMLfilename'
+
+        Dim newXMLfilename As String = replaceStringInFile(xmlfilename, "xsi:type=""subscribedtask""", "")
+
+
+
+        ' XML-Datei Öffnen
+        ' A FileStream is needed to read the XML document.
+        Dim fs As New FileStream(newXMLfilename, FileMode.Open)
+
+        ' Declare an object variable of the type to be deserialized.
+        Dim Rplan As New rxf            ' Class rxf wird in clsRplanRXF.vb definiert
+
+        Try
+
+            ' Create an instance of the XmlSerializer class;
+            ' specify the type of object to be deserialized.
+            Dim deserializer As New XmlSerializer(GetType(rxf), "http://www.actano.de/2007/rxf")
+
+
+            ' If the XML document has been altered with unknown
+            ' nodes or attributes, handle them with the
+            ' UnknownNode and UnknownAttribute events.
+            AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
+            AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
+
+
+            ' Einlesen des kompletten XML-Dokument im die Klasse rxf
+            ' Use the Deserialize method to restore the object's state with
+            ' data from the XML document. 
+            Rplan = CType(deserializer.Deserialize(fs), rxf)
+
+            ' Tabellenblatt "xmlfilename" im logfile.xlsx erzeugen fürs Protokoll (xmlfilename ohne ".rxf" Extension)
+
+            Dim tstr As String() = Split(xmlfilename, "\", -1)
+            Dim hstr As String = tstr(tstr.Length - 1)
+            Dim quelle As String = hstr
+            tstr = Split(hstr, ".", 2)
+
+            Dim tabblattname As String = tstr(0)
+            Dim wslogbuch As Excel.Worksheet = Nothing
+
+
+            Dim protokollLine As New clsProtokoll("", quelle)
+            Dim zeile As Integer = 3
+
+
+            ' Projekt suchen; VISBO Projekt suchen unter der RPLANTasks mit gegebenen MainProject
+            For i = 0 To Rplan.task.Length - 1
+
+                If Not IsNothing(Rplan.task(i).mainProject) Then
+                    ' akt. Task ist Projekt 
+
+                    aktuellerName = Rplan.task(i).name
+
+                    Dim aktTask_i As rxfTask = Rplan.task(i)
+                    hproj = New clsProjekt
+
+                    hproj.name = aktTask_i.name
+                    hproj.VorlagenName = ""
+                    hproj.leadPerson = aktTask_i.owner
+                    hproj.startDate = aktTask_i.actualDate.start.Value
+                    ProjektdauerinDays = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
+
+                    ' Protokollzeile bestücken
+                    protokollLine = New clsProtokoll(hproj.name, quelle)
+
+
+                    ' ProjektPhase erzeugen
+                    cphase = New clsPhase(parent:=hproj)
+
+                    With cphase
+                        .nameID = rootPhaseName
+
+                        Dim Duration As Long = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
+                        Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_i.actualDate.start.Value)
+
+                        ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
+
+                        Dim startOffset As Integer = 0
+                        .changeStartandDauer(startOffset, Duration)
+                        Dim phaseStartdate As Date = .getStartDate
+                        Dim phaseEnddate As Date = .getEndDate
+
+                    End With
+
+                    ' ProjektPhase wird hinzugefügt
+                    Dim hrchynode As New clsHierarchyNode
+                    hrchynode.elemName = cphase.name
+                    hrchynode.parentNodeKey = ""
+                    hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
+                    parentphase = cphase
+                    parentelemID = cphase.nameID
+                    lastphase = cphase
+                    lastelemID = cphase.nameID
+
+                    ' Alle Tasks zu diesem Projekt mit deren Kinder und KindesKinder in hproj eintragen
+                    Try
+                        Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan, protokollLine, zeile, protokollliste)
+                    Catch ex As Exception
+                        Dim a As Integer = 0
+                    End Try
+
+
+                    '
+                    '' '' Bestimmung der BMW-Vorlage des jeweiligen Projektes
+                    '' '' muss noch genauer herausgefunden werden, welche Vorlage für das jeweilige Projekt verwendet werden muss
+                    '
+                    vorlagenName = findBMWVorlagenName(hproj)
+                    '
+                    ''''    Ende Bestimmung der BMW-Vorlage zu diesem Projekt
+                    '
+
+
+                    If Projektvorlagen.Contains(vorlagenName) Then
+                        vproj = Projektvorlagen.getProject(vorlagenName)
+
+                        hproj.VorlagenName = vorlagenName
+                        hproj.farbe = vproj.farbe
+                        hproj.Schrift = vproj.Schrift
+                        hproj.Schriftfarbe = vproj.Schriftfarbe
+                        hproj.earliestStart = vproj.earliestStart
+                        hproj.latestStart = vproj.latestStart
+
+                        'ElseIf Projektvorlagen.Contains("unknown") Then
+                        '    vproj = Projektvorlagen.getProject("unknown")
+                    Else
+                        'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
+                        hproj.VorlagenName = ""
+                        hproj.farbe = awinSettings.AmpelNichtBewertet
+                        hproj.Schrift = Projektvorlagen.getProject(0).Schrift
+                        hproj.Schriftfarbe = RGB(10, 10, 10)
+                        hproj.earliestStart = 0
+                        hproj.latestStart = 0
+
+                    End If
+
+                    Dim msPHdefcount As Integer = missingPhaseDefinitions.Count
+                    Dim msMSdefcount As Integer = missingMilestoneDefinitions.Count
+
+                    ' jetzt muss das Projekt eingetragen werden in die Listen Importierte Projekte und myCollection
+                    ' Änderung tk: falls es das Projekt unter diesem Namen bereits gibt, wird eine Variante angelegt ... 
+                    Dim lfdNr As Integer = 2
+                    Do While ImportProjekte.Containskey(calcProjektKey(hproj))
+                        hproj.variantName = lfdNr.ToString
+                        lfdNr = lfdNr + 1
+                    Loop
+
+                    Dim hlptxt As String = ""
+                    If lfdNr - 2 > 0 Then
+                        If lfdNr - 2 = 1 Then
+                            hlptxt = "es wurde eine Variante angelegt"
+                        Else
+                            hlptxt = "es wurden " & lfdNr - 2 & " Varianten angelegt."
+                        End If
+                        Call MsgBox("Projekt " & hproj.name & " kommt mehrmals vor! " & vbLf & hlptxt)
+                    End If
+
+
+                    ' jetzt ist sichergestellt, dass calcProjektKey nicht mehr vorkommt 
+                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                    myCollection.Add(calcProjektKey(hproj))
+
+
+                Else
+                    ' aktuelle Task ist kein Projekt
+                End If
+            Next i
+
+            '' '' Protokolldatei sichern
+            ' ''Call writeProtokoll(protokollliste, tabblattname)
+
+
+            ' RXF-Datei (entspricht XML-Datei) Schliessen
+            fs.Close()
+
+        Catch ex As Exception
+            Call logfileSchreiben(ex.Message & vbLf & "Fehler bei Name " & CStr(aktuellerName), aktuellerName, anzFehler)
+            Throw New ArgumentException("Fehler bei Name " & CStr(aktuellerName))
+
+            ' RXF-Datei (entspricht XML-Datei) Schliessen
+            fs.Close()
+        End Try
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' sucht zu der rxfTask 'task' alle Kinder und KindesKinder  und trägt diese in das Projekt 'hproj' ein 
+    ''' dazu wird diese Routine rekursiv aufgerufen
+    ''' </summary>
+    ''' <param name="task"></param>rxfTask 'task', die Parent aller gesuchten Tasks ist
+    ''' <param name="parentelemID"></param>Parent dieser rxfTask 'task'
+    ''' <param name="hproj"></param>aktuelles aufzubauendes Projekt
+    ''' <param name="RPLAN"></param>Komplette eingelesene rxf-Struktur 
+    ''' <remarks></remarks>
+    Private Sub findAllTasksandInsert(ByVal task As rxfTask, ByVal parentelemID As String, ByRef hproj As clsProjekt, ByVal RPLAN As rxf, ByRef prtLine As clsProtokoll, ByRef zeile As Integer, ByRef prtliste As SortedList(Of Integer, clsProtokoll))
+
+
+        Dim cphase As clsPhase = Nothing
+        Dim cmilestone As clsMeilenstein
+        Dim parentphase As clsPhase = hproj.getPhaseByID(parentelemID)
+        Dim lastphase As clsPhase = Nothing
+        Dim lastelemID As String = ""
+
+        Dim phaseNameID As String = ""
+        Dim cBewertung As clsBewertung = Nothing
+
+        Dim origMSname As String = ""
+        Dim milestonedate As Date
+        Dim isNotDuplikate As Boolean = True
+        Dim isUnkownName As Boolean = False
+
+
+        ' weitere Tasks finden, die zu diesem Projekt (mit ID=aktTask.id) gehören, d.h. ID muss als Parent auftreten
+        For j = 0 To RPLAN.task.Length - 1
+
+            isUnkownName = False            ' hier ist noch unklar, ob kown oder unkown Task
+
+            If RPLAN.task(j).parent = task.id Then
+
+                ' Änderung tk am 10.2.16 - wenn ein Fehler bei einem einzelnen Element auftritt, soll das nicht dazu führen, 
+                ' dass der Import aller anderen abgebrochen wird ... eine entsprechende Fehlermeldung soll ins Protokoll kommen 
+                ' alle anderen Elemente sollen importiert werden 
+                Try
+
+                    Dim aktTask_j As rxfTask = RPLAN.task(j)
+                    Dim isMilestone As Boolean
+
+                    Dim isKnownMsName As Boolean = MilestoneDefinitions.Contains(aktTask_j.name) Or _
+                                                missingMilestoneDefinitions.Contains(aktTask_j.name)
+
+                    Dim isKnownPhName As Boolean = PhaseDefinitions.Contains(aktTask_j.name) Or _
+                                                missingPhaseDefinitions.Contains(aktTask_j.name)
+
+                    Dim taskdauerinDays As Long = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
+                    ' Herausfinden, ob aktTask_j Phase oder Meilenstein ist 
+
+                    If taskdauerinDays > 1 Then
+                        isMilestone = False
+
+                        If aktTask_j.taskType.type = "MILESTONE" Then
+                            Call logfileSchreiben("Korrektur, RXFImport: Phasen-Element mit verschiedenen Start- und Ende-Daten war als Meilenstein deklariert:", _
+                                                        aktTask_j.name & ": " & aktTask_j.actualDate.start.Value.ToShortDateString & " versus " & _
+                                                        aktTask_j.actualDate.finish.Value.ToShortDateString & vbLf & _
+                                                        "Projekt: " & hproj.name, _
+                                                        anzFehler)
+                        End If
+
+                    ElseIf aktTask_j.taskType.type = "MILESTONE" Then
+                        isMilestone = True
+
+                    ElseIf isKnownMsName And Not isKnownPhName Then
+                        isMilestone = True
+                        If aktTask_j.taskType.type <> "MILESTONE" Then
+                            Call logfileSchreiben("Korrektur, RXFImport: bekanntes Meilenstein-Element  mit falscher Typ-Zuordnung:", _
+                                                        aktTask_j.name & " mit Typ " & aktTask_j.taskType.type & vbLf & _
+                                                        "Projekt: " & hproj.name, _
+                                                        anzFehler)
+                        End If
+
+                    ElseIf isKnownPhName And Not isKnownMsName Then
+                        isMilestone = False
+
+
+                    Else
+                        isMilestone = True
+                    End If
+
+                    If Not isMilestone Then
+
+                        ''''''  ist PHASE
+
+                        If aktTask_j.name = "Projektphasen" Then
+
+                            For i = 0 To aktTask_j.customvalue.Length - 1
+                                If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_A" Then
+                                    hproj.businessUnit = aktTask_j.customvalue(i).Value
+                                End If
+
+                                If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_B" Then
+                                    hproj.VorlagenName = aktTask_j.customvalue(i).Value
+                                End If
+                            Next i
+
+                        End If
+
+                        ' überprüfen, ob die Phase evt. ignoriert werden soll (wird im  CustomizationFile in Tabelle Phase-Mappings definiert)
+                        If Not phaseMappings.tobeIgnored(aktTask_j.name) Then
+                            Dim mappedPhasename As String = ""
+
+                            prtLine.planelement = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelNichtBewertet
+
+                            If PhaseDefinitions.Contains(aktTask_j.name) Then
+
+                                mappedPhasename = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelGruen
+
+                            Else
+                                ' aktTask_j.name existiert nicht in den PhaseDefinitions
+
+                                'wenn der PhasenName gemappt werden kann und dieser dann in phasedefinitions enthalten ist, so wird phasename ersetzt
+                                mappedPhasename = phaseMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+
+                                If PhaseDefinitions.Contains(mappedPhasename) Then
+                                    ' neuer aktueller Name der Task
+                                    prtLine.hgColor = awinSettings.AmpelGelb
+
+                                Else
+                                    ' PhasenName ist nicht bekannt
+                                    isUnkownName = True
+
+
+                                    Dim newPhaseDef As New clsPhasenDefinition
+
+
+                                    ' Änderung tk 6.12.15: das muss auf den mappedPhasename gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
+                                    ' in der phasedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
+                                    'newPhaseDef.name = aktTask_j.name
+                                    'mappedPhasename = aktTask_j.name
+
+                                    newPhaseDef.name = mappedPhasename
+                                    newPhaseDef.shortName = aktTask_j.remark
+
+                                    newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                                    newPhaseDef.UID = PhaseDefinitions.Count + 1
+                                    ' muss in missingPhaseDefinitions noch eingetragen werden
+                                    ' in add wird abgefragt, ob der Name schon existiert, wenn ja, wird nix gemacht 
+                                    missingPhaseDefinitions.Add(newPhaseDef)
+
+                                    ' Änderung tk: wird auskommentiert, das steht ja im Protokoll
+                                    'Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+
+                                End If
+                            End If
+
+                            ' Phase nur aufnehmen in das aktuelle Projekt, wenn 
+                            ' awinSettings.importUnkownNames=true ist oder auch isUnkownName = false
+
+                            If Not isUnkownName Or awinSettings.importUnknownNames Then
+
+                                Dim phaseStartdate As Date
+                                Dim phaseEnddate As Date
+                                cphase = New clsPhase(hproj)
+
+                                With cphase
+
+                                    Dim Duration As Integer = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
+                                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_j.actualDate.start.Value)
+
+                                    .changeStartandDauer(offset, Duration)
+                                    phaseStartdate = .getStartDate
+                                    phaseEnddate = .getEndDate
+
+                                    isNotDuplikate = True
+                                    ' sollen Duplikate eliminiert werden ?
+                                    If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(mappedPhasename, False)) Then
+                                        ' nur dann kann es Duplikate geben 
+                                        If hproj.isCloneToParent(mappedPhasename, parentphase.nameID, phaseStartdate, phaseEnddate, 0.97) Then
+                                            isNotDuplikate = False
+                                            prtLine.planelement = aktTask_j.name
+                                            prtLine.hgColor = awinSettings.AmpelRot
+                                            prtLine.grund = "Phase wurde eliminiert: Duplikat zur Parent-Phase"
+                                            'Call logfileSchreiben("Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Parent " & parentphase.name & " und wird ignoriert ", hproj.name, anzFehler)
+
+                                        Else
+                                            Dim duplicateSiblingID As String = hproj.getDuplicatePhaseSiblingID(mappedPhasename, parentphase.nameID, _
+                                                                                                                phaseStartdate, phaseEnddate, 0.97)
+
+                                            If duplicateSiblingID = "" Then
+                                                isNotDuplikate = True
+                                            Else
+                                                isNotDuplikate = False
+                                                prtLine.planelement = aktTask_j.name
+                                                prtLine.hgColor = awinSettings.AmpelRot
+                                                prtLine.grund = "Phase wurde eliminiert: Duplikat zur Geschwister-Phase"
+                                                'Call logfileSchreiben(" Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                                '" und wird ignoriert ", hproj.name, anzFehler)
+                                            End If
+                                        End If
+
+                                    End If
+
+                                End With
+
+                                If isNotDuplikate Then
+
+                                    ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
+                                    ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
+                                    ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
+
+                                    If awinSettings.createUniqueSiblingNames Then
+                                        mappedPhasename = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedPhasename, False)
+                                    End If
+
+                                    cphase.nameID = hproj.hierarchy.findUniqueElemKey(mappedPhasename, False)
+
+                                    ' Phase wird ins Projekt mitaufgenommen
+
+                                    Dim phrchynode As New clsHierarchyNode
+                                    phrchynode.elemName = cphase.name
+                                    phrchynode.parentNodeKey = parentelemID
+
+                                    hproj.AddPhase(cphase, origName:=aktTask_j.name, parentID:=phrchynode.parentNodeKey)
+                                    phrchynode.indexOfElem = hproj.AllPhases.Count
+
+                                    ' merken von letzem Element (Knoten,Phase,Meilenstein)
+                                    'lasthrchynode = phrchynode
+                                    lastelemID = cphase.nameID
+                                    lastphase = cphase
+
+                                    prtLine.hierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    prtLine.PThierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    prtLine.planelement = aktTask_j.name
+                                    prtLine.abkürzung = PhaseDefinitions.getAbbrev(cphase.name)
+                                    prtLine.planeleÜbern = cphase.name
+
+                                    prtLine.klasse = aktTask_j.taskType.Value
+                                    prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
+
+                                    prtliste.Add(zeile, prtLine)
+                                    zeile = zeile + 1
+                                    'prtLine.writeLog(zeile)
+
+                                    Dim quelle As String = prtLine.quelle
+
+                                    prtLine = New clsProtokoll(hproj.name, quelle)
+                                    prtLine.actDate = ""
+
+
+                                    Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN, prtLine, zeile, prtliste)
+
+                                Else
+                                    prtliste.Add(zeile, prtLine)
+                                    zeile = zeile + 1
+
+                                    Dim quelle As String = prtLine.quelle
+                                    prtLine = New clsProtokoll(hproj.name, quelle)
+                                    prtLine.actDate = ""
+                                End If
+
+                            Else
+                                prtLine.planelement = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelRot
+                                prtLine.grund = "Phase wurde ignoriert: unbekannter Bezeichner"
+
+                                prtliste.Add(zeile, prtLine)
+                                zeile = zeile + 1
+
+                                Dim quelle As String = prtLine.quelle
+                                prtLine = New clsProtokoll(hproj.name, quelle)
+                                prtLine.actDate = ""
+                            End If
+
+                        Else
+                            prtLine.planelement = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelRot
+                            prtLine.grund = "Phase wurde ignoriert: gemäß Eintrag TOBEIGNORED im Wörterbuch"
+
+                            prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
+                            zeile = zeile + 1
+
+                            Dim quelle As String = prtLine.quelle
+                            prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
+                            prtLine.actDate = ""
+
+                        End If       'Ende of tobeignored phase
+
+
+                    Else
+                        ' ist MEILENSTEIN
+
+                        Dim mappedMSname As String = ""
+
+                        If Not milestoneMappings.tobeIgnored(aktTask_j.name) Then
+
+                            If MilestoneDefinitions.Contains(aktTask_j.name) Then
+
+                                mappedMSname = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelGruen
+
+                            Else
+                                'wenn der MeilensteinName gemappt werden kann und dieser dann in milestonedefinitions enthalten ist, so wird Meilensteinname ersetzt
+                                mappedMSname = milestoneMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+                                If MilestoneDefinitions.Contains(mappedMSname) Then
+
+                                    prtLine.hgColor = awinSettings.AmpelGelb
+                                Else
+
+                                    isUnkownName = True
+
+                                    Dim msDef As New clsMeilensteinDefinition
+
+
+                                    ' Änderung tk 6.12.15: das muss auf den mappedMSNamen gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
+                                    ' in der milestonedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
+                                    'msDef.name = aktTask_j.name
+                                    'mappedMSname = aktTask_j.name
+
+                                    msDef.name = mappedMSname
+                                    msDef.schwellWert = 0
+                                    msDef.belongsTo = parentphase.name
+                                    msDef.shortName = aktTask_j.remark
+
+                                    msDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, True)
+                                    msDef.UID = MilestoneDefinitions.Count + 1
+
+                                    Try
+                                        missingMilestoneDefinitions.Add(msDef)
+
+                                        'Call logfileSchreiben(("Achtung, RXFImport: Meilenstein '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+
+                                    Catch ex As Exception
+                                    End Try
+
+                                End If
+                            End If
+
+                            ' Meilenstein wird nur in das aktuelle Projekt aufgenommen, wenn awinSettings.importUnkownNames = true 
+                            ' und der Name bekannt ist (isUnkownName = false)
+
+                            If Not isUnkownName Or awinSettings.importUnknownNames Then
+
+                                cmilestone = New clsMeilenstein(parent:=parentphase)
+                                cBewertung = New clsBewertung
+
+                                origMSname = aktTask_j.name
+
+                                If DateDiff(DateInterval.Day, aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value) = 0 Then
+                                    milestonedate = aktTask_j.actualDate.start.Value
+                                Else
+                                    Throw New Exception("Fehler, RXFImport: Der Meilenstein hat verschiedene Start- und End-Daten:" & vbLf & _
+                                                        aktTask_j.actualDate.start.Value.ToShortDateString & " versus " & _
+                                                        aktTask_j.actualDate.finish.Value.ToShortDateString & vbLf & _
+                                                        "Projekt: " & hproj.name)
+                                End If
+
+
+
+                                ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
+                                ' muss abgebrochen werden 
+
+                                If Not awinSettings.milestoneFreeFloat And _
+                                    (DateDiff(DateInterval.Day, parentphase.getStartDate, milestonedate) < 0 Or _
+                                     DateDiff(DateInterval.Day, parentphase.getEndDate, milestonedate) > 0) Then
+
+                                    'Call logfileSchreiben(("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                    '                    origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
+                                    '                         "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
+                                    Throw New Exception("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                                        origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
+                                                             "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                                End If
+
+                                Dim resultVerantwortlich As String = aktTask_j.owner
+                                Dim bewertungsAmpel As Integer = 0
+                                Dim explanation As String = aktTask_j.note
+
+                                ' Ergänzung tk 2.11 deliverables ergänzt 
+                                Dim deliverables As String = ""
+
+                                If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                    ' es gibt keine Bewertung
+                                    bewertungsAmpel = 0
+                                End If
+                                ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                With cBewertung
+                                    '.bewerterName = resultVerantwortlich
+                                    .colorIndex = bewertungsAmpel
+                                    .datum = Date.Now
+                                    .description = explanation
+                                    ' deliverables sind jetzt Bestandteil von clsMeilenstein (List (of String))  
+                                    '.deliverables = deliverables
+                                End With
+
+                                isNotDuplikate = True
+                                If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(mappedMSname, True)) Then
+                                    ' nur dann kann es Duplikate geben 
+                                    Dim duplicateSiblingID As String = hproj.getDuplicateMsSiblingID(mappedMSname, parentphase.nameID, _
+                                                                                                         milestonedate, 0)
+
+                                    If duplicateSiblingID = "" Then
+                                        isNotDuplikate = True
+                                    Else
+                                        isNotDuplikate = False
+                                        prtLine.planelement = aktTask_j.name
+                                        prtLine.hgColor = awinSettings.AmpelRot
+                                        prtLine.grund = "Meilenstein wurde eliminiert: Duplikat zur Geschwister-Phase"
+                                        'Call logfileSchreiben("Fehler, RXFImport:" & mappedMSname & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                        '" und wird ignoriert ", hproj.name, anzFehler)
+                                    End If
+
+                                End If
+
+                                If isNotDuplikate Then
+
+                                    With cmilestone
+                                        .setDate = milestonedate
+                                        '.verantwortlich = resultVerantwortlich
+
+                                        ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
+                                        ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
+                                        ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
+
+                                        If awinSettings.createUniqueSiblingNames Then
+                                            mappedMSname = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedMSname, True)
+                                        End If
+
+                                        .nameID = hproj.hierarchy.findUniqueElemKey(mappedMSname, True)
+                                        If Not cBewertung Is Nothing Then
+                                            .addBewertung(cBewertung)
+                                        End If
+                                    End With
+
+                                    With parentphase
+                                        .addMilestone(cmilestone, origName:=origMSname)
+                                    End With
+
+                                    prtLine.hierarchie = hproj.hierarchy.getBreadCrumb(cmilestone.nameID)
+                                    prtLine.PThierarchie = hproj.hierarchy.getBreadCrumb(cmilestone.nameID)
+                                    prtLine.planelement = aktTask_j.name
+                                    prtLine.abkürzung = MilestoneDefinitions.getAbbrev(cmilestone.name)
+                                    prtLine.planeleÜbern = cmilestone.name
+
+                                    prtLine.klasse = aktTask_j.taskType.Value
+                                    prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, True)
+
+                                    prtliste.Add(zeile, prtLine)
+                                    zeile = zeile + 1
+
+                                    Dim quelle As String = prtLine.quelle
+                                    prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
+                                    prtLine.actDate = ""
+
+                                Else
+                                    prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
+                                    zeile = zeile + 1
+
+                                    Dim quelle As String = prtLine.quelle
+                                    prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
+                                    prtLine.actDate = ""
+
+                                End If
+
+                            Else
+                                prtLine.planelement = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelRot
+                                prtLine.grund = "Meilenstein wurde ignoriert: unbekannter Bezeichner"
+
+                                prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
+                                zeile = zeile + 1
+
+                                Dim quelle As String = prtLine.quelle
+                                prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
+                                prtLine.actDate = ""
+                            End If
+
+                        Else
+                            prtLine.planelement = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelRot
+                            prtLine.grund = "Meilenstein wurde ignoriert gemäß Eintrag im Wörterbuch"
+
+                            prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
+                            zeile = zeile + 1
+
+                            Dim quelle As String = prtLine.quelle
+                            prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
+                            prtLine.actDate = ""
+
+                        End If     ' Ende: Meilenstein soll ignoriert werden
+
+
+
+                    End If      '  Ende: ist MEILENSTEIN
+
+                Catch ex As Exception
+
+                    Call logfileSchreiben(ex.Message, hproj.name, anzFehler)
+
+
+                End Try
+
+
+            End If
+
+        Next j    ' Ende Schleife über alle Tasks
+    End Sub
+
+    ''' <summary>
+    ''' nach BMW-Vorgaben:
+    ''' bestimmt aus dem übergebenen VorlagenNamen ( =  der CustomValue "UsA_SERVICE_SPALTE_B" aus Phase "Projektphasen" ) 
+    ''' den tatsächlichen VorlagenNamen des Projekts 
+    '''     ''' </summary>
+    ''' <param name="hproj"></param>aktuelles zu lesendes Projekt
+    ''' <returns></returns>fertig zusammengesetzter VorlagenName des Projekts (gemäß BMW vorschriften
+    ''' <remarks></remarks>
+    Private Function findBMWVorlagenName(ByVal hproj As clsProjekt) As String
+
+
+        Dim vorNam1 = "rel 4"
+        Dim typkennung As String = hproj.VorlagenName      ' hier ist aber nur enthalten, eA, wA, E  usw.
+        Dim anlaufkennung As String = "03"
+        Dim firstMS As Integer = hproj.hierarchy.getIndexOf1stMilestone
+
+
+        Dim hrchyhproj As clsHierarchy = hproj.hierarchy
+        For phi = 1 To firstMS - 1
+            Dim phID As String = hrchyhproj.getIDAtIndex(phi)
+            Dim phName As String = elemNameOfElemID(phID)
+            If phName.Contains("I-Stufen") Then
+                Dim pharray() As String = Split(phName, " ", 5)
+                vorNam1 = "rel 5"
+            End If
+        Next phi
+        For msi = firstMS To hrchyhproj.count - 1
+            Dim msID As String = hrchyhproj.getIDAtIndex(msi)
+            Dim msName As String = elemNameOfElemID(msID)
+            If msName.Contains("SOP") Then
+                Dim msarray() As String = Split(msName, " ", 5)
+                Try
+                    Dim sopdate As Date = hproj.getMilestoneDate(msID)
+
+                    If DateDiff(DateInterval.Month, StartofCalendar, sopdate) > 0 Then
+                        Dim sopMonth As Integer = sopdate.Month
+                        If sopMonth >= 3 And sopMonth <= 6 Then
+                            anlaufkennung = "03"
+                        ElseIf sopMonth >= 7 And sopMonth <= 10 Then
+                            anlaufkennung = "07"
+                        Else
+                            anlaufkennung = "11"
+                        End If
+                    Else
+                        anlaufkennung = sopdate.Month.ToString("D2")       ' Monat mindestens zweistellig angeben
+                    End If
+
+                Catch ex As Exception
+                    anlaufkennung = "?"
+                End Try
+
+            End If
+        Next
+        Try
+            If Not IsNothing(typkennung) Then
+
+                If typkennung.Contains("SB") Then
+                    typkennung = "SBWE"
+                ElseIf typkennung.Contains("eA") Then
+                    typkennung = "eA"
+                ElseIf typkennung.Contains("wA") Then
+                    typkennung = "wA"
+                ElseIf typkennung.Contains("E") Then
+                    typkennung = "E"
+                Else
+                    typkennung = "?"
+                End If
+            Else
+                typkennung = "?"
+            End If
+        Catch ex As Exception
+            typkennung = "?"
+        End Try
+
+        findBMWVorlagenName = vorNam1 & " " & typkennung & "-" & anlaufkennung
+
+    End Function
+
+
+    ''' <summary>
+    ''' Behandelt den Fehler UnkonwnNode beim Einlesen des RXF-Files
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub deserializer_UnknownNode(sender As Object, e As XmlNodeEventArgs)
+        Call MsgBox(("RXFImport: Unknown Node:" & e.Name & ControlChars.Tab & e.Text))
+    End Sub 'serializer_UnknownNode
+
+
+    ''' <summary>
+    ''' Behandelt den Fehler UnkonwnAttribute beim Einlesen des RXF-Files
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub deserializer_UnknownAttribute(sender As Object, e As XmlAttributeEventArgs)
+        Dim attr As System.Xml.XmlAttribute = e.Attr
+        Call MsgBox(("RXFImport: Unknown attribute " & attr.Name & "='" & attr.Value & "'"))
+    End Sub 'serializer_UnknownAttribute
+
+    ''' <summary>
+    ''' in der ganzen Datei sfilename wird der String searchstr durch replacestr ersetzt
+    ''' </summary>
+    ''' <param name="sfilename"></param>Name der Datei, in der die Ersetzung erfolgen soll
+    ''' <param name="searchstr"></param>zu ersetzender String
+    ''' <param name="replacestr"></param>neuer String
+    ''' <returns></returns>Name der neuen Datei
+    ''' <remarks></remarks>
+    Private Function replaceStringInFile(ByVal sfilename As String, ByVal searchstr As String, ByVal replacestr As String) As String
+
+        'Declare ALL of your variables :)
+        Const ForReading = 1    '
+        Dim fileToRead As String = sfilename  ' the path of the file to read
+        Dim tstr() As String = Split(sfilename, ".", 2)
+        Dim fileToWrite As String = tstr(0) & ".new"     ' the path of a new file
+        Dim FSO As Object
+        Dim readFile As Object  'the file you will READ
+        Dim writeFile As Object 'the file you will CREATE
+        Dim repLine As Object   'the array of lines you will WRITE
+        Dim ln As Object
+        Dim l As Long
+
+        FSO = CreateObject("Scripting.FileSystemObject")
+        readFile = FSO.OpenTextFile(fileToRead, ForReading, False)
+        writeFile = FSO.CreateTextFile(fileToWrite, True, False)
+
+        '# Read entire file into an array & close it
+        repLine = Split(readFile.ReadAll, vbNewLine)
+        readFile.Close()
+
+        '# iterate the array and do the replacement line by line
+
+        For Each ln In repLine
+            ln = Replace(ln, searchstr, replacestr)
+            repLine(l) = ln
+            l = l + 1
+        Next
+
+        '# Write to the array items to the file
+        writeFile.Write(Join(repLine, vbNewLine))
+        writeFile.Close()
+
+        '# clean up
+        readFile = Nothing
+        writeFile = Nothing
+        FSO = Nothing
+        replaceStringInFile = fileToWrite
+
+    End Function
+
 
 
     ''' <summary>
@@ -8971,6 +14806,7 @@ Public Module awinGeneralModules
         Try
 
             With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+                .Name = "logBuch"
                 CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
                 CType(.Columns(1), Excel.Range).ColumnWidth = 100
                 CType(.Columns(2), Excel.Range).ColumnWidth = 50
@@ -8993,9 +14829,9 @@ Public Module awinGeneralModules
         Dim obj As Object
 
         Try
-            obj = CType(CType(xlsLogfile.Worksheets(1), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
                 CType(.Cells(1, 1), Excel.Range).Value = text
                 CType(.Cells(1, 2), Excel.Range).Value = addOn
                 CType(.Cells(1, 3), Excel.Range).Value = Date.Now
@@ -9065,5 +14901,2988 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = True
     End Sub
 
+    ''' <summary>
+    ''' initialisert im Inputfile die Tabelle 'Logbuch'
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Sub InitProtokoll(ByRef wslogbuch As Excel.Worksheet, ByVal tabblattname As String)
 
+        ' diese Variable sagt, ob das Tabellenblatt existiert hat; wenn nein, müssen die Spalten-Breiten gesetzt werden 
+        Dim didntExist As Boolean
+
+        Try
+            wslogbuch = CType(xlsLogfile.Worksheets(tabblattname), _
+               Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+            If Not IsNothing(wslogbuch) Then
+
+                ' Änderung tk: 16.1.16
+                ' es reicht die Inhalte zu löschen ...  
+                wslogbuch.Cells.Clear()
+                didntExist = False
+                'xlsLogfile.Worksheets.Application.DisplayAlerts = False
+                'wslogbuch.Delete()
+                'xlsLogfile.Worksheets.Application.DisplayAlerts = True
+
+                'wslogbuch = CType(xlsLogfile.Worksheets.Add(), _
+                '   Global.Microsoft.Office.Interop.Excel.Worksheet)
+                'wslogbuch.Name = tabblattname
+            End If
+        Catch ex As Exception
+            'wsLogbuch = CType(xlsInput.Worksheets.Add(After:=xlsInput.Worksheets.Count), _
+            '   Global.Microsoft.Office.Interop.Excel.Worksheet)
+            wslogbuch = CType(xlsLogfile.Worksheets.Add(), _
+                Global.Microsoft.Office.Interop.Excel.Worksheet)
+            wslogbuch.Name = tabblattname
+            didntExist = True
+        End Try
+
+
+        With wslogbuch
+
+            If didntExist Then
+                .Rows.RowHeight = 15
+                CType(.Rows(1), Excel.Range).RowHeight = 30
+                CType(.Rows(1), Excel.Range).Font.Bold = True
+            End If
+
+
+            If awinSettings.fullProtocol Then
+                CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
+                CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
+                CType(.Cells(1, 3), Excel.Range).Value() = "Hierarchie"
+                CType(.Cells(1, 4), Excel.Range).Value() = "Plan-Element"
+                CType(.Cells(1, 5), Excel.Range).Value() = "Klasse"
+                CType(.Cells(1, 6), Excel.Range).Value() = "Abkürzung"
+                CType(.Cells(1, 7), Excel.Range).Value() = "Quelle"
+                CType(.Cells(1, 8), Excel.Range).Value() = "Übernommen als"
+                CType(.Cells(1, 9), Excel.Range).Value() = "Grund"
+                CType(.Cells(1, 10), Excel.Range).Value() = "PT Hierarchie"
+                CType(.Cells(1, 11), Excel.Range).Value() = "PT Klasse"
+
+                ' nur verändern, wenn es nicht vorher schon existiert hat ... 
+                ' falls der Anwender sich die Breiten so hingerichtet hat , wie er es gerne hätte, 
+                ' sollte das nicht verändert werden 
+                If didntExist Then
+                    CType(.Columns(1), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(2), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(3), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(4), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(5), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(6), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(7), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(8), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(9), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(10), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(11), Excel.Range).ColumnWidth = 40
+                End If
+
+            Else
+                CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
+                CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
+                CType(.Cells(1, 4), Excel.Range).Value() = "Plan-Element"
+                CType(.Cells(1, 8), Excel.Range).Value() = "Übernommen als"
+                CType(.Cells(1, 9), Excel.Range).Value() = "Grund"
+
+                ' nur verändern, wenn es nicht vorher schon existiert hat ... 
+                ' falls der Anwender sich die Breiten so hingerichtet hat , wie er es gerne hätte, 
+                ' sollte das nicht verändert werden 
+                If didntExist Then
+                    CType(.Columns(1), Excel.Range).ColumnWidth = 18
+                    CType(.Columns(2), Excel.Range).ColumnWidth = 35
+                    CType(.Columns(3), Excel.Range).ColumnWidth = 5
+                    CType(.Columns(4), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(5), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(6), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(7), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(8), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(9), Excel.Range).ColumnWidth = 40
+                End If
+
+            End If
+
+        End With
+
+    End Sub
+    ''' <summary>
+    ''' schreibt das Protokoll in das Tabellenblatt
+    ''' es wird eine Range definiert, die soviele Zeilen enthält wie öt 
+    ''' </summary>
+    ''' <param name="prtliste"></param>
+    ''' <param name="tabblattname"></param>
+    ''' <remarks></remarks>
+    Sub writeProtokoll(ByRef prtliste As SortedList(Of Integer, clsProtokoll), ByVal tabblattname As String)
+
+        Dim zelle As Excel.Range = Nothing
+        Dim zeile As Integer
+
+        Dim anzZeilen As Integer = prtliste.Count
+
+        Dim wsLogbuch As Excel.Worksheet = Nothing
+
+        Try
+            Call InitProtokoll(wsLogbuch, tabblattname) ' Tabelle Logbuch wird initialisiert
+            If Not IsNothing(xlsLogfile) Then
+                xlsLogfile.Save()
+            End If
+
+
+        Catch ex As Exception
+
+            Call MsgBox("Fehler beim Initialisieren des Protokolls")
+        End Try
+
+        Dim protokollRange As Excel.Range = wsLogbuch.Cells
+
+
+        For Each prtline As KeyValuePair(Of Integer, clsProtokoll) In prtliste
+            Try
+                'rowOffset = CType(CType(xlsLogfile.Worksheets(Me.tabblattname), Excel.Worksheet).Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                zeile = prtline.Key
+
+                With wsLogbuch
+
+                    ' Änderung tk: das dauert sehr lange ... 
+                    'If awinSettings.fullProtocol Then
+                    '    CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
+                    '    CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
+                    '    CType(.Cells(zeile, 3), Excel.Range).Value() = prtline.Value.hierarchie
+                    '    CType(.Cells(zeile, 4), Excel.Range).Value() = prtline.Value.planelement
+                    '    CType(.Cells(zeile, 5), Excel.Range).Value() = prtline.Value.klasse
+                    '    CType(.Cells(zeile, 6), Excel.Range).Value() = prtline.Value.abkürzung
+                    '    CType(.Cells(zeile, 7), Excel.Range).Value() = prtline.Value.quelle
+                    '    CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
+                    '    CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
+                    '    CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
+                    '    CType(.Cells(zeile, 10), Excel.Range).Value() = prtline.Value.PThierarchie
+                    '    CType(.Cells(zeile, 11), Excel.Range).Value() = prtline.Value.PTklasse
+                    'Else
+                    '    CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
+                    '    CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
+                    '    CType(.Cells(zeile, 4), Excel.Range).Value() = prtline.Value.planelement
+                    '    CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
+                    '    CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
+                    '    CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
+                    'End If
+
+                    If awinSettings.fullProtocol Then
+                        protokollRange.Cells(zeile, 1).Value = prtline.Value.actDate
+                        protokollRange.Cells(zeile, 2).Value = prtline.Value.Projekt
+                        protokollRange.Cells(zeile, 3).Value = prtline.Value.hierarchie
+                        protokollRange.Cells(zeile, 4).Value = prtline.Value.planelement
+                        protokollRange.Cells(zeile, 5).Value = prtline.Value.klasse
+                        protokollRange.Cells(zeile, 6).Value = prtline.Value.abkürzung
+                        protokollRange.Cells(zeile, 7).Value = prtline.Value.quelle
+                        protokollRange.Cells(zeile, 8).Value = prtline.Value.planeleÜbern
+                        protokollRange.Cells(zeile, 8).Interior.Color = prtline.Value.hgColor
+                        protokollRange.Cells(zeile, 9).Value = prtline.Value.grund
+                        protokollRange.Cells(zeile, 10).Value = prtline.Value.PThierarchie
+                        protokollRange.Cells(zeile, 11).Value = prtline.Value.PTklasse
+                    Else
+                        protokollRange.Cells(zeile, 1).Value = prtline.Value.actDate
+                        protokollRange.Cells(zeile, 2).Value = prtline.Value.Projekt
+                        protokollRange.Cells(zeile, 4).Value = prtline.Value.planelement
+                        protokollRange.Cells(zeile, 8).Value = prtline.Value.planeleÜbern
+                        protokollRange.Cells(zeile, 8).Interior.Color = prtline.Value.hgColor
+                        protokollRange.Cells(zeile, 9).Value = prtline.Value.grund
+                    End If
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+        Next
+
+        ' Logbuch sichern
+        If Not IsNothing(xlsLogfile) Then
+            xlsLogfile.Save()
+        End If
+
+    End Sub
+
+
+
+    Public Sub XMLExportReportProfil(ByVal profil As clsReport)
+
+
+
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
+
+        Try
+
+            Dim serializer = New DataContractSerializer(GetType(clsReport))
+
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, profil)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, profil)
+            writer.Flush()
+            writer.Close()
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+
+    End Sub
+
+    Public Function XMLImportReportProfil(ByVal profilName As String) As clsReport
+
+        Dim profil As New clsReport
+
+        Dim serializer = New DataContractSerializer(GetType(clsReport))
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            profil = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportReportProfil = profil
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportReportProfil = Nothing
+        End Try
+
+    End Function
+
+    Public Sub retrieveProfilSelection(ByVal profilName As String, ByVal menuOption As Integer, _
+                                     ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                     ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                     ByRef selectedRoles As Collection, ByRef selectedCosts As Collection, ByRef reportProfil As clsReport)
+        Try
+
+            ' Datumsangaben sichern
+            Dim vondate_sav As Date = reportProfil.VonDate
+            Dim bisdate_sav As Date = reportProfil.BisDate
+            Dim PPTvondate_sav As Date = reportProfil.CalendarVonDate
+            Dim PPTbisdate_sav As Date = reportProfil.CalendarBisDate
+
+            ' Projekte sichern
+            Dim projects_sav As New SortedList(Of Double, String)
+            For Each kvp As KeyValuePair(Of Double, String) In reportProfil.Projects
+                projects_sav.Add(kvp.Key, kvp.Value)
+            Next
+
+
+            ' Einlesen des ausgewählten ReportProfils
+            reportProfil = XMLImportReportProfil(profilName)
+
+            ' Datumsangaben zurücksichern
+            reportProfil.CalendarVonDate = PPTvondate_sav
+            reportProfil.CalendarBisDate = PPTbisdate_sav
+            reportProfil.calcRepVonBis(vondate_sav, bisdate_sav)
+
+            ' für BHTC immer true
+            reportProfil.ExtendedMode = True
+            ' für BHTC immer false
+            reportProfil.Ampeln = False
+            reportProfil.AllIfOne = False
+            reportProfil.FullyContained = False
+            reportProfil.SortedDauer = False
+            reportProfil.ProjectLine = False
+            reportProfil.UseOriginalNames = False
+
+            ' Projekte zurücksichern
+            reportProfil.Projects.Clear()
+            For Each kvp As KeyValuePair(Of Double, String) In projects_sav
+                reportProfil.Projects.Add(kvp.Key, kvp.Value)
+            Next
+
+            '  und bereitstellen der Auswahl für Hierarchieselection
+            selectedPhases = copySortedListtoColl(reportProfil.Phases)
+            selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+            selectedRoles = copySortedListtoColl(reportProfil.Roles)
+            selectedCosts = copySortedListtoColl(reportProfil.Costs)
+            selectedBUs = copySortedListtoColl(reportProfil.BUs)
+            selectedTyps = copySortedListtoColl(reportProfil.Typs)
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Lesen des ReportProfils: retrieveProfilSelection")
+        End Try
+
+    End Sub
+
+
+    Public Sub storeReportProfil(ByVal menuOption As Integer, _
+                                     ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, ByVal reportProfil As clsReport)
+
+
+
+        '  und bereitstellen der Auswahl für Hierarchieselection
+        reportProfil.Phases = copyColltoSortedList(selectedPhases)
+        reportProfil.Milestones = copyColltoSortedList(selectedMilestones)
+        reportProfil.Roles = copyColltoSortedList(selectedRoles)
+        reportProfil.Costs = copyColltoSortedList(selectedCosts)
+        reportProfil.BUs = copyColltoSortedList(selectedBUs)
+        reportProfil.Typs = copyColltoSortedList(selectedTyps)
+
+
+        With awinSettings
+
+            ' tk : wird für Darstellung Projekt auf Multiprojekt Tafel verwendet; hier nicht setzen ! 
+            '.drawProjectLine = True
+            reportProfil.ExtendedMode = .mppExtendedMode
+            reportProfil.OnePage = .mppOnePage
+            reportProfil.AllIfOne = .mppShowAllIfOne
+            reportProfil.Ampeln = .mppShowAmpel
+            reportProfil.Legend = .mppShowLegend
+            reportProfil.MSDate = .mppShowMsDate
+            reportProfil.MSName = .mppShowMsName
+            reportProfil.PhDate = .mppShowPhDate
+            reportProfil.PhName = .mppShowPhName
+            reportProfil.ProjectLine = .mppShowProjectLine
+            reportProfil.SortedDauer = .mppSortiertDauer
+            reportProfil.VLinien = .mppVertikalesRaster
+            reportProfil.FullyContained = .mppFullyContained
+            reportProfil.ShowHorizontals = .mppShowHorizontals
+            reportProfil.UseAbbreviation = .mppUseAbbreviation
+            reportProfil.UseOriginalNames = .mppUseOriginalNames
+            reportProfil.KwInMilestone = .mppKwInMilestone
+        End With
+
+
+        ' Schreiben des ausgewählten ReportProfils
+        Call XMLExportReportProfil(reportProfil)
+
+    End Sub
+    ''' <summary>
+    ''' synchronisiert die globalen mit den lokalen Konfigurations-Dateien 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub synchronizeGlobalToLocalFolder()
+
+
+        Dim srcFile As String
+        Dim destFile As String
+        Dim destdir As String
+
+        Try
+
+
+            'Prüfen, ob der Globale Folder existiert
+            If Not My.Computer.FileSystem.DirectoryExists(globalPath) Then
+
+                Throw New ArgumentException("Globaler Requirementsordner " & globalPath & " existiert nicht!")
+
+            Else
+                ' '' ''Prüfen, ob der Lokale Folder existiert
+                '' ''If Not My.Computer.FileSystem.DirectoryExists(awinPath) Then
+
+                '' ''    Call MsgBox("lokaler Requirementsordner " & awinPath & " existiert nicht!")
+
+                ' Lokaler Requirementsordner wird erzeugt, mit allen Unterdirectories
+                Try
+
+
+                    My.Computer.FileSystem.CreateDirectory(awinPath)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & requirementsOrdner)
+
+                    For Each gdir In My.Computer.FileSystem.GetDirectories(globalPath & requirementsOrdner)
+
+                        ' Name des lokalen Directories zusammensetzen
+                        Dim hstr() As String
+                        hstr = gdir.Split(New Char() {CChar("\")})
+
+                        ' Name des destinationDirectories zusammen setzen
+                        destdir = awinPath & requirementsOrdner
+
+                        destdir = destdir & hstr(hstr.Length - 1)
+
+                        My.Computer.FileSystem.CreateDirectory(destdir)
+
+                    Next
+
+                    ' ''My.Computer.FileSystem.CreateDirectory(awinPath & projektVorlagenOrdner)
+                    ' ''My.Computer.FileSystem.CreateDirectory(awinPath & modulVorlagenOrdner)
+                    ' ''My.Computer.FileSystem.CreateDirectory(awinPath & projektRessOrdner)
+                    ' ''My.Computer.FileSystem.CreateDirectory(awinPath & RepProjectVorOrdner)
+                    ' ''My.Computer.FileSystem.CreateDirectory(awinPath & RepPortfolioVorOrdner)
+                    ' ''My.Computer.FileSystem.CreateDirectory(awinPath & ReportProfileOrdner)
+
+
+                    '' ''importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
+                    '' ''importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
+                    '' ''importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
+                    '' ''importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
+                    '' ''importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+                    '' ''importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
+                    '' ''importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
+
+                    '' ''exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
+                    '' ''exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
+                    '' ''exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
+                    '' ''exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
+                    '' ''exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
+
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.visbo))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplan))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.msproject))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.simpleScen))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.modulScen))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.addElements))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplanrxf))
+
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.visbo))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.rplan))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.msproject))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.simpleScen))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.modulScen))
+
+                Catch ex As Exception
+
+                End Try
+                '' ''Else
+
+
+                Dim dirItem As String = globalPath & requirementsOrdner
+
+                ' lokaler RequirementsOrdner existiert
+
+                ' RequirementsOrdner:   alle Dateien , sofern sie im globalPath neuer als im awinPath sind kopieren
+
+                For Each srcFile In My.Computer.FileSystem.GetFiles(dirItem)
+
+                    ' Name des lokalen Files zusammensetzen
+                    Dim hstr() As String
+                    hstr = srcFile.Split(New Char() {CChar("\")})
+
+                    ' Name des destinationDirectories zusammen setzen
+                    destdir = awinPath & requirementsOrdner
+
+                    destFile = destdir & "\" & hstr(hstr.Length - 1)
+
+                    ' Test ob globales File neuer als lokales
+                    Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime
+                    Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime
+                    Dim ddiff As Long = DateDiff(DateInterval.Second, _
+                                                 My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime, _
+                                                 My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime)
+
+                    ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
+                    If ddiff < 0 Then
+                        ' Kopieren der Datei, mit Overwrite erzwingen
+                        My.Computer.FileSystem.CopyFile(srcFile, destFile, True)
+                        ' Debug Mode? 
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("kopiert von global nach local:" & hstr(hstr.Length - 1))
+                        End If
+                    End If
+
+                Next srcFile
+
+
+                ' Unterdirectories von requirementsOrdner:      alle Dateien dieser  werden von globalPath nACH awinPath kopiert, sofern neueres Änderungsdatum
+
+                For Each dirItem In My.Computer.FileSystem.GetDirectories(globalPath & requirementsOrdner)
+
+                    For Each srcFile In My.Computer.FileSystem.GetFiles(dirItem)
+
+                        ' Name des lokalen Files zusammensetzen
+                        Dim hstr() As String
+                        hstr = srcFile.Split(New Char() {CChar("\")})
+                        ' Name des destinationDirectories zusammen setzen
+                        Dim dirstr() As String
+                        dirstr = dirItem.Split(New Char() {CChar("\")})
+                        destdir = awinPath & requirementsOrdner & dirstr(dirstr.Length - 1)
+
+                        destFile = destdir & "\" & hstr(hstr.Length - 1)
+
+                        ' Test ob globales File neuer als lokales
+                        Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime
+                        Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime
+                        Dim ddiff As Long = DateDiff(DateInterval.Second, _
+                                                     My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime, _
+                                                     My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime)
+
+                        ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
+                        If ddiff < 0 Then
+                            ' Kopieren der Datei, mit Overwrite erzwingen
+                            My.Computer.FileSystem.CopyFile(srcFile, destFile, True)
+
+                            ' Debug Mode? 
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("kopiert von global nach local:" & hstr(hstr.Length - 2) & "/" & hstr(hstr.Length - 1))
+                            End If
+                        End If
+
+                    Next srcFile
+
+                Next dirItem
+
+            End If
+
+
+            ' ''End If
+
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
+
+    Public Sub XMLExportLicences(ByVal lic As clsLicences, ByVal nameLicfile As String)
+
+
+        Dim xmlfilename As String = awinPath & nameLicfile
+
+        Try
+
+            Dim serializer = New DataContractSerializer(GetType(clsLicences))
+
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, lic)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, lic)
+            writer.Flush()
+            writer.Close()
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+
+    End Sub
+
+    Public Function XMLImportLicences(ByVal licfile As String) As clsLicences
+
+        Dim lic As New clsLicences
+
+        Dim serializer = New DataContractSerializer(GetType(clsLicences))
+        Dim xmlfilename As String = awinPath & licfile
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            lic = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportLicences = lic
+
+        Catch ex As Exception
+            'Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            Throw New ArgumentException("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportLicences = Nothing
+        End Try
+
+    End Function
+
+    Public Function XMLImportReportMsg(ByVal repMsgfile As String, ByVal language As String) As clsReportMessages
+
+        Dim reportMessages As New clsReportMessages
+
+        Dim serializer = New DataContractSerializer(GetType(clsReportMessages))
+        Dim xmlfilename As String = awinPath & requirementsOrdner & repMsgfile & "_" & language & ".xml"
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            reportMessages = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportReportMsg = reportMessages
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportReportMsg = Nothing
+        End Try
+
+    End Function
+
+    Public Sub XMLExportReportMsg(ByVal reportMsg As clsReportMessages, ByVal repMsgfile As String, ByVal language As String)
+
+
+
+        Dim xmlfilename As String = awinPath & requirementsOrdner & repMsgfile & "_" & language & ".xml"
+        Try
+            Dim serializer = New DataContractSerializer(GetType(clsReportMessages))
+
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, lic)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, reportMsg)
+            writer.Flush()
+            writer.Close()
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+    End Sub
+    ''' <summary>
+    ''' importiert die ProjectboardConfig.xml
+    ''' </summary>
+    ''' <param name="cfgXMLfilename"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function XMLImportPBcfg(ByVal cfgXMLfilename As String) As configuration
+
+        ' XML-Datei Öffnen
+        ' A FileStream is needed to read the XML document.
+        Dim fs As New FileStream(cfgXMLfilename, FileMode.Open)
+
+        ' Declare an object variable of the type to be deserialized.
+        Dim cfgs As New configuration           ' Class configuration erzeugt aus Projectboard.dll.config
+        Try
+
+
+            ' Create an instance of the XmlSerializer class;
+            ' specify the type of object to be deserialized.
+            Dim deserializer As New XmlSerializer(GetType(configuration))
+
+
+            ' If the XML document has been altered with unknown
+            ' nodes or attributes, handle them with the
+            ' UnknownNode and UnknownAttribute events.
+            AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
+            AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
+
+
+            ' Einlesen des kompletten XML-Dokument im die Klasse rxf
+            ' Use the Deserialize method to restore the object's state with
+            ' data from the XML document. 
+            cfgs = CType(deserializer.Deserialize(fs), configuration)
+
+            XMLImportPBcfg = cfgs
+
+        Catch ex As Exception
+            XMLImportPBcfg = Nothing
+            Call MsgBox("Lesen der ProjectboardConfig.xml fehlgeschlagen")
+        End Try
+
+        ' ProjectboardConfig.xml-Datei schließen
+        fs.Close()
+
+    End Function
+
+
+    ''' <summary>
+    ''' schreibt eine Datei mit den monatlichen Zuordnungen Rollenbedarfe / Kosten 
+    ''' Diese Datei kann editiert werden , dann wieder importiert werden 
+    ''' in Abhängigkeit vom Typ wird geschrieben: 
+    ''' 0: alles
+    ''' 1: nur Vergangenheit, von bestimmt den Start , Heute-1 das Ende 
+    ''' 2: nur die Zukunft, Heute bestimmt den Start, bis  das Ende  
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub writeProjektBedarfeXLSX(ByVal von As Integer, ByVal bis As Integer, ByVal type As Integer)
+
+
+        appInstance.EnableEvents = False
+
+        Dim newWB As Excel.Workbook
+        Dim rng As Excel.Range
+        Dim ersteZeile As Excel.Range
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        With newWB.ActiveSheet
+
+            ersteZeile = CType(.Range(.cells(1, 1), .cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 4), Excel.Range).Value = "Ressourcen-Name"
+            CType(.Cells(1, 5), Excel.Range).Value = "Kostenart-Name"
+
+
+            ' jetzt wird die Zeile 1 geschrieben 
+            CType(.Cells(1, 6), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von - 1)
+            CType(.Cells(1, 7), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von)
+            rng = .Range(.Cells(1, 6), .Cells(1, 7))
+
+            '' Deutsches Format:
+            'rng.NumberFormat = "[$-407]mmm yy;@"
+            ' Englisches Format:
+            rng.NumberFormat = "[$-409]mmm yy;@"
+
+            Dim destinationRange As Excel.Range = .Range(.Cells(1, 6), .Cells(1, 6 + bis - von))
+            With destinationRange
+                .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                '' Deutsches Format: 
+                'rng.NumberFormat = "[$-407]mmm yy;@"
+                ' Englische Format:
+                .NumberFormat = "[$-409]mmm yy;@"
+                .WrapText = False
+                .Orientation = 90
+                .AddIndent = False
+                .IndentLevel = 0
+                .ReadingOrder = Excel.Constants.xlContext
+                .MergeCells = False
+            End With
+
+            rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+
+        End With
+
+
+
+        zeile = 2
+
+        Dim tmpName As String = ""
+        Dim tmpValues() As Double
+        Dim schnittmenge() As Double
+        Dim usedRoles As Collection
+        Dim usedCosts As Collection
+        Dim pStart As Integer, pEnde As Integer
+
+        Dim editRange As Excel.Range
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            pStart = getColumnOfDate(kvp.Value.startDate)
+            pEnde = getColumnOfDate(kvp.Value.endeDate)
+
+            usedRoles = kvp.Value.getRoleNames
+            usedCosts = kvp.Value.getCostNames
+
+            For r = 1 To usedRoles.Count
+                tmpName = usedRoles.Item(r)
+                tmpValues = kvp.Value.getRessourcenBedarf(tmpName)
+                schnittmenge = calcArrayIntersection(von, bis, pStart, pEnde, tmpValues)
+
+                If schnittmenge.Sum <> tmpValues.Sum Then
+                    Dim a As Integer = 99
+                End If
+
+                ' Schreiben der Projekt-Informationen 
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 1), Excel.Range).Value = kvp.Value.name
+                    CType(.cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
+                    CType(.cells(zeile, 3), Excel.Range).Value = "."
+                End With
+
+
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 4), Excel.Range).Value = tmpName
+                    editRange = CType(.range(.cells(zeile, 6), .cells(zeile, 6 + bis - von)), Excel.Range)
+                End With
+
+                editRange.Value = schnittmenge
+                zeile = zeile + 1
+
+            Next
+
+
+
+            For k As Integer = 1 To usedCosts.Count
+
+                tmpName = usedCosts.Item(k)
+                tmpValues = kvp.Value.getKostenBedarf(tmpName)
+                schnittmenge = calcArrayIntersection(von, bis, pStart, pEnde, tmpValues)
+
+                If schnittmenge.Sum <> tmpValues.Sum Then
+                    Dim a As Integer = 99
+                End If
+
+                ' Schreiben der Projekt-Informationen 
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 1), Excel.Range).Value = kvp.Value.name
+                    CType(.cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
+                    CType(.cells(zeile, 3), Excel.Range).Value = "."
+                End With
+
+                With newWB.ActiveSheet
+                    CType(.cells(zeile, 5), Excel.Range).Value = tmpName
+                    editRange = CType(.range(.cells(zeile, 6), .cells(zeile, 6 + bis - von)), Excel.Range)
+                End With
+
+                editRange.Value = schnittmenge
+                zeile = zeile + 1
+            Next
+
+        Next
+
+
+        ' jetzt den Bereich markieren bzw. schützen 
+        Dim startProtectedArea As Integer
+        Dim endProtectedArea As Integer
+        Dim protectedRange As Excel.Range = Nothing
+        Dim wbName As String
+
+        Select Case type
+            Case 0
+                startProtectedArea = 0
+                endProtectedArea = 0
+                wbName = "all"
+            Case 1
+
+                startProtectedArea = getColumnOfDate(Date.Now)
+                endProtectedArea = bis
+                wbName = "past"
+            Case 2
+                startProtectedArea = von
+                endProtectedArea = getColumnOfDate(Date.Now)
+                wbName = "future"
+            Case Else
+                Call MsgBox("Typ nicht erkannt, muss Werte 0, 1 oder 2 haben: ist aber" & type)
+                appInstance.EnableEvents = True
+                Exit Sub
+        End Select
+
+        Dim generalRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, 1), _
+                                                newWB.ActiveSheet.cells(zeile - 1, 5)),  _
+                                                Excel.Range)
+        Dim valueRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, 6), _
+                                                newWB.ActiveSheet.cells(zeile - 1, 6 + bis - von + 1)),  _
+                                                Excel.Range)
+
+        With generalRange
+            .Columns.AutoFit()
+        End With
+
+
+        With ersteZeile
+            .Interior.Color = awinSettings.AmpelGruen
+        End With
+
+
+        If type <> 0 Then
+
+            With newWB.ActiveSheet
+                protectedRange = CType(.Range(.cells(1, startProtectedArea), _
+                                                               .cells(zeile - 1, endProtectedArea)),  _
+                                                                Excel.Range)
+
+            End With
+            protectedRange.Interior.Color = awinSettings.AmpelNichtBewertet
+        End If
+
+
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.visbo) & "\EditNeeds_" & _
+            Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Try
+            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt eine Datei mit den monatlichen Zuordnungen Projekt/Phase - Rollenbedarfe / Kosten 
+    ''' Diese Datei kann editiert werden , dann wieder importiert werden 
+    ''' in Abhängigkeit vom Typ wird geschrieben: 
+    ''' 0: alles
+    ''' 1: nur Vergangenheit, von bestimmt den Start , Heute-1 das Ende 
+    ''' 2: nur die Zukunft, Heute bestimmt den Start, bis  das Ende  
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="type"></param>
+    ''' <remarks></remarks>
+    Public Sub writeProjektPhasenBedarfeXLSX(ByVal von As Integer, ByVal bis As Integer, ByVal type As Integer)
+
+
+        appInstance.EnableEvents = False
+
+        Dim newWB As Excel.Workbook
+        Dim ersteZeile As Excel.Range
+        Dim ressCostColumn As Integer
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\EditNeeds_" & _
+        Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            If newWB.Worksheets.Count < 2 Then
+                newWB.Worksheets.Add(After:=newWB.Worksheets("VISBO"))
+                CType(appInstance.ActiveSheet, Excel.Worksheet).Name = "tmp"
+
+            Else
+                CType(newWB.Worksheets.Item(2), Excel.Worksheet).Name = "tmp"
+            End If
+
+            newWB.SaveAs(expFName)
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        'Dim startSpalteDaten As Integer = 8
+        Dim startSpalteDaten As Integer = 8
+        Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        Dim tmpName As String = ""
+
+        ' hier werden jetzt erst mal die Ressourcen und Kostenarten geschrieben 
+        With CType(newWB.Worksheets("tmp"), Excel.Worksheet)
+
+            Dim sortedRCListe As New SortedList(Of String, String)
+            For iz As Integer = 1 To RoleDefinitions.Count
+                tmpName = RoleDefinitions.getRoledef(iz).name
+                If Not sortedRCListe.ContainsKey(tmpName) Then
+                    sortedRCListe.Add(tmpName, tmpName)
+                End If
+            Next
+            For iz As Integer = 1 To sortedRCListe.Count
+                tmpName = sortedRCListe.ElementAt(iz - 1).Value
+                CType(.Cells(iz, 1), Excel.Range).Value = tmpName
+            Next
+
+            Dim offz As Integer = sortedRCListe.Count
+            sortedRCListe.Clear()
+
+            For iz As Integer = 1 To CostDefinitions.Count - 1
+                tmpName = CostDefinitions.getCostdef(iz).name
+                If Not sortedRCListe.ContainsKey(tmpName) Then
+                    sortedRCListe.Add(tmpName, tmpName)
+                End If
+            Next
+
+            For iz As Integer = 1 To sortedRCListe.Count
+                tmpName = sortedRCListe.ElementAt(iz - 1).Value
+                CType(.Cells(iz + offz, 1), Excel.Range).Value = tmpName
+            Next
+
+            offz = offz + sortedRCListe.Count
+            roleCostNames = CType(.Range(.Cells(1, 1), .Cells(offz, 1)), Excel.Range)
+            newWB.Names.Add(Name:="RollenKostenNamen", RefersToR1C1:=roleCostNames)
+            CType(newWB.Worksheets("tmp"), Excel.Worksheet).Visible = False    ' Worksheet "tmp" ausblenden
+
+        End With
+
+
+
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+            CType(.Cells(1, 6), Excel.Range).Value = "Summe"
+            CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+
+            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+            ressCostColumn = 5
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+            ' jetzt wird der Name hinzugefügt
+            Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
+            Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + 2 * (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
+            newWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
+            newWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+
+                With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = ""
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .Orientation = 0
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+
+            Next
+
+            ' bevor die Prozentualen Anteile ergänzt wurden ... 
+            ' ''CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von - 1)
+            ' ''CType(.Cells(1, startSpalteDaten + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von)
+            ' ''rng = .Range(.Cells(1, startSpalteDaten), .Cells(1, startSpalteDaten + 1))
+
+            ' '' '' Deutsches Format:
+            '' ''rng.NumberFormat = "[$-407]mmm yy;@"
+            '' '' Englisches Format:
+            ' ''rng.NumberFormat = "[$-409]mmm yy;@"
+
+            ' ''Dim destinationRange As Excel.Range = .Range(.Cells(1, 6), .Cells(1, 6 + bis - von))
+            ' ''With destinationRange
+            ' ''    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+            ' ''    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+            ' ''    '' Deutsches Format: 
+            ' ''    'rng.NumberFormat = "[$-407]mmm yy;@"
+            ' ''    ' Englische Format:
+            ' ''    .NumberFormat = "[$-409]mmm yy;@"
+            ' ''    .WrapText = False
+            ' ''    .Orientation = 90
+            ' ''    .AddIndent = False
+            ' ''    .IndentLevel = 0
+            ' ''    .ReadingOrder = Excel.Constants.xlContext
+            ' ''    .MergeCells = False
+            ' ''End With
+
+            ' ''rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+
+        End With
+
+        zeile = 2
+
+        Dim schnittmenge() As Double
+        Dim zeilenWerte() As Double
+        Dim zeilensumme As Double
+        Dim pStart As Integer, pEnde As Integer
+
+        Dim editRange As Excel.Range
+
+
+        ' zu Beginn werden die rollen-spezifischen Auslastungskennzahlen ermittelt, die sich über alle aktuell 
+        ' betrachteten Projekte ergeben; 
+        ' es werden sowohl die Gesamt-Auslastungs Werte im Zeitraum betrachtet als auch der einzelne monats-spezifische Wert   
+        ' dazu wird ein Array angelegt mit der Dimension (anzahlRollen-1, bis-von+1) 
+        Dim auslastungsArray(,) As Double
+
+        Try
+            auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
+            'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+        Catch ex As Exception
+            ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
+        End Try
+
+
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            pStart = getColumnOfDate(kvp.Value.startDate)
+            pEnde = getColumnOfDate(kvp.Value.endeDate)
+
+            For p = 1 To kvp.Value.CountPhases
+
+                Dim cphase As clsPhase = kvp.Value.getPhase(p)
+                Dim phaseNameID As String = cphase.nameID
+                Dim phaseName As String = cphase.name
+                Dim chckNameID As String = calcHryElemKey(phaseName, False)
+
+                If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
+                    ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+
+                    ' jetzt müssen die Zellen, die zur Phase gehören , entsperrt werden  ...
+                    Dim ixZeitraum As Integer
+                    Dim ix As Integer, breite As Integer
+
+                    Dim atLeastOne As Boolean = False
+
+                    Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
+
+
+                    For r = 1 To cphase.countRoles
+
+
+                        Dim role As clsRolle = cphase.getRole(r)
+                        Dim roleName As String = role.name
+                        Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                        Dim xValues() As Double = role.Xwerte
+
+                        schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                        zeilensumme = schnittmenge.Sum
+
+                        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+                        ' Schreiben der Projekt-Informationen 
+                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                            CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.businessUnit
+                            CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
+                            CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
+                            CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
+                            CType(.Cells(zeile, 5), Excel.Range).Value = roleName
+                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                            CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                        End With
+
+                        ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                        For mis As Integer = 0 To bis - von
+                            zeilenWerte(2 * mis) = schnittmenge(mis)
+                            ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
+                            zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+                        Next
+
+                        'editRange.Value = schnittmenge
+                        editRange.Value = zeilenWerte
+                        atLeastOne = True
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+
+                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+                            For l = 0 To bis - von
+
+                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                Else
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                End If
+
+                            Next
+
+                            ' vorheriger Code
+                            ''For l As Integer = ixZeitraum To ixZeitraum + breite - 1
+                            ''    CType(.cell(zeile, l + 6), Excel.Range).Locked = False
+                            ''    CType(.cell(zeile, l + 6), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                            ''Next
+                        End With
+
+
+                        ''With newWB.ActiveSheet
+                        ''    For l As Integer = ixZeitraum To ixZeitraum + breite - 1
+                        ''        CType(.cells(zeile, l + 6), Excel.Range).Locked = False
+                        ''    Next
+                        ''End With
+
+                        zeile = zeile + 1
+
+                    Next r
+
+                    For c = 1 To cphase.countCosts
+                        Dim cost As clsKostenart = cphase.getCost(c)
+                        Dim xValues() As Double = cost.Xwerte
+                        Dim costName As String = cost.name
+                        schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                        zeilensumme = schnittmenge.Sum
+
+                        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+                        ' Schreiben der Projekt-Informationen 
+                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                            CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.businessUnit
+                            CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
+                            CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
+                            CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
+                            CType(.Cells(zeile, 5), Excel.Range).Value = costName
+                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                        End With
+
+                        ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                        For mis As Integer = 0 To bis - von
+                            zeilenWerte(2 * mis) = schnittmenge(mis)
+                            ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
+                            zeilenWerte(2 * mis + 1) = 0
+                        Next
+
+                        'editRange.Value = schnittmenge
+                        editRange.Value = zeilenWerte
+                        atLeastOne = True
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+
+                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+                            For l = 0 To bis - von
+
+                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                Else
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                End If
+
+                            Next
+
+                        End With
+
+                        zeile = zeile + 1
+
+                    Next c
+
+                    If Not atLeastOne Then
+                        ' jetzt sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
+                        ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
+                        ' Schreiben der Projekt-Informationen 
+                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                            CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.businessUnit
+                            CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.name
+                            CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.variantName
+                            CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                            End If
+                            If chckNameID = phaseNameID Then
+                                ' nichts weiter tun ... 
+                                ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                            Else
+                                CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            End If
+
+                            CType(.Cells(zeile, 5), Excel.Range).Value = ""
+                            CType(.Cells(zeile, 6), Excel.Range).Value = ""
+                            CType(.Cells(zeile, 7), Excel.Range).Value = ""
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
+                        End With
+
+                        ' die Zellen entsperren, die editiert werden dürfen ...
+                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+                            For l = 0 To bis - von
+
+                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                Else
+                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                End If
+
+                            Next
+
+                        End With
+
+                        zeile = zeile + 1
+
+                    End If
+
+                End If
+
+
+
+            Next p
+
+
+
+        Next
+
+
+        ' jetzt die Größe der Spalten anpassen 
+        Dim infoBlock As Excel.Range
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 1)), Excel.Range)
+            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+            infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+            infoBlock.AutoFit()
+        End With
+
+        Dim tmpRange As Excel.Range
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+            Dim isPrz As Boolean = False
+            For mis As Integer = 0 To 2 * (bis - von + 1) - 1
+                tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
+                If isPrz Then
+                    tmpRange.Columns.ColumnWidth = 3.1
+                    tmpRange.Font.Size = 6
+                    tmpRange.NumberFormat = "0%"
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                Else
+                    tmpRange.Columns.ColumnWidth = 5
+                    tmpRange.Font.Size = 10
+                    tmpRange.NumberFormat = "0"
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                End If
+                isPrz = Not isPrz
+            Next
+
+        End With
+
+
+
+        ' jetzt wird der RoleCostInput Bereich festgelegt 
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            Dim maxRows As Integer = .Rows.Count
+            roleCostInput = CType(.Range(.Cells(2, ressCostColumn), .Cells(maxRows, ressCostColumn)), Excel.Range)
+        End With
+
+        With roleCostInput
+            .Validation.Delete()
+            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=RollenKostenNamen")
+        End With
+
+
+        'With CType(newWB.ActiveSheet, Excel.Worksheet)
+
+        '    Try
+        '        autoFilterRange = CType(.Columns("A:E"), Excel.Range)
+        '        autoFilterRange.AutoFilter()
+        '    Catch ex As Exception
+
+        '    End Try
+
+        '    Try
+
+        '        Dim rng1 As Excel.Range = CType(.Columns(1), Excel.Range)
+        '        Dim rng2 As Excel.Range = CType(.Columns(5), Excel.Range)
+        '        autoFilterRange = CType(.Range(rng1, rng2), Excel.Range)
+        '    Catch ex As Exception
+
+        '    End Try
+
+
+        'End With
+
+
+
+
+        ' jetzt den Bereich markieren bzw. schützen 
+        ''Dim startProtectedArea As Integer
+        ''Dim endProtectedArea As Integer
+        ''Dim protectedRange As Excel.Range = Nothing
+        ''Dim wbName As String
+
+        ''Select Case type
+        ''    Case 0
+        ''        startProtectedArea = 0
+        ''        endProtectedArea = 0
+        ''        wbName = "all"
+        ''    Case 1
+
+        ''        startProtectedArea = getColumnOfDate(Date.Now)
+        ''        endProtectedArea = bis
+        ''        wbName = "past"
+        ''    Case 2
+        ''        startProtectedArea = von
+        ''        endProtectedArea = getColumnOfDate(Date.Now)
+        ''        wbName = "future"
+        ''    Case Else
+        ''        Call MsgBox("Typ nicht erkannt, muss Werte 0, 1 oder 2 haben: ist aber" & type)
+        ''        appInstance.EnableEvents = True
+        ''        Exit Sub
+        ''End Select
+
+        ''Dim generalRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, 1), _
+        ''                                        newWB.ActiveSheet.cells(zeile - 1, startSpalteDaten - 1)),  _
+        ''                                        Excel.Range)
+        ''Dim valueRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, startSpalteDaten), _
+        ''                                        newWB.ActiveSheet.cells(zeile - 1, startSpalteDaten + 2 * (bis - von + 1))),  _
+        ''                                        Excel.Range)
+
+        ''With generalRange
+        ''    .Columns.AutoFit()
+        ''End With
+
+
+        'With ersteZeile
+        '    .Interior.Color = awinSettings.AmpelGruen
+        'End With
+
+
+        'If type <> 0 Then
+
+        '    With newWB.ActiveSheet
+        '        protectedRange = CType(.Range(.cells(1, startProtectedArea), _
+        '                                                       .cells(zeile - 1, endProtectedArea)),  _
+        '                                                        Excel.Range)
+
+        '    End With
+        '    protectedRange.Interior.Color = awinSettings.AmpelNichtBewertet
+        'End If
+
+        'With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+        '    .Protect(Password:="x", AllowDeletingColumns:=False, UserInterfaceOnly:=True, DrawingObjects:=True, _
+        '             AllowFormattingCells:=True, AllowDeletingRows:=True, AllowFiltering:=True, AllowFormattingColumns:=True, _
+        '             AllowFormattingRows:=True, AllowInsertingColumns:=False, AllowInsertingHyperlinks:=False, AllowInsertingRows:=True,
+        '             AllowSorting:=True, AllowUsingPivotTables:=True)
+        'End With
+
+        ' '' '' ''Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\EditNeeds_" & _
+        ' '' '' ''    Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        '' ''Try
+        '' ''    'appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        '' ''    'newWB.SaveAs(Filename:=expFName, ConflictResolution:=Microsoft.Office.Interop.Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        '' ''    newWB.Save()
+
+        '' ''Catch ex As Exception
+
+        '' ''End Try
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            ' ExcelFile abspeichern und schließen
+            newWB.Close(SaveChanges:=True)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Filtersetzen und Speichern" & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+    End Sub
+
+    ''' <summary>
+    ''' erstellt für alles, alleRollen, alleKosten und die einzelnen Sammel-Rollen die ValidationStrings
+    ''' die dann im Mass-Edit verwendet werden können 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function createMassEditRcValidations() As SortedList(Of String, String)
+        Dim validationStrings As New SortedList(Of String, String)
+        Dim validationName As String
+
+        ' Aufbau Alles
+        validationName = "alles"
+        Dim sortedRCListe As New SortedList(Of String, String)
+        Dim rcDefinition As String = ""
+        Dim tmpName As String
+
+        For iz As Integer = 1 To RoleDefinitions.Count
+            tmpName = RoleDefinitions.getRoledef(iz).name
+            If Not sortedRCListe.ContainsKey(tmpName) Then
+                sortedRCListe.Add(tmpName, tmpName)
+            End If
+        Next
+
+        For iz As Integer = 1 To sortedRCListe.Count
+            If rcDefinition.Length = 0 Then
+                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+            Else
+                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+            End If
+        Next
+
+        sortedRCListe.Clear()
+
+        For iz As Integer = 1 To CostDefinitions.Count - 1
+            tmpName = CostDefinitions.getCostdef(iz).name
+            If Not sortedRCListe.ContainsKey(tmpName) Then
+                sortedRCListe.Add(tmpName, tmpName)
+            End If
+        Next
+
+        For iz As Integer = 1 To sortedRCListe.Count
+            If rcDefinition.Length = 0 Then
+                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+            Else
+                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+            End If
+        Next
+
+        If Not validationStrings.ContainsKey(validationName) Then
+            validationStrings.Add(validationName, rcDefinition)
+        End If
+
+
+        '
+        ' jetzt kommen alleRollen 
+
+        validationName = "alleRollen"
+        sortedRCListe = New SortedList(Of String, String)
+        rcDefinition = ""
+
+        For iz As Integer = 1 To RoleDefinitions.Count
+            tmpName = RoleDefinitions.getRoledef(iz).name
+            If Not sortedRCListe.ContainsKey(tmpName) Then
+                sortedRCListe.Add(tmpName, tmpName)
+            End If
+        Next
+
+        For iz As Integer = 1 To sortedRCListe.Count
+            If rcDefinition.Length = 0 Then
+                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+            Else
+                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+            End If
+        Next
+
+        If Not validationStrings.ContainsKey(validationName) Then
+            validationStrings.Add(validationName, rcDefinition)
+        End If
+
+        ' Ende alleRollen
+        '
+
+        '
+        ' jetzt kommen alleKosten 
+
+        validationName = "alleKosten"
+        sortedRCListe = New SortedList(Of String, String)
+        rcDefinition = ""
+
+        For iz As Integer = 1 To CostDefinitions.Count - 1
+            tmpName = CostDefinitions.getCostdef(iz).name
+            If Not sortedRCListe.ContainsKey(tmpName) Then
+                sortedRCListe.Add(tmpName, tmpName)
+            End If
+        Next
+
+        For iz As Integer = 1 To sortedRCListe.Count
+            If rcDefinition.Length = 0 Then
+                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+            Else
+                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+            End If
+        Next
+
+        If Not validationStrings.ContainsKey(validationName) Then
+            validationStrings.Add(validationName, rcDefinition)
+        End If
+
+        ' Ende alleKosten
+        '
+
+        '
+        ' jetzt kommen die einzelnen Sammelrollen, unter Angabe ihres Namens 
+
+        Dim sammelrollenNamen As Collection = RoleDefinitions.getSummaryRoles
+
+        For iz As Integer = 1 To sammelrollenNamen.Count
+            tmpName = CStr(sammelrollenNamen.Item(iz))
+            If Not sortedRCListe.ContainsKey(tmpName) Then
+                sortedRCListe.Add(tmpName, tmpName)
+            End If
+        Next
+
+        For Each validationName In sammelrollenNamen
+
+            sortedRCListe = New SortedList(Of String, String)
+            rcDefinition = ""
+
+            For iz As Integer = 1 To sammelrollenNamen.Count
+                tmpName = CStr(sammelrollenNamen.Item(iz))
+                If Not sortedRCListe.ContainsKey(tmpName) Then
+                    sortedRCListe.Add(tmpName, tmpName)
+                End If
+            Next
+
+            Dim subRoleNames As Collection = RoleDefinitions.getSubRoleNamesOf(validationName, PTcbr.all)
+
+            For iz As Integer = 1 To subRoleNames.Count
+                tmpName = CStr(subRoleNames.Item(iz))
+                If Not sortedRCListe.ContainsKey(tmpName) Then
+                    sortedRCListe.Add(tmpName, tmpName)
+                End If
+            Next
+
+            For iz As Integer = 1 To sortedRCListe.Count
+                If rcDefinition.Length = 0 Then
+                    rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+                Else
+                    rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+                End If
+            Next
+
+            ' jetzt den Validation String hinzufügen 
+            If Not validationStrings.ContainsKey(validationName) Then
+                validationStrings.Add(validationName, rcDefinition)
+            End If
+
+        Next
+
+        createMassEditRcValidations = validationStrings
+    End Function
+
+    ''' <summary>
+    ''' schreibt die Daten der in einer todoListe übergebenen Projekt-Namen in ein extra Tabellenblatt 
+    ''' die Info-Daten werden in einer Range mit Name informationColumns zusammengefasst   
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <remarks></remarks>
+    Public Sub writeOnlineMassEditRessCost(ByVal todoListe As Collection, _
+                                           ByVal von As Integer, ByVal bis As Integer)
+
+        If todoListe.Count = 0 Then
+            Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
+            Exit Sub
+        End If
+
+        appInstance.EnableEvents = False
+
+        Dim currentWS As Excel.Worksheet
+        Dim currentWB As Excel.Workbook
+        Dim ersteZeile As Excel.Range
+        Dim ressCostColumn As Integer
+        Dim tmpName As String
+
+        ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
+        Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
+        Dim anzahlRollen As Integer = RoleDefinitions.Count
+        Dim rcValidation() As String
+        ' in rcValidation(0) steht der Name "alleKosten" für den Validation-String für alle Kosten
+        ' in rcValidation(i) steht der Name des Validation-String für Rolle mit UID i 
+        ReDim rcValidation(anzahlRollen + 1)
+
+        rcValidation(0) = "alleKosten"
+        rcValidation(anzahlRollen + 1) = "alles"
+
+        For i = 1 To anzahlRollen
+            Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+            If tmprole.isCombinedRole Then
+                rcValidation(i) = tmprole.name
+            Else
+                Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.name)
+                If parentName = "" Then
+                    rcValidation(i) = "alleRollen"
+                Else
+                    rcValidation(i) = parentName
+                End If
+            End If
+        Next
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+            currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+            currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+            Try
+                If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+                    CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+            Try
+                currentWS.UsedRange.Clear()
+            Catch ex As Exception
+
+            End Try
+
+            
+        Catch ex As Exception
+            Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        'Dim startSpalteDaten As Integer = 8
+        Dim startSpalteDaten As Integer = 8
+        'Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        tmpName = ""
+
+        With CType(currentWS, Excel.Worksheet)
+
+            If .ProtectContents Then
+                .Unprotect(Password:="x")
+            End If
+
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+            CType(.Cells(1, 6), Excel.Range).Value = "Summe"
+
+            If awinSettings.mePrzAuslastung Then
+                CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+            Else
+                CType(.Cells(1, 7), Excel.Range).Value = "Frei"
+            End If
+
+
+            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+            ressCostColumn = 5
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+            ' jetzt wird der Name hinzugefügt
+            Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
+            Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + 2 * (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
+            Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
+
+            Try
+                If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then
+                    currentWB.Names.Item("StartData").Delete()
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                If Not IsNothing(CType(currentWB.Names.Item("EndData"), Excel.Name)) Then
+                    currentWB.Names.Item("EndData").Delete()
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                If Not IsNothing(CType(currentWB.Names.Item("RoleCost"), Excel.Name)) Then
+                    currentWB.Names.Item("RC").Delete()
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            currentWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
+            currentWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
+            currentWB.Names.Add(Name:="RoleCost", RefersToR1C1:=tmpRange3)
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .ShrinkToFit = False
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+
+                With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = ""
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .Orientation = 0
+                    .ShrinkToFit = False
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+
+            Next
+
+
+        End With
+
+
+        zeile = 2
+
+        Dim schnittmenge() As Double
+        Dim zeilenWerte() As Double
+        Dim zeilensumme As Double
+        Dim pStart As Integer, pEnde As Integer
+
+        Dim editRange As Excel.Range
+
+
+        ' zu Beginn werden die rollen-spezifischen Auslastungskennzahlen ermittelt, die sich über alle aktuell 
+        ' betrachteten Projekte ergeben; 
+        ' es werden sowohl die Gesamt-Auslastungs Werte im Zeitraum betrachtet als auch der einzelne monats-spezifische Wert   
+        ' dazu wird ein Array angelegt mit der Dimension (anzahlRollen-1, bis-von+1) 
+        Dim auslastungsArray(,) As Double
+
+        Try
+            auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
+            'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+        Catch ex As Exception
+            ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
+        End Try
+
+
+
+
+        For Each projektName As String In todoListe
+
+            Dim hproj As clsProjekt = ShowProjekte.getProject(projektName)
+
+            If Not IsNothing(hproj) Then
+
+                pStart = getColumnOfDate(hproj.startDate)
+                pEnde = getColumnOfDate(hproj.endeDate)
+                Dim defaultEmptyValidation As String = validationStrings(rcValidation(anzahlRollen + 1)) ' alle Rollen und Kostenarten 
+
+                For p = 1 To hproj.CountPhases
+
+                    Dim cphase As clsPhase = hproj.getPhase(p)
+                    Dim phaseNameID As String = cphase.nameID
+                    Dim phaseName As String = cphase.name
+                    Dim chckNameID As String = calcHryElemKey(phaseName, False)
+
+                    If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
+                        ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+
+                        ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
+                        Dim ixZeitraum As Integer
+                        Dim ix As Integer, breite As Integer
+
+                        Dim atLeastOne As Boolean = False
+
+                        Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
+
+
+                        For r = 1 To cphase.countRoles
+
+
+
+
+                            Dim role As clsRolle = cphase.getRole(r)
+                            Dim roleName As String = role.name
+                            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                            Dim isSammelRolle As Boolean = RoleDefinitions.getRoledef(roleName).isCombinedRole
+                            Dim xValues() As Double = role.Xwerte
+
+                            If p = 1 And cphase.countRoles = 1 And r = 1 Then
+                                ' bestimme die defaultValidation für leere Zeilen : siehe if not atleastOne ...
+                                defaultEmptyValidation = validationStrings.Item(rcValidation(roleUID)) & ";" & _
+                                    validationStrings.Item(rcValidation(0))
+                            End If
+
+                            schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                            zeilensumme = schnittmenge.Sum
+
+                            ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+                            ' Schreiben der Projekt-Informationen 
+                            With CType(currentWS, Excel.Worksheet)
+                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                If Not IsNothing(cellComment) Then
+                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                                End If
+                                If chckNameID = phaseNameID Then
+                                    ' nichts weiter tun ... 
+                                    ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                    ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                                Else
+                                    CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                                End If
+
+                                With CType(.Cells(zeile, 5), Excel.Range)
+                                    .Value = roleName
+                                    .Locked = False
+                                    .Interior.Color = awinSettings.AmpelNichtBewertet
+                                    Try
+                                        If Not IsNothing(.Validation) Then
+                                            .Validation.Delete()
+                                        End If
+                                        ' jetzt wird die ValidationList aufgebaut 
+
+                                        'Dim tmpVal As String = validationStrings.Item(rcValidation(roleUID))
+                                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                       Formula1:=validationStrings.Item(rcValidation(roleUID)))
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End With
+
+
+                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                If awinSettings.mePrzAuslastung Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                                Else
+                                    CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
+                                End If
+
+                                editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                            End With
+
+                            ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                            For mis As Integer = 0 To bis - von
+                                zeilenWerte(2 * mis) = schnittmenge(mis)
+                                ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
+                                zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+                            Next
+
+                            'editRange.Value = schnittmenge
+                            editRange.Value = zeilenWerte
+                            atLeastOne = True
+                            ' die Zellen entsperren, die editiert werden dürfen ...
+
+                            With CType(currentWS, Excel.Worksheet)
+                                For l = 0 To bis - von
+
+                                    If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+
+                                        With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                            .Locked = False
+                                            Try
+                                                .Validation.Delete()
+                                            Catch ex As Exception
+
+                                            End Try
+                                            Try
+                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                            Catch ex As Exception
+                                                .Validation.Modify(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                            End Try
+
+
+                                        End With
+                                        ' erlaubter Eingabebereich grau markieren  
+                                        CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                     .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+
+                                        'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                    Else
+                                        CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                        CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                                    End If
+
+                                Next
+                            End With
+
+
+                            zeile = zeile + 1
+
+                        Next r
+
+                        For c = 1 To cphase.countCosts
+                            Dim cost As clsKostenart = cphase.getCost(c)
+                            Dim xValues() As Double = cost.Xwerte
+                            Dim costName As String = cost.name
+                            schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                            zeilensumme = schnittmenge.Sum
+
+                            ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+                            ' Schreiben der Projekt-Informationen 
+                            With CType(currentWS, Excel.Worksheet)
+                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                If Not IsNothing(cellComment) Then
+                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                                End If
+                                If chckNameID = phaseNameID Then
+                                    ' nichts weiter tun ... 
+                                    ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                    ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                                Else
+                                    CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                                End If
+
+                                With CType(.Cells(zeile, 5), Excel.Range)
+                                    .Value = costName
+                                    .Locked = False
+                                    .Interior.Color = awinSettings.AmpelNichtBewertet
+                                    Try
+                                        If Not IsNothing(.Validation) Then
+                                            .Validation.Delete()
+                                        End If
+                                        ' jetzt wird die ValidationList aufgebaut 
+                                        'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
+                                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                       Formula1:=validationStrings.Item(rcValidation(0)))
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End With
+
+
+                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                            End With
+
+                            ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                            For mis As Integer = 0 To bis - von
+                                zeilenWerte(2 * mis) = schnittmenge(mis)
+                                ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
+                                zeilenWerte(2 * mis + 1) = 0
+                            Next
+
+                            'editRange.Value = schnittmenge
+                            editRange.Value = zeilenWerte
+                            atLeastOne = True
+                            ' die Zellen entsperren, die editiert werden dürfen ...
+
+                            ' die Zellen entsperren, die editiert werden dürfen ...
+
+                            With CType(currentWS, Excel.Worksheet)
+
+                                For l = 0 To bis - von
+
+                                    If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+
+                                        With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                            .Locked = False
+                                            Try
+                                                .Validation.Delete()
+                                            Catch ex As Exception
+
+                                            End Try
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        End With
+
+                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+
+                                        ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
+                                        CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                     .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                    Else
+                                        CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                    End If
+
+                                Next
+
+                            End With
+
+                            zeile = zeile + 1
+
+                        Next c
+
+                        If Not atLeastOne Then
+                            ' jetzt sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
+                            ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
+                            ' Schreiben der Projekt-Informationen 
+                            Dim currentValidation As String = rcValidation(anzahlRollen + 1)
+
+                            ' bestimmen, ob rootPhase nur eine Rolle hat, dann soll die Validation aus der Validation dieser Rolle plus allen Kostenarten gebildet werden ... 
+                            Try
+                                If cphase.nameID <> rootPhaseName Then
+
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
+                            With CType(currentWS, Excel.Worksheet)
+                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                If Not IsNothing(cellComment) Then
+                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                                End If
+                                If chckNameID = phaseNameID Then
+                                    ' nichts weiter tun ... 
+                                    ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                    ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                                Else
+                                    CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                                End If
+
+                                With CType(.Cells(zeile, 5), Excel.Range)
+                                    .Value = ""
+                                    .Locked = False
+                                    .Interior.Color = awinSettings.AmpelNichtBewertet
+                                    Try
+                                        If Not IsNothing(.Validation) Then
+                                            .Validation.Delete()
+                                        End If
+                                        ' jetzt wird die ValidationList aufgebaut 
+                                        'Dim tmpVal As String = validationStrings.Item(rcValidation(anzahlRollen + 1))
+                                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                       Formula1:=defaultEmptyValidation)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End With
+
+
+
+                                CType(.Cells(zeile, 6), Excel.Range).Value = ""
+                                CType(.Cells(zeile, 7), Excel.Range).Value = ""
+                                editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
+                            End With
+
+                            ' die Zellen farblich markieren, die editiert werden können ...
+                            With CType(currentWS, Excel.Worksheet)
+
+                                For l = 0 To bis - von
+
+                                    If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+
+                                        With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                            .Locked = False
+                                            Try
+                                                .Validation.Delete()
+                                            Catch ex As Exception
+
+                                            End Try
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        End With
+
+                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+
+                                        CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                     .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                    Else
+                                        CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                    End If
+
+                                Next
+
+                            End With
+
+                            zeile = zeile + 1
+
+                        End If
+
+                    End If
+
+
+
+                Next p
+
+
+            End If
+
+
+
+        Next
+
+
+        ' jetzt die erste Zeile so groß wie nötig machen 
+        Try
+            ersteZeile.AutoFit()
+        Catch ex As Exception
+
+        End Try
+
+        ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
+        Dim infoBlock As Excel.Range
+        With CType(currentWS, Excel.Worksheet)
+            infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 3)), Excel.Range)
+            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+            infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+            infoBlock.AutoFit()
+        End With
+
+        ' Summe und Frei / Proz. 
+        With CType(currentWS, Excel.Worksheet)
+            infoBlock = CType(.Range(.Columns(startSpalteDaten - 2), .Columns(startSpalteDaten - 1)), Excel.Range)
+            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+            infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+            infoBlock.AutoFit()
+        End With
+
+        Dim tmpRange As Excel.Range
+        With CType(currentWS, Excel.Worksheet)
+
+            Dim isPrz As Boolean = False
+            For mis As Integer = 0 To 2 * (bis - von + 1) - 1
+                tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
+                If isPrz Then
+                    tmpRange.Columns.ColumnWidth = 4
+                    tmpRange.Font.Size = 8
+                    If awinSettings.mePrzAuslastung Then
+                        tmpRange.NumberFormat = "0%"
+                    Else
+                        tmpRange.NumberFormat = "0"
+                    End If
+
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                Else
+                    tmpRange.Columns.ColumnWidth = 5
+                    tmpRange.Font.Size = 10
+                    tmpRange.NumberFormat = "0"
+                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                End If
+                isPrz = Not isPrz
+            Next
+
+        End With
+
+
+        ' das wird jetzt bei jeder einzelnen Zelle bereits gemacht ...
+        ' '' jetzt wird der RoleCostInput Bereich festgelegt 
+        ''With CType(currentWS, Excel.Worksheet)
+        ''    Dim maxRows As Integer = .Rows.Count
+        ''    roleCostInput = CType(.Range(.Cells(2, ressCostColumn), .Cells(maxRows, ressCostColumn)), Excel.Range)
+        ''End With
+
+
+
+        ''Dim sortedRCListe As New SortedList(Of String, String)
+        ''Dim rcDefinition As String = ""
+
+        ''For iz As Integer = 1 To RoleDefinitions.Count
+        ''    tmpName = RoleDefinitions.getRoledef(iz).name
+        ''    If Not sortedRCListe.ContainsKey(tmpName) Then
+        ''        sortedRCListe.Add(tmpName, tmpName)
+        ''    End If
+        ''Next
+
+        ''For iz As Integer = 1 To sortedRCListe.Count
+        ''    If rcDefinition.Length = 0 Then
+        ''        rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+        ''    Else
+        ''        rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+        ''    End If
+        ''Next
+
+        ''sortedRCListe.Clear()
+
+        ''For iz As Integer = 1 To CostDefinitions.Count - 1
+        ''    tmpName = CostDefinitions.getCostdef(iz).name
+        ''    If Not sortedRCListe.ContainsKey(tmpName) Then
+        ''        sortedRCListe.Add(tmpName, tmpName)
+        ''    End If
+        ''Next
+
+        ''For iz As Integer = 1 To sortedRCListe.Count
+        ''    If rcDefinition.Length = 0 Then
+        ''        rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+        ''    Else
+        ''        rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+        ''    End If
+        ''Next
+
+
+        ''With roleCostInput
+        ''    Try
+        ''        .Validation.Delete()
+        ''    Catch ex As Exception
+
+        ''    End Try
+
+        ''    ' jetzt wird die ValidationList aufgebaut 
+        ''    .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+        ''                                   Formula1:=rcDefinition)
+
+
+
+        ''End With
+
+        ' wird jetzt im Activate gemacht ... 
+        ''Try
+        ''    ' jetzt die Autofilter aktivieren ... 
+        ''    If Not CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+        ''        CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+        ''    End If
+        ''Catch ex As Exception
+        ''    appInstance.EnableEvents = True
+        ''    Throw New ArgumentException("Fehler beim Filtersetzen und Speichern" & ex.Message)
+        ''End Try
+
+        appInstance.EnableEvents = True
+
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert in Tabelle2 die Auslastungs-Values 
+    ''' Voraussetzung: der Auslastungs-Array in visbozustaende ist aktualisiert 
+    ''' </summary>
+    ''' <param name="roleNames">eine sortierte Collection mit den Namen der Rollen, die aktualisiert werden sollen
+    ''' Kostenarten brauchen nicht aktualisiert zu werden, da die keine Kapa / Grenze kennen </param>
+    ''' <remarks></remarks>
+    Public Sub updateMassEditAuslastungsValues(ByVal von As Integer, ByVal bis As Integer, _
+                                               Optional ByVal roleNames As Collection = Nothing)
+        Dim treatAllRoles As Boolean
+        Dim roleID As Integer
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+            ' nur dann befindet sich das Programm im MassEdit Sheet 
+
+            'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+            If IsNothing(roleNames) Then
+                treatAllRoles = True
+            Else
+                treatAllRoles = False
+            End If
+
+            Dim columnStartData As Integer = visboZustaende.meColSD
+            Dim columnEndData As Integer = visboZustaende.meColED
+            Dim columnRC As Integer = visboZustaende.meColRC
+
+            Dim auslastungsArray(,) As Double = visboZustaende.getUpDatedAuslastungsArray(roleNames, von, bis, awinSettings.mePrzAuslastung)
+
+            Dim tstZeilenanzahl = meWS.UsedRange.Rows.Count
+
+            ' jetzt in der Überschrift den Text anpassen 
+            If awinSettings.mePrzAuslastung Then
+                CType(meWS.Cells(1, 7), Excel.Range).Value = "Proz."
+            Else
+                CType(meWS.Cells(1, 7), Excel.Range).Value = "Frei"
+            End If
+
+            ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
+            For zeile As Integer = 2 To visboZustaende.meMaxZeile
+                Dim curRoleName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                If Not IsNothing(curRoleName) Then
+                    If curRoleName.Trim.Length > 0 Then
+                        If RoleDefinitions.containsName(curRoleName) Then
+                            Dim updateNecessary As Boolean = False
+                            If treatAllRoles Then
+                                updateNecessary = True
+                            ElseIf roleNames.Contains(curRoleName) Then
+                                updateNecessary = True
+                            End If
+                            If updateNecessary Then
+                                ' nur in diesem Fall muss was gemacht werden ... 
+                                roleID = RoleDefinitions.getRoledef(curRoleName).UID
+
+                                For mis As Integer = 0 To bis - von + 1
+                                    Dim tmpCol As Integer = columnStartData - 1 + 2 * mis
+                                    With meWS.Cells(zeile, tmpCol)
+                                        If ((tmpCol = columnStartData - 1) Or _
+                                            (meWS.Cells(zeile, tmpCol - 1).locked = False)) Then
+                                            .value = auslastungsArray(roleID - 1, mis)
+                                            If awinSettings.mePrzAuslastung Then
+                                                .NumberFormat = "0%"
+                                            Else
+                                                .NumberFormat = "0"
+                                            End If
+                                        End If
+                                    End With
+                                Next
+
+                            End If
+                        End If
+                    End If
+                End If
+            Next
+
+        Else
+            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+        End If
+
+        appInstance.EnableEvents = formerEE
+        'appInstance.EnableEvents = True
+
+    End Sub
+
+
+    ''' <summary>
+    ''' aktualisiert die Summen-Werte im Massen-Edit Sheet der Ressourcen-/Kostenzuordnungen  
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="roleCostNames"></param>
+    ''' <remarks></remarks>
+    Public Sub updateMassEditSummenValues(ByVal pname As String, ByVal phaseNameID As String, _
+                                              ByVal von As Integer, ByVal bis As Integer, _
+                                              ByVal roleCostNames As Collection)
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+            ' nur dann befindet sich das Programm im MassEdit Sheet 
+
+            'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+            If IsNothing(roleCostNames) Then
+                ' nichts tun 
+            ElseIf roleCostNames.Count = 0 Then
+                ' nichts tun 
+            Else
+                ' Update Lauf der Summen 
+                Dim columnSummen As Integer = visboZustaende.meColRC + 1
+                Dim columnRC As Integer = visboZustaende.meColRC
+
+                ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
+                For zeile As Integer = 2 To visboZustaende.meMaxZeile
+
+                    Dim curpName As String = CStr(meWS.Cells(zeile, 2).value)
+                    Dim curphaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                    Dim curphaseNameID As String = calcHryElemKey(curphaseName, False)
+                    Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                    If Not IsNothing(curComment) Then
+                        curphaseNameID = curComment.Text
+                    End If
+
+                    ' es soll auf jeden Fall auch die Rootphase geupdated werden ..., da ja die evtl auch als secondbest geändert wurde ...
+                    If curpName = pname And ((curphaseNameID = phaseNameID) Or (curphaseNameID = rootPhaseName)) Then
+
+                        Dim curRCName As String = CStr(meWS.Cells(zeile, columnRC).value)
+
+                        If Not IsNothing(curRCName) Then
+                            If curRCName.Trim.Length > 0 Then
+                                If roleCostNames.Contains(curRCName) Then
+                                    Dim tmpSum As Double = 0.0
+                                    ' jetzt muss die Summe aktualisiert werden 
+                                    Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+                                    If Not IsNothing(hproj) Then
+                                        Dim cphase As clsPhase = hproj.getPhaseByID(curphaseNameID)
+
+                                        If Not IsNothing(cphase) Then
+
+                                            Dim xWerte() As Double
+                                            Dim ixZeitraum As Integer
+                                            Dim ix As Integer
+                                            Dim anzLoops As Integer
+
+                                            ' diese MEthode definiert, wo der Zeitraum sich mit den Werte überlappt ... 
+                                            ' Anzloops sind die Anzahl Überlappungen 
+                                            Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate), _
+                                                               ixZeitraum, ix, anzLoops)
+
+                                            If RoleDefinitions.containsName(curRCName) Then
+
+                                                Dim tmpRole As clsRolle = cphase.getRole(curRCName)
+
+                                                If Not IsNothing(tmpRole) Then
+                                                    xWerte = tmpRole.Xwerte
+
+                                                    ' jetzt werden die Werte summiert ...
+                                                    Try
+                                                        For al As Integer = 1 To anzLoops
+                                                            tmpSum = tmpSum + xWerte(ix + al - 1)
+                                                        Next
+                                                    Catch ex As Exception
+                                                        Call MsgBox("Fehler bei Summenbildung ...")
+                                                        tmpSum = 0
+                                                    End Try
+
+
+                                                Else
+                                                    ' Summe löschen
+                                                End If
+
+                                            ElseIf CostDefinitions.containsName(curRCName) Then
+
+                                                Dim tmpCost As clsKostenart = cphase.getCost(curRCName)
+
+                                                If Not IsNothing(tmpCost) Then
+                                                    xWerte = tmpCost.Xwerte
+
+                                                    ' jetzt werden die Werte summiert ...
+                                                    Try
+                                                        For al As Integer = 1 To anzLoops
+                                                            tmpSum = tmpSum + xWerte(ix + al - 1)
+                                                        Next
+                                                    Catch ex As Exception
+                                                        Call MsgBox("Fehler bei Summenbildung ...")
+                                                        tmpSum = 0
+                                                    End Try
+
+                                                Else
+                                                    ' Summe löschen
+                                                End If
+                                            Else
+                                                ' Summe löschen 
+                                            End If
+
+                                        Else
+                                            ' Summe löschen  
+                                        End If
+                                    Else
+                                        ' Summe löschen 
+                                    End If
+
+                                    ' jetzt den Wert in die Zelle schreiben
+                                    If tmpSum > 0 Then
+                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = tmpSum.ToString("#,##0")
+                                    Else
+                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = ""
+                                    End If
+
+                                End If
+                            End If
+                        End If
+
+                    End If
+
+                Next
+
+            End If
+
+
+        Else
+            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+        End If
+
+        appInstance.EnableEvents = formerEE
+
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert für das angegebene Projekt die Validation Strings aller leeren / empty RoleCost Felder gemäß dem übergebenen 
+    ''' dient dazu, um die Validation an der rootPhaseName Setzung zu orientieren 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="validationString"></param>
+    ''' <remarks></remarks>
+    Public Sub updateEmptyRcCellValidations(ByVal pName As String, ByVal validationString As String)
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+            ' nur dann befindet sich das Programm im MassEdit Sheet 
+
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+            If IsNothing(pName) Or IsNothing(validationString) Then
+                ' nichts tun 
+            ElseIf pName.Trim.Length = 0 Or validationString.Trim.Length = 0 Then
+                ' nichts tun 
+            Else
+                ' Update der Validations der leeren RoleCost Zuordnungen  
+                Dim columnRC As Integer = visboZustaende.meColRC
+
+                ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
+                For zeile As Integer = 2 To visboZustaende.meMaxZeile
+
+                    Dim curpName As String = CStr(meWS.Cells(zeile, 2).value)
+                    Dim curphaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                    Dim needsUpdate As Boolean = False
+
+                    ' es soll auf jeden Fall auch die Rootphase geupdated werden ..., da ja die evtl auch als secondbest geändert wurde ...
+                    If curpName = pName And curphaseName <> "." Then
+
+                        Dim curRCName As String = CStr(meWS.Cells(zeile, columnRC).value)
+
+                        If IsNothing(curRCName) Then
+                            needsUpdate = True
+                        ElseIf curRCName.Trim.Length = 0 Then
+                            needsUpdate = True
+                        End If
+
+                    End If
+
+                    If needsUpdate Then
+                        Try
+                            With CType(meWS.Cells(zeile, columnRC), Excel.Range)
+                                If Not IsNothing(.Validation) Then
+                                    .Validation.Delete()
+                                End If
+                                ' jetzt wird die ValidationList aufgebaut 
+
+                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                               Formula1:=validationString)
+
+                            End With
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+                Next
+
+            End If
+
+
+        Else
+            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+        End If
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft ob in dem aktiven Massen-Edit Sheet die übergebene Kombination nocheinmal vorkommt ... 
+    ''' wenn nein: Rückgabe true
+    ''' wenn ja: Rückgabe false
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>
+    ''' <param name="zeile"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String, _
+                                             ByVal zeile As Integer) As Boolean
+        Dim found As Boolean = False
+        Dim curZeile As Integer = 2
+
+        Dim chckName As String
+        Dim chckPhNameID As String
+        Dim chckRCName As String
+
+        Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+        With meWS
+            chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+            Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+            chckPhNameID = calcHryElemKey(phaseName, False)
+            Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+            If Not IsNothing(curComment) Then
+                chckPhNameID = curComment.Text
+            End If
+
+            chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+        End With
+        ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
+        Do While Not found And curZeile <= visboZustaende.meMaxZeile
+
+
+            If chckName = pName And _
+                phaseNameID = chckPhNameID And _
+                zeile <> curZeile Then
+
+                If IsNothing(rcName) Then
+                    found = True
+                ElseIf rcName = chckRCName Then
+                    found = True
+                End If
+
+            End If
+
+            If Not found Then
+
+                curZeile = curZeile + 1
+
+                With meWS
+                    chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+                    Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                    chckPhNameID = calcHryElemKey(phaseName, False)
+                    Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                    If Not IsNothing(curComment) Then
+                        chckPhNameID = curComment.Text
+                    End If
+
+                    chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+                End With
+
+            End If
+
+        Loop
+
+        noDuplicatesInSheet = Not found
+
+    End Function
+
+    ''' <summary>
+    ''' gibt eine Zeile zurück, die zu dem angegebenen Projekt, der Phase und dem rcName eine Sammelrolle zurückgibt
+    ''' Wenn mehrere mögliche Sammelrollen existieren, dann wird die erste auftretende zurückgegeben
+    ''' 0, wenn in diesem Projekt zu dieser Rolle keine Sammelrolle definiert ist  
+    ''' ausserdem wird erst in der gleichen Phase gesucht, oder aber in der RootPhase
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function findeSammelRollenZeile(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String) As Integer
+        Dim found As Boolean = False
+        Dim curZeile As Integer = 2
+
+        Dim chckName As String
+        Dim chckPhNameID As String
+        Dim chckRCName As String
+        Dim bestName As String = ""
+        Dim secondBestzeile As Integer = 0
+
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(rcName)
+
+        If Not IsNothing(tmpRole) Then
+
+            Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
+
+            If istSammelRolle Then
+                curZeile = 0
+            Else
+                ' nur für echte Rollen durchführen ...
+                Dim potentialParentRoles As Collection = RoleDefinitions.getSummaryRoles(rcName)
+
+                If potentialParentRoles.Count = 0 Then
+                    curZeile = 0
+
+                Else
+                    '
+                    ' auf die Suche gehen ... 
+                    Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+                    .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
+                    With meWS
+                        chckName = CStr(meWS.Cells(curZeile, 2).value)
+                        If IsNothing(chckName) Then
+                            chckName = ""
+                        End If
+
+                        Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                        If IsNothing(phaseName) Then
+                            phaseName = ""
+                        End If
+
+                        chckPhNameID = calcHryElemKey(phaseName, False)
+                        Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                        If Not IsNothing(curComment) Then
+                            chckPhNameID = curComment.Text
+                        End If
+
+                        chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+                        If IsNothing(chckRCName) Then
+                            chckRCName = ""
+                        End If
+
+                    End With
+                    ' 
+                    ' jetzt wird erst geprüft, ob es eine Sammelrolle in der gleichen Phase gibt 
+                    ' dann wird geprüft , ob es eine Sammelrolle in der rootphase gibt 
+
+
+
+                    Do While Not found And curZeile <= visboZustaende.meMaxZeile
+
+
+                        If ((chckName = pName) And _
+                            ((phaseNameID = chckPhNameID) Or (rootPhaseName = chckPhNameID))) Then
+
+                            If potentialParentRoles.Contains(chckRCName) Then
+                                ' nimm jetzt einfach mal den ersten, der auftritt  ... 
+                                If phaseNameID = chckPhNameID Then
+                                    found = True
+                                Else
+                                    secondBestzeile = curZeile
+                                    ' noch weitersuchen, ob nicht noch das found-Kriterium greift ... 
+                                End If
+
+                            End If
+
+                        End If
+
+                        If Not found Then
+
+                            curZeile = curZeile + 1
+
+                            With meWS
+                                chckName = CStr(meWS.Cells(curZeile, 2).value)
+                                If IsNothing(chckName) Then
+                                    chckName = ""
+                                End If
+
+                                Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                                If IsNothing(phaseName) Then
+                                    phaseName = ""
+                                End If
+
+                                chckPhNameID = calcHryElemKey(phaseName, False)
+                                Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                                If Not IsNothing(curComment) Then
+                                    chckPhNameID = curComment.Text
+                                End If
+
+                                chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+                                If IsNothing(chckRCName) Then
+                                    chckRCName = ""
+                                End If
+
+                            End With
+
+                        End If
+
+                    Loop
+
+                End If
+
+            End If
+
+        End If
+
+
+
+
+        If found Then
+            findeSammelRollenZeile = curZeile
+        ElseIf secondBestzeile > 0 Then
+            findeSammelRollenZeile = secondBestzeile
+        Else
+            findeSammelRollenZeile = 0
+        End If
+
+    End Function
+    ''' <summary>
+    ''' liest, falls vorhanden aus ProjectboardConfig.xml die Settings
+    ''' wenn nicht vorhanden, gibt false zurück 
+    ''' </summary>
+    ''' <param name="path"></param>
+    ''' <returns>ob erfolgreich oder nicht </returns>
+    ''' <remarks></remarks>
+    Public Function readawinSettings(ByVal path As String) As Boolean
+
+
+        Dim cfgs As New configuration
+        Dim cfgFile As String = path & "\ProjectboardConfig.xml"
+
+        Dim erg As Boolean = My.Computer.FileSystem.FileExists(cfgFile)
+
+        Try
+
+            cfgs = XMLImportPBcfg(cfgFile)
+
+            If Not IsNothing(cfgs) Then
+
+                Dim anzahlSettings As Integer = cfgs.applicationSettings.ExcelWorkbook1MySettings.Length
+
+                For i = 0 To anzahlSettings - 1
+
+                    Select Case cfgs.applicationSettings.ExcelWorkbook1MySettings(i).name
+                        Case "mongoDBURL"
+                            awinSettings.databaseURL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "mongoDBname"
+                            awinSettings.databaseName = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "globalPath"
+                            awinSettings.globalPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "awinPath"
+                            awinSettings.awinPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOTaskClass"
+                            awinSettings.visboTaskClass = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAbbreviation"
+                            awinSettings.visboAbbreviation = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpel"
+                            awinSettings.visboAmpel = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBODebug"
+                            awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+
+                    End Select
+                Next
+
+                readawinSettings = True
+
+            Else
+
+                readawinSettings = False
+
+            End If
+
+        Catch ex As Exception
+
+            readawinSettings = False
+
+        End Try
+
+    End Function
 End Module

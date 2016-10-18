@@ -1,9 +1,12 @@
 ﻿Imports ProjectBoardDefinitions
+Imports System.Globalization
 Imports System.Collections.Generic
 Imports System.Math
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
+Imports pptNS = Microsoft.Office.Interop.PowerPoint
+Imports System.Xml.Serialization
 
 
 
@@ -18,6 +21,9 @@ Public Module Module1
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
     Public loginErfolgreich As Boolean = False
+    Public noDB As Boolean = True
+
+    Public myWindowsName As String
 
     Public awinSettings As New clsawinSettings
     Public visboZustaende As New clsVisboZustaende
@@ -27,15 +33,22 @@ Public Module Module1
     Public iWertFarbe As Object
     'Public HoehePrcChart As Double
 
+
     Public myProjektTafel As String = ""
     Public myCustomizationFile As String
     Public myLogfile As String
 
+    ' gibt an, in welchem Modus sich aktuell die Projekt-Tafe befindet 
+    Public currentProjektTafelModus As Integer
+
+    'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
+    Public repMessages As clsReportMessages
+   
+    
     'Definitionen zum Schreiben eines Logfiles
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
     Public anzFehler As Long = 0
-
 
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
@@ -58,7 +71,7 @@ Public Module Module1
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
-    
+
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
@@ -86,16 +99,20 @@ Public Module Module1
     Public RoleDefinitions As New clsRollen
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
-   
+
 
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
-    Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
+    Public businessUnitDefinitions As New SortedList(Of Integer, clsBusinessUnit)
+
+    ' welche CustomFields gibt es ? 
+    Public customFieldDefinitions As New clsCustomFieldDefinitions
 
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
     Public missingMilestoneDefinitions As New clsMeilensteine
-
+    Public missingRoleDefinitions As New clsRollen
+    Public missingCostDefinitions As New clsKostenarten
 
     ' diese Collection nimmt alle Filter Definitionen auf 
     Public filterDefinitions As New clsFilterDefinitions
@@ -104,7 +121,7 @@ Public Module Module1
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
 
-   
+
 
 
     ' damit ist das Formular Milestone / Status / Phase überall verfügbar
@@ -136,25 +153,74 @@ Public Module Module1
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
 
+    ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
+    ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
+    Public Const rootPhaseNameDB As String = "0"
+
+    ' ur:29.06.2016: da "." kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
+    ' also wird "." = punktName durch "~|°" = punktNameDB  nur zum Speichern in DB ersetzt. Beim Lesen umgekehrt.
+    Public Const punktName As String = "."
+    Public Const punktNameDB As String = "~|°"
+
+    Public Const minColumns As Integer = 2
+
     ' diese Konstante legt die Einrücktiefe fest. Das wird benötigt beim Exportieren von Projekte in ein File, ebenso beim Importieren von Datei
     Public Const einrückTiefe As Integer = 2
 
     ' diese Konstanten werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
-    Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
-    Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
-    Public Const summentitel3 As String = "Personal-Kosten intern/extern"
-    Public Const summentitel4 As String = "Personal Kosten Struktur"
-    Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
-    Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
-    Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
-    Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
-    Public Const summentitel9 As String = "Auslastungs-Übersicht"
-    Public Const summentitel10 As String = "Details zur Über-Auslastung"
-    Public Const summentitel11 As String = "Details zur Unter-Auslastung"
-    Public Const maxProjektdauer As Integer = 60
+    '' ''Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
+    '' ''Public Const summentitel2 As String = "strategischer Fit, Risiko & Marge"
+    '' ''Public Const summentitel3 As String = "Personal-Kosten intern/extern"
+    '' ''Public Const summentitel4 As String = "Personal Kosten Struktur"
+    '' ''Public Const summentitel5 As String = "Ergebnis Verbesserungs-Potentiale"
+    '' ''Public Const summentitel6 As String = "Bisherige Ziel-Erreichung"
+    '' ''Public Const summentitel7 As String = "Prognose zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel8 As String = "Bisherige & zukünftige Ziel-Erreichung"
+    '' ''Public Const summentitel9 As String = "Auslastungs-Übersicht"
+    '' ''Public Const summentitel10 As String = "Details zur Über-Auslastung"
+    '' ''Public Const summentitel11 As String = "Details zur Unter-Auslastung"
 
+    ' diese Variablen werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
+    Public summentitel1 As String
+    Public summentitel2 As String
+    Public summentitel3 As String
+    Public summentitel4 As String
+    Public summentitel5 As String
+    Public summentitel6 As String
+    Public summentitel7 As String
+    Public summentitel8 As String
+    Public summentitel9 As String
+    Public summentitel10 As String
+    Public summentitel11 As String
 
    
+    Public Const maxProjektdauer As Integer = 60
+
+    ' welche Art von CustomFields gibt es 
+    ' kann später ggf erweitert werden auf StrArray, DblArray, etc
+    ' muss dann auch in clsProjektVorlage und clsCustomField angepasst werden  
+    Public Enum ptCustomFields
+        Str = 0
+        Dbl = 1
+        bool = 2
+    End Enum
+
+    Public Enum ptModus
+        graficboard = 0
+        massEditRessCost = 1
+    End Enum
+
+    ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
+    Public Enum ptRplanNamen
+        Name = 0
+        Anfang = 1
+        Ende = 2
+        Beschreibung = 3
+        Vorgangsklasse = 4
+        Produktlinie = 5
+        Protocol = 6
+        Dauer = 7
+    End Enum
 
 
     Public Enum PTbubble
@@ -192,6 +258,7 @@ Public Module Module1
         betterWorseL = 17 ' es wird mit dem letzten Stand verglichen
         betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
         Budget = 19
+        FitRisikoDependency = 20
     End Enum
 
     ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 
@@ -241,6 +308,24 @@ Public Module Module1
         resultampel = 8
         phasen = 9
         startdatum = 10
+        deliverables = 11
+        customfields = 12
+        projecttype = 13
+        endedatum = 14
+        persbedarf = 15
+        rolle = 16
+        kostenart = 17
+    End Enum
+
+    ''' <summary>
+    ''' betimmt bei den combined Rollen, ob nach allen SubRoles, den Platzhaltern und den Real Rollen aufgelöst werden soll 
+    ''' nur nach den Platzhaltern bzw real Rollen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTcbr
+        all = 0
+        placeholders = 1
+        realRoles = 2
     End Enum
 
     Public Enum PThis
@@ -248,6 +333,7 @@ Public Module Module1
         vorlage = 1
         beauftragung = 2
         letzterStand = 3
+        ersterStand = 4
     End Enum
 
     ' Enumeration für die Farbe 
@@ -281,6 +367,17 @@ Public Module Module1
         rplan = 7
         meilensteinTrendanalyse = 8
         filterAuswahl = 9
+        reportBHTC = 10
+        sessionFilterDefinieren = 11
+    End Enum
+    Public Enum PTlicense
+        swimlanes = 0
+       
+    End Enum
+
+    Public Enum PTpptAnnotationType
+        text = 0
+        datum = 1
     End Enum
 
 
@@ -293,7 +390,7 @@ Public Module Module1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(19, 3) As Double
+    Public frmCoord(21, 3) As Double
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
     Public Enum PTfrm
@@ -317,6 +414,8 @@ Public Module Module1
         listSelR = 17
         listSelM = 18
         phaseInfo = 19
+        createVariant = 20
+        listInfo = 21
     End Enum
 
     Public Enum PTpinfo
@@ -324,6 +423,14 @@ Public Module Module1
         left = 1
         width = 2
         height = 3
+    End Enum
+
+    ' Sprachen für die ReportMessages
+    Public Enum PTSprache
+        deutsch = 0
+        englisch = 1
+        französisch = 2
+        spanisch = 3
     End Enum
 
     ' wird in der Treeview für Laden, Löschen, Aktivieren von TreeView Formularen benötigt 
@@ -336,23 +443,47 @@ Public Module Module1
         definePortfolioSE = 5
         loadPV = 6
         deleteV = 7
+        chgInSession = 8
     End Enum
 
+    ''' <summary>
+    ''' alle Bezeichner, die sowohl lesend wie schreibend sind , stehen am Anfang; 
+    ''' dann kommen die, die nur lesend sind ... 
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Enum PTImpExp
         visbo = 0
         rplan = 1
         msproject = 2
         simpleScen = 3
         modulScen = 4
-        addElements = 5
+        massenEdit = 5
+        addElements = 6
+        rplanrxf = 7
     End Enum
 
-   
+    ' SoftwareKomponenten für die Lizensierung
+    Public Enum PTSWKomp
+
+        ProjectAdmin = 0
+        Swimlanes2 = 1
+        SWkomp2 = 2
+        SWkomp3 = 3
+        SWkomp4 = 4
+        Premium = 5
+    End Enum
+
+
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
     Public weightStrategicFit As Double
 
     '
+    '
+    ' Lizenzkomponente kann sein:
+    ' ProjectAdmin
+    ' Swimlanes2
+    Public LizenzKomponenten(5) As String '
     '
     ' Projektstatus kann sein:
     ' beendet
@@ -360,7 +491,18 @@ Public Module Module1
     ' beauftragt
     ' abgeschlossen
     Public ProjektStatus(4) As String
+    '
+    'ReportSprache kann sein:
+    ' deutsch
+    ' englisch
+    ' französisch
+    ' spanisch
+    Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"), _
+                                         New CultureInfo("en-US"), _
+                                         New CultureInfo("fr-FR"), _
+                                         New CultureInfo("es-ES")}
 
+    Public repCult As CultureInfo
 
     '
     '
@@ -396,12 +538,18 @@ Public Module Module1
     Public nrOfDaysMonth As Double
 
     ' so werden in Visual Basic die Worksheets der aktuell geladenen Excel Applikation zugänglich gemacht   
-    Public appInstance As _Application
+    'Public appInstance As _Application
+    Public appInstance As Microsoft.Office.Interop.Excel.Application
+
+    Public pptApp As Microsoft.Office.Interop.PowerPoint.Application
+
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
+    Public globalPath As String
     Public awinPath As String
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String
+    Public reportOrdnerName As String
 
     'Public projektFilesOrdner As String = "ProjectFiles"
     'Public rplanimportFilesOrdner As String = "RPLANImport"
@@ -409,6 +557,8 @@ Public Module Module1
 
     Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
+    Public licFileName As String = requirementsOrdner & "License.xml"
+    Public repMsgFileName As String = "ReportTexte"
     Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
@@ -418,6 +568,7 @@ Public Module Module1
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
     Public RepPortfolioVorOrdner As String = requirementsOrdner & "ReportTemplatesPortfolio"
+    Public ReportProfileOrdner As String = requirementsOrdner & "ReportProfile"
     Public demoModusHistory As Boolean = False
     Public historicDate As Date
 
@@ -427,13 +578,15 @@ Public Module Module1
     Public LastY As Double = -1.0
     Public firstPress As Boolean = True
 
+    Public fehlerBeimLoad As Boolean = False
 
 
 
 
 
 
- 
+
+
 
 
     ''' <summary>
@@ -454,6 +607,12 @@ Public Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' eingefügt, um eine Warteschleife relisieren zu können ... 
+    ''' </summary>
+    ''' <param name="dwMilliseconds"></param>
+    ''' <remarks></remarks>
+    Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
     'Sub awinLoescheProjekt(pname As String)
     '    '
@@ -1257,13 +1416,19 @@ Public Module Module1
 
 
     '
-    ' gibt die Überdeckung zurück zwischen den beiden Zeiträumen definiert durch showRangeLeft /showRangeRight und anfang / ende
-    ' anzahl enthält die Breite der Überdeckung
-    ' ixzeitraum gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat
-    ' ix gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt
+
     '
+    ''' <summary>
+    ''' gibt die Überdeckung zurück zwischen den beiden Zeiträumen definiert durch showRangeLeft /showRangeRight und anfang / ende
+    ''' </summary>
+    ''' <param name="anfang">Anfang Zeitraum 2</param>
+    ''' <param name="ende">Ende Zeitraum 2</param>
+    ''' <param name="ixZeitraum">gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat</param>
+    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt</param>
+    ''' <param name="anzahl">enthält die Breite der Überdeckung</param>
+    ''' <remarks></remarks>
     Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, _
-                                ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
+                                    ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
 
 
 
@@ -1299,7 +1464,7 @@ Public Module Module1
         Dim i As Integer
         Dim chtobj As Excel.ChartObject
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
@@ -1334,7 +1499,7 @@ Public Module Module1
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
             Dim found As Boolean
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
@@ -1376,7 +1541,7 @@ Public Module Module1
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
@@ -1487,7 +1652,7 @@ Public Module Module1
         ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
 
         If selectedProjekte.Count > 0 Then
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             ReDim shpArray(selectedProjekte.Count - 1)
 
             For Each kvp In selectedProjekte.Liste
@@ -1495,7 +1660,7 @@ Public Module Module1
                 hproj = kvp.Value
                 i = i + 1
                 Try
-                    shpElement = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpElement = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
                     shpArray(i - 1) = shpElement.Name
 
                 Catch ex As Exception
@@ -1530,7 +1695,10 @@ Public Module Module1
 
         If selectedProjekte.Count > 0 Then
             selectedProjekte.Clear()
-            Call awinNeuZeichnenDiagramme(8)
+            If awinSettings.showValuesOfSelected Then
+                Call awinNeuZeichnenDiagramme(8)
+            End If
+
         End If
 
 
@@ -1736,7 +1904,7 @@ Public Module Module1
         End Select
 
         Try
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
 
 
@@ -1781,7 +1949,7 @@ Public Module Module1
 
 
         Try
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             If pName = "" Then
                 For Each shpElement In worksheetShapes
@@ -2221,6 +2389,24 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstin oder eine Phase 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcPPTShapeName(ByVal hproj As clsProjekt, elemID As String) As String
+
+        Dim tmpName As String = elemID
+        If Not IsNothing(hproj) Then
+            tmpName = "(" & hproj.name & "#" & hproj.variantName & ")" & elemID
+        End If
+
+        calcPPTShapeName = tmpName
+
+    End Function
+
+    ''' <summary>
     ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
     ''' </summary>
     ''' <param name="fullname"></param>
@@ -2620,7 +2806,7 @@ Public Module Module1
             found = True
             'ElseIf request.pingMongoDb() Then
 
-            '    found = request.projectNameAlreadyExists(strName, "")
+            '    found = request.projectNameAlreadyExists(strName, "", Date.Now)
             'Else
             '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
             '    found = False
@@ -2727,6 +2913,7 @@ Public Module Module1
         Dim lastFilter As clsFilter
 
         If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.sessionFilterDefinieren Or _
             menuOption = PTmenue.filterAuswahl Then
             lastFilter = filterDefinitions.retrieveFilter(fName)
         Else
@@ -2759,7 +2946,171 @@ Public Module Module1
         End If
 
     End Sub
-   
+
+    ''' <summary>
+    ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
+    ''' fügt 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                    ByVal type As String, _
+                                    ByVal drawingAreaLeft As Double, _
+                                    ByVal drawingAreaRight As Double, _
+                                    ByVal drawingAreaBottom As Double, _
+                                    ByVal drawingAreaTop As Double, _
+                                    ByVal calendarLeft As Date, _
+                                    ByVal calendarRight As Date)
+
+        If Not IsNothing(pptSlide) Then
+            With pptSlide
+
+                If Not IsNothing(type) Then
+                    .Tags.Add("SMART", type)
+                    .Tags.Add("DAL", drawingAreaLeft.ToString)
+                    .Tags.Add("DAR", drawingAreaRight.ToString)
+                    .Tags.Add("DAB", drawingAreaBottom.ToString)
+                    .Tags.Add("DAT", drawingAreaTop.ToString)
+                    .Tags.Add("CALL", calendarLeft.ToShortDateString)
+                    .Tags.Add("CALR", calendarRight.ToShortDateString)
+                End If
+
+            End With
+        End If
 
 
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="fullBreadCrumb"></param>
+    ''' <param name="classifiedName"></param>
+    ''' <param name="shortName"></param>
+    ''' <param name="originalName"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="endDate"></param>
+    ''' <param name="ampelColor"></param>
+    ''' <param name="ampelErlaeuterung"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
+                                          ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
+                                          ByVal startDate As Date, ByVal endDate As Date, _
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+
+        Dim nullDate As Date = Nothing
+
+        If Not IsNothing(pptShape) Then
+            With pptShape
+
+
+                If Not IsNothing(fullBreadCrumb) Then
+                    .Tags.Add("BC", fullBreadCrumb)
+                End If
+
+                If Not IsNothing(classifiedName) Then
+                    .Tags.Add("CN", classifiedName)
+                End If
+
+                If Not IsNothing(shortName) Then
+                    If shortName <> classifiedName And shortName <> "" Then
+                        .Tags.Add("SN", shortName)
+                    End If
+                End If
+
+                If Not IsNothing(originalName) Then
+                    If originalName <> classifiedName And originalName <> "" Then
+                        .Tags.Add("ON", originalName)
+                    End If
+                End If
+
+                If Not IsNothing(startDate) Then
+                    If Not startDate = nullDate Then
+                        .Tags.Add("SD", startDate.ToShortDateString)
+                    End If
+                End If
+
+                If Not IsNothing(endDate) Then
+                    If Not endDate = nullDate Then
+                        .Tags.Add("ED", endDate.ToShortDateString)
+                    End If
+
+                End If
+
+                If Not IsNothing(ampelColor) Then
+                    If ampelColor >= 0 And ampelColor <= 3 Then
+                        .Tags.Add("AC", ampelColor.ToString)
+                    Else
+                        .Tags.Add("AC", "0")
+                    End If
+                End If
+
+                If Not IsNothing(ampelErlaeuterung) Then
+                    .Tags.Add("AE", ampelErlaeuterung)
+                End If
+
+            End With
+        End If
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' setzt die komplette Session zurück 
+    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearCompleteSession()
+
+        Dim allShapes As Excel.Shapes
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' jetzt: Löschen der Session 
+
+        Try
+
+            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+            For Each element As Excel.Shape In allShapes
+                element.Delete()
+            Next
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen der Shapes ...")
+        End Try
+
+        ShowProjekte.Clear()
+        AlleProjekte.Clear()
+        selectedProjekte.Clear()
+        ImportProjekte.Clear()
+        DiagramList.Clear()
+        awinButtonEvents.Clear()
+
+        allDependencies.Clear()
+        projectboardShapes.clear()
+        ' Session gelöscht
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
+
+    Public Sub PPTstarten()
+        Try
+            ' prüft, ob bereits Powerpoint geöffnet ist 
+            pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
+        Catch ex As Exception
+            Try
+                pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
+            Catch ex1 As Exception
+                Throw New ArgumentException("Powerpoint konnte nicht gestartet werden ...", ex1.Message)
+                'Exit Sub
+            End Try
+
+        End Try
+    End Sub
 End Module

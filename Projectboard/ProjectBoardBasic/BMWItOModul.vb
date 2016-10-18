@@ -3,18 +3,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
 Public Module BMWItOModul
 
 
-    Private Enum ptNamen
-        Name = 0
-        Anfang = 1
-        Ende = 2
-        Beschreibung = 3
-        Vorgangsklasse = 4
-        Produktlinie = 5
-        Protocol = 6
-        Dauer = 7
-    End Enum
-
-
     ' spezifisch für BMW Export 
 
     Friend bmwFC52Vorlage As String = "FC52 Vorlage.xlsx"
@@ -74,7 +62,10 @@ Public Module BMWItOModul
 
         ' 
         Dim logMessage As String = ""
-        Dim fullProtocol As Boolean = False
+
+        ' ur: 1.12.2015: wird nun Public awinSettings.fullProtokoll As Boolean = True  
+        ' und damit global definiert, da auch in RXFImport benötigt.
+        ' Dim fullProtocol As Boolean = True
 
 
         Dim milestoneIX As Integer = MilestoneDefinitions.Count + 1
@@ -99,14 +90,14 @@ Public Module BMWItOModul
 
 
         Dim suchstr(7) As String
-        suchstr(ptNamen.Name) = "Name"
-        suchstr(ptNamen.Anfang) = "Anfang"
-        suchstr(ptNamen.Ende) = "Ende"
-        suchstr(ptNamen.Beschreibung) = "Beschreibung"
-        suchstr(ptNamen.Vorgangsklasse) = "Vorgangsklasse"
-        suchstr(ptNamen.Produktlinie) = "Spalte A"
-        suchstr(ptNamen.Protocol) = "Übernommen als"
-        suchstr(ptNamen.Dauer) = "Dauer"
+        suchstr(ptRplanNamen.Name) = "Name"
+        suchstr(ptRplanNamen.Anfang) = "Anfang"
+        suchstr(ptRplanNamen.Ende) = "Ende"
+        suchstr(ptRplanNamen.Beschreibung) = "Beschreibung"
+        suchstr(ptRplanNamen.Vorgangsklasse) = "Vorgangsklasse"
+        suchstr(ptRplanNamen.Produktlinie) = "Spalte A"
+        suchstr(ptRplanNamen.Protocol) = "Übernommen als"
+        suchstr(ptRplanNamen.Dauer) = "Dauer"
 
 
         zeile = 2
@@ -146,31 +137,31 @@ Public Module BMWItOModul
 
         ' diese Daten müssen vorhanden sein - andernfalls Abbruch 
         Try
-            colName = firstZeile.Find(What:=suchstr(ptNamen.Name)).Column
-            colAnfang = firstZeile.Find(What:=suchstr(ptNamen.Anfang)).Column
-            colEnde = firstZeile.Find(What:=suchstr(ptNamen.Ende)).Column
+            colName = firstZeile.Find(What:=suchstr(ptRplanNamen.Name), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colAnfang = firstZeile.Find(What:=suchstr(ptRplanNamen.Anfang), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colEnde = firstZeile.Find(What:=suchstr(ptRplanNamen.Ende), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
         End Try
 
         Try
-            colDauer = firstZeile.Find(What:=suchstr(ptNamen.Dauer)).Column
+            colDauer = firstZeile.Find(What:=suchstr(ptRplanNamen.Dauer), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
             colDauer = -1
         End Try
 
 
         Try
-            colProduktlinie = firstZeile.Find(What:=suchstr(ptNamen.Produktlinie)).Column
+            colProduktlinie = firstZeile.Find(What:=suchstr(ptRplanNamen.Produktlinie), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
             colProduktlinie = -1
         End Try
 
         ' diese Daten können vorhanden sein - wenn nicht, weitermachen ...  
         Try
-            colAbbrev = firstZeile.Find(What:=suchstr(ptNamen.Beschreibung)).Column
-            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptNamen.Vorgangsklasse)).Column
+            colAbbrev = firstZeile.Find(What:=suchstr(ptRplanNamen.Beschreibung), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptRplanNamen.Vorgangsklasse), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
 
         End Try
@@ -185,7 +176,7 @@ Public Module BMWItOModul
 
 
 
-        ' Hier wird die Stelle und die Informationen für das Visbo Protocoll ermittel und gesetzt 
+        ' Hier wird die Stelle und die Informationen für das Visbo Protocoll ermittelt und gesetzt 
         Dim protocolCellName As String = "VISBO_Protocol"
         Dim pCell As Excel.Range
 
@@ -226,7 +217,10 @@ Public Module BMWItOModul
 
         ' Die Überschriften für das Protokoll werden alle wieder gesetzt 
         With aktivesSheet
-            If fullProtocol Then
+
+
+            If awinSettings.fullProtocol Then
+
                 CType(.Cells(1, colProtocol), Excel.Range).Value = "Projekt"
                 CType(.Cells(1, colProtocol + 1), Excel.Range).Value = "Hierarchie"
                 CType(.Cells(1, colProtocol + 2), Excel.Range).Value = "Plan-Element"
@@ -238,7 +232,7 @@ Public Module BMWItOModul
             End If
 
             ' wird immer geschrieben 
-            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptNamen.Protocol)
+            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptRplanNamen.Protocol)
             CType(.Cells(1, colProtocol + 7), Excel.Range).Value = "Grund"
 
         End With
@@ -316,19 +310,6 @@ Public Module BMWItOModul
                     Dim doADD As Boolean = False
 
                     pName = tmpStr(0)
-                    'If tmpStr(0).Contains("SOP") Then
-                    '    Dim positionIX As Integer = tmpStr(0).IndexOf("SOP") - 1
-                    '    pName = ""
-                    '    For ih As Integer = 0 To positionIX
-                    '        pName = pName & tmpStr(0).Chars(ih)
-                    '    Next
-                    '    pName = pName.Trim
-                    '    ' doADD = True
-                    '    doADD = False
-                    'Else
-                    '    pName = tmpStr(0).Trim
-                    'End If
-                    ' Ende Änderung PT-71 22.1.15 (tk)
 
                     If Not isVorlage Then
                         If tmpStr(0).Trim.EndsWith("eA") Then
@@ -475,7 +456,9 @@ Public Module BMWItOModul
 
                                         anzProcessedElements = anzProcessedElements + 1
 
-                                        If fullProtocol Then
+
+                                        If awinSettings.fullProtocol Then
+
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 2), Excel.Range).Value = origItem.Trim
                                             CType(aktivesSheet.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
@@ -514,7 +497,9 @@ Public Module BMWItOModul
 
                                                             found = True
                                                             hproj.businessUnit = tmpBU
-                                                            If fullProtocol Then
+
+                                                            If awinSettings.fullProtocol Then
+
                                                                 CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = tmpBU
                                                             End If
 
@@ -525,7 +510,8 @@ Public Module BMWItOModul
                                                     End While
                                                 End If
 
-                                                If Not found And fullProtocol Then
+
+                                                If Not found And awinSettings.fullProtocol Then
 
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
 
@@ -630,7 +616,9 @@ Public Module BMWItOModul
                                 oLevel = origHierarchy.getLevel(origItem)
                                 Dim oBreadCrumb As String = origHierarchy.getFootPrint(oLevel)
 
-                                If fullProtocol Then
+
+                                If awinSettings.fullProtocol Then
+
                                     ' Original Footprint
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 1), Excel.Range).Value = oBreadCrumb
                                     ' Textvorgangsklasse
@@ -671,6 +659,13 @@ Public Module BMWItOModul
                                     ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
                                     parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
 
+                                    ' Plausibilitäts-Check: die beiden müssen identisch sein !!
+                                    ' tk Debug: 27.11.15
+                                    If elemNameOfElemID(parentNodeID) <> parentElemName Then
+                                        Call MsgBox("nicht konsistent in bmwImportProjekteITO15, zeile 663")
+                                    End If
+
+
                                     ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
                                     Try
 
@@ -684,99 +679,48 @@ Public Module BMWItOModul
                                         stdName = itemName
                                     End Try
 
-                                    Dim ok1 As Boolean
 
-                                    elemID = calcHryElemKey(stdName, False)
-                                    If hproj.hierarchy.containsKey(elemID) Then
-
-                                        elemID = hproj.hierarchy.findUniqueElemKey(stdName, False)
-
-                                        Dim ueberdeckung As Double
-                                        Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
-                                        Dim parentPhase As clsPhase = pHierarchy.getPhaseBeforeLevel(indentLevel)
-                                        Dim parentphaseName As String = ""
-
-                                        If Not IsNothing(parentPhase) Then
-                                            parentphaseName = parentPhase.name
-                                        End If
-
-                                        If awinSettings.eliminateDuplicates Then
-
-                                            If parentphaseName = stdName Then
-                                                ueberdeckung = calcPhaseUeberdeckung(parentPhase.getStartDate, parentPhase.getEndDate, _
-                                                                          itemStartDate, itemEndDate)
-                                                If ueberdeckung < 0.97 Then
-                                                    ok1 = True
-                                                Else
-                                                    ok1 = False
-                                                    logMessage = stdName & " ist doppelt und wird ignoriert "
-                                                End If
-
-                                            Else
-                                                ' tk: 20.5.15
-                                                ' nur wenn explizit gefordert, wird nach Duplikaten gesucht, die auf der gleichen Hierarchie Stufe sind 
-                                                ' und den gleichen Parent haben 
-                                                ' die zu ignorieren ist eigentlich nicht gut, wir sollten nicht versuchen, den Eingabe Schrott zu korrigieren
-                                                ' da werden dann ggf Elemente ignoriert, die nicht ignoriert werden sollten 
-                                                ' deshalb wird diese Prüfung nur noch optional gemacht ... 
-
-                                                Dim phaseIndices() As Integer
-                                                phaseIndices = hproj.hierarchy.getPhaseIndices(stdName, breadcrumb)
-                                                If phaseIndices(0) > 0 Then
-                                                    Dim anzahl As Integer = phaseIndices.Length
-
-                                                    ' PT-79 toleranz für Identität von Phasen
-                                                    Dim vglPhase As clsPhase
-
-                                                    Dim index As Integer = 1
-                                                    found = False
-
-                                                    Do While index <= anzahl And Not found
-
-                                                        vglPhase = hproj.getPhase(phaseIndices(index - 1))
-
-                                                        ' haben die beiden Phasen den gleichen Vater ?
-                                                        If parentPhase.nameID = hproj.hierarchy.getParentIDOfID(vglPhase.nameID) Then
-                                                            ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
-                                                                          itemStartDate, itemEndDate)
-
-                                                            'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
-                                                            If ueberdeckung < 0.95 Then
-                                                                index = index + 1
-                                                            Else
-                                                                found = True
-                                                            End If
-                                                        Else
-                                                            index = index + 1
-                                                        End If
-
-                                                    Loop
-
-                                                    If Not found Then
-                                                        ok1 = True
-                                                    Else
-                                                        ok1 = False
-                                                        logMessage = stdName & " ist doppelt und wird ignoriert "
-                                                    End If
-
-                                                Else
-                                                    ok1 = True
-                                                End If
-
-                                            End If
-
-                                        Else
-                                            ok1 = True
-                                        End If
+                                    Dim ok1 As Boolean = True
 
 
-                                    Else
-                                        ok1 = True
+                                    'Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
+                                    Dim parentPhase As clsPhase = pHierarchy.getPhaseBeforeLevel(indentLevel)
+                                    Dim parentphaseName As String = ""
+
+                                    If Not IsNothing(parentPhase) Then
+                                        parentphaseName = parentPhase.name
                                     End If
 
 
+                                    ' sollen Duplikate eliminiert werden ?
+                                    If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(stdName, False)) Then
+                                        ' nur dann kann es Duplikate geben 
+                                        If hproj.isCloneToParent(stdName, parentPhase.nameID, itemStartDate, itemEndDate, 0.97) Then
+                                            ok1 = False
+                                            logMessage = stdName & " ist Duplikat zu Parent " & parentPhase.name & " und wird ignoriert "
+
+                                        Else
+                                            Dim duplicateSiblingID As String = hproj.getDuplicatePhaseSiblingID(stdName, parentPhase.nameID, _
+                                                                                                                 itemStartDate, itemEndDate, 0.97)
+
+                                            If duplicateSiblingID = "" Then
+                                                ok1 = True
+                                            Else
+                                                ok1 = False
+                                                logMessage = stdName & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                                             " und wird ignoriert "
+                                            End If
+                                        End If
+
+
+
+                                    End If
+
+
+
                                     ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
-                                    If Not PhaseDefinitions.Contains(stdName) Then
+                                    Dim ok2 As Boolean = True
+                                    If Not PhaseDefinitions.Contains(stdName) And ok1 Then
 
                                         Dim hphaseDef As clsPhasenDefinition
                                         hphaseDef = New clsPhasenDefinition
@@ -788,17 +732,21 @@ Public Module BMWItOModul
                                         phaseIX = phaseIX + 1
 
 
-                                        If isVorlage Then
+                                        If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
                                             ' in die Phase-Definitions aufnehmen 
                                             Try
                                                 PhaseDefinitions.Add(hphaseDef)
                                             Catch ex As Exception
                                             End Try
                                         Else
-                                            ' Änderung tk: es sollen die nicht bekannten Elemente nicht mehr ausgegrenzt werden ! 
-                                            ' wenn die nicht bekannten Namen ausgegrenzt werden sollen , muss hier ein ok2 eingeführt werdne 
-                                            ' in die Missing Phase-Definitions aufnehmen 
+                                            ' in Abhängigkeit vom Setting die Elemente aufnehmen oder nicht 
                                             Try
+                                                If awinSettings.importUnknownNames Then
+                                                    ok2 = True
+                                                Else
+                                                    ok2 = False
+                                                    logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
+                                                End If
                                                 missingPhaseDefinitions.Add(hphaseDef)
                                             Catch ex As Exception
                                             End Try
@@ -808,9 +756,20 @@ Public Module BMWItOModul
 
                                     End If
 
+                                    ' hier muss noch der letzte Check rein 
 
-                                    If ok1 Then
+                                    If ok1 And ok2 Then
 
+                                        ' hier muss jetzt überprüft werden, ob es Geschwister mit gleichen Namen gibt
+                                        ' wenn ja , wird an den stdName solange eine ldfNR Ergänzung rangemacht, bis der NAme innerhalb der 
+                                        ' Geschwistergruppe eindeutig ist
+
+                                        ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase 
+                                        If awinSettings.createUniqueSiblingNames Then
+                                            stdName = hproj.hierarchy.findUniqueGeschwisterName(parentNodeID, stdName, False)
+                                        End If
+
+                                        elemID = hproj.hierarchy.findUniqueElemKey(stdName, False)
 
                                         ' das muss auf alle Fälle gemacht werden 
                                         cphase = New clsPhase(parent:=hproj)
@@ -828,7 +787,9 @@ Public Module BMWItOModul
 
                                         Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
 
-                                        If fullProtocol Then
+
+                                        If awinSettings.fullProtocol Then
+
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
                                         End If
@@ -902,66 +863,26 @@ Public Module BMWItOModul
                                             stdName = itemName
                                         End Try
 
-                                        Dim ok1 As Boolean
+                                        Dim ok1 As Boolean = True
 
-                                        elemID = calcHryElemKey(stdName, True)
-                                        If hproj.hierarchy.containsKey(elemID) Then
+                                        If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(stdName, True)) Then
+                                            ' nur dann kann es Duplikate geben 
+                                            Dim duplicateSiblingID As String = hproj.getDuplicateMsSiblingID(stdName, cphase.nameID, _
+                                                                                                                 itemStartDate, 0)
 
-                                            Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
-                                            elemID = hproj.hierarchy.findUniqueElemKey(stdName, True)
-
-                                            If awinSettings.eliminateDuplicates Then
-
-                                                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(stdName, breadcrumb)
-
-                                                If milestoneIndices(0, 0) > 0 And milestoneIndices(1, 0) > 0 Then
-                                                    Dim anzahl As Integer = CInt(milestoneIndices.Length / 2)
-
-                                                    ' PT-79 toleranz für Identität von Meilensteinen
-                                                    Dim vglMilestone As clsMeilenstein
-
-                                                    ' nur wenn sie den gleich Vater haben 
-                                                    Dim index As Integer = 1
-                                                    found = False
-
-                                                    Do While index <= anzahl And Not found
-
-                                                        vglMilestone = hproj.getMilestone(milestoneIndices(0, index - 1), milestoneIndices(1, index - 1))
-                                                        If cphase.nameID = hproj.hierarchy.getParentIDOfID(vglMilestone.nameID) Then
-
-                                                            If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
-                                                                index = index + 1
-                                                            Else
-                                                                found = True
-                                                            End If
-                                                        Else
-                                                            index = index + 1
-                                                        End If
-
-                                                    Loop
-
-                                                    If found Then
-                                                        ' identisch 
-                                                        ok1 = False
-                                                        logMessage = stdName & " ist doppelt und wird ignoriert "
-                                                    Else
-                                                        ok1 = True
-                                                    End If
-
-                                                Else
-                                                    ok1 = True
-                                                End If
-
-                                            Else
+                                            If duplicateSiblingID = "" Then
                                                 ok1 = True
+                                            Else
+                                                ok1 = False
+                                                logMessage = stdName & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                                             " und wird ignoriert "
                                             End If
 
-                                        Else
-                                            ok1 = True
                                         End If
 
 
-                                        ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist 
+                                        ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist
+                                        Dim ok2 As Boolean = True
                                         If Not MilestoneDefinitions.Contains(stdName) And ok1 Then
 
                                             Dim hMilestoneDef As New clsMeilensteinDefinition
@@ -976,7 +897,7 @@ Public Module BMWItOModul
 
                                             milestoneIX = milestoneIX + 1
 
-                                            If isVorlage Then
+                                            If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
                                                 ' in die Milestone-Definitions aufnehmen 
                                                 Try
                                                     MilestoneDefinitions.Add(hMilestoneDef)
@@ -984,12 +905,18 @@ Public Module BMWItOModul
                                                 End Try
 
                                             Else
-                                                ' auch diese Elemente werden aufgenommen ; wenn das nicht mehr der Fall sein soll, muss hier die Log-Message erweitert
-                                                ' werden und eine Variable ok2 eingeführt werden 
+
                                                 logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
 
                                                 ' in die Missing Milestone-Definitions aufnehmen 
                                                 Try
+                                                    ' das Element aufnehmen, in Abhängigkeit vom Setting 
+                                                    If awinSettings.importUnknownNames Then
+                                                        ok2 = True
+                                                    Else
+                                                        ok2 = False
+                                                    End If
+
                                                     missingMilestoneDefinitions.Add(hMilestoneDef)
                                                 Catch ex As Exception
                                                 End Try
@@ -998,7 +925,15 @@ Public Module BMWItOModul
 
                                         End If
 
-                                        If ok1 Then
+                                        If ok1 And ok2 Then
+
+
+                                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilenstein und Phase 
+                                            If awinSettings.createUniqueSiblingNames Then
+                                                stdName = hproj.hierarchy.findUniqueGeschwisterName(cphase.nameID, stdName, True)
+                                            End If
+
+                                            elemID = hproj.hierarchy.findUniqueElemKey(stdName, True)
 
 
                                             With cmilestone
@@ -1022,7 +957,9 @@ Public Module BMWItOModul
                                                 'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
                                                 Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
 
-                                                If fullProtocol Then
+
+                                                If awinSettings.fullProtocol Then
+
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
                                                 End If
@@ -1155,7 +1092,7 @@ Public Module BMWItOModul
                                 Else
                                     'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
                                     hproj.farbe = awinSettings.AmpelNichtBewertet
-                                    hproj.Schrift = Projektvorlagen.getProject(1).Schrift
+                                    hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                                     hproj.Schriftfarbe = RGB(10, 10, 10)
                                     hproj.earliestStart = 0
                                     hproj.latestStart = 0
@@ -1171,7 +1108,9 @@ Public Module BMWItOModul
                             Throw New Exception(ex.Message)
                         End Try
 
-                        If Not isVorlage And fullProtocol Then
+
+                        If Not isVorlage And awinSettings.fullProtocol Then
+
                             ' jetzt werden Projekt-Name, Business Unit und Vorlagen-Kennung weggeschreiben 
                             CType(aktivesSheet.Cells(anfang - 1, colProtocol - 3), Excel.Range).Value = hproj.name
                             CType(aktivesSheet.Cells(anfang - 1, colProtocol - 2), Excel.Range).Value = hproj.VorlagenName
@@ -1207,9 +1146,11 @@ Public Module BMWItOModul
                 ' jetzt werden die Missing Phase- und Milestone Definitions noch weggeschrieben 
                 '
 
-                ' aber nur, wenn fullProtocol = true 
+                ' aber nur, wenn awinSettings.fullProtokoll = true 
 
-                If fullProtocol Then
+
+                If awinSettings.fullProtocol Then
+
 
                     Dim tmpzeile As Integer
                     tmpzeile = 1
@@ -1307,6 +1248,7 @@ Public Module BMWItOModul
 
 
     End Sub
+
 
     ''' <summary>
     ''' exportiert das angegebene Projekt in die bereits geöffnete Datei 
@@ -1592,5 +1534,36 @@ Public Module BMWItOModul
 
         Call MsgBox("ok, Report exportiert")
 
+    End Sub
+
+    ''' <summary>
+    ''' testet die Konsistenz der Positionierungs-Informationen in projectboardshapes, im Projekt und in Showprojekte 
+    ''' allerdings ist Showprojekte aktuell nicht wirklich relevant ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub testConsistencyOfPT1()
+        Dim atleastOne As Boolean = False
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            Dim zeile1 As Integer = kvp.Value.tfZeile
+            Dim zeile2 As Integer = ShowProjekte.getPTZeile(kvp.Key)
+            If zeile1 <> zeile2 Then
+                Call MsgBox("ungleich 1/2: " & kvp.Key & ": " & zeile1.ToString & " , " & zeile2.ToString)
+                atleastOne = True
+            End If
+
+            Dim coord() As Double = projectboardShapes.getCoord(kvp.Key)
+            Dim zeile3 As Integer = calcYCoordToZeile(coord(0))
+
+            If zeile1 <> zeile3 Then
+                Call MsgBox("ungleich 1/3: " & kvp.Key & ": " & zeile1.ToString & " , " & zeile3.ToString)
+                atleastOne = True
+            End If
+
+        Next
+
+        If Not atleastOne Then
+            Call MsgBox("alles i.O")
+        End If
     End Sub
 End Module

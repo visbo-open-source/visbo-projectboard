@@ -11,25 +11,36 @@ Public Class Tabelle1
     Dim projektfarbe As Object, projektschrift As Integer
 
     Private Sub Tabelle1_ActivateEvent() Handles Me.ActivateEvent
+        Dim a As Integer
 
 
-        Application.DisplayFormulaBar = False
+        Try
+            Application.DisplayFormulaBar = False
 
-        With Application.ActiveWindow
+            With Application.ActiveWindow
 
-            .DisplayWorkbookTabs = False
-            .DisplayHeadings = False
+                .DisplayWorkbookTabs = False
+                .DisplayHeadings = False
 
-            .SplitColumn = 0
-            .SplitRow = 1
+                .SplitColumn = 0
+                .SplitRow = 1
 
-            .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = True
+                .GridlineColor = RGB(220, 220, 220)
+                a = Application.ActiveWindow.Panes.Count
 
-        End With
+                .FreezePanes = True
 
-        
+            End With
 
+
+        Catch ex As Exception
+            ' nur eine Dummy Zuweisung, um ggf später hier einen Haltepunkt setzen zu können
+            Dim b As Integer = a
+        End Try
+
+        If appInstance.ScreenUpdating = False Then
+            appInstance.ScreenUpdating = True
+        End If
 
     End Sub
 

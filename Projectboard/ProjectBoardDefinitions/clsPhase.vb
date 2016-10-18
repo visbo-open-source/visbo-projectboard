@@ -1,24 +1,263 @@
-﻿Public Class clsPhase
+﻿Imports Microsoft.Office.Interop.Excel
+Public Class clsPhase
 
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
 
-    Private AllMilestones As List(Of clsMeilenstein)
-    Private AllRoles As List(Of clsRolle)
-    Private AllCosts As List(Of clsKostenart)
-    Private _Offset As Integer
-    Private _earliestStart As Integer
-    Private _latestStart As Integer
-    Private _minDauer As Integer
-    Private _maxDauer As Integer
-    Private _relStart As Integer
-    Private _relEnde As Integer
-    Private _name As String
-    Private _startOffsetinDays As Integer
-    Private _dauerInDays As Integer
-    Private _Parent As clsProjekt
+    Private _nameID As String
+    Private _parentProject As clsProjekt
     Private _vorlagenParent As clsProjektvorlage
 
+    Private _shortName As String
+    Private _originalName As String
+    Private _appearance As String
+    Private _color As Integer
+
+    Private _verantwortlich As String
+    ' wird benötigt, um bei Optimierungs-Läufen einen Tryout Wert zu haben ..
+    Private _offset As Integer
+    ' ist der eigentlich Offsetin Tagen vom Projekt-Start weg gerechnet
+    Private _startOffsetinDays As Integer
+
+    Private _earliestStart As Integer
+    Private _latestStart As Integer
+
+    Private _relStart As Integer
+    Private _relEnde As Integer
+
+    Private _dauerInDays As Integer
+
+
+    Private _bewertungen As SortedList(Of String, clsBewertung)
+    Private _allMilestones As List(Of clsMeilenstein)
+    Private _allRoles As List(Of clsRolle)
+    Private _allCosts As List(Of clsKostenart)
+
+
+
+    ''' <summary>
+    ''' liest/schreibt das Feld für vrantwortlich
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property verantwortlich As String
+        Get
+            verantwortlich = _verantwortlich
+        End Get
+        Set(value As String)
+            _verantwortlich = value
+        End Set
+    End Property
+
+    Public Sub addBewertung(ByVal b As clsBewertung)
+        Dim key As String
+
+        If Not b.bewerterName Is Nothing Then
+            key = b.bewerterName & "#" & b.datum.ToString("MMM yy")
+        Else
+            key = "#" & b.datum.ToString("MMM yy")
+        End If
+
+        Try
+            _bewertungen.Add(key, b)
+        Catch ex As Exception
+            Throw New ArgumentException("Bewertung wurde bereits vergeben ..")
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt Anzahl Bewertungen zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property bewertungsCount As Integer
+        Get
+            bewertungsCount = _bewertungen.Count
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' löscht die Bewertungen der Phase
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearBewertungen()
+
+        Try
+            _bewertungen.Clear()
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt die Bewertungsliste zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property bewertungsListe() As SortedList(Of String, clsBewertung)
+
+        Get
+            bewertungsListe = _bewertungen
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Bewertung mit der angegebenen Nr zurück
+    ''' Nr kann zwischen 1 und Count liegen  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBewertung(ByVal index As Integer) As clsBewertung
+
+        Get
+
+            If index > _bewertungen.Count Then
+                'getBewertung = Nothing
+                getBewertung = New clsBewertung
+            Else
+                getBewertung = _bewertungen.ElementAt(index - 1).Value
+            End If
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' liest / setzt die individuelle appearance für diese Phase 
+    ''' normalerweise wird die Appearance aber über die PhaseDefinitions oder missingPhaseDefinitions definiert 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property appearance As String
+        Get
+            appearance = _appearance
+        End Get
+        Set(value As String)
+            If appearanceDefinitions.ContainsKey(value) Then
+                _appearance = value
+            Else
+                _appearance = awinSettings.defaultPhaseClass
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' gibt das Shape für die Phase zurück
+    ''' falls es keine explizite Definition gibt: die Form der ersten Phase in der AppearnceDefinitions-Liste 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
+        Get
+
+            Dim tmpClass As String
+            Dim found As Boolean = True
+
+            If PhaseDefinitions.Contains(Me.name) Then
+                tmpClass = PhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
+
+            ElseIf missingMilestoneDefinitions.Contains(Me.name) Then
+                tmpClass = missingPhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
+
+            Else
+                tmpClass = _appearance
+                found = False
+            End If
+
+            getShape = appearanceDefinitions.Item(tmpClass).form
+
+            If Not found Then
+                getShape.Fill.ForeColor.RGB = _color
+            End If
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' liest/schreibt den Ampel-Status, das ist die 1. Bewertung
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property ampelStatus As Integer
+        Get
+            If Me.bewertungsCount >= 1 Then
+                ampelStatus = Me.getBewertung(1).colorIndex
+            Else
+                ampelStatus = 0
+            End If
+        End Get
+
+        Set(value As Integer)
+            If IsNothing(value) Then
+                value = 0
+            ElseIf value < 0 Or value > 3 Then
+                value = 0
+            End If
+
+            If Me.bewertungsCount >= 1 Then
+                Me.getBewertung(1).colorIndex = value
+            Else
+
+                Dim tmpB As New clsBewertung
+                With tmpB
+                    .description = ""
+                    .colorIndex = value
+                End With
+
+                Me.addBewertung(tmpB)
+
+            End If
+        End Set
+
+    End Property
+
+    ''' <summary>
+    ''' liest/schreibt die Ampel-Erläuterung, das ist die 1. Bewertung
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property ampelErlaeuterung As String
+        Get
+            If Me.bewertungsCount >= 1 Then
+                ampelErlaeuterung = Me.getBewertung(1).description
+            Else
+                ampelErlaeuterung = ""
+            End If
+        End Get
+        Set(value As String)
+            If IsNothing(value) Then
+                value = ""
+            End If
+
+            If Me.bewertungsCount >= 1 Then
+                Me.getBewertung(1).description = value
+            Else
+                Dim tmpB As New clsBewertung
+                With tmpB
+                    .description = value
+                    .colorIndex = 0
+                End With
+
+                Me.addBewertung(tmpB)
+
+            End If
+
+        End Set
+
+    End Property
 
     ''' <summary>
     ''' prüft ob die Phase in ihren Werten Dauer in Monaten konsistent zu den Xwert-Dimensionen der Rollen und Kosten ist 
@@ -85,8 +324,8 @@
 
         Try
 
-            projektStartdate = Me.Parent.startDate
-            projektstartColumn = Me.Parent.Start
+            projektStartdate = Me.parentProject.startDate
+            projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
 
@@ -127,12 +366,15 @@
                 ' dieser Aufruf korrigiert notfalls die intern gehaltene
 
                 Try
-                    If Me.nameID <> Me.Parent.getPhase(1).nameID Then
-                        ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
-                        Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
+                    If Not IsNothing(Me.parentProject.getPhase(1)) Then
+                        If Me.nameID <> Me.parentProject.getPhase(1).nameID Then
+                            ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
+                            Me.parentProject.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
+                        End If
                     End If
-                Catch ex As Exception
 
+                Catch ex As Exception
+                    Dim b As Integer = 0
                 End Try
 
 
@@ -223,8 +465,8 @@
 
         Try
 
-            projektStartdate = Me.Parent.startDate
-            projektstartColumn = Me.Parent.Start
+            projektStartdate = Me.parentProject.startDate
+            projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
 
@@ -335,22 +577,84 @@
     End Property
 
 
-    Public Property Offset As Integer
+    Public Property offset As Integer
         Get
-            Offset = _Offset
+            offset = _offset
         End Get
         Set(value As Integer)
             If _earliestStart = -999 Or _latestStart = -999 Then
-                _Offset = value
+                _offset = value
             Else
                 If value >= _earliestStart - _relStart And value <= _latestStart - _relStart Then
-                    _Offset = value
+                    _offset = value
                 Else
                     Throw New ApplicationException("Wert für Offset liegt ausserhalb der zugelassenen Grenzen")
                 End If
             End If
 
         End Set
+    End Property
+
+    ''' <summary>
+    ''' liest/schreibt den Original Name
+    ''' gibt den Original Namen einer Phase zurück 
+    ''' wenn der leer ist, dann wird der Phasen Name zurück gegeben 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property originalName As String
+        Get
+
+            If _originalName = "" Then
+                originalName = Me.name
+            Else
+                originalName = _originalName
+            End If
+
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value.Trim.Length > 0 Then
+                    _originalName = value
+                End If
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' gibt die Abkürzung der Phase zurück 
+    ''' entweder als Abkürzung der phaseDefinitions, als Abkürzung der missingphaseDefinitions oder der leere String
+    ''' Später: alternativeAbbrev
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property shortName As String
+        Get
+            Dim abbrev As String = ""
+            Dim tmpName As String = Me.name
+
+            If PhaseDefinitions.Contains(tmpName) Then
+                abbrev = PhaseDefinitions.getAbbrev(tmpName)
+            ElseIf missingPhaseDefinitions.Contains(tmpName) Then
+                abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
+            Else
+                abbrev = _shortName
+            End If
+
+            shortName = abbrev
+
+        End Get
+
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value.Trim.Length > 0 Then
+                    _shortName = value
+                End If
+            End If
+        End Set
+
     End Property
 
     ''' <summary>
@@ -361,7 +665,7 @@
     ''' <remarks></remarks>
     Public ReadOnly Property getStartDate As Date
         Get
-            getStartDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
+            getStartDate = Me.parentProject.startDate.AddDays(_startOffsetinDays)
         End Get
     End Property
 
@@ -375,137 +679,174 @@
 
         Get
             If _dauerInDays > 0 Then
-                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
+                getEndDate = Me.parentProject.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
             Else
                 'Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
-                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
+                getEndDate = Me.parentProject.startDate.AddDays(_startOffsetinDays)
             End If
 
         End Get
 
     End Property
 
-    Public ReadOnly Property Farbe As Object
+    ''' <summary>
+    ''' gibt die individuelle Farbe zurück, also die Einstellung, die verwendet wird 
+    ''' wenn es sich nicht um einen categorized namen handelt 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property individualColor As Integer
         Get
-            Try
-                Dim itemName As String = elemNameOfElemID(_name)
-                If _name = rootPhaseName Then
-                    Farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
-                Else
-                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(elemNameOfElemID(_name))
-                    If IsNothing(tmpPhaseDef) Then
-                        If appearanceDefinitions.ContainsKey("Phasen Default") Then
-                            Farbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
-                        Else
-                            Farbe = awinSettings.AmpelNichtBewertet
-                        End If
-
-                    Else
-                        Farbe = tmpPhaseDef.farbe
-                    End If
-
-                End If
-
-            Catch ex As Exception
-                ' in diesem Fall wird ein Standard Farbe genommen 
-                Farbe = awinSettings.AmpelNichtBewertet
-            End Try
-
+            individualColor = Me._color
         End Get
     End Property
 
+    ''' <summary>
+    ''' schreibt die individuelle Farbe, also die Farbe die verwendet wird, wenn es weder in PhaseDefinitions
+    ''' noch in missingPhaseDefinitions einen Eintrag dazu gibt ...
+    ''' gibt die Farbe einer Phase zurück; das ist die Farbe der Darstellungsklasse, wenn die Phase zur Liste der
+    ''' bekannten Elemente gehört, sonst die AlternativeFare, die ggf beim auslesen z.b. aus MS Project ermittelt wird
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property farbe As Integer
+        Get
+            Try
 
+                Dim phName As String = elemNameOfElemID(_nameID)
+
+                If PhaseDefinitions.Contains(phName) Or missingPhaseDefinitions.Contains(phName) Then
+                    farbe = Me.getShape.Fill.ForeColor.RGB
+                Else
+                    farbe = _color
+                End If
+
+            Catch ex As Exception
+                farbe = _color
+            End Try
+
+        End Get
+        Set(value As Integer)
+            If value >= RGB(0, 0, 0) And value <= RGB(255, 255, 255) Then
+                _color = value
+            End If
+        End Set
+    End Property
+
+
+    ' ''' <summary>
+    ' ''' setzt die Farbe einer Phase; macht  dann Sinn, wenn die Phase nicht zur 
+    ' ''' Liste der bekannten/missing Phasen gehört 
+    ' ''' </summary>
+    ' ''' <value></value>
+    ' ''' <remarks></remarks>
+    'Public WriteOnly Property setFarbe As Long
+    '    Set(value As Long)
+
+    '        If value >= RGB(0, 0, 0) And value <= RGB(255, 255, 255) Then
+    '            _alternativeColor = value
+    '        Else
+    '            ' unverändert lassen - wird ja auch im New initial gesetzt 
+    '        End If
+
+    '    End Set
+    'End Property
+
+
+    ''' <summary>
+    ''' ist die Anzahl in Tagen, die die Phase vor ihrem aktuellen Startdatum beginnen kann
+    ''' 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property earliestStart As Integer
         Get
             earliestStart = _earliestStart
         End Get
         Set(value As Integer)
-            If value >= 0 Then
-                If _relStart <> -999 Then
-                    If value <= _relStart Then
-                        _earliestStart = value
-                    Else
-                        Throw New ApplicationException("Wert für Earliest Start liegt nach dem aktuellen Start")
-                    End If
-                Else
-                    _earliestStart = value
-                End If
+            If value <= 0 Then
+                ' tk 17.11.15: hier muss noch eine Konsistenzprüfung rein ...
+                _earliestStart = value
+
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _earliestStart = value
             Else
-                Throw New ApplicationException("Wert für Earliest Start kann nicht negativ sein")
+                Throw New ApplicationException("Wert für Earliest Start kann nicht größer Null sein")
             End If
 
         End Set
     End Property
 
+    ''' <summary>
+    ''' ist die Anzahl in Tagen, die die Phase nach ihrem aktuellen Startdatum beginnen kann
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property latestStart As Integer
         Get
             latestStart = _latestStart
         End Get
         Set(value As Integer)
             If value >= 0 Then
-                If _relStart <> -999 Then
-                    If value >= _relStart Then
-                        _latestStart = value
-                    Else
-                        Throw New ApplicationException("Wert für Latest Start liegt vor dem aktuellen Start")
-                    End If
-                Else
-                    _latestStart = value
-                End If
+                ' tk 17.11.15 hier muss noch eine Konsistenzprüfung rein ... 
+                _latestStart = value
+
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _latestStart = value
             Else
-                Throw New ApplicationException("Wert für Earliest Start kann nicht negativ sein")
+                Throw New ApplicationException("Wert für Latest Start kann nicht negativ sein")
             End If
 
         End Set
     End Property
 
-    Public Property minDauer As Integer
-        Get
-            minDauer = _minDauer
-        End Get
-        Set(value As Integer)
-            If value >= 1 Then
-                If _maxDauer <> -999 Then
-                    If value <= _maxDauer Then
-                        _minDauer = value
-                    Else
-                        Throw New ApplicationException("Mindest-Dauer kann nicht größer als Max Dauer sein")
-                    End If
-                Else
-                    _minDauer = value
-                End If
-            Else
-                Throw New ApplicationException("Mindest-Dauer kann nicht negativ oder Null sein")
-            End If
+    'Public Property minDauer As Integer
+    '    Get
+    '        minDauer = _minDauer
+    '    End Get
+    '    Set(value As Integer)
+    '        If value >= 1 Then
+    '            If _maxDauer <> -999 Then
+    '                If value <= _maxDauer Then
+    '                    _minDauer = value
+    '                Else
+    '                    Throw New ApplicationException("Mindest-Dauer kann nicht größer als Max Dauer sein")
+    '                End If
+    '            Else
+    '                _minDauer = value
+    '            End If
+    '        Else
+    '            Throw New ApplicationException("Mindest-Dauer kann nicht negativ oder Null sein")
+    '        End If
 
-        End Set
-    End Property
+    '    End Set
+    'End Property
 
-    Public Property maxDauer As Integer
-        Get
-            maxDauer = _maxDauer
-        End Get
-        Set(value As Integer)
-            If value >= 1 Then
-                If _minDauer <> -999 Then
-                    If value >= _minDauer Then
-                        _maxDauer = value
-                    Else
-                        Throw New ApplicationException("Maximal-Dauer kann nicht kleiner als Min Dauer sein")
-                    End If
-                Else
-                    _maxDauer = value
-                End If
-            Else
-                Throw New ApplicationException("Maximal-Dauer kann nicht negativ oder Null sein")
-            End If
+    'Public Property maxDauer As Integer
+    '    Get
+    '        maxDauer = _maxDauer
+    '    End Get
+    '    Set(value As Integer)
+    '        If value >= 1 Then
+    '            If _minDauer <> -999 Then
+    '                If value >= _minDauer Then
+    '                    _maxDauer = value
+    '                Else
+    '                    Throw New ApplicationException("Maximal-Dauer kann nicht kleiner als Min Dauer sein")
+    '                End If
+    '            Else
+    '                _maxDauer = value
+    '            End If
+    '        Else
+    '            Throw New ApplicationException("Maximal-Dauer kann nicht negativ oder Null sein")
+    '        End If
 
-        End Set
-    End Property
+    '    End Set
+    'End Property
 
 
     Public ReadOnly Property relStart As Integer
@@ -517,7 +858,7 @@
 
             Try
 
-                If Me.Parent Is Nothing Then
+                If Me.parentProject Is Nothing Then
                     isVorlage = True
                 Else
                     isVorlage = False
@@ -529,7 +870,7 @@
             If isVorlage Then
                 tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
             Else
-                tmpValue = getColumnOfDate(Me.Parent.startDate.AddDays(Me.startOffsetinDays)) - Me.Parent.Start + 1
+                tmpValue = getColumnOfDate(Me.parentProject.startDate.AddDays(Me.startOffsetinDays)) - Me.parentProject.Start + 1
             End If
 
             'If checkValue <> tmpValue Then 
@@ -560,7 +901,7 @@
 
             Try
 
-                If Me.Parent Is Nothing Then
+                If Me.parentProject Is Nothing Then
                     isVorlage = True
                 Else
                     isVorlage = False
@@ -572,7 +913,7 @@
             If isVorlage Then
                 tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
             Else
-                tmpValue = getColumnOfDate(Me.Parent.startDate.AddDays(Me.startOffsetinDays + Me.dauerInDays - 1)) - Me.Parent.Start + 1
+                tmpValue = getColumnOfDate(Me.parentProject.startDate.AddDays(Me.startOffsetinDays + Me.dauerInDays - 1)) - Me.parentProject.Start + 1
             End If
 
             ' kann später eliminiert werden - vorläufig bleibt das zur Sicherheit noch drin ... 
@@ -595,14 +936,14 @@
     ''' <remarks></remarks>
     Public Property nameID As String
         Get
-            nameID = _name
+            nameID = _nameID
         End Get
         Set(value As String)
             Dim tmpstr() As String
             tmpstr = value.Split(New Char() {CChar("§")}, 3)
             If Len(value) > 0 Then
                 If value.StartsWith("0§") And tmpstr.Length >= 2 Then
-                    _name = value
+                    _nameID = value
                 Else
                     Throw New ApplicationException("unzulässige Namens-ID: " & value)
                 End If
@@ -622,7 +963,7 @@
     ''' <remarks></remarks>
     Public ReadOnly Property name As String
         Get
-            name = elemNameOfElemID(_name)
+            name = elemNameOfElemID(_nameID)
         End Get
     End Property
 
@@ -638,8 +979,8 @@
 
         Try
 
-            Dim projektStartdate As Date = Me.Parent.startDate
-            Dim tfzeile As Integer = Me.Parent.tfZeile
+            Dim projektStartdate As Date = Me.parentProject.startDate
+            Dim tfzeile As Integer = Me.parentProject.tfZeile
             Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
 
@@ -733,15 +1074,117 @@
     '    End Try
 
 
+    ''' <summary>
+    ''' gibt die Rollen Instanz der Phase zurück, die den Namen roleName hat 
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRole(ByVal roleName As String) As clsRolle
 
-    'End Sub
+        Get
+            Dim returnValue As clsRolle = Nothing
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allRoles.Count - 1
+                If _allRoles.Item(ix).name = roleName Then
+                    found = True
+                    returnValue = _allRoles.Item(ix)
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            getRole = returnValue
+
+        End Get
+
+    End Property
+
+
+    ''' <summary>
+    ''' addRole fügt die Rollen Instanz hinzu, wenn sie nicht schon existiert
+    ''' summiert die Werte zu der shon existierenden ...
+    ''' </summary>
+    ''' <param name="role"></param>
+    ''' <remarks></remarks>
     Public Sub addRole(ByVal role As clsRolle)
 
-        If Not AllRoles.Contains(role) Then
-            AllRoles.Add(role)
+        'sollte nach dem 8.7.16 aktiviert werden 
+        'ebenso für addCost, mehrere Rollen/Kosten des gleichen NAmens sollen aufsummiert werden 
+        Dim roleName As String = role.name
+        Dim returnValue As clsRolle = Nothing
+        Dim ix As Integer = 0
+        Dim found As Boolean = False
+        Dim oldXWerte() As Double
+        Dim newXwerte() As Double
+
+        While Not found And ix <= _allRoles.Count - 1
+            If _allRoles.Item(ix).name = roleName Then
+                found = True
+            Else
+                ix = ix + 1
+            End If
+        End While
+
+        If found Then
+            oldXWerte = _allRoles.Item(ix).Xwerte()
+            newXwerte = role.Xwerte
+            If oldXWerte.Length = newXwerte.Length Then
+                ' hier dann aufsummieren 
+                For i As Integer = 0 To oldXWerte.Length - 1
+                    newXwerte(i) = newXwerte(i) + oldXWerte(i)
+                Next
+
+                _allRoles.Item(ix).Xwerte() = newXwerte
+
+            Else
+                ' darf eigentlich nicht sein 
+                ' Test: 
+                Call MsgBox("Fehler in Rollen-Zuordnung")
+                ' es wird dann einfach gar nichts gemacht 
+            End If
         Else
-            'Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
+            _allRoles.Add(role)
         End If
+
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Me.parentProject.rcLists.addRP(role.RollenTyp, Me.nameID)
+
+        ' '' Code vor dem 8.7.16
+        ''If Not _allRoles.Contains(role) Then
+        ''    _allRoles.Add(role)
+        ''Else
+        ''    'Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
+        ''End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt alle Rollen-Instanzen mit Rollen-Name aus der Phase
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <remarks></remarks>
+    Public Sub removeRoleByName(ByVal roleName As String)
+
+        Dim toDoList As New List(Of clsRolle)
+
+        For i As Integer = 1 To _allRoles.Count
+            Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
+            If tmpRole.name = roleName Then
+                toDoList.Add(tmpRole)
+            End If
+        Next
+
+        For Each tmpRole As clsRolle In toDoList
+            _allRoles.Remove(tmpRole)
+            ' Änderung tk 20.09.16
+            ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+            Me.parentProject.rcLists.removeRP(tmpRole.RollenTyp, Me.nameID)
+        Next
 
 
     End Sub
@@ -756,14 +1199,21 @@
                             Optional ByVal origName As String = "")
 
 
-        Dim anzElements As Integer = AllMilestones.Count - 1
+        Dim anzElements As Integer = _allMilestones.Count - 1
         Dim ix As Integer = 0
         Dim found As Boolean = False
 
         Dim elemName As String = elemNameOfElemID(milestone.nameID)
 
+        ' wenn der Origname gesetzt werden soll ...
+        If origName <> "" Then
+            If milestone.originalName <> origName Then
+                milestone.originalName = origName
+            End If
+        End If
+
         Do While ix <= anzElements And Not found
-            If AllMilestones.Item(ix).nameID = milestone.nameID Then
+            If _allMilestones.Item(ix).nameID = milestone.nameID Then
                 found = True
             Else
                 ix = ix + 1
@@ -773,7 +1223,7 @@
         If found Then
             Throw New ArgumentException("Meilenstein existiert bereits in dieser Phase!" & milestone.nameID)
         Else
-            AllMilestones.Add(milestone)
+            _allMilestones.Add(milestone)
         End If
 
         ' jetzt muss der Meilenstein in die Projekt-Hierarchie aufgenommen werden , 
@@ -782,7 +1232,7 @@
         Dim currentElementNode As New clsHierarchyNode
         Dim hproj As New clsProjekt, vproj As New clsProjektvorlage
         Dim parentIsVorlage As Boolean
-        Dim milestoneIndex As Integer = AllMilestones.Count
+        Dim milestoneIndex As Integer = _allMilestones.Count
         Dim phaseID As String = Me.nameID
         Dim ok As Boolean = False
 
@@ -790,7 +1240,7 @@
             elemID = vproj.hierarchy.findUniqueElemKey(elemName, True)
         End If
 
-        If IsNothing(Me.Parent) Then
+        If IsNothing(Me.parentProject) Then
             parentIsVorlage = True
             vproj = Me.VorlagenParent
             If vproj.hierarchy.containsKey(phaseID) Then
@@ -799,7 +1249,7 @@
             End If
         Else
             parentIsVorlage = False
-            hproj = Me.Parent
+            hproj = Me.parentProject
             If hproj.hierarchy.containsKey(phaseID) Then
                 ' Phase ist bereits in der Projekt-Hierarchie eingetragen
                 ok = True
@@ -812,11 +1262,12 @@
 
                 .elemName = elemName
 
-                If origName = "" Then
-                    .origName = .elemName
-                Else
-                    .origName = origName
-                End If
+                ' '' Änderung tk 29.5.16 : Origname ist nicht mehr Bestandteil von hierarchyNode ... 
+                ''If origName = "" Then
+                ''    .origName = .elemName
+                ''Else
+                ''    .origName = origName
+                ''End If
 
                 .indexOfElem = milestoneIndex
                 .parentNodeKey = phaseID
@@ -845,9 +1296,9 @@
     Public Sub removeMilestoneAt(ByVal index As Integer, Optional ByVal checkID As String = "")
         Dim ok As Boolean = True
 
-        If index >= 0 And index <= AllMilestones.Count - 1 Then
+        If index >= 0 And index <= _allMilestones.Count - 1 Then
             If checkID <> "" Then
-                If AllMilestones.ElementAt(index).nameID = checkID Then
+                If _allMilestones.ElementAt(index).nameID = checkID Then
                     ok = True
                 Else
                     ok = False
@@ -856,10 +1307,10 @@
         Else
             ok = False
         End If
-        
+
 
         If ok Then
-            AllMilestones.RemoveAt(index)
+            _allMilestones.RemoveAt(index)
         End If
 
     End Sub
@@ -867,7 +1318,7 @@
     Public ReadOnly Property rollenListe() As List(Of clsRolle)
 
         Get
-            rollenListe = AllRoles
+            rollenListe = _allRoles
         End Get
 
     End Property
@@ -875,7 +1326,7 @@
     Public ReadOnly Property meilensteinListe() As List(Of clsMeilenstein)
 
         Get
-            meilensteinListe = AllMilestones
+            meilensteinListe = _allMilestones
         End Get
 
     End Property
@@ -883,7 +1334,7 @@
     Public ReadOnly Property kostenListe() As List(Of clsKostenart)
 
         Get
-            kostenListe = AllCosts
+            kostenListe = _allCosts
         End Get
 
     End Property
@@ -892,7 +1343,7 @@
     Public ReadOnly Property countRoles() As Integer
 
         Get
-            countRoles = AllRoles.Count
+            countRoles = _allRoles.Count
         End Get
 
     End Property
@@ -900,14 +1351,14 @@
     Public ReadOnly Property countMilestones() As Integer
 
         Get
-            countMilestones = AllMilestones.Count
+            countMilestones = _allMilestones.Count
         End Get
 
     End Property
 
 
 
-    Public Sub CopyTo(ByRef newphase As clsPhase)
+    Public Sub copyTo(ByRef newphase As clsPhase)
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle
         Dim newcost As clsKostenart
@@ -918,15 +1369,18 @@
         Dim dimension As Integer
 
         With newphase
-            .minDauer = Me._minDauer
-            .maxDauer = Me._maxDauer
+
             .earliestStart = Me._earliestStart
             .latestStart = Me._latestStart
-            .Offset = Me._Offset
+            .offset = Me._offset
+            .nameID = _nameID
 
-
-
-            .nameID = _name
+            ' sonstigen Elemente übernehmen 
+            .shortName = Me._shortName
+            .originalName = Me._originalName
+            .appearance = Me._appearance
+            .farbe = Me._color
+            .verantwortlich = Me._verantwortlich
 
             For r = 1 To Me.countRoles
                 'newrole = New clsRolle(relEnde - relStart)
@@ -954,12 +1408,25 @@
 
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
-            For r = 1 To Me.AllMilestones.Count
+            For r = 1 To Me._allMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
-                Me.getMilestone(r).CopyTo(newresult)
+                Me.getMilestone(r).copyTo(newresult)
 
                 Try
                     .addMilestone(newresult)
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+
+            ' jetzt noch die evtl vorhandenen Bewertungen kopieren 
+            For b As Integer = 1 To Me._bewertungen.Count
+                Dim newb As New clsBewertung
+                Me.getBewertung(b).copyto(newb)
+                Try
+                    .addBewertung(newb)
                 Catch ex As Exception
 
                 End Try
@@ -984,14 +1451,14 @@
         'Dim h2wert As Double
 
         With newphase
-            .minDauer = Me._minDauer
-            .maxDauer = Me._maxDauer
+            '.minDauer = Me._minDauer
+            '.maxDauer = Me._maxDauer
             .earliestStart = Me._earliestStart
             .latestStart = Me._latestStart
-            .Offset = Me._Offset
+            .offset = Me._offset
 
             If newPhaseNameID = "" Then
-                .nameID = _name
+                .nameID = _nameID
             Else
                 .nameID = newPhaseNameID
             End If
@@ -1058,13 +1525,13 @@
 
             ' alt .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
-            For r = 1 To Me.AllMilestones.Count
+            For r = 1 To Me._allMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
                 If newPhaseNameID = "" Then
-                    Me.getMilestone(r).CopyTo(newresult)
+                    Me.getMilestone(r).copyTo(newresult)
                 Else
-                    Dim newMSNameID As String = newphase.Parent.hierarchy.findUniqueElemKey(Me.getMilestone(r).name, True)
-                    Me.getMilestone(r).CopyTo(newresult, newMSNameID)
+                    Dim newMSNameID As String = newphase.parentProject.hierarchy.findUniqueElemKey(Me.getMilestone(r).name, True)
+                    Me.getMilestone(r).copyTo(newresult, newMSNameID)
                 End If
 
                 ' korrigiert den Offset der Meilensteine 
@@ -1091,7 +1558,7 @@
 
     Public Sub adjustMilestones(ByVal faktor As Double)
         Dim newOffset As Integer
-        For r = 1 To Me.AllMilestones.Count
+        For r = 1 To Me._allMilestones.Count
 
             ' korrigiert den Offset der Meilensteine 
             newOffset = CInt(System.Math.Round(CLng(Me.getMilestone(r).offset * faktor)))
@@ -1109,30 +1576,37 @@
 
     Public Property Role(ByVal index As Integer) As clsRolle
         Get
-            Role = AllRoles.Item(index - 1)
+            Role = _allRoles.Item(index - 1)
         End Get
 
         Set(value As clsRolle)
-            AllRoles.Item(index - 1) = value
+            _allRoles.Item(index - 1) = value
         End Set
 
     End Property
 
     Public Property Cost(ByVal index As Integer) As clsKostenart
         Get
-            Cost = AllCosts.Item(index - 1)
+            Cost = _allCosts.Item(index - 1)
         End Get
 
         Set(value As clsKostenart)
-            AllCosts.Item(index - 1) = value
+            _allCosts.Item(index - 1) = value
         End Set
 
     End Property
 
+    ''' <summary>
+    ''' liefert die Rolle an Index-Stelle i; i darf Werte zwischen 1 und AnzahlRollen annehmen
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getRole(ByVal index As Integer) As clsRolle
 
         Get
-            getRole = AllRoles.Item(index - 1)
+            getRole = _allRoles.Item(index - 1)
         End Get
 
     End Property
@@ -1140,10 +1614,10 @@
     Public ReadOnly Property getMilestone(ByVal index As Integer) As clsMeilenstein
 
         Get
-            If index < 1 Or index > AllMilestones.Count Then
+            If index < 1 Or index > _allMilestones.Count Then
                 getMilestone = Nothing
             Else
-                getMilestone = AllMilestones.Item(index - 1)
+                getMilestone = _allMilestones.Item(index - 1)
             End If
 
         End Get
@@ -1174,13 +1648,13 @@
 
             If istElemID(key) Then
 
-                hryNode = Me.Parent.hierarchy.nodeItem(key)
+                hryNode = Me.parentProject.hierarchy.nodeItem(key)
                 If Not IsNothing(hryNode) Then
 
                     ' prüfen, ob der Meilenstein überhaupt zu dieser Phase gehört 
                     If hryNode.parentNodeKey = Me.nameID Then
                         index = hryNode.indexOfElem
-                        tmpMilestone = AllMilestones.Item(index - 1)
+                        tmpMilestone = _allMilestones.Item(index - 1)
                     End If
 
                 End If
@@ -1191,11 +1665,11 @@
                 Dim r As Integer = 1
                 While r <= Me.countMilestones And Not found
 
-                    If elemNameOfElemID(AllMilestones.Item(r - 1).nameID) = key Then
+                    If elemNameOfElemID(_allMilestones.Item(r - 1).nameID) = key Then
                         anzahl = anzahl + 1
                         If anzahl >= lfdNr Then
                             found = True
-                            tmpMilestone = AllMilestones.Item(r - 1)
+                            tmpMilestone = _allMilestones.Item(r - 1)
                         End If
                     Else
                         r = r + 1
@@ -1241,21 +1715,124 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' fügt die Kostenart Instanz der Liste der Kosten hinzu;
+    ''' wenn sie schon existiert, werden die Xwerte aufsummiert  
+    ''' </summary>
+    ''' <param name="cost"></param>
+    ''' <remarks></remarks>
     Public Sub AddCost(ByVal cost As clsKostenart)
 
-        If Not AllCosts.Contains(cost) Then
-            AllCosts.Add(cost)
+        'sollte nach dem 8.7.16 aktiviert werden 
+        'ebenso für addCost, mehrere Rollen/Kosten des gleichen NAmens sollen aufsummiert werden 
+        Dim costName As String = cost.name
+
+        Dim ix As Integer = 0
+        Dim found As Boolean = False
+        Dim oldXWerte() As Double
+        Dim newXwerte() As Double
+
+        While Not found And ix <= _allCosts.Count - 1
+            If _allCosts.Item(ix).name = costName Then
+                found = True
+            Else
+                ix = ix + 1
+            End If
+        End While
+
+        If found Then
+            oldXWerte = _allCosts.Item(ix).Xwerte()
+            newXwerte = cost.Xwerte
+            If oldXWerte.Length = newXwerte.Length Then
+                ' hier dann aufsummieren 
+                For i As Integer = 0 To oldXWerte.Length - 1
+                    newXwerte(i) = newXwerte(i) + oldXWerte(i)
+                Next
+
+                _allCosts.Item(ix).Xwerte() = newXwerte
+
+            Else
+                ' darf eigentlich nicht sein 
+                ' Test: 
+                Call MsgBox("Fehler in Kosten-Zuordnung")
+                ' es wird dann einfach gar nichts gemacht 
+            End If
         Else
-            Throw New Exception("Fehler: Kostenart '" & cost.name & "' ist bereits in der Phase '" & Me.name & "' enthalten")
+            _allCosts.Add(cost)
         End If
 
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Me.parentProject.rcLists.addCP(cost.KostenTyp, Me.nameID)
+
+
+        ' vor dem 8.7.16
+        ''If Not _allCosts.Contains(cost) Then
+        ''    _allCosts.Add(cost)
+        ''Else
+        ''    Throw New Exception("Fehler: Kostenart '" & cost.name & "' ist bereits in der Phase '" & Me.name & "' enthalten")
+        ''End If
+
     End Sub
+
+    ''' <summary>
+    ''' entfernt alle Rollen-Instanzen mit Rollen-Name aus der Phase
+    ''' </summary>
+    ''' <param name="costName"></param>
+    ''' <remarks></remarks>
+    Public Sub removeCostByName(ByVal costName As String)
+
+        Dim toDoList As New List(Of clsKostenart)
+
+        For i As Integer = 1 To _allCosts.Count
+            Dim tmpCost As clsKostenart = _allCosts.Item(i - 1)
+            If tmpCost.name = costName Then
+                toDoList.Add(tmpCost)
+            End If
+        Next
+
+        For Each tmpCost As clsKostenart In toDoList
+            _allCosts.Remove(tmpCost)
+            ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+            Me.parentProject.rcLists.removeCP(tmpCost.KostenTyp, Me.nameID)
+        Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt die Kostenart Instanz der Phase zurück, die den Namen costName hat 
+    ''' </summary>
+    ''' <param name="costName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCost(ByVal costName As String) As clsKostenart
+
+        Get
+            Dim returnValue As clsKostenart = Nothing
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allCosts.Count - 1
+                If _allCosts.Item(ix).name = costName Then
+                    found = True
+                    returnValue = _allCosts.Item(ix)
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            getCost = returnValue
+
+        End Get
+
+    End Property
 
 
     Public ReadOnly Property countCosts() As Integer
 
         Get
-            countCosts = AllCosts.Count
+            countCosts = _allCosts.Count
         End Get
 
     End Property
@@ -1264,14 +1841,14 @@
     Public ReadOnly Property getCost(ByVal index As Integer) As clsKostenart
 
         Get
-            getCost = AllCosts.Item(index - 1)
+            getCost = _allCosts.Item(index - 1)
         End Get
 
     End Property
 
-    Public ReadOnly Property Parent() As clsProjekt
+    Public ReadOnly Property parentProject() As clsProjekt
         Get
-            Parent = _Parent
+            parentProject = _parentProject
         End Get
     End Property
 
@@ -1283,16 +1860,39 @@
 
     Public Sub New(ByRef parent As clsProjekt)
 
-        AllRoles = New List(Of clsRolle)
-        AllCosts = New List(Of clsKostenart)
-        AllMilestones = New List(Of clsMeilenstein)
-        _minDauer = 1
-        _maxDauer = 60
-        _Offset = 0
+        _nameID = ""
+        _parentProject = parent
+        _vorlagenParent = Nothing
+
+        _bewertungen = New SortedList(Of String, clsBewertung)
+        _allRoles = New List(Of clsRolle)
+        _allCosts = New List(Of clsKostenart)
+        _allMilestones = New List(Of clsMeilenstein)
+
+        _shortName = ""
+        _originalName = ""
+        _appearance = awinSettings.defaultPhaseClass
+
+        Try
+            _color = XlRgbColor.rgbDarkGrey
+            If appearanceDefinitions.ContainsKey(_appearance) Then
+                If Not IsNothing(appearanceDefinitions.Item(_appearance).form) Then
+                    _color = appearanceDefinitions.Item(_appearance).form.Fill.ForeColor.RGB
+                End If
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        _verantwortlich = ""
+
+        _offset = 0
         _earliestStart = -999
         _latestStart = -999
-        _Parent = parent
-        _vorlagenParent = Nothing
+        
+
+
 
 
     End Sub
@@ -1301,19 +1901,38 @@
         ' Variable isVorlage dient lediglich dazu, eine weitere Signatur für einen Konstruktor zu bekommen 
         ' dieser Konstruktor wird für parent = Vorlage benutzt 
 
-
-        AllRoles = New List(Of clsRolle)
-        AllCosts = New List(Of clsKostenart)
-        AllMilestones = New List(Of clsMeilenstein)
-        _minDauer = 1
-        _maxDauer = 60
-        _Offset = 0
-        _earliestStart = -999
-        _latestStart = -999
-        _Parent = Nothing
+        _nameID = ""
+        _parentProject = Nothing
         _vorlagenParent = parent
 
 
+        _bewertungen = New SortedList(Of String, clsBewertung)
+        _allRoles = New List(Of clsRolle)
+        _allCosts = New List(Of clsKostenart)
+        _allMilestones = New List(Of clsMeilenstein)
+
+        _shortName = ""
+        _originalName = ""
+        _appearance = awinSettings.defaultPhaseClass
+
+        Try
+            _color = XlRgbColor.rgbDarkGrey
+            If appearanceDefinitions.ContainsKey(_appearance) Then
+                If Not IsNothing(appearanceDefinitions.Item(_appearance).form) Then
+                    _color = appearanceDefinitions.Item(_appearance).form.Fill.ForeColor.RGB
+                End If
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        _verantwortlich = ""
+        
+        _offset = 0
+        _earliestStart = -999
+        _latestStart = -999
+        
 
     End Sub
 
@@ -1344,7 +1963,7 @@
 
     End Sub
 
-    
+
     ''' <summary>
     ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
     ''' </summary>
@@ -1354,7 +1973,8 @@
     ''' <param name="corrFakt"></param>
     ''' <param name="newValues"></param>
     ''' <remarks></remarks>
-    Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+    Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
+                               ByVal corrFakt As Double, ByRef newValues() As Double)
         Dim k As Integer
         Dim newXwerte() As Double
         Dim gesBedarf As Double
@@ -1410,28 +2030,38 @@
 
             Else
 
-
+                Dim tmpSum As Double = 0
                 For k = 0 To newXwerte.Length - 1
 
                     If k = 0 Then
                         ' damit ist 00:00 des Startdates gemeint 
                         hDatum = startdate
-                        anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-                        anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+                        'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                        'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
 
                     ElseIf k = newXwerte.Length - 1 Then
                         ' damit hDatum das End-Datum um 23.00 Uhr
-                        hDatum = endedate.AddHours(23)
-                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                        anzDaysthisMonth = endedate.Day
+                        'hDatum = endedate.AddHours(23)
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
 
                     Else
                         hDatum = startdate
-                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
                     End If
 
                     newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
-
+                    tmpSum = tmpSum + anzDaysthisMonth
                 Next k
+
+                ' Kontrolle für Test ... aChck muss immer Null sein !
+                'Dim aChck As Double = Me.dauerInDays - tmpSum
+
 
                 ' Rest wird auf alle newXwerte verteilt
 

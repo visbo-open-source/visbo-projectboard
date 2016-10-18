@@ -35,6 +35,9 @@ Public Class frmSelectPPTTempl
         ElseIf calledfrom = "Projekt" Then
             dirname = awinPath & RepProjectVorOrdner
             Me.einstellungen.Visible = True
+        Else
+            dirname = awinPath & RepProjectVorOrdner
+            Me.einstellungen.Visible = True
         End If
 
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
@@ -49,7 +52,7 @@ Public Class frmSelectPPTTempl
                         RepVorlagenDropbox.Items.Add(dateiName)
                     End If
                     'RepVorlagenDropbox.Items.Add(dateiName)
-                ElseIf calledfrom = "Portfolio1" Then
+                ElseIf calledfrom = "Portfolio1" Or calledfrom = "Portfolio2" Then
                     If Not dateiName.Contains("Typ II") Then
                         RepVorlagenDropbox.Items.Add(dateiName)
                     End If
@@ -68,7 +71,9 @@ Public Class frmSelectPPTTempl
 
     Private Sub createReport_Click(sender As Object, e As EventArgs) Handles createReport.Click
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+
         'Dim singleShp As Excel.Shape
         'Dim hproj As clsProjekt
         Dim vglName As String = " "
@@ -85,7 +90,7 @@ Public Class frmSelectPPTTempl
         enableOnUpdate = False
 
         ' hier muss unterschieden werden, ob Projekt oder Portfolio-Report soll erzeugt werden
-        If calledfrom = "Portfolio1" Then
+        If calledfrom = "Portfolio1" Or calledfrom = "Portfolio2" Then
             dirName = awinPath & RepPortfolioVorOrdner
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
             Try
@@ -93,29 +98,43 @@ Public Class frmSelectPPTTempl
                 RepVorlagenDropbox.Enabled = False
                 Me.Cursor = Cursors.WaitCursor
 
+                'Call PPTstarten()
+
                 BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
 
-        ElseIf calledfrom = "Projekt" Then
+        Else
             dirName = awinPath & RepProjectVorOrdner
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
 
-            awinSettings.eppExtendedMode = True
+            'awinSettings.eppExtendedMode = True
 
             Try
+                If selectedProjekte.Count <= 0 Then
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                    For Each tmpname In awinSelection
+                        Try
+                            selectedProjekte.Add(ShowProjekte.getProject(tmpname))
+                        Catch ex As Exception
 
-                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                        End Try
+                    Next
+                End If
+
             Catch ex As Exception
                 awinSelection = Nothing
+                selectedProjekte.Clear()
             End Try
 
             Try
                 createReport.Enabled = False
                 RepVorlagenDropbox.Enabled = False
                 Me.Cursor = Cursors.WaitCursor
+
+                'Call PPTstarten()
 
                 BackgroundWorker2.RunWorkerAsync(vorlagenDateiName)
 
@@ -152,8 +171,8 @@ Public Class frmSelectPPTTempl
             End If
         End With
 
-
-        Call MsgBox("Berichterstellung wurde beendet")
+        selectedProjekte.Clear()
+        'Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
 
     End Sub
@@ -258,7 +277,12 @@ Public Class frmSelectPPTTempl
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
-        mppFrm.calledfrom = "frmSelectPPTTempl"
+        If calledfrom = "MS-Project" Then
+            mppFrm.calledfrom = calledfrom
+        Else
+            mppFrm.calledfrom = "frmSelectPPTTempl"
+        End If
+
         dialogreturn = mppFrm.ShowDialog
 
 

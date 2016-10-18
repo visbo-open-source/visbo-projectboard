@@ -12,7 +12,7 @@ Public Class frmAnnotateProject
 
         Try
 
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Call MsgBox("keine Shapes Zuordnung möglich ")
@@ -45,7 +45,7 @@ Public Class frmAnnotateProject
 
 
                 'Try
-                '    worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+                '    worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
                 '    projectshape = worksheetShapes.Item(kvp.Value.name)
                 'Catch ex As Exception
 
@@ -76,5 +76,18 @@ Public Class frmAnnotateProject
         If selectedProjekte.Count = 0 Then
             OKButton.Text = "Alle beschriften"
         End If
+    End Sub
+
+    Private Sub deleteAnnotations_Click(sender As Object, e As EventArgs) Handles deleteAnnotations.Click
+
+        If selectedProjekte.Count = 0 Then
+            Call deleteBeschriftungen()
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                Call deleteBeschriftungen(kvp.Key)
+            Next
+        End If
+
+
     End Sub
 End Class

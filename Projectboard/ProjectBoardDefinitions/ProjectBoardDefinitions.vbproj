@@ -10,7 +10,7 @@
     <AssemblyName>ProjectBoardDefinitions</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Windows</MyType>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
   </PropertyGroup>
@@ -22,6 +22,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>ProjectBoardDefinitions.xml</DocumentationFile>
     <NoWarn>42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +32,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DocumentationFile>ProjectBoardDefinitions.xml</DocumentationFile>
     <NoWarn>42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -45,15 +47,19 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\14.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
     </Reference>
-    <Reference Include="OFFICE, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Office.Interop.MSProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="OFFICE, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\office\14.0.0.0__71e9bce111e9429c\OFFICE.DLL</HintPath>
+      <HintPath>..\..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\office\15.0.0.0__71e9bce111e9429c\OFFICE.DLL</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
@@ -75,10 +81,20 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsCustomField.vb" />
+    <Compile Include="clsCustomFieldDefinition.vb" />
+    <Compile Include="clsCustomFieldDefinitions.vb" />
+    <Compile Include="clsLicences.vb" />
+    <Compile Include="clsListOfCostAndRoles.vb" />
+    <Compile Include="clsOpenXML.vb" />
+    <Compile Include="clsPPTShapes.vb" />
     <Compile Include="clsAddElementRules.vb" />
     <Compile Include="clsAddElementRuleItem.vb" />
     <Compile Include="clsAddElements.vb" />
     <Compile Include="clsFilterDB.vb" />
+    <Compile Include="clsReport.vb" />
+    <Compile Include="clsReportMessages.vb" />
+    <Compile Include="clsRiskChance.vb" />
     <Compile Include="clsVisboZustaende.vb" />
     <Compile Include="clsHierarchy.vb" />
     <Compile Include="clsHierarchyNode.vb" />
@@ -130,7 +146,6 @@
     <Compile Include="clsRolle.vb" />
     <Compile Include="clsRollen.vb" />
     <Compile Include="clsRollenDefinition.vb" />
-    <Compile Include="clsShpChart.vb" />
     <Compile Include="clsVerknuepfung.vb" />
     <Compile Include="frmMppSettings.Designer.vb">
       <DependentUpon>frmMppSettings.vb</DependentUpon>
@@ -156,10 +171,10 @@
     <Compile Include="frmPhaseInformation.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmRemoveConstellation.Designer.vb">
-      <DependentUpon>frmRemoveConstellation.vb</DependentUpon>
+    <Compile Include="frmRemConst+DBFilter.Designer.vb">
+      <DependentUpon>frmRemConst+DBFilter.vb</DependentUpon>
     </Compile>
-    <Compile Include="frmRemoveConstellation.vb">
+    <Compile Include="frmRemConst+DBFilter.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmStatusInformation.Designer.vb">
@@ -272,8 +287,8 @@
     <EmbeddedResource Include="frmPhaseInformation.resx">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmRemoveConstellation.resx">
-      <DependentUpon>frmRemoveConstellation.vb</DependentUpon>
+    <EmbeddedResource Include="frmRemConst+DBFilter.resx">
+      <DependentUpon>frmRemConst+DBFilter.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmStatusInformation.resx">
       <DependentUpon>frmStatusInformation.vb</DependentUpon>
@@ -341,6 +356,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Pfeil rechts.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="VBIDE">
+      <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>5</VersionMajor>
+      <VersionMinor>3</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

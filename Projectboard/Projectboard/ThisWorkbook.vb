@@ -8,11 +8,12 @@ Imports MongoDbAccess
 
 
 
+
+
 Public Class ThisWorkbook
     ' Copyright Philipp Koytek et al. 
     ' 2012 ff
     ' Nicht authorisierte Verwendung nicht gestattet 
-
 
     Protected Overrides Function CreateRibbonExtensibilityObject() As Microsoft.Office.Core.IRibbonExtensibility
         Return New Ribbon1()
@@ -21,7 +22,7 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_ActivateEvent() Handles Me.ActivateEvent
 
         Application.DisplayFormulaBar = False
-        'Application.Worksheets(arrWsNames(3)).Activate()
+
 
     End Sub
 
@@ -38,13 +39,15 @@ Public Class ThisWorkbook
             .SplitRow = 0
             .DisplayWorkbookTabs = True
             .GridlineColor = RGB(220, 220, 220)
+            .DisplayHeadings = True
+
             Try
                 .FreezePanes = False
             Catch ex As Exception
 
             End Try
 
-            .DisplayHeadings = True
+
         End With
 
     End Sub
@@ -58,7 +61,8 @@ Public Class ThisWorkbook
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
 
-
+        Dim path As String = CType(appInstance.ActiveWorkbook, Excel.Workbook).Path
+       
         ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
         ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
         ' in anderen Excel Sheets ist das weiterhin aktiv 
@@ -71,16 +75,27 @@ Public Class ThisWorkbook
 
         magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
-      
+
 
         Try
 
+
             appInstance.ScreenUpdating = False
 
-            awinSettings.databaseURL = My.Settings.mongoDBURL
-            awinSettings.databaseName = My.Settings.mongoDBname
-            awinSettings.awinPath = My.Settings.awinPath
+            ' hier werden die Settings aus der Datei ProjectboardConfig.xml ausgelesen.
+            ' falls die nicht funktioniert, so werden die My.Settings ausgelesen und verwendet.
 
+            If Not readawinSettings(path) Then
+
+                awinSettings.databaseURL = My.Settings.mongoDBURL
+                awinSettings.databaseName = My.Settings.mongoDBname
+                awinSettings.globalPath = My.Settings.globalPath
+                awinSettings.awinPath = My.Settings.awinPath
+                awinSettings.visboTaskClass = My.Settings.TaskClass
+                awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                awinSettings.visboDebug = My.Settings.VISBODebug
+
+            End If
 
             Call awinsetTypen()
 
@@ -111,6 +126,10 @@ Public Class ThisWorkbook
 
         Dim plantafel As Excel.Window
 
+        If Application.EnableEvents Then
+        Else
+            Application.EnableEvents = True
+        End If
 
         CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
 
@@ -119,6 +138,7 @@ Public Class ThisWorkbook
         plantafel = Application.ActiveWindow
 
         With plantafel
+            .DisplayHeadings = False
             .Caption = windowNames(5)
             .ScrollRow = 1
             .ScrollColumn = 1
@@ -165,32 +185,38 @@ Public Class ThisWorkbook
         If loginErfolgreich Then
 
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
             Call awinKontextReset()
 
             ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
             Try
 
-                If request.pingMongoDb() And AlleProjekte.Count > 0 Then
-                    returnValue = projektespeichern.ShowDialog
+                If Not noDB Then
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    If returnValue = DialogResult.Yes Then
+                    If request.pingMongoDb() And AlleProjekte.Count > 0 Then
+                        returnValue = projektespeichern.ShowDialog
 
-                        Call StoreAllProjectsinDB()
+                        If returnValue = DialogResult.Yes Then
+
+                            Call StoreAllProjectsinDB()
+
+                        End If
+
+                    Else
+                        Call MsgBox("keine Projekte zu speichern ...")
 
                     End If
-
-                Else
-                    Call MsgBox("keine Projekte zu speichern ...")
-
                 End If
+
 
             Catch ex As Exception
 
             End Try
 
-            Application.Worksheets(arrWsNames(3)).Activate()
+            ' wozu wird das denn hier benötigt ? 
+            'Application.Worksheets(arrWsNames(3)).Activate()
 
 
             appInstance.EnableEvents = False
@@ -198,7 +224,8 @@ Public Class ThisWorkbook
 
             ' hier sollen jetzt noch die Phasen weggeschrieben werden 
             Try
-                Call awinWritePhaseDefinitions()
+                'Call awinWritePhaseDefinitions()
+                Call awinWritePhaseMilestoneDefinitions()
             Catch ex As Exception
                 Call MsgBox("Fehler bei Schreiben Customization File")
             End Try
@@ -228,7 +255,15 @@ Public Class ThisWorkbook
 
         Dim WB As Workbook
         For Each WB In Application.Workbooks
-            WB.Saved = True
+            If WB.Name = myProjektTafel Then
+                Try
+                    WB.Saved = True
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
         Next
 
 
@@ -240,7 +275,7 @@ Public Class ThisWorkbook
         '' ''Application.Wait(waitTime)
 
         Application.DisplayAlerts = False
-        Application.Quit()
+        'Application.Quit()
 
 
 
@@ -311,6 +346,13 @@ Public Class ThisWorkbook
 
 
         appInstance.ScreenUpdating = True
+
+        If Application.Workbooks.Count <= 1 Then
+            Dim a As Integer = Application.Workbooks.Count
+            'Dim name asstring = Application.Workbooks(1).name
+        End If
+        
+
 
 
     End Sub

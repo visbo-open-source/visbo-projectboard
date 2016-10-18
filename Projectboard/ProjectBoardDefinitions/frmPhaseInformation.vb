@@ -51,14 +51,16 @@
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub showOrigItem_CheckedChanged(sender As Object, e As EventArgs) Handles showOrigItem.CheckedChanged
-        Dim tmpNode As clsHierarchyNode
+        Dim tmpPhase As clsPhase
 
         awinSettings.showOrigName = showOrigItem.Checked
 
         If showOrigItem.Checked = True Then
-            tmpNode = curProject.hierarchy.nodeItem(phaseNameID)
-            If Not IsNothing(tmpNode) Then
-                phaseName.Text = tmpNode.origName
+            tmpPhase = curProject.getPhaseByID(phaseNameID)
+            If Not IsNothing(tmpPhase) Then
+                phaseName.Text = tmpPhase.originalName
+            Else
+                phaseName.Text = elemNameOfElemID(phaseNameID)
             End If
         Else
             phaseName.Text = elemNameOfElemID(phaseNameID)

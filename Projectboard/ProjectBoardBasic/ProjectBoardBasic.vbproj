@@ -10,7 +10,8 @@
     <AssemblyName>ProjectBoardBasic</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Windows</MyType>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>ProjectBoardBasic.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +31,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DocumentationFile>ProjectBoardBasic.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -46,6 +49,12 @@
     <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.Office.Interop.MSProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -58,14 +67,13 @@
     </Reference>
     <Reference Include="Microsoft.Office.Tools.Excel.v4.0.Utilities, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Office, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -86,6 +94,68 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="clsProjectboardConfig.vb" />
+    <Compile Include="frmOutputWindow.Designer.vb">
+      <DependentUpon>frmOutputWindow.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmOutputWindow.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmRenameProject.Designer.vb">
+      <DependentUpon>frmRenameProject.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmRenameProject.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmCreateLicences.Designer.vb">
+      <DependentUpon>frmCreateLicences.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateLicences.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmCreateReportMeldungen.Designer.vb">
+      <DependentUpon>frmCreateReportMeldungen.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateReportMeldungen.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmReportProfil.Designer.vb">
+      <DependentUpon>frmReportProfil.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmReportProfil.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSelectImportFiles.Designer.vb">
+      <DependentUpon>frmSelectImportFiles.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectImportFiles.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSelectRepSprache.Designer.vb">
+      <DependentUpon>frmSelectRepSprache.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectRepSprache.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmTestLicences.Designer.vb">
+      <DependentUpon>frmTestLicences.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmTestLicences.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmWbListInfo.Designer.vb">
+      <DependentUpon>frmWbListInfo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmWbListInfo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmEditWoerterbuch.Designer.vb">
+      <DependentUpon>frmEditWoerterbuch.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmEditWoerterbuch.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="clsProtokoll.vb" />
     <Compile Include="frmAmpelBewertung.Designer.vb">
       <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
     </Compile>
@@ -210,6 +280,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="PBBModules.vb" />
+    <Compile Include="clsRplanRXF.vb" />
     <Compile Include="Settings.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -225,8 +296,14 @@
     <EmbeddedResource Include="frmBetterWorseSettings.resx">
       <DependentUpon>frmBetterWorseSettings.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmCreateLicences.resx">
+      <DependentUpon>frmCreateLicences.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmCreateNewVariant.resx">
       <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmCreateReportMeldungen.resx">
+      <DependentUpon>frmCreateReportMeldungen.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmCreateRolloutProject.resx">
       <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>
@@ -237,8 +314,13 @@
     <EmbeddedResource Include="frmDependencies.resx">
       <DependentUpon>frmDependencies.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmEditWoerterbuch.resx">
+      <DependentUpon>frmEditWoerterbuch.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmHierarchySelection.resx">
       <DependentUpon>frmHierarchySelection.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmLoadCockpit.resx">
       <DependentUpon>frmLoadCockpit.vb</DependentUpon>
@@ -250,14 +332,30 @@
       <DependentUpon>frmNameSelection.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmOutputWindow.resx">
+      <DependentUpon>frmOutputWindow.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmProjekteSpeichern.resx">
       <DependentUpon>frmProjekteSpeichern.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjPortfolioAdmin.resx">
       <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmRenameProject.resx">
+      <DependentUpon>frmRenameProject.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmReportProfil.resx">
+      <DependentUpon>frmReportProfil.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectImportFiles.resx">
+      <DependentUpon>frmSelectImportFiles.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmSelectPPTTempl.resx">
       <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectRepSprache.resx">
+      <DependentUpon>frmSelectRepSprache.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSelectRPlanImport.resx">
       <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>
@@ -267,6 +365,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmStoreCockpit.resx">
       <DependentUpon>frmStoreCockpit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTestLicences.resx">
+      <DependentUpon>frmTestLicences.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmWbListInfo.resx">
+      <DependentUpon>frmWbListInfo.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
@@ -304,10 +408,38 @@
       <Project>{59210896-68d1-4a34-91cc-8d015eca7061}</Project>
       <Name>WPFPieChart</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WpfWindow\WpfWindow.csproj">
-      <Project>{0934cc5e-361f-443e-8af2-2468a38214a1}</Project>
-      <Name>WpfWindow</Name>
-    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_right.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil rechts 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil links 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selection_delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="Microsoft.Office.Core">
+      <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>5</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\funnel_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\funnel_delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\branch.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
