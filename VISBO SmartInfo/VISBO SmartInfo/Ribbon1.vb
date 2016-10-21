@@ -6,11 +6,6 @@ Public Class Ribbon1
 
     End Sub
 
-
-    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs)
-
-    End Sub
-
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
         visboInfoActivated = Not visboInfoActivated
@@ -26,5 +21,12 @@ Public Class Ribbon1
 
     End Sub
 
-    
+    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
+        Dim settingsfrm As New frmSettings
+
+        With settingsfrm
+            Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
+        End With
+
+    End Sub
 End Class

@@ -132,7 +132,7 @@
 
         dontFire = False
 
-            ' ab jetzt sollen wieder die entsprechenden Event Routinen durchgeführt werden 
+        ' ab jetzt sollen wieder die entsprechenden Event Routinen durchgeführt werden 
         With Me.rdbName
             .Checked = True
         End With
@@ -147,7 +147,7 @@
 
     End Sub
 
-    
+
     Private Sub rdbName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbName.CheckedChanged
         ' dontFire true verhindert, dass die Aktion durchgeführt wird, das ist dann erforderlich wenn man explizit verhindern will, 
         ' dass ständig die Events getriggert werden 
@@ -304,7 +304,7 @@
         If rdbOriginalName.Checked = True Then
 
             Call erstelleListbox()
-            
+
         End If
     End Sub
 
@@ -973,5 +973,5 @@
 
     End Sub
 
-    
+
 End Class

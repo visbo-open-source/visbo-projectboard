@@ -257,12 +257,12 @@
 
                         Next
                     End If
-                    
+
                 End If
             Catch ex As Exception
 
             End Try
-            
+
 
             getShapeNamesWithColor = tmpCollection
 
@@ -270,8 +270,29 @@
     End Property
 
     ''' <summary>
+    ''' liefert eine Collection an Namen; das sind alle auftretenden cNames von Phasen und Meilensteinen  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getElementNamen() As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            For Each kvp As KeyValuePair(Of String, SortedList(Of Integer, Boolean)) In cNList
+                If Not tmpCollection.Contains(kvp.Key) Then
+                    tmpCollection.Add(kvp.Key, kvp.Key)
+                End If
+            Next
+
+            getElementNamen = tmpCollection
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' bekommt als Input eine Menge von selektierten Namen , classified, Short, Original, etc. 
-    ''' gibt als Output die korrespondierenden Shape-NAmen
+    ''' gibt als Output die korrespondierenden Shape-Namen
     ''' Achtung: Anzahl Input Elemente muss nicht Anzahl Output Elemente sein;  
     ''' </summary>
     ''' <param name="nameArray"></param>

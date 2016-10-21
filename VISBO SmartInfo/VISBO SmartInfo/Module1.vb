@@ -1,4 +1,5 @@
-﻿Module Module1
+﻿
+Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
 
@@ -18,6 +19,16 @@
     ' gibt an, ob das Breadcrumb Feld gezeigt werden soll 
     Friend showBreadCrumbField As Boolean = False
 
+    Friend protectContents As Boolean
+    Friend protectType As Integer
+    Friend protectFeld1 As String = ""
+    Friend protectFeld2 As String = ""
+
+    Friend dbURL As String = ""
+    Friend dbName As String = ""
+    Friend userName As String = ""
+    Friend userPWD As String = ""
+
     Friend absEinheit As Integer = 0
 
     ' gibt an, ob irgendwelche Ampeln gesetzt sind 
@@ -30,6 +41,7 @@
     ' diese Listen enthalten die Infos welche Shapes Ampel grün, gelb etc haben
     ' welche welchen Namen tragen, ...
     Friend smartSlideLists As New clsSmartSlideListen
+    Friend languages As New clsLanguages
 
     Friend bekannteIDs As SortedList(Of Integer, String)
 
@@ -638,6 +650,15 @@
 
         curShape.Name = "copied relevant Shape"
 
+
+    End Sub
+
+    ''' <summary>
+    ''' erzeugt von den aktuellen Powerpoint Namen einen Sprach-Array, 
+    ''' </summary>
+    ''' <param name="smartListen"></param>
+    ''' <remarks>noch prüfen, ob das immer gemacht werden kann, oder nur , wenn es nicht schon ein LanguageXML gibt </remarks>
+    Public Sub createOneLanguageFromPPT(ByVal smartListen As clsSmartSlideListen)
 
     End Sub
 

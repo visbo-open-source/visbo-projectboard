@@ -46,10 +46,11 @@
         Me.Tab2 = Me.Factory.CreateRibbonTab
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.activateTab = Me.Factory.CreateRibbonButton
+        Me.timeMachineTab = Me.Factory.CreateRibbonButton
         Me.settingsTab = Me.Factory.CreateRibbonButton
-        Me.Tab1.SuspendLayout
-        Me.Tab2.SuspendLayout
-        Me.SmartInfo.SuspendLayout
+        Me.Tab1.SuspendLayout()
+        Me.Tab2.SuspendLayout()
+        Me.SmartInfo.SuspendLayout()
         '
         'Tab1
         '
@@ -72,6 +73,7 @@
         'SmartInfo
         '
         Me.SmartInfo.Items.Add(Me.activateTab)
+        Me.SmartInfo.Items.Add(Me.timeMachineTab)
         Me.SmartInfo.Items.Add(Me.settingsTab)
         Me.SmartInfo.Label = "Smart-Info"
         Me.SmartInfo.Name = "SmartInfo"
@@ -80,6 +82,11 @@
         '
         Me.activateTab.Label = "Aktivieren"
         Me.activateTab.Name = "activateTab"
+        '
+        'timeMachineTab
+        '
+        Me.timeMachineTab.Label = "Zeit-Maschine"
+        Me.timeMachineTab.Name = "timeMachineTab"
         '
         'settingsTab
         '
@@ -92,14 +99,14 @@
         Me.RibbonType = "Microsoft.PowerPoint.Presentation"
         Me.Tabs.Add(Me.Tab1)
         Me.Tabs.Add(Me.Tab2)
-        Me.Tab1.ResumeLayout(false)
-        Me.Tab1.PerformLayout
-        Me.Tab2.ResumeLayout(false)
-        Me.Tab2.PerformLayout
-        Me.SmartInfo.ResumeLayout(false)
-        Me.SmartInfo.PerformLayout
+        Me.Tab1.ResumeLayout(False)
+        Me.Tab1.PerformLayout()
+        Me.Tab2.ResumeLayout(False)
+        Me.Tab2.PerformLayout()
+        Me.SmartInfo.ResumeLayout(False)
+        Me.SmartInfo.PerformLayout()
 
-End Sub
+    End Sub
 
     Friend WithEvents Tab1 As Microsoft.Office.Tools.Ribbon.RibbonTab
     Friend WithEvents Group1 As Microsoft.Office.Tools.Ribbon.RibbonGroup
@@ -107,6 +114,7 @@ End Sub
     Friend WithEvents SmartInfo As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents settingsTab As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents timeMachineTab As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

@@ -22,121 +22,94 @@ Partial Class frmSettings
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.protectShapes = New System.Windows.Forms.CheckBox()
-        Me.extendedSearch = New System.Windows.Forms.CheckBox()
-        Me.showInfoBC = New System.Windows.Forms.CheckBox()
-        Me.dbLoginButton = New System.Windows.Forms.Button()
-        Me.TextBox3 = New System.Windows.Forms.TextBox()
-        Me.TextBox2 = New System.Windows.Forms.TextBox()
-        Me.abstandseinheit = New System.Windows.Forms.ComboBox()
-        Me.Label5 = New System.Windows.Forms.Label()
-        Me.dbURI = New System.Windows.Forms.TextBox()
-        Me.dbName = New System.Windows.Forms.TextBox()
+        Me.frmExtendedSearch = New System.Windows.Forms.CheckBox()
+        Me.frmShowInfoBC = New System.Windows.Forms.CheckBox()
+        Me.btnDBLogin = New System.Windows.Forms.Button()
+        Me.frmUserPWD = New System.Windows.Forms.TextBox()
+        Me.frmUserName = New System.Windows.Forms.TextBox()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
-        Me.Label1 = New System.Windows.Forms.Label()
-        Me.schriftSize = New System.Windows.Forms.TextBox()
+        Me.rdbPWD = New System.Windows.Forms.RadioButton()
+        Me.RadioButton1 = New System.Windows.Forms.RadioButton()
+        Me.lblProtectField1 = New System.Windows.Forms.Label()
+        Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.txtboxSchriftGroesse = New System.Windows.Forms.TextBox()
         Me.lbl_schrift = New System.Windows.Forms.Label()
+        Me.txtboxAbstandsEinheit = New System.Windows.Forms.ComboBox()
+        Me.Label5 = New System.Windows.Forms.Label()
+        Me.TabPage3 = New System.Windows.Forms.TabPage()
+        Me.btnDBabbr = New System.Windows.Forms.Button()
+        Me.lblProtectField2 = New System.Windows.Forms.Label()
+        Me.frmProtectField1 = New System.Windows.Forms.TextBox()
+        Me.frmProtectField2 = New System.Windows.Forms.TextBox()
+        Me.btnProtect = New System.Windows.Forms.Button()
+        Me.TabPage4 = New System.Windows.Forms.TabPage()
+        Me.lblLanguage = New System.Windows.Forms.Label()
+        Me.txtboxLanguage = New System.Windows.Forms.ComboBox()
+        Me.btnLanguageImp = New System.Windows.Forms.Button()
+        Me.btnLanguageExp = New System.Windows.Forms.Button()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.TabControl1.SuspendLayout()
+        Me.TabPage1.SuspendLayout()
+        Me.TabPage2.SuspendLayout()
+        Me.TabPage3.SuspendLayout()
+        Me.TabPage4.SuspendLayout()
         Me.SuspendLayout()
         '
-        'protectShapes
+        'frmExtendedSearch
         '
-        Me.protectShapes.AutoSize = True
-        Me.protectShapes.Location = New System.Drawing.Point(16, 98)
-        Me.protectShapes.Name = "protectShapes"
-        Me.protectShapes.Size = New System.Drawing.Size(170, 17)
-        Me.protectShapes.TabIndex = 31
-        Me.protectShapes.Text = "Smart PPT Elemente schützen"
-        Me.protectShapes.UseVisualStyleBackColor = True
+        Me.frmExtendedSearch.AutoSize = True
+        Me.frmExtendedSearch.Location = New System.Drawing.Point(8, 108)
+        Me.frmExtendedSearch.Name = "frmExtendedSearch"
+        Me.frmExtendedSearch.Size = New System.Drawing.Size(106, 17)
+        Me.frmExtendedSearch.TabIndex = 30
+        Me.frmExtendedSearch.Text = "erweiterte Suche"
+        Me.frmExtendedSearch.UseVisualStyleBackColor = True
         '
-        'extendedSearch
+        'frmShowInfoBC
         '
-        Me.extendedSearch.AutoSize = True
-        Me.extendedSearch.Location = New System.Drawing.Point(168, 74)
-        Me.extendedSearch.Name = "extendedSearch"
-        Me.extendedSearch.Size = New System.Drawing.Size(106, 17)
-        Me.extendedSearch.TabIndex = 30
-        Me.extendedSearch.Text = "erweiterte Suche"
-        Me.extendedSearch.UseVisualStyleBackColor = True
+        Me.frmShowInfoBC.AutoSize = True
+        Me.frmShowInfoBC.Location = New System.Drawing.Point(8, 85)
+        Me.frmShowInfoBC.Name = "frmShowInfoBC"
+        Me.frmShowInfoBC.Size = New System.Drawing.Size(129, 17)
+        Me.frmShowInfoBC.TabIndex = 29
+        Me.frmShowInfoBC.Text = "Breadcrumb anzeigen"
+        Me.frmShowInfoBC.UseVisualStyleBackColor = True
         '
-        'showInfoBC
+        'btnDBLogin
         '
-        Me.showInfoBC.AutoSize = True
-        Me.showInfoBC.Location = New System.Drawing.Point(16, 74)
-        Me.showInfoBC.Name = "showInfoBC"
-        Me.showInfoBC.Size = New System.Drawing.Size(129, 17)
-        Me.showInfoBC.TabIndex = 29
-        Me.showInfoBC.Text = "Breadcrumb anzeigen"
-        Me.showInfoBC.UseVisualStyleBackColor = True
+        Me.btnDBLogin.Location = New System.Drawing.Point(38, 81)
+        Me.btnDBLogin.Name = "btnDBLogin"
+        Me.btnDBLogin.Size = New System.Drawing.Size(91, 23)
+        Me.btnDBLogin.TabIndex = 28
+        Me.btnDBLogin.Text = "Login"
+        Me.btnDBLogin.UseVisualStyleBackColor = True
         '
-        'dbLoginButton
+        'frmUserPWD
         '
-        Me.dbLoginButton.Location = New System.Drawing.Point(135, 291)
-        Me.dbLoginButton.Name = "dbLoginButton"
-        Me.dbLoginButton.Size = New System.Drawing.Size(235, 23)
-        Me.dbLoginButton.TabIndex = 28
-        Me.dbLoginButton.Text = "Datenbank Login"
-        Me.dbLoginButton.UseVisualStyleBackColor = True
+        Me.frmUserPWD.Location = New System.Drawing.Point(92, 38)
+        Me.frmUserPWD.Name = "frmUserPWD"
+        Me.frmUserPWD.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
+        Me.frmUserPWD.Size = New System.Drawing.Size(187, 20)
+        Me.frmUserPWD.TabIndex = 27
+        Me.frmUserPWD.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.frmUserPWD.UseSystemPasswordChar = True
+        Me.frmUserPWD.WordWrap = False
         '
-        'TextBox3
+        'frmUserName
         '
-        Me.TextBox3.Location = New System.Drawing.Point(135, 238)
-        Me.TextBox3.Name = "TextBox3"
-        Me.TextBox3.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
-        Me.TextBox3.Size = New System.Drawing.Size(235, 20)
-        Me.TextBox3.TabIndex = 27
-        Me.TextBox3.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
-        Me.TextBox3.UseSystemPasswordChar = True
-        Me.TextBox3.WordWrap = False
-        '
-        'TextBox2
-        '
-        Me.TextBox2.Location = New System.Drawing.Point(135, 215)
-        Me.TextBox2.Name = "TextBox2"
-        Me.TextBox2.Size = New System.Drawing.Size(235, 20)
-        Me.TextBox2.TabIndex = 26
-        Me.TextBox2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
-        '
-        'abstandseinheit
-        '
-        Me.abstandseinheit.FormattingEnabled = True
-        Me.abstandseinheit.Items.AddRange(New Object() {"Tagen", "Wochen", "Monaten"})
-        Me.abstandseinheit.Location = New System.Drawing.Point(287, 45)
-        Me.abstandseinheit.Name = "abstandseinheit"
-        Me.abstandseinheit.Size = New System.Drawing.Size(83, 21)
-        Me.abstandseinheit.TabIndex = 25
-        Me.abstandseinheit.Text = "Tagen"
-        '
-        'Label5
-        '
-        Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(13, 50)
-        Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(106, 13)
-        Me.Label5.TabIndex = 24
-        Me.Label5.Text = "Abstand anzeigen in:"
-        '
-        'dbURI
-        '
-        Me.dbURI.Location = New System.Drawing.Point(135, 171)
-        Me.dbURI.Name = "dbURI"
-        Me.dbURI.Size = New System.Drawing.Size(235, 20)
-        Me.dbURI.TabIndex = 23
-        Me.dbURI.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
-        '
-        'dbName
-        '
-        Me.dbName.Location = New System.Drawing.Point(135, 149)
-        Me.dbName.Name = "dbName"
-        Me.dbName.Size = New System.Drawing.Size(235, 20)
-        Me.dbName.TabIndex = 22
-        Me.dbName.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.frmUserName.Location = New System.Drawing.Point(92, 14)
+        Me.frmUserName.Name = "frmUserName"
+        Me.frmUserName.Size = New System.Drawing.Size(187, 20)
+        Me.frmUserName.TabIndex = 26
+        Me.frmUserName.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         '
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(13, 241)
+        Me.Label4.Location = New System.Drawing.Point(3, 41)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(56, 13)
         Me.Label4.TabIndex = 21
@@ -145,89 +118,287 @@ Partial Class frmSettings
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(13, 218)
+        Me.Label3.Location = New System.Drawing.Point(3, 17)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(83, 13)
         Me.Label3.TabIndex = 20
         Me.Label3.Text = "Benutzer-Name:"
         '
-        'Label2
+        'rdbPWD
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(13, 175)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(104, 13)
-        Me.Label2.TabIndex = 19
-        Me.Label2.Text = "Datenbank-Adresse:"
+        Me.rdbPWD.AutoSize = True
+        Me.rdbPWD.Location = New System.Drawing.Point(6, 6)
+        Me.rdbPWD.Name = "rdbPWD"
+        Me.rdbPWD.Size = New System.Drawing.Size(68, 17)
+        Me.rdbPWD.TabIndex = 32
+        Me.rdbPWD.TabStop = True
+        Me.rdbPWD.Text = "Passwort"
+        Me.rdbPWD.UseVisualStyleBackColor = True
         '
-        'Label1
+        'RadioButton1
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(13, 153)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(94, 13)
-        Me.Label1.TabIndex = 18
-        Me.Label1.Text = "Datenbank-Name:"
+        Me.RadioButton1.AutoSize = True
+        Me.RadioButton1.Location = New System.Drawing.Point(96, 6)
+        Me.RadioButton1.Name = "RadioButton1"
+        Me.RadioButton1.Size = New System.Drawing.Size(117, 17)
+        Me.RadioButton1.TabIndex = 33
+        Me.RadioButton1.TabStop = True
+        Me.RadioButton1.Text = "Domain-/Username"
+        Me.RadioButton1.UseVisualStyleBackColor = True
         '
-        'schriftSize
+        'lblProtectField1
         '
-        Me.schriftSize.Location = New System.Drawing.Point(287, 22)
-        Me.schriftSize.Name = "schriftSize"
-        Me.schriftSize.Size = New System.Drawing.Size(83, 20)
-        Me.schriftSize.TabIndex = 17
-        Me.schriftSize.Text = "8"
-        Me.schriftSize.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.lblProtectField1.AutoSize = True
+        Me.lblProtectField1.Location = New System.Drawing.Point(6, 41)
+        Me.lblProtectField1.Name = "lblProtectField1"
+        Me.lblProtectField1.Size = New System.Drawing.Size(53, 13)
+        Me.lblProtectField1.TabIndex = 34
+        Me.lblProtectField1.Text = "Passwort:"
+        '
+        'TabControl1
+        '
+        Me.TabControl1.Controls.Add(Me.TabPage1)
+        Me.TabControl1.Controls.Add(Me.TabPage2)
+        Me.TabControl1.Controls.Add(Me.TabPage3)
+        Me.TabControl1.Controls.Add(Me.TabPage4)
+        Me.TabControl1.Location = New System.Drawing.Point(12, 12)
+        Me.TabControl1.Name = "TabControl1"
+        Me.TabControl1.SelectedIndex = 0
+        Me.TabControl1.Size = New System.Drawing.Size(290, 167)
+        Me.TabControl1.TabIndex = 35
+        '
+        'TabPage1
+        '
+        Me.TabPage1.Controls.Add(Me.txtboxLanguage)
+        Me.TabPage1.Controls.Add(Me.lblLanguage)
+        Me.TabPage1.Controls.Add(Me.Label5)
+        Me.TabPage1.Controls.Add(Me.txtboxSchriftGroesse)
+        Me.TabPage1.Controls.Add(Me.lbl_schrift)
+        Me.TabPage1.Controls.Add(Me.txtboxAbstandsEinheit)
+        Me.TabPage1.Controls.Add(Me.frmExtendedSearch)
+        Me.TabPage1.Controls.Add(Me.frmShowInfoBC)
+        Me.TabPage1.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage1.Name = "TabPage1"
+        Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage1.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage1.TabIndex = 0
+        Me.TabPage1.Text = "Allgemein"
+        Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'TabPage2
+        '
+        Me.TabPage2.Controls.Add(Me.btnProtect)
+        Me.TabPage2.Controls.Add(Me.frmProtectField2)
+        Me.TabPage2.Controls.Add(Me.frmProtectField1)
+        Me.TabPage2.Controls.Add(Me.lblProtectField2)
+        Me.TabPage2.Controls.Add(Me.rdbPWD)
+        Me.TabPage2.Controls.Add(Me.lblProtectField1)
+        Me.TabPage2.Controls.Add(Me.RadioButton1)
+        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage2.Name = "TabPage2"
+        Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage2.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage2.TabIndex = 1
+        Me.TabPage2.Text = "Schutz"
+        Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'txtboxSchriftGroesse
+        '
+        Me.txtboxSchriftGroesse.Location = New System.Drawing.Point(183, 6)
+        Me.txtboxSchriftGroesse.Name = "txtboxSchriftGroesse"
+        Me.txtboxSchriftGroesse.Size = New System.Drawing.Size(83, 20)
+        Me.txtboxSchriftGroesse.TabIndex = 19
+        Me.txtboxSchriftGroesse.Text = "8"
+        Me.txtboxSchriftGroesse.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         '
         'lbl_schrift
         '
         Me.lbl_schrift.AutoSize = True
-        Me.lbl_schrift.Location = New System.Drawing.Point(13, 26)
+        Me.lbl_schrift.Location = New System.Drawing.Point(2, 9)
         Me.lbl_schrift.Name = "lbl_schrift"
         Me.lbl_schrift.Size = New System.Drawing.Size(67, 13)
-        Me.lbl_schrift.TabIndex = 16
+        Me.lbl_schrift.TabIndex = 18
         Me.lbl_schrift.Text = "Schriftgröße:"
+        '
+        'txtboxAbstandsEinheit
+        '
+        Me.txtboxAbstandsEinheit.FormattingEnabled = True
+        Me.txtboxAbstandsEinheit.Items.AddRange(New Object() {"Tagen", "Wochen", "Monaten"})
+        Me.txtboxAbstandsEinheit.Location = New System.Drawing.Point(183, 28)
+        Me.txtboxAbstandsEinheit.Name = "txtboxAbstandsEinheit"
+        Me.txtboxAbstandsEinheit.Size = New System.Drawing.Size(83, 21)
+        Me.txtboxAbstandsEinheit.TabIndex = 25
+        Me.txtboxAbstandsEinheit.Text = "Tagen"
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(2, 31)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(106, 13)
+        Me.Label5.TabIndex = 36
+        Me.Label5.Text = "Abstand anzeigen in:"
+        '
+        'TabPage3
+        '
+        Me.TabPage3.Controls.Add(Me.btnDBabbr)
+        Me.TabPage3.Controls.Add(Me.Label3)
+        Me.TabPage3.Controls.Add(Me.Label4)
+        Me.TabPage3.Controls.Add(Me.btnDBLogin)
+        Me.TabPage3.Controls.Add(Me.frmUserName)
+        Me.TabPage3.Controls.Add(Me.frmUserPWD)
+        Me.TabPage3.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage3.Name = "TabPage3"
+        Me.TabPage3.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage3.TabIndex = 2
+        Me.TabPage3.Text = "Datenbank"
+        Me.TabPage3.UseVisualStyleBackColor = True
+        '
+        'btnDBabbr
+        '
+        Me.btnDBabbr.Location = New System.Drawing.Point(153, 81)
+        Me.btnDBabbr.Name = "btnDBabbr"
+        Me.btnDBabbr.Size = New System.Drawing.Size(91, 23)
+        Me.btnDBabbr.TabIndex = 29
+        Me.btnDBabbr.Text = "Abbrechen"
+        Me.btnDBabbr.UseVisualStyleBackColor = True
+        '
+        'lblProtectField2
+        '
+        Me.lblProtectField2.AutoSize = True
+        Me.lblProtectField2.Location = New System.Drawing.Point(6, 65)
+        Me.lblProtectField2.Name = "lblProtectField2"
+        Me.lblProtectField2.Size = New System.Drawing.Size(55, 13)
+        Me.lblProtectField2.TabIndex = 35
+        Me.lblProtectField2.Text = "Username"
+        '
+        'frmProtectField1
+        '
+        Me.frmProtectField1.Location = New System.Drawing.Point(96, 38)
+        Me.frmProtectField1.Name = "frmProtectField1"
+        Me.frmProtectField1.Size = New System.Drawing.Size(180, 20)
+        Me.frmProtectField1.TabIndex = 36
+        '
+        'frmProtectField2
+        '
+        Me.frmProtectField2.Location = New System.Drawing.Point(96, 62)
+        Me.frmProtectField2.Name = "frmProtectField2"
+        Me.frmProtectField2.Size = New System.Drawing.Size(180, 20)
+        Me.frmProtectField2.TabIndex = 37
+        '
+        'btnProtect
+        '
+        Me.btnProtect.Location = New System.Drawing.Point(96, 100)
+        Me.btnProtect.Name = "btnProtect"
+        Me.btnProtect.Size = New System.Drawing.Size(75, 23)
+        Me.btnProtect.TabIndex = 38
+        Me.btnProtect.Text = "Schützen"
+        Me.btnProtect.UseVisualStyleBackColor = True
+        '
+        'TabPage4
+        '
+        Me.TabPage4.Controls.Add(Me.Label1)
+        Me.TabPage4.Controls.Add(Me.btnLanguageExp)
+        Me.TabPage4.Controls.Add(Me.btnLanguageImp)
+        Me.TabPage4.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage4.Name = "TabPage4"
+        Me.TabPage4.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage4.TabIndex = 3
+        Me.TabPage4.Text = "Sprachen I/E"
+        Me.TabPage4.UseVisualStyleBackColor = True
+        '
+        'lblLanguage
+        '
+        Me.lblLanguage.AutoSize = True
+        Me.lblLanguage.Location = New System.Drawing.Point(3, 54)
+        Me.lblLanguage.Name = "lblLanguage"
+        Me.lblLanguage.Size = New System.Drawing.Size(50, 13)
+        Me.lblLanguage.TabIndex = 37
+        Me.lblLanguage.Text = "Sprache:"
+        '
+        'txtboxLanguage
+        '
+        Me.txtboxLanguage.FormattingEnabled = True
+        Me.txtboxLanguage.Location = New System.Drawing.Point(183, 51)
+        Me.txtboxLanguage.Name = "txtboxLanguage"
+        Me.txtboxLanguage.Size = New System.Drawing.Size(83, 21)
+        Me.txtboxLanguage.TabIndex = 38
+        Me.txtboxLanguage.Text = "deutsch"
+        '
+        'btnLanguageImp
+        '
+        Me.btnLanguageImp.Location = New System.Drawing.Point(37, 59)
+        Me.btnLanguageImp.Name = "btnLanguageImp"
+        Me.btnLanguageImp.Size = New System.Drawing.Size(75, 23)
+        Me.btnLanguageImp.TabIndex = 0
+        Me.btnLanguageImp.Text = "Importieren"
+        Me.btnLanguageImp.UseVisualStyleBackColor = True
+        '
+        'btnLanguageExp
+        '
+        Me.btnLanguageExp.Location = New System.Drawing.Point(153, 59)
+        Me.btnLanguageExp.Name = "btnLanguageExp"
+        Me.btnLanguageExp.Size = New System.Drawing.Size(75, 23)
+        Me.btnLanguageExp.TabIndex = 1
+        Me.btnLanguageExp.Text = "Exportieren"
+        Me.btnLanguageExp.UseVisualStyleBackColor = True
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(37, 28)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(81, 13)
+        Me.Label1.TabIndex = 2
+        Me.Label1.Text = "Sprachen-Datei"
         '
         'frmSettings
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(536, 336)
-        Me.Controls.Add(Me.protectShapes)
-        Me.Controls.Add(Me.extendedSearch)
-        Me.Controls.Add(Me.showInfoBC)
-        Me.Controls.Add(Me.dbLoginButton)
-        Me.Controls.Add(Me.TextBox3)
-        Me.Controls.Add(Me.TextBox2)
-        Me.Controls.Add(Me.abstandseinheit)
-        Me.Controls.Add(Me.Label5)
-        Me.Controls.Add(Me.dbURI)
-        Me.Controls.Add(Me.dbName)
-        Me.Controls.Add(Me.Label4)
-        Me.Controls.Add(Me.Label3)
-        Me.Controls.Add(Me.Label2)
-        Me.Controls.Add(Me.Label1)
-        Me.Controls.Add(Me.schriftSize)
-        Me.Controls.Add(Me.lbl_schrift)
+        Me.ClientSize = New System.Drawing.Size(323, 202)
+        Me.Controls.Add(Me.TabControl1)
         Me.Name = "frmSettings"
         Me.Text = "Einstellungen"
+        Me.TabControl1.ResumeLayout(False)
+        Me.TabPage1.ResumeLayout(False)
+        Me.TabPage1.PerformLayout()
+        Me.TabPage2.ResumeLayout(False)
+        Me.TabPage2.PerformLayout()
+        Me.TabPage3.ResumeLayout(False)
+        Me.TabPage3.PerformLayout()
+        Me.TabPage4.ResumeLayout(False)
+        Me.TabPage4.PerformLayout()
         Me.ResumeLayout(False)
-        Me.PerformLayout()
 
     End Sub
-    Friend WithEvents protectShapes As System.Windows.Forms.CheckBox
-    Friend WithEvents extendedSearch As System.Windows.Forms.CheckBox
-    Friend WithEvents showInfoBC As System.Windows.Forms.CheckBox
-    Friend WithEvents dbLoginButton As System.Windows.Forms.Button
-    Friend WithEvents TextBox3 As System.Windows.Forms.TextBox
-    Friend WithEvents TextBox2 As System.Windows.Forms.TextBox
-    Friend WithEvents abstandseinheit As System.Windows.Forms.ComboBox
-    Friend WithEvents Label5 As System.Windows.Forms.Label
-    Friend WithEvents dbURI As System.Windows.Forms.TextBox
-    Friend WithEvents dbName As System.Windows.Forms.TextBox
+    Friend WithEvents frmExtendedSearch As System.Windows.Forms.CheckBox
+    Friend WithEvents frmShowInfoBC As System.Windows.Forms.CheckBox
+    Friend WithEvents btnDBLogin As System.Windows.Forms.Button
+    Friend WithEvents frmUserPWD As System.Windows.Forms.TextBox
+    Friend WithEvents frmUserName As System.Windows.Forms.TextBox
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents Label3 As System.Windows.Forms.Label
-    Friend WithEvents Label2 As System.Windows.Forms.Label
-    Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents schriftSize As System.Windows.Forms.TextBox
+    Friend WithEvents rdbPWD As System.Windows.Forms.RadioButton
+    Friend WithEvents RadioButton1 As System.Windows.Forms.RadioButton
+    Friend WithEvents lblProtectField1 As System.Windows.Forms.Label
+    Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
+    Friend WithEvents TabPage1 As System.Windows.Forms.TabPage
+    Friend WithEvents Label5 As System.Windows.Forms.Label
+    Friend WithEvents txtboxSchriftGroesse As System.Windows.Forms.TextBox
     Friend WithEvents lbl_schrift As System.Windows.Forms.Label
+    Friend WithEvents txtboxAbstandsEinheit As System.Windows.Forms.ComboBox
+    Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
+    Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
+    Friend WithEvents btnDBabbr As System.Windows.Forms.Button
+    Friend WithEvents btnProtect As System.Windows.Forms.Button
+    Friend WithEvents frmProtectField2 As System.Windows.Forms.TextBox
+    Friend WithEvents frmProtectField1 As System.Windows.Forms.TextBox
+    Friend WithEvents lblProtectField2 As System.Windows.Forms.Label
+    Friend WithEvents txtboxLanguage As System.Windows.Forms.ComboBox
+    Friend WithEvents lblLanguage As System.Windows.Forms.Label
+    Friend WithEvents TabPage4 As System.Windows.Forms.TabPage
+    Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents btnLanguageExp As System.Windows.Forms.Button
+    Friend WithEvents btnLanguageImp As System.Windows.Forms.Button
 End Class
