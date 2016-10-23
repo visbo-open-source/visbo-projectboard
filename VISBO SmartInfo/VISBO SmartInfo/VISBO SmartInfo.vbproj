@@ -130,6 +130,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
@@ -166,11 +167,16 @@
     <Import Include="Microsoft.VisualBasic" />
     <Import Include="System" />
     <Import Include="System.Collections.Generic" />
+    <Import Include="System.IO" />
     <Import Include="System.Linq" />
+    <Import Include="System.Runtime" />
+    <Import Include="System.Runtime.Serialization" />
     <Import Include="System.Text" />
+    <Import Include="System.Xml" />
     <Import Include="System.Xml.Linq" />
     <Import Include="Office = Microsoft.Office.Core" />
     <Import Include="PowerPoint = Microsoft.Office.Interop.PowerPoint" />
+    <Import Include="System.Xml.Serialization" />
   </ItemGroup>
   <!--
     This section defines the user source files that are part of the project.
@@ -185,6 +191,7 @@
   <ItemGroup>
     <AppDesigner Include="My Project\" />
     <Compile Include="clsLanguages.vb" />
+    <Compile Include="clsPrepLanguagesForXML.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
     <Compile Include="frmInfo.Designer.vb">
       <DependentUpon>frmInfo.vb</DependentUpon>

@@ -186,6 +186,20 @@
 
             Dim nameCollection As Collection = smartSlideLists.getNCollection(colorCode, suchString, rdbCode)
 
+            If selectedLanguage <> defaultSprache And rdbCode = pptInfoType.cName Then
+                ' jetzt müssen die Namen in NameCollection erstmal ersetzt werden 
+                Dim tmpCollection As New Collection
+                For Each elemName As String In nameCollection
+                    Dim newName As String = languages.translate(elemName, selectedLanguage)
+                    ' es ist sichergestellt, dass es keine Doubletten gibt, also jedes Wort kann eindeutig übersetzt werden 
+                    If Not tmpCollection.Contains(newName) Then
+                        tmpCollection.Add(newName, newName)
+                    End If
+                Next
+                nameCollection.Clear()
+                nameCollection = tmpCollection
+            End If
+
             ' die bisherige Liste zurücksetzen
             Me.listboxNames.Items.Clear()
 
@@ -355,6 +369,11 @@
             rdbCode = pptInfoType.bCrumb
         Else
             rdbCode = pptInfoType.cName
+        End If
+
+        ' jetzt muss gechecked werden, ob noch übersetzt werden muss
+        If rdbCode = pptInfoType.cName And selectedLanguage <> defaultSprache Then
+
         End If
 
         Dim tmpCollection As Collection = smartSlideLists.getShapesNames(nameArrayI, rdbCode)

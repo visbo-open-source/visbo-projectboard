@@ -29,6 +29,9 @@ Module Module1
     Friend userName As String = ""
     Friend userPWD As String = ""
 
+    Friend defaultSprache As String = "Original"
+    Friend selectedLanguage As String = defaultSprache
+
     Friend absEinheit As Integer = 0
 
     ' gibt an, ob irgendwelche Ampeln gesetzt sind 
@@ -86,6 +89,21 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_AfterPresentationOpen(Pres As PowerPoint.Presentation) Handles pptAPP.AfterPresentationOpen
 
+        'Dim anzahl As Integer = Pres.CustomXMLParts.Count
+        'If anzahl > 0 Then
+
+        '    Call MsgBox("es gibt " & Pres.CustomXMLParts.Count.ToString & " CustomXML Parts")
+        '    For i As Integer = 1 To anzahl
+        '        Dim xmlPart As Microsoft.Office.Core.CustomXMLPart = Pres.CustomXMLParts.Item(i)
+        '        Dim ergebnis As String = xmlPart.XML
+        '        Call MsgBox(ergebnis & "; Id=" & xmlPart.Id & vbLf & _
+        '                    xmlPart.DocumentElement.Text)
+        '    Next
+
+
+        'Else
+        '    Call MsgBox("es gibt keine CustomXML Parts")
+        'End If
     End Sub
 
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
@@ -516,11 +534,13 @@ Module Module1
                                           ByVal showShortName As Boolean, ByVal showOriginalName As Boolean) As String
 
         Dim tmpText As String = ""
+        Dim translationNecessary As Boolean = False
 
         If isRelevantShape(curShape) Then
             If showOriginalName Then
                 If curShape.Tags.Item("ON").Length = 0 Then
                     tmpText = curShape.Tags.Item("CN")
+                    translationNecessary = (selectedLanguage <> defaultSprache)
                 Else
                     tmpText = curShape.Tags.Item("ON")
                 End If
@@ -529,6 +549,7 @@ Module Module1
                 If curShape.Tags.Item("SN").Length = 0 Then
                     If curShape.Tags.Item("CN").Length > 0 Then
                         tmpText = curShape.Tags.Item("CN")
+                        translationNecessary = (selectedLanguage <> defaultSprache)
                     End If
                 Else
                     tmpText = curShape.Tags.Item("SN")
@@ -536,7 +557,13 @@ Module Module1
 
             ElseIf curShape.Tags.Item("CN").Length > 0 Then
                 tmpText = curShape.Tags.Item("CN")
+                translationNecessary = (selectedLanguage <> defaultSprache)
             End If
+        End If
+
+        If translationNecessary Then
+            ' jetzt den Text ersetzen 
+            tmpText = languages.translate(tmpText, selectedLanguage)
         End If
 
         bestimmeElemText = tmpText

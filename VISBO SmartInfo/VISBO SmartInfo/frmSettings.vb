@@ -1,6 +1,13 @@
-﻿Public Class frmSettings
+﻿Imports System
+Imports System.Runtime.Serialization
+Imports System.Xml
+Imports System.Xml.Serialization
+Imports System.IO
 
-    
+
+Public Class frmSettings
+
+
     Private Sub schriftSize_TextChanged(sender As Object, e As EventArgs)
 
         Try
@@ -106,23 +113,72 @@
     Private Sub btnLanguageExp_Click(sender As Object, e As EventArgs) Handles btnLanguageExp.Click
         Try
             Dim tmpCollection = smartSlideLists.getElementNamen
-            Call languages.addLanguage("Original", tmpCollection)
+            Call languages.addLanguage(defaultSprache, tmpCollection)
             Call languages.exportLanguages()
             Call MsgBox("ok, nach Desktop exportiert ...")
         Catch ex As Exception
             Call MsgBox("Fehler bei Export: " & ex.Message)
         End Try
-        
+
     End Sub
 
+    ''' <summary>
+    ''' Bedingungen beim Import: 
+    ''' es muss die Default Sprache geben, es muss jeweils eine einein-deutige Übersetzung existieren ....
+    ''' also die Anzahl der Default-Sprachen Elemente muss gleich sein der Anzahl der anderen Sprachen-Elemente
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub btnLanguageImp_Click(sender As Object, e As EventArgs) Handles btnLanguageImp.Click
 
         Try
+            Dim tmpLanguages As New clsLanguages
             Dim tmpCollection = smartSlideLists.getElementNamen
-            Call languages.addLanguage("Original", tmpCollection)
+            Dim xmlFileName As String = My.Computer.FileSystem.SpecialDirectories.Desktop & "\" & "PPTlanguages.xlm"
+            Dim xmlResult As String = ""
+
+            Call languages.addLanguage(defaultSprache, tmpCollection)
             Call languages.importLanguages()
             Dim anzahlLanguages As Integer = languages.count
             Call MsgBox("ok, " & anzahlLanguages - 1 & " weitere Sprachen importiert ...")
+
+            ' jetzt wird die txtboxLanguage aktualisiert
+            txtboxLanguage.Items.Clear()
+            For i As Integer = 1 To languages.count
+                Dim sprache As String = languages.getLanguageName(i)
+                txtboxLanguage.Items.Add(sprache)
+            Next
+
+            txtboxLanguage.SelectedItem = defaultSprache
+            selectedLanguage = defaultSprache
+
+            Dim sprachenArray As clsPrepLanguagesForXML = languages.getSprachenKlasse
+
+            ' jetzt wird ein CustomXMLPart hinzugefügt 
+            'Dim serializer = New DataContractSerializer(GetType(clsLanguages))
+            Dim serializer = New DataContractSerializer(GetType(clsPrepLanguagesForXML))
+
+            Dim file As New FileStream(xmlFileName, FileMode.Create)
+
+            serializer.WriteObject(file, sprachenArray)
+            file.Close()
+
+            'Dim settings As New XmlWriterSettings()
+            'settings.Indent = True
+            'settings.IndentChars = (ControlChars.Tab)
+            'settings.OmitXmlDeclaration = True
+
+
+            'Dim writer As XmlWriter = XmlWriter.Create(xmlFileName, settings)
+            'serializer.WriteObject(writer, languages)
+            'serializer.WriteObject(writer, sprachenArray)
+
+            'xmlResult = writer.ToString
+            'writer.Flush()
+            'writer.Close()
+
+            'pptAPP.ActivePresentation.CustomXMLParts.Add(xmlResult)
         Catch ex As Exception
             Call MsgBox("Fehler bei Import: " & ex.Message)
         End Try

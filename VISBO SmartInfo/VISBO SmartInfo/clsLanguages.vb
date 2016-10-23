@@ -4,6 +4,84 @@ Public Class clsLanguages
     Private _languageItems As SortedList(Of String, Collection)
 
 
+    ''' <summary>
+    ''' gibt die Sprache mit lfd Nr index zurück
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getLanguageName(ByVal index As Integer) As String
+        Get
+            If index >= 1 And index <= _languageItems.Count Then
+                getLanguageName = _languageItems.ElementAt(index - 1).Key
+            Else
+                getLanguageName = ""
+            End If
+        End Get
+    End Property
+
+    Public ReadOnly Property translate(ByVal tmpText As String, ByVal selectedLanguage As String)
+        Get
+            Dim newText As String = tmpText
+
+            If _languageItems.ContainsKey(selectedLanguage) Then
+
+                Dim origItems As Collection = _languageItems.Item(defaultSprache)
+                If origItems.Contains(tmpText) Then
+                    Dim found As Boolean = False
+                    Dim index As Integer = 1
+                    Do While index <= origItems.Count And Not found
+                        If CStr(origItems.Item(index)) = tmpText Then
+                            found = True
+                        Else
+                            index = index + 1
+                        End If
+                    Loop
+                    If found Then
+                        Dim newLangItems As Collection = _languageItems.Item(selectedLanguage)
+                        newText = CStr(newLangItems.Item(index))
+                    End If
+                End If
+            End If
+
+            translate = newText
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Klasse sprachArray zurück, die für das Erzeugen von XML Strukturen benötigt wird ... 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSprachenKlasse() As clsPrepLanguagesForXML
+        Get
+
+            Dim tmpArray() As String
+
+            Dim dimen1 As Integer = _languageItems.Count
+            Dim dimen2 As Integer = _languageItems.ElementAt(0).Value.Count
+
+            Dim tmpPrep As New clsPrepLanguagesForXML(dimen1, dimen2)
+
+            ReDim tmpArray(dimen1 * (dimen2 + 1) - 1)
+
+            For nx As Integer = 0 To dimen1 - 1
+                tmpArray(nx * (dimen2 + 1)) = _languageItems.ElementAt(nx).Key
+
+                For ix As Integer = 1 To dimen2
+                    tmpArray(nx * (dimen2 + 1) + ix) = CStr(_languageItems.ElementAt(nx).Value.Item(ix))
+                Next
+
+            Next
+
+            tmpPrep.sprachArray = tmpArray
+
+            getSprachenKlasse = tmpPrep
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt zurück, wieviele Sprachen enthalten sind 
@@ -29,6 +107,7 @@ Public Class clsLanguages
         Dim excelDidExist As Boolean = False
         Dim fileName As String = userHome & "\" & "PPTlanguages.xlsx"
         Dim ok As Boolean = True
+        Dim reason As String = ""
 
         Try
             ' prüft, ob Excel bereits geöffnet ist
@@ -92,22 +171,25 @@ Public Class clsLanguages
                     ' jetzt , bei ixSP = 1 prüfen, ob die Original Werte genau identisch sind; 
                     ' andernfalls käme nur Schmarrn raus 
                     If ixSP = 1 Then
-                        If tmpName = "Original" Then
-                            Dim pruefCollection = _languageItems.Item(tmpName)
-                            If pruefCollection.Count = tmpCollection.Count Then
-                                Dim k As Integer = 1
-                                While k <= tmpCollection.Count And ok
-                                    If CStr(pruefCollection.Item(k)) = CStr(tmpCollection.Item(k)) Then
-                                        k = k + 1
-                                    Else
+                        If tmpName = defaultSprache Then
+                            Dim pruefCollection = _languageItems.Item(defaultSprache)
+                            If pruefCollection.Count <= tmpCollection.Count Then
+
+                                For Each pruefItem As String In pruefCollection
+                                    If Not tmpCollection.Contains(pruefItem) Then
                                         ok = False
+                                        reason = "nicht alle Elemente sind in Übersetzungstabelle enthalten"
+                                        Exit For
                                     End If
-                                End While
+                                Next
+
                             Else
+                                reason = "nicht alle Elemente sind in Übersetzungstabelle enthalten"
                                 ok = False
                             End If
 
                         Else
+                            reason = "1. Sprache nicht Default Sprache: Original"
                             ok = False
                         End If
                     End If
@@ -116,16 +198,23 @@ Public Class clsLanguages
                         Exit For
                     End If
 
-                    ' jetzt die Language hinzufügen
+                    ' jetzt die Language hinzufügen, aber nur wenn die Anzahl genauso groß ist wie bei Default-Language 
                     If ixSP > 1 Then
-                        If Not _languageItems.ContainsKey(tmpName) Then
-                            _languageItems.Add(tmpName, tmpCollection)
+                        If _languageItems.Item(defaultSprache).Count = tmpCollection.Count Then
+                            If Not _languageItems.ContainsKey(tmpName) Then
+                                _languageItems.Add(tmpName, tmpCollection)
+                            Else
+                                _languageItems.Remove(tmpName)
+                                _languageItems.Add(tmpName, tmpCollection)
+                            End If
                         Else
-                            _languageItems.Remove(tmpName)
-                            _languageItems.Add(tmpName, tmpCollection)
+                            reason = "x. Sprache hat nicht identisch viele Einträge wie die Original-Sprache"
+                            ok = False
+                            Exit For
                         End If
+                        
                     End If
-                    
+
 
                 Next
 
@@ -144,14 +233,13 @@ Public Class clsLanguages
             excelApp.Quit()
         End If
 
-        If Not OK Then
-            Throw New Exception("Übersetzungen passen nicht ...")
+        If Not ok Then
+            Throw New Exception("Fehler bei Import: " & vbLf & reason)
         End If
-
 
     End Sub
 
-    
+
     ''' <summary>
     ''' exportiert die Sprach Bezeichner in eine Excel Datei mit dem angegebenen Datei-Namen 
     ''' wirft Exception, wenn es nicht klappt
@@ -255,5 +343,23 @@ Public Class clsLanguages
         _languageItems = New SortedList(Of String, Collection)
     End Sub
 
+    ' ''' <summary>
+    ' ''' wird benötigt, um eine XML Struktur aufzubauen, die einen eindimensionalen Array hat und sonst auch nur einfache Datentypen 
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    'Public Class languageArray
+
+    '    Friend sprachArray As String()
+
+    '    Friend dimen1 As Integer
+    '    Friend dimen2 As Integer
+
+    '    Sub New(ByVal dm1 As Integer, ByVal dm2 As Integer)
+    '        dimen1 = dm1
+    '        dimen2 = dm2
+    '        ReDim sprachArray(dm1 * dm2 - 1)
+    '    End Sub
+
+    'End Class
 
 End Class
