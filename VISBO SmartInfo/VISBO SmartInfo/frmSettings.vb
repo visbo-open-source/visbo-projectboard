@@ -53,6 +53,26 @@ Public Class frmSettings
         frmProtectField2.Visible = False
         frmProtectField2.Text = ""
 
+        
+        If languages.count > 1 Then
+            ' jetzt wird die txtboxLanguage aktualisiert
+            txtboxLanguage.Visible = True
+            lblLanguage.Visible = True
+            txtboxLanguage.Items.Clear()
+
+            For i As Integer = 1 To languages.count
+                Dim sprache As String = languages.getLanguageName(i)
+                txtboxLanguage.Items.Add(sprache)
+            Next
+
+            txtboxLanguage.SelectedItem = selectedLanguage
+
+        Else
+            txtboxLanguage.Visible = False
+            lblLanguage.Visible = False
+            selectedLanguage = defaultSprache
+        End If
+
 
     End Sub
 
@@ -150,19 +170,25 @@ Public Class frmSettings
                 txtboxLanguage.Items.Add(sprache)
             Next
 
+            txtboxLanguage.Visible = True
+            lblLanguage.Visible = True
+
             txtboxLanguage.SelectedItem = defaultSprache
             selectedLanguage = defaultSprache
 
-            Dim sprachenArray As clsPrepLanguagesForXML = languages.getSprachenKlasse
+
+            ' als XML File in die PPT Datei reinschiessen ... 
+
+            'Dim sprachenArray As clsPrepLanguagesForXML = languages.getSprachenKlasse
 
             ' jetzt wird ein CustomXMLPart hinzugefügt 
             'Dim serializer = New DataContractSerializer(GetType(clsLanguages))
-            Dim serializer = New DataContractSerializer(GetType(clsPrepLanguagesForXML))
+            'Dim serializer = New DataContractSerializer(GetType(clsPrepLanguagesForXML))
 
-            Dim file As New FileStream(xmlFileName, FileMode.Create)
+            'Dim file As New FileStream(xmlFileName, FileMode.Create)
 
-            serializer.WriteObject(file, sprachenArray)
-            file.Close()
+            'serializer.WriteObject(file, sprachenArray)
+            'file.Close()
 
             'Dim settings As New XmlWriterSettings()
             'settings.Indent = True
@@ -183,5 +209,13 @@ Public Class frmSettings
             Call MsgBox("Fehler bei Import: " & ex.Message)
         End Try
 
+    End Sub
+
+    Private Sub txtboxLanguage_SelectedIndexChanged(sender As Object, e As EventArgs) Handles txtboxLanguage.SelectedIndexChanged
+        selectedLanguage = CStr(txtboxLanguage.SelectedItem)
+    End Sub
+
+    Private Sub btnChangeLanguage_Click(sender As Object, e As EventArgs) Handles btnChangeLanguage.Click
+        Call changeLanguageInAnnotations()
     End Sub
 End Class

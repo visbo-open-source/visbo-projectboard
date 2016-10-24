@@ -34,23 +34,24 @@ Partial Class frmSettings
         Me.lblProtectField1 = New System.Windows.Forms.Label()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.txtboxLanguage = New System.Windows.Forms.ComboBox()
+        Me.lblLanguage = New System.Windows.Forms.Label()
+        Me.Label5 = New System.Windows.Forms.Label()
         Me.txtboxSchriftGroesse = New System.Windows.Forms.TextBox()
         Me.lbl_schrift = New System.Windows.Forms.Label()
         Me.txtboxAbstandsEinheit = New System.Windows.Forms.ComboBox()
-        Me.Label5 = New System.Windows.Forms.Label()
+        Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.btnProtect = New System.Windows.Forms.Button()
+        Me.frmProtectField2 = New System.Windows.Forms.TextBox()
+        Me.frmProtectField1 = New System.Windows.Forms.TextBox()
+        Me.lblProtectField2 = New System.Windows.Forms.Label()
         Me.TabPage3 = New System.Windows.Forms.TabPage()
         Me.btnDBabbr = New System.Windows.Forms.Button()
-        Me.lblProtectField2 = New System.Windows.Forms.Label()
-        Me.frmProtectField1 = New System.Windows.Forms.TextBox()
-        Me.frmProtectField2 = New System.Windows.Forms.TextBox()
-        Me.btnProtect = New System.Windows.Forms.Button()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
-        Me.lblLanguage = New System.Windows.Forms.Label()
-        Me.txtboxLanguage = New System.Windows.Forms.ComboBox()
-        Me.btnLanguageImp = New System.Windows.Forms.Button()
-        Me.btnLanguageExp = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.btnLanguageExp = New System.Windows.Forms.Button()
+        Me.btnLanguageImp = New System.Windows.Forms.Button()
+        Me.btnChangeLanguage = New System.Windows.Forms.Button()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
@@ -169,6 +170,7 @@ Partial Class frmSettings
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.btnChangeLanguage)
         Me.TabPage1.Controls.Add(Me.txtboxLanguage)
         Me.TabPage1.Controls.Add(Me.lblLanguage)
         Me.TabPage1.Controls.Add(Me.Label5)
@@ -185,22 +187,32 @@ Partial Class frmSettings
         Me.TabPage1.Text = "Allgemein"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
-        'TabPage2
+        'txtboxLanguage
         '
-        Me.TabPage2.Controls.Add(Me.btnProtect)
-        Me.TabPage2.Controls.Add(Me.frmProtectField2)
-        Me.TabPage2.Controls.Add(Me.frmProtectField1)
-        Me.TabPage2.Controls.Add(Me.lblProtectField2)
-        Me.TabPage2.Controls.Add(Me.rdbPWD)
-        Me.TabPage2.Controls.Add(Me.lblProtectField1)
-        Me.TabPage2.Controls.Add(Me.RadioButton1)
-        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage2.Name = "TabPage2"
-        Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(282, 141)
-        Me.TabPage2.TabIndex = 1
-        Me.TabPage2.Text = "Schutz"
-        Me.TabPage2.UseVisualStyleBackColor = True
+        Me.txtboxLanguage.FormattingEnabled = True
+        Me.txtboxLanguage.Location = New System.Drawing.Point(183, 51)
+        Me.txtboxLanguage.Name = "txtboxLanguage"
+        Me.txtboxLanguage.Size = New System.Drawing.Size(83, 21)
+        Me.txtboxLanguage.TabIndex = 38
+        Me.txtboxLanguage.Text = "deutsch"
+        '
+        'lblLanguage
+        '
+        Me.lblLanguage.AutoSize = True
+        Me.lblLanguage.Location = New System.Drawing.Point(3, 54)
+        Me.lblLanguage.Name = "lblLanguage"
+        Me.lblLanguage.Size = New System.Drawing.Size(50, 13)
+        Me.lblLanguage.TabIndex = 37
+        Me.lblLanguage.Text = "Sprache:"
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(2, 31)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(106, 13)
+        Me.Label5.TabIndex = 36
+        Me.Label5.Text = "Abstand anzeigen in:"
         '
         'txtboxSchriftGroesse
         '
@@ -230,14 +242,54 @@ Partial Class frmSettings
         Me.txtboxAbstandsEinheit.TabIndex = 25
         Me.txtboxAbstandsEinheit.Text = "Tagen"
         '
-        'Label5
+        'TabPage2
         '
-        Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(2, 31)
-        Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(106, 13)
-        Me.Label5.TabIndex = 36
-        Me.Label5.Text = "Abstand anzeigen in:"
+        Me.TabPage2.Controls.Add(Me.btnProtect)
+        Me.TabPage2.Controls.Add(Me.frmProtectField2)
+        Me.TabPage2.Controls.Add(Me.frmProtectField1)
+        Me.TabPage2.Controls.Add(Me.lblProtectField2)
+        Me.TabPage2.Controls.Add(Me.rdbPWD)
+        Me.TabPage2.Controls.Add(Me.lblProtectField1)
+        Me.TabPage2.Controls.Add(Me.RadioButton1)
+        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage2.Name = "TabPage2"
+        Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage2.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage2.TabIndex = 1
+        Me.TabPage2.Text = "Schutz"
+        Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'btnProtect
+        '
+        Me.btnProtect.Location = New System.Drawing.Point(96, 100)
+        Me.btnProtect.Name = "btnProtect"
+        Me.btnProtect.Size = New System.Drawing.Size(75, 23)
+        Me.btnProtect.TabIndex = 38
+        Me.btnProtect.Text = "Schützen"
+        Me.btnProtect.UseVisualStyleBackColor = True
+        '
+        'frmProtectField2
+        '
+        Me.frmProtectField2.Location = New System.Drawing.Point(96, 62)
+        Me.frmProtectField2.Name = "frmProtectField2"
+        Me.frmProtectField2.Size = New System.Drawing.Size(180, 20)
+        Me.frmProtectField2.TabIndex = 37
+        '
+        'frmProtectField1
+        '
+        Me.frmProtectField1.Location = New System.Drawing.Point(96, 38)
+        Me.frmProtectField1.Name = "frmProtectField1"
+        Me.frmProtectField1.Size = New System.Drawing.Size(180, 20)
+        Me.frmProtectField1.TabIndex = 36
+        '
+        'lblProtectField2
+        '
+        Me.lblProtectField2.AutoSize = True
+        Me.lblProtectField2.Location = New System.Drawing.Point(6, 65)
+        Me.lblProtectField2.Name = "lblProtectField2"
+        Me.lblProtectField2.Size = New System.Drawing.Size(55, 13)
+        Me.lblProtectField2.TabIndex = 35
+        Me.lblProtectField2.Text = "Username"
         '
         'TabPage3
         '
@@ -263,38 +315,6 @@ Partial Class frmSettings
         Me.btnDBabbr.Text = "Abbrechen"
         Me.btnDBabbr.UseVisualStyleBackColor = True
         '
-        'lblProtectField2
-        '
-        Me.lblProtectField2.AutoSize = True
-        Me.lblProtectField2.Location = New System.Drawing.Point(6, 65)
-        Me.lblProtectField2.Name = "lblProtectField2"
-        Me.lblProtectField2.Size = New System.Drawing.Size(55, 13)
-        Me.lblProtectField2.TabIndex = 35
-        Me.lblProtectField2.Text = "Username"
-        '
-        'frmProtectField1
-        '
-        Me.frmProtectField1.Location = New System.Drawing.Point(96, 38)
-        Me.frmProtectField1.Name = "frmProtectField1"
-        Me.frmProtectField1.Size = New System.Drawing.Size(180, 20)
-        Me.frmProtectField1.TabIndex = 36
-        '
-        'frmProtectField2
-        '
-        Me.frmProtectField2.Location = New System.Drawing.Point(96, 62)
-        Me.frmProtectField2.Name = "frmProtectField2"
-        Me.frmProtectField2.Size = New System.Drawing.Size(180, 20)
-        Me.frmProtectField2.TabIndex = 37
-        '
-        'btnProtect
-        '
-        Me.btnProtect.Location = New System.Drawing.Point(96, 100)
-        Me.btnProtect.Name = "btnProtect"
-        Me.btnProtect.Size = New System.Drawing.Size(75, 23)
-        Me.btnProtect.TabIndex = 38
-        Me.btnProtect.Text = "Schützen"
-        Me.btnProtect.UseVisualStyleBackColor = True
-        '
         'TabPage4
         '
         Me.TabPage4.Controls.Add(Me.Label1)
@@ -307,32 +327,14 @@ Partial Class frmSettings
         Me.TabPage4.Text = "Sprachen I/E"
         Me.TabPage4.UseVisualStyleBackColor = True
         '
-        'lblLanguage
+        'Label1
         '
-        Me.lblLanguage.AutoSize = True
-        Me.lblLanguage.Location = New System.Drawing.Point(3, 54)
-        Me.lblLanguage.Name = "lblLanguage"
-        Me.lblLanguage.Size = New System.Drawing.Size(50, 13)
-        Me.lblLanguage.TabIndex = 37
-        Me.lblLanguage.Text = "Sprache:"
-        '
-        'txtboxLanguage
-        '
-        Me.txtboxLanguage.FormattingEnabled = True
-        Me.txtboxLanguage.Location = New System.Drawing.Point(183, 51)
-        Me.txtboxLanguage.Name = "txtboxLanguage"
-        Me.txtboxLanguage.Size = New System.Drawing.Size(83, 21)
-        Me.txtboxLanguage.TabIndex = 38
-        Me.txtboxLanguage.Text = "deutsch"
-        '
-        'btnLanguageImp
-        '
-        Me.btnLanguageImp.Location = New System.Drawing.Point(37, 59)
-        Me.btnLanguageImp.Name = "btnLanguageImp"
-        Me.btnLanguageImp.Size = New System.Drawing.Size(75, 23)
-        Me.btnLanguageImp.TabIndex = 0
-        Me.btnLanguageImp.Text = "Importieren"
-        Me.btnLanguageImp.UseVisualStyleBackColor = True
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(37, 28)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(81, 13)
+        Me.Label1.TabIndex = 2
+        Me.Label1.Text = "Sprachen-Datei"
         '
         'btnLanguageExp
         '
@@ -343,14 +345,23 @@ Partial Class frmSettings
         Me.btnLanguageExp.Text = "Exportieren"
         Me.btnLanguageExp.UseVisualStyleBackColor = True
         '
-        'Label1
+        'btnLanguageImp
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(37, 28)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(81, 13)
-        Me.Label1.TabIndex = 2
-        Me.Label1.Text = "Sprachen-Datei"
+        Me.btnLanguageImp.Location = New System.Drawing.Point(37, 59)
+        Me.btnLanguageImp.Name = "btnLanguageImp"
+        Me.btnLanguageImp.Size = New System.Drawing.Size(75, 23)
+        Me.btnLanguageImp.TabIndex = 0
+        Me.btnLanguageImp.Text = "Importieren"
+        Me.btnLanguageImp.UseVisualStyleBackColor = True
+        '
+        'btnChangeLanguage
+        '
+        Me.btnChangeLanguage.Location = New System.Drawing.Point(183, 85)
+        Me.btnChangeLanguage.Name = "btnChangeLanguage"
+        Me.btnChangeLanguage.Size = New System.Drawing.Size(83, 40)
+        Me.btnChangeLanguage.TabIndex = 39
+        Me.btnChangeLanguage.Text = "Namen übersetzen"
+        Me.btnChangeLanguage.UseVisualStyleBackColor = True
         '
         'frmSettings
         '
@@ -401,4 +412,5 @@ Partial Class frmSettings
     Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents btnLanguageExp As System.Windows.Forms.Button
     Friend WithEvents btnLanguageImp As System.Windows.Forms.Button
+    Friend WithEvents btnChangeLanguage As System.Windows.Forms.Button
 End Class

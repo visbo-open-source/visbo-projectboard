@@ -19,6 +19,11 @@ Module Module1
     ' gibt an, ob das Breadcrumb Feld gezeigt werden soll 
     Friend showBreadCrumbField As Boolean = False
 
+    ' globale Variable, die angibt, ob ShortName gezeichnet werden soll 
+    Friend showShortName As Boolean = False
+    ' globlaela Variable, die anzeigt, ob Orginal Name gezeigt werden soll 
+    Friend showOrigName As Boolean = False
+
     Friend protectContents As Boolean
     Friend protectType As Integer
     Friend protectFeld1 As String = ""
@@ -79,6 +84,7 @@ Module Module1
         belowLeft = 6
         centerLeft = 7
         aboveLeft = 8
+        asis = 9
     End Enum
 
 
@@ -681,11 +687,247 @@ Module Module1
     End Sub
 
     ''' <summary>
-    ''' erzeugt von den aktuellen Powerpoint Namen einen Sprach-Array, 
+    ''' fügt in der Powerpoint an das selektierte Plan-Element Lang-Name, Original-Name, Kurz-Name bzw Datum an 
+    ''' wenn das Element bereits existiert, so wird es mit dem betreffenden Text beschriftet   
+    ''' globale Variable, die im Zugriff sind: 
+    ''' currentSlide: die aktuelle PPT-Slide
+    ''' selectedplanShape: das aktuell selektierte Plan-Shape 
     ''' </summary>
-    ''' <param name="smartListen"></param>
-    ''' <remarks>noch prüfen, ob das immer gemacht werden kann, oder nur , wenn es nicht schon ein LanguageXML gibt </remarks>
-    Public Sub createOneLanguageFromPPT(ByVal smartListen As clsSmartSlideListen)
+    ''' <param name="descriptionType"></param>
+    ''' <param name="positionIndex"></param>
+    ''' <remarks></remarks>
+    Public Sub annotatePlanShape(ByVal selectedPlanShape As PowerPoint.Shape, _
+                                  ByVal descriptionType As Integer, ByVal positionIndex As Integer)
+
+        Dim newShape As PowerPoint.Shape
+        Dim textLeft As Double = selectedPlanShape.Left - 4
+        Dim textTop As Double = selectedPlanShape.Top - 5
+        Dim textwidth As Double = 5
+        Dim textheight As Double = 5
+        Dim normalFarbe As Integer = RGB(10, 10, 10)
+
+        Dim descriptionText As String = ""
+
+        Dim shapeName As String = ""
+        Dim ok As Boolean = False
+
+        ' handelt es sich um den Lang-/Kurz-Namen oder um das Datum ? 
+
+        If descriptionType = pptAnnotationType.text Then
+            descriptionText = bestimmeElemText(selectedPlanShape, showShortName, showOrigName)
+        ElseIf descriptionType = pptAnnotationType.datum Then
+            descriptionText = bestimmeElemDateText(selectedPlanShape)
+        End If
+
+        Try
+            If Not IsNothing(descriptionType) Then
+                If descriptionType >= 0 Then
+                    shapeName = selectedPlanShape.Name & descriptionType.ToString
+                    ok = True
+                End If
+            End If
+
+        Catch ex As Exception
+            ok = False
+        End Try
+
+        If Not ok Then
+            Exit Sub
+        End If
+
+        Try
+            newShape = currentSlide.Shapes(shapeName)
+        Catch ex As Exception
+            newShape = Nothing
+        End Try
+
+
+        If IsNothing(newShape) Then
+
+            newShape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                                      textLeft, textTop, 50, textheight)
+            With newShape
+                .TextFrame2.TextRange.Text = descriptionText
+                .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
+                .TextFrame2.MarginBottom = 0
+                .TextFrame2.MarginLeft = 0
+                .TextFrame2.MarginRight = 0
+                .TextFrame2.MarginTop = 0
+                .Name = shapeName
+                .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+            End With
+
+        Else
+            With newShape
+                .TextFrame2.TextRange.Text = descriptionText
+                .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = normalFarbe
+            End With
+        End If
+
+
+        ' jetzt wird das TextShape noch positioniert - in Abhängigkeit vom Position Index 
+
+        Select Case positionIndex
+
+            Case pptPositionType.center
+
+                If newShape.Width > 1.5 * selectedPlanShape.Width Then
+                    ' keine Farbänderung 
+                Else
+                    ' wenn die Beschriftung von der Ausdehnung kleiner als die Phase/der Meilenstein ist
+                    newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                End If
+                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
+
+            Case pptPositionType.aboveCenter
+
+                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                textTop = selectedPlanShape.Top - newShape.Height
+
+            Case pptPositionType.aboveRight
+
+                If newShape.Width > selectedPlanShape.Width Then
+                    textLeft = selectedPlanShape.Left
+                Else
+                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    End If
+                End If
+
+                textTop = selectedPlanShape.Top - newShape.Height
+
+            Case pptPositionType.centerRight
+
+                If newShape.Width > selectedPlanShape.Width Then
+                    textLeft = selectedPlanShape.Left
+                Else
+                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    End If
+
+                End If
+
+                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
+
+            Case pptPositionType.belowRight
+
+                If newShape.Width > selectedPlanShape.Width Then
+                    textLeft = selectedPlanShape.Left
+                Else
+                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    End If
+                End If
+
+                textTop = selectedPlanShape.Top + selectedPlanShape.Height
+
+            Case pptPositionType.belowCenter
+                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                textTop = selectedPlanShape.Top + selectedPlanShape.Height
+
+            Case pptPositionType.belowLeft
+
+                If newShape.Width > selectedPlanShape.Width Then
+                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                Else
+                    textLeft = selectedPlanShape.Left
+                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    End If
+                End If
+
+                textTop = selectedPlanShape.Top + selectedPlanShape.Height
+
+            Case pptPositionType.centerLeft
+                If newShape.Width > selectedPlanShape.Width Then
+                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                Else
+                    textLeft = selectedPlanShape.Left
+                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    End If
+                End If
+                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
+
+            Case pptPositionType.aboveLeft
+                If newShape.Width > selectedPlanShape.Width Then
+                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                Else
+                    textLeft = selectedPlanShape.Left
+                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    End If
+                End If
+                textTop = selectedPlanShape.Top - newShape.Height
+
+            Case pptPositionType.asis
+                textLeft = newShape.Left
+                textTop = newShape.Top
+
+            Case Else
+                textLeft = selectedPlanShape.Left - 5
+                textTop = selectedPlanShape.Top - 10
+        End Select
+
+        ' jetzt die Position zuweisen
+
+        With newShape
+            .Top = textTop
+            .Left = textLeft
+        End With
+
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' wechselt die Sprache in der Annotation; tut dies für alle bereits dargestellten Beschriftungen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub changeLanguageInAnnotations()
+
+
+        ' andernfalls jetzt für alle Shapes ... 
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+
+            If isRelevantShape(tmpShape) Then
+
+                ' hat es einen Text ? 
+                Dim searchName As String = tmpShape.Name & CInt(pptAnnotationType.text).ToString
+                Try
+                    Dim txtShape As PowerPoint.Shape = currentSlide.Shapes(searchName)
+                    If Not IsNothing(txtShape) Then
+                        Dim curText As String = txtShape.TextFrame2.TextRange.Text
+                        ' wenn der Text jetzt weder dem ShortName noch dem Original Name entspricht, dann soll er ersetzt werden ... 
+
+                        Dim shortText As String = bestimmeElemText(tmpShape, True, False)
+                        Dim origText As String = bestimmeElemText(tmpShape, False, True)
+
+                        If ((curText <> shortText) And (curText <> origText)) Then
+                            ' dann ist es kein ShortName oder ein Original-Name , eine Unterscheidung in Meilenstein / Phase ist hier nicht notwendig, da asis gewählt wurde
+                            Call annotatePlanShape(tmpShape, pptAnnotationType.text, pptPositionType.asis)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+                
+            End If
+
+        Next
 
     End Sub
 
