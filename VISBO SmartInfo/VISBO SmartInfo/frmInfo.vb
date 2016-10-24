@@ -36,6 +36,11 @@
 
         dontFire = True
 
+        showOrginalName.Visible = False
+        showOrginalName.Text = showOrigName
+
+        showAbbrev.Checked = showShortName
+
         If showSearchListBox Then
             Me.Height = fullHeight
             filterText.Visible = True
@@ -184,20 +189,62 @@
                 rdbCode = pptInfoType.cName
             End If
 
-            Dim nameCollection As Collection = smartSlideLists.getNCollection(colorCode, suchString, rdbCode)
+            Dim nameCollection As Collection
 
             If selectedLanguage <> defaultSprache And rdbCode = pptInfoType.cName Then
-                ' jetzt müssen die Namen in NameCollection erstmal ersetzt werden 
-                Dim tmpCollection As New Collection
-                For Each elemName As String In nameCollection
-                    Dim newName As String = languages.translate(elemName, selectedLanguage)
-                    ' es ist sichergestellt, dass es keine Doubletten gibt, also jedes Wort kann eindeutig übersetzt werden 
-                    If Not tmpCollection.Contains(newName) Then
-                        tmpCollection.Add(newName, newName)
+                If suchString = "" Then
+                    nameCollection = smartSlideLists.getNCollection(colorCode, suchString, rdbCode)
+                    ' jetzt müssen die Namen in NameCollection erstmal ersetzt werden 
+                    Dim tmpCollection As New Collection
+                    For Each elemName As String In nameCollection
+                        Dim newName As String = languages.translate(elemName, selectedLanguage)
+                        ' es ist sichergestellt, dass es keine Doubletten gibt, also jedes Wort kann eindeutig übersetzt werden 
+                        If Not tmpCollection.Contains(newName) Then
+                            tmpCollection.Add(newName, newName)
+                        End If
+                    Next
+                    nameCollection.Clear()
+                    nameCollection = tmpCollection
+                Else
+                    ' jetzt müssen die anders-sprachigen Namen erstmal mit dem suchstring gefiltert werden 
+                    Dim tmpCollection As New Collection
+                    For Each anderName As String In Me.listboxNames.Items
+                        If anderName.Contains(suchString) Then
+                            If Not tmpCollection.Contains(anderName) Then
+                                tmpCollection.Add(anderName, anderName)
+                            End If
+                        End If
+                    Next
+
+                    ' dann müssen die anders-sprachigen Namen in die Original Namen übersetzt und per Farb-Code gefiltert werden 
+                    Dim oNameCollection As New Collection
+                    For Each anderName As String In tmpCollection
+                        Dim newName As String = languages.backtranslate(anderName, selectedLanguage)
+                        If Not oNameCollection.Contains(newName) Then
+                            oNameCollection.Add(newName, newName)
+                        End If
+                    Next
+
+                    ' jetzt nach Farbcode ausdünnen ...
+                    If colorCode = 0 Or colorCode = 15 Then
+                        oNameCollection = smartSlideLists.getTNCollection(colorCode, oNameCollection)
                     End If
-                Next
-                nameCollection.Clear()
-                nameCollection = tmpCollection
+
+                    ' was jetzt übrig bleibt, muss wieder in die Ander-Sprache zurückkonvertiert werden 
+                    ' dann müssen die anders-sprachigen Namen in die Original Namen übersetzt und per Farb-Code gefiltert werden 
+                    nameCollection = New Collection
+                    For Each oName As String In oNameCollection
+                        Dim newName As String = languages.translate(oName, selectedLanguage)
+                        If Not nameCollection.Contains(newName) Then
+                            nameCollection.Add(newName, newName)
+                        End If
+                    Next
+
+
+                End If
+
+            Else
+                nameCollection = smartSlideLists.getNCollection(colorCode, suchString, rdbCode)
             End If
 
             ' die bisherige Liste zurücksetzen
@@ -351,12 +398,6 @@
         Dim nameArrayO() As String
         Dim anzSelected As Integer = listboxNames.SelectedItems.Count
 
-        ReDim nameArrayI(anzSelected - 1)
-
-        For i As Integer = 0 To anzSelected - 1
-            nameArrayI(i) = CStr(listboxNames.SelectedItems.Item(i))
-        Next
-
         Dim rdbCode As Integer
 
         If rdbName.Checked Then
@@ -371,12 +412,22 @@
             rdbCode = pptInfoType.cName
         End If
 
-        ' jetzt muss gechecked werden, ob noch übersetzt werden muss
-        If rdbCode = pptInfoType.cName And selectedLanguage <> defaultSprache Then
+        ReDim nameArrayI(anzSelected - 1)
 
-        End If
+        For i As Integer = 0 To anzSelected - 1
+            Dim tmpText As String = CStr(listboxNames.SelectedItems.Item(i))
 
-        Dim tmpCollection As Collection = smartSlideLists.getShapesNames(nameArrayI, rdbCode)
+            ' jetzt muss gechecked werden, ob noch übersetzt werden muss
+            If rdbCode = pptInfoType.cName And selectedLanguage <> defaultSprache Then
+                tmpText = languages.backtranslate(tmpText, selectedLanguage)
+            End If
+
+            nameArrayI(i) = tmpText
+        Next
+
+        Dim colorCode As Integer = calcColorCode()
+
+        Dim tmpCollection As Collection = smartSlideLists.getShapesNames(nameArrayI, rdbCode, colorCode)
 
         anzSelected = tmpCollection.Count
 
@@ -433,6 +484,9 @@
     End Sub
 
     Private Sub showAbbrev_CheckedChanged(sender As Object, e As EventArgs) Handles showAbbrev.CheckedChanged
+
+        showShortName = showAbbrev.Checked
+
         If dontFire Then
             Exit Sub
         End If
@@ -442,7 +496,7 @@
 
                 dontFire = True
                 Me.showOrginalName.Checked = False
-
+                showOrigName = False
                 ' Text neu berechnen 
                 If Not IsNothing(selectedPlanShapes) Then
                     If selectedPlanShapes.Count = 1 Then
@@ -471,6 +525,9 @@
     End Sub
 
     Private Sub showOrginalName_CheckedChanged(sender As Object, e As EventArgs) Handles showOrginalName.CheckedChanged
+
+        showOrigName = showOrginalName.Checked
+
         If dontFire Then
             Exit Sub
         End If
@@ -480,6 +537,7 @@
 
                 dontFire = True
                 Me.showAbbrev.Checked = False
+                showShortName = False
 
                 ' Text neu berechnen 
                 If Not IsNothing(selectedPlanShapes) Then
@@ -701,208 +759,7 @@
         End Try
 
     End Sub
-    ''' <summary>
-    ''' fügt in der Powerpoint an das selektierte Plan-Element Lang-Name, Original-Name, Kurz-Name bzw Datum an 
-    ''' wenn das Element bereits existiert, so wird es mit dem betreffenden Text beschriftet   
-    ''' globale Variable, die im Zugriff sind: 
-    ''' currentSlide: die aktuelle PPT-Slide
-    ''' selectedplanShape: das aktuell selektierte Plan-Shape 
-    ''' </summary>
-    ''' <param name="descriptionType"></param>
-    ''' <param name="positionIndex"></param>
-    ''' <remarks></remarks>
-    Private Sub annotatePlanShape(ByVal selectedPlanShape As PowerPoint.Shape, _
-                                  ByVal descriptionType As Integer, ByVal positionIndex As Integer)
-
-        Dim newShape As PowerPoint.Shape
-        Dim textLeft As Double = selectedPlanShape.Left - 4
-        Dim textTop As Double = selectedPlanShape.Top - 5
-        Dim textwidth As Double = 5
-        Dim textheight As Double = 5
-        Dim normalFarbe As Integer = RGB(10, 10, 10)
-
-        Dim descriptionText As String = ""
-
-        Dim shapeName As String = ""
-        Dim ok As Boolean = False
-
-        ' handelt es sich um den Lang-/Kurz-Namen oder um das Datum ? 
-
-        If descriptionType = pptAnnotationType.text Then
-            descriptionText = bestimmeElemText(selectedPlanShape, Me.showAbbrev.Checked, Me.showOrginalName.Checked)
-        ElseIf descriptionType = pptAnnotationType.datum Then
-            descriptionText = bestimmeElemDateText(selectedPlanShape)
-        End If
-
-        Try
-            If Not IsNothing(descriptionType) Then
-                If descriptionType >= 0 Then
-                    shapeName = selectedPlanShape.Name & descriptionType.ToString
-                    ok = True
-                End If
-            End If
-
-        Catch ex As Exception
-            ok = False
-        End Try
-
-        If Not ok Then
-            Exit Sub
-        End If
-
-        Try
-            newShape = currentSlide.Shapes(shapeName)
-        Catch ex As Exception
-            newShape = Nothing
-        End Try
-
-
-        If IsNothing(newShape) Then
-
-            newShape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
-                                      textLeft, textTop, 50, textheight)
-            With newShape
-                .TextFrame2.TextRange.Text = descriptionText
-                .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
-                .TextFrame2.MarginBottom = 0
-                .TextFrame2.MarginLeft = 0
-                .TextFrame2.MarginRight = 0
-                .TextFrame2.MarginTop = 0
-                .Name = shapeName
-                .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-            End With
-
-        Else
-            With newShape
-                .TextFrame2.TextRange.Text = descriptionText
-                .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = normalFarbe
-            End With
-        End If
-
-
-        ' jetzt wird das TextShape noch positioniert - in Abhängigkeit vom Position Index 
-
-        Select Case positionIndex
-
-            Case pptPositionType.center
-
-                If newShape.Width > 1.5 * selectedPlanShape.Width Then
-                    ' keine Farbänderung 
-                Else
-                    ' wenn die Beschriftung von der Ausdehnung kleiner als die Phase/der Meilenstein ist
-                    newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                End If
-                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
-                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
-
-            Case pptPositionType.aboveCenter
-
-                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
-                textTop = selectedPlanShape.Top - newShape.Height
-
-            Case pptPositionType.aboveRight
-
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left
-                Else
-                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                    End If
-                End If
-
-                textTop = selectedPlanShape.Top - newShape.Height
-
-            Case pptPositionType.centerRight
-
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left
-                Else
-                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                    End If
-
-                End If
-
-                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
-
-            Case pptPositionType.belowRight
-
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left
-                Else
-                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                    End If
-                End If
-
-                textTop = selectedPlanShape.Top + selectedPlanShape.Height
-
-            Case pptPositionType.belowCenter
-                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
-                textTop = selectedPlanShape.Top + selectedPlanShape.Height
-
-            Case pptPositionType.belowLeft
-
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                Else
-                    textLeft = selectedPlanShape.Left
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                    End If
-                End If
-
-                textTop = selectedPlanShape.Top + selectedPlanShape.Height
-
-            Case pptPositionType.centerLeft
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                Else
-                    textLeft = selectedPlanShape.Left
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                    End If
-                End If
-                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
-
-            Case pptPositionType.aboveLeft
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                Else
-                    textLeft = selectedPlanShape.Left
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                    End If
-                End If
-                textTop = selectedPlanShape.Top - newShape.Height
-
-            Case Else
-                textLeft = selectedPlanShape.Left - 5
-                textTop = selectedPlanShape.Top - 10
-        End Select
-
-        ' jetzt die Position zuweisen
-
-        With newShape
-            .Top = textTop
-            .Left = textLeft
-        End With
-
-
-        'currentSlide.Shapes(newShape.Name).Select()
-
-
-    End Sub
+   
 
     Private Sub deleteDate_Click(sender As Object, e As EventArgs) Handles deleteDate.Click
         Try

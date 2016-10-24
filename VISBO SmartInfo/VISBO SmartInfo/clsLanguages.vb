@@ -1,11 +1,14 @@
 ﻿Imports Microsoft.Office.Interop.Excel
-Public Class clsLanguages
+Imports System.Xml
+Imports System.Xml.Schema
+<Serializable()> Public Class clsLanguages
 
-    Private _languageItems As SortedList(Of String, Collection)
+    Private _languageItems As SortedList(Of String, List(Of String))
 
 
     ''' <summary>
     ''' gibt die Sprache mit lfd Nr index zurück
+    ''' Index läuft von 1 .. count
     ''' </summary>
     ''' <param name="index"></param>
     ''' <value></value>
@@ -21,17 +24,44 @@ Public Class clsLanguages
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Sprachen-Items zurück, die zur angegebenen Sprache gehören
+    ''' </summary>
+    ''' <param name="lName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getLanguage(ByVal lName As String) As List(Of String)
+        Get
+            Dim tmpList As List(Of String) = Nothing
+            If _languageItems.ContainsKey(lName) Then
+                tmpList = _languageItems.Item(lName)
+            Else
+                tmpList = Nothing
+            End If
+            getLanguage = tmpList
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' übersetzt den String anhand der languageTabellen in die gewählte Sprache
+    ''' </summary>
+    ''' <param name="tmpText"></param>
+    ''' <param name="selectedLanguage"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property translate(ByVal tmpText As String, ByVal selectedLanguage As String)
         Get
             Dim newText As String = tmpText
 
             If _languageItems.ContainsKey(selectedLanguage) Then
 
-                Dim origItems As Collection = _languageItems.Item(defaultSprache)
+                Dim origItems As List(Of String) = _languageItems.Item(defaultSprache)
                 If origItems.Contains(tmpText) Then
                     Dim found As Boolean = False
-                    Dim index As Integer = 1
-                    Do While index <= origItems.Count And Not found
+                    Dim index As Integer = 0
+                    Do While index <= origItems.Count - 1 And Not found
                         If CStr(origItems.Item(index)) = tmpText Then
                             found = True
                         Else
@@ -39,7 +69,7 @@ Public Class clsLanguages
                         End If
                     Loop
                     If found Then
-                        Dim newLangItems As Collection = _languageItems.Item(selectedLanguage)
+                        Dim newLangItems As List(Of String) = _languageItems.Item(selectedLanguage)
                         newText = CStr(newLangItems.Item(index))
                     End If
                 End If
@@ -50,38 +80,41 @@ Public Class clsLanguages
     End Property
 
     ''' <summary>
-    ''' gibt eine Klasse sprachArray zurück, die für das Erzeugen von XML Strukturen benötigt wird ... 
+    ''' übersetzt den String anhand der languageTabellen in die Original Sprache
     ''' </summary>
+    ''' <param name="tmpText"></param>
+    ''' <param name="selectedLanguage"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSprachenKlasse() As clsPrepLanguagesForXML
+    Public ReadOnly Property backtranslate(ByVal tmpText As String, ByVal selectedLanguage As String)
         Get
+            Dim newText As String = tmpText
 
-            Dim tmpArray() As String
+            If _languageItems.ContainsKey(selectedLanguage) Then
 
-            Dim dimen1 As Integer = _languageItems.Count
-            Dim dimen2 As Integer = _languageItems.ElementAt(0).Value.Count
+                Dim oldLangItems As List(Of String) = _languageItems.Item(selectedLanguage)
+                If oldLangItems.Contains(tmpText) Then
+                    Dim found As Boolean = False
+                    Dim index As Integer = 0
+                    Do While index <= oldLangItems.Count - 1 And Not found
+                        If CStr(oldLangItems.Item(index)) = tmpText Then
+                            found = True
+                        Else
+                            index = index + 1
+                        End If
+                    Loop
+                    If found Then
+                        Dim origItems As List(Of String) = _languageItems.Item(defaultSprache)
+                        newText = CStr(origItems.Item(index))
+                    End If
+                End If
+            End If
 
-            Dim tmpPrep As New clsPrepLanguagesForXML(dimen1, dimen2)
-
-            ReDim tmpArray(dimen1 * (dimen2 + 1) - 1)
-
-            For nx As Integer = 0 To dimen1 - 1
-                tmpArray(nx * (dimen2 + 1)) = _languageItems.ElementAt(nx).Key
-
-                For ix As Integer = 1 To dimen2
-                    tmpArray(nx * (dimen2 + 1) + ix) = CStr(_languageItems.ElementAt(nx).Value.Item(ix))
-                Next
-
-            Next
-
-            tmpPrep.sprachArray = tmpArray
-
-            getSprachenKlasse = tmpPrep
-
+            backtranslate = newText
         End Get
     End Property
+
 
     ''' <summary>
     ''' gibt zurück, wieviele Sprachen enthalten sind 
@@ -156,15 +189,15 @@ Public Class clsLanguages
 
                 For ixSP As Integer = 1 To anzSpalten
                     tmpName = CStr(CType(.Cells(1, ixSP), Excel.Range).Value)
-                    Dim tmpCollection As New Collection
+                    Dim tmpList As New List(Of String)
 
                     For ixZE = 2 To anzZeilen
                         Dim tmpItem As String = CStr(CType(.Cells(ixZE, ixSP), Excel.Range).Value)
                         If IsNothing(tmpItem) Then
                             tmpItem = ""
                         End If
-                        If Not tmpCollection.Contains(tmpItem) And tmpItem.Length > 0 Then
-                            tmpCollection.Add(tmpItem, tmpItem)
+                        If Not tmpList.Contains(tmpItem) And tmpItem.Length > 0 Then
+                            tmpList.Add(tmpItem)
                         End If
                     Next
 
@@ -172,11 +205,11 @@ Public Class clsLanguages
                     ' andernfalls käme nur Schmarrn raus 
                     If ixSP = 1 Then
                         If tmpName = defaultSprache Then
-                            Dim pruefCollection = _languageItems.Item(defaultSprache)
-                            If pruefCollection.Count <= tmpCollection.Count Then
+                            Dim pruefListe As List(Of String) = _languageItems.Item(defaultSprache)
+                            If pruefListe.Count <= tmpList.Count Then
 
-                                For Each pruefItem As String In pruefCollection
-                                    If Not tmpCollection.Contains(pruefItem) Then
+                                For Each pruefItem As String In pruefListe
+                                    If Not tmpList.Contains(pruefItem) Then
                                         ok = False
                                         reason = "nicht alle Elemente sind in Übersetzungstabelle enthalten"
                                         Exit For
@@ -200,19 +233,19 @@ Public Class clsLanguages
 
                     ' jetzt die Language hinzufügen, aber nur wenn die Anzahl genauso groß ist wie bei Default-Language 
                     If ixSP > 1 Then
-                        If _languageItems.Item(defaultSprache).Count = tmpCollection.Count Then
+                        If _languageItems.Item(defaultSprache).Count = tmpList.Count Then
                             If Not _languageItems.ContainsKey(tmpName) Then
-                                _languageItems.Add(tmpName, tmpCollection)
+                                _languageItems.Add(tmpName, tmpList)
                             Else
                                 _languageItems.Remove(tmpName)
-                                _languageItems.Add(tmpName, tmpCollection)
+                                _languageItems.Add(tmpName, tmpList)
                             End If
                         Else
                             reason = "x. Sprache hat nicht identisch viele Einträge wie die Original-Sprache"
                             ok = False
                             Exit For
                         End If
-                        
+
                     End If
 
 
@@ -295,7 +328,7 @@ Public Class clsLanguages
 
                 Dim spalte As Integer = 1
 
-                For Each kvp As KeyValuePair(Of String, Collection) In _languageItems
+                For Each kvp As KeyValuePair(Of String, List(Of String)) In _languageItems
                     Dim zeile As Integer = 1
                     Dim lName As String = kvp.Key
                     CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Key
@@ -331,7 +364,7 @@ Public Class clsLanguages
     ''' <param name="key"></param>
     ''' <param name="items"></param>
     ''' <remarks></remarks>
-    Public Sub addLanguage(ByVal key As String, ByVal items As Collection)
+    Public Sub addLanguage(ByVal key As String, ByVal items As List(Of String))
         If _languageItems.ContainsKey(key) Then
             _languageItems.Item(key) = items
         Else
@@ -340,7 +373,7 @@ Public Class clsLanguages
     End Sub
 
     Public Sub New()
-        _languageItems = New SortedList(Of String, Collection)
+        _languageItems = New SortedList(Of String, List(Of String))
     End Sub
 
     ' ''' <summary>

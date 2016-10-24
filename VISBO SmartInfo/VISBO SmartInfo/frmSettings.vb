@@ -53,6 +53,26 @@ Public Class frmSettings
         frmProtectField2.Visible = False
         frmProtectField2.Text = ""
 
+        
+        If languages.count > 1 Then
+            ' jetzt wird die txtboxLanguage aktualisiert
+            txtboxLanguage.Visible = True
+            lblLanguage.Visible = True
+            txtboxLanguage.Items.Clear()
+
+            For i As Integer = 1 To languages.count
+                Dim sprache As String = languages.getLanguageName(i)
+                txtboxLanguage.Items.Add(sprache)
+            Next
+
+            txtboxLanguage.SelectedItem = selectedLanguage
+
+        Else
+            txtboxLanguage.Visible = False
+            lblLanguage.Visible = False
+            selectedLanguage = defaultSprache
+        End If
+
 
     End Sub
 
@@ -135,7 +155,7 @@ Public Class frmSettings
         Try
             Dim tmpLanguages As New clsLanguages
             Dim tmpCollection = smartSlideLists.getElementNamen
-            Dim xmlFileName As String = My.Computer.FileSystem.SpecialDirectories.Desktop & "\" & "PPTlanguages.xlm"
+            Dim xmlFileName As String = My.Computer.FileSystem.SpecialDirectories.Desktop & "\" & "PPTlanguages.xml"
             Dim xmlResult As String = ""
 
             Call languages.addLanguage(defaultSprache, tmpCollection)
@@ -150,38 +170,34 @@ Public Class frmSettings
                 txtboxLanguage.Items.Add(sprache)
             Next
 
+            txtboxLanguage.Visible = True
+            lblLanguage.Visible = True
+
             txtboxLanguage.SelectedItem = defaultSprache
             selectedLanguage = defaultSprache
 
-            Dim sprachenArray As clsPrepLanguagesForXML = languages.getSprachenKlasse
-
-            ' jetzt wird ein CustomXMLPart hinzugefügt 
-            'Dim serializer = New DataContractSerializer(GetType(clsLanguages))
-            Dim serializer = New DataContractSerializer(GetType(clsPrepLanguagesForXML))
-
+            Dim serializer = New DataContractSerializer(GetType(clsLanguages))
             Dim file As New FileStream(xmlFileName, FileMode.Create)
-
-            serializer.WriteObject(file, sprachenArray)
+            serializer.WriteObject(file, languages)
             file.Close()
 
-            'Dim settings As New XmlWriterSettings()
-            'settings.Indent = True
-            'settings.IndentChars = (ControlChars.Tab)
-            'settings.OmitXmlDeclaration = True
-
-
-            'Dim writer As XmlWriter = XmlWriter.Create(xmlFileName, settings)
-            'serializer.WriteObject(writer, languages)
-            'serializer.WriteObject(writer, sprachenArray)
-
-            'xmlResult = writer.ToString
-            'writer.Flush()
-            'writer.Close()
-
+            ' der folgende Befehl embedded eine XML Struktur - in einem String -  in die aktive PPT Datei 
+            ' Beschreibung zum Konzept der customXMLParts siehe: 
+            ' siehe https://msdn.microsoft.com/en-us/library/bb608612.aspx 
             'pptAPP.ActivePresentation.CustomXMLParts.Add(xmlResult)
+
+
         Catch ex As Exception
             Call MsgBox("Fehler bei Import: " & ex.Message)
         End Try
 
+    End Sub
+
+    Private Sub txtboxLanguage_SelectedIndexChanged(sender As Object, e As EventArgs) Handles txtboxLanguage.SelectedIndexChanged
+        selectedLanguage = CStr(txtboxLanguage.SelectedItem)
+    End Sub
+
+    Private Sub btnChangeLanguage_Click(sender As Object, e As EventArgs) Handles btnChangeLanguage.Click
+        Call changeLanguageInAnnotations()
     End Sub
 End Class
