@@ -355,6 +355,70 @@
     End Property
 
     ''' <summary>
+    ''' bekommt als Input eine Menge von selektierten Namen , classified, Short, Original, etc. 
+    ''' gibt als Output die korrespondierenden Shape-Namen
+    ''' Achtung: Anzahl Input Elemente muss nicht Anzahl Output Elemente sein;  
+    ''' </summary>
+    ''' <param name="nameArray"></param>
+    ''' <param name="type"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property Backup_getShapesNames(ByVal nameArray() As String, _
+                                                ByVal type As Integer) As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean))
+            Dim alleUIDs As New SortedList(Of Integer, Boolean)
+            Dim anzahlNames As Integer = nameArray.Length
+
+            Select Case type
+                Case pptInfoType.cName
+                    NList = cNList
+                Case pptInfoType.oName
+                    NList = oNList
+                Case pptInfoType.sName
+                    NList = sNList
+                Case pptInfoType.bCrumb
+                    NList = bCList
+                Case Else
+                    NList = cNList
+            End Select
+
+            For i As Integer = 0 To anzahlNames - 1
+
+                Dim uidList As SortedList(Of Integer, Boolean) = NList.Item(nameArray(i))
+
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In uidList
+
+                    If Not alleUIDs.ContainsKey(kvp.Key) Then
+                        alleUIDs.Add(kvp.Key, kvp.Value)
+                    End If
+
+                Next
+
+            Next
+
+            ' jetzt sind in der uidList alle ShapeUIDs aufgeführt - die müssen jetzt durch ihre ShapeNames ersetzt werden 
+            For Each kvp As KeyValuePair(Of Integer, Boolean) In alleUIDs
+
+                Dim shpName As String = Me.getShapeNameOfUid(kvp.Key)
+
+                If shpName.Trim.Length > 0 Then
+                    If Not tmpCollection.Contains(shpName) Then
+                        tmpCollection.Add(shpName, shpName)
+                    End If
+                End If
+
+            Next
+
+            getShapesNames = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt eine Liste zurück an Element-Namen, die den Suchstr enthalten und ausserdem die übergebene Farben-Kennung haben
     ''' leere Liste, wenn es keine Entsprechung gibt  
     ''' </summary>
