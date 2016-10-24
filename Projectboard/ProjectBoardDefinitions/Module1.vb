@@ -3047,11 +3047,17 @@ Public Module Module1
                     Else
                         .Tags.Add("AC", "0")
                     End If
+
+                    If Not IsNothing(ampelErlaeuterung) Then
+                        If ampelErlaeuterung.Length > 0 Then
+                            .Tags.Add("AE", ampelErlaeuterung)
+                        End If
+
+                    End If
+
                 End If
 
-                If Not IsNothing(ampelErlaeuterung) Then
-                    .Tags.Add("AE", ampelErlaeuterung)
-                End If
+                
 
             End With
         End If

@@ -376,15 +376,22 @@ Module Module1
 
         ' AmpelColor behandeln
         Dim ampelColor As Integer = 0
-        Try
-            ampelColor = CInt(tmpShape.Tags.Item("AC"))
-        Catch ex As Exception
-
-        End Try
-
+        tmpName = tmpShape.Tags.Item("AC")
         If tmpName.Trim.Length > 0 Then
-            Call smartSlideLists.addAC(ampelColor, shapeName)
+            Try
+                If IsNumeric(tmpName) Then
+                    ampelColor = CInt(tmpName)
+                    Call smartSlideLists.addAC(ampelColor, shapeName)
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
         End If
+        
+
+        
 
     End Sub
 

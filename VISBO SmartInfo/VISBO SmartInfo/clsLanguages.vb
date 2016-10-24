@@ -1,5 +1,7 @@
 ﻿Imports Microsoft.Office.Interop.Excel
-Public Class clsLanguages
+Imports System.Xml
+Imports System.Xml.Schema
+<Serializable()> Public Class clsLanguages
 
     Private _languageItems As SortedList(Of String, List(Of String))
 
@@ -113,39 +115,6 @@ Public Class clsLanguages
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt eine Klasse sprachArray zurück, die für das Erzeugen von XML Strukturen benötigt wird ... 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getSprachenKlasse() As clsPrepLanguagesForXML
-        Get
-
-            Dim tmpArray() As String
-
-            Dim dimen1 As Integer = _languageItems.Count
-            Dim dimen2 As Integer = _languageItems.ElementAt(0).Value.Count
-
-            Dim tmpPrep As New clsPrepLanguagesForXML(dimen1, dimen2)
-
-            ReDim tmpArray(dimen1 * (dimen2 + 1) - 1)
-
-            For nx As Integer = 0 To dimen1 - 1
-                tmpArray(nx * (dimen2 + 1)) = _languageItems.ElementAt(nx).Key
-
-                For ix As Integer = 1 To dimen2
-                    tmpArray(nx * (dimen2 + 1) + ix) = CStr(_languageItems.ElementAt(nx).Value.Item(ix))
-                Next
-
-            Next
-
-            tmpPrep.sprachArray = tmpArray
-
-            getSprachenKlasse = tmpPrep
-
-        End Get
-    End Property
 
     ''' <summary>
     ''' gibt zurück, wieviele Sprachen enthalten sind 
@@ -276,7 +245,7 @@ Public Class clsLanguages
                             ok = False
                             Exit For
                         End If
-                        
+
                     End If
 
 

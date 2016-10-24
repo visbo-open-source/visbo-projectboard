@@ -207,23 +207,25 @@
 
         ' konsistent machen ... wenn die Farbe nicht erkannt werden kann, wird sie wie <nicht gesetzt> behandelt 
         If ampelColor < 0 Or ampelColor > 3 Then
-            ampelColor = 0
+            ' nichts tun ... 
+        Else
+            If aCList.ContainsKey(ampelColor) Then
+                listOfShapeNames = aCList.Item(ampelColor)
+                If listOfShapeNames.ContainsKey(uid) Then
+                    ' nichts tun , ist schon drin ...
+                Else
+                    ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
+                    listOfShapeNames.Add(uid, True)
+                End If
+            Else
+                ' dann muss das erste aufgenommen werden 
+                listOfShapeNames = New SortedList(Of Integer, Boolean)
+                listOfShapeNames.Add(uid, True)
+                aCList.Add(ampelColor, listOfShapeNames)
+            End If
         End If
 
-        If aCList.ContainsKey(ampelColor) Then
-            listOfShapeNames = aCList.Item(ampelColor)
-            If listOfShapeNames.ContainsKey(uid) Then
-                ' nichts tun , ist schon drin ...
-            Else
-                ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
-                listOfShapeNames.Add(uid, True)
-            End If
-        Else
-            ' dann muss das erste aufgenommen werden 
-            listOfShapeNames = New SortedList(Of Integer, Boolean)
-            listOfShapeNames.Add(uid, True)
-            aCList.Add(ampelColor, listOfShapeNames)
-        End If
+        
 
     End Sub
 
@@ -270,24 +272,25 @@
     End Property
 
     ''' <summary>
-    ''' liefert eine Collection an Namen; das sind alle auftretenden cNames von Phasen und Meilensteinen  
+    ''' liefert eine nicht-sortierte Collection an Namen; das sind alle auftretenden cNames von Phasen und Meilensteinen  
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getElementNamen() As Collection
+    Public ReadOnly Property getElementNamen() As List(Of String)
         Get
-            Dim tmpCollection As New Collection
+            Dim tmpCollection As New List(Of String)
 
             For Each kvp As KeyValuePair(Of String, SortedList(Of Integer, Boolean)) In cNList
                 If Not tmpCollection.Contains(kvp.Key) Then
-                    tmpCollection.Add(kvp.Key, kvp.Key)
+                    tmpCollection.Add(kvp.Key)
                 End If
             Next
 
             getElementNamen = tmpCollection
         End Get
     End Property
+
 
 
     ''' <summary>
@@ -301,13 +304,57 @@
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getShapesNames(ByVal nameArray() As String, _
-                                                ByVal type As Integer) As Collection
+                                                ByVal type As Integer, colorCode As Integer) As Collection
         Get
             Dim tmpCollection As New Collection
-
+            Dim tmpCC As Integer = colorCode
             Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean))
             Dim alleUIDs As New SortedList(Of Integer, Boolean)
             Dim anzahlNames As Integer = nameArray.Length
+
+            Dim alleUIDsWithCertainColor As New SortedList(Of Integer, Boolean)
+            Dim resultingUIDs As New SortedList(Of Integer, Boolean)
+
+            If tmpCC >= 8 Then
+                Dim redUIDs As SortedList(Of Integer, Boolean) = aCList.Item(3)
+                For i As Integer = 1 To redUIDs.Count
+                    If Not alleUIDsWithCertainColor.ContainsKey(redUIDs.ElementAt(i - 1).Key) Then
+                        alleUIDsWithCertainColor.Add(redUIDs.ElementAt(i - 1).Key, redUIDs.ElementAt(i - 1).Value)
+                    End If
+                Next
+                tmpCC = tmpCC - 8
+            End If
+
+            If tmpCC >= 4 Then
+                Dim yellowUIDs As SortedList(Of Integer, Boolean) = aCList.Item(2)
+                For i As Integer = 1 To yellowUIDs.Count
+                    If Not alleUIDsWithCertainColor.ContainsKey(yellowUIDs.ElementAt(i - 1).Key) Then
+                        alleUIDsWithCertainColor.Add(yellowUIDs.ElementAt(i - 1).Key, yellowUIDs.ElementAt(i - 1).Value)
+                    End If
+                Next
+                tmpCC = tmpCC - 4
+            End If
+
+            If tmpCC >= 2 Then
+                Dim greenUIDs As SortedList(Of Integer, Boolean) = aCList.Item(2)
+                For i As Integer = 1 To greenUIDs.Count
+                    If Not alleUIDsWithCertainColor.ContainsKey(greenUIDs.ElementAt(i - 1).Key) Then
+                        alleUIDsWithCertainColor.Add(greenUIDs.ElementAt(i - 1).Key, greenUIDs.ElementAt(i - 1).Value)
+                    End If
+                Next
+                tmpCC = tmpCC - 2
+            End If
+
+            If tmpCC >= 1 Then
+                Dim noColorUIDs As SortedList(Of Integer, Boolean) = aCList.Item(2)
+                For i As Integer = 1 To noColorUIDs.Count
+                    If Not alleUIDsWithCertainColor.ContainsKey(noColorUIDs.ElementAt(i - 1).Key) Then
+                        alleUIDsWithCertainColor.Add(noColorUIDs.ElementAt(i - 1).Key, noColorUIDs.ElementAt(i - 1).Value)
+                    End If
+                Next
+                tmpCC = tmpCC - 1
+            End If
+
 
             Select Case type
                 Case pptInfoType.cName
@@ -326,77 +373,24 @@
 
                 Dim uidList As SortedList(Of Integer, Boolean) = NList.Item(nameArray(i))
 
-                For Each kvp As KeyValuePair(Of Integer, Boolean) In uidList
-
-                    If Not alleUIDs.ContainsKey(kvp.Key) Then
-                        alleUIDs.Add(kvp.Key, kvp.Value)
-                    End If
-
-                Next
-
-            Next
-
-            ' jetzt sind in der uidList alle ShapeUIDs aufgeführt - die müssen jetzt durch ihre ShapeNames ersetzt werden 
-            For Each kvp As KeyValuePair(Of Integer, Boolean) In alleUIDs
-
-                Dim shpName As String = Me.getShapeNameOfUid(kvp.Key)
-
-                If shpName.Trim.Length > 0 Then
-                    If Not tmpCollection.Contains(shpName) Then
-                        tmpCollection.Add(shpName, shpName)
-                    End If
+                If ((colorCode = 0) Or (colorCode = 15)) Then
+                    ' ohne Berücksichtigung von Farben aufnehmen 
+                    For Each kvp As KeyValuePair(Of Integer, Boolean) In uidList
+                        If Not alleUIDs.ContainsKey(kvp.Key) Then
+                            alleUIDs.Add(kvp.Key, kvp.Value)
+                        End If
+                    Next
+                Else
+                    ' hat das Element auch eine der gesuchten Farben ? 
+                    For Each kvp As KeyValuePair(Of Integer, Boolean) In uidList
+                        If alleUIDsWithCertainColor.ContainsKey(kvp.Key) Then
+                            If Not alleUIDs.ContainsKey(kvp.Key) Then
+                                alleUIDs.Add(kvp.Key, kvp.Value)
+                            End If
+                        End If
+                    Next
                 End If
-
-            Next
-
-            getShapesNames = tmpCollection
-
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' bekommt als Input eine Menge von selektierten Namen , classified, Short, Original, etc. 
-    ''' gibt als Output die korrespondierenden Shape-Namen
-    ''' Achtung: Anzahl Input Elemente muss nicht Anzahl Output Elemente sein;  
-    ''' </summary>
-    ''' <param name="nameArray"></param>
-    ''' <param name="type"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property Backup_getShapesNames(ByVal nameArray() As String, _
-                                                ByVal type As Integer) As Collection
-        Get
-            Dim tmpCollection As New Collection
-
-            Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean))
-            Dim alleUIDs As New SortedList(Of Integer, Boolean)
-            Dim anzahlNames As Integer = nameArray.Length
-
-            Select Case type
-                Case pptInfoType.cName
-                    NList = cNList
-                Case pptInfoType.oName
-                    NList = oNList
-                Case pptInfoType.sName
-                    NList = sNList
-                Case pptInfoType.bCrumb
-                    NList = bCList
-                Case Else
-                    NList = cNList
-            End Select
-
-            For i As Integer = 0 To anzahlNames - 1
-
-                Dim uidList As SortedList(Of Integer, Boolean) = NList.Item(nameArray(i))
-
-                For Each kvp As KeyValuePair(Of Integer, Boolean) In uidList
-
-                    If Not alleUIDs.ContainsKey(kvp.Key) Then
-                        alleUIDs.Add(kvp.Key, kvp.Value)
-                    End If
-
-                Next
+                
 
             Next
 
@@ -460,7 +454,8 @@
             End If
 
             ' gibt es eine Color Restriction, also sollen nur bestimmte Farben angezeigt werden 
-            If colorCode < 1 Or colorCode > 15 Then
+            If colorCode < 1 Or colorCode >= 15 Then
+                colRestriction = False
             Else
                 colRestriction = True
             End If
@@ -540,7 +535,10 @@
                                     If alleUIDsMitgesuchterFarbe.ContainsKey(chkUID.Key) Then
                                         ' diese UID ist jetzt eine Ergebnis-UID , die sowhl die richtige Farbe als auch den richtigen Text-String hat 
                                         ' in listElem.key steht der gesuchte String .. 
-                                        tmpCollection.Add(listElem.Key)
+                                        If Not tmpCollection.Contains(listElem.Key) Then
+                                            tmpCollection.Add(listElem.Key, listElem.Key)
+                                        End If
+
                                     End If
                                 Next
                             End If
@@ -556,7 +554,9 @@
                                 If alleUIDsMitgesuchterFarbe.ContainsKey(chkUID.Key) Then
                                     ' diese UID ist jetzt eine Ergebnis-UID , die sowhl die richtige Farbe als auch den richtigen Text-String hat 
                                     ' in listElem.key steht der gesuchte String .. 
-                                    tmpCollection.Add(listElem.Key)
+                                    If Not tmpCollection.Contains(listElem.Key) Then
+                                        tmpCollection.Add(listElem.Key, listElem.Key)
+                                    End If
                                 End If
                             Next
 
@@ -573,10 +573,14 @@
 
                     If txtRestriction Then
                         If listElem.Key.Contains(suchStr) Then
-                            tmpCollection.Add(listElem.Key)
+                            If Not tmpCollection.Contains(listElem.Key) Then
+                                tmpCollection.Add(listElem.Key, listElem.Key)
+                            End If
                         End If
                     Else
-                        tmpCollection.Add(listElem.Key)
+                        If Not tmpCollection.Contains(listElem.Key) Then
+                            tmpCollection.Add(listElem.Key, listElem.Key)
+                        End If
                     End If
 
 
@@ -588,6 +592,125 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt eine Liste zurück an Element-Namen, die den Suchstr enthalten und ausserdem die übergebene Farben-Kennung haben
+    ''' leere Liste, wenn es keine Entsprechung gibt  
+    ''' </summary>
+    ''' <param name="colorCode"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTNCollection(ByVal colorCode As Integer, _
+                                             ByVal nameCollection As Collection) As Collection
+        Get
+            Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean)) = cNList
+
+            
+            Dim tmpCollection As New Collection
+            Dim alleUIDsMitgesuchterFarbe As SortedList(Of Integer, Boolean)
+
+            Dim colRestriction As Boolean = False
+
+
+            ' gibt es eine Color Restriction, also sollen nur bestimmte Farben angezeigt werden 
+            If colorCode < 1 Or colorCode >= 15 Then
+                colRestriction = False
+                tmpCollection = nameCollection
+            Else
+                colRestriction = True
+
+                ' erst wird die Liste an uids ermittelt, die den entsprechenden Farb-Code aufweisen
+                ' dann wird untersucht, welche dieser uids ggf noch dem Suchstring entsprechen ... 
+
+                alleUIDsMitgesuchterFarbe = New SortedList(Of Integer, Boolean)
+
+                ' jetzt muss eine Schleife gemacht werden
+                Dim singleFlag As Integer
+
+                Do While colorCode > 0
+                    If colorCode >= 8 Then
+                        ' red Flag 
+                        singleFlag = 3
+                        If aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                                alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
+                            Next
+                        End If
+                        colorCode = colorCode - 8
+
+                    ElseIf colorCode >= 4 Then
+                        ' yellow flag 
+                        singleFlag = 2
+                        If aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                                alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
+                            Next
+                        End If
+                        colorCode = colorCode - 4
+
+                    ElseIf colorCode >= 2 Then
+                        ' green flag
+                        singleFlag = 1
+                        If aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                                alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
+                            Next
+                        End If
+                        colorCode = colorCode - 2
+
+                    ElseIf colorCode >= 1 Then
+                        ' nicht bewertet 
+                        singleFlag = 0
+                        If aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                                alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
+                            Next
+                        End If
+                        colorCode = colorCode - 1
+                    End If
+                Loop
+
+                If alleUIDsMitgesuchterFarbe.Count > 0 Then
+                    ' es gibt Shapes - jetzt prüfen, ob eines dazu zu den Namen aus nameCollection gehören  
+
+                    ' ermittle jetzt die Namen, Original-Namen für die Farb-UIDs
+                    ' keine Text Restriktion
+                    For Each kvp As KeyValuePair(Of Integer, Boolean) In alleUIDsMitgesuchterFarbe
+
+                        Dim shpName As String = smartSlideLists.getShapeNameOfUid(kvp.Key)
+
+                        Try
+                            Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shpName)
+                            Dim pruefName As String = tmpShape.Tags.Item("CN")
+                            If Not IsNothing(pruefName) Then
+                                If pruefName.Length > 0 Then
+                                    If nameCollection.Contains(pruefName) Then
+                                        If Not tmpCollection.Contains(pruefName) Then
+                                            tmpCollection.Add(pruefName, pruefName)
+                                        End If
+                                    End If
+                                End If
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                    Next
+
+
+                Else
+                    ' nichts tun - alleUIDsMitgesuchterFarbe ist leer ...  
+                End If
+
+            End If
+
+
+            getTNCollection = tmpCollection
+
+        End Get
+    End Property
+
 
     Public Sub New()
         planShapeIDs = New SortedList(Of String, Integer)

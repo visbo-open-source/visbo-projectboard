@@ -191,7 +191,6 @@
   <ItemGroup>
     <AppDesigner Include="My Project\" />
     <Compile Include="clsLanguages.vb" />
-    <Compile Include="clsPrepLanguagesForXML.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
     <Compile Include="frmInfo.Designer.vb">
       <DependentUpon>frmInfo.vb</DependentUpon>

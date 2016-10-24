@@ -210,7 +210,9 @@
                     Dim tmpCollection As New Collection
                     For Each anderName As String In Me.listboxNames.Items
                         If anderName.Contains(suchString) Then
-                            tmpCollection.Add(anderName)
+                            If Not tmpCollection.Contains(anderName) Then
+                                tmpCollection.Add(anderName, anderName)
+                            End If
                         End If
                     Next
 
@@ -423,7 +425,9 @@
             nameArrayI(i) = tmpText
         Next
 
-        Dim tmpCollection As Collection = smartSlideLists.getShapeNames(nameArrayI, rdbCode)
+        Dim colorCode As Integer = calcColorCode()
+
+        Dim tmpCollection As Collection = smartSlideLists.getShapesNames(nameArrayI, rdbCode, colorCode)
 
         anzSelected = tmpCollection.Count
 

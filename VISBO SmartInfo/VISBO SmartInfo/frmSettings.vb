@@ -155,7 +155,7 @@ Public Class frmSettings
         Try
             Dim tmpLanguages As New clsLanguages
             Dim tmpCollection = smartSlideLists.getElementNamen
-            Dim xmlFileName As String = My.Computer.FileSystem.SpecialDirectories.Desktop & "\" & "PPTlanguages.xlm"
+            Dim xmlFileName As String = My.Computer.FileSystem.SpecialDirectories.Desktop & "\" & "PPTlanguages.xml"
             Dim xmlResult As String = ""
 
             Call languages.addLanguage(defaultSprache, tmpCollection)
@@ -176,35 +176,17 @@ Public Class frmSettings
             txtboxLanguage.SelectedItem = defaultSprache
             selectedLanguage = defaultSprache
 
+            Dim serializer = New DataContractSerializer(GetType(clsLanguages))
+            Dim file As New FileStream(xmlFileName, FileMode.Create)
+            serializer.WriteObject(file, languages)
+            file.Close()
 
-            ' als XML File in die PPT Datei reinschiessen ... 
-
-            'Dim sprachenArray As clsPrepLanguagesForXML = languages.getSprachenKlasse
-
-            ' jetzt wird ein CustomXMLPart hinzugefügt 
-            'Dim serializer = New DataContractSerializer(GetType(clsLanguages))
-            'Dim serializer = New DataContractSerializer(GetType(clsPrepLanguagesForXML))
-
-            'Dim file As New FileStream(xmlFileName, FileMode.Create)
-
-            'serializer.WriteObject(file, sprachenArray)
-            'file.Close()
-
-            'Dim settings As New XmlWriterSettings()
-            'settings.Indent = True
-            'settings.IndentChars = (ControlChars.Tab)
-            'settings.OmitXmlDeclaration = True
-
-
-            'Dim writer As XmlWriter = XmlWriter.Create(xmlFileName, settings)
-            'serializer.WriteObject(writer, languages)
-            'serializer.WriteObject(writer, sprachenArray)
-
-            'xmlResult = writer.ToString
-            'writer.Flush()
-            'writer.Close()
-
+            ' der folgende Befehl embedded eine XML Struktur - in einem String -  in die aktive PPT Datei 
+            ' Beschreibung zum Konzept der customXMLParts siehe: 
+            ' siehe https://msdn.microsoft.com/en-us/library/bb608612.aspx 
             'pptAPP.ActivePresentation.CustomXMLParts.Add(xmlResult)
+
+
         Catch ex As Exception
             Call MsgBox("Fehler bei Import: " & ex.Message)
         End Try
