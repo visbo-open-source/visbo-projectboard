@@ -1973,6 +1973,15 @@ Public Module awinGeneralModules
                 awinSettings.importTyp = 1
             End Try
 
+
+            ' sollen im Massen-Edit bei der Berechnung der auslastungsWerte die internen mitberücksichtigt werden ? 
+            Try
+                awinSettings.meAuslastungIsInclExt = CInt(.Range("KapaIstMitExt").Value)
+            Catch ex As Exception
+                awinSettings.meAuslastungIsInclExt = True
+            End Try
+
+
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
         End With
