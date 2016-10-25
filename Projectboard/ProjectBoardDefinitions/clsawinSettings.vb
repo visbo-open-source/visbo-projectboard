@@ -70,6 +70,7 @@ Public Class clsawinSettings
     ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
     Public Property phasesProzentual As Boolean = False
 
+    
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
     Public Property showValuesOfSelected As Boolean
 
@@ -159,6 +160,9 @@ Public Class clsawinSettings
     Public Property meAutoReduce As Boolean
     ' soll in der Massen-Edit Funktion die Sortierung enabled sein ? 
     Public Property meEnableSorting As Boolean
+    ' soll beim Berechnen der auslastungs-Values im Mass-Edit die bereits beauftragte externe Kapazität mit berücksichtigt werden 
+    ' Default = no 
+    Public Property meAuslastungIsInclExt As Boolean = True
 
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
@@ -290,6 +294,7 @@ Public Class clsawinSettings
         _mePrzAuslastung = True
         _meAutoReduce = True
         _meEnableSorting = False
+        _meAuslastungIsInclExt = True
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True
@@ -304,6 +309,7 @@ Public Class clsawinSettings
         _isHryNameFrmActive = False
 
         _visboDebug = False
+
 
 
 

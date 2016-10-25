@@ -2772,7 +2772,7 @@ Public Class clsProjekte
                 ReDim kapaValues(zeitraum)
 
                 myCollection.Add(roleName, roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, awinSettings.meAuslastungIsInclExt)
                 myCollection.Clear()
 
                 If istSammelRolle Then
@@ -2852,7 +2852,7 @@ Public Class clsProjekte
                 ReDim kapaValues(zeitraum)
 
                 myCollection.Add(roleName, roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, awinSettings.meAuslastungIsInclExt)
                 myCollection.Clear()
 
                 If istSammelRolle Then
