@@ -99,6 +99,16 @@ Module Module1
     Private Sub pptAPP_AfterPresentationOpen(Pres As PowerPoint.Presentation) Handles pptAPP.AfterPresentationOpen
 
 
+        Dim langGUID As String = pptAPP.ActivePresentation.Tags.Item("langGUID")
+        If langGUID.Length > 0 Then
+
+            Dim langXMLpart As Office.CustomXMLPart = pptAPP.ActivePresentation.CustomXMLParts.SelectByID(langGUID)
+
+            Dim langXMLstring = langXMLpart.XML
+            languages = xml_deserialize(langXMLstring)
+
+        End If
+
     End Sub
 
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
@@ -1115,6 +1125,58 @@ Module Module1
         Next
 
     End Sub
+    ''' <summary>
+    ''' Das Objekt vom Typ clsLanguages wird umgewandelt in einen String
+    ''' über einen MemoryStream, der dann in String gewandelt wird
+    ''' </summary>
+    ''' <param name="obj">Objekt vom Typ clsLanguages</param>
+    ''' <returns>XML String</returns>
+    ''' <remarks></remarks>
+    Public Function xml_serialize(ByVal obj As clsLanguages) As String
+
+        Dim serializer As New DataContractSerializer(GetType(clsLanguages))
+        Dim s As String
+
+        ' --- Serialisieren in MemoryStream
+        Dim ms As New MemoryStream()
+        serializer.WriteObject(ms, obj)
+        'Call MsgBox("Objekt wurde serialisiert!")
+
+        ' --- Stream in String umwandeln
+        Dim r As StreamReader = New StreamReader(ms)
+        r.BaseStream.Seek(0, SeekOrigin.Begin)
+        s = r.ReadToEnd
+
+        Return s
+    End Function
+    ''' <summary>
+    ''' Es wird ein String in die Struktur clsLanguages eingelesen
+    ''' </summary>
+    ''' <param name="langXMLstring">String in XML-Format</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function xml_deserialize(ByVal langXMLstring As String) As clsLanguages
+
+        Dim languages As New clsLanguages
+
+        ' --- Objekt  in Stream kopieren
+        Dim ms As New MemoryStream()
+        Dim w As StreamWriter = New StreamWriter(ms)
+        w.BaseStream.Seek(0, SeekOrigin.Begin)
+        w.WriteLine(langXMLstring)
+        w.Close()
+
+        '
+        ' zu folgenden Befehlen: siehe Beschreibung unter Link 
+        'https://books.google.de/books?id=zoBPnnGcASEC&pg=PA418&lpg=PA418&dq=xmlstring+erzeugen+mit+serializer&source=bl&ots=oMaIaszAh2&sig=l3E0WzuSsQ2IjvPIz50VahjJaNw&hl=de&sa=X&ved=0ahUKEwipiaa0yfXPAhVF7xQKHfHeDHEQ6AEIRjAG#v=onepage&q=xmlstring%20erzeugen%20mit%20serializer&f=false
+        '
+        ' --- MemoryStream umwandeln in Struktur clsLanguages
+        Dim serializer As New DataContractSerializer(GetType(clsLanguages))
+        ms = New MemoryStream(ms.ToArray)
+        languages = CType(serializer.ReadObject(ms), clsLanguages)
+        'Call MsgBox("Objekt wurde deserialisiert!")
+        Return languages
+    End Function
 
     ''' <summary>
     ''' macht die Visbo Shapes sichtbar bzw. unsichtbar .... 

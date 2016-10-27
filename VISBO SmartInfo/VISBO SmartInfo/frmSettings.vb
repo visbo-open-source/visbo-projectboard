@@ -177,16 +177,38 @@ Public Class frmSettings
             txtboxLanguage.SelectedItem = defaultSprache
             selectedLanguage = defaultSprache
 
-            Dim serializer = New DataContractSerializer(GetType(clsLanguages))
-            Dim file As New FileStream(xmlFileName, FileMode.Create)
-            serializer.WriteObject(file, languages)
-            file.Close()
+            ' --- nicht mehr benötigt
+            ''Dim serializer = New DataContractSerializer(GetType(clsLanguages))
+            ''Dim file As New FileStream(xmlFileName, FileMode.Create)
+            ''serializer.WriteObject(file, languages)
+            ''file.Close()
 
+           
+            '
+            ' --- alte customXMLPart für Languages, falls vorhanden,  löschen
+            '
+            Dim oldlangGUID As String = pptAPP.ActivePresentation.Tags.Item("langGUID")
+            If oldlangGUID.Length > 0 Then
+                pptAPP.ActivePresentation.CustomXMLParts.SelectByID(oldlangGUID).Delete()
+            End If
+
+            '
+            ' --- neues CustomXMLPart für Languages hinzufügen
+            '
             ' der folgende Befehl embedded eine XML Struktur - in einem String -  in die aktive PPT Datei 
             ' Beschreibung zum Konzept der customXMLParts siehe: 
             ' siehe https://msdn.microsoft.com/en-us/library/bb608612.aspx 
-            'pptAPP.ActivePresentation.CustomXMLParts.Add(xmlResult)
+            '
+            Dim langXMLstring As String = xml_serialize(languages)
+            Dim languageXMLPart As Office.CustomXMLPart = pptAPP.ActivePresentation.CustomXMLParts.Add(langXMLstring)
 
+            '
+            ' Setzen einen Tags zum Merken der GUID des CustomXMLPart - Language
+            '
+            pptAPP.ActivePresentation.Tags.Add("langGUID", languageXMLPart.Id)
+
+            Dim anzXMLParts As Integer = pptAPP.ActivePresentation.CustomXMLParts.Count
+            
 
         Catch ex As Exception
             Call MsgBox("Fehler bei Import: " & ex.Message)
@@ -202,11 +224,11 @@ Public Class frmSettings
         Call changeLanguageInAnnotations()
     End Sub
 
-    
     Private Sub rdbUserName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbUserName.CheckedChanged
 
         If rdbUserName.Checked = True Then
             frmProtectField1.PasswordChar = ""
         End If
     End Sub
+
 End Class

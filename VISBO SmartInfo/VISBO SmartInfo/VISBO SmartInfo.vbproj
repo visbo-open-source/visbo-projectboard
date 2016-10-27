@@ -334,10 +334,11 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>VISBO SmartInfo_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>FC9586976D0EEB5BB59331E654DBEE7F9585F73A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>57D079AC4608E7A5EEAB9503591B51D9E4ADB64F</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a Visual Basic project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
