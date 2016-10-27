@@ -3,8 +3,9 @@
     Friend abkuerzung As String
     Friend showSearchListBox As Boolean = False
 
-    Friend Const fullHeight As Integer = 546
-    Private Const smallHeight As Integer = 296
+    Private Const deltaAmpel As Integer = 50
+    Private Const deltaSearchBox As Integer = 200
+    Private Const smallHeight As Integer = 220
 
     Private dontFire As Boolean = False
     ' innerhalb der Klasse überall im Zugriff; Colorcode ist die Zahl , die sich ergibt , 
@@ -31,44 +32,81 @@
         formIsShown = False
     End Sub
 
-    Private Sub frmInfo_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ' Initialisieren von Suchen 
+    ''' <summary>
+    ''' zeigt den AmpelErläuterungstext inkl de rbutton und verschiebt die anderen Elemente entsprechend 
+    ''' Ändert die Höhen von TabControl1 und des gesamten Formulars  
+    ''' </summary>
+    ''' <param name="istSichtbar"></param>
+    ''' <remarks></remarks>
+    Private Sub ampelBlockVisible(ByVal istSichtbar As Boolean)
 
-        dontFire = True
-
-        showOrginalName.Visible = False
-        showOrginalName.Text = showOrigName
-
-        showAbbrev.Checked = showShortName
-
-        If showSearchListBox Then
-            Me.Height = fullHeight
-            filterText.Visible = True
-            listboxNames.Visible = True
+        ' Größen und Positionen anpassen 
+        If Not istSichtbar Then
+            With Me
+                .Height = Me.Height - deltaAmpel
+                .TabControl1.Height = Me.TabControl1.Height - deltaAmpel
+                .filterText.Top = .filterText.Top - deltaAmpel
+                .searchIcon.Top = .searchIcon.Top - deltaAmpel
+                .listboxNames.Top = .listboxNames.Top - deltaAmpel
+                .rdbName.Top = .rdbName.Top - deltaAmpel
+                .rdbOriginalName.Top = rdbOriginalName.Top - deltaAmpel
+                .rdbAbbrev.Top = rdbAbbrev.Top - deltaAmpel
+                .rdbBreadcrumb.Top = .rdbBreadcrumb.Top - deltaAmpel
+            End With
         Else
-            Me.Height = smallHeight
+            With Me
+                .Height = Me.Height + deltaAmpel
+                .TabControl1.Height = Me.TabControl1.Height + deltaAmpel
+                .filterText.Top = .filterText.Top + deltaAmpel
+                .searchIcon.Top = .searchIcon.Top + deltaAmpel
+                .listboxNames.Top = .listboxNames.Top + deltaAmpel
+                .rdbName.Top = .rdbName.Top + deltaAmpel
+                .rdbOriginalName.Top = rdbOriginalName.Top + deltaAmpel
+                .rdbAbbrev.Top = rdbAbbrev.Top + deltaAmpel
+                .rdbBreadcrumb.Top = .rdbBreadcrumb.Top + deltaAmpel
+            End With
+
+        End If
+
+        Me.ampelText.Visible = istSichtbar
+        Me.deleteAmpel.Visible = istSichtbar
+        Me.writeAmpel.Visible = istSichtbar
+
+    End Sub
+
+    ''' <summary>
+    ''' zeigt die Searchbox an bzw. macht sie unsichtbar
+    ''' verändert die Größen des Formulars entsprechend 
+    ''' </summary>
+    ''' <param name="istSichtbar"></param>
+    ''' <remarks></remarks>
+    Private Sub searchBoxVisible(ByVal istSichtbar As Boolean)
+
+        If Not istSichtbar Then
+            ' es soll nicht sichtbar sein 
+            Me.Height = Me.Height - deltaSearchBox
             filterText.Visible = False
             listboxNames.Visible = False
-        End If
-
-        If showBreadCrumbField = True Then
-            fullBreadCrumb.Visible = True
-        Else
-            fullBreadCrumb.Visible = False
-        End If
-
-        ' Anzeigen der Optionen oder nicht ...
-        If extSearch = True Then
-            rdbName.Visible = True
-            rdbOriginalName.Visible = True
-            rdbAbbrev.Visible = True
-            rdbBreadcrumb.Visible = True
-        Else
             rdbName.Visible = False
             rdbOriginalName.Visible = False
             rdbAbbrev.Visible = False
             rdbBreadcrumb.Visible = False
+        Else
+            Me.Height = Me.Height + deltaSearchBox
+            filterText.Visible = True
+            listboxNames.Visible = True
+            If extSearch Then
+                rdbName.Visible = True
+                rdbOriginalName.Visible = True
+                rdbAbbrev.Visible = True
+                rdbBreadcrumb.Visible = True
+            End If
         End If
+
+    End Sub
+
+
+    Private Sub frmInfo_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         ' sind irgendwelche Ampel-Farben gesetzt 
         Dim ix As Integer = 1
@@ -134,6 +172,26 @@
             End With
         End If
 
+        ' Zu Beginn ist Ampel-Text und Ampel-Erläuterung nicht sichtbar 
+        Call ampelBlockVisible(False)
+
+        ' Zu Beginn ist die Searchbox nicht visible 
+        Call searchBoxVisible(False)
+
+        dontFire = True
+
+        showOrginalName.Visible = False
+        showOrigName = False
+
+        If showBreadCrumbField = True Then
+            fullBreadCrumb.Visible = True
+        Else
+            fullBreadCrumb.Visible = False
+        End If
+
+
+        showAbbrev.Checked = showShortName
+
 
         dontFire = False
 
@@ -143,15 +201,6 @@
         End With
 
     End Sub
-
-    Private Sub shwYellowLight_CheckedChanged(sender As Object, e As EventArgs)
-
-    End Sub
-
-    Private Sub shwGreenLight_CheckedChanged(sender As Object, e As EventArgs)
-
-    End Sub
-
 
     Private Sub rdbName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbName.CheckedChanged
         ' dontFire true verhindert, dass die Aktion durchgeführt wird, das ist dann erforderlich wenn man explizit verhindern will, 
@@ -460,24 +509,68 @@
     End Sub
 
     Private Sub shwOhneLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwOhneLight.CheckedChanged
+
+        If shwOhneLight.Checked Then
+            If (Not shwGreenLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
+                Call ampelBlockVisible(True)
+            End If
+        Else
+            If (Not shwGreenLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
+                Call ampelBlockVisible(False)
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 0
         Call faerbeShapes(ampelColor, shwOhneLight.Checked)
     End Sub
 
     Private Sub shwGreenLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwGreenLight.CheckedChanged
+
+        If shwGreenLight.Checked Then
+            If (Not shwOhneLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
+                Call ampelBlockVisible(True)
+            End If
+        Else
+            If (Not shwOhneLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
+                Call ampelBlockVisible(False)
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 1
         Call faerbeShapes(ampelColor, shwGreenLight.Checked)
     End Sub
 
     Private Sub shwYellowLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwYellowLight.CheckedChanged
+
+        If shwYellowLight.Checked Then
+            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwRedLight.Checked) Then
+                Call ampelBlockVisible(True)
+            End If
+        Else
+            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwRedLight.Checked) Then
+                Call ampelBlockVisible(False)
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 2
         Call faerbeShapes(ampelColor, shwYellowLight.Checked)
     End Sub
 
     Private Sub shwRedLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwRedLight.CheckedChanged
+
+        If shwRedLight.Checked Then
+            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwYellowLight.Checked) Then
+                Call ampelBlockVisible(True)
+            End If
+        Else
+            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwYellowLight.Checked) Then
+                Call ampelBlockVisible(False)
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 3
         Call faerbeShapes(ampelColor, shwRedLight.Checked)
@@ -834,15 +927,10 @@
         showSearchListBox = Not showSearchListBox
 
         If showSearchListBox Then
-            Me.Height = fullHeight
-            filterText.Visible = True
-            listboxNames.Visible = True
-
+            Call searchBoxVisible(True)
             Call erstelleListbox()
         Else
-            Me.Height = smallHeight
-            filterText.Visible = False
-            listboxNames.Visible = False
+            Call searchBoxVisible(False)
         End If
 
         dontFire = False
@@ -850,4 +938,53 @@
     End Sub
 
 
+    Private Sub TabPage1_Click(sender As Object, e As EventArgs) Handles TabPage1.Click
+
+    End Sub
+
+    Private Sub TabPage2_Click(sender As Object, e As EventArgs) Handles TabPage2.Click
+
+    End Sub
+
+    Private Sub writeAmpel_Click(sender As Object, e As EventArgs) Handles writeAmpel.Click
+        Try
+
+            If Not IsNothing(selectedPlanShapes) Then
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+
+                    If isRelevantShape(tmpShape) Then
+                        If pptShapeIsMilestone(tmpShape) Then
+                            Call annotatePlanShape(tmpShape, pptAnnotationType.ampelText, positionIndexMT)
+                        Else
+                            Call annotatePlanShape(tmpShape, pptAnnotationType.ampelText, positionIndexPT)
+                        End If
+                    End If
+                    
+
+                Next
+
+                selectedPlanShapes.Select()
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    Private Sub deleteAmpel_Click(sender As Object, e As EventArgs) Handles deleteAmpel.Click
+        Try
+
+            If Not IsNothing(selectedPlanShapes) Then
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+                    Call deleteAnnotationShape(tmpShape, pptAnnotationType.ampelText)
+                Next
+                selectedPlanShapes.Select()
+            End If
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
 End Class

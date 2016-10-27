@@ -5,6 +5,9 @@ Module Module1
 
     Friend visboInfoActivated As Boolean = False
     Friend formIsShown As Boolean = False
+    Friend Const markerName As String = "VisboMarker"
+    Friend Const protectionTag As String = "VisboProtection"
+    Friend Const protectionValue As String = "VisboValue"
 
     Friend currentSlide As PowerPoint.Slide
     Friend VisboProtected As Boolean = False
@@ -24,7 +27,6 @@ Module Module1
     ' globlaela Variable, die anzeigt, ob Orginal Name gezeigt werden soll 
     Friend showOrigName As Boolean = False
 
-    Friend protectContents As Boolean
     Friend protectType As Integer
     Friend protectFeld1 As String = ""
     Friend protectFeld2 As String = ""
@@ -62,6 +64,7 @@ Module Module1
     Friend Enum pptAnnotationType
         text = 0
         datum = 1
+        ampelText = 2
     End Enum
 
     Friend Enum pptInfoType
@@ -95,25 +98,16 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_AfterPresentationOpen(Pres As PowerPoint.Presentation) Handles pptAPP.AfterPresentationOpen
 
-        'Dim anzahl As Integer = Pres.CustomXMLParts.Count
-        'If anzahl > 0 Then
 
-        '    Call MsgBox("es gibt " & Pres.CustomXMLParts.Count.ToString & " CustomXML Parts")
-        '    For i As Integer = 1 To anzahl
-        '        Dim xmlPart As Microsoft.Office.Core.CustomXMLPart = Pres.CustomXMLParts.Item(i)
-        '        Dim ergebnis As String = xmlPart.XML
-        '        Call MsgBox(ergebnis & "; Id=" & xmlPart.Id & vbLf & _
-        '                    xmlPart.DocumentElement.Text)
-        '    Next
-
-
-        'Else
-        '    Call MsgBox("es gibt keine CustomXML Parts")
-        'End If
     End Sub
 
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
         ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
+
+        If VisboProtected Then
+            Call makeVisboShapesVisible(False)
+        End If
+
     End Sub
 
     ''' <summary>
@@ -197,50 +191,21 @@ Module Module1
 
             If Not IsNothing(shpRange) And visboInfoActivated Then
 
-                'If shpRange.Count = 1 Then
-                '    relevantShape = shpRange.Item(1)
-
-                '    'If Not relevantShape.HasChart And Not relevantShape.HasTable Then
-                '    If relevantShape.Tags.Count > 0 Then
-
-                '        'If relevantShape.AlternativeText <> "" And relevantShape.Title <> "" Then
-                '        If Not IsNothing(relevantShape.Tags.Item("CN")) Then
-
-                '            ' das Shape merken, damit im Formular später die Beschriftung ausgegeben werden kann 
-                '            relevantShapeNames.Add(relevantShape.Name, relevantShape.Name)
-
-                '            If IsNothing(infoFrm) Then
-                '                infoFrm = New frmInfo
-                '                formIsShown = False
-                '            End If
-
-                '            With infoFrm
-                '                .elemName.Text = relevantShape.Title
-                '                .elemDate.Text = relevantShape.AlternativeText
-                '            End With
-
-                '            If Not formIsShown Then
-                '                infoFrm.Show()
-                '                formIsShown = True
-                '            End If
-                '        Else
-                '            With infoFrm
-                '                .elemName.Text = ""
-                '                .elemDate.Text = ""
-                '            End With
-                '        End If
-                '    Else
-                '        With infoFrm
-                '            .elemName.Text = ""
-                '            .elemDate.Text = ""
-                '        End With
-                '    End If
-                'Else
-
-                ' es sind mehrere Shapes selektiert worden 
+                Call deleteMarkerShape()
+                ' es sind ein oder mehrere Shapes selektiert worden 
                 Dim i As Integer = 0
+                If shpRange.Count = 1 Then
+                    ' prüfen, ob es ein Kommentar ist 
+                    Dim tmpShape As PowerPoint.Shape = shpRange(1)
+                    If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoComment Or _
+                        (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoAutoShape And tmpShape.Name.Contains("§")) Then
+                        Call markReferenceShape(tmpShape.Name)
+                    End If
+                End If
+
                 For Each tmpShape As PowerPoint.Shape In shpRange
 
+                    
                     'If Not tmpShape.HasChart And Not tmpShape.HasTable Then
                     If tmpShape.Tags.Count > 0 Then
 
@@ -262,8 +227,9 @@ Module Module1
 
                                     With infoFrm
                                         .elemName.Text = bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked)
-                                        .elemDate.Text = bestimmeElemDateText(tmpShape)
+                                        .elemDate.Text = bestimmeElemDateText(tmpShape, .showAbbrev.Checked)
                                         .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
+                                        .ampelText.Text = bestimmeElemAmpelText(tmpShape)
                                         ' Festlegen der Beschriftungs-Position für Name und Text
                                         Call .setDTPicture(pptShapeIsMilestone(tmpShape))
 
@@ -282,8 +248,12 @@ Module Module1
                                         If .elemName.Text <> bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked) Then
                                             .elemName.Text = " ... "
                                         End If
-                                        If .elemDate.Text <> bestimmeElemDateText(tmpShape) Then
+                                        If .elemDate.Text <> bestimmeElemDateText(tmpShape, .showAbbrev.Checked) Then
                                             .elemDate.Text = " ... "
+                                        End If
+
+                                        If .ampelText.Text <> bestimmeElemAmpelText(tmpShape) Then
+                                            .ampelText.Text = " ... "
                                         End If
 
                                         .positionTextButton.Image = Nothing
@@ -321,6 +291,7 @@ Module Module1
                         With infoFrm
                             .elemName.Text = ""
                             .elemDate.Text = ""
+                            .ampelText.Text = ""
                         End With
                     End If
                 End If
@@ -389,9 +360,9 @@ Module Module1
             End Try
 
         End If
-        
 
-        
+
+
 
     End Sub
 
@@ -429,6 +400,86 @@ Module Module1
 
     End Function
 
+    ''' <summary>
+    ''' bringt zu dem gegebenen ShapeNamen den Namen des zugrundeliegenden Referenz-Shapes zurück
+    ''' also zum Comment das zugehörige Shape , dass dann in Folge mit einem Marker markiert werden kann 
+    ''' </summary>
+    ''' <param name="shapeName"></param>
+    ''' <remarks></remarks>
+    Friend Sub markReferenceShape(ByVal shapeName As String)
+        Dim tmpText As String = ""
+        Dim newLeft As Double
+        Dim newTop As Double
+        Dim newHeight As Double
+        Dim newWidth As Double
+        Dim markerShape As PowerPoint.Shape
+
+        If shapeName.EndsWith(CStr(pptAnnotationType.ampelText)) Then
+            Dim strLength As Integer = shapeName.Length
+            If strLength > 1 Then
+                tmpText = shapeName.Substring(0, strLength - 1)
+
+                Try
+                    Dim refShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpText)
+                    If Not IsNothing(refShape) Then
+                        With refShape
+                            'newLeft = .Left - 0.3 * refShape.Width
+                            'newTop = .Top - 0.3 * refShape.Height
+                            'newHeight = 1.6 * .Height
+                            'newWidth = 1.6 * .Width
+                            newHeight = 19
+                            newWidth = 13
+                            newLeft = .Left + 0.5 * (refShape.Width - newWidth)
+                            newTop = .Top - (newHeight + 2)
+                            
+                        End With
+
+                        Try
+                            markerShape = currentSlide.Shapes.Item(markerName)
+                            If Not IsNothing(markerShape) Then
+                                markerShape.Delete()
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                        ' jetzt wird das MarkerShape neu gezeichnet 
+                        'markerShape = currentSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeRectangle, _
+                        '                             newLeft, newTop, newWidth, newHeight)
+                        markerShape = currentSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeDownArrow, newLeft, newTop, newWidth, newHeight)
+                        With markerShape
+                            .Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
+                            .Fill.Transparency = 0.0
+                            .Line.Weight = 3
+                            .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                            .Line.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
+                            .Name = markerName
+                        End With
+
+                    End If
+                Catch ex As Exception
+
+                End Try
+            End If
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht das Marker Shape ( Laserpointer 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub deleteMarkerShape()
+        Try
+            Dim markerShape As PowerPoint.Shape = currentSlide.Shapes.Item(markerName)
+            If Not IsNothing(markerShape) Then
+                markerShape.Delete()
+            End If
+        Catch ex As Exception
+
+        End Try
+    End Sub
 
     ''' <summary>
     ''' gibt die ElemID eines Elements zurück 
@@ -461,6 +512,8 @@ Module Module1
         getElemIDFromShpName = tmpName
 
     End Function
+
+
 
     ''' <summary>
     ''' gibt den Elem-Namen zurück 
@@ -536,6 +589,26 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt den Ampeltext des Shapes zurück 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeElemAmpelText(ByVal curShape As PowerPoint.Shape) As String
+        Dim tmpText As String = ""
+
+        Try
+            If curShape.Tags.Item("AE").Length > 0 Then
+                tmpText = curShape.Tags.Item("AE")
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        bestimmeElemAmpelText = tmpText
+    End Function
+
+    ''' <summary>
     ''' bestimmt den Text in Abhängigkeit, ob classified name, ShortName oder OriginalName gezeigt werden soll 
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -589,17 +662,39 @@ Module Module1
     ''' <param name="curShape"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function bestimmeElemDateText(ByVal curShape As PowerPoint.Shape) As String
+    Public Function bestimmeElemDateText(ByVal curShape As PowerPoint.Shape, ByVal showShort As Boolean) As String
 
         Dim tmpText As String = ""
 
         If pptShapeIsMilestone(curShape) Then
             If curShape.Tags.Item("ED").Length > 0 Then
-                tmpText = curShape.Tags.Item("ED")
+                If Not showShort Then
+                    tmpText = curShape.Tags.Item("ED")
+                Else
+                    Try
+                        Dim msDate As Date = CDate(curShape.Tags.Item("ED"))
+                        tmpText = msDate.Day.ToString & "." & msDate.Month.ToString
+                    Catch ex As Exception
+                        tmpText = curShape.Tags.Item("ED")
+                    End Try
+                End If
             End If
         Else
             If curShape.Tags.Item("SD").Length > 0 And curShape.Tags.Item("ED").Length > 0 Then
-                tmpText = curShape.Tags.Item("SD") & "-" & curShape.Tags.Item("ED")
+                If Not showShort Then
+                    tmpText = curShape.Tags.Item("SD") & "-" & curShape.Tags.Item("ED")
+                Else
+                    Try
+                        Dim startDate As Date = CDate(curShape.Tags.Item("SD"))
+                        Dim endDate As Date = CDate(curShape.Tags.Item("ED"))
+                        tmpText = startDate.Day.ToString & "." & startDate.Month.ToString & "-" & _
+                                    endDate.Day.ToString & "." & endDate.Month.ToString
+                    Catch ex As Exception
+                        tmpText = curShape.Tags.Item("SD") & "-" & curShape.Tags.Item("ED")
+                    End Try
+
+                End If
+
             End If
         End If
 
@@ -646,6 +741,36 @@ Module Module1
             isRelevantShape = False
         End If
 
+    End Function
+
+    ''' <summary>
+    ''' prüft, ob ein Shape für Schutz relevant ist oder nicht 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isRelevantForProtection(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim criteria1 As String = ""
+        Dim criteria2 As Boolean
+
+        Try
+            criteria1 = curShape.Tags.Item("CN")
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            ' alle VISBO Beschriftungen oder Kommentare enthalten das im Namen ... 
+            criteria2 = (curShape.Name.Contains(")1§") Or curShape.Name.Contains(")0§"))
+        Catch ex As Exception
+
+        End Try
+
+        If criteria1.Length > 0 Or criteria2 Then
+            isRelevantForProtection = True
+        Else
+            isRelevantForProtection = False
+        End If
     End Function
 
     ''' <summary>
@@ -707,11 +832,12 @@ Module Module1
                                   ByVal descriptionType As Integer, ByVal positionIndex As Integer)
 
         Dim newShape As PowerPoint.Shape
-        Dim textLeft As Double = selectedPlanShape.Left - 4
-        Dim textTop As Double = selectedPlanShape.Top - 5
-        Dim textwidth As Double = 5
-        Dim textheight As Double = 5
+        Dim txtShpLeft As Double = selectedPlanShape.Left - 4
+        Dim txtShpTop As Double = selectedPlanShape.Top - 5
+        Dim txtShpWidth As Double = 5
+        Dim txtShpHeight As Double = 5
         Dim normalFarbe As Integer = RGB(10, 10, 10)
+        Dim ampelFarbe As Integer = 0
 
         Dim descriptionText As String = ""
 
@@ -723,7 +849,16 @@ Module Module1
         If descriptionType = pptAnnotationType.text Then
             descriptionText = bestimmeElemText(selectedPlanShape, showShortName, showOrigName)
         ElseIf descriptionType = pptAnnotationType.datum Then
-            descriptionText = bestimmeElemDateText(selectedPlanShape)
+            descriptionText = bestimmeElemDateText(selectedPlanShape, showShortName)
+        ElseIf descriptionType = pptAnnotationType.ampelText Then
+            If IsNumeric(selectedPlanShape.Tags.Item("AC")) Then
+                ampelFarbe = CInt(selectedPlanShape.Tags.Item("AC"))
+            End If
+            descriptionText = bestimmeElemAmpelText(selectedPlanShape)
+            txtShpLeft = selectedPlanShape.Left + 1.5 * selectedPlanShape.Width + 5
+            txtShpTop = selectedPlanShape.Top - 75
+            txtShpWidth = 70
+            txtShpHeight = 70
         End If
 
         Try
@@ -744,6 +879,10 @@ Module Module1
 
         Try
             newShape = currentSlide.Shapes(shapeName)
+            If descriptionType = pptAnnotationType.ampelText Then
+                newShape.Delete()
+                newShape = Nothing
+            End If
         Catch ex As Exception
             newShape = Nothing
         End Try
@@ -751,18 +890,48 @@ Module Module1
 
         If IsNothing(newShape) Then
 
-            newShape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
-                                      textLeft, textTop, 50, textheight)
-            With newShape
-                .TextFrame2.TextRange.Text = descriptionText
-                .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
-                .TextFrame2.MarginBottom = 0
-                .TextFrame2.MarginLeft = 0
-                .TextFrame2.MarginRight = 0
-                .TextFrame2.MarginTop = 0
-                .Name = shapeName
-                .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-            End With
+            If descriptionType = pptAnnotationType.ampelText Then
+                newShape = currentSlide.Shapes.AddComment()
+                'newShape = currentSlide.Shapes.AddCallout(Microsoft.Office.Core.MsoCalloutType.msoCalloutOne, _
+                '                      txtShpLeft, txtShpTop, txtShpWidth, txtShpHeight)
+                With newShape
+                    .Fill.ForeColor.RGB = RGB(240, 240, 240)
+                    If ampelFarbe = 1 Then
+                        .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGreen
+                    ElseIf ampelFarbe = 2 Then
+                        .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbYellow
+                    ElseIf ampelFarbe = 3 Then
+                        .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbRed
+                    Else
+                        .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGrey
+                    End If
+                    '.Line.Weight = 3
+                    .TextFrame2.TextRange.Text = descriptionText
+                    .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
+                    .TextFrame2.MarginBottom = 3
+                    .TextFrame2.MarginLeft = 3
+                    .TextFrame2.MarginRight = 3
+                    .TextFrame2.MarginTop = 3
+                    .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = normalFarbe
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignLeft
+                    .Name = shapeName
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoTrue
+                End With
+            Else
+                newShape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                                      txtShpLeft, txtShpTop, 50, txtShpHeight)
+                With newShape
+                    .TextFrame2.TextRange.Text = descriptionText
+                    .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginTop = 0
+                    .Name = shapeName
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                End With
+
+            End If
 
         Else
             With newShape
@@ -772,127 +941,136 @@ Module Module1
         End If
 
 
-        ' jetzt wird das TextShape noch positioniert - in Abhängigkeit vom Position Index 
+        ' jetzt wird das TextShape noch positioniert - in Abhängigkeit vom Position Index, 
+        ' aber nur wenn es sich nicht um die Ampel handelt ...
 
-        Select Case positionIndex
+        If Not descriptionType = pptAnnotationType.ampelText Then
+            Select Case positionIndex
 
-            Case pptPositionType.center
+                Case pptPositionType.center
 
-                If newShape.Width > 1.5 * selectedPlanShape.Width Then
-                    ' keine Farbänderung 
-                Else
-                    ' wenn die Beschriftung von der Ausdehnung kleiner als die Phase/der Meilenstein ist
-                    newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                End If
-                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
-                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
-
-            Case pptPositionType.aboveCenter
-
-                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
-                textTop = selectedPlanShape.Top - newShape.Height
-
-            Case pptPositionType.aboveRight
-
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left
-                Else
-                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                    If newShape.Width > 1.5 * selectedPlanShape.Width Then
+                        ' keine Farbänderung 
+                    Else
+                        ' wenn die Beschriftung von der Ausdehnung kleiner als die Phase/der Meilenstein ist
                         newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
                     End If
-                End If
+                    txtShpLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                    txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
-                textTop = selectedPlanShape.Top - newShape.Height
+                Case pptPositionType.aboveCenter
 
-            Case pptPositionType.centerRight
+                    txtShpLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                    txtShpTop = selectedPlanShape.Top - newShape.Height
 
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left
-                Else
-                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                Case pptPositionType.aboveRight
+
+                    If newShape.Width > selectedPlanShape.Width Then
+                        txtShpLeft = selectedPlanShape.Left
+                    Else
+                        txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        End If
                     End If
 
-                End If
+                    txtShpTop = selectedPlanShape.Top - newShape.Height
 
-                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
+                Case pptPositionType.centerRight
 
-            Case pptPositionType.belowRight
+                    If newShape.Width > selectedPlanShape.Width Then
+                        txtShpLeft = selectedPlanShape.Left
+                    Else
+                        txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        End If
 
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left
-                Else
-                    textLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
                     End If
-                End If
 
-                textTop = selectedPlanShape.Top + selectedPlanShape.Height
+                    txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
-            Case pptPositionType.belowCenter
-                textLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
-                textTop = selectedPlanShape.Top + selectedPlanShape.Height
+                Case pptPositionType.belowRight
 
-            Case pptPositionType.belowLeft
-
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                Else
-                    textLeft = selectedPlanShape.Left
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    If newShape.Width > selectedPlanShape.Width Then
+                        txtShpLeft = selectedPlanShape.Left
+                    Else
+                        txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        End If
                     End If
-                End If
 
-                textTop = selectedPlanShape.Top + selectedPlanShape.Height
+                    txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
 
-            Case pptPositionType.centerLeft
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                Else
-                    textLeft = selectedPlanShape.Left
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                Case pptPositionType.belowCenter
+                    txtShpLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                    txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
+
+                Case pptPositionType.belowLeft
+
+                    If newShape.Width > selectedPlanShape.Width Then
+                        txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                    Else
+                        txtShpLeft = selectedPlanShape.Left
+                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        End If
                     End If
-                End If
-                textTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
-            Case pptPositionType.aboveLeft
-                If newShape.Width > selectedPlanShape.Width Then
-                    textLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                Else
-                    textLeft = selectedPlanShape.Left
-                    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
+
+                Case pptPositionType.centerLeft
+                    If newShape.Width > selectedPlanShape.Width Then
+                        txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                    Else
+                        txtShpLeft = selectedPlanShape.Left
+                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        End If
                     End If
-                End If
-                textTop = selectedPlanShape.Top - newShape.Height
+                    txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
-            Case pptPositionType.asis
-                textLeft = newShape.Left
-                textTop = newShape.Top
+                Case pptPositionType.aboveLeft
+                    If newShape.Width > selectedPlanShape.Width Then
+                        txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                    Else
+                        txtShpLeft = selectedPlanShape.Left
+                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        End If
+                    End If
+                    txtShpTop = selectedPlanShape.Top - newShape.Height
 
-            Case Else
-                textLeft = selectedPlanShape.Left - 5
-                textTop = selectedPlanShape.Top - 10
-        End Select
+                Case pptPositionType.asis
+                    txtShpLeft = newShape.Left
+                    txtShpTop = newShape.Top
 
-        ' jetzt die Position zuweisen
+                Case Else
+                    txtShpLeft = selectedPlanShape.Left - 5
+                    txtShpTop = selectedPlanShape.Top - 10
+            End Select
 
-        With newShape
-            .Top = textTop
-            .Left = textLeft
-        End With
+            ' jetzt die Position zuweisen
+
+            With newShape
+                .Top = txtShpTop
+                .Left = txtShpLeft
+            End With
+        Else
+            With newShape
+                .Top = selectedPlanShape.Top - .Height - selectedPlanShape.Height / 2
+                .Left = selectedPlanShape.Left + 2 * selectedPlanShape.Width
+            End With
+        End If
+
 
 
 
@@ -931,11 +1109,29 @@ Module Module1
                 Catch ex As Exception
 
                 End Try
-                
+
             End If
 
         Next
 
     End Sub
 
+    ''' <summary>
+    ''' macht die Visbo Shapes sichtbar bzw. unsichtbar .... 
+    ''' </summary>
+    ''' <param name="visible"></param>
+    ''' <remarks></remarks>
+    Public Sub makeVisboShapesVisible(ByVal visible As Boolean)
+
+        For Each pptSlide As PowerPoint.Slide In pptAPP.ActivePresentation.Slides
+
+            For Each pptShape As PowerPoint.Shape In pptSlide.Shapes
+                If isRelevantForProtection(pptShape) Then
+                    pptShape.Visible = visible
+                End If
+            Next
+
+        Next
+
+    End Sub
 End Module

@@ -86,16 +86,17 @@ Public Class frmSettings
 
     Private Sub btnProtect_Click(sender As Object, e As EventArgs) Handles btnProtect.Click
 
-        protectContents = Not protectContents
+        VisboProtected = True
 
-        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-            If tmpShape.Tags.Count > 0 Then
-                If isRelevantShape(tmpShape) Then
-                    ' Sichtbarkeit setzen ....
-                    tmpShape.Visible = protectContents
-                End If
-            End If
-        Next
+        If rdbPWD.Checked Then
+            pptAPP.ActivePresentation.Tags.Add(protectionTag, "PWD")
+            pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text)
+        Else
+            pptAPP.ActivePresentation.Tags.Add(protectionTag, "COMPUTER")
+            pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text & "\" & frmProtectField2.Text)
+        End If
+
+        Call makeVisboShapesVisible(False)
 
     End Sub
 
@@ -124,7 +125,7 @@ Public Class frmSettings
         Try
             schriftGroesse = CDbl(txtboxSchriftGroesse.Text)
         Catch ex As Exception
-            Call MsgBox("unzuzlässiger Wert für Schriftgröße ...")
+            Call MsgBox("unzulässiger Wert für Schriftgröße ...")
             txtboxSchriftGroesse.Text = schriftGroesse.ToString
         End Try
 
@@ -199,5 +200,13 @@ Public Class frmSettings
 
     Private Sub btnChangeLanguage_Click(sender As Object, e As EventArgs) Handles btnChangeLanguage.Click
         Call changeLanguageInAnnotations()
+    End Sub
+
+    
+    Private Sub rdbUserName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbUserName.CheckedChanged
+
+        If rdbUserName.Checked = True Then
+            frmProtectField1.PasswordChar = ""
+        End If
     End Sub
 End Class

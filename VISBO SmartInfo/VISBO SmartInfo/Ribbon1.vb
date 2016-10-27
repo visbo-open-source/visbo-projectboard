@@ -10,11 +10,40 @@ Public Class Ribbon1
 
         visboInfoActivated = Not visboInfoActivated
         If visboInfoActivated Then
-            Me.activateTab.Description = "De-Aktivieren"
+
+            If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
+                ' Formular zur Password Eingabe aufrufen 
+                VisboProtected = True
+
+                ' Formular ... 
+                Dim pwdFormular As New frmPassword
+                If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
+                    If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
+                        ' in allen Slides den Sicht Schutz aufheben 
+
+                        Call makeVisboShapesVisible(True)
+                    End If
+                End If
+
+                ' if richtig 
+            ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
+                ' überprüfen, ob es die richtige Domain ist 
+                VisboProtected = True
+
+                Dim userName As String = My.Computer.Name
+                If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
+                    ' in allen Slides den Sicht Schutz aufheben 
+
+                    Call makeVisboShapesVisible(True)
+
+                End If
+            End If
+
+            Me.activateTab.Label = "De-Aktivieren"
             Me.activateTab.ScreenTip = "Info-Modus de-aktivieren"
             'Call MsgBox("Info-Modus aktiviert")
         Else
-            Me.activateTab.Description = "Aktivieren"
+            Me.activateTab.Label = "Aktivieren"
             Me.activateTab.ScreenTip = "Info-Modus aktivieren"
             'Call MsgBox("Info-Modus de-aktiviert")
         End If
@@ -27,6 +56,10 @@ Public Class Ribbon1
         With settingsfrm
             Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
         End With
+
+    End Sub
+
+    Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs) Handles timeMachineTab.Click
 
     End Sub
 End Class

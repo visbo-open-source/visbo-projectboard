@@ -30,10 +30,11 @@ Partial Class frmSettings
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.rdbPWD = New System.Windows.Forms.RadioButton()
-        Me.RadioButton1 = New System.Windows.Forms.RadioButton()
+        Me.rdbUserName = New System.Windows.Forms.RadioButton()
         Me.lblProtectField1 = New System.Windows.Forms.Label()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.btnChangeLanguage = New System.Windows.Forms.Button()
         Me.txtboxLanguage = New System.Windows.Forms.ComboBox()
         Me.lblLanguage = New System.Windows.Forms.Label()
         Me.Label5 = New System.Windows.Forms.Label()
@@ -51,7 +52,6 @@ Partial Class frmSettings
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnLanguageExp = New System.Windows.Forms.Button()
         Me.btnLanguageImp = New System.Windows.Forms.Button()
-        Me.btnChangeLanguage = New System.Windows.Forms.Button()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
@@ -128,6 +128,7 @@ Partial Class frmSettings
         'rdbPWD
         '
         Me.rdbPWD.AutoSize = True
+        Me.rdbPWD.Checked = True
         Me.rdbPWD.Location = New System.Drawing.Point(6, 6)
         Me.rdbPWD.Name = "rdbPWD"
         Me.rdbPWD.Size = New System.Drawing.Size(68, 17)
@@ -136,16 +137,15 @@ Partial Class frmSettings
         Me.rdbPWD.Text = "Passwort"
         Me.rdbPWD.UseVisualStyleBackColor = True
         '
-        'RadioButton1
+        'rdbUserName
         '
-        Me.RadioButton1.AutoSize = True
-        Me.RadioButton1.Location = New System.Drawing.Point(96, 6)
-        Me.RadioButton1.Name = "RadioButton1"
-        Me.RadioButton1.Size = New System.Drawing.Size(117, 17)
-        Me.RadioButton1.TabIndex = 33
-        Me.RadioButton1.TabStop = True
-        Me.RadioButton1.Text = "Domain-/Username"
-        Me.RadioButton1.UseVisualStyleBackColor = True
+        Me.rdbUserName.AutoSize = True
+        Me.rdbUserName.Location = New System.Drawing.Point(96, 6)
+        Me.rdbUserName.Name = "rdbUserName"
+        Me.rdbUserName.Size = New System.Drawing.Size(117, 17)
+        Me.rdbUserName.TabIndex = 33
+        Me.rdbUserName.Text = "Domain-/Username"
+        Me.rdbUserName.UseVisualStyleBackColor = True
         '
         'lblProtectField1
         '
@@ -186,6 +186,15 @@ Partial Class frmSettings
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Allgemein"
         Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'btnChangeLanguage
+        '
+        Me.btnChangeLanguage.Location = New System.Drawing.Point(183, 85)
+        Me.btnChangeLanguage.Name = "btnChangeLanguage"
+        Me.btnChangeLanguage.Size = New System.Drawing.Size(83, 40)
+        Me.btnChangeLanguage.TabIndex = 39
+        Me.btnChangeLanguage.Text = "Namen übersetzen"
+        Me.btnChangeLanguage.UseVisualStyleBackColor = True
         '
         'txtboxLanguage
         '
@@ -250,7 +259,7 @@ Partial Class frmSettings
         Me.TabPage2.Controls.Add(Me.lblProtectField2)
         Me.TabPage2.Controls.Add(Me.rdbPWD)
         Me.TabPage2.Controls.Add(Me.lblProtectField1)
-        Me.TabPage2.Controls.Add(Me.RadioButton1)
+        Me.TabPage2.Controls.Add(Me.rdbUserName)
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
@@ -279,6 +288,7 @@ Partial Class frmSettings
         '
         Me.frmProtectField1.Location = New System.Drawing.Point(96, 38)
         Me.frmProtectField1.Name = "frmProtectField1"
+        Me.frmProtectField1.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
         Me.frmProtectField1.Size = New System.Drawing.Size(180, 20)
         Me.frmProtectField1.TabIndex = 36
         '
@@ -354,15 +364,6 @@ Partial Class frmSettings
         Me.btnLanguageImp.Text = "Importieren"
         Me.btnLanguageImp.UseVisualStyleBackColor = True
         '
-        'btnChangeLanguage
-        '
-        Me.btnChangeLanguage.Location = New System.Drawing.Point(183, 85)
-        Me.btnChangeLanguage.Name = "btnChangeLanguage"
-        Me.btnChangeLanguage.Size = New System.Drawing.Size(83, 40)
-        Me.btnChangeLanguage.TabIndex = 39
-        Me.btnChangeLanguage.Text = "Namen übersetzen"
-        Me.btnChangeLanguage.UseVisualStyleBackColor = True
-        '
         'frmSettings
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -391,7 +392,7 @@ Partial Class frmSettings
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents rdbPWD As System.Windows.Forms.RadioButton
-    Friend WithEvents RadioButton1 As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbUserName As System.Windows.Forms.RadioButton
     Friend WithEvents lblProtectField1 As System.Windows.Forms.Label
     Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
     Friend WithEvents TabPage1 As System.Windows.Forms.TabPage
