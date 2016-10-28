@@ -12,6 +12,9 @@ Module Module1
     Friend currentSlide As PowerPoint.Slide
     Friend VisboProtected As Boolean = False
 
+    ' der Key ist der Name des Referenz-Shapes, zu dem der Marker gezeichnet wird , der Value ist der Name des Marker-Shapes 
+    Friend markerShpNames As New SortedList(Of String, String)
+
     ' wird gesetzt in Einstellungen 
     ' steuert, ob extended seach gemacht werden kann; wirkt auf Suchfeld (NAme, Original Name, Abkürzung, ..)  
     Friend extSearch As Boolean = False
@@ -111,6 +114,12 @@ Module Module1
 
     End Sub
 
+    Private Sub pptAPP_PresentationBeforeClose(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeClose
+        If VisboProtected Then
+            Call makeVisboShapesVisible(False)
+        End If
+    End Sub
+
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
         ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
 
@@ -118,6 +127,12 @@ Module Module1
             Call makeVisboShapesVisible(False)
         End If
 
+    End Sub
+
+    Private Sub pptAPP_PresentationCloseFinal(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationCloseFinal
+        'If Not Pres.Name.EndsWith(".pptx") Then
+        '    Call MsgBox("Alarm! unter falschem Namen gespeichert ... ")
+        'End If
     End Sub
 
     ''' <summary>
@@ -188,11 +203,18 @@ Module Module1
 
     End Sub
 
+    Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
+        If VisboProtected Then
+            Call makeVisboShapesVisible(False)
+        End If
+    End Sub
+
     Private Sub pptAPP_WindowSelectionChange(Sel As PowerPoint.Selection) Handles pptAPP.WindowSelectionChange
 
         'Dim relevantShape As PowerPoint.Shape
         Dim arrayOfNames() As String
         Dim relevantShapeNames As New Collection
+
 
         selectedPlanShapes = Nothing
 
@@ -201,21 +223,41 @@ Module Module1
 
             If Not IsNothing(shpRange) And visboInfoActivated Then
 
-                Call deleteMarkerShape()
+
                 ' es sind ein oder mehrere Shapes selektiert worden 
                 Dim i As Integer = 0
                 If shpRange.Count = 1 Then
+
+                    If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
+                        Call deleteMarkerShapes()
+                    ElseIf markerShpNames.Count > 1 Then
+                        Call deleteMarkerShapes(shpRange(1).Name)
+                    End If
+
                     ' prüfen, ob es ein Kommentar ist 
                     Dim tmpShape As PowerPoint.Shape = shpRange(1)
                     If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoComment Or _
                         (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoAutoShape And tmpShape.Name.Contains("§")) Then
                         Call markReferenceShape(tmpShape.Name)
                     End If
+                ElseIf shpRange.Count > 1 Then
+                    ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
+                    For Each tmpShape As PowerPoint.Shape In shpRange
+                        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoComment Or _
+                        (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoAutoShape And tmpShape.Name.Contains("§")) Then
+                            Call markReferenceShape(tmpShape.Name)
+                        End If
+                    Next
+                Else
+                    If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
+                        Call deleteMarkerShapes()
+                    End If
+
                 End If
 
                 For Each tmpShape As PowerPoint.Shape In shpRange
 
-                    
+
                     'If Not tmpShape.HasChart And Not tmpShape.HasTable Then
                     If tmpShape.Tags.Count > 0 Then
 
@@ -418,11 +460,6 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub markReferenceShape(ByVal shapeName As String)
         Dim tmpText As String = ""
-        Dim newLeft As Double
-        Dim newTop As Double
-        Dim newHeight As Double
-        Dim newWidth As Double
-        Dim markerShape As PowerPoint.Shape
 
         If shapeName.EndsWith(CStr(pptAnnotationType.ampelText)) Then
             Dim strLength As Integer = shapeName.Length
@@ -431,42 +468,7 @@ Module Module1
 
                 Try
                     Dim refShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpText)
-                    If Not IsNothing(refShape) Then
-                        With refShape
-                            'newLeft = .Left - 0.3 * refShape.Width
-                            'newTop = .Top - 0.3 * refShape.Height
-                            'newHeight = 1.6 * .Height
-                            'newWidth = 1.6 * .Width
-                            newHeight = 19
-                            newWidth = 13
-                            newLeft = .Left + 0.5 * (refShape.Width - newWidth)
-                            newTop = .Top - (newHeight + 2)
-                            
-                        End With
-
-                        Try
-                            markerShape = currentSlide.Shapes.Item(markerName)
-                            If Not IsNothing(markerShape) Then
-                                markerShape.Delete()
-                            End If
-                        Catch ex As Exception
-
-                        End Try
-
-                        ' jetzt wird das MarkerShape neu gezeichnet 
-                        'markerShape = currentSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeRectangle, _
-                        '                             newLeft, newTop, newWidth, newHeight)
-                        markerShape = currentSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeDownArrow, newLeft, newTop, newWidth, newHeight)
-                        With markerShape
-                            .Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
-                            .Fill.Transparency = 0.0
-                            .Line.Weight = 3
-                            .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                            .Line.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
-                            .Name = markerName
-                        End With
-
-                    End If
+                    Call createMarkerShapes(refShape)
                 Catch ex As Exception
 
                 End Try
@@ -477,15 +479,125 @@ Module Module1
     End Sub
 
     ''' <summary>
+    ''' erzeugt für jedes Shape in der angegebenen ShapeRange ein Marker Shape 
+    ''' </summary>
+    ''' <param name="pptShapes"></param>
+    ''' <remarks></remarks>
+    Friend Sub createMarkerShapes(Optional ByVal pptShape As PowerPoint.Shape = Nothing, _
+                                  Optional ByVal pptShapes As PowerPoint.ShapeRange = Nothing)
+
+
+        Dim tmpShapeRange As PowerPoint.ShapeRange
+
+        If Not IsNothing(pptShapes) Then
+            tmpShapeRange = pptShapes
+            For Each refShape As PowerPoint.Shape In tmpShapeRange
+                Call zeichneMarkerShape(refShape)
+            Next
+
+        ElseIf Not IsNothing(pptShape) Then
+            Call zeichneMarkerShape(pptShape)
+
+        Else
+            Exit Sub
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet für das übergebene Shape ein MarkerShape 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub zeichneMarkerShape(ByVal tmpShape As PowerPoint.Shape)
+
+        Dim newHeight As Single
+        Dim newWidth As Single
+        Dim newLeft As Single
+        Dim newTop As Single
+
+        Try
+            If Not IsNothing(tmpShape) Then
+
+                If Not markerShpNames.ContainsKey(tmpShape.Name) Then
+                    ' dann gibt es noch keinen Marker für dieses Shape ...  
+                    With tmpShape
+                        newHeight = 19
+                        newWidth = 13
+                        newLeft = .Left + 0.5 * (tmpShape.Width - newWidth)
+                        newTop = .Top - (newHeight + 2)
+                    End With
+
+                    Dim markerShape As PowerPoint.Shape = _
+                                currentSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeDownArrow, newLeft, newTop, newWidth, newHeight)
+
+                    With markerShape
+                        .Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
+                        .Fill.Transparency = 0.0
+                        .Line.Weight = 3
+                        .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                        .Line.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
+                    End With
+
+                    markerShpNames.Add(tmpShape.Name, markerShape.Name)
+
+                End If
+
+
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+    ''' <summary>
     ''' löscht das Marker Shape ( Laserpointer 
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub deleteMarkerShape()
+    Friend Sub deleteMarkerShapes(Optional ByVal exceptShpName As String = "")
         Try
-            Dim markerShape As PowerPoint.Shape = currentSlide.Shapes.Item(markerName)
-            If Not IsNothing(markerShape) Then
+            Dim exceptionKey As String = ""
+            Dim exceptionValue As String = ""
+
+            If markerShpNames.Count > 1 Or _
+                (markerShpNames.Count = 1 And exceptShpName.Length > 0 And _
+                Not markerShpNames.ContainsKey(exceptShpName)) Then
+
+                Dim arrayOfShpNames() As String
+
+                ' ist eine Ausnahme definiert ? 
+                If exceptShpName.Length > 0 Then
+                    If markerShpNames.ContainsKey(exceptShpName) Then
+                        exceptionKey = exceptShpName
+                        exceptionValue = markerShpNames.Item(exceptionKey)
+                        markerShpNames.Remove(exceptionKey)
+                    End If
+                End If
+
+                ReDim arrayOfShpNames(markerShpNames.Count - 1)
+
+                markerShpNames.Values.CopyTo(arrayOfShpNames, 0)
+
+
+                'Dim markerShape As PowerPoint.Shape = currentSlide.Shapes.Item(markerName)
+                Dim markerShapes As PowerPoint.ShapeRange = currentSlide.Shapes.Range(arrayOfShpNames)
+                If Not IsNothing(markerShapes) Then
+                    markerShapes.Delete()
+                End If
+                ' die Liste komplett bzw. bis auf die Ausnahme löschen
+                markerShpNames.Clear()
+                If exceptionKey.Length > 0 Then
+                    markerShpNames.Add(exceptionKey, exceptionValue)
+                End If
+
+            ElseIf markerShpNames.Count = 1 And exceptShpName.Length = 0 Then
+                Dim tmpName As String = markerShpNames.First.Value
+                Dim markerShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpName)
+                markerShpNames.Clear()
                 markerShape.Delete()
             End If
+
         Catch ex As Exception
 
         End Try

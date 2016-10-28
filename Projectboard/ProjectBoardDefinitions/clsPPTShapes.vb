@@ -87,7 +87,7 @@ Public Class clsPPTShapes
     End Sub
 
     ''' <summary>
-    ''' alle Hilfsshapes, die auf der aktuellen Sliede drauf sind, werden den entsprechenden 
+    ''' alle Hilfsshapes, die auf der aktuellen Slide drauf sind, werden den entsprechenden 
     ''' Klassen-Variablen zugewiesen  
     ''' </summary>
     ''' <remarks></remarks>

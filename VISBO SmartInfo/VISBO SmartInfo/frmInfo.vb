@@ -482,6 +482,12 @@
 
 
         If anzSelected >= 1 Then
+
+            ' wenn das erste Element selektiert wird udn die Anzahl Marker > 0 ist, dann müssen hier die MArker gelöscht werden 
+            If listboxNames.SelectedItems.Count = 1 And markerShpNames.Count > 0 Then
+                Call deleteMarkerShapes()
+            End If
+
             ReDim nameArrayO(anzSelected - 1)
 
             For i As Integer = 0 To anzSelected - 1
@@ -491,6 +497,20 @@
             Try
                 selectedPlanShapes = currentSlide.Shapes.Range(nameArrayO)
                 selectedPlanShapes.Select()
+
+                ' die WindowsSelection Change Routine gleich wieder verlassen ... damit die MArkerShapes nicht gleich wieder gelöscht werden 
+
+
+                If selectedPlanShapes.Count > 1 Then
+
+                    Call createMarkerShapes(pptShapes:=selectedPlanShapes)
+
+                ElseIf selectedPlanShapes.Count = 1 Then
+                    Call createMarkerShapes(pptShape:=selectedPlanShapes.Item(1))
+                End If
+
+
+
             Catch ex As Exception
 
             End Try
