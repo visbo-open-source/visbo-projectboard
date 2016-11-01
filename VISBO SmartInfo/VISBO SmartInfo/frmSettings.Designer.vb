@@ -46,7 +46,8 @@ Partial Class frmSettings
         Me.frmProtectField2 = New System.Windows.Forms.TextBox()
         Me.frmProtectField1 = New System.Windows.Forms.TextBox()
         Me.lblProtectField2 = New System.Windows.Forms.Label()
-        Me.TabPage3 = New System.Windows.Forms.TabPage()
+        Me.DBLoginPage = New System.Windows.Forms.TabPage()
+        Me.feedbackMessage = New System.Windows.Forms.Label()
         Me.btnDBabbr = New System.Windows.Forms.Button()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -55,7 +56,7 @@ Partial Class frmSettings
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
-        Me.TabPage3.SuspendLayout()
+        Me.DBLoginPage.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -95,7 +96,6 @@ Partial Class frmSettings
         Me.frmUserPWD.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
         Me.frmUserPWD.Size = New System.Drawing.Size(187, 20)
         Me.frmUserPWD.TabIndex = 27
-        Me.frmUserPWD.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         Me.frmUserPWD.UseSystemPasswordChar = True
         Me.frmUserPWD.WordWrap = False
         '
@@ -105,7 +105,6 @@ Partial Class frmSettings
         Me.frmUserName.Name = "frmUserName"
         Me.frmUserName.Size = New System.Drawing.Size(187, 20)
         Me.frmUserName.TabIndex = 26
-        Me.frmUserName.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         '
         'Label4
         '
@@ -160,7 +159,7 @@ Partial Class frmSettings
         '
         Me.TabControl1.Controls.Add(Me.TabPage1)
         Me.TabControl1.Controls.Add(Me.TabPage2)
-        Me.TabControl1.Controls.Add(Me.TabPage3)
+        Me.TabControl1.Controls.Add(Me.DBLoginPage)
         Me.TabControl1.Controls.Add(Me.TabPage4)
         Me.TabControl1.Location = New System.Drawing.Point(12, 12)
         Me.TabControl1.Name = "TabControl1"
@@ -301,20 +300,30 @@ Partial Class frmSettings
         Me.lblProtectField2.TabIndex = 35
         Me.lblProtectField2.Text = "Username"
         '
-        'TabPage3
+        'DBLoginPage
         '
-        Me.TabPage3.Controls.Add(Me.btnDBabbr)
-        Me.TabPage3.Controls.Add(Me.Label3)
-        Me.TabPage3.Controls.Add(Me.Label4)
-        Me.TabPage3.Controls.Add(Me.btnDBLogin)
-        Me.TabPage3.Controls.Add(Me.frmUserName)
-        Me.TabPage3.Controls.Add(Me.frmUserPWD)
-        Me.TabPage3.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage3.Name = "TabPage3"
-        Me.TabPage3.Size = New System.Drawing.Size(282, 141)
-        Me.TabPage3.TabIndex = 2
-        Me.TabPage3.Text = "Datenbank"
-        Me.TabPage3.UseVisualStyleBackColor = True
+        Me.DBLoginPage.Controls.Add(Me.feedbackMessage)
+        Me.DBLoginPage.Controls.Add(Me.btnDBabbr)
+        Me.DBLoginPage.Controls.Add(Me.Label3)
+        Me.DBLoginPage.Controls.Add(Me.Label4)
+        Me.DBLoginPage.Controls.Add(Me.btnDBLogin)
+        Me.DBLoginPage.Controls.Add(Me.frmUserName)
+        Me.DBLoginPage.Controls.Add(Me.frmUserPWD)
+        Me.DBLoginPage.Location = New System.Drawing.Point(4, 22)
+        Me.DBLoginPage.Name = "DBLoginPage"
+        Me.DBLoginPage.Size = New System.Drawing.Size(282, 141)
+        Me.DBLoginPage.TabIndex = 2
+        Me.DBLoginPage.Text = "Datenbank"
+        Me.DBLoginPage.UseVisualStyleBackColor = True
+        '
+        'feedbackMessage
+        '
+        Me.feedbackMessage.AutoSize = True
+        Me.feedbackMessage.Location = New System.Drawing.Point(37, 119)
+        Me.feedbackMessage.Name = "feedbackMessage"
+        Me.feedbackMessage.Size = New System.Drawing.Size(101, 13)
+        Me.feedbackMessage.TabIndex = 30
+        Me.feedbackMessage.Text = "Feedback-Message"
         '
         'btnDBabbr
         '
@@ -377,8 +386,8 @@ Partial Class frmSettings
         Me.TabPage1.PerformLayout()
         Me.TabPage2.ResumeLayout(False)
         Me.TabPage2.PerformLayout()
-        Me.TabPage3.ResumeLayout(False)
-        Me.TabPage3.PerformLayout()
+        Me.DBLoginPage.ResumeLayout(False)
+        Me.DBLoginPage.PerformLayout()
         Me.TabPage4.ResumeLayout(False)
         Me.TabPage4.PerformLayout()
         Me.ResumeLayout(False)
@@ -401,7 +410,7 @@ Partial Class frmSettings
     Friend WithEvents lbl_schrift As System.Windows.Forms.Label
     Friend WithEvents txtboxAbstandsEinheit As System.Windows.Forms.ComboBox
     Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
-    Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
+    Friend WithEvents DBLoginPage As System.Windows.Forms.TabPage
     Friend WithEvents btnDBabbr As System.Windows.Forms.Button
     Friend WithEvents btnProtect As System.Windows.Forms.Button
     Friend WithEvents frmProtectField2 As System.Windows.Forms.TextBox
@@ -414,4 +423,5 @@ Partial Class frmSettings
     Friend WithEvents btnLanguageExp As System.Windows.Forms.Button
     Friend WithEvents btnLanguageImp As System.Windows.Forms.Button
     Friend WithEvents btnChangeLanguage As System.Windows.Forms.Button
+    Friend WithEvents feedbackMessage As System.Windows.Forms.Label
 End Class

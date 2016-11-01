@@ -1,4 +1,9 @@
-﻿Public Class frmInfo
+﻿''' <summary>
+''' das Form Info wird in variabler Größe angezeigt: mit / ohne Ampel-Block, mit /ohne Search-Block
+''' es gibt zwei Methoden ampelblockVisibible und searchblockVisible, die die Elemente dann entsprechend positionieren und sichtbar machen 
+''' </summary>
+''' <remarks></remarks>
+Public Class frmInfo
 
     Friend abkuerzung As String
     Friend showSearchListBox As Boolean = False
@@ -47,8 +52,12 @@
                 .TabControl1.Height = Me.TabControl1.Height - deltaAmpel
                 .filterText.Top = .filterText.Top - deltaAmpel
                 .searchIcon.Top = .searchIcon.Top - deltaAmpel
+                .PictureMarker.Top = .PictureMarker.Top - deltaAmpel
+                .CheckBxMarker.Top = .CheckBxMarker.Top - deltaAmpel
                 .listboxNames.Top = .listboxNames.Top - deltaAmpel
                 .rdbName.Top = .rdbName.Top - deltaAmpel
+                .rdbLU.Top = .rdbLU.Top - deltaAmpel
+                .rdbMV.Top = .rdbMV.Top - deltaAmpel
                 .rdbOriginalName.Top = rdbOriginalName.Top - deltaAmpel
                 .rdbAbbrev.Top = rdbAbbrev.Top - deltaAmpel
                 .rdbBreadcrumb.Top = .rdbBreadcrumb.Top - deltaAmpel
@@ -59,8 +68,12 @@
                 .TabControl1.Height = Me.TabControl1.Height + deltaAmpel
                 .filterText.Top = .filterText.Top + deltaAmpel
                 .searchIcon.Top = .searchIcon.Top + deltaAmpel
+                .PictureMarker.Top = .PictureMarker.Top + deltaAmpel
+                .CheckBxMarker.Top = .CheckBxMarker.Top + deltaAmpel
                 .listboxNames.Top = .listboxNames.Top + deltaAmpel
                 .rdbName.Top = .rdbName.Top + deltaAmpel
+                .rdbLU.Top = .rdbLU.Top + deltaAmpel
+                .rdbMV.Top = .rdbMV.Top + deltaAmpel
                 .rdbOriginalName.Top = rdbOriginalName.Top + deltaAmpel
                 .rdbAbbrev.Top = rdbAbbrev.Top + deltaAmpel
                 .rdbBreadcrumb.Top = .rdbBreadcrumb.Top + deltaAmpel
@@ -80,23 +93,31 @@
     ''' </summary>
     ''' <param name="istSichtbar"></param>
     ''' <remarks></remarks>
-    Private Sub searchBoxVisible(ByVal istSichtbar As Boolean)
+    Private Sub searchBlockVisible(ByVal istSichtbar As Boolean)
 
         If Not istSichtbar Then
             ' es soll nicht sichtbar sein 
             Me.Height = Me.Height - deltaSearchBox
             filterText.Visible = False
+            PictureMarker.Visible = False
+            CheckBxMarker.Visible = False
             listboxNames.Visible = False
             rdbName.Visible = False
+            rdbLU.Visible = False
+            rdbMV.Visible = False
             rdbOriginalName.Visible = False
             rdbAbbrev.Visible = False
             rdbBreadcrumb.Visible = False
         Else
             Me.Height = Me.Height + deltaSearchBox
             filterText.Visible = True
+            PictureMarker.Visible = True
+            CheckBxMarker.Visible = True
             listboxNames.Visible = True
+            rdbName.Visible = True
+            rdbLU.Visible = True
+            rdbMV.Visible = True
             If extSearch Then
-                rdbName.Visible = True
                 rdbOriginalName.Visible = True
                 rdbAbbrev.Visible = True
                 rdbBreadcrumb.Visible = True
@@ -172,11 +193,12 @@
             End With
         End If
 
+        CheckBxMarker.Checked = showMarker
         ' Zu Beginn ist Ampel-Text und Ampel-Erläuterung nicht sichtbar 
         Call ampelBlockVisible(False)
 
         ' Zu Beginn ist die Searchbox nicht visible 
-        Call searchBoxVisible(False)
+        Call searchBlockVisible(False)
 
         dontFire = True
 
@@ -234,6 +256,10 @@
                 rdbCode = pptInfoType.sName
             ElseIf rdbBreadcrumb.Checked Then
                 rdbCode = pptInfoType.bCrumb
+            ElseIf rdbLU.Checked Then
+                rdbCode = pptInfoType.lUmfang
+            ElseIf rdbMV.Checked Then
+                rdbCode = pptInfoType.mvElement
             Else
                 rdbCode = pptInfoType.cName
             End If
@@ -275,9 +301,12 @@
                     Next
 
                     ' jetzt nach Farbcode ausdünnen ...
-                    If colorCode = 0 Or colorCode = 15 Then
-                        oNameCollection = smartSlideLists.getTNCollection(colorCode, oNameCollection)
-                    End If
+                    'If colorCode = 0 Or colorCode = 15 Then
+                    '    oNameCollection = smartSlideLists.getTNCollection(colorCode, oNameCollection)
+                    'End If
+                    ' das vorherige war doch falsch ... weil ja dann gar nichts aussortiert wurde ... 
+                    oNameCollection = smartSlideLists.getTNCollection(colorCode, oNameCollection)
+
 
                     ' was jetzt übrig bleibt, muss wieder in die Ander-Sprache zurückkonvertiert werden 
                     ' dann müssen die anders-sprachigen Namen in die Original Namen übersetzt und per Farb-Code gefiltert werden 
@@ -436,6 +465,13 @@
 
     End Sub
 
+    Private Sub listboxNames_DoubleClick(sender As Object, e As EventArgs) Handles listboxNames.DoubleClick
+        If rdbMV.Checked = True Then
+            ' jetzt kann der Erläuterungstext eingegeben werden ... 
+            Call MsgBox("Erläuterung eingeben ...")
+        End If
+    End Sub
+
     Private Sub listboxNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles listboxNames.SelectedIndexChanged
 
         ' es werden alle selektierten Namen als Shapes selektiert ....
@@ -457,6 +493,10 @@
             rdbCode = pptInfoType.sName
         ElseIf rdbBreadcrumb.Checked Then
             rdbCode = pptInfoType.bCrumb
+        ElseIf rdbLU.Checked Then
+            rdbCode = pptInfoType.lUmfang
+        ElseIf rdbMV.Checked Then
+            rdbCode = pptInfoType.mvElement
         Else
             rdbCode = pptInfoType.cName
         End If
@@ -500,16 +540,17 @@
 
                 ' die WindowsSelection Change Routine gleich wieder verlassen ... damit die MArkerShapes nicht gleich wieder gelöscht werden 
 
+                If showMarker Then
+                    If selectedPlanShapes.Count > 1 Then
 
-                If selectedPlanShapes.Count > 1 Then
+                        Call createMarkerShapes(pptShapes:=selectedPlanShapes)
 
-                    Call createMarkerShapes(pptShapes:=selectedPlanShapes)
+                    ElseIf selectedPlanShapes.Count = 1 Then
 
-                ElseIf selectedPlanShapes.Count = 1 Then
-                    Call createMarkerShapes(pptShape:=selectedPlanShapes.Item(1))
+                        Call createMarkerShapes(pptShape:=selectedPlanShapes.Item(1))
+
+                    End If
                 End If
-
-
 
             Catch ex As Exception
 
@@ -614,7 +655,8 @@
                 If Not IsNothing(selectedPlanShapes) Then
                     If selectedPlanShapes.Count = 1 Then
                         Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                        Me.elemName.Text = bestimmeElemText(tmpShape, True, False)
+                        Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
+                        Me.elemDate.Text = bestimmeElemDateText(tmpShape, showAbbrev.Checked)
                     End If
                 End If
 
@@ -624,7 +666,8 @@
 
                 If selectedPlanShapes.Count = 1 Then
                     Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                    Me.elemName.Text = bestimmeElemText(tmpShape, False, False)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
+                    Me.elemDate.Text = bestimmeElemDateText(tmpShape, showAbbrev.Checked)
                 End If
 
             End If
@@ -872,7 +915,7 @@
         End Try
 
     End Sub
-   
+
 
     Private Sub deleteDate_Click(sender As Object, e As EventArgs) Handles deleteDate.Click
         Try
@@ -947,10 +990,10 @@
         showSearchListBox = Not showSearchListBox
 
         If showSearchListBox Then
-            Call searchBoxVisible(True)
+            Call searchBlockVisible(True)
             Call erstelleListbox()
         Else
-            Call searchBoxVisible(False)
+            Call searchBlockVisible(False)
         End If
 
         dontFire = False
@@ -979,7 +1022,7 @@
                             Call annotatePlanShape(tmpShape, pptAnnotationType.ampelText, positionIndexPT)
                         End If
                     End If
-                    
+
 
                 Next
 
@@ -1006,5 +1049,37 @@
         Catch ex As Exception
 
         End Try
+    End Sub
+
+    Private Sub PictureMarker_Click(sender As Object, e As EventArgs) Handles PictureMarker.Click
+
+    End Sub
+
+    Private Sub CheckBxMarker_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBxMarker.CheckedChanged
+        If CheckBxMarker.Checked Then
+            ' alle selektierten Elemente jetzt mit Marker versehen
+            showMarker = True
+            Call createMarkerShapes(pptShapes:=selectedPlanShapes)
+        Else
+            showMarker = False
+            Call deleteMarkerShapes()
+        End If
+    End Sub
+
+    Private Sub rdbLU_CheckedChanged(sender As Object, e As EventArgs) Handles rdbLU.CheckedChanged
+
+        If rdbLU.Checked = True Then
+
+            Call erstelleListbox()
+
+        End If
+    End Sub
+
+    Private Sub rdbMV_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMV.CheckedChanged
+        If rdbMV.Checked = True Then
+
+            Call erstelleListbox()
+
+        End If
     End Sub
 End Class

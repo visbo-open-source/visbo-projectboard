@@ -73,12 +73,13 @@ Public Class clsPPTShapes
     ''' </summary>
     ''' <param name="shape"></param>
     ''' <remarks></remarks>
-    Private Sub loescheShape(ByRef shape As pptNS.Shape)
+    Private Sub makeShapeInvisible(ByRef shape As pptNS.Shape)
 
         If Not IsNothing(shape) Then
 
             Try
-                shape.Delete()
+                'shape.Delete()
+                shape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
             Catch ex As Exception
 
             End Try
@@ -290,7 +291,45 @@ Public Class clsPPTShapes
             x2Pos = Me.drawingAreaLeft + offset2 * Me.tagesbreite
         End If
 
+        ' '' Test Funktionen , eingeführt um die Rückwärtsrechnung Koordinaten->Datum zu überprüfen ... 
+        ''Dim tstStart As Date = calcStartDate(x1Pos)
+        ''If DateDiff(DateInterval.Day, startdate, tstStart) = 0 Then
+        ''    ' alles in Ordnung 
+        ''Else
+        ''    Call MsgBox("Unterschied: " & startdate.ToString & " versus " & tstStart.ToString)
+        ''End If
+
+        ''Dim tstEnde As Date = calcEndDate(x1Pos, x2Pos - x1Pos)
+        ''If DateDiff(DateInterval.Day, startdate, tstStart) = 0 Then
+        ''    ' alles in Ordnung 
+        ''Else
+        ''    Call MsgBox("Unterschied: " & enddate.ToString & " versus " & tstEnde.ToString)
+        ''End If
+
     End Sub
+
+    ''' <summary>
+    ''' berechnet für die angegebene Koordinate das zugehörige Datum 
+    ''' </summary>
+    ''' <param name="xPos"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcStartDate(ByVal xPos As Double) As Date
+        Dim tmpDate As Date = Me.PPTStartOFCalendar.AddDays(CInt((xPos - Me._drawingAreaLeft) / Me._tagesbreite))
+        calcStartDate = tmpDate
+    End Function
+
+    ''' <summary>
+    ''' berechnet für die angegebene Koordinate und Länge das zugehörige Datum 
+    ''' </summary>
+    ''' <param name="xPos"></param>
+    ''' <param name="width"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcEndDate(ByVal xPos As Double, ByVal width As Double) As Date
+        Dim tmpDate As Date = Me.PPTStartOFCalendar.AddDays(CInt((xPos + width - Me._drawingAreaLeft) / Me._tagesbreite))
+        calcEndDate = tmpDate
+    End Function
 
     Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer, _
                                    ByVal considerAll As Boolean)
@@ -360,7 +399,7 @@ Public Class clsPPTShapes
                     End With
                 End If
             End If
-            
+
 
         End If
 
@@ -453,7 +492,7 @@ Public Class clsPPTShapes
                     End With
                 End If
             End If
-            
+
 
         End If
 
@@ -1550,7 +1589,7 @@ Public Class clsPPTShapes
                 _projectListLeft = .Left + 10
             End With
         End If
-       
+
 
         ' bestimme KalenderArea
         If Not IsNothing(_calendarLineShape) Then
@@ -1631,7 +1670,7 @@ Public Class clsPPTShapes
                 ' dadurch werden die Koordinaten der Zeichenarea bestimmt 
                 ' wenn die Daten für den Kalender bereits bekannt sind, wird dort auch die Tagesbreite gesetzt 
                 Call bestimmeZeichenKoordinaten()
-               
+
 
             End If
         End Set
@@ -1778,46 +1817,46 @@ Public Class clsPPTShapes
     ' bestimmt Schriftart, Farbe, Größe der Segment Beschriftung (=Phasen der Hierarchie-Stude 1 eines Projektes)
     Public Property segmentVorlagenShape As pptNS.Shape
 
-    Public Sub deleteShapes(Optional ByVal whichOnes As String = "")
+    Public Sub setShapesInvisible(Optional ByVal whichOnes As String = "")
 
         If whichOnes = "" Then
-            Call loescheShape(_projectNameVorlagenShape)
-            Call loescheShape(_calendarLineShape)
-            Call loescheShape(_quarterMonthVorlagenShape)
-            Call loescheShape(_yearVorlagenShape)
-            Call loescheShape(_projectVorlagenShape)
-            Call loescheShape(_phaseVorlagenShape)
-            Call loescheShape(_milestoneVorlagenShape)
-            Call loescheShape(_ampelVorlagenShape)
-            Call loescheShape(_calendarYearSeparator)
-            Call loescheShape(_calendarQuartalSeparator)
-            Call loescheShape(_horizontalLineShape)
-            Call loescheShape(_legendLineShape)
-            Call loescheShape(_legendStartShape)
-            Call loescheShape(_legendTextVorlagenShape)
-            Call loescheShape(_legendPhaseVorlagenShape)
-            Call loescheShape(_legendMilestoneVorlagenShape)
+            Call makeShapeInvisible(_projectNameVorlagenShape)
+            Call makeShapeInvisible(_calendarLineShape)
+            Call makeShapeInvisible(_quarterMonthVorlagenShape)
+            Call makeShapeInvisible(_yearVorlagenShape)
+            Call makeShapeInvisible(_projectVorlagenShape)
+            Call makeShapeInvisible(_phaseVorlagenShape)
+            Call makeShapeInvisible(_milestoneVorlagenShape)
+            Call makeShapeInvisible(_ampelVorlagenShape)
+            Call makeShapeInvisible(_calendarYearSeparator)
+            Call makeShapeInvisible(_calendarQuartalSeparator)
+            Call makeShapeInvisible(_horizontalLineShape)
+            Call makeShapeInvisible(_legendLineShape)
+            Call makeShapeInvisible(_legendStartShape)
+            Call makeShapeInvisible(_legendTextVorlagenShape)
+            Call makeShapeInvisible(_legendPhaseVorlagenShape)
+            Call makeShapeInvisible(_legendMilestoneVorlagenShape)
 
             If Not IsNothing(_containerShape) Then
                 _containerShape.TextFrame2.TextRange.Text = ""
             End If
 
-            Call loescheShape(_calendarHeightShape)
-            Call loescheShape(_MsDescVorlagenShape)
-            Call loescheShape(_MsDateVorlagenShape)
-            Call loescheShape(_PhDescVorlagenShape)
-            Call loescheShape(_PhDateVorlagenShape)
-            Call loescheShape(_todayLineShape)
-            Call loescheShape(_calendarStepShape)
-            Call loescheShape(_calendarMarkShape)
-            Call loescheShape(_errorVorlagenShape)
-            Call loescheShape(_legendBuColorShape)
-            Call loescheShape(_buColorShape)
-            Call loescheShape(_rowDifferentiatorShape)
-            Call loescheShape(_phaseDelimiterShape)
-            Call loescheShape(_durationArrowShape)
-            Call loescheShape(_durationTextShape)
-            Call loescheShape(_segmentVorlagenShape)
+            Call makeShapeInvisible(_calendarHeightShape)
+            Call makeShapeInvisible(_MsDescVorlagenShape)
+            Call makeShapeInvisible(_MsDateVorlagenShape)
+            Call makeShapeInvisible(_PhDescVorlagenShape)
+            Call makeShapeInvisible(_PhDateVorlagenShape)
+            Call makeShapeInvisible(_todayLineShape)
+            Call makeShapeInvisible(_calendarStepShape)
+            Call makeShapeInvisible(_calendarMarkShape)
+            Call makeShapeInvisible(_errorVorlagenShape)
+            Call makeShapeInvisible(_legendBuColorShape)
+            Call makeShapeInvisible(_buColorShape)
+            Call makeShapeInvisible(_rowDifferentiatorShape)
+            Call makeShapeInvisible(_phaseDelimiterShape)
+            Call makeShapeInvisible(_durationArrowShape)
+            Call makeShapeInvisible(_durationTextShape)
+            Call makeShapeInvisible(_segmentVorlagenShape)
 
             'If Not IsNothing(_quarterMonthVorlagenShape) Then
             '    _quarterMonthVorlagenShape.Delete()

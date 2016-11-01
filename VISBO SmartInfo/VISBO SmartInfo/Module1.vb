@@ -1,4 +1,4 @@
-﻿
+﻿Imports ProjectBoardDefinitions
 Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -25,6 +25,9 @@ Module Module1
     ' gibt an, ob das Breadcrumb Feld gezeigt werden soll 
     Friend showBreadCrumbField As Boolean = False
 
+    ' gibt an, ob bei der suche die gefundenen Elemente mit AMrker angezeigt werden sollen oder nicht .. 
+    Friend showMarker As Boolean = False
+
     ' globale Variable, die angibt, ob ShortName gezeichnet werden soll 
     Friend showShortName As Boolean = False
     ' globlaela Variable, die anzeigt, ob Orginal Name gezeigt werden soll 
@@ -39,6 +42,8 @@ Module Module1
     Friend userName As String = ""
     Friend userPWD As String = ""
 
+    Friend noDBAccess As Boolean = True
+
     Friend defaultSprache As String = "Original"
     Friend selectedLanguage As String = defaultSprache
 
@@ -48,6 +53,10 @@ Module Module1
     Friend ampelnExistieren As Boolean = False
 
     Friend selectedPlanShapes As PowerPoint.ShapeRange = Nothing
+
+    ' hier werden PPTClander, linker Rand etc gehalten
+    ' mit dieser Klasse können auch die Berechnungen Koord->Datum und umgekehrt durchgeführt werden 
+    Friend slideCoordInfo As New clsPPTShapes
 
     Friend infoFrm As New frmInfo
 
@@ -78,6 +87,8 @@ Module Module1
         aColor = 4
         aExpl = 5
         appClass = 6
+        lUmfang = 7
+        mvElement = 8
     End Enum
 
     Friend Enum pptPositionType
@@ -101,7 +112,7 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_AfterPresentationOpen(Pres As PowerPoint.Presentation) Handles pptAPP.AfterPresentationOpen
 
-
+        ' gibt es eine Sprachen-Tabelle ? 
         Dim langGUID As String = pptAPP.ActivePresentation.Tags.Item("langGUID")
         If langGUID.Length > 0 Then
 
@@ -111,6 +122,16 @@ Module Module1
             languages = xml_deserialize(langXMLstring)
 
         End If
+
+        ' Abrufen von Datenbank URL und Datenbank-Name 
+        Try
+            dbName = Pres.Tags.Item("DBNAME")
+            dbURL = Pres.Tags.Item("DBURL")
+        Catch ex As Exception
+            dbName = ""
+            dbURL = ""
+        End Try
+        
 
     End Sub
 
@@ -169,6 +190,23 @@ Module Module1
             If currentSlide.Tags.Count > 0 Then
                 Try
                     If currentSlide.Tags.Item("SMART").Length > 0 Then
+
+
+                        Try
+
+                            slideCoordInfo = New clsPPTShapes
+                            slideCoordInfo.pptSlide = currentSlide
+
+                            With currentSlide
+                                Dim tmpSD As String = .Tags.Item("CALL")
+                                Dim tmpED As String = .Tags.Item("CALR")
+                                slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                            End With
+
+                        Catch ex As Exception
+                            slideCoordInfo = Nothing
+                        End Try
+                        
                         ' zurücksetzen der SmartSlideLists
                         smartSlideLists = New clsSmartSlideListen
                         bekannteIDs = New SortedList(Of Integer, String)
@@ -181,7 +219,9 @@ Module Module1
                                     ' invisible setzen ....
                                     'tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                                     bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
+
                                     Call aktualisiereSortedLists(tmpShape, smartSlideLists)
+
                                     If visboInfoActivated And tmpShape.Visible = False Then
                                         tmpShape.Visible = True
                                     End If
@@ -357,15 +397,16 @@ Module Module1
 
     End Sub
 
-
+    
     ''' <summary>
+    ''' wird nur für relevante Shapes aufgerufen
     ''' baut die intelligenten Listen für das Slide auf 
     ''' wenn das Shape keine Abkürzung hat, so wird eine aus der laufenden Nummer erzeugt ...
     ''' </summary>
     ''' <param name="tmpShape"></param>
     ''' <param name="smartSlideLists"></param>
     ''' <remarks></remarks>
-    Private Sub aktualisiereSortedLists(ByRef tmpShape As PowerPoint.Shape, _
+    Private Sub aktualisiereSortedLists(ByVal tmpShape As PowerPoint.Shape, _
                                             ByRef smartSlideLists As clsSmartSlideListen)
         Dim shapeName As String = tmpShape.Name
 
@@ -413,11 +454,103 @@ Module Module1
 
         End If
 
+        ' Lieferumfänge behandeln
+        tmpName = tmpShape.Tags.Item("LU")
+        If tmpName.Trim.Length > 0 Then
+            Try
+                Call smartSlideLists.addLU(tmpName, shapeName)
+            Catch ex As Exception
 
+            End Try
+        End If
+
+        ' wurde das Element verschoben ? 
+        ' SmartslideLists werden auch gleich mit aktualisiert ... 
+        Call checkShpOnManualMovement(tmpShape.Name)
 
 
     End Sub
 
+    ''' <summary>
+    ''' prüft, ob ein Shape manuell verschoben wurde; 
+    ''' wenn ja, wird dem Shape die Movement Info gleich in Tags mitgegeben und die SmartSlideLists werden aktualisiert  
+    ''' </summary>
+    ''' <param name="shapeName"></param>
+    ''' <remarks></remarks>
+    Private Sub checkShpOnManualMovement(ByVal shapeName As String)
+
+        Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
+        Dim defaultExplanation As String = "manuell verschoben durch " & My.User.Name
+
+        If IsNothing(tmpShape) Then
+            Exit Sub
+        Else
+
+            If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+                ' die Swimlane Texte sollen nicht berücksichtigt werden ...
+            Else
+                If pptShapeIsMilestone(tmpShape) Then
+                    Dim pptDate As Date = slideCoordInfo.calcStartDate(tmpShape.Left + 0.5 * tmpShape.Width)
+                    Dim planDate As Date = CDate(tmpShape.Tags.Item("ED"))
+
+                    If DateDiff(DateInterval.Day, pptDate, planDate) = 0 Then
+                        ' keine Änderung 
+                    Else
+
+                        With tmpShape
+                            If .Tags.Item("MVD").Length > 0 Then
+                                .Tags.Delete("MVD")
+                            End If
+
+                            .Tags.Add("MVD", pptDate.ToString)
+                            If .Tags.Item("MVE").Length > 0 Then
+                                ' nichts tun, der alte Wert soll erhalten bleiben 
+                            Else
+                                .Tags.Add("MVE", defaultExplanation)
+                            End If
+                        End With
+
+                        Call smartSlideLists.addMV(tmpShape.Name)
+                    End If
+                Else
+                    Dim pptSDate As Date = slideCoordInfo.calcStartDate(tmpShape.Left)
+                    Dim pptEDate As Date = slideCoordInfo.calcStartDate(tmpShape.Left + tmpShape.Width)
+                    Dim planSDate As Date = CDate(tmpShape.Tags.Item("SD"))
+                    Dim planEDate As Date = CDate(tmpShape.Tags.Item("ED"))
+
+                    If ((DateDiff(DateInterval.Day, pptSDate, planSDate) = 0) And _
+                        (DateDiff(DateInterval.Day, pptEDate, planEDate) = 0)) Then
+                        ' keine Änderung 
+                    Else
+
+                        With tmpShape
+
+                            If .Tags.Item("MVD").Length > 0 Then
+                                .Tags.Delete("MVD")
+                            End If
+
+                            .Tags.Add("MVD", pptSDate.ToString & "#" & pptEDate.ToString)
+                            ' wenn bereits eine Explanation existiert, soll die erhalten bleiben 
+                            If .Tags.Item("MVE").Length > 0 Then
+                                ' nichts tun, der alte Wert soll erhalten bleiben 
+                            Else
+                                .Tags.Add("MVE", defaultExplanation)
+                            End If
+
+                        End With
+
+                        Call smartSlideLists.addMV(tmpShape.Name)
+                    End If
+
+                End If
+            End If
+
+        End If
+
+        
+
+
+    End Sub
 
     ''' <summary>
     ''' gibt den Projekt-/Varianten Namen zurück
@@ -532,11 +665,12 @@ Module Module1
                                 currentSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeDownArrow, newLeft, newTop, newWidth, newHeight)
 
                     With markerShape
-                        .Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
+                        '.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbCornflowerBlue
+                        .Fill.ForeColor.RGB = visboFarbeBlau
                         .Fill.Transparency = 0.0
                         .Line.Weight = 3
                         .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                        .Line.ForeColor.RGB = PowerPoint.XlRgbColor.rgbOrange
+                        .Line.ForeColor.RGB = visboFarbeBlau
                     End With
 
                     markerShpNames.Add(tmpShape.Name, markerShape.Name)
@@ -935,7 +1069,7 @@ Module Module1
             curShape.Tags.Delete("AE")
         End If
 
-        curShape.Name = "copied relevant Shape"
+        curShape.Name = "copied_from" & curShape.Name
 
 
     End Sub
