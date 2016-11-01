@@ -52,6 +52,8 @@ Public Class frmInfo
                 .TabControl1.Height = Me.TabControl1.Height - deltaAmpel
                 .filterText.Top = .filterText.Top - deltaAmpel
                 .searchIcon.Top = .searchIcon.Top - deltaAmpel
+                .btnSendToHome.Top = .btnSendToHome.Top - deltaAmpel
+                .btnSentToChange.Top = .btnSentToChange.Top - deltaAmpel
                 .PictureMarker.Top = .PictureMarker.Top - deltaAmpel
                 .CheckBxMarker.Top = .CheckBxMarker.Top - deltaAmpel
                 .listboxNames.Top = .listboxNames.Top - deltaAmpel
@@ -68,6 +70,8 @@ Public Class frmInfo
                 .TabControl1.Height = Me.TabControl1.Height + deltaAmpel
                 .filterText.Top = .filterText.Top + deltaAmpel
                 .searchIcon.Top = .searchIcon.Top + deltaAmpel
+                .btnSendToHome.Top = .btnSendToHome.Top + deltaAmpel
+                .btnSentToChange.Top = .btnSentToChange.Top + deltaAmpel
                 .PictureMarker.Top = .PictureMarker.Top + deltaAmpel
                 .CheckBxMarker.Top = .CheckBxMarker.Top + deltaAmpel
                 .listboxNames.Top = .listboxNames.Top + deltaAmpel
@@ -1052,7 +1056,7 @@ Public Class frmInfo
     End Sub
 
     Private Sub PictureMarker_Click(sender As Object, e As EventArgs) Handles PictureMarker.Click
-
+        CheckBxMarker.Checked = Not CheckBxMarker.Checked
     End Sub
 
     Private Sub CheckBxMarker_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBxMarker.CheckedChanged
@@ -1081,5 +1085,80 @@ Public Class frmInfo
             Call erstelleListbox()
 
         End If
+    End Sub
+
+    ''' <summary>
+    ''' im Falle: Termin-Veränderungen zeigen: alle in der Listbox markierten Elemente werden "auf Home-Position" geschickt ; wenn kein Element selektiert ist, dann alle 
+    ''' im Fall eines selektierten Elements, das Home/Change Position hat: das oder die aktuell markierten Elemente werden zur Home-Position geschickt   
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnSendToHome_Click(sender As Object, e As EventArgs) Handles btnSendToHome.Click
+
+        Dim doItAll As Boolean = False
+        If Not IsNothing(selectedPlanShapes) Then
+            If selectedPlanShapes.Count > 0 Then
+                ' alle selektierten Elemente zur Home-Position schicken 
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+                    If isRelevantShape(tmpShape) Then
+                        Call sentToHomePosition(tmpShape)
+                    End If
+                Next
+            Else
+                doItAll = True
+            End If
+        Else
+            doItAll = True
+        End If
+
+        If doItAll Then
+            ' alle zur Home-Position schicken ...
+            For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+                If isRelevantShape(tmpShape) Then
+                    Call sentToHomePosition(tmpShape)
+                End If
+            Next
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' im Falle: Termin-Veränderungen zeigen: alle in der Listbox markierten Elemente werden "auf Changed-Position" geschickt ; wenn kein Element selektiert ist, dann alle 
+    ''' im Fall eines selektierten Elements, das Home/Change Position hat: das oder die aktuell markierten Elemente werden zur Changed-Position geschickt   
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnSentToChange_Click(sender As Object, e As EventArgs) Handles btnSentToChange.Click
+
+        Dim doItAll As Boolean = False
+        If Not IsNothing(selectedPlanShapes) Then
+            If selectedPlanShapes.Count > 0 Then
+                ' alle selektierten Elemente zur Home-Position schicken 
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+
+                    If isRelevantShape(tmpShape) Then
+                        Call sentToChangedPosition(tmpShape)
+                    End If
+
+                Next
+            Else
+                doItAll = True
+                
+            End If
+        Else
+            doItAll = True
+        End If
+
+        If doItAll Then
+            ' alle zur Home-Position schicken ...
+            For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+                If isRelevantShape(tmpShape) Then
+                    Call sentToChangedPosition(tmpShape)
+                End If
+            Next
+        End If
+
     End Sub
 End Class

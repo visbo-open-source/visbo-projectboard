@@ -553,6 +553,132 @@ Module Module1
     End Sub
 
     ''' <summary>
+    ''' wird nur aufgerufen für relevant Shapes
+    ''' positioniert ein Shape auf seine "Home"-Position, wenn es nicht ohnehin schon dort ist ... 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub sentToHomePosition(ByVal tmpShape As PowerPoint.Shape)
+
+        Dim homeSDate As Date
+        Dim homeEDate As Date
+        Dim x1Pos As Double, x2Pos As Double
+
+        ' Prüfen, ob Text Box , wenn ja, gleich Exit 
+        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+            ' nichts tun 
+        Else
+            If pptShapeIsMilestone(tmpShape) Then
+
+                With tmpShape
+                    If .Tags.Item("MVD").Length > 0 Then
+                        ' nur dann muss was nach Hause geschickt werden 
+                        Try
+                            ' ED existiert - das wird in pptShapeisMilestone geprüft 
+                            homeEDate = CDate(.Tags.Item("ED"))
+                            Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
+                            ' Positionieren auf Home ...
+                            .Left = CSng(x1Pos) - .Width / 2
+
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+                End With
+
+            ElseIf pptShapeIsPhase(tmpShape) Then
+
+                With tmpShape
+                    If .Tags.Item("MVD").Length > 0 Then
+                        ' nur dann muss was nach Hause geschickt werden 
+                        Try
+                            ' SD, ED existieren - das wird in pptShapeisPhase geprüft 
+                            homeSDate = CDate(.Tags.Item("SD"))
+                            homeEDate = CDate(.Tags.Item("ED"))
+                            Call slideCoordInfo.calculatePPTx1x2(homeSDate, homeEDate, x1Pos, x2Pos)
+                            ' Positionieren auf Home
+                            .Left = CSng(x1Pos)
+                            .Width = CSng(x2Pos - x1Pos)
+
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+                End With
+            End If
+            
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' wird nur aufgerufen für relevant Shapes
+    ''' positioniert ein Shape auf seine "Changed"-Position, wenn es denn eine gibt  ... 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub sentToChangedPosition(ByVal tmpShape As PowerPoint.Shape)
+
+        Dim homeSDate As Date
+        Dim homeEDate As Date
+        Dim x1Pos As Double, x2Pos As Double
+        Dim tmpstr() As String
+
+        ' Prüfen, ob Text Box , wenn ja, gleich Exit 
+        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+            ' nichts tun 
+        Else
+            If pptShapeIsMilestone(tmpShape) Then
+
+                With tmpShape
+                    If .Tags.Item("MVD").Length > 0 Then
+                        ' nur dann muss was nach Hause geschickt werden 
+                        Try
+                            ' ED existiert - das wird in pptShapeisMilestone geprüft 
+                            tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
+                            homeEDate = CDate(tmpstr(0))
+                            Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
+                            ' Positionieren auf Home ...
+                            .Left = CSng(x1Pos) - .Width / 2
+
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+                End With
+
+            ElseIf pptShapeIsPhase(tmpShape) Then
+
+                With tmpShape
+                    If .Tags.Item("MVD").Length > 0 Then
+                        ' nur dann muss was nach Hause geschickt werden 
+                        Try
+                            ' SD, ED existieren - das wird in pptShapeisPhase geprüft 
+                            tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
+
+                            If tmpstr.Length = 2 Then
+                                homeSDate = CDate(tmpstr(0))
+                                homeEDate = CDate(tmpstr(1))
+                                Call slideCoordInfo.calculatePPTx1x2(homeSDate, homeEDate, x1Pos, x2Pos)
+                                ' Positionieren auf Home
+                                .Left = CSng(x1Pos)
+                                .Width = CSng(x2Pos - x1Pos)
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+                End With
+            End If
+
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' gibt den Projekt-/Varianten Namen zurück
     ''' ShapeName ist aufgebaut (pName#variantName)ElemID  
     ''' </summary>
@@ -812,7 +938,7 @@ Module Module1
     End Function
 
     ''' <summary>
-    ''' entscheidet, ob es sich um einen Meilenstein oder eine Phase handelt
+    ''' entscheidet, ob es sich um einen Meilenstein handelt
     ''' Kriterium ist: Anzahl Tags > 0 und Startdate = Nothing, Enddate nicht gleich Nothing
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -840,6 +966,34 @@ Module Module1
             End If
         Else
             pptShapeIsMilestone = False
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' entscheidet, ob es sich um einen Meilenstein handelt
+    ''' Kriterium ist: Anzahl Tags > 0 und Startdate, EndDate ungleich Nothing
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pptShapeIsPhase(ByVal curShape As PowerPoint.Shape) As Boolean
+
+
+        If curShape.Tags.Count > 0 Then
+            Dim anfang As String = curShape.Tags.Item("SD")
+            Dim ende As String = curShape.Tags.Item("ED")
+
+
+            If anfang.Length > 0 And ende.Length > 0 Then
+                
+
+                pptShapeIsPhase = True
+            Else
+                pptShapeIsPhase = False
+            End If
+        Else
+            pptShapeIsPhase = False
         End If
 
     End Function

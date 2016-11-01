@@ -24,20 +24,12 @@ Partial Class frmInfo
     Private Sub InitializeComponent()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.deleteAmpel = New System.Windows.Forms.Button()
-        Me.writeAmpel = New System.Windows.Forms.Button()
         Me.ampelText = New System.Windows.Forms.TextBox()
         Me.fullBreadCrumb = New System.Windows.Forms.TextBox()
-        Me.positionDateButton = New System.Windows.Forms.Button()
-        Me.deleteDate = New System.Windows.Forms.Button()
-        Me.writeDate = New System.Windows.Forms.Button()
         Me.elemDate = New System.Windows.Forms.TextBox()
-        Me.positionTextButton = New System.Windows.Forms.Button()
-        Me.deleteText = New System.Windows.Forms.Button()
         Me.showOrginalName = New System.Windows.Forms.CheckBox()
         Me.elemName = New System.Windows.Forms.TextBox()
         Me.showAbbrev = New System.Windows.Forms.CheckBox()
-        Me.writeText = New System.Windows.Forms.Button()
         Me.TabPage2 = New System.Windows.Forms.TabPage()
         Me.lblAmpeln = New System.Windows.Forms.Label()
         Me.shwRedLight = New System.Windows.Forms.CheckBox()
@@ -51,10 +43,20 @@ Partial Class frmInfo
         Me.rdbOriginalName = New System.Windows.Forms.RadioButton()
         Me.rdbName = New System.Windows.Forms.RadioButton()
         Me.CheckBxMarker = New System.Windows.Forms.CheckBox()
-        Me.PictureMarker = New System.Windows.Forms.PictureBox()
-        Me.searchIcon = New System.Windows.Forms.Button()
         Me.rdbLU = New System.Windows.Forms.RadioButton()
         Me.rdbMV = New System.Windows.Forms.RadioButton()
+        Me.btnSentToChange = New System.Windows.Forms.Button()
+        Me.btnSendToHome = New System.Windows.Forms.Button()
+        Me.PictureMarker = New System.Windows.Forms.PictureBox()
+        Me.searchIcon = New System.Windows.Forms.Button()
+        Me.deleteAmpel = New System.Windows.Forms.Button()
+        Me.writeAmpel = New System.Windows.Forms.Button()
+        Me.positionDateButton = New System.Windows.Forms.Button()
+        Me.deleteDate = New System.Windows.Forms.Button()
+        Me.writeDate = New System.Windows.Forms.Button()
+        Me.positionTextButton = New System.Windows.Forms.Button()
+        Me.deleteText = New System.Windows.Forms.Button()
+        Me.writeText = New System.Windows.Forms.Button()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -94,33 +96,15 @@ Partial Class frmInfo
         Me.TabPage1.Text = "Information"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
-        'deleteAmpel
-        '
-        Me.deleteAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteAmpel.Location = New System.Drawing.Point(427, 114)
-        Me.deleteAmpel.Name = "deleteAmpel"
-        Me.deleteAmpel.Size = New System.Drawing.Size(30, 26)
-        Me.deleteAmpel.TabIndex = 31
-        Me.deleteAmpel.UseVisualStyleBackColor = True
-        '
-        'writeAmpel
-        '
-        Me.writeAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeAmpel.Location = New System.Drawing.Point(487, 114)
-        Me.writeAmpel.Name = "writeAmpel"
-        Me.writeAmpel.Size = New System.Drawing.Size(30, 26)
-        Me.writeAmpel.TabIndex = 30
-        Me.writeAmpel.UseVisualStyleBackColor = True
-        '
         'ampelText
         '
         Me.ampelText.Enabled = False
         Me.ampelText.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ampelText.Location = New System.Drawing.Point(20, 102)
+        Me.ampelText.Location = New System.Drawing.Point(14, 102)
         Me.ampelText.Multiline = True
         Me.ampelText.Name = "ampelText"
         Me.ampelText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.ampelText.Size = New System.Drawing.Size(401, 51)
+        Me.ampelText.Size = New System.Drawing.Size(407, 51)
         Me.ampelText.TabIndex = 29
         '
         'fullBreadCrumb
@@ -128,72 +112,27 @@ Partial Class frmInfo
         Me.fullBreadCrumb.BackColor = System.Drawing.SystemColors.Window
         Me.fullBreadCrumb.Enabled = False
         Me.fullBreadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.fullBreadCrumb.Location = New System.Drawing.Point(20, 55)
+        Me.fullBreadCrumb.Location = New System.Drawing.Point(14, 55)
         Me.fullBreadCrumb.Name = "fullBreadCrumb"
         Me.fullBreadCrumb.ReadOnly = True
         Me.fullBreadCrumb.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.fullBreadCrumb.Size = New System.Drawing.Size(401, 20)
+        Me.fullBreadCrumb.Size = New System.Drawing.Size(407, 20)
         Me.fullBreadCrumb.TabIndex = 28
         Me.fullBreadCrumb.Visible = False
-        '
-        'positionDateButton
-        '
-        Me.positionDateButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_south
-        Me.positionDateButton.Location = New System.Drawing.Point(457, 76)
-        Me.positionDateButton.Name = "positionDateButton"
-        Me.positionDateButton.Size = New System.Drawing.Size(30, 26)
-        Me.positionDateButton.TabIndex = 27
-        Me.positionDateButton.UseVisualStyleBackColor = True
-        '
-        'deleteDate
-        '
-        Me.deleteDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteDate.Location = New System.Drawing.Point(427, 76)
-        Me.deleteDate.Name = "deleteDate"
-        Me.deleteDate.Size = New System.Drawing.Size(30, 26)
-        Me.deleteDate.TabIndex = 26
-        Me.deleteDate.UseVisualStyleBackColor = True
-        '
-        'writeDate
-        '
-        Me.writeDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeDate.Location = New System.Drawing.Point(487, 76)
-        Me.writeDate.Name = "writeDate"
-        Me.writeDate.Size = New System.Drawing.Size(30, 26)
-        Me.writeDate.TabIndex = 25
-        Me.writeDate.UseVisualStyleBackColor = True
         '
         'elemDate
         '
         Me.elemDate.Enabled = False
         Me.elemDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.elemDate.Location = New System.Drawing.Point(20, 77)
+        Me.elemDate.Location = New System.Drawing.Point(14, 77)
         Me.elemDate.Name = "elemDate"
-        Me.elemDate.Size = New System.Drawing.Size(401, 22)
+        Me.elemDate.Size = New System.Drawing.Size(407, 22)
         Me.elemDate.TabIndex = 24
-        '
-        'positionTextButton
-        '
-        Me.positionTextButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_north
-        Me.positionTextButton.Location = New System.Drawing.Point(457, 30)
-        Me.positionTextButton.Name = "positionTextButton"
-        Me.positionTextButton.Size = New System.Drawing.Size(30, 26)
-        Me.positionTextButton.TabIndex = 23
-        Me.positionTextButton.UseVisualStyleBackColor = True
-        '
-        'deleteText
-        '
-        Me.deleteText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteText.Location = New System.Drawing.Point(427, 30)
-        Me.deleteText.Name = "deleteText"
-        Me.deleteText.Size = New System.Drawing.Size(30, 26)
-        Me.deleteText.TabIndex = 22
-        Me.deleteText.UseVisualStyleBackColor = True
         '
         'showOrginalName
         '
         Me.showOrginalName.AutoSize = True
-        Me.showOrginalName.Location = New System.Drawing.Point(121, 8)
+        Me.showOrginalName.Location = New System.Drawing.Point(110, 8)
         Me.showOrginalName.Name = "showOrginalName"
         Me.showOrginalName.Size = New System.Drawing.Size(92, 17)
         Me.showOrginalName.TabIndex = 21
@@ -205,30 +144,21 @@ Partial Class frmInfo
         '
         Me.elemName.Enabled = False
         Me.elemName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.elemName.Location = New System.Drawing.Point(20, 31)
+        Me.elemName.Location = New System.Drawing.Point(14, 31)
         Me.elemName.Name = "elemName"
         Me.elemName.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.elemName.Size = New System.Drawing.Size(401, 22)
+        Me.elemName.Size = New System.Drawing.Size(407, 22)
         Me.elemName.TabIndex = 18
         '
         'showAbbrev
         '
         Me.showAbbrev.AutoSize = True
-        Me.showAbbrev.Location = New System.Drawing.Point(20, 8)
+        Me.showAbbrev.Location = New System.Drawing.Point(14, 8)
         Me.showAbbrev.Name = "showAbbrev"
         Me.showAbbrev.Size = New System.Drawing.Size(77, 17)
         Me.showAbbrev.TabIndex = 20
         Me.showAbbrev.Text = "Abkürzung"
         Me.showAbbrev.UseVisualStyleBackColor = True
-        '
-        'writeText
-        '
-        Me.writeText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeText.Location = New System.Drawing.Point(487, 30)
-        Me.writeText.Name = "writeText"
-        Me.writeText.Size = New System.Drawing.Size(30, 26)
-        Me.writeText.TabIndex = 19
-        Me.writeText.UseVisualStyleBackColor = True
         '
         'TabPage2
         '
@@ -243,17 +173,17 @@ Partial Class frmInfo
         'lblAmpeln
         '
         Me.lblAmpeln.AutoSize = True
-        Me.lblAmpeln.Location = New System.Drawing.Point(353, 14)
+        Me.lblAmpeln.Location = New System.Drawing.Point(437, 13)
         Me.lblAmpeln.Name = "lblAmpeln"
-        Me.lblAmpeln.Size = New System.Drawing.Size(79, 13)
+        Me.lblAmpeln.Size = New System.Drawing.Size(45, 13)
         Me.lblAmpeln.TabIndex = 1
-        Me.lblAmpeln.Text = "Ampeln zeigen:"
+        Me.lblAmpeln.Text = "Ampeln:"
         '
         'shwRedLight
         '
         Me.shwRedLight.AutoSize = True
         Me.shwRedLight.BackColor = System.Drawing.Color.Firebrick
-        Me.shwRedLight.Location = New System.Drawing.Point(534, 13)
+        Me.shwRedLight.Location = New System.Drawing.Point(533, 12)
         Me.shwRedLight.Name = "shwRedLight"
         Me.shwRedLight.Size = New System.Drawing.Size(15, 14)
         Me.shwRedLight.TabIndex = 36
@@ -263,7 +193,7 @@ Partial Class frmInfo
         '
         Me.shwYellowLight.AutoSize = True
         Me.shwYellowLight.BackColor = System.Drawing.Color.Yellow
-        Me.shwYellowLight.Location = New System.Drawing.Point(503, 13)
+        Me.shwYellowLight.Location = New System.Drawing.Point(515, 12)
         Me.shwYellowLight.Name = "shwYellowLight"
         Me.shwYellowLight.Size = New System.Drawing.Size(15, 14)
         Me.shwYellowLight.TabIndex = 35
@@ -273,7 +203,7 @@ Partial Class frmInfo
         '
         Me.shwGreenLight.AutoSize = True
         Me.shwGreenLight.BackColor = System.Drawing.Color.LawnGreen
-        Me.shwGreenLight.Location = New System.Drawing.Point(470, 13)
+        Me.shwGreenLight.Location = New System.Drawing.Point(497, 12)
         Me.shwGreenLight.Name = "shwGreenLight"
         Me.shwGreenLight.Size = New System.Drawing.Size(15, 14)
         Me.shwGreenLight.TabIndex = 34
@@ -282,7 +212,7 @@ Partial Class frmInfo
         'shwOhneLight
         '
         Me.shwOhneLight.AutoSize = True
-        Me.shwOhneLight.Location = New System.Drawing.Point(441, 13)
+        Me.shwOhneLight.Location = New System.Drawing.Point(479, 12)
         Me.shwOhneLight.Name = "shwOhneLight"
         Me.shwOhneLight.Size = New System.Drawing.Size(15, 14)
         Me.shwOhneLight.TabIndex = 33
@@ -295,7 +225,7 @@ Partial Class frmInfo
         Me.listboxNames.Location = New System.Drawing.Point(12, 232)
         Me.listboxNames.Name = "listboxNames"
         Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.listboxNames.Size = New System.Drawing.Size(538, 173)
+        Me.listboxNames.Size = New System.Drawing.Size(536, 173)
         Me.listboxNames.Sorted = True
         Me.listboxNames.TabIndex = 38
         '
@@ -353,29 +283,11 @@ Partial Class frmInfo
         'CheckBxMarker
         '
         Me.CheckBxMarker.AutoSize = True
-        Me.CheckBxMarker.Location = New System.Drawing.Point(451, 210)
+        Me.CheckBxMarker.Location = New System.Drawing.Point(407, 12)
         Me.CheckBxMarker.Name = "CheckBxMarker"
         Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
         Me.CheckBxMarker.TabIndex = 43
         Me.CheckBxMarker.UseVisualStyleBackColor = True
-        '
-        'PictureMarker
-        '
-        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(467, 209)
-        Me.PictureMarker.Name = "PictureMarker"
-        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
-        Me.PictureMarker.TabIndex = 32
-        Me.PictureMarker.TabStop = False
-        '
-        'searchIcon
-        '
-        Me.searchIcon.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view2
-        Me.searchIcon.Location = New System.Drawing.Point(503, 203)
-        Me.searchIcon.Name = "searchIcon"
-        Me.searchIcon.Size = New System.Drawing.Size(30, 26)
-        Me.searchIcon.TabIndex = 29
-        Me.searchIcon.UseVisualStyleBackColor = True
         '
         'rdbLU
         '
@@ -397,15 +309,125 @@ Partial Class frmInfo
         Me.rdbMV.Text = "Termin-Änderungen"
         Me.rdbMV.UseVisualStyleBackColor = True
         '
+        'btnSentToChange
+        '
+        Me.btnSentToChange.Image = Global.VISBO_SmartInfo.My.Resources.Resources.replace2
+        Me.btnSentToChange.Location = New System.Drawing.Point(473, 203)
+        Me.btnSentToChange.Name = "btnSentToChange"
+        Me.btnSentToChange.Size = New System.Drawing.Size(30, 26)
+        Me.btnSentToChange.TabIndex = 32
+        Me.btnSentToChange.UseVisualStyleBackColor = True
+        '
+        'btnSendToHome
+        '
+        Me.btnSendToHome.Image = Global.VISBO_SmartInfo.My.Resources.Resources.home
+        Me.btnSendToHome.Location = New System.Drawing.Point(443, 203)
+        Me.btnSendToHome.Name = "btnSendToHome"
+        Me.btnSendToHome.Size = New System.Drawing.Size(30, 26)
+        Me.btnSendToHome.TabIndex = 32
+        Me.btnSendToHome.UseVisualStyleBackColor = True
+        '
+        'PictureMarker
+        '
+        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
+        Me.PictureMarker.Location = New System.Drawing.Point(393, 11)
+        Me.PictureMarker.Name = "PictureMarker"
+        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
+        Me.PictureMarker.TabIndex = 32
+        Me.PictureMarker.TabStop = False
+        '
+        'searchIcon
+        '
+        Me.searchIcon.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view2
+        Me.searchIcon.Location = New System.Drawing.Point(503, 203)
+        Me.searchIcon.Name = "searchIcon"
+        Me.searchIcon.Size = New System.Drawing.Size(30, 26)
+        Me.searchIcon.TabIndex = 29
+        Me.searchIcon.UseVisualStyleBackColor = True
+        '
+        'deleteAmpel
+        '
+        Me.deleteAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
+        Me.deleteAmpel.Location = New System.Drawing.Point(427, 114)
+        Me.deleteAmpel.Name = "deleteAmpel"
+        Me.deleteAmpel.Size = New System.Drawing.Size(30, 26)
+        Me.deleteAmpel.TabIndex = 31
+        Me.deleteAmpel.UseVisualStyleBackColor = True
+        '
+        'writeAmpel
+        '
+        Me.writeAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
+        Me.writeAmpel.Location = New System.Drawing.Point(487, 114)
+        Me.writeAmpel.Name = "writeAmpel"
+        Me.writeAmpel.Size = New System.Drawing.Size(30, 26)
+        Me.writeAmpel.TabIndex = 30
+        Me.writeAmpel.UseVisualStyleBackColor = True
+        '
+        'positionDateButton
+        '
+        Me.positionDateButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_south
+        Me.positionDateButton.Location = New System.Drawing.Point(457, 76)
+        Me.positionDateButton.Name = "positionDateButton"
+        Me.positionDateButton.Size = New System.Drawing.Size(30, 26)
+        Me.positionDateButton.TabIndex = 27
+        Me.positionDateButton.UseVisualStyleBackColor = True
+        '
+        'deleteDate
+        '
+        Me.deleteDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
+        Me.deleteDate.Location = New System.Drawing.Point(427, 76)
+        Me.deleteDate.Name = "deleteDate"
+        Me.deleteDate.Size = New System.Drawing.Size(30, 26)
+        Me.deleteDate.TabIndex = 26
+        Me.deleteDate.UseVisualStyleBackColor = True
+        '
+        'writeDate
+        '
+        Me.writeDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
+        Me.writeDate.Location = New System.Drawing.Point(487, 76)
+        Me.writeDate.Name = "writeDate"
+        Me.writeDate.Size = New System.Drawing.Size(30, 26)
+        Me.writeDate.TabIndex = 25
+        Me.writeDate.UseVisualStyleBackColor = True
+        '
+        'positionTextButton
+        '
+        Me.positionTextButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_north
+        Me.positionTextButton.Location = New System.Drawing.Point(457, 30)
+        Me.positionTextButton.Name = "positionTextButton"
+        Me.positionTextButton.Size = New System.Drawing.Size(30, 26)
+        Me.positionTextButton.TabIndex = 23
+        Me.positionTextButton.UseVisualStyleBackColor = True
+        '
+        'deleteText
+        '
+        Me.deleteText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
+        Me.deleteText.Location = New System.Drawing.Point(427, 30)
+        Me.deleteText.Name = "deleteText"
+        Me.deleteText.Size = New System.Drawing.Size(30, 26)
+        Me.deleteText.TabIndex = 22
+        Me.deleteText.UseVisualStyleBackColor = True
+        '
+        'writeText
+        '
+        Me.writeText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
+        Me.writeText.Location = New System.Drawing.Point(487, 30)
+        Me.writeText.Name = "writeText"
+        Me.writeText.Size = New System.Drawing.Size(30, 26)
+        Me.writeText.TabIndex = 19
+        Me.writeText.UseVisualStyleBackColor = True
+        '
         'frmInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(566, 432)
+        Me.Controls.Add(Me.CheckBxMarker)
+        Me.Controls.Add(Me.btnSentToChange)
+        Me.Controls.Add(Me.btnSendToHome)
         Me.Controls.Add(Me.rdbMV)
         Me.Controls.Add(Me.rdbLU)
         Me.Controls.Add(Me.PictureMarker)
-        Me.Controls.Add(Me.CheckBxMarker)
         Me.Controls.Add(Me.rdbBreadcrumb)
         Me.Controls.Add(Me.rdbAbbrev)
         Me.Controls.Add(Me.rdbOriginalName)
@@ -463,4 +485,6 @@ Partial Class frmInfo
     Friend WithEvents PictureMarker As System.Windows.Forms.PictureBox
     Friend WithEvents rdbLU As System.Windows.Forms.RadioButton
     Friend WithEvents rdbMV As System.Windows.Forms.RadioButton
+    Friend WithEvents btnSendToHome As System.Windows.Forms.Button
+    Friend WithEvents btnSentToChange As System.Windows.Forms.Button
 End Class
