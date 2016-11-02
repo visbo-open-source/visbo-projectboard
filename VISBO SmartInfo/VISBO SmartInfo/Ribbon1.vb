@@ -8,10 +8,13 @@ Public Class Ribbon1
 
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
+        Dim alreadyProtected As Boolean = VisboProtected
         visboInfoActivated = Not visboInfoActivated
+
         If visboInfoActivated Then
 
-            If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
+            If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" And _
+                Not alreadyProtected Then
                 ' Formular zur Password Eingabe aufrufen 
                 VisboProtected = True
 
@@ -26,7 +29,8 @@ Public Class Ribbon1
                 End If
 
                 ' if richtig 
-            ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
+            ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" And _
+                Not alreadyProtected Then
                 ' überprüfen, ob es die richtige Domain ist 
                 VisboProtected = True
 

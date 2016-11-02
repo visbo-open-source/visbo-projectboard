@@ -314,13 +314,13 @@ Public Class clsPPTShapes
     ''' <param name="xPos"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function calcStartDate(ByVal xPos As Double) As Date
+    Public Function calcXtoDate(ByVal xPos As Double) As Date
         Dim tmpDate As Date = Me.PPTStartOFCalendar.AddDays(CInt((xPos - Me._drawingAreaLeft) / Me._tagesbreite))
-        calcStartDate = tmpDate
+        calcXtoDate = tmpDate
     End Function
 
     ''' <summary>
-    ''' berechnet für die angegebene Koordinate und Länge das zugehörige Datum 
+    ''' berechnet für die angegebene LEft Koordinate und Länge das zugehörige Datum 
     ''' </summary>
     ''' <param name="xPos"></param>
     ''' <param name="width"></param>

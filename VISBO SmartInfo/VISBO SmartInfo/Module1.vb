@@ -295,10 +295,9 @@ Module Module1
 
                 End If
 
+
                 For Each tmpShape As PowerPoint.Shape In shpRange
 
-
-                    'If Not tmpShape.HasChart And Not tmpShape.HasTable Then
                     If tmpShape.Tags.Count > 0 Then
 
                         'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
@@ -310,50 +309,6 @@ Module Module1
                                     relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
                                 End If
 
-                                If relevantShapeNames.Count = 1 Then
-
-                                    If IsNothing(infoFrm) Then
-                                        infoFrm = New frmInfo
-                                        formIsShown = False
-                                    End If
-
-                                    With infoFrm
-                                        .elemName.Text = bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked)
-                                        .elemDate.Text = bestimmeElemDateText(tmpShape, .showAbbrev.Checked)
-                                        .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
-                                        .ampelText.Text = bestimmeElemAmpelText(tmpShape)
-                                        ' Festlegen der Beschriftungs-Position für Name und Text
-                                        Call .setDTPicture(pptShapeIsMilestone(tmpShape))
-
-                                    End With
-
-
-
-
-                                    If Not formIsShown Then
-                                        infoFrm.Show()
-                                        formIsShown = True
-                                    End If
-
-                                Else
-                                    With infoFrm
-                                        If .elemName.Text <> bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked) Then
-                                            .elemName.Text = " ... "
-                                        End If
-                                        If .elemDate.Text <> bestimmeElemDateText(tmpShape, .showAbbrev.Checked) Then
-                                            .elemDate.Text = " ... "
-                                        End If
-
-                                        If .ampelText.Text <> bestimmeElemAmpelText(tmpShape) Then
-                                            .ampelText.Text = " ... "
-                                        End If
-
-                                        .positionTextButton.Image = Nothing
-                                        .positionDateButton.Image = Nothing
-
-                                    End With
-                                End If
-
                             Else
                                 ' die vorhandenen Tags löschen ... und den Namen ändern 
                                 Call deleteShpTags(tmpShape)
@@ -363,29 +318,52 @@ Module Module1
 
                     End If
 
+                    ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
+                    If relevantShapeNames.Count >= 1 Then
+
+                        ReDim arrayOfNames(relevantShapeNames.Count - 1)
+
+                        For ix As Integer = 1 To relevantShapeNames.Count
+                            arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
+                        Next
+
+                        selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+                    Else
+                        ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
+                        If Not IsNothing(infoFrm) And formIsShown Then
+                            With infoFrm
+                                .elemName.Text = ""
+                                .fullBreadCrumb.Text = ""
+                                .elemDate.Text = ""
+                                .aLuTvText.Text = ""
+                                .aLuTvText.Enabled = False
+                                .elemDate.Enabled = False
+                            End With
+                        End If
+                    End If
                 Next
 
-                'End If
+                If Not IsNothing(selectedPlanShapes) Then
 
-                ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
-                If relevantShapeNames.Count >= 1 Then
+                    ' wird das Formular aktuell angezeigt ? 
+                    If IsNothing(infoFrm) Then
+                        infoFrm = New frmInfo
+                    End If
 
-                    ReDim arrayOfNames(relevantShapeNames.Count - 1)
+                    For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+                        ' hier sind nur noch richtige Shapes  
 
-                    For ix As Integer = 1 To relevantShapeNames.Count
-                        arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
+                        Call aktualisiereInfoFrm(tmpShape, isMovedElement(tmpShape))
+
+                        If Not formIsShown Then
+                            ' Festlegen der Beschriftungs-Position für Name und Text
+                            Call infoFrm.setDTPicture(pptShapeIsMilestone(tmpShape))
+                            infoFrm.Show()
+                            formIsShown = True
+                        End If
+
                     Next
 
-                    selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
-                Else
-                    ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
-                    If Not IsNothing(infoFrm) And formIsShown Then
-                        With infoFrm
-                            .elemName.Text = ""
-                            .elemDate.Text = ""
-                            .ampelText.Text = ""
-                        End With
-                    End If
                 End If
 
             End If
@@ -397,7 +375,39 @@ Module Module1
 
     End Sub
 
-    
+    ''' <summary>
+    ''' gibt aus der Enum pptinfoType den entsprechenden Wert zurück, je nachdem welcher Radiobutton gesetzt ist 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Friend Function calcRDB() As Integer
+        Dim tmpResult As Integer = pptInfoType.cName
+        If formIsShown And Not IsNothing(infoFrm) Then
+            With infoFrm
+                If .rdbName.Checked Then
+                    tmpResult = pptInfoType.cName
+                ElseIf .rdbOriginalName.Checked Then
+                    tmpResult = pptInfoType.oName
+                ElseIf .rdbAbbrev.Checked Then
+                    tmpResult = pptInfoType.sName
+                ElseIf .rdbBreadcrumb.Checked Then
+                    tmpResult = pptInfoType.bCrumb
+                ElseIf .rdbLU.Checked Then
+                    tmpResult = pptInfoType.lUmfang
+                ElseIf .rdbMV.Checked Then
+                    tmpResult = pptInfoType.mvElement
+                Else
+                    tmpResult = pptInfoType.cName
+                End If
+            End With
+        Else
+            tmpResult = pptInfoType.cName
+        End If
+
+        calcRDB = tmpResult
+
+    End Function
+
     ''' <summary>
     ''' wird nur für relevante Shapes aufgerufen
     ''' baut die intelligenten Listen für das Slide auf 
@@ -480,7 +490,7 @@ Module Module1
     Private Sub checkShpOnManualMovement(ByVal shapeName As String)
 
         Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
-        Dim defaultExplanation As String = "manuell verschoben durch " & My.User.Name
+        Dim defaultExplanation As String = "manuell verschoben durch " & My.Computer.Name
 
         If IsNothing(tmpShape) Then
             Exit Sub
@@ -490,7 +500,7 @@ Module Module1
                 ' die Swimlane Texte sollen nicht berücksichtigt werden ...
             Else
                 If pptShapeIsMilestone(tmpShape) Then
-                    Dim pptDate As Date = slideCoordInfo.calcStartDate(tmpShape.Left + 0.5 * tmpShape.Width)
+                    Dim pptDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + 0.5 * tmpShape.Width)
                     Dim planDate As Date = CDate(tmpShape.Tags.Item("ED"))
 
                     If DateDiff(DateInterval.Day, pptDate, planDate) = 0 Then
@@ -513,8 +523,8 @@ Module Module1
                         Call smartSlideLists.addMV(tmpShape.Name)
                     End If
                 Else
-                    Dim pptSDate As Date = slideCoordInfo.calcStartDate(tmpShape.Left)
-                    Dim pptEDate As Date = slideCoordInfo.calcStartDate(tmpShape.Left + tmpShape.Width)
+                    Dim pptSDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left)
+                    Dim pptEDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width)
                     Dim planSDate As Date = CDate(tmpShape.Tags.Item("SD"))
                     Dim planEDate As Date = CDate(tmpShape.Tags.Item("ED"))
 
@@ -547,7 +557,7 @@ Module Module1
 
         End If
 
-        
+
 
 
     End Sub
@@ -577,8 +587,16 @@ Module Module1
                             ' ED existiert - das wird in pptShapeisMilestone geprüft 
                             homeEDate = CDate(.Tags.Item("ED"))
                             Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
-                            ' Positionieren auf Home ...
-                            .Left = CSng(x1Pos) - .Width / 2
+
+                            ' Positionieren auf Home Position und aktualisieren des Info-Formulars..
+                            If .Left <> CSng(x1Pos) - .Width / 2 Then
+                                .Left = CSng(x1Pos) - .Width / 2
+                                If Not IsNothing(infoFrm) Then
+                                    Call aktualisiereInfoFrm(tmpShape, True)
+                                End If
+
+
+                            End If
 
                         Catch ex As Exception
 
@@ -596,10 +614,18 @@ Module Module1
                             homeSDate = CDate(.Tags.Item("SD"))
                             homeEDate = CDate(.Tags.Item("ED"))
                             Call slideCoordInfo.calculatePPTx1x2(homeSDate, homeEDate, x1Pos, x2Pos)
-                            ' Positionieren auf Home
-                            .Left = CSng(x1Pos)
-                            .Width = CSng(x2Pos - x1Pos)
 
+                            ' Positionieren auf Home Position und aktualisieren des Info-Formulars..
+                            If ((.Left <> CSng(x1Pos)) Or (.Width <> CSng(x2Pos - x1Pos))) Then
+
+                                .Left = CSng(x1Pos)
+                                .Width = CSng(x2Pos - x1Pos)
+
+                                If Not IsNothing(infoFrm) Then
+                                    Call aktualisiereInfoFrm(tmpShape, True)
+                                End If
+                            End If
+                            
                         Catch ex As Exception
 
                         End Try
@@ -607,7 +633,7 @@ Module Module1
                     End If
                 End With
             End If
-            
+
         End If
 
     End Sub
@@ -615,6 +641,8 @@ Module Module1
     ''' <summary>
     ''' wird nur aufgerufen für relevant Shapes
     ''' positioniert ein Shape auf seine "Changed"-Position, wenn es denn eine gibt  ... 
+    ''' aktualisiert das info-Fenster, wenn nur ein Shape selektiert ist 
+    ''' verschiebt evtl vorhandene Text und Datums-Beschriftungen mit 
     ''' </summary>
     ''' <param name="tmpShape"></param>
     ''' <remarks></remarks>
@@ -624,6 +652,7 @@ Module Module1
         Dim homeEDate As Date
         Dim x1Pos As Double, x2Pos As Double
         Dim tmpstr() As String
+        'Dim diff As Double
 
         ' Prüfen, ob Text Box , wenn ja, gleich Exit 
         If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
@@ -633,14 +662,22 @@ Module Module1
 
                 With tmpShape
                     If .Tags.Item("MVD").Length > 0 Then
-                        ' nur dann muss was nach Hause geschickt werden 
+                        ' nur dann kann was zur Changed Position geschickt werden 
                         Try
                             ' ED existiert - das wird in pptShapeisMilestone geprüft 
                             tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
                             homeEDate = CDate(tmpstr(0))
                             Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
-                            ' Positionieren auf Home ...
-                            .Left = CSng(x1Pos) - .Width / 2
+
+                            ' Positionieren auf Changed Position und aktualisieren des Info-Formulars..
+                            If .Left <> CSng(x1Pos) - .Width / 2 Then
+                                .Left = CSng(x1Pos) - .Width / 2
+                                If Not IsNothing(infoFrm) Then
+                                    Call aktualisiereInfoFrm(tmpShape, True)
+                                End If
+
+
+                            End If
 
                         Catch ex As Exception
 
@@ -652,7 +689,7 @@ Module Module1
 
                 With tmpShape
                     If .Tags.Item("MVD").Length > 0 Then
-                        ' nur dann muss was nach Hause geschickt werden 
+                        ' nur dann kann was zur Changed Position geschickt werden 
                         Try
                             ' SD, ED existieren - das wird in pptShapeisPhase geprüft 
                             tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
@@ -661,9 +698,18 @@ Module Module1
                                 homeSDate = CDate(tmpstr(0))
                                 homeEDate = CDate(tmpstr(1))
                                 Call slideCoordInfo.calculatePPTx1x2(homeSDate, homeEDate, x1Pos, x2Pos)
-                                ' Positionieren auf Home
-                                .Left = CSng(x1Pos)
-                                .Width = CSng(x2Pos - x1Pos)
+
+                                ' Positionieren auf Changed Position und aktualisieren des Info-Formulars..
+                                If ((.Left <> CSng(x1Pos)) Or (.Width <> CSng(x2Pos - x1Pos))) Then
+
+                                    .Left = CSng(x1Pos)
+                                    .Width = CSng(x2Pos - x1Pos)
+
+                                    If Not IsNothing(infoFrm) Then
+                                        Call aktualisiereInfoFrm(tmpShape, True)
+                                    End If
+                                End If
+                                
                             End If
 
                         Catch ex As Exception
@@ -676,6 +722,67 @@ Module Module1
 
         End If
 
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert die Info Form mit den Feldern ElemName, ElemDate, BreadCrumb und aLuTv-Text 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="isMovedShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub aktualisiereInfoFrm(ByVal tmpShape As PowerPoint.Shape, Optional ByVal isMovedShape As Boolean = False)
+
+        If Not IsNothing(infoFrm) Then
+
+            If selectedPlanShapes.Count = 1 Then
+
+                With infoFrm
+                    .elemName.Text = bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked)
+                    If showBreadCrumbField Then
+                        .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
+                    End If
+                    .elemDate.Text = bestimmeElemDateText(tmpShape, False)
+
+                    Dim rdbCode As Integer = calcRDB()
+                    .aLuTvText.Text = bestimmeElemALuTvText(tmpShape, rdbCode)
+
+                    ' Änderungen bei Datum und Erläuterung erlauben 
+                    If isMovedShape Then
+                        .elemDate.Enabled = True
+                        If .rdbMV.Checked Then
+                            .aLuTvText.Enabled = True
+                        Else
+                            .aLuTvText.Enabled = False
+                        End If
+                    Else
+                        .elemDate.Enabled = False
+                        .aLuTvText.Enabled = False
+                    End If
+
+
+                End With
+            ElseIf selectedPlanShapes.Count > 1 Then
+
+                Dim rdbCode As Integer = calcRDB()
+                With infoFrm
+                    If .elemName.Text <> bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked) Then
+                        .elemName.Text = " ... "
+                    End If
+                    If .elemDate.Text <> bestimmeElemDateText(tmpShape, False) Then
+                        .elemDate.Text = " ... "
+                    End If
+
+                    .aLuTvText.Text = " ... "
+
+                    .aLuTvText.Enabled = False
+                    .elemDate.Enabled = False
+
+
+                End With
+
+            End If
+
+        End If
     End Sub
 
     ''' <summary>
@@ -986,7 +1093,7 @@ Module Module1
 
 
             If anfang.Length > 0 And ende.Length > 0 Then
-                
+
 
                 pptShapeIsPhase = True
             Else
@@ -999,23 +1106,48 @@ Module Module1
     End Function
 
     ''' <summary>
-    ''' gibt den Ampeltext des Shapes zurück 
+    ''' gibt den Ampeltext / Lieferumfang / Terminveränderungs-Erläuterung des Shapes zurück 
     ''' </summary>
     ''' <param name="curShape"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function bestimmeElemAmpelText(ByVal curShape As PowerPoint.Shape) As String
+    Public Function bestimmeElemALuTvText(ByVal curShape As PowerPoint.Shape, _
+                                          Optional ByVal type As Integer = pptInfoType.aExpl) As String
         Dim tmpText As String = ""
 
         Try
-            If curShape.Tags.Item("AE").Length > 0 Then
-                tmpText = curShape.Tags.Item("AE")
+
+            If type = pptInfoType.lUmfang Then
+                Dim tmpStr() As String
+                If curShape.Tags.Item("LU").Length > 0 Then
+                    tmpStr = curShape.Tags.Item("LU").Split(New Char() {CType("#", Char)})
+                    For i As Integer = 0 To tmpStr.Length - 1
+                        If i = 0 Then
+                            tmpText = tmpStr(i)
+                        Else
+                            tmpText = tmpText & vbLf & tmpStr(i)
+                        End If
+                    Next
+                End If
+
+            ElseIf type = pptInfoType.mvElement Then
+                If curShape.Tags.Item("MVE").Length > 0 Then
+                    tmpText = curShape.Tags.Item("MVE")
+                End If
+
+            Else
+                ' in allen anderen Fällen den Ampel-Text wählen 
+                If curShape.Tags.Item("AE").Length > 0 Then
+                    tmpText = curShape.Tags.Item("AE")
+                End If
             End If
+
         Catch ex As Exception
 
         End Try
 
-        bestimmeElemAmpelText = tmpText
+        bestimmeElemALuTvText = tmpText
+
     End Function
 
     ''' <summary>
@@ -1077,40 +1209,97 @@ Module Module1
         Dim tmpText As String = ""
 
         If pptShapeIsMilestone(curShape) Then
-            If curShape.Tags.Item("ED").Length > 0 Then
-                If Not showShort Then
-                    tmpText = curShape.Tags.Item("ED")
-                Else
-                    Try
-                        Dim msDate As Date = CDate(curShape.Tags.Item("ED"))
-                        tmpText = msDate.Day.ToString & "." & msDate.Month.ToString
-                    Catch ex As Exception
-                        tmpText = curShape.Tags.Item("ED")
-                    End Try
-                End If
+
+            Dim msDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + 0.5 * curShape.Width)
+            If Not showShort Then
+                'tmpText = msDate.ToString("d")
+                tmpText = msDate.ToShortDateString
+            Else
+                tmpText = msDate.Day.ToString & "." & msDate.Month.ToString
             End If
-        Else
-            If curShape.Tags.Item("SD").Length > 0 And curShape.Tags.Item("ED").Length > 0 Then
-                If Not showShort Then
+
+            'Dim tstDate As Date = CDate(curShape.Tags.Item("ED"))
+            'If DateDiff(DateInterval.Day, msDate, tstDate) <> 0 Then
+            '    tmpText = tmpText & " (M)"
+            'End If
+
+        ElseIf pptShapeIsPhase(curShape) Then
+
+            Dim startDate As Date = slideCoordInfo.calcXtoDate(curShape.Left)
+            Dim endDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + curShape.Width)
+
+            If Not showShort Then
+                'tmpText = startDate.ToString("d") & "-" & endDate.ToString("d")
+                tmpText = startDate.ToShortDateString & "-" & endDate.ToShortDateString
+            Else
+                Try
+
+                    tmpText = startDate.Day.ToString & "." & startDate.Month.ToString & "-" & _
+                                endDate.Day.ToString & "." & endDate.Month.ToString
+                Catch ex As Exception
                     tmpText = curShape.Tags.Item("SD") & "-" & curShape.Tags.Item("ED")
-                Else
-                    Try
-                        Dim startDate As Date = CDate(curShape.Tags.Item("SD"))
-                        Dim endDate As Date = CDate(curShape.Tags.Item("ED"))
-                        tmpText = startDate.Day.ToString & "." & startDate.Month.ToString & "-" & _
-                                    endDate.Day.ToString & "." & endDate.Month.ToString
-                    Catch ex As Exception
-                        tmpText = curShape.Tags.Item("SD") & "-" & curShape.Tags.Item("ED")
-                    End Try
-
-                End If
+                End Try
 
             End If
+
+            'Dim tstDate1 As Date = CDate(curShape.Tags.Item("SD"))
+            'Dim tstDate2 As Date = CDate(curShape.Tags.Item("ED"))
+
+            'If DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Or _
+            '    DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Then
+            '    tmpText = tmpText & " (M)"
+            'End If
+
+
         End If
+
 
         bestimmeElemDateText = tmpText
     End Function
 
+
+    ''' <summary>
+    ''' gibt an, ob ein Element manuell verändert wurde oder nicht 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isMovedElement(ByVal curShape As PowerPoint.Shape) As Boolean
+
+        Dim tmpResult As Boolean = False
+
+        Try
+            If pptShapeIsMilestone(curShape) Then
+
+                Dim msDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + 0.5 * curShape.Width)
+
+                Dim tstDate As Date = CDate(curShape.Tags.Item("ED"))
+                If DateDiff(DateInterval.Day, msDate, tstDate) <> 0 Then
+                    tmpResult = True
+                End If
+
+            ElseIf pptShapeIsPhase(curShape) Then
+
+                Dim startDate As Date = slideCoordInfo.calcXtoDate(curShape.Left)
+                Dim endDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + curShape.Width)
+
+                Dim tstDate1 As Date = CDate(curShape.Tags.Item("SD"))
+                Dim tstDate2 As Date = CDate(curShape.Tags.Item("ED"))
+
+                If DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Or _
+                    DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Then
+                    tmpResult = True
+                End If
+
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        isMovedElement = tmpResult
+
+    End Function
     ''' <summary>
     ''' gibt den Breadcrumb des Elements zurück 
     ''' </summary>
@@ -1264,7 +1453,7 @@ Module Module1
             If IsNumeric(selectedPlanShape.Tags.Item("AC")) Then
                 ampelFarbe = CInt(selectedPlanShape.Tags.Item("AC"))
             End If
-            descriptionText = bestimmeElemAmpelText(selectedPlanShape)
+            descriptionText = bestimmeElemALuTvText(selectedPlanShape)
             txtShpLeft = selectedPlanShape.Left + 1.5 * selectedPlanShape.Width + 5
             txtShpTop = selectedPlanShape.Top - 75
             txtShpWidth = 70

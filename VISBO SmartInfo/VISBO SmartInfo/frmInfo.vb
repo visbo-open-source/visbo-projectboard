@@ -31,6 +31,7 @@ Public Class frmInfo
 
     Private Sub frmInfo_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
         infoFrm = Nothing
+        formIsShown = False
     End Sub
 
     Private Sub frmInfo_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
@@ -38,12 +39,12 @@ Public Class frmInfo
     End Sub
 
     ''' <summary>
-    ''' zeigt den AmpelErläuterungstext inkl de rbutton und verschiebt die anderen Elemente entsprechend 
+    ''' zeigt den Ampel-/LU-/Moved Erläuterungstext inkl de rbutton und verschiebt die anderen Elemente entsprechend 
     ''' Ändert die Höhen von TabControl1 und des gesamten Formulars  
     ''' </summary>
     ''' <param name="istSichtbar"></param>
     ''' <remarks></remarks>
-    Private Sub ampelBlockVisible(ByVal istSichtbar As Boolean)
+    Private Sub aLuTvBlockVisible(ByVal istSichtbar As Boolean)
 
         ' Größen und Positionen anpassen 
         If Not istSichtbar Then
@@ -85,7 +86,7 @@ Public Class frmInfo
 
         End If
 
-        Me.ampelText.Visible = istSichtbar
+        Me.aLuTvText.Visible = istSichtbar
         Me.deleteAmpel.Visible = istSichtbar
         Me.writeAmpel.Visible = istSichtbar
 
@@ -199,7 +200,7 @@ Public Class frmInfo
 
         CheckBxMarker.Checked = showMarker
         ' Zu Beginn ist Ampel-Text und Ampel-Erläuterung nicht sichtbar 
-        Call ampelBlockVisible(False)
+        Call aLuTvBlockVisible(False)
 
         ' Zu Beginn ist die Searchbox nicht visible 
         Call searchBlockVisible(False)
@@ -234,6 +235,8 @@ Public Class frmInfo
 
 
         If rdbName.Checked = True Then
+            Me.aLuTvText.Text = setALuTvText
+
 
             Call erstelleListbox()
 
@@ -445,6 +448,7 @@ Public Class frmInfo
 
     Private Sub rdbOriginalName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbOriginalName.CheckedChanged
         If rdbOriginalName.Checked = True Then
+            Me.aLuTvText.Text = setALuTvText
 
             Call erstelleListbox()
 
@@ -453,7 +457,7 @@ Public Class frmInfo
 
     Private Sub rdbAbbrev_CheckedChanged(sender As Object, e As EventArgs) Handles rdbAbbrev.CheckedChanged
         If rdbAbbrev.Checked = True Then
-
+            Me.aLuTvText.Text = setALuTvText
             Call erstelleListbox()
 
         End If
@@ -463,12 +467,36 @@ Public Class frmInfo
 
         If rdbBreadcrumb.Checked = True Then
 
+            Me.aLuTvText.Text = setALuTvText
+            
             Call erstelleListbox()
 
         End If
 
     End Sub
 
+    ''' <summary>
+    ''' bestimmt den String in Abhängigkeit von rdbCode und dem selektierten Shape 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function setALuTvText() As String
+
+        Dim tmpResult As String
+        If Not IsNothing(selectedPlanShapes) Then
+            If selectedPlanShapes.Count = 1 Then
+                Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                Dim rdbcode = calcRDB()
+                tmpResult = bestimmeElemALuTvText(tmpShape, rdbcode)
+            Else
+                tmpResult = ""
+            End If
+        Else
+            tmpResult = ""
+        End If
+
+        setALuTvText = tmpResult
+    End Function
     Private Sub listboxNames_DoubleClick(sender As Object, e As EventArgs) Handles listboxNames.DoubleClick
         If rdbMV.Checked = True Then
             ' jetzt kann der Erläuterungstext eingegeben werden ... 
@@ -576,12 +604,14 @@ Public Class frmInfo
     Private Sub shwOhneLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwOhneLight.CheckedChanged
 
         If shwOhneLight.Checked Then
-            If (Not shwGreenLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
-                Call ampelBlockVisible(True)
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
             End If
         Else
-            If (Not shwGreenLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
-                Call ampelBlockVisible(False)
+            If Me.aLuTvText.Visible And _
+                    (Not shwGreenLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                Call aLuTvBlockVisible(False)
             End If
         End If
 
@@ -593,12 +623,14 @@ Public Class frmInfo
     Private Sub shwGreenLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwGreenLight.CheckedChanged
 
         If shwGreenLight.Checked Then
-            If (Not shwOhneLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
-                Call ampelBlockVisible(True)
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
             End If
         Else
-            If (Not shwOhneLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) Then
-                Call ampelBlockVisible(False)
+            If Me.aLuTvText.Visible And _
+                    (Not shwOhneLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                Call aLuTvBlockVisible(False)
             End If
         End If
 
@@ -610,12 +642,14 @@ Public Class frmInfo
     Private Sub shwYellowLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwYellowLight.CheckedChanged
 
         If shwYellowLight.Checked Then
-            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwRedLight.Checked) Then
-                Call ampelBlockVisible(True)
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
             End If
         Else
-            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwRedLight.Checked) Then
-                Call ampelBlockVisible(False)
+            If Me.aLuTvText.Visible And _
+                    (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwRedLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                Call aLuTvBlockVisible(False)
             End If
         End If
 
@@ -627,12 +661,16 @@ Public Class frmInfo
     Private Sub shwRedLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwRedLight.CheckedChanged
 
         If shwRedLight.Checked Then
-            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwYellowLight.Checked) Then
-                Call ampelBlockVisible(True)
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
             End If
         Else
-            If (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwYellowLight.Checked) Then
-                Call ampelBlockVisible(False)
+            If Me.aLuTvText.Visible And _
+                    (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwYellowLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+
+                Call aLuTvBlockVisible(False)
+
             End If
         End If
 
@@ -660,7 +698,8 @@ Public Class frmInfo
                     If selectedPlanShapes.Count = 1 Then
                         Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
                         Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
-                        Me.elemDate.Text = bestimmeElemDateText(tmpShape, showAbbrev.Checked)
+                        ' wird im Formular immer lang dargestellt 
+                        Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
                     End If
                 End If
 
@@ -670,8 +709,9 @@ Public Class frmInfo
 
                 If selectedPlanShapes.Count = 1 Then
                     Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
-                    Me.elemDate.Text = bestimmeElemDateText(tmpShape, showAbbrev.Checked)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, showOrginalName.Checked)
+                    ' wird im Formular immer lang dargestellt 
+                    Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
                 End If
 
             End If
@@ -865,7 +905,7 @@ Public Class frmInfo
                 Case pptPositionType.aboveLeft
                     .positionTextButton.Image = My.Resources.layout_northwest
                 Case pptPositionType.center
-                    .positionTextButton.Image = My.Resources.layout_horizontal
+                    .positionTextButton.Image = My.Resources.layout_center
                 Case Else
                     .positionTextButton.Image = My.Resources.layout_north
             End Select
@@ -888,7 +928,7 @@ Public Class frmInfo
                 Case pptPositionType.aboveLeft
                     .positionDateButton.Image = My.Resources.layout_northwest
                 Case pptPositionType.center
-                    .positionDateButton.Image = My.Resources.layout_horizontal
+                    .positionDateButton.Image = My.Resources.layout_center
                 Case Else
                     .positionDateButton.Image = My.Resources.layout_north
             End Select
@@ -971,7 +1011,7 @@ Public Class frmInfo
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
                     If pptShapeIsMilestone(tmpShape) Then
                         Call annotatePlanShape(tmpShape, pptAnnotationType.datum, positionIndexMD)
-                    Else
+                    Elseif pptShapeIsPhase(tmpShape)
                         Call annotatePlanShape(tmpShape, pptAnnotationType.datum, positionIndexPD)
                     End If
 
@@ -1074,6 +1114,15 @@ Public Class frmInfo
 
         If rdbLU.Checked = True Then
 
+            Me.aLuTvText.Text = setALuTvText()
+
+            ' prüfen , ob der AmpelBlock sichtbar ist ...
+            If Me.aLuTvText.Visible Then
+                ' alles ok 
+            Else
+                Call aLuTvBlockVisible(True)
+            End If
+
             Call erstelleListbox()
 
         End If
@@ -1082,11 +1131,21 @@ Public Class frmInfo
     Private Sub rdbMV_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMV.CheckedChanged
         If rdbMV.Checked = True Then
 
+            Me.aLuTvText.Text = setALuTvText
+
+            ' prüfen , ob der AmpelBlock sichtbar ist ...
+            If Me.aLuTvText.Visible Then
+                ' alles ok 
+            Else
+                Call aLuTvBlockVisible(True)
+            End If
+
             Call erstelleListbox()
 
         End If
     End Sub
 
+   
     ''' <summary>
     ''' im Falle: Termin-Veränderungen zeigen: alle in der Listbox markierten Elemente werden "auf Home-Position" geschickt ; wenn kein Element selektiert ist, dann alle 
     ''' im Fall eines selektierten Elements, das Home/Change Position hat: das oder die aktuell markierten Elemente werden zur Home-Position geschickt   
@@ -1161,4 +1220,9 @@ Public Class frmInfo
         End If
 
     End Sub
+
+    Private Sub aLuTvText_Enter(sender As Object, e As EventArgs) Handles aLuTvText.Enter
+        Call MsgBox("changed")
+    End Sub
+
 End Class
