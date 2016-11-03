@@ -5,9 +5,22 @@ Imports System.ComponentModel
 
 Public Class frmReportProfil
 
+    ' für calledfrom ="MS Project"
     Public reportProfil As New clsReport
     Public hproj As clsProjekt
     Public profileBearbeiten As New frmHierarchySelection
+
+
+    'für calledfrom = "Multiprojekt-Tafel"
+    Public reportAllProfil As New clsReportAll
+
+
+    ' an der aufrufenden Stelle muss hier entweder "Multiprojekt-Tafel" oder
+    ' "MS Project" stehen. 
+    Public calledFrom As String
+
+
+  
 
     Private Sub frmReportProfil_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
@@ -27,114 +40,213 @@ Public Class frmReportProfil
      
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
+        If Me.calledFrom = "MS Project" Then
 
-        Try
+            Try
 
-            '' ''Dim i As Integer
+                '' ''Dim i As Integer
 
-            '' ''Dim minDate As Date = Date.MaxValue
-            '' ''Dim maxDate As Date = Date.MinValue
+                '' ''Dim minDate As Date = Date.MaxValue
+                '' ''Dim maxDate As Date = Date.MinValue
 
-            '' ''Dim anzproj As Integer = ShowProjekte.Count
-            ' '' '' alle geladenen Projekte in ReportProfil aufnehmen
-            '' ''For i = 1 To anzproj
+                '' ''Dim anzproj As Integer = ShowProjekte.Count
+                ' '' '' alle geladenen Projekte in ReportProfil aufnehmen
+                '' ''For i = 1 To anzproj
 
-            '' ''    Dim hhproj As clsProjekt = ShowProjekte.getProject(i)
+                '' ''    Dim hhproj As clsProjekt = ShowProjekte.getProject(i)
 
-            '' ''    If DateDiff(DateInterval.Day, minDate, hhproj.startDate) < 0 Then
-            '' ''        minDate = hhproj.startDate
+                '' ''    If DateDiff(DateInterval.Day, minDate, hhproj.startDate) < 0 Then
+                '' ''        minDate = hhproj.startDate
 
-            '' ''        If minDate < StartofCalendar Then
-            '' ''            minDate = StartofCalendar
-            '' ''        End If
-            '' ''    End If
+                '' ''        If minDate < StartofCalendar Then
+                '' ''            minDate = StartofCalendar
+                '' ''        End If
+                '' ''    End If
 
-            '' ''    If DateDiff(DateInterval.Day, maxDate, hhproj.endeDate) > 0 Then
-            '' ''        maxDate = hhproj.endeDate
-            '' ''    End If
+                '' ''    If DateDiff(DateInterval.Day, maxDate, hhproj.endeDate) > 0 Then
+                '' ''        maxDate = hhproj.endeDate
+                '' ''    End If
 
-            '' ''Next
+                '' ''Next
 
-            vonDate.Value = hproj.startDate
-            bisDate.Value = hproj.endeDate
+                vonDate.Value = hproj.startDate
+                bisDate.Value = hproj.endeDate
 
-            ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
+                ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
 
-            Dim dirName As String
-            Dim dateiName As String
-            Dim profilName As String = ""
+                Dim dirName As String
+                Dim dateiName As String
+                Dim profilName As String = ""
 
-            dirName = awinPath & ReportProfileOrdner
-
-
-            If My.Computer.FileSystem.DirectoryExists(dirName) Then
+                dirName = awinPath & ReportProfileOrdner
 
 
-                Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
+                If My.Computer.FileSystem.DirectoryExists(dirName) Then
 
 
-                ' Existiert kein ReportProfil.XML, so wird ein Dummy.xml erzeugt und anschließend eingelesen
-
-                If listOfFiles.Count < 1 Then
-
-                    ' erzeuge ein Dummy-ReportPRofil
-
-                    Dim dmyRepProfil As New clsReport
-                    '' 'Call createDummyReportProfil(dmyRepProfil)
-
-                    dmyRepProfil.Projects.Clear()
-                    dmyRepProfil.Projects.Add(1, hproj.name)
-
-                    dmyRepProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+                    Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
 
 
-                    ' Schreiben des Dummy ReportProfils
-                    Call XMLExportReportProfil(dmyRepProfil)
+                    ' Existiert kein ReportProfil.XML, so wird ein Dummy.xml erzeugt und anschließend eingelesen
 
-                    'erneut Files auf Directory lesen
-                    listOfFiles = My.Computer.FileSystem.GetFiles(dirName)
+                    If listOfFiles.Count < 1 Then
 
-                End If
+                        ' erzeuge ein Dummy-ReportPRofil
 
-                For k As Integer = 1 To listOfFiles.Count
+                        Dim dmyRepProfil As New clsReport
+                        '' 'Call createDummyReportProfil(dmyRepProfil)
 
-                    dateiName = listOfFiles.Item(k - 1)
-                    If dateiName.Contains(".xml") Then
+                        dmyRepProfil.Projects.Clear()
+                        dmyRepProfil.Projects.Add(1, hproj.name)
 
-                        Try
+                        dmyRepProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
 
-                            Dim hstr() As String
-                            hstr = Split(dateiName, ".xml", 2)
-                            Dim hhstr() As String
-                            hhstr = Split(hstr(0), "\")
-                            profilName = hhstr(hhstr.Length - 1)
-                            RepProfilListbox.Items.Add(profilName)
 
-                        Catch ex As Exception
+                        ' Schreiben des Dummy ReportProfils
+                        Call XMLExportReportProfil(dmyRepProfil)
 
-                        End Try
+                        'erneut Files auf Directory lesen
+                        listOfFiles = My.Computer.FileSystem.GetFiles(dirName)
 
                     End If
 
-                Next k
+                    For k As Integer = 1 To listOfFiles.Count
 
-                If listOfFiles.Count > 0 Then
-                    RepProfilListbox.SelectedIndex = 0
+                        dateiName = listOfFiles.Item(k - 1)
+                        If dateiName.Contains(".xml") Then
+
+                            Try
+
+                                Dim hstr() As String
+                                hstr = Split(dateiName, ".xml", 2)
+                                Dim hhstr() As String
+                                hhstr = Split(hstr(0), "\")
+                                profilName = hhstr(hhstr.Length - 1)
+                                RepProfilListbox.Items.Add(profilName)
+
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+
+                    Next k
+
+                    If listOfFiles.Count > 0 Then
+                        RepProfilListbox.SelectedIndex = 0
+                    End If
+
+
+                Else
+                    Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+
                 End If
 
+                Me.statusLabel.Visible = False
 
-            Else
-                Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+            Catch ex As Exception
+                'Call MsgBox(ex.Message)
+                Me.statusLabel.Text = ex.Message
+                Me.statusLabel.Visible = True
+            End Try
 
-            End If
+        ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+            Try
 
-            Me.statusLabel.Visible = False
+                ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
+                Dim listofProfils As New SortedList(Of String, clsReportAll)
+                Dim dirName As String
+                Dim dateiName As String
+                Dim profilName As String = ""
 
-        Catch ex As Exception
-            'Call MsgBox(ex.Message)
-            Me.statusLabel.Text = ex.Message
-            Me.statusLabel.Visible = True
-        End Try
+                dirName = awinPath & ReportProfileOrdner
+
+
+                If My.Computer.FileSystem.DirectoryExists(dirName) Then
+
+
+                    Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
+
+
+                    ' Existiert kein ReportProfil.XML, so wird ein Dummy.xml erzeugt und anschließend eingelesen
+
+                    If listOfFiles.Count < 1 Then
+
+                        ' erzeuge ein Dummy-ReportPRofil
+
+                        Dim dmyRepProfil As New clsReportAll
+                        '' 'Call createDummyReportProfil(dmyRepProfil)
+
+                        dmyRepProfil.Projects.Clear()
+                        dmyRepProfil.Projects.Add(1, hproj.name)
+
+                        dmyRepProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+
+
+                        ' Schreiben des Dummy ReportProfils
+                        Call XMLExportReportProfil(dmyRepProfil)
+
+
+                        'erneut Files auf Directory lesen
+                        listOfFiles = My.Computer.FileSystem.GetFiles(dirName)
+
+                    End If
+
+                    For k As Integer = 1 To listOfFiles.Count
+
+                        dateiName = listOfFiles.Item(k - 1)
+                        If dateiName.Contains(".xml") Then
+
+                            Try
+
+                                Dim hstr() As String
+                                hstr = Split(dateiName, ".xml", 2)
+                                Dim hhstr() As String
+                                hhstr = Split(hstr(0), "\")
+                                profilName = hhstr(hhstr.Length - 1)
+
+                                Dim hreportAll As clsReportAll = XMLImportReportAllProfil(profilName)
+
+                                If listofProfils.ContainsKey(profilName) Then
+                                    listofProfils.Remove(profilName)
+                                End If
+                                listofProfils.Add(profilName, hreportAll)
+
+                                ' Profil profilName in Auswahl eintragen
+                                RepProfilListbox.Items.Add(profilName)
+
+                            Catch ex As Exception
+                                'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
+                                Call MsgBox("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
+                            End Try
+
+                        End If
+
+                    Next k
+
+                    If listOfFiles.Count > 0 Then
+                        RepProfilListbox.SelectedIndex = 0
+                    End If
+
+
+                Else
+                    Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+
+                End If
+
+                Me.zeitLabel.Visible = False
+                Me.vonDate.Visible = False
+                Me.bisDate.Visible = False
+                Me.changeProfil.Visible = False
+                Me.statusLabel.Visible = False
+
+            Catch ex As Exception
+                'Call MsgBox(ex.Message)
+                Me.statusLabel.Text = ex.Message
+                Me.statusLabel.Visible = True
+            End Try
+
+        End If
 
     End Sub
     Private Sub RepProfilListbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles RepProfilListbox.SelectedIndexChanged
@@ -144,27 +256,32 @@ Public Class frmReportProfil
 
         ''Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
 
-        ' '' Einlesen des ausgewählten ReportProfils
-        reportProfil = XMLImportReportProfil(reportProfilName)
-    
-        If Not IsNothing(reportProfil) Then
+        If Me.calledFrom = "MS Project" Then
+            ' '' Einlesen des ausgewählten ReportProfils
+            reportProfil = XMLImportReportProfil(reportProfilName)
 
+            If Not IsNothing(reportProfil) Then
 
-            reportProfil.Projects.Clear()
-            reportProfil.Projects.Add(1, hproj.name)
+                reportProfil.Projects.Clear()
+                reportProfil.Projects.Add(1, hproj.name)
+                ' für BHTC immer true
+                reportProfil.ExtendedMode = True
+                ' für BHTC immer false
+                reportProfil.Ampeln = False
+                reportProfil.AllIfOne = False
+                reportProfil.FullyContained = False
+                reportProfil.SortedDauer = False
+                reportProfil.ProjectLine = False
+                reportProfil.UseOriginalNames = False
 
-
-            ' für BHTC immer true
-            reportProfil.ExtendedMode = True
-            ' für BHTC immer false
-            reportProfil.Ampeln = False
-            reportProfil.AllIfOne = False
-            reportProfil.FullyContained = False
-            reportProfil.SortedDauer = False
-            reportProfil.ProjectLine = False
-            reportProfil.UseOriginalNames = False
-
+            End If
+        ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+            ' '' Einlesen des ausgewählten ReportProfils
+            reportAllProfil = XMLImportReportAllProfil(reportProfilName)
+            currentReportProfil = reportAllProfil
         End If
+     
+    
 
     End Sub
 
@@ -180,103 +297,162 @@ Public Class frmReportProfil
 
     Private Sub ReportErstellen_Click(sender As Object, e As EventArgs) Handles ReportErstellen.Click
 
-        Try
-            Dim noPhExist As Boolean = True
-            Dim noMSExist As Boolean = True
-            Dim tmpSortedList As New SortedList(Of String, String)
+        If Me.calledFrom = "MS Project" Then
 
-            If RepProfilListbox.Text <> "" Then
+            Try
+                Dim noPhExist As Boolean = True
+                Dim noMSExist As Boolean = True
+                Dim tmpSortedList As New SortedList(Of String, String)
 
-                Dim reportProfilName As String = RepProfilListbox.Text
+                If RepProfilListbox.Text <> "" Then
 
-                'Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
+                    Dim reportProfilName As String = RepProfilListbox.Text
 
-                ' Einlesen des ausgewählten ReportProfils
-                reportProfil = XMLImportReportProfil(reportProfilName)
+                    'Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
 
-
-                ' Test, ob die in reportProfil definierten Meilenstein und Phasen in hproj enthalten sind
-
-                If Not (reportProfil.Phases.Count = 0 And reportProfil.Milestones.Count = 0) Then
-
-                    For Each kvp As KeyValuePair(Of String, String) In reportProfil.Phases
-                        noPhExist = noPhExist And Not hproj.containsPhase(kvp.Key, True)
-                    Next
-
-                    For Each kvp As KeyValuePair(Of String, String) In reportProfil.Milestones
-                        noMSExist = noMSExist And Not hproj.containsMilestone(kvp.Key, True)
-                    Next
-                Else
-                    noPhExist = False
-                    noMSExist = False
-                End If
-             
-
-                If noPhExist And noMSExist Then
-                    Call MsgBox("Achtung: Projekt '" & hproj.name & "' enthält die ausgewählten Phasen und Meilensteine nicht!")
-                Else
-
-                    If Not IsNothing(reportProfil) Then
-
-                        'Call MsgBox("ReportErstellen")
-                        Try
-                            reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
-                        Catch ex As Exception
-                            Throw New ArgumentException(ex.Message)
-                        End Try
+                    ' Einlesen des ausgewählten ReportProfils
+                    reportProfil = XMLImportReportProfil(reportProfilName)
 
 
-                        Dim anzproj As Integer = ShowProjekte.Count
-                        ' alle geladenen Projekte in ReportProfil aufnehmen
-                        ' ''For i = 1 To anzproj
+                    ' Test, ob die in reportProfil definierten Meilenstein und Phasen in hproj enthalten sind
 
-                        ' ''    Dim hilfsproj As clsProjekt = ShowProjekte.getProject(i)
-                        ' ''    reportProfil.Projects.Add(i, hilfsproj.name)
+                    If Not (reportProfil.Phases.Count = 0 And reportProfil.Milestones.Count = 0) Then
 
-                        ' ''Next
+                        For Each kvp As KeyValuePair(Of String, String) In reportProfil.Phases
+                            noPhExist = noPhExist And Not hproj.containsPhase(kvp.Key, True)
+                        Next
 
-                        'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
-                        '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
-
-                        reportProfil.Projects.Clear()
-                        reportProfil.Projects.Add(1, hproj.name)
-
-                        ' für BHTC immer true
-                        reportProfil.ExtendedMode = True
-                        ' für BHTC immer false
-                        reportProfil.Ampeln = False
-                        reportProfil.AllIfOne = False
-                        reportProfil.FullyContained = False
-                        reportProfil.SortedDauer = False
-                        reportProfil.ProjectLine = False
-                        reportProfil.UseOriginalNames = False
-
-
-
-                        'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
-                        Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
-
-                        Me.statusLabel.Visible = True
-                        Me.statusLabel.Text = "...started"
-
-                        'Call PPTstarten()
-
-                        BGworkerReportBHTC.RunWorkerAsync(reportProfil)
-
+                        For Each kvp As KeyValuePair(Of String, String) In reportProfil.Milestones
+                            noMSExist = noMSExist And Not hproj.containsMilestone(kvp.Key, True)
+                        Next
                     Else
-                        Call MsgBox("ausgewähltes Report-Profil enthält Fehler !")
+                        noPhExist = False
+                        noMSExist = False
                     End If
+
+
+                    If noPhExist And noMSExist Then
+                        Call MsgBox("Achtung: Projekt '" & hproj.name & "' enthält die ausgewählten Phasen und Meilensteine nicht!")
+                    Else
+
+                        If Not IsNothing(reportProfil) Then
+
+                            'Call MsgBox("ReportErstellen")
+                            Try
+                                reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+                            Catch ex As Exception
+                                Throw New ArgumentException(ex.Message)
+                            End Try
+
+
+                            Dim anzproj As Integer = ShowProjekte.Count
+                            ' alle geladenen Projekte in ReportProfil aufnehmen
+                            ' ''For i = 1 To anzproj
+
+                            ' ''    Dim hilfsproj As clsProjekt = ShowProjekte.getProject(i)
+                            ' ''    reportProfil.Projects.Add(i, hilfsproj.name)
+
+                            ' ''Next
+
+                            'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
+                            '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
+
+                            reportProfil.Projects.Clear()
+                            reportProfil.Projects.Add(1, hproj.name)
+
+                            ' für BHTC immer true
+                            reportProfil.ExtendedMode = True
+                            ' für BHTC immer false
+                            reportProfil.Ampeln = False
+                            reportProfil.AllIfOne = False
+                            reportProfil.FullyContained = False
+                            reportProfil.SortedDauer = False
+                            reportProfil.ProjectLine = False
+                            reportProfil.UseOriginalNames = False
+
+
+
+                            'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
+                            Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+
+                            Me.statusLabel.Visible = True
+                            Me.statusLabel.Text = "...started"
+
+                            'Call PPTstarten()
+
+                            BGworkerReportBHTC.RunWorkerAsync(reportProfil)
+
+                        Else
+                            Call MsgBox("ausgewähltes Report-Profil enthält Fehler !")
+                        End If
+                    End If
+                Else
+                    Call MsgBox("Es wurde noch kein Report-Profil ausgewählt !")
+
                 End If
-            Else
-                Call MsgBox("Es wurde noch kein Report-Profil ausgewählt !")
 
-            End If
+            Catch ex As Exception
+                'Call MsgBox(ex.Message)
+                Me.statusLabel.Text = ex.Message
+                Me.statusLabel.Visible = True
+            End Try
 
-        Catch ex As Exception
-            'Call MsgBox(ex.Message)
-            Me.statusLabel.Text = ex.Message
-            Me.statusLabel.Visible = True
-        End Try
+
+        ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+            Try
+                If RepProfilListbox.Text <> "" And ShowProjekte.Count > 0 Then
+
+                    Dim reportProfilName As String = RepProfilListbox.Text
+
+                    ' Einlesen des ausgewählten ReportProfils
+                    reportAllProfil = XMLImportReportAllProfil(reportProfilName)
+
+                    ' ausgewähltes ReportPRofil in current-Variable speichern
+                    currentReportProfil = reportAllProfil
+
+                    If Not IsNothing(reportAllProfil) Then
+
+                        If reportAllProfil.isMpp Then
+
+                            Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+
+                            Me.statusLabel.Visible = True
+                            Me.statusLabel.Text = "...started"
+
+                            BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
+
+                        Else   ' Profil für Einzelprojekt-Bericht ausgewählt
+                            ' Es muss mindestens ein Projekt selektiert sein
+                            If selectedProjekte.Count < 1 Then
+
+                                Me.statusLabel.Visible = True
+                                Me.statusLabel.Text = "bitte zuerst Projekte selektieren!"
+
+                                Call MsgBox("bitte zuerst Projekte selektieren!")
+                                MyBase.Close()
+                            Else
+                                Me.statusLabel.Visible = True
+                                Me.statusLabel.Text = "...started"
+
+                                BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
+                            End If
+
+                        End If
+                    End If
+
+                Else
+                    Call MsgBox("Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf & "Es sind keine Projekte geladen !")
+
+                End If
+
+
+            Catch ex As Exception
+                'Call MsgBox(ex.Message)
+                Me.statusLabel.Text = ex.Message
+                Me.statusLabel.Visible = True
+            End Try
+
+        End If
     End Sub
 
     Private Sub changeProfil_Click(sender As Object, e As EventArgs) Handles changeProfil.Click
@@ -483,25 +659,139 @@ Public Class frmReportProfil
                                                 True, zeilenhoehe, legendFontSize, _
                                                 worker, e)
   
-
-        ' ''Call createPPTReportFromProjects(vorlagenDateiName, _
-        ' ''                                   selectedPhases, selectedMilestones, _
-        ' ''                                   selectedRoles, selectedCosts, _
-        ' ''                                   selectedBUs, selectedTyps, _
-        ' ''                                   worker, e)
             Else
 
-        ''Call createPPTSlidesFromConstellation(reportProfil.PPTTemplate, _
-        ''                                reportProfil.Phases, reportProfil.Milestones, _
-        ''                                reportProfil.Roles, reportProfil.Costs, _
-        ''                                reportProfil.BUs, reportProfil.Typs, True, _
-        ''                                worker, e)
+
             End If
 
 
         Catch ex As Exception
             Call MsgBox("Fehler: " & vbLf & ex.Message)
         End Try
+
+    End Sub
+
+    Private Sub BGWorkerReportGen_DoWork(sender As Object, e As DoWorkEventArgs) Handles BGWorkerReportGen.DoWork
+
+
+
+        Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
+        Dim reportProfil As clsReportAll = CType(e.Argument, clsReportAll)
+        Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
+        Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
+
+        Dim selectedPhases As New Collection
+        Dim selectedMilestones As New Collection
+        Dim selectedRoles As New Collection
+        Dim selectedCosts As New Collection
+        Dim selectedBUs As New Collection
+        Dim selectedTypes As New Collection
+
+        selectedPhases = copySortedListtoColl(reportProfil.Phases)
+        selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+        selectedRoles = copySortedListtoColl(reportProfil.Roles)
+        selectedCosts = copySortedListtoColl(reportProfil.Costs)
+        selectedBUs = copySortedListtoColl(reportProfil.BUs)
+        selectedTypes = copySortedListtoColl(reportProfil.Typs)
+
+        With awinSettings
+
+            .mppExtendedMode = reportProfil.ExtendedMode
+            .mppOnePage = reportProfil.OnePage
+            .mppShowAllIfOne = reportProfil.AllIfOne
+            .mppShowAmpel = reportProfil.Ampeln
+            .mppShowLegend = reportProfil.Legend
+            .mppShowMsDate = reportProfil.MSDate
+            .mppShowMsName = reportProfil.MSName
+            .mppShowPhDate = reportProfil.PhDate
+            .mppShowPhName = reportProfil.PhName
+            .mppShowProjectLine = reportProfil.ProjectLine
+            .mppSortiertDauer = reportProfil.SortedDauer
+            .mppVertikalesRaster = reportProfil.VLinien
+            .mppFullyContained = reportProfil.FullyContained
+            .mppShowHorizontals = reportProfil.ShowHorizontals
+            .mppUseAbbreviation = reportProfil.UseAbbreviation
+            .mppUseOriginalNames = reportProfil.UseOriginalNames
+            .mppKwInMilestone = reportProfil.KwInMilestone
+            .mppShowPhName = reportProfil.projectsWithNoMPmayPass
+
+        End With
+
+        If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+
+            showRangeLeft = getColumnOfDate(reportProfil.VonDate)
+            showRangeRight = getColumnOfDate(reportProfil.BisDate)
+
+        End If
+      
+
+        Try
+            If Not reportProfil.isMpp Then
+
+                Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
+                If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                    ' Alle selektierten Projekte reporten
+                    For Each kvp In selectedProjekte.Liste
+
+                        hproj = kvp.Value
+
+                        Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
+                                                        selectedPhases, selectedMilestones, _
+                                                        selectedRoles, selectedCosts, _
+                                                        selectedBUs, selectedTypes, True, _
+                                                        True, zeilenhoehe, legendFontSize, _
+                                                        worker, e)
+
+
+                        ''Call createPPTReportFromProjects(vorlagendateiname, _
+                        ''                                 selectedPhases, selectedMilestones, _
+                        ''                                 selectedRoles, selectedCosts, _
+                        ''                                 selectedBUs, selectedTypes, _
+                        ''                                 worker, e)
+                    Next
+
+                End If
+            Else
+
+                Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
+                If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+  
+                    Call createPPTSlidesFromConstellation(vorlagendateiname, _
+                                                          selectedPhases, selectedMilestones, _
+                                                          selectedRoles, selectedCosts, _
+                                                          selectedBUs, selectedTypes, True, _
+                                                          worker, e)
+
+                End If
+
+            End If
+
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler: " & vbLf & ex.Message)
+        End Try
+
+    End Sub
+
+    Private Sub BGWorkerReportGen_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BGWorkerReportGen.ProgressChanged
+
+        Dim re As System.ComponentModel.DoWorkEventArgs = CType(e.UserState, System.ComponentModel.DoWorkEventArgs)
+        Me.statusLabel.Text = CType(re.Result, String)
+
+    End Sub
+
+    Private Sub BGWorkerReportGen_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BGWorkerReportGen.RunWorkerCompleted
+
+        Me.statusLabel.Text = "...done"
+        Me.statusLabel.Visible = True
+        Me.ReportErstellen.Visible = False
+        Me.ReportErstellen.Enabled = False
+        Me.RepProfilListbox.Enabled = False
+        Me.Cursor = System.Windows.Forms.Cursors.Arrow
+
+        ' hier evt. noch schließen und Abspeichern des Reports von PPT
 
     End Sub
 End Class

@@ -192,14 +192,71 @@ Public Class frmSelectPPTTempl
 
         Dim tmpCollection As New Collection
 
+        currentReportProfil.Phases = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Milestones = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Roles = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Costs = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Typs = copyColltoSortedList(tmpCollection)
+        currentReportProfil.BUs = copyColltoSortedList(tmpCollection)
+
+        currentReportProfil.CalendarVonDate = StartofCalendar
+
+        Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
+        Dim bisDate As Date = getDateofColumn(showRangeRight, True)
+
         Try
+            currentReportProfil.calcRepVonBis(vonDate, bisDate)
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        Try
+
             With awinSettings
-                Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                      tmpCollection, tmpCollection, _
-                                                      tmpCollection, tmpCollection, _
-                                                      tmpCollection, tmpCollection, True, _
-                                                      worker, e)
+
+                If .mppSortiertDauer Then
+                    .mppShowAllIfOne = True
+                End If
+
+                currentReportProfil.ProjectLine = .mppShowProjectLine
+                currentReportProfil.AllIfOne = .mppShowAllIfOne
+                currentReportProfil.Ampeln = .mppShowAmpel
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+
+                currentReportProfil.projectsWithNoMPmayPass = .mppShowPhName
+                currentReportProfil.PhDate = .mppShowPhDate
+                currentReportProfil.MSName = .mppShowMsName
+                currentReportProfil.MSDate = .mppShowMsDate
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+                currentReportProfil.KwInMilestone = .mppKwInMilestone
+
+
+                currentReportProfil.VLinien = .mppVertikalesRaster
+                currentReportProfil.ShowHorizontals = .mppShowHorizontals
+                currentReportProfil.Legend = .mppShowLegend
+                currentReportProfil.OnePage = .mppOnePage
+
+                currentReportProfil.SortedDauer = .mppSortiertDauer
+                currentReportProfil.ExtendedMode = .mppExtendedMode
+                currentReportProfil.FullyContained = .mppFullyContained
+
+                currentReportProfil.projectsWithNoMPmayPass = .mppProjectsWithNoMPmayPass
+
+                ' Dateiname eliminieren, ohne Pfadangaben im ReportProfil speichern
+                Dim hstr() As String
+                hstr = Split(vorlagenDateiName, "\")
+                currentReportProfil.PPTTemplate = hstr(hstr.Length - 1)
+                currentReportProfil.isMpp = True
+
             End With
+
+            Call createPPTSlidesFromConstellation(vorlagenDateiName, _
+                                                   tmpCollection, tmpCollection, _
+                                                   tmpCollection, tmpCollection, _
+                                                   tmpCollection, tmpCollection, True, _
+                                                   worker, e)
+
+ 
         Catch ex As Exception
             Call MsgBox("Fehler " & ex.Message)
             Call MsgBox(" in BAckground Worker ...")
@@ -235,11 +292,75 @@ Public Class frmSelectPPTTempl
 
         Dim vorlagenDateiName As String = CType(e.Argument, String)
         Dim tmpCollection As New Collection
-        Call createPPTReportFromProjects(vorlagenDateiName, _
-                                         tmpCollection, tmpCollection, _
-                                         tmpCollection, tmpCollection, _
-                                         tmpCollection, tmpCollection, _
-                                         worker, e)
+
+
+        currentReportProfil.Phases = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Milestones = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Roles = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Costs = copyColltoSortedList(tmpCollection)
+        currentReportProfil.Typs = copyColltoSortedList(tmpCollection)
+        currentReportProfil.BUs = copyColltoSortedList(tmpCollection)
+
+        currentReportProfil.CalendarVonDate = StartofCalendar
+
+        Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
+        Dim bisDate As Date = getDateofColumn(showRangeRight, True)
+
+        Try
+            currentReportProfil.calcRepVonBis(vonDate, bisDate)
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        Try
+
+            With awinSettings
+
+                If .mppSortiertDauer Then
+                    .mppShowAllIfOne = True
+                End If
+
+                currentReportProfil.ProjectLine = .mppShowProjectLine
+                currentReportProfil.AllIfOne = .mppShowAllIfOne
+                currentReportProfil.Ampeln = .mppShowAmpel
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+
+                currentReportProfil.projectsWithNoMPmayPass = .mppShowPhName
+                currentReportProfil.PhDate = .mppShowPhDate
+                currentReportProfil.MSName = .mppShowMsName
+                currentReportProfil.MSDate = .mppShowMsDate
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+                currentReportProfil.KwInMilestone = .mppKwInMilestone
+
+
+                currentReportProfil.VLinien = .mppVertikalesRaster
+                currentReportProfil.ShowHorizontals = .mppShowHorizontals
+                currentReportProfil.Legend = .mppShowLegend
+                currentReportProfil.OnePage = .mppOnePage
+
+                currentReportProfil.SortedDauer = .mppSortiertDauer
+                currentReportProfil.ExtendedMode = .mppExtendedMode
+                currentReportProfil.FullyContained = .mppFullyContained
+
+                currentReportProfil.projectsWithNoMPmayPass = .mppProjectsWithNoMPmayPass
+
+                ' Dateiname eliminieren, ohne Pfadangaben im ReportProfil speichern
+                Dim hstr() As String
+                hstr = Split(vorlagenDateiName, "\")
+                currentReportProfil.PPTTemplate = hstr(hstr.Length - 1)
+                currentReportProfil.isMpp = False
+            End With
+
+
+            Call createPPTReportFromProjects(vorlagenDateiName, _
+                                             tmpCollection, tmpCollection, _
+                                             tmpCollection, tmpCollection, _
+                                             tmpCollection, tmpCollection, _
+                                             worker, e)
+
+        Catch ex As Exception
+
+        End Try
+
 
 
     End Sub

@@ -3,7 +3,7 @@ Imports System.Xml
 Imports System.Xml.Schema
 
 
-<Serializable()>
+<Serializable()> _
 Public Class clsReport
 
     Private _name As String
@@ -17,32 +17,40 @@ Public Class clsReport
     ' Definitionen, die in DB für das ReportProfil gespeichert werden müssen
     Private reportIsMpp As Boolean
     Private reportPPTTemplate As String
+
     Private reportPhase As SortedList(Of String, String)
     Private reportMilestone As SortedList(Of String, String)
     Private reportRolle As SortedList(Of String, String)
     Private reportCost As SortedList(Of String, String)
     Private reportTyp As SortedList(Of String, String)
     Private reportBU As SortedList(Of String, String)
-    Private reportVon As Date
-    Private reportBis As Date
 
     Private reportProjectline As Boolean
-    Private reportAmpeln As Boolean
     Private reportAllIfOne As Boolean
+    Private reportAmpeln As Boolean
+    Private reportUseAbbreviation As Boolean
+    'Private reportProjectsWithNoMPmayPass as boolean
+
     Private reportPhName As Boolean
     Private reportPhDate As Boolean
-    Private reportMSName As Boolean
-    Private reportMSDate As Boolean
-    Private reportVLinien As Boolean
-    Private reportLegend As Boolean
-    Private reportSortedDauer As Boolean
-    Private reportOnePage As Boolean
-    Private reportExtendedMode As Boolean
-    Private reportFullyContained As Boolean
-    Private reportShowHorizontals As Boolean
-    Private reportUseAbbreviation As Boolean
-    Private reportUseOriginalNames As Boolean
+    Private reportMsName As Boolean
+    Private reportMsDate As Boolean
+
     Private reportKwInMilestone As Boolean
+    Private reportUseOriginalNames As Boolean
+
+    Private reportVLinien As Boolean
+    Private reportShowHorizontals As Boolean
+    Private reportLegend As Boolean
+    Private reportOnePage As Boolean
+
+    Private reportSortedDauer As Boolean
+    Private reportExtendedMode As Boolean
+
+    Private reportFullyContained As Boolean
+
+    Private reportVon As Date
+    Private reportBis As Date
 
 
 
@@ -84,7 +92,7 @@ Public Class clsReport
                 .CalendarVonDate = Me.reportCalendarVon
                 .CalendarBisDate = Me.reportCalendarBis
                 .isMpp = Me.reportIsMpp
-                If Not isnothing(Me.reportppttemplate) Then
+                If Not IsNothing(Me.reportPPTTemplate) Then
                     .PPTTemplate = Me.reportPPTTemplate
                 End If
                 .Phases = copyList(Me.reportPhase)
@@ -99,8 +107,8 @@ Public Class clsReport
                 .AllIfOne = Me.reportAllIfOne
                 .PhName = Me.reportPhName
                 .PhDate = Me.reportPhDate
-                .MSName = Me.reportMSName
-                .MSDate = Me.reportMSDate
+                .MSName = Me.reportMsName
+                .MSDate = Me.reportMsDate
                 .VLinien = Me.reportVLinien
                 .Legend = Me.reportLegend
                 .SortedDauer = Me.reportSortedDauer
@@ -410,10 +418,10 @@ Public Class clsReport
     ''' <remarks></remarks>
     Public Property MSName As Boolean
         Get
-            MSName = reportMSName
+            MSName = reportMsName
         End Get
         Set(value As Boolean)
-            reportMSName = value
+            reportMsName = value
         End Set
     End Property
     ''' <summary>
@@ -424,10 +432,10 @@ Public Class clsReport
     ''' <remarks></remarks>
     Public Property MSDate As Boolean
         Get
-            MSDate = reportMSDate
+            MSDate = reportMsDate
         End Get
         Set(value As Boolean)
-            reportMSDate = value
+            reportMsDate = value
         End Set
     End Property
     ''' <summary>
@@ -703,8 +711,8 @@ Public Class clsReport
 
         reportPhName = True
         reportPhDate = True
-        reportMSName = True
-        reportMSDate = True
+        reportMsName = True
+        reportMsDate = True
         reportVLinien = False
         reportLegend = False
         reportOnePage = True

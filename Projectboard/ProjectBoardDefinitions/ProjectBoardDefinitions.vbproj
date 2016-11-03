@@ -93,6 +93,7 @@
     <Compile Include="clsAddElements.vb" />
     <Compile Include="clsFilterDB.vb" />
     <Compile Include="clsReport.vb" />
+    <Compile Include="clsReportAll.vb" />
     <Compile Include="clsReportMessages.vb" />
     <Compile Include="clsRiskChance.vb" />
     <Compile Include="clsVisboZustaende.vb" />

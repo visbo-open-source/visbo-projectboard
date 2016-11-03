@@ -18084,6 +18084,50 @@ Public Module Projekte
 
     End Function
 
+ 
+
+    ''' <summary>
+    ''' gibt das  Datum zurück, das der Rasterspalte in der Projekt-Tafel entspricht
+    ''' die Einstellung awinsettings.zeiteinheit gibt dabei an, ob Monate , Wochen oder Tage das Raster sind
+    ''' Aktuell werden nur Monate unterstützt
+    ''' </summary>
+    ''' <param name="raster"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getDateofColumn(ByVal raster As Integer, ByVal isBisDate As Boolean) As Date
+        Dim datum As Date = StartofCalendar
+
+        Select Case awinSettings.zeitEinheit
+            Case "PM"
+                If isBisDate Then
+                    Dim bisdate = datum.AddMonths(raster)
+                    getDateofColumn = bisdate.AddDays(-1)
+                Else
+                    getDateofColumn = datum.AddMonths(raster - 1)
+                End If
+
+                'spalte = CInt(DateDiff(DateInterval.Month, StartofCalendar, datum) + 1)
+            Case "PW"
+                Call MsgBox("noch nicht implementiert")
+                If isBisDate Then
+                    Dim bisdate = datum.AddMonths((raster) * 7)
+                    getDateofColumn = bisdate.AddDays(-1)
+                Else
+                    getDateofColumn = datum.AddDays((raster - 1) * 7)
+                    'spalte = 1
+                End If
+
+            Case "PT"
+                Call MsgBox("noch nicht implementiert")
+                getDateofColumn = datum.AddDays(raster)
+                'spalte = 1
+            Case Else
+                getDateofColumn = StartofCalendar
+
+        End Select
+
+    End Function
+
     Public Function getIndexBeauftragung(ByRef pHistorie As SortedList(Of Date, clsProjekt)) As Integer
 
         Dim abbruch As Boolean = False
