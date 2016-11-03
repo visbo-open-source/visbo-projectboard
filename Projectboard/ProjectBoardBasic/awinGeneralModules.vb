@@ -10631,7 +10631,7 @@ Public Module awinGeneralModules
         Dim pname As String = ""
         Dim variantName As String = ""
         Dim loadErrorMsg As String = ""
-        Dim listOfVariantNamesDB As New Collection
+        'Dim listOfVariantNamesDB As New Collection
 
 
         Dim deletedProj As Integer = 0
@@ -10735,14 +10735,15 @@ Public Module awinGeneralModules
                 For Each pname In projektliste
 
                     showPname = True
-                    If noDB Then
-                        listOfVariantNamesDB.Clear()
-                    Else
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+                    ' das wird hier doch überhaupt nicht gebraucht ... ? 
+                    'If noDB Then
+                    '    listOfVariantNamesDB.Clear()
+                    'Else
+                    '    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    '    Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
-                        listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
-                    End If
+                    '    listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
+                    'End If
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
                     If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then

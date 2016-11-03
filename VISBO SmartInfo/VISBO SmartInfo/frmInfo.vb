@@ -1,10 +1,16 @@
-﻿Public Class frmInfo
+﻿''' <summary>
+''' das Form Info wird in variabler Größe angezeigt: mit / ohne Ampel-Block, mit /ohne Search-Block
+''' es gibt zwei Methoden ampelblockVisibible und searchblockVisible, die die Elemente dann entsprechend positionieren und sichtbar machen 
+''' </summary>
+''' <remarks></remarks>
+Public Class frmInfo
 
     Friend abkuerzung As String
     Friend showSearchListBox As Boolean = False
 
-    Friend Const fullHeight As Integer = 546
-    Private Const smallHeight As Integer = 296
+    Private Const deltaAmpel As Integer = 50
+    Private Const deltaSearchBox As Integer = 200
+    Private Const smallHeight As Integer = 220
 
     Private dontFire As Boolean = False
     ' innerhalb der Klasse überall im Zugriff; Colorcode ist die Zahl , die sich ergibt , 
@@ -25,50 +31,108 @@
 
     Private Sub frmInfo_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
         infoFrm = Nothing
+        formIsShown = False
     End Sub
 
     Private Sub frmInfo_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
         formIsShown = False
     End Sub
 
-    Private Sub frmInfo_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ' Initialisieren von Suchen 
+    ''' <summary>
+    ''' zeigt den Ampel-/LU-/Moved Erläuterungstext inkl de rbutton und verschiebt die anderen Elemente entsprechend 
+    ''' Ändert die Höhen von TabControl1 und des gesamten Formulars  
+    ''' </summary>
+    ''' <param name="istSichtbar"></param>
+    ''' <remarks></remarks>
+    Private Sub aLuTvBlockVisible(ByVal istSichtbar As Boolean)
 
-        dontFire = True
-
-        showOrginalName.Visible = False
-        showOrginalName.Text = showOrigName
-
-        showAbbrev.Checked = showShortName
-
-        If showSearchListBox Then
-            Me.Height = fullHeight
-            filterText.Visible = True
-            listboxNames.Visible = True
+        ' Größen und Positionen anpassen 
+        If Not istSichtbar Then
+            With Me
+                .Height = Me.Height - deltaAmpel
+                .TabControl1.Height = Me.TabControl1.Height - deltaAmpel
+                .filterText.Top = .filterText.Top - deltaAmpel
+                .searchIcon.Top = .searchIcon.Top - deltaAmpel
+                .btnSendToHome.Top = .btnSendToHome.Top - deltaAmpel
+                .btnSentToChange.Top = .btnSentToChange.Top - deltaAmpel
+                .PictureMarker.Top = .PictureMarker.Top - deltaAmpel
+                .CheckBxMarker.Top = .CheckBxMarker.Top - deltaAmpel
+                .listboxNames.Top = .listboxNames.Top - deltaAmpel
+                .rdbName.Top = .rdbName.Top - deltaAmpel
+                .rdbLU.Top = .rdbLU.Top - deltaAmpel
+                .rdbMV.Top = .rdbMV.Top - deltaAmpel
+                .rdbOriginalName.Top = rdbOriginalName.Top - deltaAmpel
+                .rdbAbbrev.Top = rdbAbbrev.Top - deltaAmpel
+                .rdbBreadcrumb.Top = .rdbBreadcrumb.Top - deltaAmpel
+            End With
         Else
-            Me.Height = smallHeight
+            With Me
+                .Height = Me.Height + deltaAmpel
+                .TabControl1.Height = Me.TabControl1.Height + deltaAmpel
+                .filterText.Top = .filterText.Top + deltaAmpel
+                .searchIcon.Top = .searchIcon.Top + deltaAmpel
+                .btnSendToHome.Top = .btnSendToHome.Top + deltaAmpel
+                .btnSentToChange.Top = .btnSentToChange.Top + deltaAmpel
+                .PictureMarker.Top = .PictureMarker.Top + deltaAmpel
+                .CheckBxMarker.Top = .CheckBxMarker.Top + deltaAmpel
+                .listboxNames.Top = .listboxNames.Top + deltaAmpel
+                .rdbName.Top = .rdbName.Top + deltaAmpel
+                .rdbLU.Top = .rdbLU.Top + deltaAmpel
+                .rdbMV.Top = .rdbMV.Top + deltaAmpel
+                .rdbOriginalName.Top = rdbOriginalName.Top + deltaAmpel
+                .rdbAbbrev.Top = rdbAbbrev.Top + deltaAmpel
+                .rdbBreadcrumb.Top = .rdbBreadcrumb.Top + deltaAmpel
+            End With
+
+        End If
+
+        Me.aLuTvText.Visible = istSichtbar
+        Me.deleteAmpel.Visible = istSichtbar
+        Me.writeAmpel.Visible = istSichtbar
+
+    End Sub
+
+    ''' <summary>
+    ''' zeigt die Searchbox an bzw. macht sie unsichtbar
+    ''' verändert die Größen des Formulars entsprechend 
+    ''' </summary>
+    ''' <param name="istSichtbar"></param>
+    ''' <remarks></remarks>
+    Private Sub searchBlockVisible(ByVal istSichtbar As Boolean)
+
+        If Not istSichtbar Then
+            ' es soll nicht sichtbar sein 
+            Me.Height = Me.Height - deltaSearchBox
             filterText.Visible = False
+            PictureMarker.Visible = False
+            CheckBxMarker.Visible = False
             listboxNames.Visible = False
-        End If
-
-        If showBreadCrumbField = True Then
-            fullBreadCrumb.Visible = True
-        Else
-            fullBreadCrumb.Visible = False
-        End If
-
-        ' Anzeigen der Optionen oder nicht ...
-        If extSearch = True Then
-            rdbName.Visible = True
-            rdbOriginalName.Visible = True
-            rdbAbbrev.Visible = True
-            rdbBreadcrumb.Visible = True
-        Else
             rdbName.Visible = False
+            rdbLU.Visible = False
+            rdbMV.Visible = False
             rdbOriginalName.Visible = False
             rdbAbbrev.Visible = False
             rdbBreadcrumb.Visible = False
+        Else
+            Me.Height = Me.Height + deltaSearchBox
+            filterText.Visible = True
+            PictureMarker.Visible = True
+            CheckBxMarker.Visible = True
+            listboxNames.Visible = True
+            rdbName.Visible = True
+            rdbLU.Visible = True
+            rdbMV.Visible = True
+            If extSearch Then
+                rdbOriginalName.Visible = True
+                rdbAbbrev.Visible = True
+                rdbBreadcrumb.Visible = True
+            End If
         End If
+
+    End Sub
+
+
+    Private Sub frmInfo_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         ' sind irgendwelche Ampel-Farben gesetzt 
         Dim ix As Integer = 1
@@ -134,6 +198,27 @@
             End With
         End If
 
+        CheckBxMarker.Checked = showMarker
+        ' Zu Beginn ist Ampel-Text und Ampel-Erläuterung nicht sichtbar 
+        Call aLuTvBlockVisible(False)
+
+        ' Zu Beginn ist die Searchbox nicht visible 
+        Call searchBlockVisible(False)
+
+        dontFire = True
+
+        showOrginalName.Visible = False
+        showOrigName = False
+
+        If showBreadCrumbField = True Then
+            fullBreadCrumb.Visible = True
+        Else
+            fullBreadCrumb.Visible = False
+        End If
+
+
+        showAbbrev.Checked = showShortName
+
 
         dontFire = False
 
@@ -144,21 +229,14 @@
 
     End Sub
 
-    Private Sub shwYellowLight_CheckedChanged(sender As Object, e As EventArgs)
-
-    End Sub
-
-    Private Sub shwGreenLight_CheckedChanged(sender As Object, e As EventArgs)
-
-    End Sub
-
-
     Private Sub rdbName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbName.CheckedChanged
         ' dontFire true verhindert, dass die Aktion durchgeführt wird, das ist dann erforderlich wenn man explizit verhindern will, 
         ' dass ständig die Events getriggert werden 
 
 
         If rdbName.Checked = True Then
+            Me.aLuTvText.Text = setALuTvText
+
 
             Call erstelleListbox()
 
@@ -185,6 +263,10 @@
                 rdbCode = pptInfoType.sName
             ElseIf rdbBreadcrumb.Checked Then
                 rdbCode = pptInfoType.bCrumb
+            ElseIf rdbLU.Checked Then
+                rdbCode = pptInfoType.lUmfang
+            ElseIf rdbMV.Checked Then
+                rdbCode = pptInfoType.mvElement
             Else
                 rdbCode = pptInfoType.cName
             End If
@@ -226,9 +308,12 @@
                     Next
 
                     ' jetzt nach Farbcode ausdünnen ...
-                    If colorCode = 0 Or colorCode = 15 Then
-                        oNameCollection = smartSlideLists.getTNCollection(colorCode, oNameCollection)
-                    End If
+                    'If colorCode = 0 Or colorCode = 15 Then
+                    '    oNameCollection = smartSlideLists.getTNCollection(colorCode, oNameCollection)
+                    'End If
+                    ' das vorherige war doch falsch ... weil ja dann gar nichts aussortiert wurde ... 
+                    oNameCollection = smartSlideLists.getTNCollection(colorCode, oNameCollection)
+
 
                     ' was jetzt übrig bleibt, muss wieder in die Ander-Sprache zurückkonvertiert werden 
                     ' dann müssen die anders-sprachigen Namen in die Original Namen übersetzt und per Farb-Code gefiltert werden 
@@ -363,6 +448,7 @@
 
     Private Sub rdbOriginalName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbOriginalName.CheckedChanged
         If rdbOriginalName.Checked = True Then
+            Me.aLuTvText.Text = setALuTvText
 
             Call erstelleListbox()
 
@@ -371,7 +457,7 @@
 
     Private Sub rdbAbbrev_CheckedChanged(sender As Object, e As EventArgs) Handles rdbAbbrev.CheckedChanged
         If rdbAbbrev.Checked = True Then
-
+            Me.aLuTvText.Text = setALuTvText
             Call erstelleListbox()
 
         End If
@@ -381,10 +467,41 @@
 
         If rdbBreadcrumb.Checked = True Then
 
+            Me.aLuTvText.Text = setALuTvText
+            
             Call erstelleListbox()
 
         End If
 
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt den String in Abhängigkeit von rdbCode und dem selektierten Shape 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function setALuTvText() As String
+
+        Dim tmpResult As String
+        If Not IsNothing(selectedPlanShapes) Then
+            If selectedPlanShapes.Count = 1 Then
+                Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                Dim rdbcode = calcRDB()
+                tmpResult = bestimmeElemALuTvText(tmpShape, rdbcode)
+            Else
+                tmpResult = ""
+            End If
+        Else
+            tmpResult = ""
+        End If
+
+        setALuTvText = tmpResult
+    End Function
+    Private Sub listboxNames_DoubleClick(sender As Object, e As EventArgs) Handles listboxNames.DoubleClick
+        If rdbMV.Checked = True Then
+            ' jetzt kann der Erläuterungstext eingegeben werden ... 
+            Call MsgBox("Erläuterung eingeben ...")
+        End If
     End Sub
 
     Private Sub listboxNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles listboxNames.SelectedIndexChanged
@@ -408,6 +525,10 @@
             rdbCode = pptInfoType.sName
         ElseIf rdbBreadcrumb.Checked Then
             rdbCode = pptInfoType.bCrumb
+        ElseIf rdbLU.Checked Then
+            rdbCode = pptInfoType.lUmfang
+        ElseIf rdbMV.Checked Then
+            rdbCode = pptInfoType.mvElement
         Else
             rdbCode = pptInfoType.cName
         End If
@@ -433,6 +554,12 @@
 
 
         If anzSelected >= 1 Then
+
+            ' wenn das erste Element selektiert wird udn die Anzahl Marker > 0 ist, dann müssen hier die MArker gelöscht werden 
+            If listboxNames.SelectedItems.Count = 1 And markerShpNames.Count > 0 Then
+                Call deleteMarkerShapes()
+            End If
+
             ReDim nameArrayO(anzSelected - 1)
 
             For i As Integer = 0 To anzSelected - 1
@@ -442,6 +569,21 @@
             Try
                 selectedPlanShapes = currentSlide.Shapes.Range(nameArrayO)
                 selectedPlanShapes.Select()
+
+                ' die WindowsSelection Change Routine gleich wieder verlassen ... damit die MArkerShapes nicht gleich wieder gelöscht werden 
+
+                If showMarker Then
+                    If selectedPlanShapes.Count > 1 Then
+
+                        Call createMarkerShapes(pptShapes:=selectedPlanShapes)
+
+                    ElseIf selectedPlanShapes.Count = 1 Then
+
+                        Call createMarkerShapes(pptShape:=selectedPlanShapes.Item(1))
+
+                    End If
+                End If
+
             Catch ex As Exception
 
             End Try
@@ -460,24 +602,78 @@
     End Sub
 
     Private Sub shwOhneLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwOhneLight.CheckedChanged
+
+        If shwOhneLight.Checked Then
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
+            End If
+        Else
+            If Me.aLuTvText.Visible And _
+                    (Not shwGreenLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                Call aLuTvBlockVisible(False)
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 0
         Call faerbeShapes(ampelColor, shwOhneLight.Checked)
     End Sub
 
     Private Sub shwGreenLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwGreenLight.CheckedChanged
+
+        If shwGreenLight.Checked Then
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
+            End If
+        Else
+            If Me.aLuTvText.Visible And _
+                    (Not shwOhneLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                Call aLuTvBlockVisible(False)
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 1
         Call faerbeShapes(ampelColor, shwGreenLight.Checked)
     End Sub
 
     Private Sub shwYellowLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwYellowLight.CheckedChanged
+
+        If shwYellowLight.Checked Then
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
+            End If
+        Else
+            If Me.aLuTvText.Visible And _
+                    (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwRedLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                Call aLuTvBlockVisible(False)
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 2
         Call faerbeShapes(ampelColor, shwYellowLight.Checked)
     End Sub
 
     Private Sub shwRedLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwRedLight.CheckedChanged
+
+        If shwRedLight.Checked Then
+            If Not Me.aLuTvText.Visible Then
+                Call aLuTvBlockVisible(True)
+            End If
+        Else
+            If Me.aLuTvText.Visible And _
+                    (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwYellowLight.Checked) And _
+                    (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+
+                Call aLuTvBlockVisible(False)
+
+            End If
+        End If
+
         Call erstelleListbox()
         Dim ampelColor As Integer = 3
         Call faerbeShapes(ampelColor, shwRedLight.Checked)
@@ -501,7 +697,9 @@
                 If Not IsNothing(selectedPlanShapes) Then
                     If selectedPlanShapes.Count = 1 Then
                         Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                        Me.elemName.Text = bestimmeElemText(tmpShape, True, False)
+                        Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
+                        ' wird im Formular immer lang dargestellt 
+                        Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
                     End If
                 End If
 
@@ -511,7 +709,9 @@
 
                 If selectedPlanShapes.Count = 1 Then
                     Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                    Me.elemName.Text = bestimmeElemText(tmpShape, False, False)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, showOrginalName.Checked)
+                    ' wird im Formular immer lang dargestellt 
+                    Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
                 End If
 
             End If
@@ -705,7 +905,7 @@
                 Case pptPositionType.aboveLeft
                     .positionTextButton.Image = My.Resources.layout_northwest
                 Case pptPositionType.center
-                    .positionTextButton.Image = My.Resources.layout_horizontal
+                    .positionTextButton.Image = My.Resources.layout_center
                 Case Else
                     .positionTextButton.Image = My.Resources.layout_north
             End Select
@@ -728,7 +928,7 @@
                 Case pptPositionType.aboveLeft
                     .positionDateButton.Image = My.Resources.layout_northwest
                 Case pptPositionType.center
-                    .positionDateButton.Image = My.Resources.layout_horizontal
+                    .positionDateButton.Image = My.Resources.layout_center
                 Case Else
                     .positionDateButton.Image = My.Resources.layout_north
             End Select
@@ -759,7 +959,7 @@
         End Try
 
     End Sub
-   
+
 
     Private Sub deleteDate_Click(sender As Object, e As EventArgs) Handles deleteDate.Click
         Try
@@ -811,7 +1011,7 @@
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
                     If pptShapeIsMilestone(tmpShape) Then
                         Call annotatePlanShape(tmpShape, pptAnnotationType.datum, positionIndexMD)
-                    Else
+                    Elseif pptShapeIsPhase(tmpShape)
                         Call annotatePlanShape(tmpShape, pptAnnotationType.datum, positionIndexPD)
                     End If
 
@@ -834,20 +1034,195 @@
         showSearchListBox = Not showSearchListBox
 
         If showSearchListBox Then
-            Me.Height = fullHeight
-            filterText.Visible = True
-            listboxNames.Visible = True
-
+            Call searchBlockVisible(True)
             Call erstelleListbox()
         Else
-            Me.Height = smallHeight
-            filterText.Visible = False
-            listboxNames.Visible = False
+            Call searchBlockVisible(False)
         End If
 
         dontFire = False
 
     End Sub
 
+
+    Private Sub TabPage1_Click(sender As Object, e As EventArgs) Handles TabPage1.Click
+
+    End Sub
+
+    Private Sub TabPage2_Click(sender As Object, e As EventArgs) Handles TabPage2.Click
+
+    End Sub
+
+    Private Sub writeAmpel_Click(sender As Object, e As EventArgs) Handles writeAmpel.Click
+        Try
+
+            If Not IsNothing(selectedPlanShapes) Then
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+
+                    If isRelevantShape(tmpShape) Then
+                        If pptShapeIsMilestone(tmpShape) Then
+                            Call annotatePlanShape(tmpShape, pptAnnotationType.ampelText, positionIndexMT)
+                        Else
+                            Call annotatePlanShape(tmpShape, pptAnnotationType.ampelText, positionIndexPT)
+                        End If
+                    End If
+
+
+                Next
+
+                selectedPlanShapes.Select()
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    Private Sub deleteAmpel_Click(sender As Object, e As EventArgs) Handles deleteAmpel.Click
+        Try
+
+            If Not IsNothing(selectedPlanShapes) Then
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+                    Call deleteAnnotationShape(tmpShape, pptAnnotationType.ampelText)
+                Next
+                selectedPlanShapes.Select()
+            End If
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
+
+    Private Sub PictureMarker_Click(sender As Object, e As EventArgs) Handles PictureMarker.Click
+        CheckBxMarker.Checked = Not CheckBxMarker.Checked
+    End Sub
+
+    Private Sub CheckBxMarker_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBxMarker.CheckedChanged
+        If CheckBxMarker.Checked Then
+            ' alle selektierten Elemente jetzt mit Marker versehen
+            showMarker = True
+            Call createMarkerShapes(pptShapes:=selectedPlanShapes)
+        Else
+            showMarker = False
+            Call deleteMarkerShapes()
+        End If
+    End Sub
+
+    Private Sub rdbLU_CheckedChanged(sender As Object, e As EventArgs) Handles rdbLU.CheckedChanged
+
+        If rdbLU.Checked = True Then
+
+            Me.aLuTvText.Text = setALuTvText()
+
+            ' prüfen , ob der AmpelBlock sichtbar ist ...
+            If Me.aLuTvText.Visible Then
+                ' alles ok 
+            Else
+                Call aLuTvBlockVisible(True)
+            End If
+
+            Call erstelleListbox()
+
+        End If
+    End Sub
+
+    Private Sub rdbMV_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMV.CheckedChanged
+        If rdbMV.Checked = True Then
+
+            Me.aLuTvText.Text = setALuTvText
+
+            ' prüfen , ob der AmpelBlock sichtbar ist ...
+            If Me.aLuTvText.Visible Then
+                ' alles ok 
+            Else
+                Call aLuTvBlockVisible(True)
+            End If
+
+            Call erstelleListbox()
+
+        End If
+    End Sub
+
+   
+    ''' <summary>
+    ''' im Falle: Termin-Veränderungen zeigen: alle in der Listbox markierten Elemente werden "auf Home-Position" geschickt ; wenn kein Element selektiert ist, dann alle 
+    ''' im Fall eines selektierten Elements, das Home/Change Position hat: das oder die aktuell markierten Elemente werden zur Home-Position geschickt   
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnSendToHome_Click(sender As Object, e As EventArgs) Handles btnSendToHome.Click
+
+        Dim doItAll As Boolean = False
+        If Not IsNothing(selectedPlanShapes) Then
+            If selectedPlanShapes.Count > 0 Then
+                ' alle selektierten Elemente zur Home-Position schicken 
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+                    If isRelevantShape(tmpShape) Then
+                        Call sentToHomePosition(tmpShape)
+                    End If
+                Next
+            Else
+                doItAll = True
+            End If
+        Else
+            doItAll = True
+        End If
+
+        If doItAll Then
+            ' alle zur Home-Position schicken ...
+            For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+                If isRelevantShape(tmpShape) Then
+                    Call sentToHomePosition(tmpShape)
+                End If
+            Next
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' im Falle: Termin-Veränderungen zeigen: alle in der Listbox markierten Elemente werden "auf Changed-Position" geschickt ; wenn kein Element selektiert ist, dann alle 
+    ''' im Fall eines selektierten Elements, das Home/Change Position hat: das oder die aktuell markierten Elemente werden zur Changed-Position geschickt   
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnSentToChange_Click(sender As Object, e As EventArgs) Handles btnSentToChange.Click
+
+        Dim doItAll As Boolean = False
+        If Not IsNothing(selectedPlanShapes) Then
+            If selectedPlanShapes.Count > 0 Then
+                ' alle selektierten Elemente zur Home-Position schicken 
+                For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+
+                    If isRelevantShape(tmpShape) Then
+                        Call sentToChangedPosition(tmpShape)
+                    End If
+
+                Next
+            Else
+                doItAll = True
+                
+            End If
+        Else
+            doItAll = True
+        End If
+
+        If doItAll Then
+            ' alle zur Home-Position schicken ...
+            For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+                If isRelevantShape(tmpShape) Then
+                    Call sentToChangedPosition(tmpShape)
+                End If
+            Next
+        End If
+
+    End Sub
+
+    Private Sub aLuTvText_Enter(sender As Object, e As EventArgs) Handles aLuTvText.Enter
+        Call MsgBox("changed")
+    End Sub
 
 End Class

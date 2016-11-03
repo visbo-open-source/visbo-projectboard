@@ -2566,6 +2566,16 @@ Public Module testModule
 
         End While
 
+        ' Änderung tk 29.10.16 ergänzt um Schreiben der DB Info in das PPT file 
+        Try
+            Call addSmartPPTPresentationInfo(pptPres:=pptCurrentPresentation, _
+                                          dbURL:=awinSettings.databaseURL, _
+                                          dbName:=awinSettings.databaseName)
+        Catch ex As Exception
+
+        End Try
+
+        
         'If pptLastTime Or swimlaneMode Then
         If pptLastTime Then
             Try
@@ -4611,6 +4621,15 @@ Public Module testModule
         If worker.WorkerReportsProgress Then
             worker.ReportProgress(0, e)
         End If
+
+        ' Änderung tk 29.10.16 ergänzt um Schreiben der DB Info in das PPT file 
+        Try
+            Call addSmartPPTPresentationInfo(pptPres:=pptCurrentPresentation, _
+                                          dbURL:=awinSettings.databaseURL, _
+                                          dbName:=awinSettings.databaseName)
+        Catch ex As Exception
+
+        End Try
 
         ' Vorlage in passender Größe wird nun nicht mehr benötigt
         Try
@@ -15956,8 +15975,8 @@ Public Module testModule
             Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
         End If
 
-        ' jetzt werden alle Shapes gelöscht ... 
-        Call rds.deleteShapes()
+        ' jetzt werden alle Shapes invisible gesetzt  ... 
+        Call rds.setShapesInvisible()
 
 
     End Sub
@@ -16630,7 +16649,7 @@ Public Module testModule
         End If
 
         ' jetzt werden alle Shapes gelöscht ... 
-        Call rds.deleteShapes()
+        Call rds.setShapesInvisible()
 
 
     End Sub

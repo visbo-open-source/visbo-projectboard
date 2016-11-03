@@ -3,6 +3,7 @@ Imports System.Runtime.Serialization
 Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
+Imports MongoDbAccess
 
 
 Public Class frmSettings
@@ -43,8 +44,24 @@ Public Class frmSettings
         frmShowInfoBC.Checked = showBreadCrumbField
         frmExtendedSearch.Checked = extSearch
 
-        frmUserName.Text = userName
-        frmUserPWD.Text = ""
+        If Not noDBAccess Then
+            frmUserName.Text = userName
+            frmUserName.Enabled = False
+            frmUserPWD.Enabled = False
+            frmUserPWD.Text = ""
+            feedbackMessage.Text = "Login bereits erfolgreich durchgeführt ..."
+        Else
+            If dbURL.Length > 0 And dbName.Length > 0 Then
+                frmUserName.Enabled = True
+                frmUserPWD.Enabled = True
+                feedbackMessage.Text = ""
+            Else
+                frmUserName.Enabled = False
+                frmUserPWD.Enabled = False
+                feedbackMessage.Text = "keine Datenbank Information vorhanden ..."
+            End If
+        End If
+
 
         rdbPWD.Checked = True
         lblProtectField1.Text = "Passwort:"
@@ -82,20 +99,52 @@ Public Class frmSettings
         userName = frmUserName.Text
         userPWD = frmUserPWD.Text
 
+        Dim pwd As String
+        Dim user As String
+
+        user = frmUserName.Text
+        pwd = frmUserPWD.Text
+        feedbackMessage.Text = ""
+
+        Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
+            Dim request As New Request(dbURL, dbName, user, pwd)
+            Dim ok As Boolean = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
+            
+            userName = user
+            userPWD = pwd
+
+            feedbackMessage.Text = "Login bei DB <" & dbName & "> erfolgreich !"
+            noDBAccess = False
+
+            frmUserName.Enabled = False
+            frmUserPWD.Enabled = False
+
+        Catch ex As Exception
+            noDBAccess = True
+            feedbackMessage.Text = "Benutzername oder Passwort fehlerhaft!"
+            frmUserName.Text = ""
+            frmUserPWD.Text = ""
+            user = frmUserName.Text
+            pwd = frmUserPWD.Text
+            frmUserName.Focus()
+            DialogResult = System.Windows.Forms.DialogResult.Retry
+        End Try
+
     End Sub
 
     Private Sub btnProtect_Click(sender As Object, e As EventArgs) Handles btnProtect.Click
 
-        protectContents = Not protectContents
+        VisboProtected = True
 
-        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-            If tmpShape.Tags.Count > 0 Then
-                If isRelevantShape(tmpShape) Then
-                    ' Sichtbarkeit setzen ....
-                    tmpShape.Visible = protectContents
-                End If
-            End If
-        Next
+        If rdbPWD.Checked Then
+            pptAPP.ActivePresentation.Tags.Add(protectionTag, "PWD")
+            pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text)
+        Else
+            pptAPP.ActivePresentation.Tags.Add(protectionTag, "COMPUTER")
+            pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text & "\" & frmProtectField2.Text)
+        End If
+
+        Call makeVisboShapesVisible(False)
 
     End Sub
 
@@ -124,7 +173,7 @@ Public Class frmSettings
         Try
             schriftGroesse = CDbl(txtboxSchriftGroesse.Text)
         Catch ex As Exception
-            Call MsgBox("unzuzlässiger Wert für Schriftgröße ...")
+            Call MsgBox("unzulässiger Wert für Schriftgröße ...")
             txtboxSchriftGroesse.Text = schriftGroesse.ToString
         End Try
 
@@ -223,5 +272,32 @@ Public Class frmSettings
         Call changeLanguageInAnnotations()
     End Sub
 
- 
+    Private Sub rdbUserName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbUserName.CheckedChanged
+
+        If rdbUserName.Checked = True Then
+            frmProtectField1.PasswordChar = ""
+        End If
+    End Sub
+
+    Private Sub DBLoginPage_Click(sender As Object, e As EventArgs) Handles DBLoginPage.Click
+        If Not noDBAccess Then
+            frmUserName.Enabled = False
+            frmUserPWD.Enabled = False
+            feedbackMessage.Text = "Login bereits durchgeführt ..."
+        Else
+            If dbURL.Length > 0 And dbName.Length > 0 Then
+                frmUserName.Enabled = True
+                frmUserPWD.Enabled = True
+                feedbackMessage.Text = ""
+            Else
+                frmUserName.Enabled = False
+                frmUserPWD.Enabled = False
+                feedbackMessage.Text = "keine Datenbank Information vorhanden ..."
+            End If
+        End If
+    End Sub
+
+    Private Sub TabPage4_Click(sender As Object, e As EventArgs) Handles TabPage4.Click
+        Call MsgBox("jetzt in TabPage4")
+    End Sub
 End Class

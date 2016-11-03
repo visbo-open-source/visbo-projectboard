@@ -153,6 +153,9 @@ Public Module Module1
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
 
+    Public visboFarbeBlau As Integer = RGB(69, 140, 203)
+    Public visboFarbeOrange As Integer = RGB(247, 148, 30)
+
     ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
     Public Const rootPhaseNameDB As String = "0"
@@ -473,8 +476,9 @@ Public Module Module1
         Premium = 5
     End Enum
 
-
-    Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
+    ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
+    ' soll so früh gesetzt sein, damit 
+    Public StartofCalendar As Date = #1/1/2000#
 
     Public weightStrategicFit As Double
 
@@ -3058,6 +3062,43 @@ Public Module Module1
                 End If
 
                 
+
+            End With
+        End If
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' fügt an eine Powerpoint Präsentation Informationen über DBURL und Name an, die vom PPT Add-In SmartPPT ausgelesen werden können
+    ''' </summary>
+    ''' <param name="pptPres"></param>
+    ''' <param name="dbURL"></param>
+    ''' <param name="dbName"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTPresentationInfo(ByRef pptPres As PowerPoint.Presentation, _
+                                              ByVal dbURL As String, ByVal dbName As String)
+
+
+
+        If Not IsNothing(pptPres) Then
+            With pptPres
+
+
+                If Not IsNothing(dbURL) Then
+                    If dbURL.Length > 0 Then
+                        .Tags.Add("DBURL", dbURL)
+                    End If
+
+                End If
+
+                If Not IsNothing(dbName) Then
+                    If dbName.Length > 0 Then
+                        .Tags.Add("DBNAME", dbName)
+                    End If
+                End If
+
 
             End With
         End If
