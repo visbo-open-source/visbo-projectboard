@@ -418,6 +418,8 @@ Public Class frmReportProfil
 
                             Me.statusLabel.Visible = True
                             Me.statusLabel.Text = "...started"
+                            Me.ReportErstellen.Visible = False
+                            Me.ReportErstellen.Enabled = False
 
                             BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
 
@@ -433,6 +435,8 @@ Public Class frmReportProfil
                             Else
                                 Me.statusLabel.Visible = True
                                 Me.statusLabel.Text = "...started"
+                                Me.ReportErstellen.Visible = False
+                                Me.ReportErstellen.Enabled = False
 
                                 BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
                             End If
@@ -786,9 +790,9 @@ Public Class frmReportProfil
 
         Me.statusLabel.Text = "...done"
         Me.statusLabel.Visible = True
-        Me.ReportErstellen.Visible = False
-        Me.ReportErstellen.Enabled = False
-        Me.RepProfilListbox.Enabled = False
+        Me.ReportErstellen.Visible = True
+        Me.ReportErstellen.Enabled = True
+        Me.RepProfilListbox.Enabled = True
         Me.Cursor = System.Windows.Forms.Cursors.Arrow
 
         ' hier evt. noch schließen und Abspeichern des Reports von PPT
