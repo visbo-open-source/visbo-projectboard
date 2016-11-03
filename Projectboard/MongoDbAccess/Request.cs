@@ -45,7 +45,8 @@ namespace MongoDbAccess
             //var databaseURL = "localhost";
             if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
-                var connectionString = "mongodb://" + databaseURL + "?connectTimeoutMS=30&SocketTimeoutMS=10"; 
+                var connectionString = "mongodb://" + databaseURL; 
+                //var connectionString = "mongodb://" + databaseURL + "?connectTimeoutMS=30&SocketTimeoutMS=10"; 
                 //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
@@ -53,8 +54,8 @@ namespace MongoDbAccess
 
 
             {
-
-                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
+                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;  /*Aufruf mit MongoDB mit Authentication  */
+                //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
                 

@@ -9495,7 +9495,37 @@ Imports System.Windows
 
 
     End Sub
+    ''' <summary>
+    ''' Speichern des aktuellen, in CurrentReportProfil gespeicherten ReportProfil auf Platte in Dir awinPath\requirements\ReportProfile
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub PTStoreCurReportProfil(control As IRibbonControl)
+        Dim profilNameForm As New frmStoreReportProfil
+        Dim returnvalue As DialogResult
+        returnvalue = profilNameForm.ShowDialog
+       
+    End Sub
 
+    Public Sub PTDoReportOfProfil(control As IRibbonControl)
+
+        Dim reportAuswahl As New frmReportProfil
+        Dim returnvalue As DialogResult
+
+        If ShowProjekte.Count > 0 Then
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                reportAuswahl.calledFrom = "Multiprojekt-Tafel"
+                returnvalue = reportAuswahl.ShowDialog
+                Call awinDeSelect()
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus! ")
+            End If
+        Else
+            Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
+        End If
+
+
+    End Sub
 
 
 #End Region

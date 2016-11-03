@@ -149,4 +149,8 @@
     Private Sub filterEmptyProjects_CheckedChanged(sender As Object, e As EventArgs) Handles filterEmptyProjects.CheckedChanged
 
     End Sub
+
+    Private Sub shwProjectLine_CheckedChanged(sender As Object, e As EventArgs) Handles shwProjectLine.CheckedChanged
+
+    End Sub
 End Class

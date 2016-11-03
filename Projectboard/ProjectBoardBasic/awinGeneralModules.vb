@@ -15146,6 +15146,40 @@ Public Module awinGeneralModules
 
     End Sub
 
+
+    Public Sub XMLExportReportProfil(ByVal profil As clsReportAll)
+
+
+
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
+
+        Try
+
+            Dim serializer = New DataContractSerializer(GetType(clsReportAll))
+
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, profil)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, profil)
+            writer.Flush()
+            writer.Close()
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+
+    End Sub
+
+
     Public Function XMLImportReportProfil(ByVal profilName As String) As clsReport
 
         Dim profil As New clsReport
@@ -15166,6 +15200,30 @@ Public Module awinGeneralModules
 
             Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
             XMLImportReportProfil = Nothing
+        End Try
+
+    End Function
+
+    Public Function XMLImportReportAllProfil(ByVal profilName As String) As clsReportAll
+
+        Dim profil As New clsReportAll
+
+        Dim serializer = New DataContractSerializer(GetType(clsReportAll))
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            profil = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportReportAllProfil = profil
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportReportAllProfil = Nothing
         End Try
 
     End Function

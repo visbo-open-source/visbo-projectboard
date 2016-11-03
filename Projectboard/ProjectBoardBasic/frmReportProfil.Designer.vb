@@ -31,6 +31,7 @@ Partial Class frmReportProfil
         Me.changeProfil = New System.Windows.Forms.Button()
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.BGworkerReportBHTC = New System.ComponentModel.BackgroundWorker()
+        Me.BGWorkerReportGen = New System.ComponentModel.BackgroundWorker()
         Me.SuspendLayout()
         '
         'RepProfilListbox
@@ -113,6 +114,9 @@ Partial Class frmReportProfil
         '
         Me.BGworkerReportBHTC.WorkerReportsProgress = True
         '
+        'BGWorkerReportGen
+        '
+        '
         'frmReportProfil
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -140,4 +144,5 @@ Partial Class frmReportProfil
     Friend WithEvents changeProfil As System.Windows.Forms.Button
     Friend WithEvents statusLabel As System.Windows.Forms.Label
     Friend WithEvents BGworkerReportBHTC As System.ComponentModel.BackgroundWorker
+    Friend WithEvents BGWorkerReportGen As System.ComponentModel.BackgroundWorker
 End Class
