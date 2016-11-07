@@ -10730,7 +10730,7 @@ Public Module awinGeneralModules
                 Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
                 Dim showPname As Boolean
 
-                
+
 
                 For Each pname In projektliste
 
@@ -10756,7 +10756,7 @@ Public Module awinGeneralModules
                         Dim variantNames As Collection = aktuelleGesamtListe.getVariantNames(pname, True)
 
                         nodeLevel0 = .Nodes.Add(pname)
-                        
+
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
                         If aKtionskennung = PTTvActions.delFromSession Or _
