@@ -19,6 +19,8 @@ Public Class frmReportProfil
     ' "MS Project" stehen. 
     Public calledFrom As String
 
+    Friend listofProfils As New SortedList(Of String, clsReportAll)
+
 
   
 
@@ -41,6 +43,12 @@ Public Class frmReportProfil
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
         If Me.calledFrom = "MS Project" Then
+
+            ' für BHTC-Report wird diese Auswahlmöglichkeit derzeit nicht benötigt
+            Me.EPreports.Enabled = False
+            Me.EPreports.Visible = False
+            Me.MPreports.Enabled = False
+            Me.MPreports.Visible = False
 
             Try
 
@@ -154,7 +162,7 @@ Public Class frmReportProfil
             Try
 
                 ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
-                Dim listofProfils As New SortedList(Of String, clsReportAll)
+
                 Dim dirName As String
                 Dim dateiName As String
                 Dim profilName As String = ""
@@ -253,6 +261,7 @@ Public Class frmReportProfil
 
 
         Dim reportProfilName As String = RepProfilListbox.Text
+        Dim IndSelItem As Integer = RepProfilListbox.SelectedIndex
 
         ''Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
 
@@ -276,18 +285,25 @@ Public Class frmReportProfil
 
             End If
         ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+
             ' '' Einlesen des ausgewählten ReportProfils
             reportAllProfil = XMLImportReportAllProfil(reportProfilName)
             currentReportProfil = reportAllProfil
+
+            If Not IsNothing(reportAllProfil) Then
+                ToolTipProfil.Show(reportAllProfil.description, RepProfilListbox, 6000)
+            End If
+
         End If
-     
-    
+
+
 
     End Sub
 
+
     Private Sub vonDate_ValueChanged(sender As Object, e As EventArgs) Handles vonDate.ValueChanged
 
-        
+
     End Sub
 
     Private Sub bisDate_ValueChanged(sender As Object, e As EventArgs) Handles bisDate.ValueChanged
@@ -662,7 +678,7 @@ Public Class frmReportProfil
                                                 selectedBUs, selectedTypes, True, _
                                                 True, zeilenhoehe, legendFontSize, _
                                                 worker, e)
-  
+
             Else
 
 
@@ -727,7 +743,7 @@ Public Class frmReportProfil
             showRangeRight = getColumnOfDate(reportProfil.BisDate)
 
         End If
-      
+
 
         Try
             If Not reportProfil.isMpp Then
@@ -760,7 +776,7 @@ Public Class frmReportProfil
 
                 Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
                 If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
-  
+
                     Call createPPTSlidesFromConstellation(vorlagendateiname, _
                                                           selectedPhases, selectedMilestones, _
                                                           selectedRoles, selectedCosts, _
@@ -798,4 +814,100 @@ Public Class frmReportProfil
         ' hier evt. noch schließen und Abspeichern des Reports von PPT
 
     End Sub
+
+    Private Sub EPreports_CheckedChanged(sender As Object, e As EventArgs) Handles EPreports.CheckedChanged
+
+        If EPreports.Checked And Not MPreports.Checked Then
+
+            If Me.calledFrom = "MS Project" Then
+
+                Try
+
+                Catch ex As Exception
+                    'Call MsgBox(ex.Message)
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                End Try
+
+            ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+                Try
+
+                    RepProfilListbox.Items.Clear()
+
+                    For Each kvp In listofProfils
+
+                        If Not kvp.Value.isMpp Then
+                            ' Profil profilName in Auswahl eintragen
+                            RepProfilListbox.Items.Add(kvp.Value.name)
+
+                        End If
+                    Next
+
+
+                Catch ex As Exception
+                    'Throw New ArgumentException("Fehler beim Filtern")
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                End Try
+
+
+                Me.zeitLabel.Visible = False
+                Me.vonDate.Visible = False
+                Me.bisDate.Visible = False
+                Me.changeProfil.Visible = False
+                Me.statusLabel.Visible = False
+            End If
+
+        End If
+    End Sub
+
+
+    Private Sub MPreports_CheckedChanged(sender As Object, e As EventArgs) Handles MPreports.CheckedChanged
+
+        If MPreports.Checked And Not EPreports.Checked Then
+
+            If Me.calledFrom = "MS Project" Then
+
+                Try
+
+                Catch ex As Exception
+                    'Call MsgBox(ex.Message)
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                End Try
+
+            ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+                Try
+
+                    RepProfilListbox.Items.Clear()
+
+                    For Each kvp In listofProfils
+
+                        If kvp.Value.isMpp Then
+                            ' Profil profilName in Auswahl eintragen
+                            RepProfilListbox.Items.Add(kvp.Value.name)
+
+                        End If
+                    Next
+
+
+                Catch ex As Exception
+                    'Throw New ArgumentException("Fehler beim Filtern")
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                End Try
+
+
+                Me.zeitLabel.Visible = False
+                Me.vonDate.Visible = False
+                Me.bisDate.Visible = False
+                Me.changeProfil.Visible = False
+                Me.statusLabel.Visible = False
+            End If
+
+        End If
+
+    End Sub
+
+
 End Class

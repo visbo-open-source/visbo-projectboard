@@ -1,5 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
+Imports System.Windows.Forms
+
 Public Class frmStoreReportProfil
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
@@ -11,11 +13,20 @@ Public Class frmStoreReportProfil
         Else
             cName = NameReportProfil.SelectedItem.ToString
         End If
-        currentReportProfil.name = cName
-        Call XMLExportReportProfil(currentReportProfil)
+        ' Beschreibung für Report Profil speichern
+        currentReportProfil.description = profilDescription.Text
 
-        DialogResult = System.Windows.Forms.DialogResult.OK
-        MyBase.Close()
+        If cName <> "" Then
+
+            currentReportProfil.name = cName
+            Call XMLExportReportProfil(currentReportProfil)
+
+            DialogResult = System.Windows.Forms.DialogResult.OK
+            MyBase.Close()
+        Else
+            Call MsgBox("Bitte geben Sie einen Namen für das ReportProfil ein! ")
+        End If
+
     End Sub
 
     Private Sub AbbruchButton_Click(sender As Object, e As EventArgs) Handles AbbruchButton.Click
@@ -25,11 +36,19 @@ Public Class frmStoreReportProfil
     End Sub
 
     Private Sub NameReportProfil_SelectedIndexChanged(sender As Object, e As EventArgs) Handles NameReportProfil.SelectedIndexChanged
-     
+        Dim hilfsReportProfil As New clsReportAll
+
+        hilfsReportProfil = XMLImportReportAllProfil(NameReportProfil.SelectedItem.ToString)
+        If Not IsNothing(hilfsReportProfil) Then
+            profilDescription.Text = hilfsReportProfil.description
+        Else
+            profilDescription.Text = ""
+        End If
+
     End Sub
 
     Private Sub frmStoreReportProfil_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-       
+
         Dim dirName As String
         Dim dateiName As String
         Dim profilName As String = ""
@@ -65,6 +84,11 @@ Public Class frmStoreReportProfil
             End If
 
         End If
+        profilDescription.Text = ""
+    End Sub
 
+    Private Sub NameReportProfil_KeyDown(sender As Object, e As KeyEventArgs) Handles NameReportProfil.KeyDown
+        
+        profilDescription.Text = ""
     End Sub
 End Class
