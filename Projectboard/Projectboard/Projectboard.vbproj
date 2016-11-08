@@ -20,7 +20,7 @@
     <PublishUrl>C:\publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.2.2.3</ApplicationVersion>
+    <ApplicationVersion>3.2.2.4</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>

@@ -14733,25 +14733,25 @@ Public Module awinGeneralModules
 
 
     ''' <summary>
-    ''' Behandelt den Fehler UnkonwnNode beim Einlesen des RXF-Files
+    ''' Behandelt den Fehler UnkonwnNode beim Einlesen eines XML-Files (oder RXF-Files)
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub deserializer_UnknownNode(sender As Object, e As XmlNodeEventArgs)
-        Call MsgBox(("RXFImport: Unknown Node:" & e.Name & ControlChars.Tab & e.Text))
+        Call MsgBox(("XMLImport: Unknown Node:" & e.Name & ControlChars.Tab & e.Text))
     End Sub 'serializer_UnknownNode
 
 
     ''' <summary>
-    ''' Behandelt den Fehler UnkonwnAttribute beim Einlesen des RXF-Files
+    ''' Behandelt den Fehler UnkonwnAttribute beim Einlesen eines XML-Files (oder RXF-Files)
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub deserializer_UnknownAttribute(sender As Object, e As XmlAttributeEventArgs)
         Dim attr As System.Xml.XmlAttribute = e.Attr
-        Call MsgBox(("RXFImport: Unknown attribute " & attr.Name & "='" & attr.Value & "'"))
+        Call MsgBox(("XMLImport: Unknown attribute " & attr.Name & "='" & attr.Value & "'"))
     End Sub 'serializer_UnknownAttribute
 
     ''' <summary>
