@@ -137,6 +137,12 @@
     <Compile Include="frmSelectRepSprache.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmStoreReportProfil.Designer.vb">
+      <DependentUpon>frmStoreReportProfil.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmStoreReportProfil.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmTestLicences.Designer.vb">
       <DependentUpon>frmTestLicences.vb</DependentUpon>
     </Compile>
@@ -365,6 +371,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmStoreCockpit.resx">
       <DependentUpon>frmStoreCockpit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmStoreReportProfil.resx">
+      <DependentUpon>frmStoreReportProfil.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmTestLicences.resx">
       <DependentUpon>frmTestLicences.vb</DependentUpon>

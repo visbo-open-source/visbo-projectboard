@@ -495,17 +495,27 @@ Public Module Module1
     ' beauftragt
     ' abgeschlossen
     Public ProjektStatus(4) As String
+
+
+    '
+    ' aktuell angewendetes ReportProfil
+    '
+    Public currentReportProfil As New clsReportAll
+
+
     '
     'ReportSprache kann sein:
-    ' deutsch
-    ' englisch
-    ' französisch
-    ' spanisch
+    '   deutsch
+    '   englisch
+    '   französisch
+    '   spanisch
+    '
     Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"), _
                                          New CultureInfo("en-US"), _
                                          New CultureInfo("fr-FR"), _
                                          New CultureInfo("es-ES")}
-
+    ' aktuell verwendete Sprache
+    '
     Public repCult As CultureInfo
 
     '
