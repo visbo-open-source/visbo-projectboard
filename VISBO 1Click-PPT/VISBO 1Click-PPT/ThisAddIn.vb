@@ -32,9 +32,9 @@ Public Class ThisAddIn
             awinSettings.visboTaskClass = My.Settings.TaskClass
             awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
             awinSettings.visboAmpel = My.Settings.VISBOAmpel
+            awinSettings.visboDebug = True
 
-
-            ' 09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+            '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
             Call awinsetTypen("BHTC")
 
             StartofCalendar = StartofCalendar.AddMonths(-12)

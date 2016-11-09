@@ -707,8 +707,7 @@ Public Module awinGeneralModules
             Dim formerSU As Boolean = appInstance.ScreenUpdating
             Dim needToBeSaved As Boolean = False
             '  um dahinter temporär die Darstellungsklassen kopieren zu können , nur für ProjectBoard nötig 
-            Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Dim projectBoardSheet As Excel.Worksheet = Nothing
 
             Dim i As Integer
             Dim xlsCustomization As Excel.Workbook = Nothing
@@ -716,6 +715,7 @@ Public Module awinGeneralModules
             ReDim importOrdnerNames(7)
             ReDim exportOrdnerNames(5)
 
+            Call MsgBox("auslesen von user")
 
             ' Auslesen des Window Namens 
             Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
@@ -726,25 +726,22 @@ Public Module awinGeneralModules
 
             globalPath = awinSettings.globalPath
 
-            If special = "ProjectBoard" Then
 
-                ' Debug-Mode?
-                If awinSettings.visboDebug Then
-                    If Not IsNothing(globalPath) Then
-                        If globalPath.Length > 0 Then
-                            Call MsgBox("GlobalPath:" & globalPath & vbLf & _
-                                        "existiert: " & My.Computer.FileSystem.DirectoryExists(globalPath).ToString)
-                        Else
-                            Call MsgBox("GlobalPath: leerer String")
-                        End If
+            ' Debug-Mode?
+            If awinSettings.visboDebug Then
+                If Not IsNothing(globalPath) Then
+                    If globalPath.Length > 0 Then
+                        Call MsgBox("GlobalPath:" & globalPath & vbLf & _
+                                    "existiert: " & My.Computer.FileSystem.DirectoryExists(globalPath).ToString)
                     Else
-                        Call MsgBox("GlobalPath: Nothing")
+                        Call MsgBox("GlobalPath: leerer String")
                     End If
-
-
+                Else
+                    Call MsgBox("GlobalPath: Nothing")
                 End If
 
-            End If ' if special
+
+            End If
 
 
             ' awinPath kann relativ oder absolut angegeben sein, beides möglich
@@ -754,11 +751,9 @@ Public Module awinGeneralModules
             awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
 
 
-
             If Not awinPath.EndsWith("\") Then
                 awinPath = awinPath & "\"
             End If
-
 
 
             ' Debug-Mode?
@@ -766,7 +761,6 @@ Public Module awinGeneralModules
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
             End If
-
 
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
@@ -954,6 +948,8 @@ Public Module awinGeneralModules
                 '' ''  um dahinter temporär die Darstellungsklassen kopieren zu können  
                 ' ''Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
                 ' ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                projectBoardSheet = CType(appInstance.ActiveSheet, _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
 
                 With appInstance.ActiveWindow
 
@@ -1078,6 +1074,7 @@ Public Module awinGeneralModules
                 End If
             End If 'if special="ProjectBoard"
 
+            Call MsgBox("CustomizationFile is open")
 
             Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -1111,6 +1108,7 @@ Public Module awinGeneralModules
 
                 ' auslesen der anderen Informationen 
                 Call readOtherDefinitions(wsName4)
+
 
                 If special = "ProjectBoard" Then
 
@@ -1156,6 +1154,9 @@ Public Module awinGeneralModules
                     End If
 
                 End If ' if special="ProjectBoard"
+
+
+                Call MsgBox("vor NameMappings")
 
 
                 ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 

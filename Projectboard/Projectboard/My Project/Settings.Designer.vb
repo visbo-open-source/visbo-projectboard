@@ -116,12 +116,12 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")> _
     Public ReadOnly Property VISBODebug() As Boolean
         Get
-            Return CType(Me("VISBODebug"),Boolean)
+            Return CType(Me("VISBODebug"), Boolean)
         End Get
     End Property
 End Class
