@@ -77,6 +77,8 @@ Module Module1
         text = 0
         datum = 1
         ampelText = 2
+        lieferumfang = 3
+        movedExplanation = 4
     End Enum
 
     Friend Enum pptInfoType
@@ -214,13 +216,14 @@ Module Module1
                         Dim anzShapes As Integer = currentSlide.Shapes.Count
                         ' jetzt werden die ganzen Listen aufgebaut 
                         For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+                            Dim tstName As String = tmpShape.Name
                             If tmpShape.Tags.Count > 0 Then
                                 If isRelevantShape(tmpShape) Then
                                     ' invisible setzen ....
                                     'tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                                     bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
 
-                                    Call aktualisiereSortedLists(tmpShape, smartSlideLists)
+                                    Call aktualisiereSortedLists(tmpShape)
 
                                     If visboInfoActivated And tmpShape.Visible = False Then
                                         tmpShape.Visible = True
@@ -414,69 +417,75 @@ Module Module1
     ''' wenn das Shape keine Abkürzung hat, so wird eine aus der laufenden Nummer erzeugt ...
     ''' </summary>
     ''' <param name="tmpShape"></param>
-    ''' <param name="smartSlideLists"></param>
     ''' <remarks></remarks>
-    Private Sub aktualisiereSortedLists(ByVal tmpShape As PowerPoint.Shape, _
-                                            ByRef smartSlideLists As clsSmartSlideListen)
+    Private Sub aktualisiereSortedLists(ByVal tmpShape As PowerPoint.Shape)
         Dim shapeName As String = tmpShape.Name
 
-        ' den classified Name behandeln ...
-        Dim tmpName As String = tmpShape.Tags.Item("CN")
-        If tmpName.Trim.Length = 0 Then
-            Exit Sub
+
+        ' es werden nur die aufgebaut, die keine Textboxen sind 
+        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or _
+            tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine Then
+            ' nichts tun 
+        Else
+            ' den classified Name behandeln ...
+            Dim tmpName As String = tmpShape.Tags.Item("CN")
+            If tmpName.Trim.Length = 0 Then
+                Exit Sub
+            End If
+
+            Call smartSlideLists.addCN(tmpName, shapeName)
+
+            ' den original Name behandeln ...
+            tmpName = tmpShape.Tags.Item("ON")
+            If tmpName.Trim.Length > 0 Then
+                Call smartSlideLists.addON(tmpName, shapeName)
+            End If
+
+            ' den Short Name behandeln ...
+            tmpName = tmpShape.Tags.Item("SN")
+            If tmpName.Trim.Length = 0 Then
+                ' es gibt keinen Short-Name, also soll einer aufgrund der laufenden Nummer erzeugt werden ...
+                tmpName = smartSlideLists.getUID(shapeName).ToString
+            End If
+            Call smartSlideLists.addSN(tmpName, shapeName)
+
+            ' den BreadCrumb behandeln 
+            tmpName = tmpShape.Tags.Item("BC")
+            If tmpName.Trim.Length > 0 Then
+                Call smartSlideLists.addBC(tmpName, shapeName)
+            End If
+
+            ' AmpelColor behandeln
+            Dim ampelColor As Integer = 0
+            tmpName = tmpShape.Tags.Item("AC")
+            If tmpName.Trim.Length > 0 Then
+                Try
+                    If IsNumeric(tmpName) Then
+                        ampelColor = CInt(tmpName)
+                        Call smartSlideLists.addAC(ampelColor, shapeName)
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+            ' Lieferumfänge behandeln
+            tmpName = tmpShape.Tags.Item("LU")
+            If tmpName.Trim.Length > 0 Then
+                Try
+                    Call smartSlideLists.addLU(tmpName, shapeName)
+                Catch ex As Exception
+
+                End Try
+            End If
+
+            ' wurde das Element verschoben ? 
+            ' SmartslideLists werden auch gleich mit aktualisiert ... 
+            Call checkShpOnManualMovement(tmpShape.Name)
         End If
 
-        Call smartSlideLists.addCN(tmpName, shapeName)
-
-        ' den original Name behandeln ...
-        tmpName = tmpShape.Tags.Item("ON")
-        If tmpName.Trim.Length > 0 Then
-            Call smartSlideLists.addON(tmpName, shapeName)
-        End If
-
-        ' den Short Name behandeln ...
-        tmpName = tmpShape.Tags.Item("SN")
-        If tmpName.Trim.Length = 0 Then
-            ' es gibt keinen Short-Name, also soll einer aufgrund der laufenden Nummer erzeugt werden ...
-            tmpName = smartSlideLists.getUID(shapeName).ToString
-        End If
-        Call smartSlideLists.addSN(tmpName, shapeName)
-
-        ' den BreadCrumb behandeln 
-        tmpName = tmpShape.Tags.Item("BC")
-        If tmpName.Trim.Length > 0 Then
-            Call smartSlideLists.addBC(tmpName, shapeName)
-        End If
-
-        ' AmpelColor behandeln
-        Dim ampelColor As Integer = 0
-        tmpName = tmpShape.Tags.Item("AC")
-        If tmpName.Trim.Length > 0 Then
-            Try
-                If IsNumeric(tmpName) Then
-                    ampelColor = CInt(tmpName)
-                    Call smartSlideLists.addAC(ampelColor, shapeName)
-                End If
-
-            Catch ex As Exception
-
-            End Try
-
-        End If
-
-        ' Lieferumfänge behandeln
-        tmpName = tmpShape.Tags.Item("LU")
-        If tmpName.Trim.Length > 0 Then
-            Try
-                Call smartSlideLists.addLU(tmpName, shapeName)
-            Catch ex As Exception
-
-            End Try
-        End If
-
-        ' wurde das Element verschoben ? 
-        ' SmartslideLists werden auch gleich mit aktualisiert ... 
-        Call checkShpOnManualMovement(tmpShape.Name)
 
 
     End Sub
@@ -503,7 +512,8 @@ Module Module1
                     Dim pptDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + 0.5 * tmpShape.Width)
                     Dim planDate As Date = CDate(tmpShape.Tags.Item("ED"))
 
-                    If DateDiff(DateInterval.Day, pptDate, planDate) = 0 Then
+                    If DateDiff(DateInterval.Day, pptDate, planDate) >= -1 And _
+                        DateDiff(DateInterval.Day, pptDate, planDate) <= 1 Then
                         ' keine Änderung 
                     Else
 
@@ -522,17 +532,38 @@ Module Module1
 
                         Call smartSlideLists.addMV(tmpShape.Name)
                     End If
+
                 Else
                     Dim pptSDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left)
                     Dim pptEDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width)
                     Dim planSDate As Date = CDate(tmpShape.Tags.Item("SD"))
                     Dim planEDate As Date = CDate(tmpShape.Tags.Item("ED"))
 
-                    If ((DateDiff(DateInterval.Day, pptSDate, planSDate) = 0) And _
-                        (DateDiff(DateInterval.Day, pptEDate, planEDate) = 0)) Then
+                    ' prüfen, ob es beim Erzeugen abgeschnitten wurde ...
+                    Dim pptStartOfCalendar As Date = slideCoordInfo.PPTStartOFCalendar
+                    Dim pptEndOfCalendar As Date = slideCoordInfo.PPTEndOFCalendar
+
+                    If DateDiff(DateInterval.Day, pptStartOfCalendar, planSDate) < 0 Then
+                        planSDate = pptStartOfCalendar
+                    End If
+
+                    If DateDiff(DateInterval.Day, pptEndOfCalendar, planEDate) > 0 Then
+                        planEDate = pptEndOfCalendar
+                    End If
+
+                    Dim absDiffSD As Integer = DateDiff(DateInterval.Day, pptSDate, planSDate)
+                    If absDiffSD < 0 Then
+                        absDiffSD = -1 * absDiffSD
+                    End If
+
+                    Dim absDiffED As Integer = DateDiff(DateInterval.Day, pptEDate, planEDate)
+                    If absDiffED < 0 Then
+                        absDiffED = -1 * absDiffED
+                    End If
+
+                    If ((absDiffSD <=1) and (absDiffED <=1))  then 
                         ' keine Änderung 
                     Else
-
                         With tmpShape
 
                             If .Tags.Item("MVD").Length > 0 Then
@@ -550,7 +581,8 @@ Module Module1
                         End With
 
                         Call smartSlideLists.addMV(tmpShape.Name)
-                    End If
+
+                End If
 
                 End If
             End If
@@ -827,7 +859,9 @@ Module Module1
     Friend Sub markReferenceShape(ByVal shapeName As String)
         Dim tmpText As String = ""
 
-        If shapeName.EndsWith(CStr(pptAnnotationType.ampelText)) Then
+        If shapeName.EndsWith(CStr(pptAnnotationType.ampelText)) Or _
+            shapeName.EndsWith(CStr(pptAnnotationType.lieferumfang)) Or _
+            shapeName.EndsWith(CStr(pptAnnotationType.movedExplanation)) Then
             Dim strLength As Integer = shapeName.Length
             If strLength > 1 Then
                 tmpText = shapeName.Substring(0, strLength - 1)
@@ -906,7 +940,21 @@ Module Module1
                         .Line.ForeColor.RGB = visboFarbeBlau
                     End With
 
-                    markerShpNames.Add(tmpShape.Name, markerShape.Name)
+
+                    If Not markerShpNames.ContainsKey(tmpShape.Name) Then
+                        markerShpNames.Add(tmpShape.Name, markerShape.Name)
+                    Else
+                        Try
+                            Dim oldMarker As PowerPoint.Shape = currentSlide.Shapes(markerShpNames.Item(tmpShape.Name))
+                            oldMarker.Delete()
+                            markerShpNames.Remove(tmpShape.Name)
+                            markerShpNames.Add(tmpShape.Name, markerShape.Name)
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
 
                 End If
 
@@ -1267,6 +1315,7 @@ Module Module1
     Public Function isMovedElement(ByVal curShape As PowerPoint.Shape) As Boolean
 
         Dim tmpResult As Boolean = False
+        Dim tolerance As Integer = 1
 
         Try
             If pptShapeIsMilestone(curShape) Then
@@ -1274,7 +1323,12 @@ Module Module1
                 Dim msDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + 0.5 * curShape.Width)
 
                 Dim tstDate As Date = CDate(curShape.Tags.Item("ED"))
-                If DateDiff(DateInterval.Day, msDate, tstDate) <> 0 Then
+                Dim diffDays As Integer = DateDiff(DateInterval.Day, msDate, tstDate)
+                If diffDays < 0 Then
+                    diffDays = -1 * diffDays
+                End If
+
+                If diffDays > tolerance Then
                     tmpResult = True
                 End If
 
@@ -1286,8 +1340,18 @@ Module Module1
                 Dim tstDate1 As Date = CDate(curShape.Tags.Item("SD"))
                 Dim tstDate2 As Date = CDate(curShape.Tags.Item("ED"))
 
-                If DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Or _
-                    DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Then
+                Dim diffdays1 As Integer = DateDiff(DateInterval.Day, startDate, tstDate1)
+                If diffdays1 < 0 Then
+                    diffdays1 = diffdays1 * -1
+                End If
+
+                Dim diffdays2 As Integer = DateDiff(DateInterval.Day, endDate, tstDate2)
+                If diffdays2 < 0 Then
+                    diffdays2 = diffdays2 * -1
+                End If
+
+                If diffdays1 > tolerance Or _
+                    diffdays2 > tolerance Then
                     tmpResult = True
                 End If
 
@@ -1443,17 +1507,32 @@ Module Module1
         Dim shapeName As String = ""
         Dim ok As Boolean = False
 
+        ' bestimme den Info Type ..
         ' handelt es sich um den Lang-/Kurz-Namen oder um das Datum ? 
 
         If descriptionType = pptAnnotationType.text Then
             descriptionText = bestimmeElemText(selectedPlanShape, showShortName, showOrigName)
+
         ElseIf descriptionType = pptAnnotationType.datum Then
             descriptionText = bestimmeElemDateText(selectedPlanShape, showShortName)
-        ElseIf descriptionType = pptAnnotationType.ampelText Then
+
+        ElseIf descriptionType = pptAnnotationType.ampelText Or _
+                descriptionType = pptAnnotationType.lieferumfang Or _
+                descriptionType = pptAnnotationType.movedExplanation Then
+
             If IsNumeric(selectedPlanShape.Tags.Item("AC")) Then
                 ampelFarbe = CInt(selectedPlanShape.Tags.Item("AC"))
             End If
-            descriptionText = bestimmeElemALuTvText(selectedPlanShape)
+
+            If descriptionType = pptAnnotationType.movedExplanation Then
+                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.mvElement)
+                ampelFarbe = 4
+            ElseIf descriptionType = pptAnnotationType.lieferumfang Then
+                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.lUmfang)
+            Else
+                descriptionText = bestimmeElemALuTvText(selectedPlanShape)
+            End If
+
             txtShpLeft = selectedPlanShape.Left + 1.5 * selectedPlanShape.Width + 5
             txtShpTop = selectedPlanShape.Top - 75
             txtShpWidth = 70
@@ -1478,7 +1557,9 @@ Module Module1
 
         Try
             newShape = currentSlide.Shapes(shapeName)
-            If descriptionType = pptAnnotationType.ampelText Then
+            If descriptionType = pptAnnotationType.ampelText Or _
+                    descriptionType = pptAnnotationType.movedExplanation Or _
+                    descriptionType = pptAnnotationType.lieferumfang Then
                 newShape.Delete()
                 newShape = Nothing
             End If
@@ -1489,7 +1570,9 @@ Module Module1
 
         If IsNothing(newShape) Then
 
-            If descriptionType = pptAnnotationType.ampelText Then
+            If descriptionType = pptAnnotationType.ampelText Or _
+                    descriptionType = pptAnnotationType.movedExplanation Or _
+                    descriptionType = pptAnnotationType.lieferumfang Then
                 newShape = currentSlide.Shapes.AddComment()
                 'newShape = currentSlide.Shapes.AddCallout(Microsoft.Office.Core.MsoCalloutType.msoCalloutOne, _
                 '                      txtShpLeft, txtShpTop, txtShpWidth, txtShpHeight)
@@ -1501,6 +1584,8 @@ Module Module1
                         .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbYellow
                     ElseIf ampelFarbe = 3 Then
                         .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbRed
+                    ElseIf ampelFarbe = 4 Then
+                        .Shadow.ForeColor.RGB = visboFarbeOrange
                     Else
                         .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGrey
                     End If
@@ -1543,7 +1628,9 @@ Module Module1
         ' jetzt wird das TextShape noch positioniert - in Abhängigkeit vom Position Index, 
         ' aber nur wenn es sich nicht um die Ampel handelt ...
 
-        If Not descriptionType = pptAnnotationType.ampelText Then
+        If ((Not descriptionType = pptAnnotationType.ampelText) And _
+             (Not descriptionType = pptAnnotationType.movedExplanation) And _
+             (Not descriptionType = pptAnnotationType.lieferumfang)) Then
             Select Case positionIndex
 
                 Case pptPositionType.center

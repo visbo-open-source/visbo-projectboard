@@ -67,7 +67,8 @@ Public Class frmProjPortfolioAdmin
 
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
-                .Text = "Zusammenstellung im Szenario ändern"
+                '.Text = "Zusammenstellung im Szenario ändern"
+                .Text = "Modify Multi-Project Scenario "
 
                 .dropBoxTimeStamps.Visible = False
                 .lblStandvom.Visible = False
@@ -87,7 +88,9 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = True
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Szenario speichern"
+                '.OKButton.Text = "Szenario speichern"
+                .OKButton.Text = "Store Scenario"
+                Dim testName As String = .OKButton.Name
 
             ElseIf aKtionskennung = PTTvActions.definePortfolioDB Then
 
@@ -1701,4 +1704,6 @@ Public Class frmProjPortfolioAdmin
     Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
 
     End Sub
+
+    
 End Class

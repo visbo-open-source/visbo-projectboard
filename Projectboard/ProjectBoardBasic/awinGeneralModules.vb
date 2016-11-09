@@ -5048,9 +5048,15 @@ Public Module awinGeneralModules
         Dim lfdZeilenNr As Integer = 2
         Dim ok As Boolean
 
+        Dim importDate As Date = Date.Now
+
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
 
             Dim impProjekt As clsProjekt = kvp.Value
+
+            ' jetzt das Import Datum setzen ...
+            impProjekt.timeStamp = importDate
+
             Dim importKey As String = calcProjektKey(impProjekt)
 
             vglProj = Nothing
@@ -9590,7 +9596,7 @@ Public Module awinGeneralModules
         If kennung = PTTvActions.delFromDB Then
 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+            'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
             If Not projekthistorie Is Nothing Then
                 projekthistorie.clear() ' alte Historie löschen
@@ -9601,16 +9607,16 @@ Public Module awinGeneralModules
                                      storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
             ' Speichern im Papierkorb 
-            For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                If requestTrash.storeProjectToDB(kvp.Value) Then
-                Else
-                    ' es ging etwas schief
+            'For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
+            '    If requestTrash.storeProjectToDB(kvp.Value) Then
+            '    Else
+            '        ' es ging etwas schief
 
 
-                    Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
-                                kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
-                End If
-            Next
+            '        Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+            '                    kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
+            '    End If
+            'Next
 
             ' jetzt alle Timestamps in der Datenbank löschen 
             Try
@@ -9737,21 +9743,21 @@ Public Module awinGeneralModules
 
         Else
             ' Speichern im Papierkorb, dann löschen
-            If requestTrash.storeProjectToDB(hproj) Then
-                If request.deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName, _
-                                      stored:=timeStamp) Then
-                    'Call MsgBox("ok, gelöscht")
-                Else
-                    Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName & ", " & _
-                                timeStamp.ToShortDateString)
-                End If
+            'If requestTrash.storeProjectToDB(hproj) Then
+            If request.deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName, _
+                                  stored:=timeStamp) Then
+                'Call MsgBox("ok, gelöscht")
             Else
-                ' es ging etwas schief
-
-
-                Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
-                            hproj.name & ", " & hproj.timeStamp.ToShortDateString)
+                Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName & ", " & _
+                            timeStamp.ToShortDateString)
             End If
+            '    Else
+            '    ' es ging etwas schief
+
+
+            '    Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+            '                hproj.name & ", " & hproj.timeStamp.ToShortDateString)
+            'End If
 
         End If
 
@@ -10653,7 +10659,7 @@ Public Module awinGeneralModules
 
             Case PTTvActions.delFromDB
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
@@ -10670,7 +10676,7 @@ Public Module awinGeneralModules
 
             Case PTTvActions.loadPVS    ' ur: 30.01.2015: aktuell nicht benutzt!!!
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
@@ -10682,7 +10688,7 @@ Public Module awinGeneralModules
 
             Case PTTvActions.loadPV
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
@@ -13987,6 +13993,10 @@ Public Module awinGeneralModules
             ' If the XML document has been altered with unknown
             ' nodes or attributes, handle them with the
             ' UnknownNode and UnknownAttribute events.
+
+            ' Änderung tk: die beiden deserializer Kommandos müssen wieder aktiviert werden !
+            'Call MsgBox("hier wurde RXF Import massgeblich verändert !!" & vbLf & _
+            '             " lief bei Windows 10/Excel 2016 nicht")
             AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
             AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
 

@@ -98,6 +98,9 @@ Partial Class frmProjPortfolioAdmin
         Me.dropboxScenarioNames.Size = New System.Drawing.Size(393, 21)
         Me.dropboxScenarioNames.TabIndex = 56
         '
+        'ToolTipStand
+        '
+        '
         'deleteFilterIcon
         '
         Me.deleteFilterIcon.BackColor = System.Drawing.SystemColors.Control

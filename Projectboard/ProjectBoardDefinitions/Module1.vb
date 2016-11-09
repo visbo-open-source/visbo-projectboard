@@ -3004,7 +3004,8 @@ Public Module Module1
     Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
-                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
+                                          ByVal lieferumfaenge As String)
 
         Dim nullDate As Date = Nothing
 
@@ -3061,7 +3062,12 @@ Public Module Module1
 
                 End If
 
-                
+                If Not IsNothing(lieferumfaenge) Then
+                    If lieferumfaenge.Length > 0 Then
+                        .Tags.Add("LU", lieferumfaenge)
+                    End If
+
+                End If
 
             End With
         End If

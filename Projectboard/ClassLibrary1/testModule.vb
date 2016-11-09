@@ -12103,10 +12103,11 @@ Public Module testModule
                     originalName = Nothing
                 End If
 
+
                 Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
                                             cphase.getStartDate, cphase.getEndDate, _
-                                            Nothing, Nothing)
+                                            Nothing, Nothing, Nothing)
 
             End If
 
@@ -12166,7 +12167,7 @@ Public Module testModule
                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
                                                 cphase.getStartDate, cphase.getEndDate, _
-                                                Nothing, Nothing)
+                                                Nothing, Nothing, Nothing)
 
                 End If
 
@@ -12733,7 +12734,7 @@ Public Module testModule
                         Call addSmartPPTShapeInfo(copiedShape(1), _
                                                     Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                     hproj.startDate, hproj.endeDate, _
-                                                    hproj.ampelStatus, hproj.ampelErlaeuterung)
+                                                    hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
 
                     End If
 
@@ -12773,6 +12774,7 @@ Public Module testModule
                     ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
 
                 End If
+
 
                 '
                 ' zeichne jetzt das Projekt 
@@ -12829,7 +12831,7 @@ Public Module testModule
                             Call addSmartPPTShapeInfo(copiedShape(1), _
                                                    Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                    hproj.startDate, hproj.endeDate, _
-                                                   hproj.ampelStatus, hproj.ampelErlaeuterung)
+                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
 
                         End If
 
@@ -13215,7 +13217,7 @@ Public Module testModule
                                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
                                                                 phaseStart, phaseEnd, _
-                                                                Nothing, Nothing)
+                                                                Nothing, Nothing, Nothing)
                                 End If
 
                                 phShapeNames.Add(copiedShape(1).Name)
@@ -13893,10 +13895,12 @@ Public Module testModule
                 originalName = Nothing
             End If
 
+            Dim lieferumfaenge As String = MS.getAllDeliverables("#")
             Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                         fullBreadCrumb, MS.name, shortText, originalName, _
                                         Nothing, msdate, _
-                                        MS.getBewertung(1).colorIndex, MS.getBewertung(1).description)
+                                        MS.getBewertung(1).colorIndex, MS.getBewertung(1).description, _
+                                        lieferumfaenge)
         End If
 
         msShapeNames.Add(copiedShape.Item(1).Name)
@@ -14132,7 +14136,7 @@ Public Module testModule
                 Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
                                             phStartDate, phEndDate, _
-                                            Nothing, Nothing)
+                                            Nothing, Nothing, Nothing)
             End If
 
         End If
@@ -14310,10 +14314,12 @@ Public Module testModule
                         originalName = Nothing
                     End If
 
+                    Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                                 fullBreadCrumb, cMilestone.name, shortText, originalName, _
                                                 Nothing, msDate, _
-                                                cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description)
+                                                cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
+                                                lieferumfaenge)
                 End If
 
                 shapeNames.Add(.Name)
@@ -14981,7 +14987,7 @@ Public Module testModule
         End If
 
 
-        Dim offset2 As Integer = DateDiff(DateInterval.Day, pptStartOfCalendar, enddate)
+        Dim offset2 As Integer = DateDiff(DateInterval.Day, pptStartOfCalendar.Date, enddate.Date)
         If offset2 >= anzahlTageImKalender Then
             x2Pos = linkerRand + breite
         Else

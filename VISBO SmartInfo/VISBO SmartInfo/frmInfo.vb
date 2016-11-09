@@ -55,8 +55,8 @@ Public Class frmInfo
                 .searchIcon.Top = .searchIcon.Top - deltaAmpel
                 .btnSendToHome.Top = .btnSendToHome.Top - deltaAmpel
                 .btnSentToChange.Top = .btnSentToChange.Top - deltaAmpel
-                .PictureMarker.Top = .PictureMarker.Top - deltaAmpel
-                .CheckBxMarker.Top = .CheckBxMarker.Top - deltaAmpel
+                '.PictureMarker.Top = .PictureMarker.Top - deltaAmpel
+                '.CheckBxMarker.Top = .CheckBxMarker.Top - deltaAmpel
                 .listboxNames.Top = .listboxNames.Top - deltaAmpel
                 .rdbName.Top = .rdbName.Top - deltaAmpel
                 .rdbLU.Top = .rdbLU.Top - deltaAmpel
@@ -73,8 +73,8 @@ Public Class frmInfo
                 .searchIcon.Top = .searchIcon.Top + deltaAmpel
                 .btnSendToHome.Top = .btnSendToHome.Top + deltaAmpel
                 .btnSentToChange.Top = .btnSentToChange.Top + deltaAmpel
-                .PictureMarker.Top = .PictureMarker.Top + deltaAmpel
-                .CheckBxMarker.Top = .CheckBxMarker.Top + deltaAmpel
+                '.PictureMarker.Top = .PictureMarker.Top + deltaAmpel
+                '.CheckBxMarker.Top = .CheckBxMarker.Top + deltaAmpel
                 .listboxNames.Top = .listboxNames.Top + deltaAmpel
                 .rdbName.Top = .rdbName.Top + deltaAmpel
                 .rdbLU.Top = .rdbLU.Top + deltaAmpel
@@ -104,8 +104,6 @@ Public Class frmInfo
             ' es soll nicht sichtbar sein 
             Me.Height = Me.Height - deltaSearchBox
             filterText.Visible = False
-            PictureMarker.Visible = False
-            CheckBxMarker.Visible = False
             listboxNames.Visible = False
             rdbName.Visible = False
             rdbLU.Visible = False
@@ -116,8 +114,6 @@ Public Class frmInfo
         Else
             Me.Height = Me.Height + deltaSearchBox
             filterText.Visible = True
-            PictureMarker.Visible = True
-            CheckBxMarker.Visible = True
             listboxNames.Visible = True
             rdbName.Visible = True
             rdbLU.Visible = True
@@ -136,6 +132,9 @@ Public Class frmInfo
 
         ' sind irgendwelche Ampel-Farben gesetzt 
         Dim ix As Integer = 1
+
+        PictureMarker.Visible = True
+        CheckBxMarker.Visible = True
 
         Do While ix <= 3 And Not ampelnExistieren
             Dim tmpCollection As Collection = smartSlideLists.getShapeNamesWithColor(ix)
@@ -1056,14 +1055,23 @@ Public Class frmInfo
     Private Sub writeAmpel_Click(sender As Object, e As EventArgs) Handles writeAmpel.Click
         Try
 
+            Dim type As Integer
+            If rdbMV.Checked Then
+                type = pptAnnotationType.movedExplanation
+            ElseIf rdbLU.Checked Then
+                type = pptAnnotationType.lieferumfang
+            Else
+                type = pptAnnotationType.ampelText
+            End If
+
             If Not IsNothing(selectedPlanShapes) Then
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
 
                     If isRelevantShape(tmpShape) Then
                         If pptShapeIsMilestone(tmpShape) Then
-                            Call annotatePlanShape(tmpShape, pptAnnotationType.ampelText, positionIndexMT)
+                            Call annotatePlanShape(tmpShape, type, positionIndexMT)
                         Else
-                            Call annotatePlanShape(tmpShape, pptAnnotationType.ampelText, positionIndexPT)
+                            Call annotatePlanShape(tmpShape, type, positionIndexPT)
                         End If
                     End If
 
@@ -1222,7 +1230,10 @@ Public Class frmInfo
     End Sub
 
     Private Sub aLuTvText_Enter(sender As Object, e As EventArgs) Handles aLuTvText.Enter
-        Call MsgBox("changed")
+
     End Sub
 
+    Private Sub aLuTvText_TextChanged(sender As Object, e As EventArgs) Handles aLuTvText.TextChanged
+
+    End Sub
 End Class

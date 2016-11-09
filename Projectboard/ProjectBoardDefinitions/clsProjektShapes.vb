@@ -905,6 +905,7 @@ Public Class clsProjektShapes
                     With hproj
                         newProjekt.name = .name
                         newProjekt.variantName = .variantName
+                        newProjekt.description = .description
                         newProjekt.ampelStatus = .ampelStatus
                         newProjekt.ampelErlaeuterung = .ampelErlaeuterung
                         newProjekt.Status = .Status

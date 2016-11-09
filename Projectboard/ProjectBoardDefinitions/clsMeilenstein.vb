@@ -80,19 +80,20 @@ Public Class clsMeilenstein
 
     ''' <summary>
     ''' gibt die Liste der Deliverables eines Meilensteins als einen String zurück; 
-    ''' die einzelnen Deliverables sind durch einen vblf getrennt
+    ''' die einzelnen Deliverables sind by default durch einen vblf getrennt
+    ''' oder getrennt durch das übergebene trennzeichen  
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAllDeliverables As String
+    Public ReadOnly Property getAllDeliverables(Optional ByVal trennzeichen As String = vbLf) As String
         Get
             Dim tmpDeliverables As String = ""
             For i As Integer = 1 To _deliverables.Count
                 If i = 1 Then
                     tmpDeliverables = _deliverables.Item(i - 1)
                 Else
-                    tmpDeliverables = tmpDeliverables & vbLf & _
+                    tmpDeliverables = tmpDeliverables & trennzeichen & _
                         _deliverables.Item(i - 1)
                 End If
             Next
