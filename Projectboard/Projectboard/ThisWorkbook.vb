@@ -97,7 +97,7 @@ Public Class ThisWorkbook
 
             End If
 
-            Call awinsetTypen()
+            Call awinsetTypen("ProjectBoard")
 
         Catch ex As Exception
 

@@ -34,7 +34,8 @@ Public Class ThisAddIn
             awinSettings.visboAmpel = My.Settings.VISBOAmpel
 
 
-            Call awinsetTypenNEW("BHTC")
+            ' 09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+            Call awinsetTypen("BHTC")
 
             StartofCalendar = StartofCalendar.AddMonths(-12)
 

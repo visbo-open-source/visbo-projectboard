@@ -701,9 +701,14 @@ Public Module awinGeneralModules
     ''' liest das Customization File aus und initialisiert die globalen Variablen entsprechend
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub awinsetTypen()
+    Public Sub awinsetTypen(ByVal special As String)
         Try
-
+            ' neu 9.11.2016
+            Dim formerSU As Boolean = appInstance.ScreenUpdating
+            Dim needToBeSaved As Boolean = False
+            '  um dahinter temporär die Darstellungsklassen kopieren zu können , nur für ProjectBoard nötig 
+            Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             Dim i As Integer
             Dim xlsCustomization As Excel.Workbook = Nothing
@@ -712,24 +717,35 @@ Public Module awinGeneralModules
             ReDim exportOrdnerNames(5)
 
 
+            ' Auslesen des Window Namens 
+            Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+            Dim myUser As New WindowsIdentity(accountToken)
+            myWindowsName = myUser.Name
+
+
 
             globalPath = awinSettings.globalPath
 
-            ' Debug-Mode?
-            If awinSettings.visboDebug Then
-                If Not IsNothing(globalPath) Then
-                    If globalPath.Length > 0 Then
-                        Call MsgBox("GlobalPath:" & globalPath & vbLf & _
-                                    "existiert: " & My.Computer.FileSystem.DirectoryExists(globalPath).ToString)
+            If special = "ProjectBoard" Then
+
+                ' Debug-Mode?
+                If awinSettings.visboDebug Then
+                    If Not IsNothing(globalPath) Then
+                        If globalPath.Length > 0 Then
+                            Call MsgBox("GlobalPath:" & globalPath & vbLf & _
+                                        "existiert: " & My.Computer.FileSystem.DirectoryExists(globalPath).ToString)
+                        Else
+                            Call MsgBox("GlobalPath: leerer String")
+                        End If
                     Else
-                        Call MsgBox("GlobalPath: leerer String")
+                        Call MsgBox("GlobalPath: Nothing")
                     End If
-                Else
-                    Call MsgBox("GlobalPath: Nothing")
+
+
                 End If
 
+            End If ' if special
 
-            End If
 
             ' awinPath kann relativ oder absolut angegeben sein, beides möglich
 
@@ -743,11 +759,15 @@ Public Module awinGeneralModules
                 awinPath = awinPath & "\"
             End If
 
+
+
             ' Debug-Mode?
             If awinSettings.visboDebug Then
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
             End If
+
+
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
                 awinPath = globalPath
@@ -819,22 +839,26 @@ Public Module awinGeneralModules
             exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
             exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\massEdit"
 
-            ' jetzt werden die Directories alle angelegt, sofern Sie nicht schon existieren ... 
-            For di As Integer = 0 To importOrdnerNames.Length - 1
-                Try
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(di))
-                Catch ex As Exception
+            If special = "ProjectBoard" Then
 
-                End Try
-            Next
+                ' jetzt werden die Directories alle angelegt, sofern Sie nicht schon existieren ... 
+                For di As Integer = 0 To importOrdnerNames.Length - 1
+                    Try
+                        My.Computer.FileSystem.CreateDirectory(importOrdnerNames(di))
+                    Catch ex As Exception
 
-            For di As Integer = 0 To exportOrdnerNames.Length - 1
-                Try
-                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
-                Catch ex As Exception
+                    End Try
+                Next
 
-                End Try
-            Next
+                For di As Integer = 0 To exportOrdnerNames.Length - 1
+                    Try
+                        My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
+                    Catch ex As Exception
+
+                    End Try
+                Next
+
+            End If ' if special
 
             StartofCalendar = StartofCalendar.Date
 
@@ -851,12 +875,6 @@ Public Module awinGeneralModules
             ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
             ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
             ProjektStatus(4) = "abgeschlossen"
-
-            ''ReportLang(PTSprache.deutsch) = "de"
-            ''ReportLang(PTSprache.englisch) = "en"
-            ''ReportLang(PTSprache.französisch) = "fr"
-            ''ReportLang(PTSprache.spanisch) = "es"
-
 
 
             DiagrammTypen(0) = "Phase"
@@ -921,87 +939,108 @@ Public Module awinGeneralModules
             'selectedRoleNeeds = 0
             'selectedCostNeeds = 0
 
-            ' bestimmen der maximalen Breite und Höhe 
-            Dim formerSU As Boolean = appInstance.ScreenUpdating
-            appInstance.ScreenUpdating = False
+
+            If special = "ProjectBoard" Then
 
 
-            ' um dahinter temporär die Darstellungsklassen kopieren zu können  
-            Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+                '' Versuch, awinsetTypen allgemeingültiger zu machen
+
+                '  bestimmen der maximalen Breite und Höhe 
+                formerSU = appInstance.ScreenUpdating
+                appInstance.ScreenUpdating = False
+
+                ' 9.11.2016: wird nun ganz am Anfang von awinsetTypen definiert
+                '
+                '' ''  um dahinter temporär die Darstellungsklassen kopieren zu können  
+                ' ''Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+                ' ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                With appInstance.ActiveWindow
+
+
+                    If .WindowState = Excel.XlWindowState.xlMaximized Then
+                        maxScreenHeight = .Height
+                        maxScreenWidth = .Width
+                    Else
+                        Dim formerState As Excel.XlWindowState = .WindowState
+                        .WindowState = Excel.XlWindowState.xlMaximized
+                        maxScreenHeight = .Height
+                        maxScreenWidth = .Width
+                        .WindowState = formerState
+                    End If
+
+
+                End With
+
+                miniHeight = maxScreenHeight / 6
+                miniWidth = maxScreenWidth / 10
 
 
 
-            With appInstance.ActiveWindow
+                Dim oGrenze As Integer = UBound(frmCoord, 1)
+                ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
+                For i = 0 To oGrenze
+                    frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
+                    frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
+                Next
+
+                ' jetzt setzen der Werte für Status-Information und Milestone-Information
+                frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
+                frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+                frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
+                frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+                '  With listOfWorkSheets(arrWsNames(4))
 
 
-                If .WindowState = Excel.XlWindowState.xlMaximized Then
-                    maxScreenHeight = .Height
-                    maxScreenWidth = .Width
-                Else
-                    Dim formerState As Excel.XlWindowState = .WindowState
-                    .WindowState = Excel.XlWindowState.xlMaximized
-                    maxScreenHeight = .Height
-                    maxScreenWidth = .Width
-                    .WindowState = formerState
+
+                ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
+
+                Call logfileOpen()
+
+                Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+
+                '' '--------------------------------------------------------------------------------
+                '   Testen, ob der User die passende Lizenz besitzt
+                '' '--------------------------------------------------------------------------------
+                Dim user As String = myWindowsName
+                Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
+
+                ' Lesen des Lizenzen-Files
+
+                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+
+                ' Prüfen der Lizenzen
+                If Not lizenzen.validLicence(user, komponente) Then
+
+                    Call logfileSchreiben("Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
+
+                    ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                    ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                    Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                                & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+
                 End If
 
-
-            End With
-
-            miniHeight = maxScreenHeight / 6
-            miniWidth = maxScreenWidth / 10
+                ' Lizenz ist ok
 
 
+            End If ' if special = "ProjectBoard"
 
-            Dim oGrenze As Integer = UBound(frmCoord, 1)
-            ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
-            For i = 0 To oGrenze
-                frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
-                frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
-            Next
+            If special = "BHTC" Or special = "ReportGen" Then
 
-            ' jetzt setzen der Werte für Status-Information und Milestone-Information
-            frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
-            frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+                appInstance = New Excel.Application
 
-            frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
-            frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+                ' hier muss jetzt das Customization File aufgemacht werden ...
+                Try
+                    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
+                    myCustomizationFile = appInstance.ActiveWorkbook.Name
+                Catch ex As Exception
+                    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+                End Try
 
-            ' With listOfWorkSheets(arrWsNames(4))
-
-            ' Logfile öffnen und ggf. initialisieren
-            Call logfileOpen()
-
-
-            ' Auslesen des Window Namens 
-            Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
-            Dim myUser As New WindowsIdentity(accountToken)
-            myWindowsName = myUser.Name
-            Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
-
-            '' '--------------------------------------------------------------------------------
-            '   Testen, ob der User die passende Lizenz besitzt
-            '' '--------------------------------------------------------------------------------
-            Dim user As String = myWindowsName
-            Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
-
-            ' Lesen des Lizenzen-Files
-
-            Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
-
-            ' Prüfen der Lizenzen
-            If Not lizenzen.validLicence(user, komponente) Then
-
-                Call logfileSchreiben("Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
-
-                ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
-                Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
-
-
-            Else            ' Lizenz ist ok
+            ElseIf special = "ProjectBoard" Then
 
                 ' hier muss jetzt das Customization File aufgemacht werden ...
                 Try
@@ -1011,22 +1050,12 @@ Public Module awinGeneralModules
                     appInstance.ScreenUpdating = formerSU
                     Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
                 End Try
+            End If
 
-                Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
-                '' ''Try
-                '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
-                '' ''    If awinSettings.databaseName = "" Then
-                '' ''        awinSettings.databaseName = "VisboTest"
-                '' ''    End If
-                '' ''Catch ex As Exception
-
-                '' ''    awinSettings.databaseName = "VisboTest"
-                '' ''    'appInstance.ScreenUpdating = formerSU
-                '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
-                '' ''End Try
+            If special = "ProjectBoard" Then
 
                 If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
@@ -1047,44 +1076,46 @@ Public Module awinGeneralModules
                     End If
 
                 End If
+            End If 'if special="ProjectBoard"
 
 
-                Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
 
+            Try
+                ' Aufbauen der Darstellungsklassen  
+                Call aufbauenAppearanceDefinitions(wsName7810)
+
+                ' Auslesen der BusinessUnit Definitionen
+                Call readBusinessUnitDefinitions(wsName4)
+
+                ' Auslesen der Phasen Definitionen 
+                Call readPhaseDefinitions(wsName4)
+
+                ' Auslesen der Meilenstein Definitionen 
+                Call readMilestoneDefinitions(wsName4)
+
+
+                ' Auslesen der Rollen Definitionen 
+                Call readRoleDefinitions(wsName4)
+
+                ' Auslesen der Kosten Definitionen 
+                Call readCostDefinitions(wsName4)
+
+                ' Auslesen der Custom Field Definitions
                 Try
-                    ' Aufbauen der Darstellungsklassen  
-                    Call aufbauenAppearanceDefinitions(wsName7810)
+                    Call readCustomFieldDefinitions(wsName4)
+                Catch ex As Exception
 
-                    ' Auslesen der BusinessUnit Definitionen
-                    Call readBusinessUnitDefinitions(wsName4)
+                End Try
 
-                    ' Auslesen der Phasen Definitionen 
-                    Call readPhaseDefinitions(wsName4)
+                ' auslesen der anderen Informationen 
+                Call readOtherDefinitions(wsName4)
 
-                    ' Auslesen der Meilenstein Definitionen 
-                    Call readMilestoneDefinitions(wsName4)
-
-
-                    ' Auslesen der Rollen Definitionen 
-                    Call readRoleDefinitions(wsName4)
-
-                    ' Auslesen der Kosten Definitionen 
-                    Call readCostDefinitions(wsName4)
-
-                    ' Auslesen der Custom Field Definitions
-                    Try
-                        Call readCustomFieldDefinitions(wsName4)
-                    Catch ex As Exception
-
-                    End Try
-
-
-                    ' auslesen der anderen Informationen 
-                    Call readOtherDefinitions(wsName4)
+                If special = "ProjectBoard" Then
 
                     ' sollen die missingDefinitions gelesen / geschrieben werden 
-                    Dim needToBeSaved As Boolean = False
+
                     If awinSettings.readWriteMissingDefinitions Then
                         Try
                             Dim wsName15 As Excel.Worksheet
@@ -1124,20 +1155,23 @@ Public Module awinGeneralModules
                         End Try
                     End If
 
+                End If ' if special="ProjectBoard"
 
 
-                    ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+                ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
+                wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                    Call readNameMappings(wsName7810, phaseMappings)
+                Call readNameMappings(wsName7810, phaseMappings)
 
 
-                    ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+                ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
+                wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                    Call readNameMappings(wsName7810, milestoneMappings)
+                Call readNameMappings(wsName7810, milestoneMappings)
+
+                If special = "ProjectBoard" Then
 
                     ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
                     appInstance.EnableEvents = False
@@ -1183,23 +1217,23 @@ Public Module awinGeneralModules
                         Call readInitConstellations()
                     End If
 
+                    ' Logfile wird geschlossen
+                    Call logfileSchliessen()
 
-                Catch ex As Exception
+                End If ' if special ="ProjectBoard"
+
+            Catch ex As Exception
+                If special = "ProjectBoard" Then
                     appInstance.ScreenUpdating = formerSU
-                    appInstance.EnableEvents = True
-                    Throw New ArgumentException(ex.Message)
-                End Try
-
-                ' Logfile wird geschlossen
-                Call logfileSchliessen()
-
-
-            End If    ' else-Zweig von Lizenzprüfung
+                End If
+                appInstance.EnableEvents = True
+                Throw New ArgumentException(ex.Message)
+            End Try
 
 
         Catch ex As Exception
-            Call MsgBox("Fehler in awinsettypen " & vbLf & ex.Message)
-            Throw New ArgumentException("Fehler in awinsettypen " & vbLf & ex.Message)
+            Call MsgBox("Fehler in awinsettypen " & special & vbLf & ex.Message)
+            Throw New ArgumentException("Fehler in awinsettypen " & special & vbLf & ex.Message)
         End Try
 
     End Sub
