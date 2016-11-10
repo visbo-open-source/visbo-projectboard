@@ -704,7 +704,7 @@ Public Module awinGeneralModules
     Public Sub awinsetTypen(ByVal special As String)
         Try
             ' neu 9.11.2016
-            Dim formerSU As Boolean = appInstance.ScreenUpdating
+            Dim formerSU As Boolean = True
             Dim needToBeSaved As Boolean = False
             '  um dahinter temporär die Darstellungsklassen kopieren zu können , nur für ProjectBoard nötig 
             Dim projectBoardSheet As Excel.Worksheet = Nothing
