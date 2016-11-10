@@ -4649,6 +4649,7 @@ Public Module testModule
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         enableOnUpdate = False
 
+
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         Call storeSessionConstellation("Last")
 
@@ -4656,7 +4657,7 @@ Public Module testModule
 
             Try
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
-
+                Dim anzahlStores As Integer = 0
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                     Try
@@ -4668,10 +4669,29 @@ Public Module testModule
                             kvp.Value.timeStamp = jetzt
                         End If
 
-                        If request.storeProjectToDB(kvp.Value) Then
+                        Dim storeNeeded As Boolean
+                        If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
+                            ' prüfen, ob es Unterschied gibt 
+                            Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
+                            If Not IsNothing(standInDB) Then
+                                ' prüfe, ob es Unterschiede gibt
+                                storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
+                            Else
+                                ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                                storeNeeded = True
+                            End If
                         Else
-                            Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
+                            storeNeeded = True
                         End If
+
+                        If storeNeeded Then
+                            If request.storeProjectToDB(kvp.Value) Then
+                                anzahlStores = anzahlStores + 1
+                            Else
+                                Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
+                            End If
+                        End If
+                        
                     Catch ex As Exception
 
                         ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
@@ -4681,7 +4701,11 @@ Public Module testModule
 
                 Next
 
+
                 historicDate = historicDate.AddMonths(1)
+                If historicDate > Date.Now Then
+                    historicDate = Date.Now
+                End If
 
 
 
@@ -4722,14 +4746,42 @@ Public Module testModule
                     Next
 
                 End If
-                
+
 
                 zeitStempel = AlleProjekte.First.timeStamp
 
                 If everythingElse Then
-                    Call MsgBox("ok, Szenarien und Projekte gespeichert! (Projekte inkl. Zeitstempel)" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+
+                    If anzahlStores > 0 Then
+                        If anzahlStores = 1 Then
+                            Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                                        "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                        Else
+                            Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                                        "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                        End If
+                    Else
+                        Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                                    "keine Änderungen in Projekten bzw. Projekt-Varianten;" & vbLf & _
+                                    "daher wurden keine Projekte in der Datenbank gespeichert")
+                    End If
+
+
                 Else
-                    Call MsgBox("ok, Projekte mit Zeitstempel gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                    If anzahlStores > 0 Then
+                        If anzahlStores = 1 Then
+                            Call MsgBox("es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                        Else
+                            Call MsgBox("es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                        End If
+                    Else
+                        Call MsgBox("keine Änderungen in Projekten bzw. Projekt-Varianten;" & vbLf & _
+                                    "daher wurden keine Projekte in der Datenbank gespeichert")
+                    End If
                 End If
 
 

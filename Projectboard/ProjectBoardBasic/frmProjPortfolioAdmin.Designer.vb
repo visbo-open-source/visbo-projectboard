@@ -50,6 +50,7 @@ Partial Class frmProjPortfolioAdmin
         Me.TreeViewProjekte.Location = New System.Drawing.Point(34, 52)
         Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
+        Me.TreeViewProjekte.ShowNodeToolTips = True
         Me.TreeViewProjekte.Size = New System.Drawing.Size(395, 290)
         Me.TreeViewProjekte.TabIndex = 1
         '

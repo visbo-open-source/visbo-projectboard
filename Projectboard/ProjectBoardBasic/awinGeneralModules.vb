@@ -1206,6 +1206,56 @@ Public Module awinGeneralModules
 
 
     ''' <summary>
+    ''' setzt die komplette Session zurück 
+    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearCompleteSession()
+
+        Dim allShapes As Excel.Shapes
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' jetzt: Löschen der Session 
+
+        Try
+
+            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+            For Each element As Excel.Shape In allShapes
+                element.Delete()
+            Next
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen der Shapes ...")
+        End Try
+
+        ShowProjekte.Clear()
+        AlleProjekte.Clear()
+        selectedProjekte.Clear()
+        ImportProjekte.Clear()
+        DiagramList.Clear()
+        awinButtonEvents.Clear()
+        projectboardShapes.clear()
+
+        
+        ' tk, 10.11.16 allDependencies darf nicht gelöscht werden, weil das sonst nicht mehr vorhanden ist
+        ' allDependencies wird aktull nur beim Start geladen - und das reicht ja auch ... 
+        ' beim Laden eines Szenarios, beim Laden von Projekten wird das nicht mehr geladen ...
+        ' auch die geladenen Konstellationen bleiben erhalten 
+        ' alternativ könnte das Folgende aktiviert werden ..
+        ''allDependencies.Clear()
+        ''projectConstellations.Liste.Clear()
+        ' '' hier werden jetzt wieder die in der Datenbank vorhandenen Abhängigkeiten und Szenarios geladen ...
+        ''Call readInitConstellations()
+
+
+        ' Session gelöscht
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
+
+    ''' <summary>
     ''' setzt die Messages je nach Sprache 
     ''' </summary>
     ''' <remarks></remarks>
@@ -5121,9 +5171,10 @@ Public Module awinGeneralModules
             ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
             If Not IsNothing(vglProj) And Not noComparison Then
 
-                Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
+                ' erstezt durch Abfrage auf Identität 
+                'Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
 
-                If unterschiede.Count > 0 Then
+                If Not impProjekt.isIdenticalTo(vglProj) Then
                     ' es gibt Unterschiede, also muss eine Variante angelegt werden 
 
                     impProjekt.variantName = cName
@@ -5138,6 +5189,7 @@ Public Module awinGeneralModules
                     ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
                     AlleProjekte.Add(importKey, impProjekt)
                 End If
+
             End If
 
             ' Aufnehmen in Constellation
@@ -10764,6 +10816,48 @@ Public Module awinGeneralModules
 
                         nodeLevel0 = .Nodes.Add(pname)
 
+                        ' damit kann evtl direkt auf den Node zugegriffen werden ...
+                        nodeLevel0.Name = pname
+
+                        ' Berücksichtigung der Abhängigkeiten im TreeView ...
+                        If allDependencies.projectCount > 0 Then
+                            ' es gibt irgendwelche Dependencies, die Lead-Projekte sollen visbo-Orange gezeigt werden, 
+                            ' wenn  ein Lead-Projekt markiert wird, sollen die abhängigen Projekte Visbo-blau eingefärbt werden 
+
+                            ' die Projekte suchen, von denen dieses Projekt abhängt 
+                            Dim passivListe As Collection = allDependencies.passiveListe(pname, PTdpndncyType.inhalt)
+                            Dim aktivListe As Collection = allDependencies.activeListe(pname, PTdpndncyType.inhalt)
+                            If passivListe.Count > 0 And aktivListe.Count = 0 Then
+                                ' ist abhängiges Projekt ...
+                                nodeLevel0.ForeColor = Color.Blue
+                                Dim lProjectList As String = ""
+                                For i As Integer = 1 To passivListe.Count
+                                    If i = 1 Then
+                                        lProjectList = CStr(passivListe.Item(i))
+                                    Else
+                                        lProjectList = lProjectList & "; " & passivListe.Item(i)
+
+                                    End If
+                                Next
+                                nodeLevel0.ToolTipText = lProjectList
+
+                            ElseIf passivListe.Count = 0 And aktivListe.Count > 0 Then
+                                ' ist Projekt, von dem andere abhängen 
+                                nodeLevel0.ForeColor = Color.Orange
+                                Dim lProjectList As String = ""
+                                For i As Integer = 1 To aktivListe.Count
+                                    If i = 1 Then
+                                        lProjectList = CStr(aktivListe.Item(i))
+                                    Else
+                                        lProjectList = lProjectList & "; " & aktivListe.Item(i)
+
+                                    End If
+                                Next
+                                nodeLevel0.ToolTipText = lProjectList
+
+                            End If
+                        End If
+
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
                         If aKtionskennung = PTTvActions.delFromSession Or _
@@ -10773,6 +10867,7 @@ Public Module awinGeneralModules
                              aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
                             aKtionskennung = PTTvActions.definePortfolioSE Then
+
                             If variantNames.Count > 1 Then
 
                                 nodeLevel0.Tag = "P"
@@ -10800,6 +10895,8 @@ Public Module awinGeneralModules
                             If aKtionskennung = PTTvActions.chgInSession Then
                                 If ShowProjekte.contains(pname) Then
                                     nodeLevel0.Checked = True
+                                    ' herausfinden, ob es abhängige Projekte zu diesem Projekt gibt ... 
+
                                 End If
                             End If
 

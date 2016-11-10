@@ -38,6 +38,21 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub defineButtonVisibility()
 
+        ' je nachdem, ob es überhaupt Abhäbgigkeiten gibt, wird das angezeigt ..
+        If allDependencies.projectCount > 0 Then
+            Me.TreeViewProjekte.ShowNodeToolTips = True
+
+            Me.considerDependencies.Visible = True
+            Me.considerDependencies.Enabled = False
+            Me.considerDependencies.Checked = True
+        Else
+            Me.TreeViewProjekte.ShowNodeToolTips = False
+
+            Me.considerDependencies.Visible = False
+            Me.considerDependencies.Enabled = False
+            Me.considerDependencies.Checked = False
+        End If
+
         With Me
 
             ' bei Beginn immer disabled
@@ -60,7 +75,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
+                '.considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
                 .OKButton.Visible = False
@@ -81,9 +96,6 @@ Public Class frmProjPortfolioAdmin
 
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
-
-                .considerDependencies.Visible = True
-                .considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = True
 
@@ -113,7 +125,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
+                '.considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -136,8 +148,8 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = False
                 .deleteFilterIcon.Visible = False
 
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
+                '.considerDependencies.Visible = False
+                '.considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -159,8 +171,8 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = False
                 .deleteFilterIcon.Visible = False
 
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
+                '.considerDependencies.Visible = False
+                '.considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -183,8 +195,8 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
 
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
+                '.considerDependencies.Visible = False
+                '.considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -208,8 +220,8 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
 
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
+                '.considerDependencies.Visible = False
+                '.considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -720,14 +732,19 @@ Public Class frmProjPortfolioAdmin
 
         For i As Integer = 1 To TreeViewProjekte.GetNodeCount(False)
             Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
+            Dim curItemA As TreeNode = TreeViewProjekte.Nodes.Item(mprojectName)
 
-            If curItem.Checked Then
-                ' nichts tun 
-            Else
-                stopRecursion = False
-                curItem.Checked = True
-                stopRecursion = True
+            If curItem.Text = mprojectName Then
+                If curItem.Checked Then
+                    ' nichts tun 
+                Else
+                    stopRecursion = False
+                    curItem.Checked = True
+                    stopRecursion = True
+                End If
             End If
+
+            
 
         Next
 
@@ -1706,4 +1723,11 @@ Public Class frmProjPortfolioAdmin
     End Sub
 
     
+    Private Sub TreeViewProjekte_MouseHover(sender As Object, e As EventArgs) Handles TreeViewProjekte.MouseHover
+        Dim a As Integer
+    End Sub
+
+    Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
+
+    End Sub
 End Class

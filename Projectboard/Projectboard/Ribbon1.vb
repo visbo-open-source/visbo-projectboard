@@ -146,8 +146,7 @@ Imports System.Windows
                             ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
                             Dim oldProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
                             ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
-                            Dim anzahlUnterschiede As Integer = hproj.listOfDifferences(oldProj, True, 0, True, True).Count
-                            If anzahlUnterschiede > 0 Then
+                            If Not hproj.isIdenticalTo(oldProj) Then
                                 hproj.timeStamp = DBtimeStamp
                                 If request.storeProjectToDB(hproj) Then
                                     ' alles ok
@@ -172,11 +171,17 @@ Imports System.Windows
                     Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
                 End Try
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Szenario: " & constellationName & vbLf & _
-                                "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
-                                "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString)
+
+                Dim tsMessage As String = ""
+                If anzahlNeue + anzahlChanged > 0 Then
+                    tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
                 End If
+                Call MsgBox("Gespeichert ... " & vbLf & _
+                            "Szenario: " & constellationName & vbLf & _
+                            "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
+                            "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf & _
+                            tsMessage)
+
 
             Next
 

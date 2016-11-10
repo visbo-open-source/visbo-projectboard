@@ -18,6 +18,60 @@ Public Class clsMeilenstein
     Private _deliverables As List(Of String)
     Private _bewertungen As SortedList(Of String, clsBewertung)
 
+
+    ''' <summary>
+    ''' prüft zwei Meilensteine auf Identität 
+    ''' </summary>
+    ''' <param name="vglMS"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vglMS As clsMeilenstein) As Boolean
+        Get
+            Dim stillOK As Boolean = False
+            Dim ix As Integer = 1
+
+            With vglMS
+                ' prüfen auf allgemeine Attribute ... 
+                If Me.nameID = .nameID And _
+                    Me.shortName = .shortName And _
+                    Me.originalName = .originalName And _
+                    Me.appearance = .appearance And _
+                    Me.verantwortlich = .verantwortlich And _
+                    Me.offset = .offset And _
+                    Me.countDeliverables = .countDeliverables And _
+                    Me.bewertungsCount = .bewertungsCount Then
+                    stillOK = True
+
+                    ' prüfen auf Deliverables ... 
+                    Dim MeDelis As String = Me.getAllDeliverables("#")
+                    Dim vglDelis As String = .getAllDeliverables("#")
+
+                    If MeDelis = vglDelis Then
+                        ' prüfen auf Bewertungen ... 
+                        ix = 1
+                        Do While stillOK And ix <= Me.bewertungsCount
+                            Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
+                            Dim vglBewertung As clsBewertung = .getBewertung(ix)
+                            If MeBewertung.isIdenticalTo(vglBewertung) Then
+                                ix = ix + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
+
+                    End If
+
+
+                
+                End If
+
+            End With
+
+            isIdenticalTo = stillOK
+
+        End Get
+    End Property
     ' Farbe, Form und Abkürzung eines Meilensteins wird über den categorizedName bzw. die missingmilestonedefinitions abgebildet 
     ' oder aber über den die folgenden Parameter 
 
