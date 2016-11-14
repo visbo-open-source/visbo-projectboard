@@ -1,5 +1,6 @@
 ﻿Imports ClassLibrary1
 Imports ProjectBoardDefinitions
+
 Imports MongoDbAccess
 Imports Microsoft.Office.Core
 Imports pptNS = Microsoft.Office.Interop.PowerPoint
@@ -391,9 +392,15 @@ Public Module testModule
                             pptTemplatePresentation.Saved = True
                             pptTemplatePresentation.Close()
 
-                            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-                            If worker.WorkerReportsProgress Then
-                                worker.ReportProgress(0, e)
+                            If Not IsNothing(worker) Then
+
+                                e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                                If worker.WorkerReportsProgress Then
+                                    worker.ReportProgress(0, e)
+                                End If
+                            Else
+                                Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromProject", 0)
+
                             End If
 
                             Exit Sub
@@ -407,9 +414,15 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+            If Not IsNothing(worker) Then
+
+                e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromProject", 0)
+
             End If
 
             Exit Sub
@@ -444,10 +457,15 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
+            If Not IsNothing(worker) Then
+                e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
 
-            e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen", "createPPTSlidesFromProject", 0)
+
             End If
 
             Exit Sub
@@ -467,12 +485,16 @@ Public Module testModule
         While folieIX <= anzSlidesToAdd
             'For j = 1 To anzSlidesToAdd
 
-            If worker.WorkerSupportsCancellation Then
+            If Not IsNothing(worker) Then
 
-                If worker.CancellationPending Then
-                    e.Cancel = True
-                    e.Result = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
-                    Exit While
+                If worker.WorkerSupportsCancellation Then
+
+                    If worker.CancellationPending Then
+                        e.Cancel = True
+                        e.Result = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
+                        Exit While
+                    End If
+
                 End If
 
             End If
@@ -513,12 +535,16 @@ Public Module testModule
             '' ''                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
 
 
+            If Not IsNothing(worker) Then
 
-            'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & folieIX & " wird aufgebaut ...."
+                'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                e.Result = "Bericht Seite " & folieIX & " wird aufgebaut ...."
 
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("Bericht Seite " & folieIX & " wird aufgebaut ....", "createPPTSlidesFromProject", 0)
             End If
 
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
@@ -2445,7 +2471,7 @@ Public Module testModule
                                 Catch ex As Exception
 
                                 End Try
-                                
+
 
                             Case "Stand:"
 
@@ -2643,11 +2669,16 @@ Public Module testModule
 
         End Try
 
+        If Not IsNothing(worker) Then
 
-        'frmSelectPPTTempl.statusNotification.Text = "PowerPoint nun geöffnet ...."
-        e.Result = "PowerPoint ist nun geöffnet ...."
-        If worker.WorkerReportsProgress Then
-            worker.ReportProgress(0, e)
+            'frmSelectPPTTempl.statusNotification.Text = "PowerPoint nun geöffnet ...."
+            e.Result = "PowerPoint ist nun geöffnet ...."
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+        Else
+            Call logfileSchreiben("PowerPoint ist nun geöffnet", "createPPTSlidesFromConstellation", 0)
+
         End If
 
         ' jetzt wird das template geöffnet , um festzustellen , welches Format Quer oder Hoch die Vorlage hat 
@@ -2687,10 +2718,16 @@ Public Module testModule
                         pptTemplatePresentation.Saved = True
                         pptTemplatePresentation.Close()
 
-                        e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-                        If worker.WorkerReportsProgress Then
-                            worker.ReportProgress(0, e)
+                        If Not IsNothing(worker) Then
+
+                            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                            If worker.WorkerReportsProgress Then
+                                worker.ReportProgress(0, e)
+                            End If
+                        Else
+                            Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromConstellation", 0)
                         End If
+
 
                         Exit Sub
 
@@ -2701,10 +2738,17 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+
+            If Not IsNothing(worker) Then
+
+                e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromConstellation", 0)
             End If
+
 
             Exit Sub
         End Try
@@ -2764,16 +2808,20 @@ Public Module testModule
         While folieIX <= anzSlidesToAdd
 
             tatsErstellt = tatsErstellt + 1
-            If worker.WorkerSupportsCancellation Then
 
-                If worker.CancellationPending Then
-                    e.Cancel = True
-                    e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+            If Not IsNothing(worker) Then
+                If worker.WorkerSupportsCancellation Then
 
-                    Exit While
+                    If worker.CancellationPending Then
+                        e.Cancel = True
+                        e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+
+                        Exit While
+                    End If
+
                 End If
-
             End If
+         
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
             Dim tmpIX As Integer
@@ -2795,12 +2843,18 @@ Public Module testModule
                                                                               SlideStart:=folieIX, SlideEnd:=folieIX)
             End If
 
+            If Not IsNothing(worker) Then
 
-            'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
+                'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                e.Result = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
 
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+
+                Call logfileSchreiben("Bericht Seite " & tatsErstellt & " wird aufgebaut ....", "createPPTSlidesFromConstellation", 0)
+
             End If
 
 
@@ -2959,15 +3013,19 @@ Public Module testModule
                         boxName = ""
                     End If
 
+                    If Not IsNothing(worker) Then
 
-                    ' Fortschrittsmeldung im Formular SelectPPTTempl
+                        ' Fortschrittsmeldung im Formular SelectPPTTempl
 
-                    'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-                    e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
-                    If worker.WorkerReportsProgress Then
-                        worker.ReportProgress(0, e)
+                        'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                        e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
+                        If worker.WorkerReportsProgress Then
+                            worker.ReportProgress(0, e)
+                        End If
+                    Else
+                        Call logfileSchreiben("Chart '" & kennzeichnung & "' wird aufgebaut ....", "createPPTSlidesFromConstellation", 0)
+
                     End If
-
 
 
                     reportObj = Nothing
@@ -3616,7 +3674,7 @@ Public Module testModule
                             End Try
 
 
-                        
+
 
                         Case "Übersicht Budget"
 
@@ -4602,14 +4660,25 @@ Public Module testModule
 
         ' pptTemplate muss noch geschlossen werden
 
-        If tatsErstellt = 1 Then
-            e.Result = " Report mit " & tatsErstellt & " Seite erstellt !"
-        Else
-            e.Result = " Report mit " & tatsErstellt & " Seiten erstellt !"
-        End If
+        If Not IsNothing(worker) Then
 
-        If worker.WorkerReportsProgress Then
-            worker.ReportProgress(0, e)
+            If tatsErstellt = 1 Then
+                e.Result = " Report mit " & tatsErstellt & " Seite erstellt !"
+            Else
+                e.Result = " Report mit " & tatsErstellt & " Seiten erstellt !"
+            End If
+
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+        Else
+
+            If tatsErstellt = 1 Then
+                Call logfileSchreiben(" Report mit " & tatsErstellt & " Seite erstellt !", "createPPTSlidesFromConstellation", 0)
+            Else
+                Call logfileSchreiben(" Report mit " & tatsErstellt & " Seiten erstellt !", "createPPTSlidesFromConstellation", 0)
+            End If
+
         End If
 
         ' Vorlage in passender Größe wird nun nicht mehr benötigt
@@ -12671,22 +12740,27 @@ Public Module testModule
                     End If
                 End If
 
-                If worker.WorkerSupportsCancellation Then
+                If Not IsNothing(worker) Then
 
-                    If worker.CancellationPending Then
-                        e.Cancel = True
-                        e.Result = "Berichterstellung abgebrochen ..."
-                        Exit For
+                    If worker.WorkerSupportsCancellation Then
+
+                        If worker.CancellationPending Then
+                            e.Cancel = True
+                            e.Result = "Berichterstellung abgebrochen ..."
+                            Exit For
+                        End If
+
                     End If
 
-                End If
+                    ' Zwischenbericht abgeben ...
+                    e.Result = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
+                    If worker.WorkerReportsProgress Then
+                        worker.ReportProgress(0, e)
+                    End If
+                Else
+                    Call logfileSchreiben("Projekt '" & hproj.getShapeText & "' wird gezeichnet  ....", "zeichnePPTprojects", 0)
 
-                ' Zwischenbericht abgeben ...
-                e.Result = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
-                If worker.WorkerReportsProgress Then
-                    worker.ReportProgress(0, e)
                 End If
-
 
                 '
                 ' zeichne den Projekt-Namen
@@ -16550,22 +16624,26 @@ Public Module testModule
                 Do While (curSwimlaneIndex <= swimLanesToDo) And _
                         (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
 
+                    If Not IsNothing(worker) Then
 
-                    ' Zwischen-Meldung ausgeben ...
-                    If worker.WorkerSupportsCancellation Then
+                        ' Zwischen-Meldung ausgeben ...
+                        If worker.WorkerSupportsCancellation Then
 
-                        If worker.CancellationPending Then
-                            e.Cancel = True
-                            e.Result = "Berichterstellung abgebrochen ..."
-                            Exit Sub
+                            If worker.CancellationPending Then
+                                e.Cancel = True
+                                e.Result = "Berichterstellung abgebrochen ..."
+                                Exit Sub
+                            End If
+
                         End If
 
-                    End If
-
-                    ' Zwischenbericht abgeben ...
-                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
-                    If worker.WorkerReportsProgress Then
-                        worker.ReportProgress(0, e)
+                        ' Zwischenbericht abgeben ...
+                        e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
+                        If worker.WorkerReportsProgress Then
+                            worker.ReportProgress(0, e)
+                        End If
+                    Else
+                        Call logfileSchreiben("Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
                     End If
 
                     ' jetzt die Swimlane zeichnen

@@ -9,10 +9,30 @@ Imports MongoDbAccess
 
 Module Module1
 
-    Sub Main()
-        ' (ByVal inputfile As String, ByVal username As String, ByVal password As String)
-        Dim username As String = ""
-        Dim password As String = ""
+    Sub Main(ByVal args() As String)
+        For i = 0 To args.Length - 1
+            Console.WriteLine("{0} => {1}", i, args(i))
+        Next
+
+        'Dim inputfile As String = My.Computer.FileSystem.CurrentDirectory & "\" & args(0)
+        Dim inputfile As String = args(0)
+        Dim username As String = args(1)
+        Dim password As String = args(2)
+
+        Dim xlsBatchFile As Excel.Workbook = Nothing
+        Dim currentBatchfile As String
+
+        Dim zeile As Integer = 2
+        Dim spalte As Integer = 1
+
+        Dim reportname As String = ""
+        Dim profilname As String = ""
+        Dim portfolio_projname As String = ""
+        Dim variantname As String = ""
+        Dim rangeleft As Date
+        Dim rangeright As Date
+
+        Call MsgBox("inputfile= " & inputfile)
 
         Dim path As String = My.Computer.FileSystem.CurrentDirectory.ToString
 
@@ -27,16 +47,66 @@ Module Module1
 
             End If
 
-            Call awinsetTypen()
+            Call awinsetTypen("ReportGen")
 
         Catch ex As Exception
 
             Call MsgBox(ex.Message)
 
         Finally
-          
+
         End Try
-        Call awinsetTypen()
+
+        ' einlesen der Batch-Vorgabe
+        xlsBatchFile = appInstance.Workbooks.Open(awinPath & inputfile, [ReadOnly]:=True, Editable:=False)
+        currentBatchfile = appInstance.ActiveWorkbook.Name
+
+        Dim wsName As Excel.Worksheet = CType(appInstance.Worksheets(1), Microsoft.Office.Interop.Excel.Worksheet)
+
+        Try
+            With wsName
+
+                Dim lastrow As Integer = CType(.Cells(2000, 1), Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                Dim lastcolumn As Integer = CType(.Cells(1, 2000), Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+
+                While zeile <= lastrow
+                    reportname = CStr(CType(.Cells(zeile, spalte), Microsoft.Office.Interop.Excel.Range).Value)
+                    profilname = CStr(CType(.Cells(zeile, spalte + 1), Microsoft.Office.Interop.Excel.Range).Value)
+                    portfolio_projname = CStr(CType(.Cells(zeile, spalte + 2), Microsoft.Office.Interop.Excel.Range).Value)
+                    variantname = CStr(CType(.Cells(zeile, spalte + 3), Microsoft.Office.Interop.Excel.Range).Value)
+                    If IsNothing(variantname) Then
+                        variantname = ""
+                    End If
+                    rangeleft = CType(.Cells(zeile, spalte + 4), Microsoft.Office.Interop.Excel.Range).Value
+                    rangeright = CType(.Cells(zeile, spalte + 5), Microsoft.Office.Interop.Excel.Range).Value
+                    
+                    showRangeLeft = getColumnOfDate(rangeleft)
+                    showRangeRight = getColumnOfDate(rangeright)
+
+                    If Not (IsNothing(reportname) _
+                        And IsNothing(profilname) _
+                        And IsNothing(portfolio_projname) _
+                        And IsNothing(rangeleft) _
+                        And IsNothing(rangeright)) Then
+
+                        Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname)
+                        If erfolgreich Then
+                            ' Powerpoint-Report unter dem namen reportname speichern
+                        Else
+                            Call logfileSchreiben("Fehler in der Angabe in Zeile " & zeile, "Main", 0)
+                        End If
+
+                    End If
+
+                    zeile = zeile + 1
+
+                End While
+
+            End With
+        Catch ex As Exception
+
+
+        End Try
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, username, password)
 

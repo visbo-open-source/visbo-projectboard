@@ -715,7 +715,6 @@ Public Module awinGeneralModules
             ReDim importOrdnerNames(7)
             ReDim exportOrdnerNames(5)
 
-            Call MsgBox("auslesen von user")
 
             ' Auslesen des Window Namens 
             Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
@@ -990,12 +989,12 @@ Public Module awinGeneralModules
                 '  With listOfWorkSheets(arrWsNames(4))
 
 
-
                 ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
 
                 Call logfileOpen()
 
                 Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+
 
                 '' '--------------------------------------------------------------------------------
                 '   Testen, ob der User die passende Lizenz besitzt
@@ -1032,6 +1031,13 @@ Public Module awinGeneralModules
                 Try
                     xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
                     myCustomizationFile = appInstance.ActiveWorkbook.Name
+
+                    ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
+
+                    Call logfileOpen()
+
+                    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+
                 Catch ex As Exception
                     Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
                 End Try
@@ -1074,7 +1080,6 @@ Public Module awinGeneralModules
                 End If
             End If 'if special="ProjectBoard"
 
-            Call MsgBox("CustomizationFile is open")
 
             Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -1155,8 +1160,6 @@ Public Module awinGeneralModules
 
                 End If ' if special="ProjectBoard"
 
-
-                Call MsgBox("vor NameMappings")
 
 
                 ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
@@ -14841,109 +14844,109 @@ Public Module awinGeneralModules
 
 
 
-    ''' <summary>
-    ''' initialisert das Logfile
-    ''' </summary>
-    ''' <remarks></remarks>
-    Sub logfileInit()
+    ' '' ''' <summary>
+    ' '' ''' initialisert das Logfile
+    ' '' ''' </summary>
+    ' '' ''' <remarks></remarks>
+    ' ''Sub logfileInit()
 
-        Try
+    ' ''    Try
 
-            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
-                .Name = "logBuch"
-                CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
-                CType(.Columns(1), Excel.Range).ColumnWidth = 100
-                CType(.Columns(2), Excel.Range).ColumnWidth = 50
-                CType(.Columns(3), Excel.Range).ColumnWidth = 20
-            End With
-        Catch ex As Exception
+    ' ''        With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+    ' ''            .Name = "logBuch"
+    ' ''            CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
+    ' ''            CType(.Columns(1), Excel.Range).ColumnWidth = 100
+    ' ''            CType(.Columns(2), Excel.Range).ColumnWidth = 50
+    ' ''            CType(.Columns(3), Excel.Range).ColumnWidth = 20
+    ' ''        End With
+    ' ''    Catch ex As Exception
 
-        End Try
-
-
-    End Sub
-    ''' <summary>
-    ''' schreibt in das logfile 
-    ''' </summary>
-    ''' <param name="text"></param>
-    ''' <param name="addOn"></param>
-    ''' <remarks></remarks>
-    Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
-
-        Dim obj As Object
-
-        Try
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                CType(.Cells(1, 1), Excel.Range).Value = text
-                CType(.Cells(1, 2), Excel.Range).Value = addOn
-                CType(.Cells(1, 3), Excel.Range).Value = Date.Now
-            End With
-            anzFehler = anzFehler + 1
+    ' ''    End Try
 
 
-        Catch ex As Exception
+    ' ''End Sub
+    ' '' ''' <summary>
+    ' '' ''' schreibt in das logfile 
+    ' '' ''' </summary>
+    ' '' ''' <param name="text"></param>
+    ' '' ''' <param name="addOn"></param>
+    ' '' ''' <remarks></remarks>
+    ' ''Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
 
-        End Try
+    ' ''    Dim obj As Object
 
-    End Sub
-    ''' <summary>
-    ''' öffnet das LogFile
-    ''' </summary>
-    ''' <remarks></remarks>
-    Sub logfileOpen()
+    ' ''    Try
+    ' ''        obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-        appInstance.ScreenUpdating = False
-
-        ' aktives Workbook merken im Variable actualWB
-        Dim actualWB As String = appInstance.ActiveWorkbook.Name
-
-        If My.Computer.FileSystem.FileExists(awinPath & logFileName) Then
-            Try
-                xlsLogfile = appInstance.Workbooks.Open(awinPath & logFileName)
-                myLogfile = appInstance.ActiveWorkbook.Name
-            Catch ex As Exception
-
-                logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf & _
-                                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
-                'Call logfileSchreiben(logMessage, " ")
-                Throw New ArgumentException(logmessage)
-
-            End Try
-
-        Else
-            ' Logfile neu anlegen 
-            xlsLogfile = appInstance.Workbooks.Add
-            Call logfileInit()
-            xlsLogfile.SaveAs(awinPath & logFileName)
-            myLogfile = xlsLogfile.Name
-
-        End If
-
-        ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
-        appInstance.Workbooks(actualWB).Activate()
-
-    End Sub
+    ' ''        With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+    ' ''            CType(.Cells(1, 1), Excel.Range).Value = text
+    ' ''            CType(.Cells(1, 2), Excel.Range).Value = addOn
+    ' ''            CType(.Cells(1, 3), Excel.Range).Value = Date.Now
+    ' ''        End With
+    ' ''        anzFehler = anzFehler + 1
 
 
+    ' ''    Catch ex As Exception
 
-    ''' <summary>
-    ''' schliesst  das logfile 
-    ''' </summary>  
-    ''' <remarks></remarks>
-    Sub logfileSchliessen()
+    ' ''    End Try
 
-        appInstance.EnableEvents = False
-        Try
+    ' ''End Sub
+    ' '' ''' <summary>
+    ' '' ''' öffnet das LogFile
+    ' '' ''' </summary>
+    ' '' ''' <remarks></remarks>
+    ' ''Sub logfileOpen()
 
-            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+    ' ''    appInstance.ScreenUpdating = False
 
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Schließen des Logfiles")
-        End Try
-        appInstance.EnableEvents = True
-    End Sub
+    ' ''    ' aktives Workbook merken im Variable actualWB
+    ' ''    Dim actualWB As String = appInstance.ActiveWorkbook.Name
+
+    ' ''    If My.Computer.FileSystem.FileExists(awinPath & logFileName) Then
+    ' ''        Try
+    ' ''            xlsLogfile = appInstance.Workbooks.Open(awinPath & logFileName)
+    ' ''            myLogfile = appInstance.ActiveWorkbook.Name
+    ' ''        Catch ex As Exception
+
+    ' ''            logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf & _
+    ' ''                                            "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+    ' ''            'Call logfileSchreiben(logMessage, " ")
+    ' ''            Throw New ArgumentException(logmessage)
+
+    ' ''        End Try
+
+    ' ''    Else
+    ' ''        ' Logfile neu anlegen 
+    ' ''        xlsLogfile = appInstance.Workbooks.Add
+    ' ''        Call logfileInit()
+    ' ''        xlsLogfile.SaveAs(awinPath & logFileName)
+    ' ''        myLogfile = xlsLogfile.Name
+
+    ' ''    End If
+
+    ' ''    ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+    ' ''    appInstance.Workbooks(actualWB).Activate()
+
+    ' ''End Sub
+
+
+
+    ' '' ''' <summary>
+    ' '' ''' schliesst  das logfile 
+    ' '' ''' </summary>  
+    ' '' ''' <remarks></remarks>
+    ' ''Sub logfileSchliessen()
+
+    ' ''    appInstance.EnableEvents = False
+    ' ''    Try
+
+    ' ''        appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+
+    ' ''    Catch ex As Exception
+    ' ''        Call MsgBox("Fehler beim Schließen des Logfiles")
+    ' ''    End Try
+    ' ''    appInstance.EnableEvents = True
+    ' ''End Sub
 
     ''' <summary>
     ''' initialisert im Inputfile die Tabelle 'Logbuch'
@@ -17987,4 +17990,120 @@ Public Module awinGeneralModules
         End Try
 
     End Function
+
+    Function reportErstellen(ByVal projekte As String, ByVal variante As String, ByVal profilname As String) As Boolean
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim reportProfil As clsReportAll = XMLImportReportAllProfil(profilname)
+        Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
+        Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
+
+        Dim selectedPhases As New Collection
+        Dim selectedMilestones As New Collection
+        Dim selectedRoles As New Collection
+        Dim selectedCosts As New Collection
+        Dim selectedBUs As New Collection
+        Dim selectedTypes As New Collection
+
+        selectedPhases = copySortedListtoColl(reportProfil.Phases)
+        selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+        selectedRoles = copySortedListtoColl(reportProfil.Roles)
+        selectedCosts = copySortedListtoColl(reportProfil.Costs)
+        selectedBUs = copySortedListtoColl(reportProfil.BUs)
+        selectedTypes = copySortedListtoColl(reportProfil.Typs)
+
+        With awinSettings
+
+            .mppExtendedMode = reportProfil.ExtendedMode
+            .mppOnePage = reportProfil.OnePage
+            .mppShowAllIfOne = reportProfil.AllIfOne
+            .mppShowAmpel = reportProfil.Ampeln
+            .mppShowLegend = reportProfil.Legend
+            .mppShowMsDate = reportProfil.MSDate
+            .mppShowMsName = reportProfil.MSName
+            .mppShowPhDate = reportProfil.PhDate
+            .mppShowPhName = reportProfil.PhName
+            .mppShowProjectLine = reportProfil.ProjectLine
+            .mppSortiertDauer = reportProfil.SortedDauer
+            .mppVertikalesRaster = reportProfil.VLinien
+            .mppFullyContained = reportProfil.FullyContained
+            .mppShowHorizontals = reportProfil.ShowHorizontals
+            .mppUseAbbreviation = reportProfil.UseAbbreviation
+            .mppUseOriginalNames = reportProfil.UseOriginalNames
+            .mppKwInMilestone = reportProfil.KwInMilestone
+            .mppShowPhName = reportProfil.projectsWithNoMPmayPass
+
+        End With
+
+        If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+
+            showRangeLeft = getColumnOfDate(reportProfil.VonDate)
+            showRangeRight = getColumnOfDate(reportProfil.BisDate)
+
+        End If
+
+
+        Try
+            If Not reportProfil.isMpp Then
+
+                Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
+                If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                    ' Alle selektierten Projekte reporten
+                    For Each kvp In selectedProjekte.Liste
+
+                        Dim hproj As New clsProjekt
+                        hproj = request.retrieveOneProjectfromDB(projekte, variante, Date.Now)
+
+                        Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
+                                                        selectedPhases, selectedMilestones, _
+                                                        selectedRoles, selectedCosts, _
+                                                        selectedBUs, selectedTypes, True, _
+                                                        True, zeilenhoehe, legendFontSize, _
+                                                        Nothing, Nothing)
+
+                    Next
+
+                End If
+            Else
+                Dim hproj As New clsProjekt
+                Dim constellations As New clsConstellations
+                constellations = request.retrieveConstellationsFromDB()
+                Dim curconstellation As clsConstellation = constellations.getConstellation(projekte)
+
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In curconstellation.Liste
+
+                    hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, Date.Now)
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        ShowProjekte.Add(hproj)
+                    Else
+                        If ShowProjekte.getProject(hproj.name).variantName <> kvp.Value.variantName Then
+                            ShowProjekte.Remove(kvp.Value.projectName)
+                            ShowProjekte.Add(hproj)
+                        End If
+                    End If
+                Next
+
+                Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
+                If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                    Call createPPTSlidesFromConstellation(vorlagendateiname, _
+                                                          selectedPhases, selectedMilestones, _
+                                                          selectedRoles, selectedCosts, _
+                                                          selectedBUs, selectedTypes, True, _
+                                                          Nothing, Nothing)
+
+                End If
+
+            End If
+
+            reportErstellen = True
+
+        Catch ex As Exception
+            Call MsgBox("Fehler: " & vbLf & ex.Message)
+            reportErstellen = False
+        End Try
+
+    End Function
+
 End Module
