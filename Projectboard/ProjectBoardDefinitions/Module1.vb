@@ -383,6 +383,17 @@ Public Module Module1
         datum = 1
     End Enum
 
+    ''' <summary>
+    ''' kann überall do verwendet werden, wo es wichtig ist, die CallerApp zu unterscheiden, 
+    ''' also wurde ein bestimmtes Formular aus der Multiprojekt Tafel aufgerufen, aus dem Project Add-In oder aus dem Powerpoint Add-In 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTCallerApp
+        projektTafel = 0
+        projectAddIn = 1
+        pptAddIn = 2
+    End Enum
+
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
@@ -467,7 +478,6 @@ Public Module Module1
 
     ' SoftwareKomponenten für die Lizensierung
     Public Enum PTSWKomp
-
         ProjectAdmin = 0
         Swimlanes2 = 1
         SWkomp2 = 2

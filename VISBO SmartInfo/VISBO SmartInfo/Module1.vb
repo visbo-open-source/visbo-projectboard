@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports MongoDbAccess
 Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -37,12 +38,13 @@ Module Module1
     Friend protectFeld1 As String = ""
     Friend protectFeld2 As String = ""
 
-    Friend dbURL As String = ""
-    Friend dbName As String = ""
-    Friend userName As String = ""
-    Friend userPWD As String = ""
+    ' hier sollen die Namen aus projectboardDefinitions übernommen werden 
+    'Friend dbURL As String = ""
+    'Friend dbName As String = ""
+    'Friend userName As String = ""
+    'Friend userPWD As String = ""
 
-    Friend noDBAccess As Boolean = True
+    Friend noDBAccessInPPT As Boolean = True
 
     Friend defaultSprache As String = "Original"
     Friend selectedLanguage As String = defaultSprache
@@ -127,13 +129,15 @@ Module Module1
 
         ' Abrufen von Datenbank URL und Datenbank-Name 
         Try
-            dbName = Pres.Tags.Item("DBNAME")
-            dbURL = Pres.Tags.Item("DBURL")
+            awinSettings.databaseURL = Pres.Tags.Item("DBURL")
+            awinSettings.databaseName = Pres.Tags.Item("DBNAME")
+            'dbName = Pres.Tags.Item("DBNAME")
+            'dbURL = Pres.Tags.Item("DBURL")
         Catch ex As Exception
-            dbName = ""
-            dbURL = ""
+            awinSettings.databaseURL = ""
+            awinSettings.databaseName = ""
         End Try
-        
+
 
     End Sub
 
@@ -208,10 +212,12 @@ Module Module1
                         Catch ex As Exception
                             slideCoordInfo = Nothing
                         End Try
-                        
+
                         ' zurücksetzen der SmartSlideLists
                         smartSlideLists = New clsSmartSlideListen
                         bekannteIDs = New SortedList(Of Integer, String)
+
+
 
                         Dim anzShapes As Integer = currentSlide.Shapes.Count
                         ' jetzt werden die ganzen Listen aufgebaut 
@@ -219,8 +225,7 @@ Module Module1
                             Dim tstName As String = tmpShape.Name
                             If tmpShape.Tags.Count > 0 Then
                                 If isRelevantShape(tmpShape) Then
-                                    ' invisible setzen ....
-                                    'tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+
                                     bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
 
                                     Call aktualisiereSortedLists(tmpShape)
@@ -231,6 +236,8 @@ Module Module1
                                 End If
                             End If
                         Next
+
+
                     End If
                 Catch ex As Exception
 
@@ -415,18 +422,34 @@ Module Module1
     ''' wird nur für relevante Shapes aufgerufen
     ''' baut die intelligenten Listen für das Slide auf 
     ''' wenn das Shape keine Abkürzung hat, so wird eine aus der laufenden Nummer erzeugt ...
+    ''' 
     ''' </summary>
     ''' <param name="tmpShape"></param>
     ''' <remarks></remarks>
     Private Sub aktualisiereSortedLists(ByVal tmpShape As PowerPoint.Shape)
         Dim shapeName As String = tmpShape.Name
+        Dim checkIT As Boolean = False
 
-
-        ' es werden nur die aufgebaut, die keine Textboxen sind 
-        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or _
-            tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine Then
-            ' nichts tun 
+        Dim pvName As String = getPnameFromShpName(tmpShape.Name)
+        If smartSlideLists.containsProject(pvName) Then
+            ' nichts tun, ist schon drin ..
         Else
+            smartSlideLists.addProject(pvName)
+        End If
+
+        ' es werden nur die aufgebaut, die Meilensteine oder Phasen sind ...  
+        If pptShapeIsMilestone(tmpShape) Then
+            checkIT = True
+            ' nichts tun 
+        ElseIf pptShapeIsPhase(tmpShape) Then
+            checkIT = True
+        Else
+            ' nichts tun 
+            checkIT = False
+        End If
+
+        If checkIT Then
+
             ' den classified Name behandeln ...
             Dim tmpName As String = tmpShape.Tags.Item("CN")
             If tmpName.Trim.Length = 0 Then
@@ -484,8 +507,10 @@ Module Module1
             ' wurde das Element verschoben ? 
             ' SmartslideLists werden auch gleich mit aktualisiert ... 
             Call checkShpOnManualMovement(tmpShape.Name)
-        End If
 
+            ' jetzt wird noch die Liste der Projekt-Varianten aufgebaut 
+
+        End If
 
 
     End Sub
@@ -509,13 +534,10 @@ Module Module1
                 ' die Swimlane Texte sollen nicht berücksichtigt werden ...
             Else
                 If pptShapeIsMilestone(tmpShape) Then
-                    Dim pptDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + 0.5 * tmpShape.Width)
-                    Dim planDate As Date = CDate(tmpShape.Tags.Item("ED"))
 
-                    If DateDiff(DateInterval.Day, pptDate, planDate) >= -1 And _
-                        DateDiff(DateInterval.Day, pptDate, planDate) <= 1 Then
-                        ' keine Änderung 
-                    Else
+                    If isMovedElement(tmpShape) Then
+
+                        Dim pptDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + 0.5 * tmpShape.Width)
 
                         With tmpShape
                             If .Tags.Item("MVD").Length > 0 Then
@@ -533,39 +555,15 @@ Module Module1
                         Call smartSlideLists.addMV(tmpShape.Name)
                     End If
 
+
                 Else
-                    Dim pptSDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left)
-                    Dim pptEDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width)
-                    Dim planSDate As Date = CDate(tmpShape.Tags.Item("SD"))
-                    Dim planEDate As Date = CDate(tmpShape.Tags.Item("ED"))
 
-                    ' prüfen, ob es beim Erzeugen abgeschnitten wurde ...
-                    Dim pptStartOfCalendar As Date = slideCoordInfo.PPTStartOFCalendar
-                    Dim pptEndOfCalendar As Date = slideCoordInfo.PPTEndOFCalendar
+                    If isMovedElement(tmpShape) Then
 
-                    If DateDiff(DateInterval.Day, pptStartOfCalendar, planSDate) < 0 Then
-                        planSDate = pptStartOfCalendar
-                    End If
+                        Dim pptSDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left)
+                        Dim pptEDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width)
 
-                    If DateDiff(DateInterval.Day, pptEndOfCalendar, planEDate) > 0 Then
-                        planEDate = pptEndOfCalendar
-                    End If
-
-                    Dim absDiffSD As Integer = DateDiff(DateInterval.Day, pptSDate, planSDate)
-                    If absDiffSD < 0 Then
-                        absDiffSD = -1 * absDiffSD
-                    End If
-
-                    Dim absDiffED As Integer = DateDiff(DateInterval.Day, pptEDate, planEDate)
-                    If absDiffED < 0 Then
-                        absDiffED = -1 * absDiffED
-                    End If
-
-                    If ((absDiffSD <=1) and (absDiffED <=1))  then 
-                        ' keine Änderung 
-                    Else
                         With tmpShape
-
                             If .Tags.Item("MVD").Length > 0 Then
                                 .Tags.Delete("MVD")
                             End If
@@ -581,8 +579,7 @@ Module Module1
                         End With
 
                         Call smartSlideLists.addMV(tmpShape.Name)
-
-                End If
+                    End If
 
                 End If
             End If
@@ -657,7 +654,7 @@ Module Module1
                                     Call aktualisiereInfoFrm(tmpShape, True)
                                 End If
                             End If
-                            
+
                         Catch ex As Exception
 
                         End Try
@@ -741,7 +738,7 @@ Module Module1
                                         Call aktualisiereInfoFrm(tmpShape, True)
                                     End If
                                 End If
-                                
+
                             End If
 
                         Catch ex As Exception
@@ -1315,45 +1312,58 @@ Module Module1
     Public Function isMovedElement(ByVal curShape As PowerPoint.Shape) As Boolean
 
         Dim tmpResult As Boolean = False
-        Dim tolerance As Integer = 1
+        Dim tolerance As Integer = 0
 
         Try
             If pptShapeIsMilestone(curShape) Then
 
                 Dim msDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + 0.5 * curShape.Width)
-
                 Dim tstDate As Date = CDate(curShape.Tags.Item("ED"))
                 Dim diffDays As Integer = DateDiff(DateInterval.Day, msDate, tstDate)
-                If diffDays < 0 Then
-                    diffDays = -1 * diffDays
-                End If
 
-                If diffDays > tolerance Then
+                If diffDays <> 0 Then
                     tmpResult = True
                 End If
+
+                ''If diffDays < 0 Then
+                ''    diffDays = -1 * diffDays
+                ''End If
+
+                ''If diffDays > tolerance Then
+                ''    tmpResult = True
+                ''End If
 
             ElseIf pptShapeIsPhase(curShape) Then
 
-                Dim startDate As Date = slideCoordInfo.calcXtoDate(curShape.Left)
-                Dim endDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + curShape.Width)
 
-                Dim tstDate1 As Date = CDate(curShape.Tags.Item("SD"))
-                Dim tstDate2 As Date = CDate(curShape.Tags.Item("ED"))
+                Dim pptSDate As Date = slideCoordInfo.calcXtoDate(curShape.Left)
+                Dim pptEDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + curShape.Width)
+                Dim planSDate As Date = CDate(curShape.Tags.Item("SD"))
+                Dim planEDate As Date = CDate(curShape.Tags.Item("ED"))
 
-                Dim diffdays1 As Integer = DateDiff(DateInterval.Day, startDate, tstDate1)
-                If diffdays1 < 0 Then
-                    diffdays1 = diffdays1 * -1
+                ' prüfen, ob es beim Erzeugen abgeschnitten wurde ...
+                Dim pptStartOfCalendar As Date = slideCoordInfo.PPTStartOFCalendar
+                Dim pptEndOfCalendar As Date = slideCoordInfo.PPTEndOFCalendar
+
+                If DateDiff(DateInterval.Day, pptStartOfCalendar, planSDate) < 0 Then
+                    planSDate = pptStartOfCalendar
                 End If
 
-                Dim diffdays2 As Integer = DateDiff(DateInterval.Day, endDate, tstDate2)
-                If diffdays2 < 0 Then
-                    diffdays2 = diffdays2 * -1
+                If DateDiff(DateInterval.Day, pptEndOfCalendar, planEDate) > 0 Then
+                    planEDate = pptEndOfCalendar
                 End If
 
-                If diffdays1 > tolerance Or _
-                    diffdays2 > tolerance Then
+                Dim diffSD As Integer = DateDiff(DateInterval.Day, pptSDate, planSDate)
+                Dim diffED As Integer = DateDiff(DateInterval.Day, pptEDate, planEDate)
+
+
+                If diffSD <> 0 Or diffED <> 0 Then
                     tmpResult = True
                 End If
+                'If diffdays1 > tolerance Or _
+                '    diffdays2 > tolerance Then
+                '    tmpResult = True
+                'End If
 
 
             End If
@@ -1872,4 +1882,54 @@ Module Module1
         Next
 
     End Sub
+
+    Public Function getProjektHistory(ByVal pvName) As clsProjektHistorie
+
+        Dim tmpResult As clsProjektHistorie = Nothing
+        Dim pName As String
+        Dim variantName As String = ""
+        Dim pHistory As New clsProjektHistorie
+
+        If IsNothing(pvName) Then
+            ' nichts tun 
+        ElseIf pvName.trim.length = 0 Then
+            ' auch nichts tun ...
+        Else
+
+            Dim tmpstr() As String = pvName.Split(New Char() {CType("#", Char)})
+            pName = tmpstr(0).Trim
+            If tmpstr.Length > 1 Then
+                variantName = tmpstr(1).Trim
+            Else
+                variantName = ""
+            End If
+
+            If Not noDBAccessInPPT Then
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                If request.pingMongoDb() Then
+                    Try
+
+                        pHistory.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                    Catch ex As Exception
+                        pHistory = Nothing
+                    End Try
+                Else
+                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                End If
+
+
+
+
+            End If
+
+
+        End If
+
+
+
+        getProjektHistory = tmpResult
+    End Function
 End Module

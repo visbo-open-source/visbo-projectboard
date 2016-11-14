@@ -65,5 +65,25 @@ Public Class Ribbon1
 
     Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs) Handles timeMachineTab.Click
 
+        ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
+        If smartSlideLists.countProjects > 0 Then
+            ' nur dann müssen Historien geholt werden 
+            If noDBAccessInPPT Then
+                Call MsgBox("kein Datenbank Zugriff ... bitte erst einloggen ...")
+            Else
+                If Not smartSlideLists.historiesExist Then
+                    ' für jedes Projekt die ProjektHistorie holen ...
+                    Dim anzahlProjekte As Integer = smartSlideLists.countProjects
+                    For i As Integer = 1 To anzahlProjekte
+                        Dim pvName As String = smartSlideLists.getPVName(i)
+
+
+
+                    Next
+
+                End If
+            End If
+        End If
+
     End Sub
 End Class

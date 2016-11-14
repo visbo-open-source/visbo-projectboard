@@ -10821,41 +10821,27 @@ Public Module awinGeneralModules
 
                         ' Berücksichtigung der Abhängigkeiten im TreeView ...
                         If allDependencies.projectCount > 0 Then
-                            ' es gibt irgendwelche Dependencies, die Lead-Projekte sollen visbo-Orange gezeigt werden, 
-                            ' wenn  ein Lead-Projekt markiert wird, sollen die abhängigen Projekte Visbo-blau eingefärbt werden 
+                            ' es gibt irgendwelche Dependencies, die Lead-Projekte, abhängigen Projekte 
+                            ' und sowohl-als-auch-Projekte werden farblich markiert  
 
                             ' die Projekte suchen, von denen dieses Projekt abhängt 
                             Dim passivListe As Collection = allDependencies.passiveListe(pname, PTdpndncyType.inhalt)
                             Dim aktivListe As Collection = allDependencies.activeListe(pname, PTdpndncyType.inhalt)
-                            If passivListe.Count > 0 And aktivListe.Count = 0 Then
-                                ' ist abhängiges Projekt ...
-                                nodeLevel0.ForeColor = Color.Blue
-                                Dim lProjectList As String = ""
-                                For i As Integer = 1 To passivListe.Count
-                                    If i = 1 Then
-                                        lProjectList = CStr(passivListe.Item(i))
-                                    Else
-                                        lProjectList = lProjectList & "; " & passivListe.Item(i)
 
-                                    End If
-                                Next
-                                nodeLevel0.ToolTipText = lProjectList
+                            If passivListe.Count > 0 And aktivListe.Count = 0 Then
+                                ' ist nur abhängiges Projekt ...
+                                nodeLevel0.ForeColor = Color.Gray
+
 
                             ElseIf passivListe.Count = 0 And aktivListe.Count > 0 Then
-                                ' ist Projekt, von dem andere abhängen 
+                                ' hat abhängige Projekte  
+                                nodeLevel0.ForeColor = Color.OrangeRed
+
+                            ElseIf passivListe.Count > 0 And aktivListe.Count > 0 Then
+                                ' hängt ab und hat abhängige Projekte 
                                 nodeLevel0.ForeColor = Color.Orange
-                                Dim lProjectList As String = ""
-                                For i As Integer = 1 To aktivListe.Count
-                                    If i = 1 Then
-                                        lProjectList = CStr(aktivListe.Item(i))
-                                    Else
-                                        lProjectList = lProjectList & "; " & aktivListe.Item(i)
-
-                                    End If
-                                Next
-                                nodeLevel0.ToolTipText = lProjectList
-
                             End If
+
                         End If
 
 

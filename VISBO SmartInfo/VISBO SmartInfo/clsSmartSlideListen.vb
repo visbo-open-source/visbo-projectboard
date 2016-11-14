@@ -1,4 +1,13 @@
-﻿Public Class clsSmartSlideListen
+﻿Imports ProjectBoardDefinitions
+''' <summary>
+''' baut die SmartListen für die betreffende Slide auf
+''' dazu gehören classifiedName, OriginalNames, ShortNames, FullBreadCrumbs, ampelColr, 
+''' Deliverables, movedElements und Project TimeStamps 
+''' die Project TimeStamps werden erstmal für jedes Projekt erst mal nur mit Nothing angelegt, 
+''' erst wenn TimeMachine aktiviert wird werden sie nach Bedarf geholt ...
+''' </summary>
+''' <remarks></remarks>
+Public Class clsSmartSlideListen
 
     ' um zu verhindern, dass der Speicherbedarf wegen sortierter String Listen sehr groß wird, 
     ' wird eine Hilfsliste eingeführt, die für jeden auftretenden Shape-Namen (eindeutig !) eine eindeutige lfdNr zuweist 
@@ -18,7 +27,109 @@
     Private LUList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Elemente, die manuell verschoben wurden ... 
     Private mVList As SortedList(Of Integer, Boolean)
+    ' enthält die Liste an Projekt-Historien 
+    Private projectTimeStamps As SortedList(Of String, clsProjektHistorie)
 
+
+    ''' <summary>
+    ''' liefert true, wenn das Projekt mit projectVariantName = pName#vName in der Liste der Projekte enthalten ist 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsProject(ByVal pvName As String) As Boolean
+        Get
+            containsProject = projectTimeStamps.ContainsKey(pvName)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Projekt-Varianten-Namen des i.ten-Elements zurück
+    ''' i läuft von 1.. count 
+    ''' der Name hat folgenden Aufbau: pName#vName 
+    ''' Aufruf mit unzulässigem Index gibt Nothing zurück 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPVName(ByVal index As Integer) As String
+        Get
+
+            If index >= 1 And index <= projectTimeStamps.Count Then
+                getPVName = projectTimeStamps.ElementAt(index - 1).Key
+            Else
+                getPVName = Nothing
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Anzahl an Projekten, die mit oder ohne TimeStamps aufgeführt sind 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countProjects() As Integer
+        Get
+            countProjects = projectTimeStamps.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt für das angegebene Projekte die Liste der Time-Stamps zurück
+    ''' Nothing, wenn sie noch nicht aus der Datenbank geladen wurde  
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTimeStampListe(ByVal pvName As String) As clsProjektHistorie
+        Get
+            If projectTimeStamps.ContainsKey(pvName) Then
+                getTimeStampListe = projectTimeStamps.Item(pvName)
+            Else
+                getTimeStampListe = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Projektliste ein neues Element hinzu; 
+    ''' die Project TimeStampListe kann Nothing sein ... 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <param name="pHistory"></param>
+    ''' <remarks></remarks>
+    Public Sub addProject(ByVal pvName As String, Optional ByVal pHistory As clsProjektHistorie = Nothing)
+
+        If projectTimeStamps.ContainsKey(pvName) Then
+            projectTimeStamps.Remove(pvName)
+        End If
+
+        projectTimeStamps.Add(pvName, pHistory)
+
+    End Sub
+
+    Public ReadOnly Property historiesExist() As Boolean
+        Get
+            Dim tmpResult As Boolean = True
+
+            Dim i As Integer = 0
+            Do While i <= projectTimeStamps.Count - 1 And tmpResult
+                If IsNothing(projectTimeStamps.ElementAt(i).Value) Then
+                    tmpResult = False
+                Else
+                    i = i + 1
+                End If
+            Loop
+
+            historiesExist = tmpResult
+
+        End Get
+    End Property
     Public ReadOnly Property getUID(ByVal shapeName As String) As Integer
         Get
             Dim uid As Integer
@@ -641,7 +752,7 @@
 
                         Next
                     End If
-                    
+
 
 
                 Else
@@ -824,6 +935,8 @@
     End Property
 
 
+
+
     Public Sub New()
         planShapeIDs = New SortedList(Of String, Integer)
         IDplanShapes = New SortedList(Of Integer, String)
@@ -834,6 +947,7 @@
         aCList = New SortedList(Of Integer, SortedList(Of Integer, Boolean))
         LUList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         mVList = New SortedList(Of Integer, Boolean)
+        projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
     End Sub
 
 End Class

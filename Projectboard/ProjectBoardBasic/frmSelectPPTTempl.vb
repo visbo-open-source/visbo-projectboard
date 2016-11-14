@@ -303,12 +303,12 @@ Public Class frmSelectPPTTempl
 
         currentReportProfil.CalendarVonDate = StartofCalendar
 
-        Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
-        Dim bisDate As Date = getDateofColumn(showRangeRight, True)
-
+        
         Try
-            currentReportProfil.calcRepVonBis(vonDate, bisDate)
+            'currentReportProfil.calcRepVonBis(vonDate, bisDate)
+            currentReportProfil.calcRepVonBis(StartofCalendar, StartofCalendar)
         Catch ex As Exception
+            ' tk keine Exception, weil sonst kein Einzelprojekt Report gemacht werdne kann 
             Throw New ArgumentException(ex.Message)
         End Try
         Try

@@ -33,8 +33,8 @@ Partial Class frmReportProfil
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.BGworkerReportBHTC = New System.ComponentModel.BackgroundWorker()
         Me.BGWorkerReportGen = New System.ComponentModel.BackgroundWorker()
-        Me.EPreports = New System.Windows.Forms.RadioButton()
-        Me.MPreports = New System.Windows.Forms.RadioButton()
+        Me.rdbEPreports = New System.Windows.Forms.RadioButton()
+        Me.rdbMPreports = New System.Windows.Forms.RadioButton()
         Me.ToolTipProfil = New System.Windows.Forms.ToolTip(Me.components)
         Me.SuspendLayout()
         '
@@ -121,27 +121,27 @@ Partial Class frmReportProfil
         'BGWorkerReportGen
         '
         '
-        'EPreports
+        'rdbEPreports
         '
-        Me.EPreports.AutoSize = True
-        Me.EPreports.Location = New System.Drawing.Point(14, 7)
-        Me.EPreports.Name = "EPreports"
-        Me.EPreports.Size = New System.Drawing.Size(125, 17)
-        Me.EPreports.TabIndex = 44
-        Me.EPreports.TabStop = True
-        Me.EPreports.Text = "Einzelprojekt Reports"
-        Me.EPreports.UseVisualStyleBackColor = True
+        Me.rdbEPreports.AutoSize = True
+        Me.rdbEPreports.Checked = True
+        Me.rdbEPreports.Location = New System.Drawing.Point(14, 7)
+        Me.rdbEPreports.Name = "rdbEPreports"
+        Me.rdbEPreports.Size = New System.Drawing.Size(125, 17)
+        Me.rdbEPreports.TabIndex = 44
+        Me.rdbEPreports.TabStop = True
+        Me.rdbEPreports.Text = "Einzelprojekt Reports"
+        Me.rdbEPreports.UseVisualStyleBackColor = True
         '
-        'MPreports
+        'rdbMPreports
         '
-        Me.MPreports.AutoSize = True
-        Me.MPreports.Location = New System.Drawing.Point(171, 7)
-        Me.MPreports.Name = "MPreports"
-        Me.MPreports.Size = New System.Drawing.Size(119, 17)
-        Me.MPreports.TabIndex = 45
-        Me.MPreports.TabStop = True
-        Me.MPreports.Text = "Multiprojekt Reports"
-        Me.MPreports.UseVisualStyleBackColor = True
+        Me.rdbMPreports.AutoSize = True
+        Me.rdbMPreports.Location = New System.Drawing.Point(171, 7)
+        Me.rdbMPreports.Name = "rdbMPreports"
+        Me.rdbMPreports.Size = New System.Drawing.Size(119, 17)
+        Me.rdbMPreports.TabIndex = 45
+        Me.rdbMPreports.Text = "Multiprojekt Reports"
+        Me.rdbMPreports.UseVisualStyleBackColor = True
         '
         'ToolTipProfil
         '
@@ -154,8 +154,8 @@ Partial Class frmReportProfil
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(612, 499)
-        Me.Controls.Add(Me.MPreports)
-        Me.Controls.Add(Me.EPreports)
+        Me.Controls.Add(Me.rdbMPreports)
+        Me.Controls.Add(Me.rdbEPreports)
         Me.Controls.Add(Me.statusLabel)
         Me.Controls.Add(Me.changeProfil)
         Me.Controls.Add(Me.ReportErstellen)
@@ -179,7 +179,7 @@ Partial Class frmReportProfil
     Friend WithEvents statusLabel As System.Windows.Forms.Label
     Friend WithEvents BGworkerReportBHTC As System.ComponentModel.BackgroundWorker
     Friend WithEvents BGWorkerReportGen As System.ComponentModel.BackgroundWorker
-    Friend WithEvents EPreports As System.Windows.Forms.RadioButton
-    Friend WithEvents MPreports As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbEPreports As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbMPreports As System.Windows.Forms.RadioButton
     Friend WithEvents ToolTipProfil As System.Windows.Forms.ToolTip
 End Class

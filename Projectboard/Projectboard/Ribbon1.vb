@@ -9483,13 +9483,10 @@ Imports System.Windows
         Dim returnvalue As DialogResult
 
         If ShowProjekte.Count > 0 Then
-            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                reportAuswahl.calledFrom = "Multiprojekt-Tafel"
-                returnvalue = reportAuswahl.ShowDialog
-                Call awinDeSelect()
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus! ")
-            End If
+
+            reportAuswahl.calledFrom = "Multiprojekt-Tafel"
+            returnvalue = reportAuswahl.ShowDialog
+            Call awinDeSelect()
         Else
             Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
         End If

@@ -216,6 +216,12 @@
     <AppDesigner Include="My Project\" />
     <Compile Include="clsLanguages.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
+    <Compile Include="frmPPTTimeMachine.Designer.vb">
+      <DependentUpon>frmPPTTimeMachine.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmPPTTimeMachine.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmInfo.Designer.vb">
       <DependentUpon>frmInfo.vb</DependentUpon>
     </Compile>
@@ -244,6 +250,9 @@
     <Compile Include="ThisAddIn.vb">
       <SubType>Code</SubType>
     </Compile>
+    <EmbeddedResource Include="frmPPTTimeMachine.resx">
+      <DependentUpon>frmPPTTimeMachine.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmInfo.resx">
       <DependentUpon>frmInfo.vb</DependentUpon>
     </EmbeddedResource>
@@ -339,6 +348,27 @@
   <ItemGroup>
     <None Include="Resources\home.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_beginning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_beginning1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_left2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_left.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_right.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_right2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_end.png" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -372,7 +402,7 @@
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
         <ProjectProperties HostName="PowerPoint" HostPackage="{20A848B8-E01F-4801-962E-25DB0FF57389}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="PowerPoint" Language="vb" TemplatesPath="" DebugInfoExeName="#Software\Microsoft\Office\14.0\PowerPoint\InstallRoot\Path#powerpnt.exe" AddItemTemplatesGuid="{DCFE8D25-4715-4C33-9EAB-A34A9EBC9544}" />
         <Host Name="PowerPoint" PublishedHash="69C324AB27932AA2FBF2B7EA72250886FF164DE6" IconIndex="0">
-          <HostItem Name="ThisAddIn" Code="ThisAddIn.vb" CanonicalName="AddIn" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.vb" PublishedHash="A4CF9EC3BB364A5FFFA307D21A2C7130F2ED2642" />
+          <HostItem Name="ThisAddIn" Code="ThisAddIn.vb" CanonicalName="AddIn" PublishedHash="A4CF9EC3BB364A5FFFA307D21A2C7130F2ED2642" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.vb" />
         </Host>
       </FlavorProperties>
     </VisualStudio>
