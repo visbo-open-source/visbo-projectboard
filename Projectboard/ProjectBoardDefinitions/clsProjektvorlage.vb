@@ -1114,13 +1114,102 @@
     End Property
 
 
+    Private _farbe As Integer = RGB(220, 220, 220)
     Public Property farbe() As Integer
+        Get
+            If Not IsNothing(_farbe) Then
+                farbe = _farbe
+            Else
+                farbe = 10
+            End If
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                Try
+                    _farbe = CInt(value)
+                Catch ex As Exception
+                    _farbe = 10
+                End Try
 
+            Else
+                _farbe = 10
+            End If
+
+        End Set
+    End Property
+
+    Private _Schrift As Integer = 10
     Public Property Schrift() As Integer
+        Get
+            If Not IsNothing(_Schrift) Then
+                Schrift = _Schrift
+            Else
+                Schrift = 10
+            End If
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                Try
+                    _Schrift = CInt(value)
+                    If _Schrift >= 5 And _Schrift <= 20 Then
+                        ' ok , nichts tun
+                    Else
+                        _Schrift = 10
+                    End If
+                Catch ex As Exception
+                    _Schrift = 10
+                End Try
 
+            Else
+                _Schrift = 10
+            End If
+
+        End Set
+    End Property
+
+
+    Private _Schriftfarbe As Integer = RGB(5, 5, 5)
     Public Property Schriftfarbe() As Object
+        Get
+            If Not IsNothing(_Schriftfarbe) Then
+                Schriftfarbe = _Schriftfarbe
+            Else
+                Schriftfarbe = RGB(5, 5, 5)
+            End If
+        End Get
+        Set(value As Object)
+            If Not IsNothing(value) Then
+                Try
+                    _Schriftfarbe = CInt(value)
+                Catch ex As Exception
+                    _Schriftfarbe = RGB(5, 5, 5)
+                End Try
 
+            Else
+                _Schriftfarbe = RGB(5, 5, 5)
+            End If
+
+        End Set
+    End Property
+
+    Private _VorlagenName As String = ""
     Public Property VorlagenName() As String
+        Get
+            If Not IsNothing(_VorlagenName) Then
+                VorlagenName = _VorlagenName
+            Else
+                VorlagenName = ""
+            End If
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _VorlagenName = value
+            Else
+                _VorlagenName = ""
+            End If
+
+        End Set
+    End Property
 
     'Public RessourcenDefinitionsBereich As String
 

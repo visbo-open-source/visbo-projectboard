@@ -16,6 +16,56 @@ Public Class clsDependencies
     End Sub
 
     ''' <summary>
+    ''' gibt einen String zurück, der die Projekte auflistet, von denen pName abhängt bzw. die von pName abhängen 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getDependencyInfos(ByVal pName As String) As String
+        Get
+            Dim lProjectList As String = "-"
+            Dim passivListe As Collection = Me.passiveListe(pName, PTdpndncyType.inhalt)
+            Dim aktivListe As Collection = Me.activeListe(pName, PTdpndncyType.inhalt)
+
+            If passivListe.Count > 0 Then
+                ' ist abhängiges Projekt ...
+                lProjectList = "ist abhängig von: "
+                For i As Integer = 1 To passivListe.Count
+                    If i = 1 Then
+                        lProjectList = lProjectList & CStr(passivListe.Item(i))
+                    Else
+                        lProjectList = lProjectList & "; " & CStr(passivListe.Item(i))
+
+                    End If
+                Next
+            End If
+
+            If aktivListe.Count > 0 Then
+                ' ist Projekt, von dem andere abhängen 
+                If passivListe.Count > 0 Then
+                    ' es gibt schon was ...
+                    lProjectList = lProjectList & vbLf & vbLf & "abhängige Projekte: "
+                Else
+                    lProjectList = "abhängige Projekte: "
+                End If
+
+                For i As Integer = 1 To aktivListe.Count
+                    If i = 1 Then
+                        lProjectList = lProjectList & CStr(aktivListe.Item(i))
+                    Else
+                        lProjectList = lProjectList & "; " & CStr(aktivListe.Item(i))
+
+                    End If
+                Next
+            End If
+
+            getDependencyInfos = lProjectList
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' fügt die Liste der Projekt-Abhängigkeiten eines Projektes hinzu, bei Overwrite = true wird überschrieben , falls es diese Liste bereits gibt
     ''' </summary>
     ''' <param name="liste"></param>

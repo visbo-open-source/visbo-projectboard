@@ -383,6 +383,17 @@ Public Module Module1
         datum = 1
     End Enum
 
+    ''' <summary>
+    ''' kann überall do verwendet werden, wo es wichtig ist, die CallerApp zu unterscheiden, 
+    ''' also wurde ein bestimmtes Formular aus der Multiprojekt Tafel aufgerufen, aus dem Project Add-In oder aus dem Powerpoint Add-In 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTCallerApp
+        projektTafel = 0
+        projectAddIn = 1
+        pptAddIn = 2
+    End Enum
+
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
@@ -467,7 +478,6 @@ Public Module Module1
 
     ' SoftwareKomponenten für die Lizensierung
     Public Enum PTSWKomp
-
         ProjectAdmin = 0
         Swimlanes2 = 1
         SWkomp2 = 2
@@ -3014,7 +3024,8 @@ Public Module Module1
     Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
-                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
+                                          ByVal lieferumfaenge As String)
 
         Dim nullDate As Date = Nothing
 
@@ -3071,7 +3082,12 @@ Public Module Module1
 
                 End If
 
-                
+                If Not IsNothing(lieferumfaenge) Then
+                    If lieferumfaenge.Length > 0 Then
+                        .Tags.Add("LU", lieferumfaenge)
+                    End If
+
+                End If
 
             End With
         End If
@@ -3117,44 +3133,6 @@ Public Module Module1
 
     End Sub
 
-    ''' <summary>
-    ''' setzt die komplette Session zurück 
-    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub clearCompleteSession()
-
-        Dim allShapes As Excel.Shapes
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        ' jetzt: Löschen der Session 
-
-        Try
-
-            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
-            For Each element As Excel.Shape In allShapes
-                element.Delete()
-            Next
-
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Löschen der Shapes ...")
-        End Try
-
-        ShowProjekte.Clear()
-        AlleProjekte.Clear()
-        selectedProjekte.Clear()
-        ImportProjekte.Clear()
-        DiagramList.Clear()
-        awinButtonEvents.Clear()
-
-        allDependencies.Clear()
-        projectboardShapes.clear()
-        ' Session gelöscht
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-    End Sub
 
     Public Sub PPTstarten()
         Try

@@ -245,11 +245,11 @@ Partial Class frmInfo
         'lblAmpeln
         '
         Me.lblAmpeln.AutoSize = True
-        Me.lblAmpeln.Location = New System.Drawing.Point(437, 13)
+        Me.lblAmpeln.Location = New System.Drawing.Point(432, 13)
         Me.lblAmpeln.Name = "lblAmpeln"
-        Me.lblAmpeln.Size = New System.Drawing.Size(45, 13)
+        Me.lblAmpeln.Size = New System.Drawing.Size(39, 13)
         Me.lblAmpeln.TabIndex = 1
-        Me.lblAmpeln.Text = "Ampeln:"
+        Me.lblAmpeln.Text = "Ampel:"
         '
         'shwRedLight
         '
@@ -355,7 +355,7 @@ Partial Class frmInfo
         'CheckBxMarker
         '
         Me.CheckBxMarker.AutoSize = True
-        Me.CheckBxMarker.Location = New System.Drawing.Point(407, 12)
+        Me.CheckBxMarker.Location = New System.Drawing.Point(402, 12)
         Me.CheckBxMarker.Name = "CheckBxMarker"
         Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
         Me.CheckBxMarker.TabIndex = 43
@@ -402,7 +402,7 @@ Partial Class frmInfo
         'PictureMarker
         '
         Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(393, 11)
+        Me.PictureMarker.Location = New System.Drawing.Point(388, 11)
         Me.PictureMarker.Name = "PictureMarker"
         Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
         Me.PictureMarker.TabIndex = 32

@@ -3,6 +3,7 @@ Imports System.Runtime.Serialization
 Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
+Imports ProjectBoardDefinitions
 Imports MongoDbAccess
 
 
@@ -44,14 +45,14 @@ Public Class frmSettings
         frmShowInfoBC.Checked = showBreadCrumbField
         frmExtendedSearch.Checked = extSearch
 
-        If Not noDBAccess Then
-            frmUserName.Text = userName
+        If Not noDBAccessInPPT Then
+            frmUserName.Text = dbUsername
             frmUserName.Enabled = False
             frmUserPWD.Enabled = False
             frmUserPWD.Text = ""
             feedbackMessage.Text = "Login bereits erfolgreich durchgeführt ..."
         Else
-            If dbURL.Length > 0 And dbName.Length > 0 Then
+            If awinSettings.databaseURL.Length > 0 And awinSettings.databaseName.Length > 0 Then
                 frmUserName.Enabled = True
                 frmUserPWD.Enabled = True
                 feedbackMessage.Text = ""
@@ -70,7 +71,7 @@ Public Class frmSettings
         frmProtectField2.Visible = False
         frmProtectField2.Text = ""
 
-        
+
         If languages.count > 1 Then
             ' jetzt wird die txtboxLanguage aktualisiert
             txtboxLanguage.Visible = True
@@ -96,8 +97,8 @@ Public Class frmSettings
 
     Private Sub dbLoginButton_Click(sender As Object, e As EventArgs) Handles btnDBLogin.Click
 
-        userName = frmUserName.Text
-        userPWD = frmUserPWD.Text
+        dbUsername = frmUserName.Text
+        dbPasswort = frmUserPWD.Text
 
         Dim pwd As String
         Dim user As String
@@ -107,20 +108,20 @@ Public Class frmSettings
         feedbackMessage.Text = ""
 
         Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
-            Dim request As New Request(dbURL, dbName, user, pwd)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
             Dim ok As Boolean = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
-            
-            userName = user
-            userPWD = pwd
 
-            feedbackMessage.Text = "Login bei DB <" & dbName & "> erfolgreich !"
-            noDBAccess = False
+            dbUsername = user
+            dbPasswort = pwd
+
+            feedbackMessage.Text = "Login bei DB <" & awinSettings.databaseName & "> erfolgreich !"
+            noDBAccessInPPT = False
 
             frmUserName.Enabled = False
             frmUserPWD.Enabled = False
 
         Catch ex As Exception
-            noDBAccess = True
+            noDBAccessInPPT = True
             feedbackMessage.Text = "Benutzername oder Passwort fehlerhaft!"
             frmUserName.Text = ""
             frmUserPWD.Text = ""
@@ -231,7 +232,7 @@ Public Class frmSettings
             ''serializer.WriteObject(file, languages)
             ''file.Close()
 
-           
+
             '
             ' --- alte customXMLPart für Languages, falls vorhanden,  löschen
             '
@@ -256,7 +257,7 @@ Public Class frmSettings
             pptAPP.ActivePresentation.Tags.Add("langGUID", languageXMLPart.Id)
 
             Dim anzXMLParts As Integer = pptAPP.ActivePresentation.CustomXMLParts.Count
-            
+
 
         Catch ex As Exception
             Call MsgBox("Fehler bei Import: " & ex.Message)
@@ -280,12 +281,12 @@ Public Class frmSettings
     End Sub
 
     Private Sub DBLoginPage_Click(sender As Object, e As EventArgs) Handles DBLoginPage.Click
-        If Not noDBAccess Then
+        If Not noDBAccessInPPT Then
             frmUserName.Enabled = False
             frmUserPWD.Enabled = False
             feedbackMessage.Text = "Login bereits durchgeführt ..."
         Else
-            If dbURL.Length > 0 And dbName.Length > 0 Then
+            If awinSettings.databaseURL.Length > 0 And awinSettings.databaseName.Length > 0 Then
                 frmUserName.Enabled = True
                 frmUserPWD.Enabled = True
                 feedbackMessage.Text = ""

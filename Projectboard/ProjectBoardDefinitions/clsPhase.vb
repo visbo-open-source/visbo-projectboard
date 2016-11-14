@@ -34,6 +34,129 @@ Public Class clsPhase
     Private _allCosts As List(Of clsKostenart)
 
 
+    ''' <summary>
+    ''' gibt zurück, ob die Phase identisch mit der übergebenen Phase ist  
+    ''' </summary>
+    ''' <param name="vPhase"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vPhase As clsPhase) As Boolean
+        Get
+            Dim stillOK As Boolean = False
+            Dim ix As Integer = 0
+
+            Try
+                With vPhase
+                    ' administratives ...
+                    If Me.nameID = .nameID Then
+
+                        If Me.dauerInDays = .dauerInDays And _
+                            Me.startOffsetinDays = .startOffsetinDays Then
+
+                            If Me.countCosts = .countCosts And _
+                                Me.countRoles = .countRoles And _
+                                Me.countMilestones = .countMilestones And _
+                                Me.bewertungsCount = .bewertungsCount Then
+
+                                If Me.ampelErlaeuterung = .ampelErlaeuterung And _
+                                    Me.ampelStatus = .ampelStatus Then
+
+                                    If Me.shortName = .shortName And _
+                                        Me.originalName = .originalName And _
+                                        Me.verantwortlich = .verantwortlich Then
+
+                                        If Me.appearance = .appearance And _
+                                            Me.individualColor = .individualColor And _
+                                            Me.earliestStart = .earliestStart And _
+                                            Me.latestStart = .latestStart And _
+                                            Me.offset = .offset Then
+
+                                            stillOK = True
+                                        
+                                        End If
+
+                                    End If
+
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
+
+
+                    ' jetzt die Rollen, Kosten, Milestones und Bewertungen abfragen 
+                    If stillOK Then
+                        ' sind die Rollen identisch 
+                        ix = 1
+                        Do While stillOK And ix <= Me.countRoles
+                            Dim MeRole As clsRolle = Me.getRole(ix)
+                            Dim vglRole As clsRolle = .getRole(ix)
+                            If MeRole.isIdenticalTo(vglRole) Then
+                                ix = ix + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
+
+                        If stillOK Then
+                            ' sind die Kostenarten identisch ?
+                            ix = 1
+                            Do While stillOK And ix <= Me.countCosts
+                                Dim MeCost As clsKostenart = Me.getCost(ix)
+                                Dim vglCost As clsKostenart = .getCost(ix)
+                                If MeCost.isIdenticalTo(vglCost) Then
+                                    ix = ix + 1
+                                Else
+                                    stillOK = False
+                                End If
+                            Loop
+
+                            If stillOK Then
+                                ' sind die Phasen Bewertungen identisch?
+                                ix = 1
+                                Do While stillOK And ix <= Me.bewertungsCount
+                                    Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
+                                    Dim vglBewertung As clsBewertung = .getBewertung(ix)
+                                    If MeBewertung.isIdenticalTo(vglBewertung) Then
+                                        ix = ix + 1
+                                    Else
+                                        stillOK = False
+                                    End If
+                                Loop
+
+                                If stillOK Then
+                                    ' jetzt die Meilensteine, Bewertungen und Deliverables prüfen ... 
+                                    ix = 1
+                                    Do While stillOK And ix <= Me.countMilestones
+                                        Dim MeMs As clsMeilenstein = Me.getMilestone(ix)
+                                        Dim vglMs As clsMeilenstein = .getMilestone(ix)
+                                        If MeMs.isIdenticalTo(vglMs) Then
+                                            ix = ix + 1
+                                        Else
+                                            stillOK = False
+                                        End If
+                                    Loop
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
+
+                End With
+
+            Catch ex As Exception
+                stillOK = False
+            End Try
+
+            isIdenticalTo = stillOK
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' liest/schreibt das Feld für vrantwortlich

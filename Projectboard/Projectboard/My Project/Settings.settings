@@ -3,16 +3,16 @@
   <Profiles />
   <Settings>
     <Setting Name="mongoDBURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">localhost</Value>
+      <Value Profile="(Default)">ds011472.mlab.com:11472</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Ute\Documents\VISBO\Test\Mahle 2017\</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Muenchen Demo\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">mahle17</Value>
+      <Value Profile="(Default)">muenchen</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Ute\Documents\VISBO\Mahle 2017\</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>

@@ -1206,6 +1206,56 @@ Public Module awinGeneralModules
 
 
     ''' <summary>
+    ''' setzt die komplette Session zurück 
+    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearCompleteSession()
+
+        Dim allShapes As Excel.Shapes
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' jetzt: Löschen der Session 
+
+        Try
+
+            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+            For Each element As Excel.Shape In allShapes
+                element.Delete()
+            Next
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen der Shapes ...")
+        End Try
+
+        ShowProjekte.Clear()
+        AlleProjekte.Clear()
+        selectedProjekte.Clear()
+        ImportProjekte.Clear()
+        DiagramList.Clear()
+        awinButtonEvents.Clear()
+        projectboardShapes.clear()
+
+        
+        ' tk, 10.11.16 allDependencies darf nicht gelöscht werden, weil das sonst nicht mehr vorhanden ist
+        ' allDependencies wird aktull nur beim Start geladen - und das reicht ja auch ... 
+        ' beim Laden eines Szenarios, beim Laden von Projekten wird das nicht mehr geladen ...
+        ' auch die geladenen Konstellationen bleiben erhalten 
+        ' alternativ könnte das Folgende aktiviert werden ..
+        ''allDependencies.Clear()
+        ''projectConstellations.Liste.Clear()
+        ' '' hier werden jetzt wieder die in der Datenbank vorhandenen Abhängigkeiten und Szenarios geladen ...
+        ''Call readInitConstellations()
+
+
+        ' Session gelöscht
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
+
+    ''' <summary>
     ''' setzt die Messages je nach Sprache 
     ''' </summary>
     ''' <remarks></remarks>
@@ -5048,9 +5098,15 @@ Public Module awinGeneralModules
         Dim lfdZeilenNr As Integer = 2
         Dim ok As Boolean
 
+        Dim importDate As Date = Date.Now
+
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
 
             Dim impProjekt As clsProjekt = kvp.Value
+
+            ' jetzt das Import Datum setzen ...
+            impProjekt.timeStamp = importDate
+
             Dim importKey As String = calcProjektKey(impProjekt)
 
             vglProj = Nothing
@@ -5115,9 +5171,10 @@ Public Module awinGeneralModules
             ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
             If Not IsNothing(vglProj) And Not noComparison Then
 
-                Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
+                ' erstezt durch Abfrage auf Identität 
+                'Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
 
-                If unterschiede.Count > 0 Then
+                If Not impProjekt.isIdenticalTo(vglProj) Then
                     ' es gibt Unterschiede, also muss eine Variante angelegt werden 
 
                     impProjekt.variantName = cName
@@ -5132,6 +5189,7 @@ Public Module awinGeneralModules
                     ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
                     AlleProjekte.Add(importKey, impProjekt)
                 End If
+
             End If
 
             ' Aufnehmen in Constellation
@@ -9590,7 +9648,7 @@ Public Module awinGeneralModules
         If kennung = PTTvActions.delFromDB Then
 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+            'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
             If Not projekthistorie Is Nothing Then
                 projekthistorie.clear() ' alte Historie löschen
@@ -9601,16 +9659,16 @@ Public Module awinGeneralModules
                                      storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
             ' Speichern im Papierkorb 
-            For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                If requestTrash.storeProjectToDB(kvp.Value) Then
-                Else
-                    ' es ging etwas schief
+            'For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
+            '    If requestTrash.storeProjectToDB(kvp.Value) Then
+            '    Else
+            '        ' es ging etwas schief
 
 
-                    Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
-                                kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
-                End If
-            Next
+            '        Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+            '                    kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
+            '    End If
+            'Next
 
             ' jetzt alle Timestamps in der Datenbank löschen 
             Try
@@ -9737,21 +9795,21 @@ Public Module awinGeneralModules
 
         Else
             ' Speichern im Papierkorb, dann löschen
-            If requestTrash.storeProjectToDB(hproj) Then
-                If request.deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName, _
-                                      stored:=timeStamp) Then
-                    'Call MsgBox("ok, gelöscht")
-                Else
-                    Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName & ", " & _
-                                timeStamp.ToShortDateString)
-                End If
+            'If requestTrash.storeProjectToDB(hproj) Then
+            If request.deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName, _
+                                  stored:=timeStamp) Then
+                'Call MsgBox("ok, gelöscht")
             Else
-                ' es ging etwas schief
-
-
-                Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
-                            hproj.name & ", " & hproj.timeStamp.ToShortDateString)
+                Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName & ", " & _
+                            timeStamp.ToShortDateString)
             End If
+            '    Else
+            '    ' es ging etwas schief
+
+
+            '    Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+            '                hproj.name & ", " & hproj.timeStamp.ToShortDateString)
+            'End If
 
         End If
 
@@ -10653,7 +10711,7 @@ Public Module awinGeneralModules
 
             Case PTTvActions.delFromDB
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
@@ -10670,7 +10728,7 @@ Public Module awinGeneralModules
 
             Case PTTvActions.loadPVS    ' ur: 30.01.2015: aktuell nicht benutzt!!!
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
@@ -10682,7 +10740,7 @@ Public Module awinGeneralModules
 
             Case PTTvActions.loadPV
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
@@ -10758,6 +10816,34 @@ Public Module awinGeneralModules
 
                         nodeLevel0 = .Nodes.Add(pname)
 
+                        ' damit kann evtl direkt auf den Node zugegriffen werden ...
+                        nodeLevel0.Name = pname
+
+                        ' Berücksichtigung der Abhängigkeiten im TreeView ...
+                        If allDependencies.projectCount > 0 Then
+                            ' es gibt irgendwelche Dependencies, die Lead-Projekte, abhängigen Projekte 
+                            ' und sowohl-als-auch-Projekte werden farblich markiert  
+
+                            ' die Projekte suchen, von denen dieses Projekt abhängt 
+                            Dim passivListe As Collection = allDependencies.passiveListe(pname, PTdpndncyType.inhalt)
+                            Dim aktivListe As Collection = allDependencies.activeListe(pname, PTdpndncyType.inhalt)
+
+                            If passivListe.Count > 0 And aktivListe.Count = 0 Then
+                                ' ist nur abhängiges Projekt ...
+                                nodeLevel0.ForeColor = Color.Gray
+
+
+                            ElseIf passivListe.Count = 0 And aktivListe.Count > 0 Then
+                                ' hat abhängige Projekte  
+                                nodeLevel0.ForeColor = Color.OrangeRed
+
+                            ElseIf passivListe.Count > 0 And aktivListe.Count > 0 Then
+                                ' hängt ab und hat abhängige Projekte 
+                                nodeLevel0.ForeColor = Color.Orange
+                            End If
+
+                        End If
+
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
                         If aKtionskennung = PTTvActions.delFromSession Or _
@@ -10767,6 +10853,7 @@ Public Module awinGeneralModules
                              aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
                             aKtionskennung = PTTvActions.definePortfolioSE Then
+
                             If variantNames.Count > 1 Then
 
                                 nodeLevel0.Tag = "P"
@@ -10794,6 +10881,8 @@ Public Module awinGeneralModules
                             If aKtionskennung = PTTvActions.chgInSession Then
                                 If ShowProjekte.contains(pname) Then
                                     nodeLevel0.Checked = True
+                                    ' herausfinden, ob es abhängige Projekte zu diesem Projekt gibt ... 
+
                                 End If
                             End If
 
@@ -13987,6 +14076,10 @@ Public Module awinGeneralModules
             ' If the XML document has been altered with unknown
             ' nodes or attributes, handle them with the
             ' UnknownNode and UnknownAttribute events.
+
+            ' Änderung tk: die beiden deserializer Kommandos müssen wieder aktiviert werden !
+            'Call MsgBox("hier wurde RXF Import massgeblich verändert !!" & vbLf & _
+            '             " lief bei Windows 10/Excel 2016 nicht")
             AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
             AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
 

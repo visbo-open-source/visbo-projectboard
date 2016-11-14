@@ -45,10 +45,10 @@ Public Class frmReportProfil
         If Me.calledFrom = "MS Project" Then
 
             ' für BHTC-Report wird diese Auswahlmöglichkeit derzeit nicht benötigt
-            Me.EPreports.Enabled = False
-            Me.EPreports.Visible = False
-            Me.MPreports.Enabled = False
-            Me.MPreports.Visible = False
+            Me.rdbEPreports.Enabled = False
+            Me.rdbEPreports.Visible = False
+            Me.rdbMPreports.Enabled = False
+            Me.rdbMPreports.Visible = False
 
             Try
 
@@ -737,16 +737,12 @@ Public Class frmReportProfil
 
         End With
 
-        If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
 
-            showRangeLeft = getColumnOfDate(reportProfil.VonDate)
-            showRangeRight = getColumnOfDate(reportProfil.BisDate)
-
-        End If
 
 
         Try
             If Not reportProfil.isMpp Then
+
 
                 Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
                 If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
@@ -773,6 +769,13 @@ Public Class frmReportProfil
 
                 End If
             Else
+
+                If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+
+                    showRangeLeft = getColumnOfDate(reportProfil.VonDate)
+                    showRangeRight = getColumnOfDate(reportProfil.BisDate)
+
+                End If
 
                 Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
                 If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
@@ -815,68 +818,44 @@ Public Class frmReportProfil
 
     End Sub
 
-    Private Sub EPreports_CheckedChanged(sender As Object, e As EventArgs) Handles EPreports.CheckedChanged
-
-        If EPreports.Checked And Not MPreports.Checked Then
-
-            If Me.calledFrom = "MS Project" Then
-
-                Try
-
-                Catch ex As Exception
-                    'Call MsgBox(ex.Message)
-                    Me.statusLabel.Text = ex.Message
-                    Me.statusLabel.Visible = True
-                End Try
-
-            ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
-                Try
-
-                    RepProfilListbox.Items.Clear()
-
-                    For Each kvp In listofProfils
-
-                        If Not kvp.Value.isMpp Then
-                            ' Profil profilName in Auswahl eintragen
-                            RepProfilListbox.Items.Add(kvp.Value.name)
-
-                        End If
-                    Next
+    Private Sub rdbEPreports_CheckedChanged(sender As Object, e As EventArgs) Handles rdbEPreports.CheckedChanged
 
 
-                Catch ex As Exception
-                    'Throw New ArgumentException("Fehler beim Filtern")
-                    Me.statusLabel.Text = ex.Message
-                    Me.statusLabel.Visible = True
-                End Try
+        If Me.calledFrom = "Multiprojekt-Tafel" Then
+            Try
+
+                RepProfilListbox.Items.Clear()
+
+                For Each kvp In listofProfils
+
+                    If Not kvp.Value.isMpp Then
+                        ' Profil profilName in Auswahl eintragen
+                        RepProfilListbox.Items.Add(kvp.Value.name)
+
+                    End If
+                Next
 
 
-                Me.zeitLabel.Visible = False
-                Me.vonDate.Visible = False
-                Me.bisDate.Visible = False
-                Me.changeProfil.Visible = False
-                Me.statusLabel.Visible = False
-            End If
+            Catch ex As Exception
+                'Throw New ArgumentException("Fehler beim Filtern")
+                Me.statusLabel.Text = ex.Message
+                Me.statusLabel.Visible = True
+            End Try
 
+
+            Me.zeitLabel.Visible = False
+            Me.vonDate.Visible = False
+            Me.bisDate.Visible = False
+            Me.changeProfil.Visible = False
+            Me.statusLabel.Visible = False
         End If
+
     End Sub
 
 
-    Private Sub MPreports_CheckedChanged(sender As Object, e As EventArgs) Handles MPreports.CheckedChanged
+    Private Sub rdbMPreports_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMPreports.CheckedChanged
 
-        If MPreports.Checked And Not EPreports.Checked Then
-
-            If Me.calledFrom = "MS Project" Then
-
-                Try
-
-                Catch ex As Exception
-                    'Call MsgBox(ex.Message)
-                    Me.statusLabel.Text = ex.Message
-                    Me.statusLabel.Visible = True
-                End Try
-
-            ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+        If Me.calledFrom = "Multiprojekt-Tafel" Then
                 Try
 
                     RepProfilListbox.Items.Clear()
@@ -905,7 +884,6 @@ Public Class frmReportProfil
                 Me.statusLabel.Visible = False
             End If
 
-        End If
 
     End Sub
 

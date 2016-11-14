@@ -620,6 +620,13 @@ Public Class clsReport
 
     End Property
 
+    ''' <summary>
+    ''' setzt die Range von und bis als Datum im Report-Profil. wenn sowohl von als auch bis mit dem Wert StartoFCalendar aufgerufen wird, dann 
+    ''' ist keine Range gesetzt 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <remarks></remarks>
     Public Sub calcRepVonBis(ByVal von As Date, ByVal bis As Date)
 
         Try
@@ -633,6 +640,10 @@ Public Class clsReport
                     Throw New ArgumentException("Datum 'von' muss vor Datum 'bis' liegen")
                 End If
 
+            ElseIf von = StartofCalendar And bis = StartofCalendar Then
+                ' das ist das Zeichen, dass kein Range definiert ist 
+                reportVon = StartofCalendar
+                reportBis = StartofCalendar
             Else
                 Throw New ArgumentException("Datum 'von' und 'bis' müssen nach dem ' " & StartofCalendar.ToString & " ' liegen")
             End If

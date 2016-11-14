@@ -24,7 +24,7 @@ Public Class clsProjekt
     ' Änderung tk: ist jetzt in der Phase 1 , Bewertung (1) abgespeichert 
     'Private _ampelStatus As Integer
     'Private _ampelErlaeuterung As String
-    Private _name As String
+    Private _name As String = "Project Dummy Name"
     Private _variantName As String = ""
     Private _variantDescription As String = ""
     ' Projektbeschreibung 
@@ -36,33 +36,399 @@ Public Class clsProjekt
 
 
     ' Deklarationen der Events 
+    Private _shpUID As String = ""
     Public Property shpUID As String
+        Get
+            If Not IsNothing(_shpUID) Then
+                shpUID = _shpUID
+            Else
+                shpUID = ""
+            End If
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _shpUID = value
+            Else
+                _shpUID = ""
+            End If
 
+        End Set
+    End Property
+
+    Private _Risiko As Double = 0.0
     Public Property Risiko As Double
-    Public Property StrategicFit As Double
-    Public Property Erloes As Double
-    Public Property leadPerson As String
-    'Public Property tfSpalte As Integer
-    Public Property tfZeile As Integer
+        Get
+            If Not IsNothing(_Risiko) Then
+                Risiko = _Risiko
+            Else
+                Risiko = 0.0
+            End If
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                _Risiko = value
+            Else
+                _Risiko = 0.0
+            End If
 
+        End Set
+    End Property
+
+
+    Private _StrategicFit As Double = 0.0
+    Public Property StrategicFit As Double
+        Get
+            If Not IsNothing(_StrategicFit) Then
+                StrategicFit = _StrategicFit
+            Else
+                StrategicFit = 0.0
+            End If
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                _StrategicFit = value
+            Else
+                _StrategicFit = 0.0
+            End If
+
+        End Set
+    End Property
+
+    Private _Erloes As Double = 0.0
+    Public Property Erloes As Double
+        Get
+            If Not IsNothing(_Erloes) Then
+                Erloes = _Erloes
+            Else
+                Erloes = 0.0
+            End If
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                _Erloes = value
+            Else
+                _Erloes = 0.0
+            End If
+
+        End Set
+    End Property
+
+    Private _leadPerson As String = ""
+    Public Property leadPerson As String
+        Get
+            If Not IsNothing(_leadPerson) Then
+                leadPerson = _leadPerson
+            Else
+                leadPerson = ""
+            End If
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _leadPerson = value
+            Else
+                _leadPerson = ""
+            End If
+
+        End Set
+    End Property
+    'Public Property tfSpalte As Integer
+
+    Private _tfZeile As Integer = 2
+    Public Property tfZeile As Integer
+        Get
+            If Not IsNothing(_tfZeile) Then
+                tfZeile = _tfZeile
+            Else
+                tfZeile = 2
+            End If
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                _tfZeile = value
+            Else
+                _tfZeile = 2
+            End If
+
+        End Set
+    End Property
+
+    Private _Id As String = ""
     Public Property Id As String
+        Get
+            If Not IsNothing(_Id) Then
+                Id = _Id
+            Else
+                Id = ""
+            End If
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _Id = value
+            Else
+                _Id = ""
+            End If
+        End Set
+    End Property
+
+    Private _timeStamp As Date = Date.Now
     Public Property timeStamp As Date
+        Get
+            If Not IsNothing(_timeStamp) Then
+                timeStamp = _timeStamp
+            Else
+                timeStamp = Date.Now
+            End If
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                _timeStamp = value
+            Else
+                _timeStamp = Date.Now
+            End If
+        End Set
+    End Property
 
     ' ergänzt am 26.10.13 - nicht in Vorlage aufgenommen, da es für jedes Projekt individuell ist 
 
+    Private _volume As Double = 0.0
     Public Property volume As Double
+        Get
+            If Not IsNothing(_volume) Then
+                volume = _volume
+            Else
+                volume = 0.0
+            End If
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                _volume = value
+            Else
+                _volume = 0.0
+            End If
+        End Set
+    End Property
+
+    Private _complexity As Double = 0.0
     Public Property complexity As Double
+        Get
+            If Not IsNothing(_complexity) Then
+                complexity = _complexity
+            Else
+                complexity = 0.0
+            End If
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                _complexity = value
+            Else
+                _complexity = 0.0
+            End If
+        End Set
+    End Property
+
+    Private _businessUnit As String = ""
     Public Property businessUnit As String
+        Get
+            If Not IsNothing(_businessUnit) Then
+                businessUnit = _businessUnit
+            Else
+                businessUnit = ""
+            End If
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _businessUnit = value
+            Else
+                _businessUnit = ""
+            End If
+        End Set
+    End Property
 
 
     ''''  Definitionen zu einem Projekt, die nicht in der DB abgespeichert werden
 
     ' ergänzt am 30.1.14 - diffToPrev , wird benutzt, um zu kennzeichnen , welches Projekt sich im Vergleich zu vorher verändert hat 
+
+    Private _diffToPrev As Boolean = False
     Public Property diffToPrev As Boolean
+        Get
+            If Not IsNothing(_diffToPrev) Then
+                diffToPrev = _diffToPrev
+            Else
+                diffToPrev = False
+            End If
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _diffToPrev = value
+            Else
+                _diffToPrev = False
+            End If
+        End Set
+    End Property
 
     ' ergänzt am 16.09.2015 - extendedView , wird benutzt, um zu kennzeichnen , welches Projekt in extended View dargestellt werden soll
+    Private _extendedView As Boolean = False
     Public Property extendedView As Boolean
+        Get
+            If Not IsNothing(_extendedView) Then
+                extendedView = _extendedView
+            Else
+                extendedView = False
+            End If
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _extendedView = value
+            Else
+                _extendedView = False
+            End If
+        End Set
+    End Property
     ' 
+
+    ''' <summary>
+    ''' prüft, ob ein Projekt in allen Belangen genau identisch mit einem anderen Projekt ist
+    ''' wird benutzt, um zu prüfen, ob gespeichert werden soll oder nicht ... 
+    ''' </summary>
+    ''' <param name="vProj"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vProj As clsProjekt) As Boolean
+        Get
+            Dim stillOK As Boolean = False
+
+            Try
+                With vProj
+
+                    If Me.name = .name And _
+                        Me.variantName = .variantName And _
+                        Me.variantDescription = .variantDescription And _
+                        Me.description = .description Then
+
+                        If Me.startDate = .startDate And _
+                            Me.endeDate = .endeDate Then
+
+                            If Me.ampelStatus = .ampelStatus And _
+                                Me.ampelErlaeuterung = .ampelErlaeuterung Then
+
+                                If Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) And _
+                                   Me.Erloes = .Erloes Then
+
+                                    If Me.businessUnit = .businessUnit And _
+                                        Me.complexity = .complexity And _
+                                        Me.earliestStartDate = .earliestStartDate And _
+                                        Me.latestStartDate = .latestStartDate And _
+                                        Me.Status = .Status And _
+                                        Me.StrategicFit = .StrategicFit And _
+                                        Me.Risiko = .Risiko And _
+                                        Me.VorlagenName = .VorlagenName And _
+                                        Me.volume = .volume And _
+                                        Me.leadPerson = .leadPerson Then
+
+                                        stillOK = True
+
+                                    End If
+
+
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
+
+
+                    ' jetzt die Phasen prüfen, dann die Meilensteine 
+                    If stillOK And Me.CountPhases = .CountPhases Then
+
+                        Dim pNr As Integer = 1
+                        Do While stillOK And pNr <= Me.CountPhases
+                            Dim cPhase As clsPhase = Me.getPhase(pNr)
+                            Dim vPhase As clsPhase = .getPhase(pNr)
+                            If cPhase.isIdenticalTo(vPhase) Then
+                                ' alles ok 
+                                pNr = pNr + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
+
+                    Else
+                        stillOK = False
+                    End If
+
+                    ' jetzt die Custom Fields prüfen 
+                    If stillOK And _
+                        Me.customBoolFields.Count = .customBoolFields.Count And _
+                        Me.customDblFields.Count = .customDblFields.Count And _
+                        Me.customStringFields.Count = .customStringFields.Count Then
+                        ' alle sind gleich , detaillierte Überprüfung lohnt 
+
+
+                        ' String CustomFields
+                        Dim ix As Integer = 0
+                        Do While stillOK And ix <= Me.customStringFields.Count - 1
+                            Dim cFMe As KeyValuePair(Of Integer, String) = Me.customStringFields.ElementAt(ix)
+                            Dim cFVgl As KeyValuePair(Of Integer, String) = .customStringFields.ElementAt(ix)
+
+                            If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
+                                ix = ix + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
+
+
+                        If stillOK Then
+                            ' prüfe Double Custom Fields
+                            ix = 0
+                            Do While stillOK And ix <= Me.customDblFields.Count - 1
+                                Dim cFMe As KeyValuePair(Of Integer, Double) = Me.customDblFields.ElementAt(ix)
+                                Dim cFVgl As KeyValuePair(Of Integer, Double) = .customDblFields.ElementAt(ix)
+
+                                If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
+                                    ix = ix + 1
+                                Else
+                                    stillOK = False
+                                End If
+                            Loop
+
+                            If stillOK Then
+                                ' prüfe Bool Custom fields
+                                ix = 0
+                                Do While stillOK And ix <= Me.customBoolFields.Count - 1
+                                    Dim cFMe As KeyValuePair(Of Integer, Boolean) = Me.customBoolFields.ElementAt(ix)
+                                    Dim cFVgl As KeyValuePair(Of Integer, Boolean) = .customBoolFields.ElementAt(ix)
+
+                                    If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
+                                        ix = ix + 1
+                                    Else
+                                        stillOK = False
+                                    End If
+                                Loop
+                            End If
+                        End If
+
+
+                    Else
+                        stillOK = False
+                    End If
+
+                End With
+            Catch ex As Exception
+
+                stillOK = False
+
+            End Try
+
+
+            isIdenticalTo = stillOK
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt für die übergebenen Listen an Phasen und Meilensteinen das früheste bzw. späteste Datum zurück, das in den 
@@ -1405,6 +1771,9 @@ Public Class clsProjekt
                 End If
             Else
                 ' ohne Bewertung
+                If Me.CountPhases > 0 Then
+                    Me.getPhase(1).ampelStatus = 0
+                End If
             End If
 
         End Set
