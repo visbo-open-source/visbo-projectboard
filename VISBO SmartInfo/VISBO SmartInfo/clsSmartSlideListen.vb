@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports MongoDbAccess
 ''' <summary>
 ''' baut die SmartListen für die betreffende Slide auf
 ''' dazu gehören classifiedName, OriginalNames, ShortNames, FullBreadCrumbs, ampelColr, 
@@ -29,6 +30,132 @@ Public Class clsSmartSlideListen
     Private mVList As SortedList(Of Integer, Boolean)
     ' enthält die Liste an Projekt-Historien 
     Private projectTimeStamps As SortedList(Of String, clsProjektHistorie)
+    ' enthält die Liste an TimeStamps, die in der Time-Machine betrachtet werden können 
+    ' der bool'sche Wert kann später dafür sorgen, dass ein Eintrag berücksichtigt / nicht berücksichtigt werden soll 
+    Private listOfTimeStamps As SortedList(Of Date, Boolean)
+
+    Private _creationDate As Date
+
+    ''' <summary>
+    ''' liest bzw. setzt das Creation Date der Slide 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property creationDate As Date
+        Get
+            creationDate = _creationDate
+        End Get
+        Set(value As Date)
+            _creationDate = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liefert das TimeStamp Projekt, entweder aus der  smartslideListe oder aus der Datenbank; 
+    ''' wenn es aus der DB geholt wird, dann wird es in smartSlideList gechacht
+    ''' wenn es auch in de rDatenbank nicht existiert, so wid Nothing zurückgegeben 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <param name="tsDate"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTSProject(ByVal pvName As String, ByVal tsDate As Date) As clsProjekt
+        Get
+            Dim tmpProject As clsProjekt = Nothing
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim pName As String = getPnameFromKey(pvName)
+            Dim vName As String = getVariantnameFromKey(pvName)
+
+
+            If projectTimeStamps.ContainsKey(pvName) Then
+                Dim timeStamps As clsProjektHistorie = projectTimeStamps.Item(pvName)
+                If Not IsNothing(timeStamps) Then
+
+                    tmpProject = timeStamps.item(tsDate)
+                    If IsNothing(tmpProject) Then
+                        ' aus Datenbank holen 
+                        tmpProject = request.retrieveOneProjectfromDB(pName, vName, tsDate)
+
+                        If Not IsNothing(tmpProject) Then
+                            timeStamps.Add(tsDate, tmpProject)
+                        End If
+
+
+                    End If
+                Else
+                    timeStamps = New clsProjektHistorie
+                    ' jetzt aus Datenbank holen 
+                    tmpProject = request.retrieveOneProjectfromDB(pName, vName, tsDate)
+
+                    If Not IsNothing(tmpProject) Then
+                        timeStamps.Add(tsDate, tmpProject)
+                    End If
+
+                    projectTimeStamps.Item(pvName) = timeStamps
+
+                End If
+
+            End If
+
+            getTSProject = tmpProject
+
+        End Get
+    End Property
+    ''' <summary>
+    ''' fügt der Liste an TimeStamps alle Daten, die in einer Collection übergeben werden, hinzu  
+    ''' </summary>
+    ''' <param name="tsCollection"></param>
+    ''' <remarks></remarks>
+    Public Sub addToListOfTS(ByVal tsCollection As Collection)
+
+        If Not IsNothing(tsCollection) Then
+
+            Try
+                For Each tmpDate As Date In tsCollection
+                    If Not listOfTimeStamps.ContainsKey(tmpDate) Then
+                        listOfTimeStamps.Add(tmpDate, True)
+                    End If
+                Next
+            Catch ex As Exception
+                Exit Sub
+            End Try
+            
+        End If
+        
+    End Sub
+
+    ''' <summary>
+    ''' gibt die Gesamt-Liste aller TimeStamps für das Time-Machine Formular zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getArrayOfTS As Date()
+        Get
+            Dim tmpArray() As Date = Nothing
+
+            If Not IsNothing(listOfTimeStamps) Then
+                If listOfTimeStamps.Count > 0 Then
+                    tmpArray = listOfTimeStamps.Keys.ToArray()
+                End If
+            End If
+
+
+            'If listOfTimeStamps.Count > 0 Then
+            '    ReDim tmpArray(listOfTimeStamps.Count - 1)
+            '    Dim index As Integer = 0
+            '    For Each kvp As KeyValuePair(Of Date, Boolean) In listOfTimeStamps
+            '        tmpArray(index) = kvp.Key
+            '    Next
+            'End If
+
+            getArrayOfTS = tmpArray
+
+        End Get
+    End Property
 
 
     ''' <summary>
@@ -948,6 +1075,7 @@ Public Class clsSmartSlideListen
         LUList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         mVList = New SortedList(Of Integer, Boolean)
         projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
+        listOfTimeStamps = New SortedList(Of Date, Boolean)
     End Sub
 
 End Class

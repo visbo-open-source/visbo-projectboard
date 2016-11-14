@@ -1169,7 +1169,7 @@ Public Class frmInfo
                 ' alle selektierten Elemente zur Home-Position schicken 
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
                     If isRelevantShape(tmpShape) Then
-                        Call sentToHomePosition(tmpShape)
+                        Call sentToHomePosition(tmpShape.Name)
                     End If
                 Next
             Else
@@ -1183,7 +1183,7 @@ Public Class frmInfo
             ' alle zur Home-Position schicken ...
             For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
                 If isRelevantShape(tmpShape) Then
-                    Call sentToHomePosition(tmpShape)
+                    Call sentToHomePosition(tmpShape.Name)
                 End If
             Next
         End If
@@ -1206,7 +1206,7 @@ Public Class frmInfo
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
 
                     If isRelevantShape(tmpShape) Then
-                        Call sentToChangedPosition(tmpShape)
+                        Call sentToChangedPosition(tmpShape.Name)
                     End If
 
                 Next
@@ -1222,7 +1222,7 @@ Public Class frmInfo
             ' alle zur Home-Position schicken ...
             For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
                 If isRelevantShape(tmpShape) Then
-                    Call sentToChangedPosition(tmpShape)
+                    Call sentToChangedPosition(tmpShape.Name)
                 End If
             Next
         End If

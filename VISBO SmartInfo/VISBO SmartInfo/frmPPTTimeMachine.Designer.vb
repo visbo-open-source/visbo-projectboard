@@ -116,7 +116,7 @@ Partial Class frmPPTTimeMachine
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(357, 121)
+        Me.ClientSize = New System.Drawing.Size(357, 123)
         Me.Controls.Add(Me.btnChangedPosition)
         Me.Controls.Add(Me.btnHome)
         Me.Controls.Add(Me.btnBack)

@@ -1,5 +1,7 @@
 ﻿Imports Microsoft.Office.Tools.Ribbon
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
+Imports MongoDbAccess
+Imports ProjectBoardDefinitions
 
 Public Class Ribbon1
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
@@ -71,19 +73,30 @@ Public Class Ribbon1
             If noDBAccessInPPT Then
                 Call MsgBox("kein Datenbank Zugriff ... bitte erst einloggen ...")
             Else
+
+
                 If Not smartSlideLists.historiesExist Then
-                    ' für jedes Projekt die ProjektHistorie holen ...
+
+                    ' dazu erst mal alle TimeStamps eines Projektes holen 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
                     Dim anzahlProjekte As Integer = smartSlideLists.countProjects
                     For i As Integer = 1 To anzahlProjekte
-                        Dim pvName As String = smartSlideLists.getPVName(i)
+                        Dim tmpName As String = smartSlideLists.getPVName(i)
+                        Dim pName As String = getPnameFromKey(tmpName)
+                        Dim vName As String = getVariantnameFromKey(tmpName)
+                        Dim pvName As String = calcProjektKeyDB(pName, vName)
+                        Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
 
-
-
+                        smartSlideLists.addToListOfTS(tsCollection)
                     Next
-
+                    ' jetzt wird das Formular TimeStamps aufgerufen ...
+                    Dim tmFormular As New frmPPTTimeMachine
+                    Dim dgRes As Windows.Forms.DialogResult = tmFormular.ShowDialog
                 End If
             End If
         End If
 
     End Sub
 End Class
+

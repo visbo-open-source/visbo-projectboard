@@ -504,7 +504,7 @@ Public Module Module1
     ' geplant
     ' beauftragt
     ' abgeschlossen
-    Public ProjektStatus(4) As String
+    Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen"}
 
 
     '
@@ -2997,6 +2997,8 @@ Public Module Module1
                     .Tags.Add("DAT", drawingAreaTop.ToString)
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)
                     .Tags.Add("CALR", calendarRight.ToShortDateString)
+                    .Tags.Add("SOC", StartofCalendar.ToShortDateString)
+                    .Tags.Add("CRD", Date.Now.ToShortDateString)
                 End If
 
             End With

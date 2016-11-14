@@ -207,6 +207,11 @@ Module Module1
                                 Dim tmpSD As String = .Tags.Item("CALL")
                                 Dim tmpED As String = .Tags.Item("CALR")
                                 slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+
+                                If .Tags.Item("SOC").Length > 0 Then
+                                    StartofCalendar = CDate(.Tags.Item("SOC"))
+                                End If
+
                             End With
 
                         Catch ex As Exception
@@ -217,6 +222,11 @@ Module Module1
                         smartSlideLists = New clsSmartSlideListen
                         bekannteIDs = New SortedList(Of Integer, String)
 
+                        With currentSlide
+                            If .Tags.Item("CRD").Length > 0 Then
+                                smartSlideLists.creationDate = CDate(.Tags.Item("CRD"))
+                            End If
+                        End With
 
 
                         Dim anzShapes As Integer = currentSlide.Shapes.Count
@@ -595,140 +605,59 @@ Module Module1
     ''' wird nur aufgerufen für relevant Shapes
     ''' positioniert ein Shape auf seine "Home"-Position, wenn es nicht ohnehin schon dort ist ... 
     ''' </summary>
-    ''' <param name="tmpShape"></param>
+    ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Friend Sub sentToHomePosition(ByVal tmpShape As PowerPoint.Shape)
+    Friend Sub sentToHomePosition(ByVal shapeName As String)
 
-        Dim homeSDate As Date
-        Dim homeEDate As Date
-        Dim x1Pos As Double, x2Pos As Double
+        Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
+        If Not IsNothing(tmpShape) Then
 
-        ' Prüfen, ob Text Box , wenn ja, gleich Exit 
-        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
-            ' nichts tun 
-        Else
-            If pptShapeIsMilestone(tmpShape) Then
+            Dim homeSDate As Date
+            Dim homeEDate As Date
+            Dim x1Pos As Double, x2Pos As Double
 
-                With tmpShape
-                    If .Tags.Item("MVD").Length > 0 Then
-                        ' nur dann muss was nach Hause geschickt werden 
-                        Try
-                            ' ED existiert - das wird in pptShapeisMilestone geprüft 
-                            homeEDate = CDate(.Tags.Item("ED"))
-                            Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
+            ' Prüfen, ob Text Box , wenn ja, gleich Exit 
+            If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+                ' nichts tun 
+            Else
+                If pptShapeIsMilestone(tmpShape) Then
 
-                            ' Positionieren auf Home Position und aktualisieren des Info-Formulars..
-                            If .Left <> CSng(x1Pos) - .Width / 2 Then
-                                .Left = CSng(x1Pos) - .Width / 2
-                                If Not IsNothing(infoFrm) Then
-                                    Call aktualisiereInfoFrm(tmpShape, True)
+                    With tmpShape
+                        If .Tags.Item("MVD").Length > 0 Then
+                            ' nur dann muss was nach Hause geschickt werden 
+                            Try
+                                ' ED existiert - das wird in pptShapeisMilestone geprüft 
+                                homeEDate = CDate(.Tags.Item("ED"))
+                                Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
+
+                                ' Positionieren auf Home Position und aktualisieren des Info-Formulars..
+                                If .Left <> CSng(x1Pos) - .Width / 2 Then
+                                    .Left = CSng(x1Pos) - .Width / 2
+                                    If Not IsNothing(infoFrm) Then
+                                        Call aktualisiereInfoFrm(tmpShape, True)
+                                    End If
+
+
                                 End If
 
+                            Catch ex As Exception
 
-                            End If
+                            End Try
+                        End If
+                    End With
 
-                        Catch ex As Exception
+                ElseIf pptShapeIsPhase(tmpShape) Then
 
-                        End Try
-                    End If
-                End With
-
-            ElseIf pptShapeIsPhase(tmpShape) Then
-
-                With tmpShape
-                    If .Tags.Item("MVD").Length > 0 Then
-                        ' nur dann muss was nach Hause geschickt werden 
-                        Try
-                            ' SD, ED existieren - das wird in pptShapeisPhase geprüft 
-                            homeSDate = CDate(.Tags.Item("SD"))
-                            homeEDate = CDate(.Tags.Item("ED"))
-                            Call slideCoordInfo.calculatePPTx1x2(homeSDate, homeEDate, x1Pos, x2Pos)
-
-                            ' Positionieren auf Home Position und aktualisieren des Info-Formulars..
-                            If ((.Left <> CSng(x1Pos)) Or (.Width <> CSng(x2Pos - x1Pos))) Then
-
-                                .Left = CSng(x1Pos)
-                                .Width = CSng(x2Pos - x1Pos)
-
-                                If Not IsNothing(infoFrm) Then
-                                    Call aktualisiereInfoFrm(tmpShape, True)
-                                End If
-                            End If
-
-                        Catch ex As Exception
-
-                        End Try
-
-                    End If
-                End With
-            End If
-
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' wird nur aufgerufen für relevant Shapes
-    ''' positioniert ein Shape auf seine "Changed"-Position, wenn es denn eine gibt  ... 
-    ''' aktualisiert das info-Fenster, wenn nur ein Shape selektiert ist 
-    ''' verschiebt evtl vorhandene Text und Datums-Beschriftungen mit 
-    ''' </summary>
-    ''' <param name="tmpShape"></param>
-    ''' <remarks></remarks>
-    Friend Sub sentToChangedPosition(ByVal tmpShape As PowerPoint.Shape)
-
-        Dim homeSDate As Date
-        Dim homeEDate As Date
-        Dim x1Pos As Double, x2Pos As Double
-        Dim tmpstr() As String
-        'Dim diff As Double
-
-        ' Prüfen, ob Text Box , wenn ja, gleich Exit 
-        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
-            ' nichts tun 
-        Else
-            If pptShapeIsMilestone(tmpShape) Then
-
-                With tmpShape
-                    If .Tags.Item("MVD").Length > 0 Then
-                        ' nur dann kann was zur Changed Position geschickt werden 
-                        Try
-                            ' ED existiert - das wird in pptShapeisMilestone geprüft 
-                            tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
-                            homeEDate = CDate(tmpstr(0))
-                            Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
-
-                            ' Positionieren auf Changed Position und aktualisieren des Info-Formulars..
-                            If .Left <> CSng(x1Pos) - .Width / 2 Then
-                                .Left = CSng(x1Pos) - .Width / 2
-                                If Not IsNothing(infoFrm) Then
-                                    Call aktualisiereInfoFrm(tmpShape, True)
-                                End If
-
-
-                            End If
-
-                        Catch ex As Exception
-
-                        End Try
-                    End If
-                End With
-
-            ElseIf pptShapeIsPhase(tmpShape) Then
-
-                With tmpShape
-                    If .Tags.Item("MVD").Length > 0 Then
-                        ' nur dann kann was zur Changed Position geschickt werden 
-                        Try
-                            ' SD, ED existieren - das wird in pptShapeisPhase geprüft 
-                            tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
-
-                            If tmpstr.Length = 2 Then
-                                homeSDate = CDate(tmpstr(0))
-                                homeEDate = CDate(tmpstr(1))
+                    With tmpShape
+                        If .Tags.Item("MVD").Length > 0 Then
+                            ' nur dann muss was nach Hause geschickt werden 
+                            Try
+                                ' SD, ED existieren - das wird in pptShapeisPhase geprüft 
+                                homeSDate = CDate(.Tags.Item("SD"))
+                                homeEDate = CDate(.Tags.Item("ED"))
                                 Call slideCoordInfo.calculatePPTx1x2(homeSDate, homeEDate, x1Pos, x2Pos)
 
-                                ' Positionieren auf Changed Position und aktualisieren des Info-Formulars..
+                                ' Positionieren auf Home Position und aktualisieren des Info-Formulars..
                                 If ((.Left <> CSng(x1Pos)) Or (.Width <> CSng(x2Pos - x1Pos))) Then
 
                                     .Left = CSng(x1Pos)
@@ -739,16 +668,249 @@ Module Module1
                                     End If
                                 End If
 
-                            End If
+                            Catch ex As Exception
 
-                        Catch ex As Exception
+                            End Try
 
-                        End Try
+                        End If
+                    End With
+                End If
 
-                    End If
-                End With
             End If
 
+        End If
+
+        
+
+    End Sub
+
+    ''' <summary>
+    ''' wird nur aufgerufen für relevant Shapes
+    ''' positioniert ein Shape auf seine "Changed"-Position, wenn es denn eine gibt  ... 
+    ''' aktualisiert das info-Fenster, wenn nur ein Shape selektiert ist 
+    ''' verschiebt evtl vorhandene Text und Datums-Beschriftungen mit 
+    ''' </summary>
+    ''' <param name="shapeName"></param>
+    ''' <remarks></remarks>
+    Friend Sub sentToChangedPosition(ByVal shapeName As String)
+
+        Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
+        If Not IsNothing(tmpShape) Then
+
+            Dim homeSDate As Date
+            Dim homeEDate As Date
+            Dim x1Pos As Double, x2Pos As Double
+            Dim tmpstr() As String
+            'Dim diff As Double
+
+            ' Prüfen, ob Text Box , wenn ja, gleich Exit 
+            If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+                ' nichts tun 
+            Else
+                If pptShapeIsMilestone(tmpShape) Then
+
+                    With tmpShape
+                        If .Tags.Item("MVD").Length > 0 Then
+                            ' nur dann kann was zur Changed Position geschickt werden 
+                            Try
+                                ' ED existiert - das wird in pptShapeisMilestone geprüft 
+                                tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
+                                homeEDate = CDate(tmpstr(0))
+                                Call slideCoordInfo.calculatePPTx1x2(homeEDate, homeEDate, x1Pos, x2Pos)
+
+                                ' Positionieren auf Changed Position und aktualisieren des Info-Formulars..
+                                If .Left <> CSng(x1Pos) - .Width / 2 Then
+                                    .Left = CSng(x1Pos) - .Width / 2
+                                    If Not IsNothing(infoFrm) Then
+                                        Call aktualisiereInfoFrm(tmpShape, True)
+                                    End If
+
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+                    End With
+
+                ElseIf pptShapeIsPhase(tmpShape) Then
+
+                    With tmpShape
+                        If .Tags.Item("MVD").Length > 0 Then
+                            ' nur dann kann was zur Changed Position geschickt werden 
+                            Try
+                                ' SD, ED existieren - das wird in pptShapeisPhase geprüft 
+                                tmpstr = .Tags.Item("MVD").Split(New Char() {CType("#", Char)})
+
+                                If tmpstr.Length = 2 Then
+                                    homeSDate = CDate(tmpstr(0))
+                                    homeEDate = CDate(tmpstr(1))
+                                    Call slideCoordInfo.calculatePPTx1x2(homeSDate, homeEDate, x1Pos, x2Pos)
+
+                                    ' Positionieren auf Changed Position und aktualisieren des Info-Formulars..
+                                    If ((.Left <> CSng(x1Pos)) Or (.Width <> CSng(x2Pos - x1Pos))) Then
+
+                                        .Left = CSng(x1Pos)
+                                        .Width = CSng(x2Pos - x1Pos)
+
+                                        If Not IsNothing(infoFrm) Then
+                                            Call aktualisiereInfoFrm(tmpShape, True)
+                                        End If
+                                    End If
+
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+                    End With
+                End If
+
+            End If
+
+        End If
+        
+
+    End Sub
+
+    ''' <summary>
+    ''' überprüft, ob das angegebene Shape eine geänderte Position beim gegeben. Datum hat  
+    ''' wenn ja, wird es umpositioniert 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub sendToTimeStampPosition(ByVal tmpShape As PowerPoint.Shape, ByVal timestamp As Date)
+        'Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
+
+        If Not IsNothing(tmpShape) Then
+            ' Voraussetzung: es handelt sich um eine Phase oder einen Meilenstein ... 
+            ' Prüfen, ob Text Box , wenn ja, gleich Exit 
+            If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+                ' nichts tun 
+
+            Else
+
+                ' überprüfe, ob es zu dem angegebenen Shape bereits ein TS Projekt gibt 
+                Dim pvName As String = getPnameFromShpName(tmpShape.Name)
+
+                ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
+
+                Dim elemName As String = tmpShape.Tags.Item("CN")
+                Dim elemBC As String = tmpShape.Tags.Item("BC")
+
+                If pptShapeIsMilestone(tmpShape) Then
+
+                    Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
+                    If IsNothing(ms) Then
+                        tmpShape.Visible = False
+                    Else
+                        Call mvMilestoneToTimestampPosition(tmpShape, ms.getDate, timestamp)
+                    End If
+
+
+                ElseIf pptShapeIsPhase(tmpShape) Then
+                    Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
+                    If IsNothing(ph) Then
+                        tmpShape.Visible = False
+                    End If
+                    Call mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, timestamp)
+                End If
+
+            End If
+
+        End If
+
+
+    End Sub
+
+    Friend Sub mvPhaseToTimestampPosition(ByVal tmpShape As PowerPoint.Shape, ByVal tsStartdate As Date, ByVal tsEndDate As Date, _
+                                          ByVal timeStamp As Date)
+
+        Dim x1Pos As Double, x2Pos As Double
+        Dim expla As String = "Version: " & timeStamp.ToShortDateString
+
+        ' wenn der Phasen start oder das Phasen-Ende vor bzw. hinter dem pptStart bzw. EndOfCalendar liegt ...
+        If DateDiff(DateInterval.Day, tsStartdate, slideCoordInfo.PPTStartOFCalendar) > 0 Then
+            tsStartdate = slideCoordInfo.PPTStartOFCalendar
+        End If
+
+        If DateDiff(DateInterval.Day, slideCoordInfo.PPTEndOFCalendar, tsEndDate) > 0 Then
+            tsEndDate = slideCoordInfo.PPTEndOFCalendar
+        End If
+
+
+        If tsStartdate <> slideCoordInfo.calcXtoDate(tmpShape.Left) Or _
+            tsEndDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width) Then
+            ' es hat sich was geändert ... 
+            Call slideCoordInfo.calculatePPTx1x2(tsStartdate, tsEndDate, x1Pos, x2Pos)
+
+            With tmpShape
+                .Left = x1Pos
+                .Width = x2Pos - tmpShape.Left
+
+                Dim mvdString As String = tsStartdate.ToString & "#" & tsEndDate.ToString
+                .Tags.Add("MVD", mvdString)
+                .Tags.Add("MVE", expla)
+
+            End With
+
+        End If
+
+    End Sub
+
+    Friend Sub mvMilestoneToTimestampPosition(ByVal tmpShape As PowerPoint.Shape, ByVal tsDate As Date, ByVal timeStamp As Date)
+        Dim x1Pos As Double, x2Pos As Double
+        Dim expla As String = "Version: " & timeStamp.ToShortDateString
+
+        If tsDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2) Then
+            ' es hat sich was geändert ... 
+            Call slideCoordInfo.calculatePPTx1x2(tsDate, tsDate, x1Pos, x2Pos)
+
+
+            ' jetzt die Shape-Info 
+            With tmpShape
+                .Left = x1Pos - tmpShape.Width / 2
+
+                Dim mvdString As String = tsDate.ToString
+
+                Dim oldValue As String = .Tags.Item("MVD")
+                .Tags.Add("MVD", mvdString)
+                Dim newValue As String = .Tags.Item("MVD")
+
+                'If .Tags.Item("MVD").Length > 0 Then
+
+                '    If .Tags.Item("MVD") <> mvdString Then
+                '        .Tags.Delete("MVD")
+                '        .Tags.Add("MVD", mvdString)
+
+                '        If .Tags.Item("MVE").Length > 0 Then
+                '            .Tags.Delete("MVD")
+                '        End If
+
+                '        .Tags.Add("MVE", expla)
+
+                '    End If
+                'Else
+                '    .Tags.Add("MVD", mvdString)
+
+                '    If .Tags.Item("MVE").Length > 0 Then
+                '        .Tags.Delete("MVD")
+                '    End If
+
+                '    .Tags.Add("MVE", expla)
+
+                'End If
+
+                .Tags.Add("MVE", expla)
+                'If .Tags.Item("MVE").Length > 0 Then
+                '    ' nichts tun, der alte Wert soll erhalten bleiben 
+                'Else
+                '    .Tags.Add("MVE", defaultExplanation)
+                'End If
+            End With
         End If
 
     End Sub

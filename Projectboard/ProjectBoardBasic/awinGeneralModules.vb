@@ -845,12 +845,12 @@ Public Module awinGeneralModules
             LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
             LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
 
-
-            ProjektStatus(0) = "geplant"
-            ProjektStatus(1) = "beauftragt"
-            ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
-            ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
-            ProjektStatus(4) = "abgeschlossen"
+            ' 14.11.16 tk nicht mehr notwenig , wird in Module initial gesetzt 
+            ''ProjektStatus(0) = "geplant"
+            ''ProjektStatus(1) = "beauftragt"
+            ''ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
+            ''ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
+            ''ProjektStatus(4) = "abgeschlossen"
 
             ''ReportLang(PTSprache.deutsch) = "de"
             ''ReportLang(PTSprache.englisch) = "en"
