@@ -3894,6 +3894,7 @@ Public Module Projekte
     Public Sub createRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                             ByVal top As Double, left As Double, height As Double, width As Double)
 
+
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
         Dim anzDiagrams As Integer

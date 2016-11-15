@@ -14,6 +14,225 @@ Public Module testModule
 
 
 
+    ' '' ''' <summary>
+    ' '' ''' erzeugt den Report aller selektieren Projekte auf Grundlage des Templates templatedossier.pptx
+    ' '' ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten Projekte steht 
+    ' '' ''' </summary>
+    ' '' ''' <param name="pptTemplate"></param>
+    ' '' ''' <remarks></remarks>
+    ' '' ''' 
+    ' ''Public Sub createPPTReportFromProjects(ByVal pptTemplate As String, _
+    ' ''                                       ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+    ' ''                                       ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+    ' ''                                       ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+    ' ''                                       ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
+
+    ' ''    Dim awinSelection As xlNS.ShapeRange
+
+    ' ''    ' ur:4.7.2016: an Stelle verschoben, wo genötigt:
+    ' ''    ' Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+    ' ''    Dim singleShp As xlNS.Shape
+    ' ''    Dim hproj As clsProjekt
+    ' ''    Dim vglName As String = " "
+    ' ''    Dim pName As String, variantName As String
+    ' ''    Dim vorlagenDateiName As String = pptTemplate
+    ' ''    Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
+    ' ''    Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
+    ' ''    Dim tatsErstellt As Integer = 0
+
+    ' ''    Dim todoListe As New Collection
+
+    ' ''    Try
+    ' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, xlNS.ShapeRange)
+    ' ''    Catch ex As Exception
+    ' ''        awinSelection = Nothing
+    ' ''    End Try
+
+    ' ''    If Not IsNothing(awinSelection) Then
+
+    ' ''        ' hier wird bestimmt, welches der ausgewählten Projekte dasjenige ist, das im Extended Mode den meisten Platz beim Report benötigt.
+    ' ''        ' Der Report dieses Projektes soll dann zuerst erstellt werden, denn somit wird das Format der PowerPointPräsentation danach ausgewählt.
+
+    ' ''        Dim maxProj As clsProjekt = Nothing
+    ' ''        Dim maxZeilen As Integer = 0
+
+    ' ''        For Each singleShp In awinSelection
+
+    ' ''            With singleShp
+    ' ''                If isProjectType(CInt(.AlternativeText)) Then
+    ' ''                    Try
+    ' ''                        hproj = ShowProjekte.getProject(singleShp.Name, True)
+    ' ''                        todoListe.Add(hproj.name)
+    ' ''                    Catch ex As Exception
+    ' ''                        Call MsgBox(singleShp.Name & " nicht gefunden ...")
+    ' ''                        Exit Sub
+    ' ''                    End Try
+    ' ''                    If hproj.calcNeededLines() > maxZeilen Then
+    ' ''                        maxProj = hproj
+    ' ''                        maxZeilen = hproj.calcNeededLines()
+
+    ' ''                    End If
+
+    ' ''                End If
+
+    ' ''            End With
+    ' ''        Next
+
+    ' ''        ' Erstelle Report für das größte Projekt "maxProj"
+
+    ' ''        If Not projekthistorie Is Nothing Then
+    ' ''            If projekthistorie.Count > 0 Then
+    ' ''                vglName = projekthistorie.First.getShapeText
+    ' ''            End If
+    ' ''        End If
+
+    ' ''        With maxProj
+    ' ''            pName = .name
+    ' ''            variantName = .variantName
+    ' ''        End With
+
+    ' ''        If Not noDB Then
+
+    ' ''            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+    ' ''            If vglName <> maxProj.getShapeText Then
+    ' ''                If request.pingMongoDb() Then
+    ' ''                    Try
+    ' ''                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+    ' ''                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+    ' ''                        projekthistorie.Add(Date.Now, maxProj)
+    ' ''                    Catch ex As Exception
+    ' ''                        projekthistorie.clear()
+    ' ''                    End Try
+    ' ''                Else
+    ' ''                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+    ' ''                End If
+
+
+    ' ''            Else
+    ' ''                ' der aktuelle Stand hproj muss hinzugefügt werden 
+    ' ''                Dim lastElem As Integer = projekthistorie.Count - 1
+    ' ''                projekthistorie.RemoveAt(lastElem)
+    ' ''                projekthistorie.Add(Date.Now, maxProj)
+    ' ''            End If
+
+    ' ''        End If
+
+    ' ''        e.Result = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+    ' ''        worker.ReportProgress(0, e)
+
+
+    ' ''        Call createPPTSlidesFromProject(maxProj, vorlagenDateiName, _
+    ' ''                                        selectedPhases, selectedMilestones, _
+    ' ''                                        selectedRoles, selectedCosts, _
+    ' ''                                        selectedBUs, selectedTyps, True, _
+    ' ''                                        (awinSelection.Count = tatsErstellt + 1), zeilenhoehe, _
+    ' ''                                        legendFontSize, _
+    ' ''                                        worker, e)
+    ' ''        tatsErstellt = tatsErstellt + 1
+
+
+    ' ''        For Each singleItem As String In todoListe
+
+    ' ''            Try
+    ' ''                hproj = ShowProjekte.getProject(singleItem)
+    ' ''            Catch ex As Exception
+
+    ' ''                Call MsgBox(singleItem & " nicht gefunden ...")
+    ' ''                Exit Sub
+    ' ''            End Try
+
+    ' ''            If hproj.name <> maxProj.name Then
+
+    ' ''                If Not projekthistorie Is Nothing Then
+    ' ''                    If projekthistorie.Count > 0 Then
+    ' ''                        vglName = projekthistorie.First.getShapeText
+    ' ''                    End If
+    ' ''                End If
+
+    ' ''                With hproj
+    ' ''                    pName = .name
+    ' ''                    variantName = .variantName
+    ' ''                End With
+
+    ' ''                If Not noDB Then
+
+    ' ''                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+    ' ''                    If vglName <> hproj.getShapeText Then
+    ' ''                        If request.pingMongoDb() Then
+    ' ''                            Try
+    ' ''                                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+    ' ''                                                                                storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+    ' ''                                projekthistorie.Add(Date.Now, hproj)
+    ' ''                            Catch ex As Exception
+    ' ''                                projekthistorie.clear()
+    ' ''                            End Try
+    ' ''                        Else
+    ' ''                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+    ' ''                        End If
+
+
+    ' ''                    Else
+    ' ''                        ' der aktuelle Stand hproj muss hinzugefügt werden 
+    ' ''                        Dim lastElem As Integer = projekthistorie.Count - 1
+    ' ''                        projekthistorie.RemoveAt(lastElem)
+    ' ''                        projekthistorie.Add(Date.Now, hproj)
+    ' ''                    End If
+
+    ' ''                End If
+
+
+    ' ''                e.Result = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
+    ' ''                worker.ReportProgress(0, e)
+
+    ' ''                If tatsErstellt = 0 Then
+
+    ' ''                    Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
+    ' ''                                                    selectedPhases, selectedMilestones, _
+    ' ''                                                    selectedRoles, selectedCosts, _
+    ' ''                                                    selectedBUs, selectedTyps, True, _
+    ' ''                                                    (todoListe.Count = tatsErstellt + 1), zeilenhoehe, _
+    ' ''                                                    legendFontSize, _
+    ' ''                                                    worker, e)
+
+    ' ''                Else
+
+    ' ''                    Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
+    ' ''                                                    selectedPhases, selectedMilestones, _
+    ' ''                                                    selectedRoles, selectedCosts, _
+    ' ''                                                    selectedBUs, selectedTyps, False, _
+    ' ''                                                    (todoListe.Count = tatsErstellt + 1), zeilenhoehe, _
+    ' ''                                                    legendFontSize, _
+    ' ''                                                    worker, e)
+
+    ' ''                End If
+
+    ' ''                tatsErstellt = tatsErstellt + 1
+
+
+    ' ''            Else
+    ' ''                ' maxProj wurde als erstes gezeichnet, damit das Format bei Multiprojektsicht das Richtige ist
+
+    ' ''            End If  ' if hproj = maxproj
+
+
+
+    ' ''        Next
+
+    ' ''    End If
+
+    ' ''    If tatsErstellt = 1 Then
+    ' ''        e.Result = " Report für " & tatsErstellt & " Projekt erstellt !"
+    ' ''    Else
+    ' ''        e.Result = " Report für " & tatsErstellt & " Projekte erstellt !"
+    ' ''    End If
+
+    ' ''    worker.ReportProgress(0, e)
+    ' ''    'frmSelectPPTTempl.statusNotification.Text = " Report mit " & tatsErstellt & " Seite erstellt !"
+
+
+    ' ''End Sub
     ''' <summary>
     ''' erzeugt den Report aller selektieren Projekte auf Grundlage des Templates templatedossier.pptx
     ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten Projekte steht 
@@ -27,11 +246,15 @@ Public Module testModule
                                            ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                            ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
 
-        Dim awinSelection As xlNS.ShapeRange
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerEE As Boolean = appInstance.EnableEvents
+
+        appInstance.ScreenUpdating = False
+        appInstance.EnableEvents = False
 
         ' ur:4.7.2016: an Stelle verschoben, wo genötigt:
         ' Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim singleShp As xlNS.Shape
+
         Dim hproj As clsProjekt
         Dim vglName As String = " "
         Dim pName As String, variantName As String
@@ -42,13 +265,9 @@ Public Module testModule
 
         Dim todoListe As New Collection
 
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, xlNS.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+       
 
-        If Not IsNothing(awinSelection) Then
+        If selectedProjekte.Count > 0 Then
 
             ' hier wird bestimmt, welches der ausgewählten Projekte dasjenige ist, das im Extended Mode den meisten Platz beim Report benötigt.
             ' Der Report dieses Projektes soll dann zuerst erstellt werden, denn somit wird das Format der PowerPointPräsentation danach ausgewählt.
@@ -56,26 +275,26 @@ Public Module testModule
             Dim maxProj As clsProjekt = Nothing
             Dim maxZeilen As Integer = 0
 
-            For Each singleShp In awinSelection
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
 
-                With singleShp
-                    If isProjectType(CInt(.AlternativeText)) Then
-                        Try
-                            hproj = ShowProjekte.getProject(singleShp.Name, True)
-                            todoListe.Add(hproj.name)
-                        Catch ex As Exception
-                            Call MsgBox(singleShp.Name & " nicht gefunden ...")
-                            Exit Sub
-                        End Try
-                        If hproj.calcNeededLines() > maxZeilen Then
-                            maxProj = hproj
-                            maxZeilen = hproj.calcNeededLines()
+                With kvp
 
-                        End If
+                    Try
+                        hproj = kvp.Value
+                        todoListe.Add(hproj.name)
+                    Catch ex As Exception
+                        Call MsgBox(kvp.Value.name & " nicht gefunden ...")
+                        Exit Sub
+                    End Try
+                    If hproj.calcNeededLines() > maxZeilen Then
+                        maxProj = hproj
+                        maxZeilen = hproj.calcNeededLines()
 
                     End If
 
                 End With
+
+
             Next
 
             ' Erstelle Report für das größte Projekt "maxProj"
@@ -126,10 +345,11 @@ Public Module testModule
                                             selectedPhases, selectedMilestones, _
                                             selectedRoles, selectedCosts, _
                                             selectedBUs, selectedTyps, True, _
-                                            (awinSelection.Count = tatsErstellt + 1), zeilenhoehe, _
+                                            (selectedProjekte.Count = tatsErstellt + 1), zeilenhoehe, _
                                             legendFontSize, _
                                             worker, e)
             tatsErstellt = tatsErstellt + 1
+
 
 
             For Each singleItem As String In todoListe
@@ -232,6 +452,8 @@ Public Module testModule
         'frmSelectPPTTempl.statusNotification.Text = " Report mit " & tatsErstellt & " Seite erstellt !"
 
 
+        appInstance.ScreenUpdating = formerSU
+        appInstance.EnableEvents = formerEE
     End Sub
 
 

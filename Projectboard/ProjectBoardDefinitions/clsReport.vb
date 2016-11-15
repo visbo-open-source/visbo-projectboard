@@ -33,8 +33,8 @@ Public Class clsReport
 
     Private reportPhName As Boolean
     Private reportPhDate As Boolean
-    Private reportMsName As Boolean
-    Private reportMsDate As Boolean
+    Private reportMSName As Boolean
+    Private reportMSDate As Boolean
 
     Private reportKwInMilestone As Boolean
     Private reportUseOriginalNames As Boolean

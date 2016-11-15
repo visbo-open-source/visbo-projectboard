@@ -19,6 +19,7 @@ Public Class frmReportProfil
     ' "MS Project" stehen. 
     Public calledFrom As String
 
+    ' Liste aller vorhandenen ReportProfile
     Friend listofProfils As New SortedList(Of String, clsReportAll)
 
 
@@ -42,6 +43,7 @@ Public Class frmReportProfil
      
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
+
         If Me.calledFrom = "MS Project" Then
 
             ' für BHTC-Report wird diese Auswahlmöglichkeit derzeit nicht benötigt
@@ -160,6 +162,15 @@ Public Class frmReportProfil
 
         ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
             Try
+                If currentReportProfil.name = "Last" Then
+                    ' Profil von letztem Report unter Name "Last" speichern
+                    Call XMLExportReportProfil(currentReportProfil)
+
+                End If
+            Catch ex As Exception
+
+            End Try
+            Try
 
                 ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
 
@@ -220,8 +231,6 @@ Public Class frmReportProfil
                                 End If
                                 listofProfils.Add(profilName, hreportAll)
 
-                                ' Profil profilName in Auswahl eintragen
-                                RepProfilListbox.Items.Add(profilName)
 
                             Catch ex As Exception
                                 'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
@@ -231,6 +240,40 @@ Public Class frmReportProfil
                         End If
 
                     Next k
+
+                    ' anzeige löschen
+                    RepProfilListbox.Items.Clear()
+
+                    ' Anzeigen der Profile, abhängig vom gecheckten Radiobutton
+
+                    ' Report mit Constellation - Multiprojektreport
+                    If rdbMPreports.Checked Then
+
+                        For Each kvp In listofProfils
+
+                            If kvp.Value.isMpp Then
+                                ' Profil profilName in Auswahl eintragen
+                                RepProfilListbox.Items.Add(kvp.Value.name)
+
+                            End If
+                        Next
+
+                    End If
+
+                    ' Einzelprojektreport
+                    If rdbEPreports.Checked Then
+
+                        For Each kvp In listofProfils
+
+                            If Not kvp.Value.isMpp Then
+                                ' Profil profilName in Auswahl eintragen
+                                RepProfilListbox.Items.Add(kvp.Value.name)
+
+                            End If
+                        Next
+
+                    End If
+
 
                     If listOfFiles.Count > 0 Then
                         RepProfilListbox.SelectedIndex = 0
@@ -312,6 +355,11 @@ Public Class frmReportProfil
     End Sub
 
     Private Sub ReportErstellen_Click(sender As Object, e As EventArgs) Handles ReportErstellen.Click
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
 
         If Me.calledFrom = "MS Project" Then
 
@@ -473,6 +521,11 @@ Public Class frmReportProfil
             End Try
 
         End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
+
     End Sub
 
     Private Sub changeProfil_Click(sender As Object, e As EventArgs) Handles changeProfil.Click
@@ -733,7 +786,7 @@ Public Class frmReportProfil
             .mppUseAbbreviation = reportProfil.UseAbbreviation
             .mppUseOriginalNames = reportProfil.UseOriginalNames
             .mppKwInMilestone = reportProfil.KwInMilestone
-            .mppShowPhName = reportProfil.projectsWithNoMPmayPass
+            .mppProjectsWithNoMPmayPass = reportProfil.projectsWithNoMPmayPass
 
         End With
 
@@ -748,24 +801,30 @@ Public Class frmReportProfil
                 If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
 
                     ' Alle selektierten Projekte reporten
-                    For Each kvp In selectedProjekte.Liste
+                    '' ''For Each kvp In selectedProjekte.Liste
 
-                        hproj = kvp.Value
-
-                        Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
-                                                        selectedPhases, selectedMilestones, _
-                                                        selectedRoles, selectedCosts, _
-                                                        selectedBUs, selectedTypes, True, _
-                                                        True, zeilenhoehe, legendFontSize, _
-                                                        worker, e)
+                    '' ''    hproj = kvp.Value
 
 
-                        ''Call createPPTReportFromProjects(vorlagendateiname, _
-                        ''                                 selectedPhases, selectedMilestones, _
-                        ''                                 selectedRoles, selectedCosts, _
-                        ''                                 selectedBUs, selectedTypes, _
-                        ''                                 worker, e)
-                    Next
+
+                    '' ''    Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
+                    '' ''                                    selectedPhases, selectedMilestones, _
+                    '' ''                                    selectedRoles, selectedCosts, _
+                    '' ''                                    selectedBUs, selectedTypes, True, _
+                    '' ''                                    True, zeilenhoehe, legendFontSize, _
+                    '' ''                                    worker, e)
+
+
+
+                    '' ''Next
+                    appInstance.EnableEvents = False
+                    'appInstance.ScreenUpdating = False
+
+                    Call createPPTReportFromProjects(vorlagendateiname, _
+                                                     selectedPhases, selectedMilestones, _
+                                                     selectedRoles, selectedCosts, _
+                                                     selectedBUs, selectedTypes, _
+                                                     worker, e)
 
                 End If
             Else
@@ -796,6 +855,7 @@ Public Class frmReportProfil
             Call MsgBox("Fehler: " & vbLf & ex.Message)
         End Try
 
+        appInstance.EnableEvents = True
     End Sub
 
     Private Sub BGWorkerReportGen_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BGWorkerReportGen.ProgressChanged
@@ -815,6 +875,8 @@ Public Class frmReportProfil
         Me.Cursor = System.Windows.Forms.Cursors.Arrow
 
         ' hier evt. noch schließen und Abspeichern des Reports von PPT
+
+        appInstance.ScreenUpdating = True
 
     End Sub
 

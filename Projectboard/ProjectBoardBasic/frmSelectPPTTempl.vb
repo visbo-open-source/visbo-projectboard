@@ -190,6 +190,8 @@ Public Class frmSelectPPTTempl
 
         Dim vorlagenDateiName As String = CType(e.Argument, String)
 
+        currentReportProfil.name = "Last"
+
         Dim tmpCollection As New Collection
 
         currentReportProfil.Phases = copyColltoSortedList(tmpCollection)
@@ -293,7 +295,7 @@ Public Class frmSelectPPTTempl
         Dim vorlagenDateiName As String = CType(e.Argument, String)
         Dim tmpCollection As New Collection
 
-
+        currentReportProfil.name = "Last"
         currentReportProfil.Phases = copyColltoSortedList(tmpCollection)
         currentReportProfil.Milestones = copyColltoSortedList(tmpCollection)
         currentReportProfil.Roles = copyColltoSortedList(tmpCollection)
