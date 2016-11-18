@@ -2,6 +2,7 @@
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
 Imports MongoDbAccess
 Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 
 Public Class Ribbon1
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
@@ -10,50 +11,61 @@ Public Class Ribbon1
 
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
-        Dim alreadyProtected As Boolean = VisboProtected
-        visboInfoActivated = Not visboInfoActivated
+        Dim showFormular As Boolean = False
 
-        If visboInfoActivated Then
 
-            If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" And _
-                Not alreadyProtected Then
-                ' Formular zur Password Eingabe aufrufen 
-                VisboProtected = True
+        If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Or _
+            pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
 
-                ' Formular ... 
-                Dim pwdFormular As New frmPassword
-                If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
-                    If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
+            VisboProtected = True
+
+            If Not protectionSolved Then
+                If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
+
+                    Dim pwdFormular As New frmPassword
+                    If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
+                        If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
+                            ' in allen Slides den Sicht Schutz aufheben 
+                            protectionSolved = True
+                            Call makeVisboShapesVisible(True)
+                        End If
+                    End If
+
+                ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
+                    Dim userName As String = My.Computer.Name
+                    If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
                         ' in allen Slides den Sicht Schutz aufheben 
 
                         Call makeVisboShapesVisible(True)
+
                     End If
-                End If
 
-                ' if richtig 
-            ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" And _
-                Not alreadyProtected Then
-                ' überprüfen, ob es die richtige Domain ist 
-                VisboProtected = True
-
-                Dim userName As String = My.Computer.Name
-                If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
-                    ' in allen Slides den Sicht Schutz aufheben 
-
-                    Call makeVisboShapesVisible(True)
+                ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
+                    ' die Login Maske aufschalten ... 
 
                 End If
             End If
 
-            Me.activateTab.Label = "De-Aktivieren"
-            Me.activateTab.ScreenTip = "Info-Modus de-aktivieren"
-            'Call MsgBox("Info-Modus aktiviert")
+            If protectionSolved Then
+                showFormular = True
+            End If
         Else
-            Me.activateTab.Label = "Aktivieren"
-            Me.activateTab.ScreenTip = "Info-Modus aktivieren"
-            'Call MsgBox("Info-Modus de-aktiviert")
+            showFormular = True
         End If
 
+        If showFormular Then
+
+            ' wird das Formular aktuell angezeigt ? 
+            If IsNothing(infoFrm) And Not formIsShown Then
+                infoFrm = New frmInfo
+                formIsShown = True
+                infoFrm.Show()
+            End If
+
+
+        End If
+
+       
     End Sub
 
     Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
@@ -69,11 +81,25 @@ Public Class Ribbon1
 
         ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
         If smartSlideLists.countProjects > 0 Then
-            ' nur dann müssen Historien geholt werden 
-            If noDBAccessInPPT Then
-                Call MsgBox("kein Datenbank Zugriff ... bitte erst einloggen ...")
-            Else
 
+            ' muss noch eingeloggt werden ? 
+            If noDBAccessInPPT Then
+                ' jetzt die Login Maske aufrufen ... 
+
+                If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                    ' tk: 17.11.16: Einloggen in Datenbank 
+                    noDBAccessInPPT = Not loginProzedur()
+
+                    If noDBAccessInPPT Then
+                        Call MsgBox("kein Datenbank Zugriff ... ")
+                    End If
+
+                End If
+
+            End If
+
+            If Not noDBAccessInPPT Then
 
                 If Not smartSlideLists.historiesExist Then
 
@@ -86,6 +112,7 @@ Public Class Ribbon1
                         Dim pName As String = getPnameFromKey(tmpName)
                         Dim vName As String = getVariantnameFromKey(tmpName)
                         Dim pvName As String = calcProjektKeyDB(pName, vName)
+
                         Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
 
                         smartSlideLists.addToListOfTS(tsCollection)
@@ -94,7 +121,11 @@ Public Class Ribbon1
                     Dim tmFormular As New frmPPTTimeMachine
                     Dim dgRes As Windows.Forms.DialogResult = tmFormular.ShowDialog
                 End If
+
             End If
+
+        Else
+            Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
         End If
 
     End Sub

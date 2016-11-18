@@ -2566,16 +2566,7 @@ Public Module testModule
 
         End While
 
-        ' Änderung tk 29.10.16 ergänzt um Schreiben der DB Info in das PPT file 
-        Try
-            Call addSmartPPTPresentationInfo(pptPres:=pptCurrentPresentation, _
-                                          dbURL:=awinSettings.databaseURL, _
-                                          dbName:=awinSettings.databaseName)
-        Catch ex As Exception
 
-        End Try
-
-        
         'If pptLastTime Or swimlaneMode Then
         If pptLastTime Then
             Try
@@ -4621,15 +4612,6 @@ Public Module testModule
         If worker.WorkerReportsProgress Then
             worker.ReportProgress(0, e)
         End If
-
-        ' Änderung tk 29.10.16 ergänzt um Schreiben der DB Info in das PPT file 
-        Try
-            Call addSmartPPTPresentationInfo(pptPres:=pptCurrentPresentation, _
-                                          dbURL:=awinSettings.databaseURL, _
-                                          dbName:=awinSettings.databaseName)
-        Catch ex As Exception
-
-        End Try
 
         ' Vorlage in passender Größe wird nun nicht mehr benötigt
         Try
@@ -15942,8 +15924,7 @@ Public Module testModule
             ' zeichne die Projekte 
 
             ' jetzt wird das Slide gekennzeichnet als Smart Slide 
-            Call addSmartPPTSlideInfo(pptslide, "TimeComponent", rds.drawingAreaLeft, rds.drawingAreaRight, rds.drawingAreaBottom, _
-                                      rds.drawingAreaTop, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
+            Call addSmartPPTSlideInfo(pptslide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
 
             Try
 
@@ -16567,8 +16548,7 @@ Public Module testModule
 
                 ' 
                 ' jetzt wird das Slide gekennzeichnet als Smart Slide 
-                Call addSmartPPTSlideInfo(rds.pptSlide, "TimeComponent", rds.drawingAreaLeft, rds.drawingAreaRight, rds.drawingAreaBottom, _
-                                          rds.drawingAreaTop, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
+                Call addSmartPPTSlideInfo(rds.pptSlide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
 
                 'ur: 25.03.2015: sichern der im Format veränderten Folie
                 rds.pptSlide.Copy()

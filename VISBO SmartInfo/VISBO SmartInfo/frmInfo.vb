@@ -218,6 +218,9 @@ Public Class frmInfo
 
         showAbbrev.Checked = showShortName
 
+        ' jetzt muss geprüft werden, ob GoToHome und GoToChangedPos enabled sind ... 
+        btnSentToChange.Enabled = changedButtonRelevance
+        btnSendToHome.Enabled = homeButtonRelevance
 
         dontFire = False
 
@@ -877,7 +880,10 @@ Public Class frmInfo
         Dim positionIndexT As Integer
         Dim positionIndexD As Integer
 
-        If isMilestone Then
+        If IsNothing(isMilestone) Then
+            positionIndexD = -1
+            positionIndexT = -1
+        ElseIf isMilestone Then
             positionIndexD = Me.positionIndexMD
             positionIndexT = Me.positionIndexMT
         Else
@@ -885,8 +891,12 @@ Public Class frmInfo
             positionIndexT = Me.positionIndexPT
         End If
 
+        
+
         With Me
             Select Case positionIndexT
+                Case -1
+                    .positionTextButton.Image = Nothing
                 Case pptPositionType.aboveCenter
                     .positionTextButton.Image = My.Resources.layout_north
                 Case pptPositionType.aboveRight
@@ -910,6 +920,8 @@ Public Class frmInfo
             End Select
 
             Select Case positionIndexD
+                Case -1
+                    .positionDateButton.Image = Nothing
                 Case pptPositionType.aboveCenter
                     .positionDateButton.Image = My.Resources.layout_north
                 Case pptPositionType.aboveRight
@@ -1188,6 +1200,12 @@ Public Class frmInfo
             Next
         End If
 
+        ' jetzt ist Home nicht mehr notwendig ... 
+        homeButtonRelevance = False
+
+        btnSendToHome.Enabled = homeButtonRelevance
+        btnSentToChange.Enabled = changedButtonRelevance
+
     End Sub
 
     ''' <summary>
@@ -1219,13 +1237,20 @@ Public Class frmInfo
         End If
 
         If doItAll Then
-            ' alle zur Home-Position schicken ...
+            ' alle zur Changed-Position schicken ...
             For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
                 If isRelevantShape(tmpShape) Then
                     Call sentToChangedPosition(tmpShape.Name)
                 End If
             Next
+
         End If
+
+        changedButtonRelevance = False
+
+        btnSentToChange.Enabled = changedButtonRelevance
+        btnSendToHome.Enabled = homeButtonRelevance
+
 
     End Sub
 

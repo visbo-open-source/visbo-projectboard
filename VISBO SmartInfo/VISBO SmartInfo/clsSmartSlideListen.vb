@@ -12,30 +12,47 @@ Public Class clsSmartSlideListen
 
     ' um zu verhindern, dass der Speicherbedarf wegen sortierter String Listen sehr groß wird, 
     ' wird eine Hilfsliste eingeführt, die für jeden auftretenden Shape-Namen (eindeutig !) eine eindeutige lfdNr zuweist 
-    Private planShapeIDs As SortedList(Of String, Integer)
-    Private IDplanShapes As SortedList(Of Integer, String)
+    Private _planShapeIDs As SortedList(Of String, Integer)
+    Private _IDplanShapes As SortedList(Of Integer, String)
 
-    Private cNList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    Private _cNList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Original Namen 
-    Private oNList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    Private _oNList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der ShortNames
-    Private sNList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    Private _sNList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der full BreadCrumbs 
-    Private bCList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    Private _bCList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Elemente, die keine, eine grüne, gelbe, rote Bewertung haben 
-    Private aCList As SortedList(Of Integer, SortedList(Of Integer, Boolean))
+    Private _aCList As SortedList(Of Integer, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Lieferumfänge; ein Lieferumfang kann ggf in mehreren Elementen vorkommen 
-    Private LUList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    Private _LUList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Elemente, die manuell verschoben wurden ... 
-    Private mVList As SortedList(Of Integer, Boolean)
+    Private _mVList As SortedList(Of Integer, Boolean)
     ' enthält die Liste an Projekt-Historien 
-    Private projectTimeStamps As SortedList(Of String, clsProjektHistorie)
+    Private _projectTimeStamps As SortedList(Of String, clsProjektHistorie)
     ' enthält die Liste an TimeStamps, die in der Time-Machine betrachtet werden können 
     ' der bool'sche Wert kann später dafür sorgen, dass ein Eintrag berücksichtigt / nicht berücksichtigt werden soll 
-    Private listOfTimeStamps As SortedList(Of Date, Boolean)
+    Private _listOfTimeStamps As SortedList(Of Date, Boolean)
 
     Private _creationDate As Date
 
+    Private _slideDBUrl As String
+    Private _slideDBName As String
+
+
+    ''' <summary>
+    ''' entfernt die Moved Information aus 
+    ''' </summary>
+    ''' <param name="shpName"></param>
+    ''' <remarks></remarks>
+    Public Sub removeSMLmvInfo(ByVal shpName As String)
+
+        Dim uid As Integer = _planShapeIDs.Item(shpName)
+        If _mVList.ContainsKey(uid) Then
+            _mVList.Remove(uid)
+        End If
+
+    End Sub
     ''' <summary>
     ''' liest bzw. setzt das Creation Date der Slide 
     ''' </summary>
@@ -47,7 +64,38 @@ Public Class clsSmartSlideListen
             creationDate = _creationDate
         End Get
         Set(value As Date)
-            _creationDate = value
+            If Not IsNothing(value) Then
+                _creationDate = value
+            Else
+                _creationDate = Date.MinValue
+            End If
+
+        End Set
+    End Property
+
+    Public Property slideDBUrl As String
+        Get
+            slideDBUrl = _slideDBUrl
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _slideDBUrl = value
+            Else
+                _slideDBUrl = ""
+            End If
+        End Set
+    End Property
+
+    Public Property slideDBName As String
+        Get
+            slideDBName = _slideDBName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _slideDBName = value
+            Else
+                _slideDBName = ""
+            End If
         End Set
     End Property
 
@@ -70,11 +118,11 @@ Public Class clsSmartSlideListen
             Dim vName As String = getVariantnameFromKey(pvName)
 
 
-            If projectTimeStamps.ContainsKey(pvName) Then
-                Dim timeStamps As clsProjektHistorie = projectTimeStamps.Item(pvName)
+            If _projectTimeStamps.ContainsKey(pvName) Then
+                Dim timeStamps As clsProjektHistorie = _projectTimeStamps.Item(pvName)
                 If Not IsNothing(timeStamps) Then
 
-                    tmpProject = timeStamps.item(tsDate)
+                    tmpProject = timeStamps.ElementAtorBefore(tsDate)
                     If IsNothing(tmpProject) Then
                         ' aus Datenbank holen 
                         tmpProject = request.retrieveOneProjectfromDB(pName, vName, tsDate)
@@ -94,7 +142,7 @@ Public Class clsSmartSlideListen
                         timeStamps.Add(tsDate, tmpProject)
                     End If
 
-                    projectTimeStamps.Item(pvName) = timeStamps
+                    _projectTimeStamps.Item(pvName) = timeStamps
 
                 End If
 
@@ -114,18 +162,28 @@ Public Class clsSmartSlideListen
         If Not IsNothing(tsCollection) Then
 
             Try
+
                 For Each tmpDate As Date In tsCollection
-                    If Not listOfTimeStamps.ContainsKey(tmpDate) Then
-                        listOfTimeStamps.Add(tmpDate, True)
+                    If Not _listOfTimeStamps.ContainsKey(tmpDate) Then
+                        ' bool'scher Wert hat aktuell keine Bedeutung 
+                        ' könnte später bestimmt werden, ob der TimeStamp bereits aus der DB geholt wurde oder nicht .. 
+                        _listOfTimeStamps.Add(tmpDate, False)
                     End If
                 Next
+
             Catch ex As Exception
                 Exit Sub
             End Try
-            
+
         End If
-        
+
     End Sub
+
+    Public ReadOnly Property getListOfTS As SortedList(Of Date, Boolean)
+        Get
+            getListOfTS = _listOfTimeStamps
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die Gesamt-Liste aller TimeStamps für das Time-Machine Formular zurück 
@@ -137,9 +195,9 @@ Public Class clsSmartSlideListen
         Get
             Dim tmpArray() As Date = Nothing
 
-            If Not IsNothing(listOfTimeStamps) Then
-                If listOfTimeStamps.Count > 0 Then
-                    tmpArray = listOfTimeStamps.Keys.ToArray()
+            If Not IsNothing(_listOfTimeStamps) Then
+                If _listOfTimeStamps.Count > 0 Then
+                    tmpArray = _listOfTimeStamps.Keys.ToArray()
                 End If
             End If
 
@@ -167,7 +225,7 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public ReadOnly Property containsProject(ByVal pvName As String) As Boolean
         Get
-            containsProject = projectTimeStamps.ContainsKey(pvName)
+            containsProject = _projectTimeStamps.ContainsKey(pvName)
         End Get
     End Property
 
@@ -184,8 +242,8 @@ Public Class clsSmartSlideListen
     Public ReadOnly Property getPVName(ByVal index As Integer) As String
         Get
 
-            If index >= 1 And index <= projectTimeStamps.Count Then
-                getPVName = projectTimeStamps.ElementAt(index - 1).Key
+            If index >= 1 And index <= _projectTimeStamps.Count Then
+                getPVName = _projectTimeStamps.ElementAt(index - 1).Key
             Else
                 getPVName = Nothing
             End If
@@ -201,7 +259,7 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public ReadOnly Property countProjects() As Integer
         Get
-            countProjects = projectTimeStamps.Count
+            countProjects = _projectTimeStamps.Count
         End Get
     End Property
 
@@ -215,8 +273,8 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public ReadOnly Property getTimeStampListe(ByVal pvName As String) As clsProjektHistorie
         Get
-            If projectTimeStamps.ContainsKey(pvName) Then
-                getTimeStampListe = projectTimeStamps.Item(pvName)
+            If _projectTimeStamps.ContainsKey(pvName) Then
+                getTimeStampListe = _projectTimeStamps.Item(pvName)
             Else
                 getTimeStampListe = Nothing
             End If
@@ -232,11 +290,11 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public Sub addProject(ByVal pvName As String, Optional ByVal pHistory As clsProjektHistorie = Nothing)
 
-        If projectTimeStamps.ContainsKey(pvName) Then
-            projectTimeStamps.Remove(pvName)
+        If _projectTimeStamps.ContainsKey(pvName) Then
+            _projectTimeStamps.Remove(pvName)
         End If
 
-        projectTimeStamps.Add(pvName, pHistory)
+        _projectTimeStamps.Add(pvName, pHistory)
 
     End Sub
 
@@ -245,8 +303,8 @@ Public Class clsSmartSlideListen
             Dim tmpResult As Boolean = True
 
             Dim i As Integer = 0
-            Do While i <= projectTimeStamps.Count - 1 And tmpResult
-                If IsNothing(projectTimeStamps.ElementAt(i).Value) Then
+            Do While i <= _projectTimeStamps.Count - 1 And tmpResult
+                If IsNothing(_projectTimeStamps.ElementAt(i).Value) Then
                     tmpResult = False
                 Else
                     i = i + 1
@@ -260,12 +318,12 @@ Public Class clsSmartSlideListen
     Public ReadOnly Property getUID(ByVal shapeName As String) As Integer
         Get
             Dim uid As Integer
-            If planShapeIDs.ContainsKey(shapeName) Then
-                uid = planShapeIDs.Item(shapeName)
+            If _planShapeIDs.ContainsKey(shapeName) Then
+                uid = _planShapeIDs.Item(shapeName)
             Else
-                uid = planShapeIDs.Count + 1
-                planShapeIDs.Add(shapeName, uid)
-                IDplanShapes.Add(uid, shapeName)
+                uid = _planShapeIDs.Count + 1
+                _planShapeIDs.Add(shapeName, uid)
+                _IDplanShapes.Add(uid, shapeName)
             End If
 
             getUID = uid
@@ -287,7 +345,7 @@ Public Class clsSmartSlideListen
             Dim found As Boolean = False
             Dim index As Integer = 0
 
-            tmpStr = IDplanShapes.Item(uid)
+            tmpStr = _IDplanShapes.Item(uid)
 
             '' für Testzwecke 
             'Do While index <= planShapeIDs.Count - 1 And Not found
@@ -321,8 +379,8 @@ Public Class clsSmartSlideListen
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
 
-        If cNList.ContainsKey(cName) Then
-            listOfShapeNames = cNList.Item(cName)
+        If _cNList.ContainsKey(cName) Then
+            listOfShapeNames = _cNList.Item(cName)
             If listOfShapeNames.ContainsKey(uid) Then
                 ' nichts tun , ist schon drin ...
             Else
@@ -333,7 +391,7 @@ Public Class clsSmartSlideListen
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
             listOfShapeNames.Add(uid, True)
-            cNList.Add(cName, listOfShapeNames)
+            _cNList.Add(cName, listOfShapeNames)
         End If
 
     End Sub
@@ -351,8 +409,8 @@ Public Class clsSmartSlideListen
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
 
-        If oNList.ContainsKey(oName) Then
-            listOfShapeNames = oNList.Item(oName)
+        If _oNList.ContainsKey(oName) Then
+            listOfShapeNames = _oNList.Item(oName)
             If listOfShapeNames.ContainsKey(uid) Then
                 ' nichts tun , ist schon drin ...
             Else
@@ -363,7 +421,7 @@ Public Class clsSmartSlideListen
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
             listOfShapeNames.Add(uid, True)
-            oNList.Add(oName, listOfShapeNames)
+            _oNList.Add(oName, listOfShapeNames)
         End If
 
     End Sub
@@ -388,8 +446,8 @@ Public Class clsSmartSlideListen
             sName = uid.ToString
         End If
 
-        If sNList.ContainsKey(sName) Then
-            listOfShapeNames = sNList.Item(sName)
+        If _sNList.ContainsKey(sName) Then
+            listOfShapeNames = _sNList.Item(sName)
             If listOfShapeNames.ContainsKey(uid) Then
                 ' nichts tun , ist schon drin ...
             Else
@@ -400,7 +458,7 @@ Public Class clsSmartSlideListen
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
             listOfShapeNames.Add(uid, True)
-            sNList.Add(sName, listOfShapeNames)
+            _sNList.Add(sName, listOfShapeNames)
         End If
 
     End Sub
@@ -422,8 +480,8 @@ Public Class clsSmartSlideListen
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
 
-        If bCList.ContainsKey(fullbCrumb) Then
-            listOfShapeNames = bCList.Item(fullbCrumb)
+        If _bCList.ContainsKey(fullbCrumb) Then
+            listOfShapeNames = _bCList.Item(fullbCrumb)
             If listOfShapeNames.ContainsKey(uid) Then
                 ' nichts tun , ist schon drin ...
             Else
@@ -434,7 +492,7 @@ Public Class clsSmartSlideListen
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
             listOfShapeNames.Add(uid, True)
-            bCList.Add(fullbCrumb, listOfShapeNames)
+            _bCList.Add(fullbCrumb, listOfShapeNames)
         End If
 
     End Sub
@@ -458,8 +516,8 @@ Public Class clsSmartSlideListen
             lieferumfang = tmpStr(i - 1)
 
             Dim listOfShapeIDs As SortedList(Of Integer, Boolean)
-            If LUList.ContainsKey(lieferumfang) Then
-                listOfShapeIDs = LUList.Item(lieferumfang)
+            If _LUList.ContainsKey(lieferumfang) Then
+                listOfShapeIDs = _LUList.Item(lieferumfang)
                 If listOfShapeIDs.ContainsKey(uid) Then
                     ' nichts tun , ist schon drin ...
                 Else
@@ -470,7 +528,7 @@ Public Class clsSmartSlideListen
                 ' dann muss das erste aufgenommen werden 
                 listOfShapeIDs = New SortedList(Of Integer, Boolean)
                 listOfShapeIDs.Add(uid, True)
-                LUList.Add(lieferumfang, listOfShapeIDs)
+                _LUList.Add(lieferumfang, listOfShapeIDs)
             End If
         Next
 
@@ -483,10 +541,10 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public Sub addMV(ByVal shapeName As String)
         Dim uid As Integer = Me.getUID(shapeName)
-        If mVList.ContainsKey(uid) Then
+        If _mVList.ContainsKey(uid) Then
             ' nichts tun , ist schon drin
         Else
-            mVList.Add(uid, True)
+            _mVList.Add(uid, True)
         End If
     End Sub
 
@@ -507,8 +565,8 @@ Public Class clsSmartSlideListen
         If ampelColor < 0 Or ampelColor > 3 Then
             ' nichts tun ... 
         Else
-            If aCList.ContainsKey(ampelColor) Then
-                listOfShapeNames = aCList.Item(ampelColor)
+            If _aCList.ContainsKey(ampelColor) Then
+                listOfShapeNames = _aCList.Item(ampelColor)
                 If listOfShapeNames.ContainsKey(uid) Then
                     ' nichts tun , ist schon drin ...
                 Else
@@ -519,7 +577,7 @@ Public Class clsSmartSlideListen
                 ' dann muss das erste aufgenommen werden 
                 listOfShapeNames = New SortedList(Of Integer, Boolean)
                 listOfShapeNames.Add(uid, True)
-                aCList.Add(ampelColor, listOfShapeNames)
+                _aCList.Add(ampelColor, listOfShapeNames)
             End If
         End If
 
@@ -540,8 +598,8 @@ Public Class clsSmartSlideListen
             Dim tmpCollection As New Collection
 
             Try
-                If Not IsNothing(aCList) Then
-                    Dim uidsWithColor As SortedList(Of Integer, Boolean) = aCList.Item(ampelColor)
+                If Not IsNothing(_aCList) Then
+                    Dim uidsWithColor As SortedList(Of Integer, Boolean) = _aCList.Item(ampelColor)
 
                     If Not IsNothing(uidsWithColor) Then
                         ' jetzt sind in der uidList alle ShapeUIDs aufgeführt - die müssen jetzt durch ihre ShapeNames ersetzt werden 
@@ -579,7 +637,7 @@ Public Class clsSmartSlideListen
         Get
             Dim tmpCollection As New List(Of String)
 
-            For Each kvp As KeyValuePair(Of String, SortedList(Of Integer, Boolean)) In cNList
+            For Each kvp As KeyValuePair(Of String, SortedList(Of Integer, Boolean)) In _cNList
                 If Not tmpCollection.Contains(kvp.Key) Then
                     tmpCollection.Add(kvp.Key)
                 End If
@@ -614,7 +672,7 @@ Public Class clsSmartSlideListen
             Dim resultingUIDs As New SortedList(Of Integer, Boolean)
 
             If tmpCC >= 8 Then
-                Dim redUIDs As SortedList(Of Integer, Boolean) = aCList.Item(3)
+                Dim redUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(3)
                 For i As Integer = 1 To redUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(redUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(redUIDs.ElementAt(i - 1).Key, redUIDs.ElementAt(i - 1).Value)
@@ -624,7 +682,7 @@ Public Class clsSmartSlideListen
             End If
 
             If tmpCC >= 4 Then
-                Dim yellowUIDs As SortedList(Of Integer, Boolean) = aCList.Item(2)
+                Dim yellowUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(2)
                 For i As Integer = 1 To yellowUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(yellowUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(yellowUIDs.ElementAt(i - 1).Key, yellowUIDs.ElementAt(i - 1).Value)
@@ -634,7 +692,7 @@ Public Class clsSmartSlideListen
             End If
 
             If tmpCC >= 2 Then
-                Dim greenUIDs As SortedList(Of Integer, Boolean) = aCList.Item(1)
+                Dim greenUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(1)
                 For i As Integer = 1 To greenUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(greenUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(greenUIDs.ElementAt(i - 1).Key, greenUIDs.ElementAt(i - 1).Value)
@@ -644,7 +702,7 @@ Public Class clsSmartSlideListen
             End If
 
             If tmpCC >= 1 Then
-                Dim noColorUIDs As SortedList(Of Integer, Boolean) = aCList.Item(0)
+                Dim noColorUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(0)
                 For i As Integer = 1 To noColorUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(noColorUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(noColorUIDs.ElementAt(i - 1).Key, noColorUIDs.ElementAt(i - 1).Value)
@@ -656,19 +714,19 @@ Public Class clsSmartSlideListen
 
             Select Case type
                 Case pptInfoType.cName
-                    NList = cNList
+                    NList = _cNList
                 Case pptInfoType.oName
-                    NList = oNList
+                    NList = _oNList
                 Case pptInfoType.sName
-                    NList = sNList
+                    NList = _sNList
                 Case pptInfoType.bCrumb
-                    NList = bCList
+                    NList = _bCList
                 Case pptInfoType.lUmfang
-                    NList = LUList
+                    NList = _LUList
                 Case pptInfoType.mvElement
-                    NList = cNList
+                    NList = _cNList
                 Case Else
-                    NList = cNList
+                    NList = _cNList
             End Select
 
             For i As Integer = 0 To anzahlNames - 1
@@ -700,7 +758,7 @@ Public Class clsSmartSlideListen
             If type = pptInfoType.mvElement Then
                 Dim realUIDs As New SortedList(Of Integer, Boolean)
                 For Each kvp As KeyValuePair(Of Integer, Boolean) In alleUIDs
-                    If mVList.ContainsKey(kvp.Key) Then
+                    If _mVList.ContainsKey(kvp.Key) Then
                         realUIDs.Add(kvp.Key, kvp.Value)
                     End If
                 Next
@@ -743,19 +801,19 @@ Public Class clsSmartSlideListen
 
             Select Case type
                 Case pptInfoType.cName
-                    NList = cNList
+                    NList = _cNList
                 Case pptInfoType.oName
-                    NList = oNList
+                    NList = _oNList
                 Case pptInfoType.sName
-                    NList = sNList
+                    NList = _sNList
                 Case pptInfoType.bCrumb
-                    NList = bCList
+                    NList = _bCList
                 Case pptInfoType.lUmfang
-                    NList = LUList
+                    NList = _LUList
                 Case pptInfoType.mvElement
-                    NList = cNList
+                    NList = _cNList
                 Case Else
-                    NList = cNList
+                    NList = _cNList
             End Select
 
             Dim tmpCollection As New Collection
@@ -795,8 +853,8 @@ Public Class clsSmartSlideListen
                     If colorCode >= 8 Then
                         ' red Flag 
                         singleFlag = 3
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -805,8 +863,8 @@ Public Class clsSmartSlideListen
                     ElseIf colorCode >= 4 Then
                         ' yellow flag 
                         singleFlag = 2
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -815,8 +873,8 @@ Public Class clsSmartSlideListen
                     ElseIf colorCode >= 2 Then
                         ' green flag
                         singleFlag = 1
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -825,8 +883,8 @@ Public Class clsSmartSlideListen
                     ElseIf colorCode >= 1 Then
                         ' nicht bewertet 
                         singleFlag = 0
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -916,7 +974,7 @@ Public Class clsSmartSlideListen
                     Dim lx As Integer = 0
 
                     Do While lx <= tmpUids.Count - 1 And Not found
-                        If mVList.ContainsKey(tmpUids.ElementAt(lx).Key) Then
+                        If _mVList.ContainsKey(tmpUids.ElementAt(lx).Key) Then
                             If colRestriction Then
                                 If alleUIDsMitgesuchterFarbe.ContainsKey(tmpUids.ElementAt(lx).Key) Then
                                     found = True
@@ -954,7 +1012,7 @@ Public Class clsSmartSlideListen
     Public ReadOnly Property getTNCollection(ByVal colorCode As Integer, _
                                              ByVal nameCollection As Collection) As Collection
         Get
-            Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean)) = cNList
+            Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean)) = _cNList
 
 
             Dim tmpCollection As New Collection
@@ -982,8 +1040,8 @@ Public Class clsSmartSlideListen
                     If colorCode >= 8 Then
                         ' red Flag 
                         singleFlag = 3
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -992,8 +1050,8 @@ Public Class clsSmartSlideListen
                     ElseIf colorCode >= 4 Then
                         ' yellow flag 
                         singleFlag = 2
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -1002,8 +1060,8 @@ Public Class clsSmartSlideListen
                     ElseIf colorCode >= 2 Then
                         ' green flag
                         singleFlag = 1
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -1012,8 +1070,8 @@ Public Class clsSmartSlideListen
                     ElseIf colorCode >= 1 Then
                         ' nicht bewertet 
                         singleFlag = 0
-                        If aCList.ContainsKey(singleFlag) Then
-                            For Each kvp As KeyValuePair(Of Integer, Boolean) In aCList.Item(singleFlag)
+                        If _aCList.ContainsKey(singleFlag) Then
+                            For Each kvp As KeyValuePair(Of Integer, Boolean) In _aCList.Item(singleFlag)
                                 alleUIDsMitgesuchterFarbe.Add(kvp.Key, kvp.Value)
                             Next
                         End If
@@ -1065,17 +1123,20 @@ Public Class clsSmartSlideListen
 
 
     Public Sub New()
-        planShapeIDs = New SortedList(Of String, Integer)
-        IDplanShapes = New SortedList(Of Integer, String)
-        cNList = New SortedList(Of String, SortedList(Of Integer, Boolean))
-        oNList = New SortedList(Of String, SortedList(Of Integer, Boolean))
-        sNList = New SortedList(Of String, SortedList(Of Integer, Boolean))
-        bCList = New SortedList(Of String, SortedList(Of Integer, Boolean))
-        aCList = New SortedList(Of Integer, SortedList(Of Integer, Boolean))
-        LUList = New SortedList(Of String, SortedList(Of Integer, Boolean))
-        mVList = New SortedList(Of Integer, Boolean)
-        projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
-        listOfTimeStamps = New SortedList(Of Date, Boolean)
+        _planShapeIDs = New SortedList(Of String, Integer)
+        _IDplanShapes = New SortedList(Of Integer, String)
+        _cNList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        _oNList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        _sNList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        _bCList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        _aCList = New SortedList(Of Integer, SortedList(Of Integer, Boolean))
+        _LUList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        _mVList = New SortedList(Of Integer, Boolean)
+        _projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
+        _listOfTimeStamps = New SortedList(Of Date, Boolean)
+        _creationDate = Date.MinValue
+        _slideDBUrl = ""
+        _slideDBName = ""
     End Sub
 
 End Class
