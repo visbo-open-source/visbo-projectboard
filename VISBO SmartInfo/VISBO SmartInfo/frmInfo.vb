@@ -133,6 +133,8 @@ Public Class frmInfo
         ' sind irgendwelche Ampel-Farben gesetzt 
         Dim ix As Integer = 1
 
+        formIsShown = True
+
         PictureMarker.Visible = True
         CheckBxMarker.Visible = True
 

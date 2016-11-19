@@ -63,11 +63,11 @@ Module Module1
 
     ' hier werden PPTClander, linker Rand etc gehalten
     ' mit dieser Klasse können auch die Berechnungen Koord->Datum und umgekehrt durchgeführt werden 
-    Friend slideCoordInfo As New clsPPTShapes
+    Friend slideCoordInfo As clsPPTShapes = Nothing
 
-    Friend infoFrm As New frmInfo
-
-    
+    Friend infoFrm As frmInfo = Nothing
+    ' wird automatisch gesetzt, wenn in einer Slide Smart-Infos sind ... 
+    Friend slideHasSmartElements As Boolean = False
 
 
     ' diese Listen enthalten die Infos welche Shapes Ampel grün, gelb etc haben
@@ -131,6 +131,9 @@ Module Module1
     ''' <param name="Pres"></param>
     ''' <remarks></remarks>
     Private Sub pptAPP_AfterPresentationOpen(Pres As PowerPoint.Presentation) Handles pptAPP.AfterPresentationOpen
+
+        ' ein ggf. vorhandener Schutz  muss wieder aktiviert werden ... 
+        protectionSolved = False
 
         ' gibt es eine Sprachen-Tabelle ? 
         Dim langGUID As String = pptAPP.ActivePresentation.Tags.Item("langGUID")
@@ -204,6 +207,7 @@ Module Module1
                 Try
                     If currentSlide.Tags.Item("SMART").Length > 0 Then
 
+                        slideHasSmartElements = True
 
                         Try
 
@@ -221,7 +225,7 @@ Module Module1
                                     StartofCalendar = CDate(.Tags.Item("SOC"))
                                 End If
 
-                                
+
 
                             End With
 
@@ -282,7 +286,8 @@ Module Module1
                 Catch ex As Exception
 
                 End Try
-
+            Else
+                slideHasSmartElements = False
             End If
 
 
@@ -314,7 +319,7 @@ Module Module1
         Try
             Dim shpRange As PowerPoint.ShapeRange = Sel.ShapeRange
 
-            If Not IsNothing(shpRange) And visboInfoActivated Then
+            If Not IsNothing(shpRange) And slideHasSmartElements Then
 
 
                 ' es sind ein oder mehrere Shapes selektiert worden 
@@ -329,22 +334,19 @@ Module Module1
 
                     ' prüfen, ob es ein Kommentar ist 
                     Dim tmpShape As PowerPoint.Shape = shpRange(1)
-                    If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoComment Or _
-                        (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoAutoShape And tmpShape.Name.Contains("§")) Then
+                    If isCommentShape(tmpShape) Then
                         Call markReferenceShape(tmpShape.Name)
                     End If
                 ElseIf shpRange.Count > 1 Then
                     ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
                     For Each tmpShape As PowerPoint.Shape In shpRange
-                        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoComment Or _
-                        (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoAutoShape And tmpShape.Name.Contains("§")) Then
+                        If isCommentShape(tmpShape) Then
                             Call markReferenceShape(tmpShape.Name)
                         End If
                     Next
-                Else
-                    If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
-                        Call deleteMarkerShapes()
-                    End If
+                ElseIf shpRange.Count = 0 Then
+
+                    Call deleteMarkerShapes()
 
                 End If
 
@@ -371,7 +373,7 @@ Module Module1
 
                     End If
 
-                    
+
                 Next
 
                 '' Anfang ... das war vorher innerhalb der next Schleife .. 
@@ -397,7 +399,6 @@ Module Module1
 
                 If Not IsNothing(selectedPlanShapes) Then
 
-                    
 
                     For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
                         ' hier sind nur noch richtige Shapes  
@@ -762,11 +763,11 @@ Module Module1
     ''' wird nur aufgerufen für relevant Shapes
     ''' positioniert ein Shape auf seine "Home"-Position, wenn es nicht ohnehin schon dort ist ... 
     ''' </summary>
-    ''' <param name="shapeName"></param>
+    ''' <param name="tmpShape"></param>
     ''' <remarks></remarks>
-    Friend Sub sentToHomePosition(ByVal shapeName As String)
+    Friend Sub sentToHomePosition(ByRef tmpShape As PowerPoint.Shape)
 
-        Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
+        'Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
         If Not IsNothing(tmpShape) Then
 
             Dim homeSDate As Date
@@ -793,9 +794,10 @@ Module Module1
                                     .Left = CSng(x1Pos) - .Width / 2
                                     changedButtonRelevance = True
 
-                                    If Not IsNothing(infoFrm) Then
+                                    If formIsShown Then
                                         Call aktualisiereInfoFrm(tmpShape, True)
                                     End If
+
 
 
                                 End If
@@ -825,7 +827,7 @@ Module Module1
                                     .Left = CSng(x1Pos)
                                     .Width = CSng(x2Pos - x1Pos)
 
-                                    If Not IsNothing(infoFrm) Then
+                                    If formIsShown Then
                                         Call aktualisiereInfoFrm(tmpShape, True)
                                     End If
                                 End If
@@ -842,7 +844,7 @@ Module Module1
 
         End If
 
-        
+
 
     End Sub
 
@@ -886,7 +888,7 @@ Module Module1
                                     homeButtonRelevance = True
 
                                     .Left = CSng(x1Pos) - .Width / 2
-                                    If Not IsNothing(infoFrm) Then
+                                    If formIsShown Then
                                         Call aktualisiereInfoFrm(tmpShape, True)
                                     End If
 
@@ -920,7 +922,7 @@ Module Module1
                                         .Left = CSng(x1Pos)
                                         .Width = CSng(x2Pos - x1Pos)
 
-                                        If Not IsNothing(infoFrm) Then
+                                        If formIsShown Then
                                             Call aktualisiereInfoFrm(tmpShape, True)
                                         End If
                                     End If
@@ -1042,6 +1044,8 @@ Module Module1
         If tsStartdate <> slideCoordInfo.calcXtoDate(tmpShape.Left) Or _
             tsEndDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width) Then
             ' es hat sich was geändert ... 
+
+            homeButtonRelevance = True
             Call slideCoordInfo.calculatePPTx1x2(tsStartdate, tsEndDate, x1Pos, x2Pos)
 
             With tmpShape
@@ -1058,19 +1062,21 @@ Module Module1
 
     End Sub
 
-    Friend Sub mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal tsDate As Date, ByVal timeStamp As Date)
+    Friend Sub mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal timeStamp As Date)
         Dim x1Pos As Double, x2Pos As Double
         Dim expla As String = "Version: " & timeStamp.ToShortDateString
 
-        If tsDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2) Then
+        If msDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2) Then
             ' es hat sich was geändert ... 
-            Call slideCoordInfo.calculatePPTx1x2(tsDate, tsDate, x1Pos, x2Pos)
+            homeButtonRelevance = True
+
+            Call slideCoordInfo.calculatePPTx1x2(msDate, msDate, x1Pos, x2Pos)
 
             ' jetzt die Shape-Info 
             With tmpShape
                 .Left = x1Pos - tmpShape.Width / 2
 
-                Dim mvdString As String = tsDate.ToString
+                Dim mvdString As String = msDate.ToString
 
                 .Tags.Add("MVD", mvdString)
                 .Tags.Add("MVE", expla)
@@ -1232,6 +1238,9 @@ Module Module1
                 Try
                     Dim refShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpText)
                     Call createMarkerShapes(refShape)
+                    If formIsShown Then
+                        Call aktualisiereInfoFrm(refShape)
+                    End If
                 Catch ex As Exception
 
                 End Try
@@ -1835,6 +1844,56 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt zurück, ob es sich bei dem Shape um ein Comment-Shape handelt ... 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isCommentShape(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim tmpResult As Boolean = False
+        ' ggf noch ergänzen mit : curShape.Name.Contains("§")
+        With curShape
+            If .Tags.Item("CMT").Length > 0 Then
+                tmpResult = True
+            End If
+        End With
+
+        isCommentShape = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' liefert den Enumeration Typ des Comments zurück 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getCommentType(ByVal curShape As PowerPoint.Shape) As Integer
+        Dim tmpResult As Integer = -1
+
+        With curShape
+            Try
+                If .Tags.Item("CMT").Length > 0 Then
+                    If IsNumeric(.Tags.Item("CMT")) Then
+                        tmpResult = CInt(.Tags.Item("CMT"))
+                        If tmpResult < 0 Or tmpResult > 4 Then
+                            ' ungültiger Wert
+                            tmpResult = -1
+                        End If
+
+                    End If
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+        End With
+        getCommentType = tmpResult
+
+    End Function
+
+    ''' <summary>
     ''' prüft, ob ein Shape für Schutz relevant ist oder nicht 
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -2003,10 +2062,14 @@ Module Module1
             If descriptionType = pptAnnotationType.ampelText Or _
                     descriptionType = pptAnnotationType.movedExplanation Or _
                     descriptionType = pptAnnotationType.lieferumfang Then
+
                 newShape = currentSlide.Shapes.AddComment()
                 'newShape = currentSlide.Shapes.AddCallout(Microsoft.Office.Core.MsoCalloutType.msoCalloutOne, _
                 '                      txtShpLeft, txtShpTop, txtShpWidth, txtShpHeight)
                 With newShape
+                    ' das Shape als Comment Shape kennzeichnen ... 
+                    .Tags.Add("CMT", descriptionType.ToString)
+
                     .Fill.ForeColor.RGB = RGB(240, 240, 240)
                     If ampelFarbe = 1 Then
                         .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGreen
@@ -2056,7 +2119,7 @@ Module Module1
 
 
         ' jetzt wird das TextShape noch positioniert - in Abhängigkeit vom Position Index, 
-        ' aber nur wenn es sich nicht um die einen Comment handelt ...
+        ' aber nur wenn es sich nicht um einen Comment handelt ...
 
         If ((Not descriptionType = pptAnnotationType.ampelText) And _
              (Not descriptionType = pptAnnotationType.movedExplanation) And _

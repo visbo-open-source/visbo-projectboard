@@ -45,23 +45,6 @@ Public Class frmSettings
         frmShowInfoBC.Checked = showBreadCrumbField
         frmExtendedSearch.Checked = extSearch
 
-        If Not noDBAccessInPPT Then
-            frmUserName.Text = dbUsername
-            frmUserName.Enabled = False
-            frmUserPWD.Enabled = False
-            frmUserPWD.Text = ""
-            feedbackMessage.Text = "Login bereits erfolgreich durchgeführt ..."
-        Else
-            If awinSettings.databaseURL.Length > 0 And awinSettings.databaseName.Length > 0 Then
-                frmUserName.Enabled = True
-                frmUserPWD.Enabled = True
-                feedbackMessage.Text = ""
-            Else
-                frmUserName.Enabled = False
-                frmUserPWD.Enabled = False
-                feedbackMessage.Text = "keine Datenbank Information vorhanden ..."
-            End If
-        End If
 
 
         rdbPWD.Checked = True
@@ -95,43 +78,7 @@ Public Class frmSettings
     End Sub
 
 
-    Private Sub dbLoginButton_Click(sender As Object, e As EventArgs) Handles btnDBLogin.Click
-
-        dbUsername = frmUserName.Text
-        dbPasswort = frmUserPWD.Text
-
-        Dim pwd As String
-        Dim user As String
-
-        user = frmUserName.Text
-        pwd = frmUserPWD.Text
-        feedbackMessage.Text = ""
-
-        Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-            Dim ok As Boolean = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
-
-            dbUsername = user
-            dbPasswort = pwd
-
-            feedbackMessage.Text = "Login bei DB <" & awinSettings.databaseName & "> erfolgreich !"
-            noDBAccessInPPT = False
-
-            frmUserName.Enabled = False
-            frmUserPWD.Enabled = False
-
-        Catch ex As Exception
-            noDBAccessInPPT = True
-            feedbackMessage.Text = "Benutzername oder Passwort fehlerhaft!"
-            frmUserName.Text = ""
-            frmUserPWD.Text = ""
-            user = frmUserName.Text
-            pwd = frmUserPWD.Text
-            frmUserName.Focus()
-            DialogResult = System.Windows.Forms.DialogResult.Retry
-        End Try
-
-    End Sub
+    
 
     Private Sub btnProtect_Click(sender As Object, e As EventArgs) Handles btnProtect.Click
 
@@ -280,23 +227,6 @@ Public Class frmSettings
         End If
     End Sub
 
-    Private Sub DBLoginPage_Click(sender As Object, e As EventArgs) Handles DBLoginPage.Click
-        If Not noDBAccessInPPT Then
-            frmUserName.Enabled = False
-            frmUserPWD.Enabled = False
-            feedbackMessage.Text = "Login bereits durchgeführt ..."
-        Else
-            If awinSettings.databaseURL.Length > 0 And awinSettings.databaseName.Length > 0 Then
-                frmUserName.Enabled = True
-                frmUserPWD.Enabled = True
-                feedbackMessage.Text = ""
-            Else
-                frmUserName.Enabled = False
-                frmUserPWD.Enabled = False
-                feedbackMessage.Text = "keine Datenbank Information vorhanden ..."
-            End If
-        End If
-    End Sub
 
     Private Sub TabPage4_Click(sender As Object, e As EventArgs) Handles TabPage4.Click
         Call MsgBox("jetzt in TabPage4")
