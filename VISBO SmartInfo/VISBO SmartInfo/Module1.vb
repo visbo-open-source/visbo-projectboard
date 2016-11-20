@@ -126,6 +126,60 @@ Module Module1
 
 
     ''' <summary>
+    ''' prüft, ob es sich um eine geschützte Präsentation handelt
+    ''' kann über pwd, Computer, oder valid Login geschützt werden ... 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Friend Function userIsEntitled() As Boolean
+
+        Dim tmpResult As Boolean = False
+
+        If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Or _
+            pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Or _
+            pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
+
+            VisboProtected = True
+
+            If Not protectionSolved Then
+                If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
+
+                    Dim pwdFormular As New frmPassword
+                    If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
+                        If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
+                            ' in allen Slides den Sicht Schutz aufheben 
+                            protectionSolved = True
+                            Call makeVisboShapesVisible(True)
+                        End If
+                    End If
+
+                ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
+                    Dim userName As String = My.Computer.Name
+                    If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
+                        ' in allen Slides den Sicht Schutz aufheben 
+
+                        Call makeVisboShapesVisible(True)
+
+                    End If
+
+                ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
+                    ' die Login Maske aufschalten ... 
+
+                End If
+            End If
+
+            If protectionSolved Then
+                tmpResult = True
+            End If
+        Else
+            tmpResult = True
+        End If
+
+        userIsEntitled = tmpResult
+
+    End Function
+
+    ''' <summary>
     ''' hier wird bestimmt, ob es sich um eine VisboProtected Präsentation handelt 
     ''' </summary>
     ''' <param name="Pres"></param>

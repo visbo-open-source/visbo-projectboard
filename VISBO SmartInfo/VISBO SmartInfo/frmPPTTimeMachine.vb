@@ -444,6 +444,12 @@
 
     End Sub
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub btnChangedPosition_Click(sender As Object, e As EventArgs) Handles btnChangedPosition.Click
 
         ' false bedeutet: move to Changed Position 
