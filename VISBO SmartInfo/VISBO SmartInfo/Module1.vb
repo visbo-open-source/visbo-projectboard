@@ -56,9 +56,6 @@ Module Module1
 
     Friend absEinheit As Integer = 0
 
-    ' gibt an, ob irgendwelche Ampeln gesetzt sind 
-    Friend ampelnExistieren As Boolean = False
-
     Friend selectedPlanShapes As PowerPoint.ShapeRange = Nothing
 
     ' hier werden PPTClander, linker Rand etc gehalten
@@ -84,6 +81,10 @@ Module Module1
     Friend initialChangedButtonRelevance As Boolean = False
 
     Friend bekannteIDs As SortedList(Of Integer, String)
+
+    Friend trafficLightColors(4) As Long
+    Friend showTrafficLights(4) As Boolean
+
 
     Friend Enum pptAbsUnit
         tage = 0
@@ -124,6 +125,144 @@ Module Module1
         asis = 9
     End Enum
 
+
+    ''' <summary>
+    ''' berechnet eine Integer Zahl, die Auskunft gibt, wie die vier TrafficLights gesetzt sind 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Friend Function calcColorCode() As Integer
+
+        Dim tmpNumber As Integer = 0
+
+        If showTrafficLights(0) Then
+            tmpNumber = tmpNumber + 1 ' 2 hoch 0 
+        End If
+
+        If showTrafficLights(1) Then
+            tmpNumber = tmpNumber + 2 ' 2 hoch 1 
+        End If
+
+        If showTrafficLights(2) Then
+            tmpNumber = tmpNumber + 4 ' 2 hoch 2 
+        End If
+
+        If showTrafficLights(3) Then
+            tmpNumber = tmpNumber + 8 ' 2 hoch 3 
+        End If
+
+        calcColorCode = tmpNumber
+
+    End Function
+
+    ''' <summary>
+    ''' zeigt bei den Shapes, die die angegebene Ampelfarbe haben, diese Farbe als Hintergrund Schatten an bzw. löscht den Hintergrund Schatten wieder
+    ''' </summary>
+    ''' <param name="ampelColor"></param>
+    ''' <param name="show"></param>
+    ''' <remarks></remarks>
+    Friend Sub faerbeShapes(ByVal ampelColor As Integer, ByVal show As Boolean)
+
+        Dim tmpCollection As Collection = smartSlideLists.getShapeNamesWithColor(ampelColor)
+        Dim anzSelected As Integer = tmpCollection.Count
+        Dim nameArray() As String
+
+        If ampelColor >= 0 And ampelColor <= 3 Then
+            'alles ok 
+        Else
+            ' sicherstellen, es kommt zu keinem Absturz .... 
+            ampelColor = 0
+        End If
+
+
+        Dim shapesToBeColored As PowerPoint.ShapeRange
+
+        If anzSelected >= 1 Then
+            ReDim nameArray(anzSelected - 1)
+
+            For i As Integer = 0 To anzSelected - 1
+                nameArray(i) = CStr(tmpCollection.Item(i + 1))
+            Next
+
+            Try
+                shapesToBeColored = currentSlide.Shapes.Range(nameArray)
+
+                If show Then
+                    ' mit Schatten einfärben 
+                    With shapesToBeColored.Shadow
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                        .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                        .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                        .Blur = 0
+                        .Size = 160
+                        .OffsetX = 0
+                        .OffsetY = 0
+                        .Transparency = 0
+                        .ForeColor.RGB = trafficLightColors(ampelColor)
+                    End With
+                Else
+                    ' Schatten wieder wegnehmen 
+                    With shapesToBeColored.Shadow
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+                    End With
+                End If
+
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' nichts tun ...
+
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' färbt das übergebene Shape mit der AmpelFarbe bzw. löscht die angezeigte AmpelFarbe
+    ''' </summary>
+    ''' <param name="ampelColor"></param>
+    ''' <param name="show"></param>
+    ''' <remarks></remarks>
+    Friend Sub faerbeShape(ByRef tmpShape As PowerPoint.Shape, _
+                           ByVal ampelColor As Integer, ByVal show As Boolean)
+
+        
+        If ampelColor >= 0 And ampelColor <= 3 Then
+            'alles ok 
+            Try
+                If show Then
+                    ' mit Schatten einfärben 
+                    With tmpShape.Shadow
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                        .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                        .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                        .Blur = 0
+                        .Size = 160
+                        .OffsetX = 0
+                        .OffsetY = 0
+                        .Transparency = 0
+                        .ForeColor.RGB = trafficLightColors(ampelColor)
+                    End With
+                Else
+                    ' Schatten wieder wegnehmen 
+                    With tmpShape.Shadow
+                        .ForeColor.RGB = trafficLightColors(ampelColor)
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+                    End With
+                End If
+            Catch ex As Exception
+
+            End Try
+        Else
+            ' andernfalls nichts machen .... 
+        End If
+
+
+
+    End Sub
 
     ''' <summary>
     ''' prüft, ob es sich um eine geschützte Präsentation handelt
@@ -287,54 +426,8 @@ Module Module1
                             slideCoordInfo = Nothing
                         End Try
 
-                        ' zurücksetzen der SmartSlideLists
-                        smartSlideLists = New clsSmartSlideListen
-                        bekannteIDs = New SortedList(Of Integer, String)
 
-                        With currentSlide
-                            If .Tags.Item("CRD").Length > 0 Then
-                                smartSlideLists.creationDate = CDate(.Tags.Item("CRD"))
-                            End If
-
-                            If .Tags.Item("DBURL").Length > 0 And _
-                                .Tags.Item("DBNAME").Length > 0 Then
-
-                                smartSlideLists.slideDBName = .Tags.Item("DBNAME")
-                                smartSlideLists.slideDBUrl = .Tags.Item("DBURL")
-
-                                If awinSettings.databaseURL <> smartSlideLists.slideDBUrl Or _
-                                    awinSettings.databaseName <> smartSlideLists.slideDBName Then
-
-                                    noDBAccessInPPT = True
-                                    awinSettings.databaseURL = smartSlideLists.slideDBUrl
-                                    awinSettings.databaseName = smartSlideLists.slideDBName
-
-                                End If
-                            End If
-
-
-                        End With
-
-
-                        Dim anzShapes As Integer = currentSlide.Shapes.Count
-                        ' jetzt werden die ganzen Listen aufgebaut 
-
-                        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-                            Dim tstName As String = tmpShape.Name
-                            If tmpShape.Tags.Count > 0 Then
-                                If isRelevantShape(tmpShape) Then
-
-                                    bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
-
-                                    Call aktualisiereSortedLists(tmpShape)
-
-                                    If protectionSolved And tmpShape.Visible = False Then
-                                        tmpShape.Visible = True
-                                    End If
-                                End If
-                            End If
-                        Next
-
+                        Call buildSmartSlideLists()
 
                     End If
                 Catch ex As Exception
@@ -355,6 +448,61 @@ Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' erstellt die SmartSlideListen neu ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub buildSmartSlideLists()
+
+        ' zurücksetzen der SmartSlideLists
+        smartSlideLists = New clsSmartSlideListen
+        bekannteIDs = New SortedList(Of Integer, String)
+
+        With currentSlide
+            If .Tags.Item("CRD").Length > 0 Then
+                smartSlideLists.creationDate = CDate(.Tags.Item("CRD"))
+            End If
+
+            If .Tags.Item("DBURL").Length > 0 And _
+                .Tags.Item("DBNAME").Length > 0 Then
+
+                smartSlideLists.slideDBName = .Tags.Item("DBNAME")
+                smartSlideLists.slideDBUrl = .Tags.Item("DBURL")
+
+                If awinSettings.databaseURL <> smartSlideLists.slideDBUrl Or _
+                    awinSettings.databaseName <> smartSlideLists.slideDBName Then
+
+                    noDBAccessInPPT = True
+                    awinSettings.databaseURL = smartSlideLists.slideDBUrl
+                    awinSettings.databaseName = smartSlideLists.slideDBName
+
+                End If
+            End If
+
+
+        End With
+
+
+        Dim anzShapes As Integer = currentSlide.Shapes.Count
+        ' jetzt werden die ganzen Listen aufgebaut 
+
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+            Dim tstName As String = tmpShape.Name
+            If tmpShape.Tags.Count > 0 Then
+                If isRelevantShape(tmpShape) Then
+
+                    bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
+
+                    Call aktualisiereSortedLists(tmpShape)
+
+                    If protectionSolved And tmpShape.Visible = False Then
+                        tmpShape.Visible = True
+                    End If
+                End If
+            End If
+        Next
+
+    End Sub
     Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
         If VisboProtected Then
             Call makeVisboShapesVisible(False)
@@ -999,52 +1147,190 @@ Module Module1
     End Sub
 
     ''' <summary>
-    ''' überprüft, ob das angegebene Shape eine geänderte Position beim gegeben. Datum hat  
-    ''' wenn ja, wird es umpositioniert 
+    ''' ändert den Kommentar Ampel-Text, Lieferumfang
+    ''' je nachdem, ob es sich um eine Ampel-Erläuterung oder einen Lieferumfang handelt ...  
     ''' </summary>
-    ''' <param name="tmpShape"></param>
+    ''' <param name="cmtShape"></param>
+    ''' <param name="timestamp"></param>
     ''' <remarks></remarks>
-    Friend Sub sendToTimeStampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal timestamp As Date)
-        'Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
+    Friend Sub modifyComment(ByRef cmtShape As PowerPoint.Shape, ByVal timestamp As Date)
 
-        If Not IsNothing(tmpShape) Then
-            ' Voraussetzung: es handelt sich um eine Phase oder einen Meilenstein ... 
-            ' Prüfen, ob Text Box , wenn ja, gleich Exit 
-            If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
-                ' nichts tun 
+        Dim newCmtText As String = ""
+        Dim newCmtColor As Integer = 0
+        Dim cmtType As Integer
 
-            Else
+        If IsNothing(cmtShape) Then
+            Exit Sub
+        End If
+
+        Dim refName As String = cmtShape.Name.Substring(0, cmtShape.Name.Length - 1)
+        Dim refShape As PowerPoint.Shape
+        Try
+            refShape = currentSlide.Shapes.Item(refName)
+        Catch ex As Exception
+            Exit Sub
+        End Try
+
+        ' jetzt kann die eigentliche Behandlung losgehen 
+        ' aber nur, wenn es sich um Ampel-Text oder Lieferumfang Shape handelt ...
+        cmtType = GetCmtTypeFromShapeName(cmtShape.Name)
+
+        If cmtType = pptAnnotationType.ampelText Or _
+            cmtType = pptAnnotationType.lieferumfang Then
+
+            If Not IsNothing(timestamp) Then
+                ' der Text und die Farbe müssen von einem TimeStamp Projekt kommen 
 
                 ' überprüfe, ob es zu dem angegebenen Shape bereits ein TS Projekt gibt 
-                Dim pvName As String = getPnameFromShpName(tmpShape.Name)
+                Dim pvName As String = getPnameFromShpName(cmtShape.Name)
 
                 ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
                 Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
 
-                Dim elemName As String = tmpShape.Tags.Item("CN")
-                Dim elemBC As String = tmpShape.Tags.Item("BC")
+                Dim elemName As String = refShape.Tags.Item("CN")
+                Dim elemBC As String = refShape.Tags.Item("BC")
+
+                If pptShapeIsMilestone(refShape) Then
+
+                    Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
+                    If IsNothing(ms) Then
+                        cmtShape.Visible = False
+                    Else
+                        If cmtType = pptAnnotationType.ampelText Then
+                            ' Text und Farbe bestimmen 
+                            newCmtText = ms.getBewertung(1).description
+                            newCmtColor = ms.getBewertung(1).colorIndex
+                        ElseIf cmtType = pptAnnotationType.lieferumfang Then
+                            ' Text und Farbe bestimmen 
+                            newCmtText = ms.getAllDeliverables
+                            newCmtColor = ms.getBewertung(1).colorIndex
+                        End If
+
+                    End If
+
+
+                ElseIf pptShapeIsPhase(refShape) Then
+
+                    Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
+                    If IsNothing(ph) Then
+                        cmtShape.Visible = False
+                    Else
+                        If cmtType = pptAnnotationType.ampelText Then
+                            ' Text und Farbe bestimmen 
+                            newCmtText = ph.getBewertung(1).description
+                            newCmtColor = ph.getBewertung(1).colorIndex
+                        ElseIf cmtType = pptAnnotationType.lieferumfang Then
+                            ' Text und Farbe bestimmen 
+                            ' bei Phasen gibt es keine Deliverables
+                            newCmtText = ""
+                            newCmtColor = ph.getBewertung(1).colorIndex
+                        End If
+                    End If
+
+                End If
+
+                ' jetzt muss das Shape noch entsprechen modifiziert werden ... 
+                With cmtShape
+                    ' Text 
+                    .TextFrame2.TextRange.Text = newCmtText
+                    ' Farbe
+                    If newCmtColor < 1 Or newCmtColor > 4 Then
+                        .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGrey
+                    Else
+                        .Shadow.ForeColor.RGB = trafficLightColors(newCmtColor)
+                    End If
+                End With
+
+            End If
+
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert das Shape mit den Daten aus dem entsprechenden TimeStamp Projekt; 
+    ''' es wird keine Aktion mit MV gemacht, das ist manually moved Information
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub sendToTimeStampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal timestamp As Date, ByRef diffMvList As SortedList(Of String, Double))
+        'Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
+
+        If Not IsNothing(tmpShape) Then
+            ' Voraussetzung: es handelt sich um ein relevantes Shapes, also einen Meilenstein, eine Phase, einen Swimlane- oder Segment Bezeichner ... eine Phase oder einen Meilenstein ... 
+
+            Dim pvName As String = getPnameFromShpName(tmpShape.Name)
+
+            ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+            Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
+
+            Dim elemName As String = tmpShape.Tags.Item("CN")
+            Dim elemBC As String = tmpShape.Tags.Item("BC")
+
+            If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+                ' Swimlane Name oder Segment Name: kein Verschieben , aber das das Setzen der Tags ist notwendig  
+                '
+                Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
+                If IsNothing(ph) Then
+                    tmpShape.Visible = False
+                Else
+
+                    ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                    Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
+                                                 ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
+                                                 Nothing)
+                End If
+
+
+            Else
 
                 If pptShapeIsMilestone(tmpShape) Then
 
-                    Call resetMVInfo(tmpShape)
+                    'Call resetMVInfo(tmpShape)
 
                     Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
                     If IsNothing(ms) Then
                         tmpShape.Visible = False
                     Else
-                        Call mvMilestoneToTimestampPosition(tmpShape, ms.getDate, timestamp)
+                        Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, timestamp)
+                        If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
+                            diffMvList.Add(tmpShape.Name, mvDiff)
+                        End If
+
+                        ' jetzt muss ggf die Farbe gesetzt werden 
+                        Dim ampelFarbe As Integer = ms.getBewertung(1).colorIndex
+                        Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
+
+                        ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                        Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, Nothing, _
+                                                  ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
+                                                  ms.getAllDeliverables("#"))
                     End If
+
 
 
                 ElseIf pptShapeIsPhase(tmpShape) Then
 
-                    Call resetMVInfo(tmpShape)
+                    'Call resetMVInfo(tmpShape)
 
                     Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                     If IsNothing(ph) Then
                         tmpShape.Visible = False
                     Else
-                        Call mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, timestamp)
+                        Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, timestamp)
+                        If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
+                            diffMvList.Add(tmpShape.Name, mvDiff)
+                        End If
+
+                        ' jetzt muss ggf die Farbe gesetzt werden 
+                        Dim ampelFarbe As Integer = ph.getBewertung(1).colorIndex
+                        Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
+
+                        ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                        Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
+                                                     ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
+                                                     Nothing)
                     End If
 
                 End If
@@ -1055,6 +1341,45 @@ Module Module1
 
 
     End Sub
+
+    ''' <summary>
+    ''' schreibt bzw. aktualisiert den Time-Stamp auf die Folie ... 
+    ''' </summary>
+    ''' <param name="currentTimestamp"></param>
+    ''' <remarks></remarks>
+    Friend Sub showTSMessage(ByVal currentTimestamp As Date)
+
+        Dim tsMsgBox As PowerPoint.Shape
+        Try
+            tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
+        Catch ex As Exception
+            tsMsgBox = Nothing
+        End Try
+
+        If IsNothing(tsMsgBox) Then
+            ' erstellen ...
+            tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                                      200, 5, 70, 20)
+            With tsMsgBox
+                .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+                .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse + 6)
+                .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = trafficLightColors(3)
+                .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
+                .TextFrame2.MarginBottom = 0
+                .TextFrame2.MarginLeft = 0
+                .Rotation = 0
+                .TextFrame2.MarginRight = 0
+                .TextFrame2.MarginTop = 0
+                .Name = "TimeStampInfo"
+                .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+            End With
+        Else
+            With tsMsgBox
+                .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+            End With
+        End If
+    End Sub
+
 
     ''' <summary>
     ''' setzt die MV-Info bei dem Element zurück 
@@ -1079,11 +1404,23 @@ Module Module1
 
     End Sub
 
-    Friend Sub mvPhaseToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal tsStartdate As Date, ByVal tsEndDate As Date, _
-                                          ByVal timeStamp As Date)
+
+    ''' <summary>
+    ''' diese MEthode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
+    ''' auch eine HomeButtonRelevance besetht nicht mehr; das neue Home ist mit dem TimeStamp erreicht 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="tsStartdate"></param>
+    ''' <param name="tsEndDate"></param>
+    ''' <param name="timeStamp"></param>
+    ''' <remarks></remarks>
+    Friend Function mvPhaseToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal tsStartdate As Date, ByVal tsEndDate As Date, _
+                                              ByVal timeStamp As Date) As Double
 
         Dim x1Pos As Double, x2Pos As Double
-        Dim expla As String = "Version: " & timeStamp.ToShortDateString
+        Dim diff As Double = 0.0
+        Dim oldLeft As Double
+        'Dim expla As String = "Version: " & timeStamp.ToShortDateString
 
         ' wenn der Phasen start oder das Phasen-Ende vor bzw. hinter dem pptStart bzw. EndOfCalendar liegt ...
         If DateDiff(DateInterval.Day, tsStartdate, slideCoordInfo.PPTStartOFCalendar) > 0 Then
@@ -1099,46 +1436,66 @@ Module Module1
             tsEndDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width) Then
             ' es hat sich was geändert ... 
 
-            homeButtonRelevance = True
+            'homeButtonRelevance = True
             Call slideCoordInfo.calculatePPTx1x2(tsStartdate, tsEndDate, x1Pos, x2Pos)
 
             With tmpShape
+                oldLeft = .Left
+
                 .Left = x1Pos
                 .Width = x2Pos - tmpShape.Left
 
-                Dim mvdString As String = tsStartdate.ToString & "#" & tsEndDate.ToString
-                .Tags.Add("MVD", mvdString)
-                .Tags.Add("MVE", expla)
+                diff = .Left - oldLeft
+                'Dim mvdString As String = tsStartdate.ToString & "#" & tsEndDate.ToString
+                '.Tags.Add("MVD", mvdString)
+                '.Tags.Add("MVE", expla)
 
             End With
 
         End If
 
-    End Sub
+        mvPhaseToTimestampPosition = diff
+    End Function
 
-    Friend Sub mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal timeStamp As Date)
+    ''' <summary>
+    ''' diese MEthode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
+    ''' auch eine HomeButtonRelevance besetht nicht mehr; das neue Home ist mit dem TimeStamp erreicht  
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="msDate"></param>
+    ''' <param name="timeStamp"></param>
+    ''' <remarks></remarks>
+    Friend Function mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal timeStamp As Date) As Double
         Dim x1Pos As Double, x2Pos As Double
-        Dim expla As String = "Version: " & timeStamp.ToShortDateString
+        Dim diff As Double = 0.0
+        Dim oldLeft As Double = 0.0
+        'Dim expla As String = "Version: " & timeStamp.ToShortDateString
 
         If msDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2) Then
             ' es hat sich was geändert ... 
-            homeButtonRelevance = True
+            'homeButtonRelevance = True
 
             Call slideCoordInfo.calculatePPTx1x2(msDate, msDate, x1Pos, x2Pos)
 
             ' jetzt die Shape-Info 
             With tmpShape
+                oldLeft = .Left
                 .Left = x1Pos - tmpShape.Width / 2
+                diff = .Left - oldLeft
 
-                Dim mvdString As String = msDate.ToString
+                ' jetzt muss überprüft werden, ob es Text- oder Datums-Annotations gibt; wenn ja, dann werden die um diff verschoben
+                ' wenn das zu langsam geht; hinterher einen Annotation Korrektur Lauf machen ... 
+                'Dim mvdString As String = msDate.ToString
 
-                .Tags.Add("MVD", mvdString)
-                .Tags.Add("MVE", expla)
+                '.Tags.Add("MVD", mvdString)
+                '.Tags.Add("MVE", expla)
 
             End With
         End If
 
-    End Sub
+        mvMilestoneToTimestampPosition = diff
+
+    End Function
 
     ''' <summary>
     ''' aktualisiert die Info Form mit den Feldern ElemName, ElemDate, BreadCrumb und aLuTv-Text 
@@ -1498,6 +1855,19 @@ Module Module1
     End Function
 
 
+    ''' <summary>
+    ''' gibt den Typ des Comments zurück 1: Ampel, 2: Lieferumfänge, 3: Terminverschiebungen
+    ''' </summary>
+    ''' <param name="shapeName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Friend Function GetCmtTypeFromShapeName(ByVal shapeName As String) As Integer
+        Try
+            GetCmtTypeFromShapeName = CInt(shapeName.Substring(shapeName.Length - 1, 1))
+        Catch ex As Exception
+            GetCmtTypeFromShapeName = -1
+        End Try
+    End Function
 
     ''' <summary>
     ''' gibt den Elem-Namen zurück 
@@ -1945,6 +2315,20 @@ Module Module1
         End With
         getCommentType = tmpResult
 
+    End Function
+
+    ''' <summary>
+    ''' prüft, ob ein Shape ein Text oder Datums-Annotation-Shape ist 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isAnnotationShape(ByVal curShape As PowerPoint.Shape) As Boolean
+
+        Dim criteria1 As Boolean = (curShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox)
+        Dim criteria2 As Boolean = (curShape.Name.Contains(")1§") Or curShape.Name.Contains(")0§"))
+
+        isAnnotationShape = criteria1 And criteria2
     End Function
 
     ''' <summary>
@@ -2498,6 +2882,68 @@ Module Module1
 
         homeButtonRelevance = atleastOneHomey
         changedButtonRelevance = atleastOneChanged
+
+    End Sub
+
+    ''' <summary>
+    ''' umbedingt darauf achten, das nur aus frmTimeMachine aufzurufen; 
+    ''' das macht nur Sinn, wenn ein echesProjekt dazu dient , die Infos upzudaten ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub upDateAllShapes(ByVal currentTimeStamp As Date)
+
+        ' Creation Date übernehmen 
+        currentSlide.Tags.Add("CRD", currentTimeStamp.ToString)
+
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+            If isRelevantShape(tmpShape) Then
+
+                ' überprüfe, ob es zu dem angegebenen Shape bereits ein TS Projekt gibt 
+                Dim pvName As String = getPnameFromShpName(tmpShape.Name)
+
+                ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimeStamp)
+
+                If Not IsNothing(tsProj) Then
+                    Dim elemName As String = tmpShape.Tags.Item("CN")
+                    Dim elemBC As String = tmpShape.Tags.Item("BC")
+
+                    If pptShapeIsMilestone(tmpShape) Then
+
+                        Call resetMVInfo(tmpShape)
+
+                        Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
+                        If IsNothing(ms) Then
+                            tmpShape.Visible = False
+                        Else
+                            ' hier werden die Smart-Infos neu gesetzt 
+                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, Nothing, _
+                                                      ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
+                                                      ms.getAllDeliverables("#"))
+                        End If
+
+
+                    ElseIf pptShapeIsPhase(tmpShape) Then
+
+                        Call resetMVInfo(tmpShape)
+
+                        Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
+                        If IsNothing(ph) Then
+                            tmpShape.Visible = False
+                        Else
+                            ' hier werden die Smart-Infos neu gesetzt 
+                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
+                                                     ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
+                                                     Nothing)
+                        End If
+
+                    End If
+                End If
+
+
+
+            End If
+        Next
 
     End Sub
 End Module

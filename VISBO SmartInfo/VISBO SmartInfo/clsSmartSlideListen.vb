@@ -475,7 +475,7 @@ Public Class clsSmartSlideListen
         Dim uid As Integer = Me.getUID(shapeName)
 
         Dim fullbCrumb As String = "(" & getPnameFromShpName(shapeName) & ")" & _
-            bCrumb.Replace("#", " - ") & getElemNameFromShpName(shapeName)
+            bCrumb.Replace("#", " - ") & " - " & getElemNameFromShpName(shapeName)
 
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)

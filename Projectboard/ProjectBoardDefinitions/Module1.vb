@@ -2988,7 +2988,7 @@ Public Module Module1
                 If Not IsNothing(type) Then
                     .Tags.Add("SMART", type)
                     .Tags.Add("SOC", StartofCalendar.ToShortDateString)
-                    .Tags.Add("CRD", Date.Now.ToShortDateString)
+                    .Tags.Add("CRD", Date.Now.ToString)
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)
                     .Tags.Add("CALR", calendarRight.ToShortDateString)
 

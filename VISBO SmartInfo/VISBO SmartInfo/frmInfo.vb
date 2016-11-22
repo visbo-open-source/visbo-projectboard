@@ -138,66 +138,31 @@ Public Class frmInfo
         PictureMarker.Visible = True
         CheckBxMarker.Visible = True
 
-        Do While ix <= 3 And Not ampelnExistieren
-            Dim tmpCollection As Collection = smartSlideLists.getShapeNamesWithColor(ix)
-            If tmpCollection.Count > 0 Then
-                ampelnExistieren = True
-            Else
-                ix = ix + 1
-            End If
 
-        Loop
+        With Me.shwGreenLight
+            .Checked = showTrafficLights(1)
+            .Visible = True
+        End With
 
-        If ampelnExistieren Then
-            With Me.shwGreenLight
-                .Checked = False
-                .Visible = True
-            End With
+        With Me.shwYellowLight
+            .Checked = showTrafficLights(2)
+            .Visible = True
+        End With
 
-            With Me.shwYellowLight
-                .Checked = False
-                .Visible = True
-            End With
+        With Me.shwRedLight
+            .Checked = showTrafficLights(3)
+            .Visible = True
+        End With
 
-            With Me.shwRedLight
-                .Checked = False
-                .Visible = True
-            End With
+        With Me.shwOhneLight
+            .Checked = showTrafficLights(0)
+            .Visible = True
+        End With
 
-            With Me.shwOhneLight
-                .Checked = False
-                .Visible = True
-            End With
-
-            With Me.lblAmpeln
-                .Visible = True
-            End With
-        Else
-
-            With Me.shwGreenLight
-                .Checked = False
-                .Visible = False
-            End With
-
-            With Me.shwYellowLight
-                .Checked = False
-                .Visible = False
-            End With
-
-            With Me.shwRedLight
-                .Checked = False
-                .Visible = False
-            End With
-
-            With Me.shwOhneLight
-                .Checked = False
-                .Visible = False
-            End With
-
-            With Me.lblAmpeln
-                .Visible = False
-            End With
-        End If
+        With Me.lblAmpeln
+            .Visible = True
+        End With
+        
 
         CheckBxMarker.Checked = showMarker
         ' Zu Beginn ist Ampel-Text und Ampel-Erläuterung nicht sichtbar 
@@ -230,6 +195,13 @@ Public Class frmInfo
         With Me.rdbName
             .Checked = True
         End With
+
+        ' wenn bereits was selektiert ist 
+        If Not IsNothing(selectedPlanShapes) Then
+            If selectedPlanShapes.Count = 1 Then
+                Call aktualisiereInfoFrm(selectedPlanShapes(1))
+            End If
+        End If
 
     End Sub
 
@@ -346,109 +318,7 @@ Public Class frmInfo
 
     End Sub
 
-    ''' <summary>
-    ''' berechnet eine Integer Zahl, die Auskunft gibt, wie die vier Checkboxen gesetzt sind 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Private Function calcColorCode() As Integer
-
-        Dim tmpNumber As Integer = 0
-
-        If Not ampelnExistieren Then
-            tmpNumber = 0
-        Else
-            If Me.shwOhneLight.Checked Then
-                tmpNumber = tmpNumber + 1 ' 2 hoch 0 
-            End If
-
-            If Me.shwGreenLight.Checked Then
-                tmpNumber = tmpNumber + 2 ' 2 hoch 1 
-            End If
-
-            If Me.shwYellowLight.Checked Then
-                tmpNumber = tmpNumber + 4 ' 2 hoch 2 
-            End If
-
-            If Me.shwRedLight.Checked Then
-                tmpNumber = tmpNumber + 8 ' 2 hoch 3 
-            End If
-        End If
-
-        calcColorCode = tmpNumber
-
-    End Function
-
-    ''' <summary>
-    ''' zeigt bei den Shapes, die die angegebene Ampelfarbe haben, diese Farbe als Hintergrund Schatten an bzw. löscht den Hintergrund Schatten wieder
-    ''' </summary>
-    ''' <param name="ampelColor"></param>
-    ''' <param name="show"></param>
-    ''' <remarks></remarks>
-    Private Sub faerbeShapes(ByVal ampelColor As Integer, ByVal show As Boolean)
-
-        Dim tmpCollection As Collection = smartSlideLists.getShapeNamesWithColor(ampelColor)
-        Dim anzSelected As Integer = tmpCollection.Count
-        Dim nameArray() As String
-
-        If ampelColor >= 0 And ampelColor <= 3 Then
-            'alles ok 
-        Else
-            ' sicherstellen, es kommt zu keinem Absturz .... 
-            ampelColor = 0
-        End If
-
-        Dim farben(4) As Long
-        farben(0) = PowerPoint.XlRgbColor.rgbGrey
-        farben(1) = PowerPoint.XlRgbColor.rgbGreen
-        farben(2) = PowerPoint.XlRgbColor.rgbYellow
-        farben(3) = PowerPoint.XlRgbColor.rgbRed
-        farben(4) = PowerPoint.XlRgbColor.rgbWhite
-
-        Dim shapesToBeColored As PowerPoint.ShapeRange
-
-        If anzSelected >= 1 Then
-            ReDim nameArray(anzSelected - 1)
-
-            For i As Integer = 0 To anzSelected - 1
-                nameArray(i) = CStr(tmpCollection.Item(i + 1))
-            Next
-
-            Try
-                shapesToBeColored = currentSlide.Shapes.Range(nameArray)
-
-                If show Then
-                    ' mit Schatten einfärben 
-                    With shapesToBeColored.Shadow
-                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                        .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
-                        .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
-                        .Blur = 0
-                        .Size = 160
-                        .OffsetX = 0
-                        .OffsetY = 0
-                        .Transparency = 0
-                        .ForeColor.RGB = farben(ampelColor)
-                    End With
-                Else
-                    ' Schatten wieder wegnehmen 
-                    With shapesToBeColored.Shadow
-                        .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
-                    End With
-                End If
-
-
-            Catch ex As Exception
-
-            End Try
-
-        Else
-            ' nichts tun ...
-
-        End If
-
-
-    End Sub
+    
 
     Private Sub rdbOriginalName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbOriginalName.CheckedChanged
         If rdbOriginalName.Checked = True Then
@@ -607,6 +477,9 @@ Public Class frmInfo
 
     Private Sub shwOhneLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwOhneLight.CheckedChanged
 
+        Dim ampelColor As Integer = 0
+        showTrafficLights(ampelColor) = shwOhneLight.Checked
+
         If shwOhneLight.Checked Then
             If Not Me.aLuTvText.Visible Then
                 Call aLuTvBlockVisible(True)
@@ -620,11 +493,14 @@ Public Class frmInfo
         End If
 
         Call erstelleListbox()
-        Dim ampelColor As Integer = 0
+
         Call faerbeShapes(ampelColor, shwOhneLight.Checked)
     End Sub
 
     Private Sub shwGreenLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwGreenLight.CheckedChanged
+
+        Dim ampelColor As Integer = 1
+        showTrafficLights(ampelColor) = shwGreenLight.Checked
 
         If shwGreenLight.Checked Then
             If Not Me.aLuTvText.Visible Then
@@ -639,11 +515,13 @@ Public Class frmInfo
         End If
 
         Call erstelleListbox()
-        Dim ampelColor As Integer = 1
+
         Call faerbeShapes(ampelColor, shwGreenLight.Checked)
     End Sub
 
     Private Sub shwYellowLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwYellowLight.CheckedChanged
+        Dim ampelColor As Integer = 2
+        showTrafficLights(ampelColor) = shwYellowLight.Checked
 
         If shwYellowLight.Checked Then
             If Not Me.aLuTvText.Visible Then
@@ -658,11 +536,13 @@ Public Class frmInfo
         End If
 
         Call erstelleListbox()
-        Dim ampelColor As Integer = 2
+
         Call faerbeShapes(ampelColor, shwYellowLight.Checked)
     End Sub
 
     Private Sub shwRedLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwRedLight.CheckedChanged
+        Dim ampelColor As Integer = 3
+        showTrafficLights(ampelColor) = shwRedLight.Checked
 
         If shwRedLight.Checked Then
             If Not Me.aLuTvText.Visible Then
@@ -679,7 +559,7 @@ Public Class frmInfo
         End If
 
         Call erstelleListbox()
-        Dim ampelColor As Integer = 3
+
         Call faerbeShapes(ampelColor, shwRedLight.Checked)
     End Sub
 

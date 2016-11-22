@@ -82,10 +82,12 @@ Public Class Ribbon1
 
                             smartSlideLists.addToListOfTS(tsCollection)
                         Next
-                        ' jetzt wird das Formular TimeStamps aufgerufen ...
-                        Dim tmFormular As New frmPPTTimeMachine
-                        Dim dgRes As Windows.Forms.DialogResult = tmFormular.ShowDialog
+                        
                     End If
+
+                    ' jetzt wird das Formular TimeStamps aufgerufen ...
+                    Dim tmFormular As New frmPPTTimeMachine
+                    Dim dgRes As Windows.Forms.DialogResult = tmFormular.ShowDialog
 
                 End If
 
