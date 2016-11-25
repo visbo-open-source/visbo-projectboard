@@ -2223,4 +2223,142 @@ Public Class clsPhase
 
     End Sub
 
+    ''' <summary>
+    ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
+    ''' soll nach Testphase die bisherige berechneBedarev ablösen
+    ''' ist jetzt als Function realisiert, die die Dimension aus Startdatum, Endedatum zieht 
+    ''' wie die MEthode vorher ja auch ... 
+    ''' </summary>
+    ''' <param name="startdate"></param>
+    ''' <param name="endedate"></param>
+    ''' <param name="oldXwerte"></param>
+    ''' <param name="corrFakt"></param>
+    ''' <remarks></remarks>
+    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
+                               ByVal corrFakt As Double) As Double()
+        Dim k As Integer
+        Dim newXwerte() As Double
+        Dim gesBedarf As Double
+        Dim Rest As Integer
+        Dim hDatum As Date
+        Dim anzDaysthisMonth As Double
+        Dim arrayLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+
+        ReDim newXwerte(arrayLength - 1)
+
+        Try
+
+
+            gesBedarf = oldXwerte.Sum
+            If awinSettings.propAnpassRess Then
+                ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
+                gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+            End If
+
+            If arrayLength = oldXwerte.Length Then
+
+                'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
+
+                If Not awinSettings.propAnpassRess Then
+                    newXwerte = oldXwerte
+                Else
+                    For i = 0 To arrayLength - 1
+                        newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
+                    Next
+
+                    ' jetzt ggf die Reste verteilen 
+                    Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
+
+                    k = newXwerte.Length - 1
+                    While Rest <> 0
+
+                        If Rest > 0 Then
+                            newXwerte(k) = newXwerte(k) + 1
+                            Rest = Rest - 1
+                        Else
+
+                            If newXwerte(k) - 1 >= 0 Then
+                                newXwerte(k) = newXwerte(k) - 1
+                                Rest = Rest + 1
+                            End If
+
+                        End If
+                        k = k - 1
+                        If k < 0 Then
+                            k = newXwerte.Length - 1
+                        End If
+
+                    End While
+
+                End If
+
+            Else
+
+                Dim tmpSum As Double = 0
+                For k = 0 To newXwerte.Length - 1
+
+                    If k = 0 Then
+                        ' damit ist 00:00 des Startdates gemeint 
+                        hDatum = startdate
+
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+                        'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                        'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+                    ElseIf k = newXwerte.Length - 1 Then
+                        ' damit hDatum das End-Datum um 23.00 Uhr
+
+                        anzDaysthisMonth = endedate.Day
+                        'hDatum = endedate.AddHours(23)
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                    Else
+                        hDatum = startdate
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                    End If
+
+                    newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+                    tmpSum = tmpSum + anzDaysthisMonth
+                Next k
+
+                ' Kontrolle für Test ... aChck muss immer Null sein !
+                'Dim aChck As Double = Me.dauerInDays - tmpSum
+
+
+                ' Rest wird auf alle newXwerte verteilt
+
+                Rest = CInt(gesBedarf - newXwerte.Sum)
+
+                k = newXwerte.Length - 1
+                While Rest <> 0
+                    If Rest > 0 Then
+                        newXwerte(k) = newXwerte(k) + 1
+                        Rest = Rest - 1
+                    Else
+                        If newXwerte(k) - 1 >= 0 Then
+                            newXwerte(k) = newXwerte(k) - 1
+                            Rest = Rest + 1
+                        End If
+                    End If
+                    k = k - 1
+                    If k < 0 Then
+                        k = newXwerte.Length - 1
+                    End If
+
+                End While
+
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+
+        berechneBedarfeNew = newXwerte
+
+    End Function
+
 End Class

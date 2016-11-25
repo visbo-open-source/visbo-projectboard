@@ -164,6 +164,8 @@ Public Class clsawinSettings
     ' Default = no 
     Public Property meAuslastungIsInclExt As Boolean = True
 
+    Public Property allowSumEditing As Boolean
+
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
@@ -295,6 +297,7 @@ Public Class clsawinSettings
         _meAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
+        _allowSumEditing = True
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True

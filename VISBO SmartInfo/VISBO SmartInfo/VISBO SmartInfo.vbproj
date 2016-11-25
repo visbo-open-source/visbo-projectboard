@@ -158,6 +158,7 @@
     <Reference Include="ProjectBoardBasic, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="ProjectBoardDefinitions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
@@ -241,6 +242,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Module1.vb" />
+    <Compile Include="Ribbon.vb">
+      <XmlRibbon>true</XmlRibbon>
+    </Compile>
     <Compile Include="Ribbon1.Designer.vb">
       <DependentUpon>Ribbon1.vb</DependentUpon>
     </Compile>
@@ -368,6 +372,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\navigate_end.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Ribbon.xml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

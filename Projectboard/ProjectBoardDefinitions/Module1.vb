@@ -504,7 +504,7 @@ Public Module Module1
     ' geplant
     ' beauftragt
     ' abgeschlossen
-    Public ProjektStatus(4) As String
+    Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen"}
 
 
     '
@@ -1448,7 +1448,7 @@ Public Module Module1
     ''' <param name="anfang">Anfang Zeitraum 2</param>
     ''' <param name="ende">Ende Zeitraum 2</param>
     ''' <param name="ixZeitraum">gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat</param>
-    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt</param>
+    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / Ende definierten Zeitraums die Überdeckung anfängt</param>
     ''' <param name="anzahl">enthält die Breite der Überdeckung</param>
     ''' <remarks></remarks>
     Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, _
@@ -2973,16 +2973,12 @@ Public Module Module1
 
     ''' <summary>
     ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
-    ''' fügt 
+    ''' fügt die Kennzeichnung "SMART" mit type an, StartofCalendar, CreationDate und Datenbank Infos 
     ''' </summary>
     ''' <param name="pptSlide"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
                                     ByVal type As String, _
-                                    ByVal drawingAreaLeft As Double, _
-                                    ByVal drawingAreaRight As Double, _
-                                    ByVal drawingAreaBottom As Double, _
-                                    ByVal drawingAreaTop As Double, _
                                     ByVal calendarLeft As Date, _
                                     ByVal calendarRight As Date)
 
@@ -2991,18 +2987,25 @@ Public Module Module1
 
                 If Not IsNothing(type) Then
                     .Tags.Add("SMART", type)
-                    .Tags.Add("DAL", drawingAreaLeft.ToString)
-                    .Tags.Add("DAR", drawingAreaRight.ToString)
-                    .Tags.Add("DAB", drawingAreaBottom.ToString)
-                    .Tags.Add("DAT", drawingAreaTop.ToString)
+                    .Tags.Add("SOC", StartofCalendar.ToShortDateString)
+                    .Tags.Add("CRD", Date.Now.ToString)
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)
                     .Tags.Add("CALR", calendarRight.ToShortDateString)
+
+                    If Not noDB Then
+                        If awinSettings.databaseURL.Length > 0 Then
+                            .Tags.Add("DBURL", awinSettings.databaseURL)
+                        End If
+                        If awinSettings.databaseName.Length > 0 Then
+                            .Tags.Add("DBNAME", awinSettings.databaseName)
+                        End If
+
+                    End If
                 End If
+
 
             End With
         End If
-
-
 
 
     End Sub
@@ -3096,42 +3099,6 @@ Public Module Module1
 
     End Sub
 
-    ''' <summary>
-    ''' fügt an eine Powerpoint Präsentation Informationen über DBURL und Name an, die vom PPT Add-In SmartPPT ausgelesen werden können
-    ''' </summary>
-    ''' <param name="pptPres"></param>
-    ''' <param name="dbURL"></param>
-    ''' <param name="dbName"></param>
-    ''' <remarks></remarks>
-    Public Sub addSmartPPTPresentationInfo(ByRef pptPres As PowerPoint.Presentation, _
-                                              ByVal dbURL As String, ByVal dbName As String)
-
-
-
-        If Not IsNothing(pptPres) Then
-            With pptPres
-
-
-                If Not IsNothing(dbURL) Then
-                    If dbURL.Length > 0 Then
-                        .Tags.Add("DBURL", dbURL)
-                    End If
-
-                End If
-
-                If Not IsNothing(dbName) Then
-                    If dbName.Length > 0 Then
-                        .Tags.Add("DBNAME", dbName)
-                    End If
-                End If
-
-
-            End With
-        End If
-
-
-
-    End Sub
 
 
     Public Sub PPTstarten()

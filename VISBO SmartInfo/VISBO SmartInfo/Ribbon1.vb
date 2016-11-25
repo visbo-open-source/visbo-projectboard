@@ -1,5 +1,8 @@
 ﻿Imports Microsoft.Office.Tools.Ribbon
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
+Imports MongoDbAccess
+Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 
 Public Class Ribbon1
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
@@ -8,82 +11,92 @@ Public Class Ribbon1
 
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
-        Dim alreadyProtected As Boolean = VisboProtected
-        visboInfoActivated = Not visboInfoActivated
 
-        If visboInfoActivated Then
+        If userIsEntitled() Then
 
-            If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" And _
-                Not alreadyProtected Then
-                ' Formular zur Password Eingabe aufrufen 
-                VisboProtected = True
-
-                ' Formular ... 
-                Dim pwdFormular As New frmPassword
-                If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
-                    If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
-                        ' in allen Slides den Sicht Schutz aufheben 
-
-                        Call makeVisboShapesVisible(True)
-                    End If
-                End If
-
-                ' if richtig 
-            ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" And _
-                Not alreadyProtected Then
-                ' überprüfen, ob es die richtige Domain ist 
-                VisboProtected = True
-
-                Dim userName As String = My.Computer.Name
-                If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
-                    ' in allen Slides den Sicht Schutz aufheben 
-
-                    Call makeVisboShapesVisible(True)
-
-                End If
+            ' wird das Formular aktuell angezeigt ? 
+            If IsNothing(infoFrm) And Not formIsShown Then
+                infoFrm = New frmInfo
+                formIsShown = True
+                infoFrm.Show()
             End If
 
-            Me.activateTab.Label = "De-Aktivieren"
-            Me.activateTab.ScreenTip = "Info-Modus de-aktivieren"
-            'Call MsgBox("Info-Modus aktiviert")
-        Else
-            Me.activateTab.Label = "Aktivieren"
-            Me.activateTab.ScreenTip = "Info-Modus aktivieren"
-            'Call MsgBox("Info-Modus de-aktiviert")
+
         End If
+
 
     End Sub
 
-    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
-        Dim settingsfrm As New frmSettings
 
-        With settingsfrm
-            Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
-        End With
+
+    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
+
+
+        If userIsEntitled() Then
+            Dim settingsfrm As New frmSettings
+            With settingsfrm
+                Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
+            End With
+        End If
 
     End Sub
 
     Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs) Handles timeMachineTab.Click
 
-        ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
-        If smartSlideLists.countProjects > 0 Then
-            ' nur dann müssen Historien geholt werden 
-            If noDBAccessInPPT Then
-                Call MsgBox("kein Datenbank Zugriff ... bitte erst einloggen ...")
-            Else
-                If Not smartSlideLists.historiesExist Then
-                    ' für jedes Projekt die ProjektHistorie holen ...
-                    Dim anzahlProjekte As Integer = smartSlideLists.countProjects
-                    For i As Integer = 1 To anzahlProjekte
-                        Dim pvName As String = smartSlideLists.getPVName(i)
+        If userIsEntitled() Then
+            ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
+            If smartSlideLists.countProjects > 0 Then
 
+                ' muss noch eingeloggt werden ? 
+                If noDBAccessInPPT Then
+                    ' jetzt die Login Maske aufrufen ... 
 
+                    If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                    Next
+                        ' tk: 17.11.16: Einloggen in Datenbank 
+                        noDBAccessInPPT = Not loginProzedur()
+
+                        If noDBAccessInPPT Then
+                            Call MsgBox("kein Datenbank Zugriff ... ")
+                        End If
+
+                    End If
 
                 End If
+
+                If Not noDBAccessInPPT Then
+
+                    If Not smartSlideLists.historiesExist Then
+
+                        ' dazu erst mal alle TimeStamps eines Projektes holen 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                        Dim anzahlProjekte As Integer = smartSlideLists.countProjects
+                        For i As Integer = 1 To anzahlProjekte
+                            Dim tmpName As String = smartSlideLists.getPVName(i)
+                            Dim pName As String = getPnameFromKey(tmpName)
+                            Dim vName As String = getVariantnameFromKey(tmpName)
+                            Dim pvName As String = calcProjektKeyDB(pName, vName)
+
+                            Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
+
+                            smartSlideLists.addToListOfTS(tsCollection)
+                        Next
+                        
+                    End If
+
+                    ' jetzt wird das Formular TimeStamps aufgerufen ...
+                    Dim tmFormular As New frmPPTTimeMachine
+                    Dim dgRes As Windows.Forms.DialogResult = tmFormular.ShowDialog
+
+                End If
+
+            Else
+                Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
             End If
         End If
 
     End Sub
+    
 End Class
+
