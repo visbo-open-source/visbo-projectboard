@@ -120,6 +120,8 @@ Partial Class frmReportProfil
         '
         'BGWorkerReportGen
         '
+        Me.BGWorkerReportGen.WorkerReportsProgress = True
+        Me.BGWorkerReportGen.WorkerSupportsCancellation = True
         '
         'rdbEPreports
         '
