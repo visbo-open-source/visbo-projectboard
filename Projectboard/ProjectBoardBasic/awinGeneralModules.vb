@@ -17049,8 +17049,28 @@ Public Module awinGeneralModules
 
                                 End With
 
-
                                 CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        .Locked = False
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        Try
+                                            If Not IsNothing(.Validation) Then
+                                                .Validation.Delete()
+                                            End If
+                                            ' jetzt wird die ValidationList aufgebaut 
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End With
+                                End If
+
+
                                 If awinSettings.mePrzAuslastung Then
                                     CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
                                 Else
@@ -17163,8 +17183,27 @@ Public Module awinGeneralModules
 
                                 End With
 
-
                                 CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        .Locked = False
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        Try
+                                            If Not IsNothing(.Validation) Then
+                                                .Validation.Delete()
+                                            End If
+                                            ' jetzt wird die ValidationList aufgebaut 
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End With
+                                End If
+
                                 editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
                             End With
 
@@ -17262,7 +17301,6 @@ Public Module awinGeneralModules
                                             .Validation.Delete()
                                         End If
                                         ' jetzt wird die ValidationList aufgebaut 
-                                        'Dim tmpVal As String = validationStrings.Item(rcValidation(anzahlRollen + 1))
                                         .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                                                        Formula1:=defaultEmptyValidation)
                                     Catch ex As Exception
@@ -17271,9 +17309,31 @@ Public Module awinGeneralModules
 
                                 End With
 
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        .Value = ""
+                                        .Locked = False
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        Try
+                                            If Not IsNothing(.Validation) Then
+                                                .Validation.Delete()
+                                            End If
+                                            ' jetzt wird die ValidationList aufgebaut 
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End With
+
+                                Else
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = ""
+                                End If
 
 
-                                CType(.Cells(zeile, 6), Excel.Range).Value = ""
                                 CType(.Cells(zeile, 7), Excel.Range).Value = ""
                                 editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
                             End With

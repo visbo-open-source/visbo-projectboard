@@ -1448,7 +1448,7 @@ Public Module Module1
     ''' <param name="anfang">Anfang Zeitraum 2</param>
     ''' <param name="ende">Ende Zeitraum 2</param>
     ''' <param name="ixZeitraum">gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat</param>
-    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt</param>
+    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / Ende definierten Zeitraums die Überdeckung anfängt</param>
     ''' <param name="anzahl">enthält die Breite der Überdeckung</param>
     ''' <remarks></remarks>
     Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, _

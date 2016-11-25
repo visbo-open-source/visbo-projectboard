@@ -973,6 +973,14 @@ Public Class frmHierarchySelection
         Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
         Dim bisDate As Date = getDateofColumn(showRangeRight, True)
 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            vonDate = getDateofColumn(showRangeLeft, False)
+            bisDate = getDateofColumn(showRangeRight, True)
+        Else
+            vonDate = StartofCalendar
+            bisDate = StartofCalendar
+        End If
+
         Try
             currentReportProfil.calcRepVonBis(vonDate, bisDate)
         Catch ex As Exception

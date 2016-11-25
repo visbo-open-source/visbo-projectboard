@@ -633,17 +633,17 @@ Public Class clsReport
             If von > StartofCalendar And bis > StartofCalendar Then
 
                 If DateDiff(DateInterval.Day, von, bis) > 0 Then
-                    reportVon = von
-                    reportBis = bis
+                    Me.reportVon = von
+                    Me.reportBis = bis
 
                 Else
                     Throw New ArgumentException("Datum 'von' muss vor Datum 'bis' liegen")
                 End If
 
-            ElseIf von = StartofCalendar And bis = StartofCalendar Then
+            ElseIf getColumnOfDate(von) = getColumnOfDate(StartofCalendar) And getColumnOfDate(bis) = getColumnOfDate(StartofCalendar) Then
                 ' das ist das Zeichen, dass kein Range definiert ist 
-                reportVon = StartofCalendar
-                reportBis = StartofCalendar
+                Me.reportVon = StartofCalendar
+                Me.reportBis = StartofCalendar
             Else
                 Throw New ArgumentException("Datum 'von' und 'bis' müssen nach dem ' " & StartofCalendar.ToString & " ' liegen")
             End If

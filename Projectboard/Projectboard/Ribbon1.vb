@@ -9337,7 +9337,7 @@ Imports System.Windows
 
         enableOnUpdate = False
         appInstance.EnableEvents = True
-        Dim yellows As Double = 0.07
+        Dim yellows As Double = 0.05
         Dim reds As Double = 0.015
 
         If demoModusHistory And historicDate > StartofCalendar And historicDate < Date.Now Then

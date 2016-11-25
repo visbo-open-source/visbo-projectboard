@@ -124,12 +124,10 @@ Partial Class frmReportProfil
         'rdbEPreports
         '
         Me.rdbEPreports.AutoSize = True
-        Me.rdbEPreports.Checked = True
         Me.rdbEPreports.Location = New System.Drawing.Point(14, 7)
         Me.rdbEPreports.Name = "rdbEPreports"
         Me.rdbEPreports.Size = New System.Drawing.Size(125, 17)
         Me.rdbEPreports.TabIndex = 44
-        Me.rdbEPreports.TabStop = True
         Me.rdbEPreports.Text = "Einzelprojekt Reports"
         Me.rdbEPreports.UseVisualStyleBackColor = True
         '

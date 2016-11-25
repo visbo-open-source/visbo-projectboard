@@ -12173,7 +12173,7 @@ Public Module testModule
 
             ''rds.projectVorlagenShape.Copy()
             ''copiedShape = rds.pptSlide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, rds.pptSlide)
+            copiedShape = pptCopypptPaste(rds.projectVorlagenShape, rds.pptSlide)
 
             With copiedShape(1)
                 .Top = CSng(curYPosition) + rds.YProjectLine
