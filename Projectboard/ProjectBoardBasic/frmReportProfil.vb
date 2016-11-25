@@ -191,92 +191,78 @@ Public Class frmReportProfil
 
                     If listOfFiles.Count < 1 Then
 
-                        ' erzeuge ein Dummy-ReportPRofil
+                        Call MsgBox(" Es existiert noch kein Report-Profil! ")
 
-                        Dim dmyRepProfil As New clsReportAll
-                        '' 'Call createDummyReportProfil(dmyRepProfil)
+                    Else
 
-                        dmyRepProfil.Projects.Clear()
-                        dmyRepProfil.Projects.Add(1, hproj.name)
+                        For k As Integer = 1 To listOfFiles.Count
 
-                        dmyRepProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+                            dateiName = listOfFiles.Item(k - 1)
+                            If dateiName.Contains(".xml") Then
+
+                                Try
+
+                                    Dim hstr() As String
+                                    hstr = Split(dateiName, ".xml", 2)
+                                    Dim hhstr() As String
+                                    hhstr = Split(hstr(0), "\")
+                                    profilName = hhstr(hhstr.Length - 1)
+
+                                    Dim hreportAll As clsReportAll = XMLImportReportAllProfil(profilName)
+
+                                    If listofProfils.ContainsKey(profilName) Then
+                                        listofProfils.Remove(profilName)
+                                    End If
+                                    listofProfils.Add(profilName, hreportAll)
 
 
-                        ' Schreiben des Dummy ReportProfils
-                        Call XMLExportReportProfil(dmyRepProfil)
+                                Catch ex As Exception
+                                    'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
+                                    Call MsgBox("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
+                                End Try
 
+                            End If
 
-                        'erneut Files auf Directory lesen
-                        listOfFiles = My.Computer.FileSystem.GetFiles(dirName)
+                        Next k
 
-                    End If
+                        ' anzeige löschen
+                        RepProfilListbox.Items.Clear()
 
-                    For k As Integer = 1 To listOfFiles.Count
+                        ' Anzeigen der Profile, abhängig vom gecheckten Radiobutton
 
-                        dateiName = listOfFiles.Item(k - 1)
-                        If dateiName.Contains(".xml") Then
+                        ' Report mit Constellation - Multiprojektreport
+                        If rdbMPreports.Checked Then
 
-                            Try
+                            For Each kvp In listofProfils
 
-                                Dim hstr() As String
-                                hstr = Split(dateiName, ".xml", 2)
-                                Dim hhstr() As String
-                                hhstr = Split(hstr(0), "\")
-                                profilName = hhstr(hhstr.Length - 1)
+                                If kvp.Value.isMpp Then
+                                    ' Profil profilName in Auswahl eintragen
+                                    RepProfilListbox.Items.Add(kvp.Value.name)
 
-                                Dim hreportAll As clsReportAll = XMLImportReportAllProfil(profilName)
-
-                                If listofProfils.ContainsKey(profilName) Then
-                                    listofProfils.Remove(profilName)
                                 End If
-                                listofProfils.Add(profilName, hreportAll)
-
-
-                            Catch ex As Exception
-                                'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
-                                Call MsgBox("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
-                            End Try
+                            Next
 
                         End If
 
-                    Next k
+                        ' Einzelprojektreport
+                        If rdbEPreports.Checked Then
 
-                    ' anzeige löschen
-                    RepProfilListbox.Items.Clear()
+                            For Each kvp In listofProfils
 
-                    ' Anzeigen der Profile, abhängig vom gecheckten Radiobutton
+                                If Not kvp.Value.isMpp Then
+                                    ' Profil profilName in Auswahl eintragen
+                                    RepProfilListbox.Items.Add(kvp.Value.name)
 
-                    ' Report mit Constellation - Multiprojektreport
-                    If rdbMPreports.Checked Then
+                                End If
+                            Next
 
-                        For Each kvp In listofProfils
-
-                            If kvp.Value.isMpp Then
-                                ' Profil profilName in Auswahl eintragen
-                                RepProfilListbox.Items.Add(kvp.Value.name)
-
-                            End If
-                        Next
-
-                    End If
-
-                    ' Einzelprojektreport
-                    If rdbEPreports.Checked Then
-
-                        For Each kvp In listofProfils
-
-                            If Not kvp.Value.isMpp Then
-                                ' Profil profilName in Auswahl eintragen
-                                RepProfilListbox.Items.Add(kvp.Value.name)
-
-                            End If
-                        Next
-
-                    End If
+                        End If
 
 
-                    If listOfFiles.Count > 0 Then
-                        RepProfilListbox.SelectedIndex = 0
+                        If listOfFiles.Count > 0 Then
+                            '  RepProfilListbox.SelectedIndex = 1
+                        End If
+
                     End If
 
 
@@ -478,14 +464,29 @@ Public Class frmReportProfil
 
                         If reportAllProfil.isMpp Then
 
-                            Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 
-                            Me.statusLabel.Visible = True
-                            Me.statusLabel.Text = "...started"
-                            Me.ReportErstellen.Visible = False
-                            Me.ReportErstellen.Enabled = False
+                            If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then  ' Zeitraum wurde nicht gesetzt
 
-                            BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
+                                ' Es muss ein Zeitraum ausgewählt sein
+                                Me.statusLabel.Visible = True
+                                Me.statusLabel.Text = "bitte zuerst einen Zeitraum auswählen!"
+
+                                Call MsgBox("bitte zuerst einen Zeitraum auswählen!")
+                                MyBase.Close()
+
+                            Else
+
+                                ' alles ok , Zeitraum bereits gesetzt 
+                                Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+
+                                Me.statusLabel.Visible = True
+                                Me.statusLabel.Text = "...started"
+                                Me.ReportErstellen.Visible = False
+                                Me.ReportErstellen.Enabled = False
+
+                                BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
+                            End If
+
 
                         Else   ' Profil für Einzelprojekt-Bericht ausgewählt
                             ' Es muss mindestens ein Projekt selektiert sein
@@ -506,12 +507,12 @@ Public Class frmReportProfil
                             End If
 
                         End If
+                        End If
+
+                    Else
+                        Call MsgBox("Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf & "Es sind keine Projekte geladen !")
+
                     End If
-
-                Else
-                    Call MsgBox("Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf & "Es sind keine Projekte geladen !")
-
-                End If
 
 
             Catch ex As Exception

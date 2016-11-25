@@ -417,6 +417,14 @@ Public Module testModule
                                                         worker, e)
 
                     Else
+                        '' '' ur: 17.11.2016 Versuch
+                        ' ''Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
+                        ' ''                           selectedPhases, selectedMilestones, _
+                        ' ''                           selectedRoles, selectedCosts, _
+                        ' ''                           selectedBUs, selectedTyps, True, _
+                        ' ''                           (todoListe.Count = tatsErstellt + 1), zeilenhoehe, _
+                        ' ''                           legendFontSize, _
+                        ' ''                           worker, e)
 
                         Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
                                                         selectedPhases, selectedMilestones, _
@@ -705,27 +713,46 @@ Public Module testModule
             Dim tmpIX As Integer
             Dim tmpslideID As Integer
 
-            'If Not pptFirstTime And kennzeichnung = "Multivariantensicht" Multiprojektsicht Then
-            'If pptFirstTime Or _
-            '    Not (kennzeichnung = "Multivariantensicht" _
-            '    Or kennzeichnung = "Multiprojektsicht" _
-            '    Or kennzeichnung = "AllePlanElemente" _
-            '    Or kennzeichnung = "Swimlanes1" _
-            '    Or kennzeichnung = "Swimlanes2") Then
+            ' ur: 22.11.2016 Kriterium ist eher die Differenz von objectsToDo and objectsDone
+            '' ''If pptFirstTime Or _
+            '' ''    Not (kennzeichnung = "Multivariantensicht" _
+            '' ''    Or kennzeichnung = "Multiprojektsicht" _
+            '' ''    Or kennzeichnung = "AllePlanElemente" _
+            '' ''    Or kennzeichnung = "Swimlanes" _
+            '' ''    Or kennzeichnung = "Swimlanes2") Then
+
             If pptFirstTime Then
 
-                anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
-                tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
-                                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+                If (objectsToDo = objectsDone) Then
+
+                    anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+                    tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                                                                                  SlideStart:=folieIX, SlideEnd:=folieIX)
+                Else
+                    pptCurrentPresentation.Slides("tmpSav").Copy()
+                    tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
+                    pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
+                    pptSlide = pptCurrentPresentation.Slides(pptCurrentPresentation.Slides.Count)
+
+                End If
             Else
 
-                pptCurrentPresentation.Slides("tmpSav").Copy()
-                tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
-                pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
-                pptSlide = pptCurrentPresentation.Slides(pptCurrentPresentation.Slides.Count)
+                'P???: ur: 16.11.2016 hier ist handlungsbedarf wegen nicht vorhandenem TmpSAv
+                Try
+                    pptCurrentPresentation.Slides("tmpSav").Copy()
+                    tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
+                    pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
+                    pptSlide = pptCurrentPresentation.Slides(pptCurrentPresentation.Slides.Count)
+                Catch ex As Exception
+                    anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+                    tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                    SlideStart:=folieIX, SlideEnd:=folieIX)
+                End Try
 
 
             End If
+
+
 
             '' ''Dim tmpIX As Integer
             ' '' ''tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + folieIX - 1, _
@@ -2667,7 +2694,7 @@ Public Module testModule
                                 Catch ex As Exception
 
                                 End Try
-                                
+
 
                             Case "Stand:"
 
@@ -2782,11 +2809,18 @@ Public Module testModule
             If objectsDone >= objectsToDo Or awinSettings.mppOnePage Then
                 folieIX = folieIX + 1
                 pptFirstTime = True  ' damit die Folie für die Legende geholt wird
+                'Try
+                '    If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
+                '        pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
+                '    End If
+                'Catch ex As Exception
+
+                'End Try
                 objectsToDo = 0
                 objectsDone = 0
             End If
 
-        End While
+        End While ' folieIX <= anzSlidestoAdd
 
         ' Änderung tk 29.10.16 ergänzt um Schreiben der DB Info in das PPT file 
         Try
@@ -16913,8 +16947,25 @@ Public Module testModule
 
                 Loop
 
-                ' jetzt die Anzahl ..Done bestimmen
-                swimLanesDone = curSwimlaneIndex - 1
+                If curSwimlaneIndex = swimLanesDone + 1 Then
+                    ' es wurde in der Schleife keine Swimmlane gezeichnet, da sie zu groß ist für eine Seite
+                    ' Abbruch provoziere
+                    ' Zwischenbericht abgeben ...
+                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
+                    If worker.WorkerReportsProgress Then
+                        worker.ReportProgress(0, e)
+                    End If
+                    Throw New ArgumentException("Das Zeichnen der Swimlanes für Projekt '" & hproj.name & "' wird abgebrochen." & vbLf & _
+                                                "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ....")
+                    swimLanesDone = 0
+                    swimLanesToDo = 0
+
+                Else
+
+                    ' jetzt die Anzahl ..Done bestimmen
+                    swimLanesDone = curSwimlaneIndex - 1
+
+                End If
 
             End If
 
