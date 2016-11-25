@@ -61,11 +61,10 @@ Imports System.Windows
         Dim storeConstellationFrm As New frmStoreConstellation
         Dim returnValue As DialogResult
         Dim constellationName As String
-        Dim speichernDatenbank As String = "Pt5G2B1"
 
-        Dim storeToDB As Boolean = False
         Dim returnRequest As Boolean = False
         Dim controlID As String = control.Id
+        Dim jetzt As Date = Date.Now
 
         Call projektTafelInit()
 
@@ -77,45 +76,8 @@ Imports System.Windows
             If returnValue = DialogResult.OK Then
                 constellationName = storeConstellationFrm.ComboBox1.Text
 
-                If controlID = speichernDatenbank And Not noDB Then
-                    storeToDB = True
-                End If
 
                 Call storeSessionConstellation(constellationName)
-
-
-                ' speichern der Konstellation mit constellationName in DB
-                If storeToDB Then
-
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-                    ' hier muss noch geprüft werden, ob auch alle referenzierten Projekte bereits in der Datenbank existieren
-                    ' wenn nein, werden die jetzt gespeichert ... aber nur, wenn sie nicht bereits existieren ...
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
-                        If Not request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
-                            ' speichern des Projektes 
-                            Call request.storeProjectToDB(kvp.Value)
-                        End If
-                    Next
-
-
-                    If request.pingMongoDb() Then
-                        ' prüfen, ob diese Constellation existiert ..
-                        If projectConstellations.Contains(constellationName) Then
-                            Try
-                                returnRequest = request.storeConstellationToDB(projectConstellations.getConstellation(constellationName))
-                                If returnRequest = False Then
-                                    Call MsgBox("Fehler bei Schreiben Szenario: " & constellationName)
-                                End If
-                            Catch ex As Exception
-                                Throw New ArgumentException("Fehler beim Speichern des MultiprojektSzenario in die DB")
-                            End Try
-                        End If
-                    Else
-                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
-                    End If
-
-                End If
 
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
                 currentConstellation = constellationName
@@ -145,6 +107,7 @@ Imports System.Windows
 
         Dim storeConstellationFrm As New frmLoadConstellation
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim DBtimeStamp As Date = Date.Now
 
         With storeConstellationFrm
             .Text = "Szenario(s) in Datenbank speichern"
@@ -175,6 +138,7 @@ Imports System.Windows
                     If Not IsNothing(hproj) Then
                         If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
                             ' speichern des Projektes 
+                            hproj.timeStamp = DBtimeStamp
                             If request.storeProjectToDB(hproj) Then
                                 anzahlNeue = anzahlNeue + 1
                             End If
@@ -182,8 +146,8 @@ Imports System.Windows
                             ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
                             Dim oldProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
                             ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
-                            Dim anzahlUnterschiede As Integer = hproj.listOfDifferences(oldProj, True, 0, True, True).Count
-                            If anzahlUnterschiede > 0 Then
+                            If Not hproj.isIdenticalTo(oldProj) Then
+                                hproj.timeStamp = DBtimeStamp
                                 If request.storeProjectToDB(hproj) Then
                                     ' alles ok
                                     anzahlChanged = anzahlChanged + 1
@@ -207,11 +171,17 @@ Imports System.Windows
                     Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
                 End Try
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Szenario: " & constellationName & vbLf & _
-                                "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
-                                "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString)
+
+                Dim tsMessage As String = ""
+                If anzahlNeue + anzahlChanged > 0 Then
+                    tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
                 End If
+                Call MsgBox("Gespeichert ... " & vbLf & _
+                            "Szenario: " & constellationName & vbLf & _
+                            "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
+                            "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf & _
+                            tsMessage)
+
 
             Next
 
@@ -9367,8 +9337,8 @@ Imports System.Windows
 
         enableOnUpdate = False
         appInstance.EnableEvents = True
-        Dim yellows As Double = 0.09
-        Dim reds As Double = 0.025
+        Dim yellows As Double = 0.07
+        Dim reds As Double = 0.015
 
         If demoModusHistory And historicDate > StartofCalendar And historicDate < Date.Now Then
             ' es werden nur die Meilensteine verändert, die nach dem historicdate liegen 
@@ -9501,29 +9471,39 @@ Imports System.Windows
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Public Sub PTStoreCurReportProfil(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
         Dim profilNameForm As New frmStoreReportProfil
         Dim returnvalue As DialogResult
         returnvalue = profilNameForm.ShowDialog
-       
+
+        enableOnUpdate = True
     End Sub
 
     Public Sub PTDoReportOfProfil(control As IRibbonControl)
 
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+       
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
 
         If ShowProjekte.Count > 0 Then
-            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                reportAuswahl.calledFrom = "Multiprojekt-Tafel"
-                returnvalue = reportAuswahl.ShowDialog
-                Call awinDeSelect()
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus! ")
-            End If
+
+            reportAuswahl.calledFrom = "Multiprojekt-Tafel"
+            returnvalue = reportAuswahl.ShowDialog
+            Call awinDeSelect()
         Else
             Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
         End If
 
+
+        enableOnUpdate = True
 
     End Sub
 

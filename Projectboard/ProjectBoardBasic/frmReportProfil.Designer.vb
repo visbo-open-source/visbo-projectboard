@@ -33,8 +33,8 @@ Partial Class frmReportProfil
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.BGworkerReportBHTC = New System.ComponentModel.BackgroundWorker()
         Me.BGWorkerReportGen = New System.ComponentModel.BackgroundWorker()
-        Me.EPreports = New System.Windows.Forms.RadioButton()
-        Me.MPreports = New System.Windows.Forms.RadioButton()
+        Me.rdbEPreports = New System.Windows.Forms.RadioButton()
+        Me.rdbMPreports = New System.Windows.Forms.RadioButton()
         Me.ToolTipProfil = New System.Windows.Forms.ToolTip(Me.components)
         Me.SuspendLayout()
         '
@@ -44,7 +44,7 @@ Partial Class frmReportProfil
         Me.RepProfilListbox.FormattingEnabled = True
         Me.RepProfilListbox.HorizontalScrollbar = True
         Me.RepProfilListbox.ItemHeight = 16
-        Me.RepProfilListbox.Location = New System.Drawing.Point(14, 14)
+        Me.RepProfilListbox.Location = New System.Drawing.Point(14, 22)
         Me.RepProfilListbox.Margin = New System.Windows.Forms.Padding(5)
         Me.RepProfilListbox.Name = "RepProfilListbox"
         Me.RepProfilListbox.ScrollAlwaysVisible = True
@@ -56,7 +56,7 @@ Partial Class frmReportProfil
         '
         Me.zeitLabel.AutoSize = True
         Me.zeitLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte), True)
-        Me.zeitLabel.Location = New System.Drawing.Point(229, 416)
+        Me.zeitLabel.Location = New System.Drawing.Point(231, 405)
         Me.zeitLabel.Name = "zeitLabel"
         Me.zeitLabel.Size = New System.Drawing.Size(63, 16)
         Me.zeitLabel.TabIndex = 2
@@ -68,7 +68,7 @@ Partial Class frmReportProfil
         Me.vonDate.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.vonDate.Location = New System.Drawing.Point(320, 410)
+        Me.vonDate.Location = New System.Drawing.Point(336, 402)
         Me.vonDate.Name = "vonDate"
         Me.vonDate.Size = New System.Drawing.Size(108, 22)
         Me.vonDate.TabIndex = 5
@@ -77,7 +77,7 @@ Partial Class frmReportProfil
         '
         Me.bisDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.bisDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.bisDate.Location = New System.Drawing.Point(486, 410)
+        Me.bisDate.Location = New System.Drawing.Point(486, 402)
         Me.bisDate.Name = "bisDate"
         Me.bisDate.Size = New System.Drawing.Size(107, 22)
         Me.bisDate.TabIndex = 6
@@ -85,7 +85,7 @@ Partial Class frmReportProfil
         'ReportErstellen
         '
         Me.ReportErstellen.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ReportErstellen.Location = New System.Drawing.Point(283, 453)
+        Me.ReportErstellen.Location = New System.Drawing.Point(234, 445)
         Me.ReportErstellen.Name = "ReportErstellen"
         Me.ReportErstellen.Size = New System.Drawing.Size(145, 27)
         Me.ReportErstellen.TabIndex = 7
@@ -95,7 +95,7 @@ Partial Class frmReportProfil
         'changeProfil
         '
         Me.changeProfil.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.changeProfil.Location = New System.Drawing.Point(462, 453)
+        Me.changeProfil.Location = New System.Drawing.Point(455, 445)
         Me.changeProfil.Name = "changeProfil"
         Me.changeProfil.Size = New System.Drawing.Size(138, 27)
         Me.changeProfil.TabIndex = 8
@@ -106,7 +106,7 @@ Partial Class frmReportProfil
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(23, 488)
+        Me.statusLabel.Location = New System.Drawing.Point(14, 479)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(51, 17)
         Me.statusLabel.TabIndex = 43
@@ -120,28 +120,32 @@ Partial Class frmReportProfil
         '
         'BGWorkerReportGen
         '
+        Me.BGWorkerReportGen.WorkerReportsProgress = True
+        Me.BGWorkerReportGen.WorkerSupportsCancellation = True
         '
-        'EPreports
+        'rdbEPreports
         '
-        Me.EPreports.AutoSize = True
-        Me.EPreports.Location = New System.Drawing.Point(26, 410)
-        Me.EPreports.Name = "EPreports"
-        Me.EPreports.Size = New System.Drawing.Size(74, 17)
-        Me.EPreports.TabIndex = 44
-        Me.EPreports.TabStop = True
-        Me.EPreports.Text = "EP Report"
-        Me.EPreports.UseVisualStyleBackColor = True
+        Me.rdbEPreports.AutoSize = True
+        Me.rdbEPreports.Checked = True
+        Me.rdbEPreports.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.rdbEPreports.Location = New System.Drawing.Point(14, 405)
+        Me.rdbEPreports.Name = "rdbEPreports"
+        Me.rdbEPreports.Size = New System.Drawing.Size(142, 19)
+        Me.rdbEPreports.TabIndex = 44
+        Me.rdbEPreports.TabStop = True
+        Me.rdbEPreports.Text = "Einzelprojekt Reports"
+        Me.rdbEPreports.UseVisualStyleBackColor = True
         '
-        'MPreports
+        'rdbMPreports
         '
-        Me.MPreports.AutoSize = True
-        Me.MPreports.Location = New System.Drawing.Point(26, 433)
-        Me.MPreports.Name = "MPreports"
-        Me.MPreports.Size = New System.Drawing.Size(76, 17)
-        Me.MPreports.TabIndex = 45
-        Me.MPreports.TabStop = True
-        Me.MPreports.Text = "MP Report"
-        Me.MPreports.UseVisualStyleBackColor = True
+        Me.rdbMPreports.AutoSize = True
+        Me.rdbMPreports.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.rdbMPreports.Location = New System.Drawing.Point(14, 430)
+        Me.rdbMPreports.Name = "rdbMPreports"
+        Me.rdbMPreports.Size = New System.Drawing.Size(135, 19)
+        Me.rdbMPreports.TabIndex = 45
+        Me.rdbMPreports.Text = "Multiprojekt Reports"
+        Me.rdbMPreports.UseVisualStyleBackColor = True
         '
         'ToolTipProfil
         '
@@ -153,9 +157,9 @@ Partial Class frmReportProfil
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(612, 510)
-        Me.Controls.Add(Me.MPreports)
-        Me.Controls.Add(Me.EPreports)
+        Me.ClientSize = New System.Drawing.Size(612, 499)
+        Me.Controls.Add(Me.rdbMPreports)
+        Me.Controls.Add(Me.rdbEPreports)
         Me.Controls.Add(Me.statusLabel)
         Me.Controls.Add(Me.changeProfil)
         Me.Controls.Add(Me.ReportErstellen)
@@ -179,7 +183,7 @@ Partial Class frmReportProfil
     Friend WithEvents statusLabel As System.Windows.Forms.Label
     Friend WithEvents BGworkerReportBHTC As System.ComponentModel.BackgroundWorker
     Friend WithEvents BGWorkerReportGen As System.ComponentModel.BackgroundWorker
-    Friend WithEvents EPreports As System.Windows.Forms.RadioButton
-    Friend WithEvents MPreports As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbEPreports As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbMPreports As System.Windows.Forms.RadioButton
     Friend WithEvents ToolTipProfil As System.Windows.Forms.ToolTip
 End Class

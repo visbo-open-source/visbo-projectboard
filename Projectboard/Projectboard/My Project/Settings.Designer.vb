@@ -53,39 +53,39 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+     Global.System.Configuration.DefaultSettingValueAttribute("ds061196.mlab.com:61196")> _
     Public ReadOnly Property mongoDBURL() As String
         Get
-            Return CType(Me("mongoDBURL"),String)
+            Return CType(Me("mongoDBURL"), String)
         End Get
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Ute\Documents\VISBO\Test\Mahle 2017\")>  _
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Ute\Documents\VISBO\Test\Engineering Demo 2017\")> _
     Public ReadOnly Property awinPath() As String
         Get
-            Return CType(Me("awinPath"),String)
+            Return CType(Me("awinPath"), String)
         End Get
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("mahle17")>  _
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+     Global.System.Configuration.DefaultSettingValueAttribute("visbotest")> _
     Public ReadOnly Property mongoDBname() As String
         Get
-            Return CType(Me("mongoDBname"),String)
+            Return CType(Me("mongoDBname"), String)
         End Get
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Ute\Documents\VISBO\Mahle 2017\")>  _
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(), _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+     Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\Engineering Demo 2017")> _
     Public ReadOnly Property globalPath() As String
         Get
-            Return CType(Me("globalPath"),String)
+            Return CType(Me("globalPath"), String)
         End Get
     End Property
     

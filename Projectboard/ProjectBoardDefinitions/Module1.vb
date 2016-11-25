@@ -153,6 +153,9 @@ Public Module Module1
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
 
+    Public visboFarbeBlau As Integer = RGB(69, 140, 203)
+    Public visboFarbeOrange As Integer = RGB(247, 148, 30)
+
     ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
     Public Const rootPhaseNameDB As String = "0"
@@ -380,6 +383,17 @@ Public Module Module1
         datum = 1
     End Enum
 
+    ''' <summary>
+    ''' kann überall do verwendet werden, wo es wichtig ist, die CallerApp zu unterscheiden, 
+    ''' also wurde ein bestimmtes Formular aus der Multiprojekt Tafel aufgerufen, aus dem Project Add-In oder aus dem Powerpoint Add-In 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTCallerApp
+        projektTafel = 0
+        projectAddIn = 1
+        pptAddIn = 2
+    End Enum
+
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
@@ -464,7 +478,6 @@ Public Module Module1
 
     ' SoftwareKomponenten für die Lizensierung
     Public Enum PTSWKomp
-
         ProjectAdmin = 0
         Swimlanes2 = 1
         SWkomp2 = 2
@@ -473,8 +486,9 @@ Public Module Module1
         Premium = 5
     End Enum
 
-
-    Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
+    ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
+    ' soll so früh gesetzt sein, damit 
+    Public StartofCalendar As Date = #1/1/2000#
 
     Public weightStrategicFit As Double
 
@@ -600,7 +614,7 @@ Public Module Module1
 
 
     ''' <summary>
-    ''' setzt enableEvents, enableOnUpdate auf true
+    ''' setzt EnableEvents, ScreenUpdating auf true
     ''' </summary>
     ''' <remarks></remarks>
     Sub projektTafelInit()
@@ -3010,7 +3024,8 @@ Public Module Module1
     Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
-                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
+                                          ByVal lieferumfaenge As String)
 
         Dim nullDate As Date = Nothing
 
@@ -3067,7 +3082,12 @@ Public Module Module1
 
                 End If
 
-                
+                If Not IsNothing(lieferumfaenge) Then
+                    If lieferumfaenge.Length > 0 Then
+                        .Tags.Add("LU", lieferumfaenge)
+                    End If
+
+                End If
 
             End With
         End If
@@ -3077,43 +3097,42 @@ Public Module Module1
     End Sub
 
     ''' <summary>
-    ''' setzt die komplette Session zurück 
-    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
+    ''' fügt an eine Powerpoint Präsentation Informationen über DBURL und Name an, die vom PPT Add-In SmartPPT ausgelesen werden können
     ''' </summary>
+    ''' <param name="pptPres"></param>
+    ''' <param name="dbURL"></param>
+    ''' <param name="dbName"></param>
     ''' <remarks></remarks>
-    Public Sub clearCompleteSession()
+    Public Sub addSmartPPTPresentationInfo(ByRef pptPres As PowerPoint.Presentation, _
+                                              ByVal dbURL As String, ByVal dbName As String)
 
-        Dim allShapes As Excel.Shapes
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
 
-        ' jetzt: Löschen der Session 
 
-        Try
+        If Not IsNothing(pptPres) Then
+            With pptPres
 
-            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
-            For Each element As Excel.Shape In allShapes
-                element.Delete()
-            Next
 
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Löschen der Shapes ...")
-        End Try
+                If Not IsNothing(dbURL) Then
+                    If dbURL.Length > 0 Then
+                        .Tags.Add("DBURL", dbURL)
+                    End If
 
-        ShowProjekte.Clear()
-        AlleProjekte.Clear()
-        selectedProjekte.Clear()
-        ImportProjekte.Clear()
-        DiagramList.Clear()
-        awinButtonEvents.Clear()
+                End If
 
-        allDependencies.Clear()
-        projectboardShapes.clear()
-        ' Session gelöscht
+                If Not IsNothing(dbName) Then
+                    If dbName.Length > 0 Then
+                        .Tags.Add("DBNAME", dbName)
+                    End If
+                End If
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+
+            End With
+        End If
+
+
+
     End Sub
+
 
     Public Sub PPTstarten()
         Try

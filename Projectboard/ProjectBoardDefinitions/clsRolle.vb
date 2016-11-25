@@ -5,7 +5,28 @@ Public Class clsRolle
     Private _bedarf() As Double
     Private _isCalculated As Boolean
 
+    ''' <summary>
+    ''' bestimmt, ob die Rolle identisch mit der übergebenen Rolle ist 
+    ''' </summary>
+    ''' <param name="vRolle"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vRolle As clsRolle) As Boolean
+        Get
+            Dim stillOK As Boolean = False
 
+            With vRolle
+                If Me.RollenTyp = .RollenTyp And _
+                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) Then
+                    stillOK = True
+                Else
+                    stillOK = False
+                End If
+            End With
+            isIdenticalTo = stillOK
+        End Get
+    End Property
     Public Property isCalculated() As Boolean
         Get
             isCalculated = _isCalculated

@@ -3,6 +3,29 @@
     Private _typus As Integer
     Private _bedarf() As Double
 
+
+    ''' <summary>
+    ''' vergleicht auf Identität
+    ''' </summary>
+    ''' <param name="vKostenart"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vKostenart As clsKostenart) As Boolean
+        Get
+            Dim stillOK As Boolean = False
+
+            With vKostenart
+                If Me.KostenTyp = .KostenTyp And _
+                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) Then
+                    stillOK = True
+                Else
+                    stillOK = False
+                End If
+            End With
+            isIdenticalTo = stillOK
+        End Get
+    End Property
     Public Property KostenTyp() As Integer
         Get
             KostenTyp = _typus

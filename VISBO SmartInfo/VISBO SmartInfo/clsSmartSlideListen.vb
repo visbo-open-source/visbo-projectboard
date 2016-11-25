@@ -1,15 +1,135 @@
-﻿Public Class clsSmartSlideListen
+﻿Imports ProjectBoardDefinitions
+''' <summary>
+''' baut die SmartListen für die betreffende Slide auf
+''' dazu gehören classifiedName, OriginalNames, ShortNames, FullBreadCrumbs, ampelColr, 
+''' Deliverables, movedElements und Project TimeStamps 
+''' die Project TimeStamps werden erstmal für jedes Projekt erst mal nur mit Nothing angelegt, 
+''' erst wenn TimeMachine aktiviert wird werden sie nach Bedarf geholt ...
+''' </summary>
+''' <remarks></remarks>
+Public Class clsSmartSlideListen
 
     ' um zu verhindern, dass der Speicherbedarf wegen sortierter String Listen sehr groß wird, 
     ' wird eine Hilfsliste eingeführt, die für jeden auftretenden Shape-Namen (eindeutig !) eine eindeutige lfdNr zuweist 
     Private planShapeIDs As SortedList(Of String, Integer)
     Private IDplanShapes As SortedList(Of Integer, String)
-    Private cNList As SortedList(Of String, SortedList(Of Integer, Boolean))
-    Private oNList As SortedList(Of String, SortedList(Of Integer, Boolean))
-    Private sNList As SortedList(Of String, SortedList(Of Integer, Boolean))
-    Private bCList As SortedList(Of String, SortedList(Of Integer, Boolean))
-    Private aCList As SortedList(Of Integer, SortedList(Of Integer, Boolean))
 
+    Private cNList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' enthält die Liste der Original Namen 
+    Private oNList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' enthält die Liste der ShortNames
+    Private sNList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' enthält die Liste der full BreadCrumbs 
+    Private bCList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' enthält die Liste der Elemente, die keine, eine grüne, gelbe, rote Bewertung haben 
+    Private aCList As SortedList(Of Integer, SortedList(Of Integer, Boolean))
+    ' enthält die Liste der Lieferumfänge; ein Lieferumfang kann ggf in mehreren Elementen vorkommen 
+    Private LUList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' enthält die Liste der Elemente, die manuell verschoben wurden ... 
+    Private mVList As SortedList(Of Integer, Boolean)
+    ' enthält die Liste an Projekt-Historien 
+    Private projectTimeStamps As SortedList(Of String, clsProjektHistorie)
+
+
+    ''' <summary>
+    ''' liefert true, wenn das Projekt mit projectVariantName = pName#vName in der Liste der Projekte enthalten ist 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsProject(ByVal pvName As String) As Boolean
+        Get
+            containsProject = projectTimeStamps.ContainsKey(pvName)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Projekt-Varianten-Namen des i.ten-Elements zurück
+    ''' i läuft von 1.. count 
+    ''' der Name hat folgenden Aufbau: pName#vName 
+    ''' Aufruf mit unzulässigem Index gibt Nothing zurück 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPVName(ByVal index As Integer) As String
+        Get
+
+            If index >= 1 And index <= projectTimeStamps.Count Then
+                getPVName = projectTimeStamps.ElementAt(index - 1).Key
+            Else
+                getPVName = Nothing
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Anzahl an Projekten, die mit oder ohne TimeStamps aufgeführt sind 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countProjects() As Integer
+        Get
+            countProjects = projectTimeStamps.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt für das angegebene Projekte die Liste der Time-Stamps zurück
+    ''' Nothing, wenn sie noch nicht aus der Datenbank geladen wurde  
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTimeStampListe(ByVal pvName As String) As clsProjektHistorie
+        Get
+            If projectTimeStamps.ContainsKey(pvName) Then
+                getTimeStampListe = projectTimeStamps.Item(pvName)
+            Else
+                getTimeStampListe = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Projektliste ein neues Element hinzu; 
+    ''' die Project TimeStampListe kann Nothing sein ... 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <param name="pHistory"></param>
+    ''' <remarks></remarks>
+    Public Sub addProject(ByVal pvName As String, Optional ByVal pHistory As clsProjektHistorie = Nothing)
+
+        If projectTimeStamps.ContainsKey(pvName) Then
+            projectTimeStamps.Remove(pvName)
+        End If
+
+        projectTimeStamps.Add(pvName, pHistory)
+
+    End Sub
+
+    Public ReadOnly Property historiesExist() As Boolean
+        Get
+            Dim tmpResult As Boolean = True
+
+            Dim i As Integer = 0
+            Do While i <= projectTimeStamps.Count - 1 And tmpResult
+                If IsNothing(projectTimeStamps.ElementAt(i).Value) Then
+                    tmpResult = False
+                Else
+                    i = i + 1
+                End If
+            Loop
+
+            historiesExist = tmpResult
+
+        End Get
+    End Property
     Public ReadOnly Property getUID(ByVal shapeName As String) As Integer
         Get
             Dim uid As Integer
@@ -193,6 +313,57 @@
     End Sub
 
     ''' <summary>
+    ''' fügt der Liste an Lieferumfängen weitere hinzu ;
+    ''' übergeben wird der komplette String mit Lieferumfängen, einzelne sind duch # voneinander getrennt 
+    ''' </summary>
+    ''' <param name="lieferumfaenge"></param>
+    ''' <param name="shapeName"></param>
+    ''' <remarks></remarks>
+    Public Sub addLU(ByVal lieferumfaenge As String, shapeName As String)
+
+        Dim uid As Integer = Me.getUID(shapeName)
+        Dim lieferumfang As String
+        Dim trennzeichen As String = "#"
+
+        Dim tmpStr() As String = lieferumfaenge.Split(New Char() {CType(trennzeichen, Char)})
+
+        For i As Integer = 1 To tmpStr.Length
+            lieferumfang = tmpStr(i - 1)
+
+            Dim listOfShapeIDs As SortedList(Of Integer, Boolean)
+            If LUList.ContainsKey(lieferumfang) Then
+                listOfShapeIDs = LUList.Item(lieferumfang)
+                If listOfShapeIDs.ContainsKey(uid) Then
+                    ' nichts tun , ist schon drin ...
+                Else
+                    ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
+                    listOfShapeIDs.Add(uid, True)
+                End If
+            Else
+                ' dann muss das erste aufgenommen werden 
+                listOfShapeIDs = New SortedList(Of Integer, Boolean)
+                listOfShapeIDs.Add(uid, True)
+                LUList.Add(lieferumfang, listOfShapeIDs)
+            End If
+        Next
+
+    End Sub
+
+    ''' <summary>
+    ''' fügt der Liste an "verschobenen Elementen" ein weiteres hinzu ...
+    ''' </summary>
+    ''' <param name="shapeName"></param>
+    ''' <remarks></remarks>
+    Public Sub addMV(ByVal shapeName As String)
+        Dim uid As Integer = Me.getUID(shapeName)
+        If mVList.ContainsKey(uid) Then
+            ' nichts tun , ist schon drin
+        Else
+            mVList.Add(uid, True)
+        End If
+    End Sub
+
+    ''' <summary>
     ''' fügt der Liste an Ampelfarben eine weitere (0,1,2,3) hinzu
     ''' wenn die schon existiert, wird die Liste an shapeNames ergänzt; statt ShapeName wird dessen uid geschrieben  
     ''' </summary>
@@ -225,7 +396,7 @@
             End If
         End If
 
-        
+
 
     End Sub
 
@@ -336,7 +507,7 @@
             End If
 
             If tmpCC >= 2 Then
-                Dim greenUIDs As SortedList(Of Integer, Boolean) = aCList.Item(2)
+                Dim greenUIDs As SortedList(Of Integer, Boolean) = aCList.Item(1)
                 For i As Integer = 1 To greenUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(greenUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(greenUIDs.ElementAt(i - 1).Key, greenUIDs.ElementAt(i - 1).Value)
@@ -346,7 +517,7 @@
             End If
 
             If tmpCC >= 1 Then
-                Dim noColorUIDs As SortedList(Of Integer, Boolean) = aCList.Item(2)
+                Dim noColorUIDs As SortedList(Of Integer, Boolean) = aCList.Item(0)
                 For i As Integer = 1 To noColorUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(noColorUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(noColorUIDs.ElementAt(i - 1).Key, noColorUIDs.ElementAt(i - 1).Value)
@@ -365,6 +536,10 @@
                     NList = sNList
                 Case pptInfoType.bCrumb
                     NList = bCList
+                Case pptInfoType.lUmfang
+                    NList = LUList
+                Case pptInfoType.mvElement
+                    NList = cNList
                 Case Else
                     NList = cNList
             End Select
@@ -390,9 +565,20 @@
                         End If
                     Next
                 End If
-                
+
 
             Next
+
+            ' jetzt muss geprüft werden, ob es sich um mVList handelt - dann muss nochmal ausgedünnt werden ... 
+            If type = pptInfoType.mvElement Then
+                Dim realUIDs As New SortedList(Of Integer, Boolean)
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In alleUIDs
+                    If mVList.ContainsKey(kvp.Key) Then
+                        realUIDs.Add(kvp.Key, kvp.Value)
+                    End If
+                Next
+                alleUIDs = realUIDs
+            End If
 
             ' jetzt sind in der uidList alle ShapeUIDs aufgeführt - die müssen jetzt durch ihre ShapeNames ersetzt werden 
             For Each kvp As KeyValuePair(Of Integer, Boolean) In alleUIDs
@@ -411,6 +597,7 @@
 
         End Get
     End Property
+
 
     ''' <summary>
     ''' gibt eine Liste zurück an Element-Namen, die den Suchstr enthalten und ausserdem die übergebene Farben-Kennung haben
@@ -436,6 +623,10 @@
                     NList = sNList
                 Case pptInfoType.bCrumb
                     NList = bCList
+                Case pptInfoType.lUmfang
+                    NList = LUList
+                Case pptInfoType.mvElement
+                    NList = cNList
                 Case Else
                     NList = cNList
             End Select
@@ -519,7 +710,6 @@
 
                 If alleUIDsMitgesuchterFarbe.Count > 0 Then
                     ' es gibt Shapes - jetzt prüfen, ob es TextRestriktion gibt 
-
                     If txtRestriction Then
                         ' ermittle die UIDS, die den gesuchten Text enthalten , prüfe gleichzeitig, 
                         ' ob sie bereits in alleUIDSMitgesuchterFarbe sind ... 
@@ -563,6 +753,8 @@
                         Next
                     End If
 
+
+
                 Else
                     ' nichts tun - alleUIDsMitgesuchterFarbe ist leer ...  
                 End If
@@ -588,6 +780,37 @@
 
             End If
 
+            ' jetzt muss im Fall mvList noch geprüft werden, welche Elemente denn verschoben wurden ...
+            If type = pptInfoType.mvElement Then
+                Dim newCollection As New Collection
+                For Each tmpElem As String In tmpCollection
+                    Dim tmpUids As SortedList(Of Integer, Boolean) = NList.Item(tmpElem)
+                    Dim found As Boolean = False
+                    Dim lx As Integer = 0
+
+                    Do While lx <= tmpUids.Count - 1 And Not found
+                        If mVList.ContainsKey(tmpUids.ElementAt(lx).Key) Then
+                            If colRestriction Then
+                                If alleUIDsMitgesuchterFarbe.ContainsKey(tmpUids.ElementAt(lx).Key) Then
+                                    found = True
+                                Else
+                                    lx = lx + 1
+                                End If
+                            Else
+                                found = True
+                            End If
+
+                        Else
+                            lx = lx + 1
+                        End If
+                        If found And Not newCollection.Contains(tmpElem) Then
+                            newCollection.Add(tmpElem, tmpElem)
+                        End If
+                    Loop
+                Next
+                tmpCollection = newCollection
+            End If
+
             getNCollection = tmpCollection
 
         End Get
@@ -606,7 +829,7 @@
         Get
             Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean)) = cNList
 
-            
+
             Dim tmpCollection As New Collection
             Dim alleUIDsMitgesuchterFarbe As SortedList(Of Integer, Boolean)
 
@@ -712,6 +935,8 @@
     End Property
 
 
+
+
     Public Sub New()
         planShapeIDs = New SortedList(Of String, Integer)
         IDplanShapes = New SortedList(Of Integer, String)
@@ -720,6 +945,9 @@
         sNList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         bCList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         aCList = New SortedList(Of Integer, SortedList(Of Integer, Boolean))
+        LUList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        mVList = New SortedList(Of Integer, Boolean)
+        projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
     End Sub
 
 End Class

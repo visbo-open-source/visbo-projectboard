@@ -961,6 +961,7 @@ Public Class frmHierarchySelection
 
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         Dim vorlagenDateiName As String = CType(e.Argument, String)
+        currentReportProfil.name = "Last"
         currentReportProfil.Phases = copyColltoSortedList(selectedPhases)
         currentReportProfil.Milestones = copyColltoSortedList(selectedMilestones)
         currentReportProfil.Roles = copyColltoSortedList(selectedRoles)
@@ -970,14 +971,6 @@ Public Class frmHierarchySelection
 
         currentReportProfil.CalendarVonDate = StartofCalendar
 
-        Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
-        Dim bisDate As Date = getDateofColumn(showRangeRight, True)
-
-        Try
-            currentReportProfil.calcRepVonBis(vonDate, bisDate)
-        Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
-        End Try
 
         Try
             With awinSettings
@@ -1015,9 +1008,19 @@ Public Class frmHierarchySelection
                 hstr = Split(vorlagenDateiName, "\")
                 currentReportProfil.PPTTemplate = hstr(hstr.Length - 1)
 
-
                 If vorlagenDateiName.Contains(RepPortfolioVorOrdner) Then
+
+                    ' Multiprojekt-Bericht
                     currentReportProfil.isMpp = True
+
+                    ' für Multiprojekt-Report muss ein Time-Range angegeben sein
+                    Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
+                    Dim bisDate As Date = getDateofColumn(showRangeRight, True)
+                    Try
+                        currentReportProfil.calcRepVonBis(vonDate, bisDate)
+                    Catch ex As Exception
+                        Throw New ArgumentException(ex.Message)
+                    End Try
 
                     Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       selectedPhases, selectedMilestones, _
@@ -1025,8 +1028,17 @@ Public Class frmHierarchySelection
                                                       selectedBUs, selectedTyps, True, _
                                                       worker, e)
                 Else
+                    ' Einzelprojekt-Bericht
+
                     currentReportProfil.isMpp = False
-                 
+
+                    ' für Einzelprojekt-Bericht ist kein Time-Range erforderlich => keine Fehlermeldung
+                    Try
+                        currentReportProfil.calcRepVonBis(StartofCalendar, StartofCalendar)
+                    Catch ex As Exception
+
+                    End Try
+
                     Call createPPTReportFromProjects(vorlagenDateiName, _
                                                      selectedPhases, selectedMilestones, _
                                                      selectedRoles, selectedCosts, _

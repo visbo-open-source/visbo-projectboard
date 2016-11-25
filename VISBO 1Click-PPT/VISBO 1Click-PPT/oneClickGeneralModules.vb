@@ -63,8 +63,8 @@ Module oneClickGeneralModules
 
             Dim xlsCustomization As Excel.Workbook = Nothing
 
-            ReDim importOrdnerNames(6)
-            ReDim exportOrdnerNames(4)
+            ReDim importOrdnerNames(7)
+            ReDim exportOrdnerNames(5)
 
 
             ' Auslesen des Window Namens 

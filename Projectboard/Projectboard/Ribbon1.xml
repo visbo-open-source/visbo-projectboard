@@ -208,11 +208,11 @@
             <button id="PT2G3M4B2" label="Charts"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
         </group>
-        <!--<group id="PT2G4" label="Abhängigkeiten">
+        <group id="PT2G4" label="Abhängigkeiten">
           <button id="PT2G4B1" label="Definieren"  enabled ="true" onAction="PTDefineDependencies" supertip="hier können schwache und starke Abhängigkeiten zwischen Projekten definiert werden"/>
           <separator id="PT2G4s1"/>
           <button id="PT2G4B2" label="Löschen"  enabled ="true" onAction="PTDeleteDependencies" supertip="hier können Projekt-Abhängigkeiten gelöscht werden"/>
-        </group>-->
+        </group>
       </tab>
       <!---->
       <!--<tab id ="PT3" label="Vergleichen">
@@ -292,8 +292,8 @@
          <menu id ="PT5G2" label ="Speichern">
            <button id="Pt5G2B1" label="Multiprojekt-Szenario" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Szenarien werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
             <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
-           <button id="Pt5G2B3" label="Projekte/Varianten " onAction="PT5StoreProjects" supertip ="die ausgewählten Projekte werden mit ihrem jeweiligen Zeitstempel in der Datenbank gespeichert; wenn zu diesen Projekten Varianten definiert sind, so werden diese mitgespeichert; wenn keine Projekte selektiert wurden, so werden alle Projekte der Session mit ihren Varianten gespeichert"/>
-           <button id="Pt5G2B4" label="Alles Speichern" onAction="PT5StoreEverything" supertip ="alle Projekte/Varianten sowie alle Szenarios und Filter werden gespeichert"/>
+           <button id="Pt5G2B3" label="Projekte/Varianten " onAction="PT5StoreProjects" supertip ="die ausgewählten Projekte werden mit dem aktuellen Zeitstempel in der Datenbank gespeichert. Ein explizit ausgewähltes Projekt wird immer gespeichert, unabhängig davon, ob es sich verändert hat oder nicht; wenn zu diesen Projekten Varianten definiert sind, so werden diese ebenfalls mitgespeichert; wenn keine Projekte selektiert wurden, so werden alle Projekte und Projekt-Varianten, die sich geändert haben gespeichert"/>
+           <button id="Pt5G2B4" label="Alles Speichern" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Szenarios und Filter werden gespeichert"/>
          </menu>
          <separator id="PT5G1s2"/>
           <menu id ="PT5G3" label ="Löschen">
@@ -306,8 +306,8 @@
       <!---->     
       <tab id ="PT6" getVisible="chckVisibility" label ="Einstellungen">
         <group id ="PT6G1" getVisible="chckVisibility" label ="Visualisierung">
-          <!--<checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>
-          <checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
+          <!--<checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>-->
+          <checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>
           <checkBox id="PT6G1B4" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj" supertip ="ist diese Option aktiviert, so werden in Leistbarkeitscharts der Anteil der selektierten Projekte im Leistbarkeits-Gebirge angezeigt; auf diese Art und Weise kann man leicht erkennen, welchen Anteil die selektierten Projekte am Gesamtverlauf haben"/>
           <checkBox id="PT6G1B5" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
           <!--<button id="PT6G1B6" label="Windows u. Excel-Version"  onAction ="PTShowVersions" />-->
@@ -338,8 +338,8 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <group id ="PT6G5" label ="Testfunktionen">
-          <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
+       <group id ="PT6G5" label ="Testfunktionen">
+          <button id="Pt6G5B0" label="Enable Event aktiv?" onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="aktuelle Test Funktion"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Check Hierarchien korrekt ? "  onAction ="PTTestFunktion3" />
           <button id="PT6G5B3" label="Demo-Funktion Ampel"  onAction ="PTTestFunktion4" />
@@ -347,10 +347,10 @@
           <button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>
           <button id="PT4G5B7" label="neue Rollen/Kosten-Struktur" onAction="PTTestFunktion7" supertip ="Test der optimierten Rollen-/Kosten Verweise"/>
         </group>
-        <!--<group id ="PT6G6" label ="Licensierung">
+       <group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
-        </group>-->
+        </group>
      </tab>
     </tabs>
   </ribbon>

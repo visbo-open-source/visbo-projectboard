@@ -3894,6 +3894,7 @@ Public Module Projekte
     Public Sub createRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                             ByVal top As Double, left As Double, height As Double, width As Double)
 
+
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
         Dim anzDiagrams As Integer
@@ -9586,7 +9587,7 @@ Public Module Projekte
     ''' <param name="values2"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function arraysAreDifferent(ByRef values1() As Double, ByRef values2() As Double) As Boolean
+    Public Function arraysAreDifferent(ByVal values1() As Double, ByVal values2() As Double) As Boolean
 
         Dim istIdentisch As Boolean = True
         Dim i As Integer
@@ -9594,17 +9595,27 @@ Public Module Projekte
 
         Try
 
-            If values1.Length <> values2.Length Then
+            If IsNothing(values1) And IsNothing(values2) Then
+                istIdentisch = True
+
+            ElseIf ((Not IsNothing(values1)) And (Not IsNothing(values2))) Then
+                If values1.Length <> values2.Length Then
+                    istIdentisch = False
+                End If
+                i = 0
+                While i <= values1.Length - 1 And istIdentisch
+                    If values1(i) <> values2(i) Then
+                        istIdentisch = False
+                    Else
+                        i = i + 1
+                    End If
+                End While
+
+            Else
                 istIdentisch = False
             End If
-            i = 0
-            While i <= values1.Length - 1 And istIdentisch
-                If values1(i) <> values2(i) Then
-                    istIdentisch = False
-                Else
-                    i = i + 1
-                End If
-            End While
+
+            
 
         Catch ex As Exception
             Call MsgBox(ex.Message & " in arraysAreDifferent")

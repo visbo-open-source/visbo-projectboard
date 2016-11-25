@@ -190,6 +190,8 @@ Public Class frmSelectPPTTempl
 
         Dim vorlagenDateiName As String = CType(e.Argument, String)
 
+        currentReportProfil.name = "Last"
+
         Dim tmpCollection As New Collection
 
         currentReportProfil.Phases = copyColltoSortedList(tmpCollection)
@@ -293,7 +295,7 @@ Public Class frmSelectPPTTempl
         Dim vorlagenDateiName As String = CType(e.Argument, String)
         Dim tmpCollection As New Collection
 
-
+        currentReportProfil.name = "Last"
         currentReportProfil.Phases = copyColltoSortedList(tmpCollection)
         currentReportProfil.Milestones = copyColltoSortedList(tmpCollection)
         currentReportProfil.Roles = copyColltoSortedList(tmpCollection)
@@ -303,12 +305,12 @@ Public Class frmSelectPPTTempl
 
         currentReportProfil.CalendarVonDate = StartofCalendar
 
-        Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
-        Dim bisDate As Date = getDateofColumn(showRangeRight, True)
-
+        
         Try
-            currentReportProfil.calcRepVonBis(vonDate, bisDate)
+            'currentReportProfil.calcRepVonBis(vonDate, bisDate)
+            currentReportProfil.calcRepVonBis(StartofCalendar, StartofCalendar)
         Catch ex As Exception
+            ' tk keine Exception, weil sonst kein Einzelprojekt Report gemacht werdne kann 
             Throw New ArgumentException(ex.Message)
         End Try
         Try

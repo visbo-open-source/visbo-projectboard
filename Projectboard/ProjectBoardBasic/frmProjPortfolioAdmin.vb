@@ -38,6 +38,21 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub defineButtonVisibility()
 
+        ' je nachdem, ob es überhaupt Abhäbgigkeiten gibt, wird das angezeigt ..
+        If allDependencies.projectCount > 0 Then
+            Me.LblToolTipps.Visible = True
+            Me.rdbTTDescription.Visible = True
+            Me.rdbTTDescription.Checked = True
+
+            Me.rdbTTDependencies.Visible = True
+        Else
+            Me.LblToolTipps.Visible = False
+            Me.rdbTTDescription.Visible = False
+            Me.rdbTTDescription.Checked = True
+
+            Me.rdbTTDependencies.Visible = False
+        End If
+
         With Me
 
             ' bei Beginn immer disabled
@@ -59,15 +74,13 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = False
                 .deleteFilterIcon.Visible = False
 
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
-
                 .dropboxScenarioNames.Visible = False
                 .OKButton.Visible = False
 
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
-                .Text = "Zusammenstellung im Szenario ändern"
+                '.Text = "Zusammenstellung im Szenario ändern"
+                .Text = "Modify Multi-Project Scenario "
 
                 .dropBoxTimeStamps.Visible = False
                 .lblStandvom.Visible = False
@@ -81,13 +94,12 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
 
-                .considerDependencies.Visible = True
-                .considerDependencies.Checked = False
-
                 .dropboxScenarioNames.Visible = True
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Szenario speichern"
+                '.OKButton.Text = "Szenario speichern"
+                .OKButton.Text = "Store Scenario"
+                Dim testName As String = .OKButton.Name
 
             ElseIf aKtionskennung = PTTvActions.definePortfolioDB Then
 
@@ -108,9 +120,6 @@ Public Class frmProjPortfolioAdmin
 
                 .filterIcon.Visible = False
                 .deleteFilterIcon.Visible = False
-
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -133,9 +142,6 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = False
                 .deleteFilterIcon.Visible = False
 
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
-
                 .dropboxScenarioNames.Visible = False
 
                 .OKButton.Visible = True
@@ -155,9 +161,6 @@ Public Class frmProjPortfolioAdmin
 
                 .filterIcon.Visible = False
                 .deleteFilterIcon.Visible = False
-
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -180,9 +183,6 @@ Public Class frmProjPortfolioAdmin
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
 
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
-
                 .dropboxScenarioNames.Visible = False
 
 
@@ -204,9 +204,6 @@ Public Class frmProjPortfolioAdmin
 
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
-
-                .considerDependencies.Visible = False
-                .considerDependencies.Checked = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -316,6 +313,13 @@ Public Class frmProjPortfolioAdmin
         Dim i As Integer, j As Integer
         Dim childNode As TreeNode
         Dim parentNode As TreeNode
+
+        Dim considerDependencies As Boolean
+        If allDependencies.projectCount > 0 Then
+            considerDependencies = True
+        Else
+            considerDependencies = False
+        End If
 
         ' Andernfalls wird die Check Routine endlos aufgerufen ...
         If stopRecursion Then
@@ -555,11 +559,11 @@ Public Class frmProjPortfolioAdmin
                         End If
 
 
-                        Call putProjectInShow(selectedProjectName, selectedVariantName, considerDependencies.Checked, False)
+                        Call putProjectInShow(selectedProjectName, selectedVariantName, considerDependencies, False)
                         ' jetzt muss das Projekt aus AlleProjekte auch in ShowProjekte transferiert werden 
                         
                         ' jetzt muss noch die TreeView ggf angepasst werden, wenn considerDependencies true ist 
-                        If considerDependencies.Checked Then
+                        If considerDependencies Then
                             ' ggf. die Projekte einblenden, von denen dieses Projekt abhängt 
                             Dim toDoListe As Collection = allDependencies.passiveListe(selectedProjectName, PTdpndncyType.inhalt)
                             If toDoListe.Count > 0 Then
@@ -572,9 +576,9 @@ Public Class frmProjPortfolioAdmin
                     Else
                         ' wurde abgewählt 
 
-                        Call putProjectInNoShow(selectedProjectName, considerDependencies.Checked, False)
+                        Call putProjectInNoShow(selectedProjectName, considerDependencies, False)
 
-                        If considerDependencies.Checked Then
+                        If considerDependencies Then
                             Dim toDoListe As Collection = allDependencies.activeListe(selectedProjectName, PTdpndncyType.inhalt)
                             If toDoListe.Count > 0 Then
                                 For Each dprojectName As String In toDoListe
@@ -717,14 +721,19 @@ Public Class frmProjPortfolioAdmin
 
         For i As Integer = 1 To TreeViewProjekte.GetNodeCount(False)
             Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
+            Dim curItemA As TreeNode = TreeViewProjekte.Nodes.Item(mprojectName)
 
-            If curItem.Checked Then
-                ' nichts tun 
-            Else
-                stopRecursion = False
-                curItem.Checked = True
-                stopRecursion = True
+            If curItem.Text = mprojectName Then
+                If curItem.Checked Then
+                    ' nichts tun 
+                Else
+                    stopRecursion = False
+                    curItem.Checked = True
+                    stopRecursion = True
+                End If
             End If
+
+            
 
         Next
 
@@ -759,7 +768,7 @@ Public Class frmProjPortfolioAdmin
         Dim treeLevel As Integer = node.Level
         Dim projectName As String
         Dim variantName As String = ""
-        Dim description As String = "-"
+        Dim toolTippText As String = "-"
         Dim hproj As clsProjekt
 
 
@@ -769,17 +778,24 @@ Public Class frmProjPortfolioAdmin
             Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
             variantName = ""
 
+
             hproj = AlleProjekte.getProject(projectName, variantName)
             If IsNothing(hproj) And variantNames.Count > 0 Then
                 variantName = CStr(variantNames.Item(1))
                 hproj = AlleProjekte.getProject(projectName, variantName)
             End If
 
-            If Not IsNothing(hproj) Then
-                If hproj.description.Length > 0 Then
-                    description = hproj.description
+            ' jetzt muss bestimmt werden, was als ToolTipp Text angezeigt werden soll 
+            If allDependencies.projectCount > 0 And rdbTTDependencies.Checked Then
+                toolTippText = allDependencies.getDependencyInfos(projectName)
+            Else
+                If Not IsNothing(hproj) Then
+                    If hproj.description.Length > 0 Then
+                        toolTippText = hproj.description
+                    End If
                 End If
             End If
+            
 
 
         ElseIf treeLevel = 1 Then
@@ -793,14 +809,14 @@ Public Class frmProjPortfolioAdmin
                 If Not IsNothing(hproj) Then
 
                     If hproj.variantDescription.Length > 0 Then
-                        description = hproj.variantDescription
+                        toolTippText = hproj.variantDescription
                     End If
                 End If
 
             End If
         End If
 
-        ToolTipStand.Show(description, TreeViewProjekte, 6000)
+        ToolTipStand.Show(toolTippText, TreeViewProjekte, 6000)
 
 
     End Sub
@@ -1028,6 +1044,13 @@ Public Class frmProjPortfolioAdmin
         'Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
         Dim storedAtOrBefore As Date
+        Dim considerDependencies As Boolean
+
+        If allDependencies.projectCount > 0 Then
+            considerDependencies = True
+        Else
+            considerDependencies = False
+        End If
 
         ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         ' ''Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
@@ -1068,7 +1091,7 @@ Public Class frmProjPortfolioAdmin
 
                         If aKtionskennung = PTTvActions.delFromSession Then
 
-                            Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies.Checked)
+                            Call awinDeleteProjectInSession(pname, considerDependencies)
 
                         ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
@@ -1128,7 +1151,7 @@ Public Class frmProjPortfolioAdmin
                                 ElseIf aKtionskennung = PTTvActions.delFromSession Or _
                                         aKtionskennung = PTTvActions.deleteV Then
 
-                                    Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies.Checked, vName:=variantName)
+                                    Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies, vName:=variantName)
 
 
                                 ElseIf aKtionskennung = PTTvActions.loadPV Then
@@ -1537,6 +1560,13 @@ Public Class frmProjPortfolioAdmin
     Private Sub filterIcon_Click(sender As Object, e As EventArgs) Handles filterIcon.Click
 
         Dim filterFormular As New frmNameSelection
+        Dim considerDependencies As Boolean
+
+        If allDependencies.projectCount > 0 Then
+            considerDependencies = True
+        Else
+            considerDependencies = False
+        End If
 
         Me.filterIsActive = True
 
@@ -1568,7 +1598,7 @@ Public Class frmProjPortfolioAdmin
                 Dim noShowNames As Collection = getProjectNamesNotFittingToFilter("Last")
 
                 For Each noShowName As String In noShowNames
-                    Call putProjectInNoShow(noShowName, considerDependencies.Checked, False)
+                    Call putProjectInNoShow(noShowName, considerDependencies, False)
                 Next
 
                 ' erst am Ende alle Diagramme neu machen ...
@@ -1662,43 +1692,65 @@ Public Class frmProjPortfolioAdmin
     End Sub
 
     Private Sub dropBoxTimeStamps_MouseHover(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.MouseHover
-        ToolTipStand.Show("bis zu welchem Datum/Zeit sollen Projekte und Varianten berücksichtigt werden? im Default immer bis zum aktuellen Zeitpunkt", dropBoxTimeStamps, 2000)
+        ToolTipStand.Show("welcher Planungs-Stand soll geladen werden? Default ist immer der aktuelle Stand", dropBoxTimeStamps, 2000)
     End Sub
 
 
     Private Sub SelectionSet_MouseHover(sender As Object, e As EventArgs) Handles SelectionSet.MouseHover
 
+        If aKtionskennung = PTTvActions.chgInSession Then
+            ToolTipStand.Show("alle Projekte anzeigen", SelectionSet, 2000)
+        ElseIf aKtionskennung = PTTvActions.delFromDB Then
+            ToolTipStand.Show("alle Projekte und Projekt-Varianten auswählen, die den oben ausgewählten Zeitstempel haben", SelectionSet, 2000)
+        ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVS Then
+            ToolTipStand.Show("alle Projekte auswählen", SelectionSet, 2000)
+        End If
+
     End Sub
 
     Private Sub SelectionReset_MouseHover(sender As Object, e As EventArgs) Handles SelectionReset.MouseHover
-
+        ToolTipStand.Show("alle Elemente de-seletieren", SelectionReset, 2000)
     End Sub
 
     Private Sub collapseCompletely_MouseHover(sender As Object, e As EventArgs) Handles collapseCompletely.MouseHover
-
+        ToolTipStand.Show("Baum-Struktur zusammenklappen", collapseCompletely, 2000)
     End Sub
 
     Private Sub expandCompletely_MouseHover(sender As Object, e As EventArgs) Handles expandCompletely.MouseHover
-
+        ToolTipStand.Show("Baum-Struktur vollständig öffnen", expandCompletely, 2000)
     End Sub
 
     Private Sub filterIcon_MouseHover(sender As Object, e As EventArgs) Handles filterIcon.MouseHover
-
+        ToolTipStand.Show("Filter definieren und anwenden", filterIcon, 2000)
     End Sub
 
     Private Sub deleteFilterIcon_MouseHover(sender As Object, e As EventArgs) Handles deleteFilterIcon.MouseHover
-
+        ToolTipStand.Show("Filter löschen und zurücksetzen", deleteFilterIcon, 2000)
     End Sub
 
-    Private Sub considerDependencies_CheckedChanged(sender As Object, e As EventArgs) Handles considerDependencies.CheckedChanged
-
-    End Sub
-
-    Private Sub considerDependencies_MouseHover(sender As Object, e As EventArgs) Handles considerDependencies.MouseHover
-
-    End Sub
 
     Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
+        ToolTipStand.Show("Szenario-Name auswählen oder neuen Namen eingeben", dropboxScenarioNames, 2000)
+    End Sub
 
+    
+    Private Sub TreeViewProjekte_MouseHover(sender As Object, e As EventArgs) Handles TreeViewProjekte.MouseHover
+
+    End Sub
+
+    Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
+
+    End Sub
+
+    Private Sub rdbTTDescription_CheckedChanged(sender As Object, e As EventArgs) Handles rdbTTDescription.CheckedChanged
+
+    End Sub
+
+    Private Sub rdbTTDescription_MouseHover(sender As Object, e As EventArgs) Handles rdbTTDescription.MouseHover
+        ToolTipStand.Show("ToolTip in Projekt-Struktur zeigt die Projekt-Beschreibung", rdbTTDescription, 2000)
+    End Sub
+
+    Private Sub rdbTTDependencies_CheckedChanged(sender As Object, e As EventArgs) Handles rdbTTDependencies.CheckedChanged
+        ToolTipStand.Show("ToolTip in Projekt-Struktur zeigt die Projekt-Abhängigkeiten", rdbTTDependencies, 2000)
     End Sub
 End Class
