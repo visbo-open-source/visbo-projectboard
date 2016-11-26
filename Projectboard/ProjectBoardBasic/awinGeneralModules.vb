@@ -12971,6 +12971,26 @@ Public Module awinGeneralModules
                     projektFarbe = CType(aktivesSheet.Cells(zeile, 1), Excel.Range).Interior.ColorIndex
                 End Try
 
+                ' jetzt kommt der Check, ob Blanks als Indent verwendet werden oder echte Excel Indents
+                Dim stdIndent As Boolean = True
+                Dim stdIndentedRows As Integer = 0
+                Dim blankIndentedRows As Integer = 0
+                For ik As Integer = 1 To lastRow
+                    If CType(.Cells(ik, colName), Excel.Range).IndentLevel > 0 Then
+                        stdIndentedRows = stdIndentedRows + 1
+                    End If
+                    Dim tstString As String = CStr(CType(.Cells(ik, colName), Excel.Range).Value)
+                    If tstString.StartsWith(" ") Then
+                        blankIndentedRows = blankIndentedRows + 1
+                    End If
+                Next
+
+                If stdIndentedRows > blankIndentedRows Then
+                    stdIndent = True
+                Else
+                    stdIndent = False
+                End If
+
 
                 While zeile <= lastRow
 
@@ -13143,8 +13163,12 @@ Public Module awinGeneralModules
 
                                 Else
 
-                                    ' bestimme den Indent-Level 
-                                    indentLevel = pHierarchy.getLevel(origItem)
+                                    If stdIndent Then
+                                        indentLevel = CType(.Cells(curZeile, colName), Excel.Range).IndentLevel
+                                    Else
+                                        indentLevel = pHierarchy.getLevel(origItem)
+                                    End If
+
                                     ' hier checken, ob indentlevel > lastduplicateIndent; 
                                     ' wenn ja, dann protokollieren, Next for und lastduplicateIndent wieder auf hohen Wert setzen
 
@@ -13180,11 +13204,22 @@ Public Module awinGeneralModules
                                         itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
                                         itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
 
-                                        If DateDiff(DateInterval.Day, itemStartDate, itemEndDate) = 0 Then
+                                        If IsNothing(CType(.Cells(curZeile, colAnfang), Excel.Range).Value) Then
                                             isMilestone = True
+                                            itemStartDate = itemEndDate
+                                        ElseIf CStr(CType(.Cells(curZeile, colAnfang), Excel.Range).Value).Trim = "" Then
+                                            isMilestone = True
+                                            itemStartDate = itemEndDate
                                         Else
-                                            isMilestone = False
+                                            If DateDiff(DateInterval.Minute, itemStartDate, itemEndDate) = 0 Then
+                                                isMilestone = True
+                                            Else
+                                                isMilestone = False
+                                            End If
                                         End If
+
+
+                                        
 
                                         If itemName = "Projektphasen" Then
                                             Try
