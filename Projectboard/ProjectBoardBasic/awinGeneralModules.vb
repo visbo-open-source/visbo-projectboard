@@ -858,12 +858,12 @@ Public Module awinGeneralModules
             LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
             LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
 
-
-            ProjektStatus(0) = "geplant"
-            ProjektStatus(1) = "beauftragt"
-            ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
-            ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
-            ProjektStatus(4) = "abgeschlossen"
+            ' 14.11.16 tk nicht mehr notwenig , wird in Module initial gesetzt 
+            ''ProjektStatus(0) = "geplant"
+            ''ProjektStatus(1) = "beauftragt"
+            ''ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
+            ''ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
+            ''ProjektStatus(4) = "abgeschlossen"
 
 
             DiagrammTypen(0) = "Phase"
@@ -7201,7 +7201,7 @@ Public Module awinGeneralModules
                                 Try
                                     ' String aus erster Spalte der Tabelle lesen
 
-                                    objectName = CType(CType(.Cells(zeile, columnOffset), Excel.Range).Value, String).Trim
+                                    objectName = CStr(CType(.Cells(zeile, columnOffset), Excel.Range).Value).Trim
 
                                     ' Level abfragen
 
@@ -7340,8 +7340,7 @@ Public Module awinGeneralModules
 
                                         cphase = New clsPhase(parent:=hproj)
 
-                                        If PhaseDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
-                                            Or awinSettings.addMissingPhaseMilestoneDef Then
+                                        If PhaseDefinitions.Contains(objectName) Or isMissingDefinitionOK(objectName, isTemplate, False) Then
 
                                             With cphase
                                                 .nameID = hproj.hierarchy.findUniqueElemKey(objectName, False)
@@ -7382,13 +7381,14 @@ Public Module awinGeneralModules
                                             End If
 
                                             hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
-                                            '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
+                                        '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
                                             hrchynode.indexOfElem = hproj.AllPhases.Count
-                                            ' merken von letzem Element (Knoten,Phase,Meilenstein)
+                                        ' merken von letzem Element (Knoten,Phase,Meilenstein)
                                             lasthrchynode = hrchynode
                                             lastelemID = cphase.nameID
                                             lastPhase = cphase
                                             lastLevel = aktLevel
+
                                         Else
                                             ' objectname existiert nicht in den PhaseDefinitions
                                             ' muss in missingPhaseDefinitions noch eingetragen werden
@@ -7397,8 +7397,8 @@ Public Module awinGeneralModules
                                         End If
 
                                     ElseIf isMeilenstein Then
-                                        If MilestoneDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
-                                            Or awinSettings.addMissingPhaseMilestoneDef Then
+
+                                        If MilestoneDefinitions.Contains(objectName) Or isMissingDefinitionOK(objectName, isTemplate, True) Then
 
                                             Dim hrchynode As New clsHierarchyNode
                                             hrchynode.elemName = cphase.name
@@ -7491,7 +7491,7 @@ Public Module awinGeneralModules
                                             Catch ex As Exception
                                                 deliverables = ""
                                             End Try
-                                           
+
 
 
                                             ' tk 29.5.16
@@ -7508,7 +7508,7 @@ Public Module awinGeneralModules
                                             Catch ex As Exception
 
                                             End Try
-                                            
+
                                             If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
                                                 ' es gibt keine Bewertung
                                                 bewertungsAmpel = 0
@@ -7541,10 +7541,14 @@ Public Module awinGeneralModules
                                                 Throw New Exception(ex1.Message)
                                             End Try
 
-
+                                        Else
+                                            ' objectname existiert nicht in den PhaseDefinitions
+                                            ' muss in missingPhaseDefinitions noch eingetragen werden
+                                            Call logfileSchreiben(("Fehler, Lesen Termine: Meilenstein '" & objectName & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+                                            Throw New ArgumentException("Fehler, Lesen Termine:Meilenstein '" & objectName & "' existiert im CustomizationFile nicht!")
                                         End If
 
-                                    End If
+                                End If
 
 
 
@@ -11155,8 +11159,10 @@ Public Module awinGeneralModules
     Function loginProzedur() As Boolean
 
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
+        ' tk, 17.11.16 das wird nicht benötigt, rausgenommen, damit die 
+        ' Login Prozedur auch von Powerpoint aus aufgerufen werden kann 
+        ' appInstance.EnableEvents = False
+        ' enableOnUpdate = False
 
         Dim loginDialog As New frmAuthentication
         Dim returnValue As DialogResult
@@ -11173,12 +11179,12 @@ Public Module awinGeneralModules
 
         If returnValue = DialogResult.Abort Or i >= 5 Then
             'Call MsgBox("Customization-File schließen")
-            appInstance.EnableEvents = True
-            enableOnUpdate = True
+            ' appInstance.EnableEvents = True
+            ' enableOnUpdate = True
             Return False
         Else
-            appInstance.EnableEvents = True
-            enableOnUpdate = True
+            ' appInstance.EnableEvents = True
+            ' enableOnUpdate = True
             Return True
         End If
 
@@ -12999,6 +13005,26 @@ Public Module awinGeneralModules
                     projektFarbe = CType(aktivesSheet.Cells(zeile, 1), Excel.Range).Interior.ColorIndex
                 End Try
 
+                ' jetzt kommt der Check, ob Blanks als Indent verwendet werden oder echte Excel Indents
+                Dim stdIndent As Boolean = True
+                Dim stdIndentedRows As Integer = 0
+                Dim blankIndentedRows As Integer = 0
+                For ik As Integer = 1 To lastRow
+                    If CType(.Cells(ik, colName), Excel.Range).IndentLevel > 0 Then
+                        stdIndentedRows = stdIndentedRows + 1
+                    End If
+                    Dim tstString As String = CStr(CType(.Cells(ik, colName), Excel.Range).Value)
+                    If tstString.StartsWith(" ") Then
+                        blankIndentedRows = blankIndentedRows + 1
+                    End If
+                Next
+
+                If stdIndentedRows > blankIndentedRows Then
+                    stdIndent = True
+                Else
+                    stdIndent = False
+                End If
+
 
                 While zeile <= lastRow
 
@@ -13171,8 +13197,12 @@ Public Module awinGeneralModules
 
                                 Else
 
-                                    ' bestimme den Indent-Level 
-                                    indentLevel = pHierarchy.getLevel(origItem)
+                                    If stdIndent Then
+                                        indentLevel = CType(.Cells(curZeile, colName), Excel.Range).IndentLevel
+                                    Else
+                                        indentLevel = pHierarchy.getLevel(origItem)
+                                    End If
+
                                     ' hier checken, ob indentlevel > lastduplicateIndent; 
                                     ' wenn ja, dann protokollieren, Next for und lastduplicateIndent wieder auf hohen Wert setzen
 
@@ -13208,11 +13238,22 @@ Public Module awinGeneralModules
                                         itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
                                         itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
 
-                                        If DateDiff(DateInterval.Day, itemStartDate, itemEndDate) = 0 Then
+                                        If IsNothing(CType(.Cells(curZeile, colAnfang), Excel.Range).Value) Then
                                             isMilestone = True
+                                            itemStartDate = itemEndDate
+                                        ElseIf CStr(CType(.Cells(curZeile, colAnfang), Excel.Range).Value).Trim = "" Then
+                                            isMilestone = True
+                                            itemStartDate = itemEndDate
                                         Else
-                                            isMilestone = False
+                                            If DateDiff(DateInterval.Minute, itemStartDate, itemEndDate) = 0 Then
+                                                isMilestone = True
+                                            Else
+                                                isMilestone = False
+                                            End If
                                         End If
+
+
+                                        
 
                                         If itemName = "Projektphasen" Then
                                             Try
@@ -17077,8 +17118,28 @@ Public Module awinGeneralModules
 
                                 End With
 
-
                                 CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        .Locked = False
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        Try
+                                            If Not IsNothing(.Validation) Then
+                                                .Validation.Delete()
+                                            End If
+                                            ' jetzt wird die ValidationList aufgebaut 
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End With
+                                End If
+
+
                                 If awinSettings.mePrzAuslastung Then
                                     CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
                                 Else
@@ -17191,8 +17252,27 @@ Public Module awinGeneralModules
 
                                 End With
 
-
                                 CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        .Locked = False
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        Try
+                                            If Not IsNothing(.Validation) Then
+                                                .Validation.Delete()
+                                            End If
+                                            ' jetzt wird die ValidationList aufgebaut 
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End With
+                                End If
+
                                 editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
                             End With
 
@@ -17290,7 +17370,6 @@ Public Module awinGeneralModules
                                             .Validation.Delete()
                                         End If
                                         ' jetzt wird die ValidationList aufgebaut 
-                                        'Dim tmpVal As String = validationStrings.Item(rcValidation(anzahlRollen + 1))
                                         .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                                                        Formula1:=defaultEmptyValidation)
                                     Catch ex As Exception
@@ -17299,9 +17378,31 @@ Public Module awinGeneralModules
 
                                 End With
 
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        .Value = ""
+                                        .Locked = False
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        Try
+                                            If Not IsNothing(.Validation) Then
+                                                .Validation.Delete()
+                                            End If
+                                            ' jetzt wird die ValidationList aufgebaut 
+                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                            Formula1:="0")
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End With
+
+                                Else
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = ""
+                                End If
 
 
-                                CType(.Cells(zeile, 6), Excel.Range).Value = ""
                                 CType(.Cells(zeile, 7), Excel.Range).Value = ""
                                 editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
                             End With
@@ -18081,6 +18182,7 @@ Public Module awinGeneralModules
 
     End Function
 
+
     Public Function reportErstellen(ByVal projekte As String, ByVal variante As String, ByVal profilname As String, _
                                     ByVal reportname As String, _
                                     ByVal dbUsername As String, ByVal dbPassword As String) As Boolean
@@ -18204,6 +18306,112 @@ Public Module awinGeneralModules
             Call MsgBox("Fehler: " & vbLf & ex.Message)
             reportErstellen = False
         End Try
+
+    End Function
+
+
+    ''' <summary>
+    ''' behandelt die Missing Definitions, nimmt ggf in 
+    ''' </summary>
+    ''' <param name="definitionName"></param>
+    ''' <param name="isVorlage"></param>
+    ''' <param name="isMilestone"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isMissingDefinitionOK(ByVal definitionName As String, ByVal isVorlage As Boolean, ByVal isMilestone As Boolean) As Boolean
+
+        Dim checkResult As Boolean = True
+
+        If isMilestone And Not MilestoneDefinitions.Contains(definitionName) Then
+            ' Behandlung Meilenstein Definition, aber nur wenn nicht enthalten ... 
+            
+            Dim hMilestoneDef As New clsMeilensteinDefinition
+
+            With hMilestoneDef
+                .name = definitionName
+                .belongsTo = ""
+                .shortName = ""
+                .darstellungsKlasse = ""
+                .UID = MilestoneDefinitions.Count + 1
+            End With
+
+            If (isVorlage And awinSettings.alwaysAcceptTemplateNames) Or _
+                awinSettings.addMissingPhaseMilestoneDef Then
+                ' in die Milestone-Definitions aufnehmen 
+                Try
+                    If Not MilestoneDefinitions.Contains(hMilestoneDef.name) Then
+                        MilestoneDefinitions.Add(hMilestoneDef)
+                    End If
+
+                Catch ex As Exception
+                End Try
+
+            Else
+
+
+                ' in die Missing Milestone-Definitions aufnehmen 
+                Try
+                    ' das Element aufnehmen, in Abhängigkeit vom Setting 
+                    If awinSettings.importUnknownNames Then
+                        checkResult = True
+                    Else
+                        checkResult = False
+                    End If
+
+                    If Not missingMilestoneDefinitions.Contains(hMilestoneDef.name) Then
+                        missingMilestoneDefinitions.Add(hMilestoneDef)
+                    End If
+
+                Catch ex As Exception
+                End Try
+            End If
+
+        ElseIf Not isMilestone And Not (PhaseDefinitions.Contains(definitionName)) Then
+
+            ' Behandlung Phasen 
+            Dim hphaseDef As clsPhasenDefinition
+            hphaseDef = New clsPhasenDefinition
+
+            hphaseDef.darstellungsKlasse = ""
+            hphaseDef.shortName = ""
+            hphaseDef.name = definitionName
+            hphaseDef.UID = PhaseDefinitions.Count + 1
+
+
+
+            If (isVorlage And awinSettings.alwaysAcceptTemplateNames) Or _
+                awinSettings.addMissingPhaseMilestoneDef Then
+                ' in die Phase-Definitions aufnehmen 
+                checkResult = True
+                Try
+                    If Not PhaseDefinitions.Contains(hphaseDef.name) Then
+                        PhaseDefinitions.Add(hphaseDef)
+                    End If
+                Catch ex As Exception
+                    checkResult = False
+                End Try
+            Else
+                ' in Abhängigkeit vom Setting die Elemente aufnehmen oder nicht 
+                Try
+                    If awinSettings.importUnknownNames Then
+                        checkResult = True
+                    Else
+                        checkResult = False
+                    End If
+
+                    If Not missingPhaseDefinitions.Contains(hphaseDef.name) Then
+                        missingPhaseDefinitions.Add(hphaseDef)
+                    End If
+
+                Catch ex As Exception
+                    checkResult = False
+                End Try
+
+
+            End If
+        End If
+
+        isMissingDefinitionOK = checkResult
 
     End Function
 

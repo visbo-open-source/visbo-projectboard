@@ -466,7 +466,7 @@ namespace MongoDbAccess
             return result;
         }
 
-        // bringt alle vorkommenden TimeStamps zurück 
+        // bringt alle vorkommenden TimeStamps zurück , in absteigender Sortierung
         public Collection retrieveZeitstempelFromDB()
         {
             var result = new Collection();
@@ -485,8 +485,32 @@ namespace MongoDbAccess
             }
 
             return result;
+        }
+
+
+        
+        // bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+        public Collection retrieveZeitstempelFromDB(string pvName)
+        {
+            var result = new Collection();
+
+
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.name == pvName)
+                            .OrderByDescending(c => c.timestamp)
+                            .Select(c => c.timestamp)
+                            .ToList()
+                            .Distinct();
+
+            foreach (DateTime tStamp in prequery)
+            {
+                DateTime tmpStamp = tStamp.ToLocalTime();
+                result.Add(tmpStamp);
+            }
+
+            return result;
         }   
-   
+
         //
         // gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
         //

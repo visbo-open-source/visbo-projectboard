@@ -971,6 +971,24 @@ Public Class frmHierarchySelection
 
         currentReportProfil.CalendarVonDate = StartofCalendar
 
+        ' Änderung von Thomas: 24.11.2016
+        ' ''Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
+        ' ''Dim bisDate As Date = getDateofColumn(showRangeRight, True)
+
+        ' ''If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        ' ''    vonDate = getDateofColumn(showRangeLeft, False)
+        ' ''    bisDate = getDateofColumn(showRangeRight, True)
+        ' ''Else
+        ' ''    vonDate = StartofCalendar
+        ' ''    bisDate = StartofCalendar
+        ' ''End If
+
+        ' ''Try
+        ' ''    currentReportProfil.calcRepVonBis(vonDate, bisDate)
+        ' ''Catch ex As Exception
+        ' ''    Throw New ArgumentException(ex.Message)
+        ' ''End Try
+
 
         Try
             With awinSettings

@@ -24,11 +24,6 @@ Partial Class frmSettings
     Private Sub InitializeComponent()
         Me.frmExtendedSearch = New System.Windows.Forms.CheckBox()
         Me.frmShowInfoBC = New System.Windows.Forms.CheckBox()
-        Me.btnDBLogin = New System.Windows.Forms.Button()
-        Me.frmUserPWD = New System.Windows.Forms.TextBox()
-        Me.frmUserName = New System.Windows.Forms.TextBox()
-        Me.Label4 = New System.Windows.Forms.Label()
-        Me.Label3 = New System.Windows.Forms.Label()
         Me.rdbPWD = New System.Windows.Forms.RadioButton()
         Me.rdbUserName = New System.Windows.Forms.RadioButton()
         Me.lblProtectField1 = New System.Windows.Forms.Label()
@@ -46,9 +41,6 @@ Partial Class frmSettings
         Me.frmProtectField2 = New System.Windows.Forms.TextBox()
         Me.frmProtectField1 = New System.Windows.Forms.TextBox()
         Me.lblProtectField2 = New System.Windows.Forms.Label()
-        Me.DBLoginPage = New System.Windows.Forms.TabPage()
-        Me.feedbackMessage = New System.Windows.Forms.Label()
-        Me.btnDBabbr = New System.Windows.Forms.Button()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnLanguageExp = New System.Windows.Forms.Button()
@@ -56,7 +48,6 @@ Partial Class frmSettings
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
-        Me.DBLoginPage.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -79,50 +70,6 @@ Partial Class frmSettings
         Me.frmShowInfoBC.TabIndex = 29
         Me.frmShowInfoBC.Text = "Breadcrumb anzeigen"
         Me.frmShowInfoBC.UseVisualStyleBackColor = True
-        '
-        'btnDBLogin
-        '
-        Me.btnDBLogin.Location = New System.Drawing.Point(38, 81)
-        Me.btnDBLogin.Name = "btnDBLogin"
-        Me.btnDBLogin.Size = New System.Drawing.Size(91, 23)
-        Me.btnDBLogin.TabIndex = 28
-        Me.btnDBLogin.Text = "Login"
-        Me.btnDBLogin.UseVisualStyleBackColor = True
-        '
-        'frmUserPWD
-        '
-        Me.frmUserPWD.Location = New System.Drawing.Point(92, 38)
-        Me.frmUserPWD.Name = "frmUserPWD"
-        Me.frmUserPWD.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
-        Me.frmUserPWD.Size = New System.Drawing.Size(187, 20)
-        Me.frmUserPWD.TabIndex = 27
-        Me.frmUserPWD.UseSystemPasswordChar = True
-        Me.frmUserPWD.WordWrap = False
-        '
-        'frmUserName
-        '
-        Me.frmUserName.Location = New System.Drawing.Point(92, 14)
-        Me.frmUserName.Name = "frmUserName"
-        Me.frmUserName.Size = New System.Drawing.Size(187, 20)
-        Me.frmUserName.TabIndex = 26
-        '
-        'Label4
-        '
-        Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(3, 41)
-        Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(56, 13)
-        Me.Label4.TabIndex = 21
-        Me.Label4.Text = "Password:"
-        '
-        'Label3
-        '
-        Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(3, 17)
-        Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(83, 13)
-        Me.Label3.TabIndex = 20
-        Me.Label3.Text = "Benutzer-Name:"
         '
         'rdbPWD
         '
@@ -159,7 +106,6 @@ Partial Class frmSettings
         '
         Me.TabControl1.Controls.Add(Me.TabPage1)
         Me.TabControl1.Controls.Add(Me.TabPage2)
-        Me.TabControl1.Controls.Add(Me.DBLoginPage)
         Me.TabControl1.Controls.Add(Me.TabPage4)
         Me.TabControl1.Location = New System.Drawing.Point(12, 12)
         Me.TabControl1.Name = "TabControl1"
@@ -300,40 +246,6 @@ Partial Class frmSettings
         Me.lblProtectField2.TabIndex = 35
         Me.lblProtectField2.Text = "Username"
         '
-        'DBLoginPage
-        '
-        Me.DBLoginPage.Controls.Add(Me.feedbackMessage)
-        Me.DBLoginPage.Controls.Add(Me.btnDBabbr)
-        Me.DBLoginPage.Controls.Add(Me.Label3)
-        Me.DBLoginPage.Controls.Add(Me.Label4)
-        Me.DBLoginPage.Controls.Add(Me.btnDBLogin)
-        Me.DBLoginPage.Controls.Add(Me.frmUserName)
-        Me.DBLoginPage.Controls.Add(Me.frmUserPWD)
-        Me.DBLoginPage.Location = New System.Drawing.Point(4, 22)
-        Me.DBLoginPage.Name = "DBLoginPage"
-        Me.DBLoginPage.Size = New System.Drawing.Size(282, 141)
-        Me.DBLoginPage.TabIndex = 2
-        Me.DBLoginPage.Text = "Datenbank"
-        Me.DBLoginPage.UseVisualStyleBackColor = True
-        '
-        'feedbackMessage
-        '
-        Me.feedbackMessage.AutoSize = True
-        Me.feedbackMessage.Location = New System.Drawing.Point(37, 119)
-        Me.feedbackMessage.Name = "feedbackMessage"
-        Me.feedbackMessage.Size = New System.Drawing.Size(101, 13)
-        Me.feedbackMessage.TabIndex = 30
-        Me.feedbackMessage.Text = "Feedback-Message"
-        '
-        'btnDBabbr
-        '
-        Me.btnDBabbr.Location = New System.Drawing.Point(153, 81)
-        Me.btnDBabbr.Name = "btnDBabbr"
-        Me.btnDBabbr.Size = New System.Drawing.Size(91, 23)
-        Me.btnDBabbr.TabIndex = 29
-        Me.btnDBabbr.Text = "Abbrechen"
-        Me.btnDBabbr.UseVisualStyleBackColor = True
-        '
         'TabPage4
         '
         Me.TabPage4.Controls.Add(Me.Label1)
@@ -386,8 +298,6 @@ Partial Class frmSettings
         Me.TabPage1.PerformLayout()
         Me.TabPage2.ResumeLayout(False)
         Me.TabPage2.PerformLayout()
-        Me.DBLoginPage.ResumeLayout(False)
-        Me.DBLoginPage.PerformLayout()
         Me.TabPage4.ResumeLayout(False)
         Me.TabPage4.PerformLayout()
         Me.ResumeLayout(False)
@@ -395,11 +305,6 @@ Partial Class frmSettings
     End Sub
     Friend WithEvents frmExtendedSearch As System.Windows.Forms.CheckBox
     Friend WithEvents frmShowInfoBC As System.Windows.Forms.CheckBox
-    Friend WithEvents btnDBLogin As System.Windows.Forms.Button
-    Friend WithEvents frmUserPWD As System.Windows.Forms.TextBox
-    Friend WithEvents frmUserName As System.Windows.Forms.TextBox
-    Friend WithEvents Label4 As System.Windows.Forms.Label
-    Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents rdbPWD As System.Windows.Forms.RadioButton
     Friend WithEvents rdbUserName As System.Windows.Forms.RadioButton
     Friend WithEvents lblProtectField1 As System.Windows.Forms.Label
@@ -410,8 +315,6 @@ Partial Class frmSettings
     Friend WithEvents lbl_schrift As System.Windows.Forms.Label
     Friend WithEvents txtboxAbstandsEinheit As System.Windows.Forms.ComboBox
     Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
-    Friend WithEvents DBLoginPage As System.Windows.Forms.TabPage
-    Friend WithEvents btnDBabbr As System.Windows.Forms.Button
     Friend WithEvents btnProtect As System.Windows.Forms.Button
     Friend WithEvents frmProtectField2 As System.Windows.Forms.TextBox
     Friend WithEvents frmProtectField1 As System.Windows.Forms.TextBox
@@ -423,5 +326,4 @@ Partial Class frmSettings
     Friend WithEvents btnLanguageExp As System.Windows.Forms.Button
     Friend WithEvents btnLanguageImp As System.Windows.Forms.Button
     Friend WithEvents btnChangeLanguage As System.Windows.Forms.Button
-    Friend WithEvents feedbackMessage As System.Windows.Forms.Label
 End Class

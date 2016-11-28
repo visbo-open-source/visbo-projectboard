@@ -520,24 +520,32 @@
 
                 Dim dimension As Integer
 
-                ' in der Datenbank wird es konsistent gespeichert
-                For r = 1 To Me.AllRoles.Count
-                    'Dim newRole As New clsRolle(.relEnde - .relStart)
+                ' macht nur Sinn, die Rollen zu holen, wenn auch Rollen-Definitionen vorhanden isnd
+                ' im PPTSmartInfo sindsie es noch nicht ! 
+                If RoleDefinitions.Count > 0 Then
+                    ' nur aufrufen, wenn 
+                    For r = 1 To Me.AllRoles.Count
+                        'Dim newRole As New clsRolle(.relEnde - .relStart)
 
-                    dimension = Me.AllRoles.Item(r - 1).Bedarf.Length - 1
-                    Dim newRole As New clsRolle(dimension)
-                    Me.AllRoles.Item(r - 1).copyto(newRole)
-                    .addRole(newRole)
+                        dimension = Me.AllRoles.Item(r - 1).Bedarf.Length - 1
+                        Dim newRole As New clsRolle(dimension)
+                        Me.AllRoles.Item(r - 1).copyto(newRole)
+                        .addRole(newRole)
 
-                Next
+                    Next
+                End If
 
-                For k = 1 To Me.AllCosts.Count
-                    'Dim newCost As New clsKostenart(.relEnde - relStart)
-                    dimension = Me.AllCosts.Item(k - 1).Bedarf.Length - 1
-                    Dim newCost As New clsKostenart(dimension)
-                    Me.AllCosts.Item(k - 1).copyto(newCost)
-                    .AddCost(newCost)
-                Next
+                ' macht nur Sinn, die Rollen zu holen, wenn auch Rollen-Definitionen vorhanden isnd
+                ' im PPTSmartInfo sind sie es noch nicht ! 
+                If CostDefinitions.Count > 0 Then
+                    For k = 1 To Me.AllCosts.Count
+                        'Dim newCost As New clsKostenart(.relEnde - relStart)
+                        dimension = Me.AllCosts.Item(k - 1).Bedarf.Length - 1
+                        Dim newCost As New clsKostenart(dimension)
+                        Me.AllCosts.Item(k - 1).copyto(newCost)
+                        .AddCost(newCost)
+                    Next
+                End If
 
                 .changeStartandDauer(startoffset, dauer)
 
@@ -558,10 +566,6 @@
                 Catch ex As Exception
 
                 End Try
-
-
-
-
 
             End With
 

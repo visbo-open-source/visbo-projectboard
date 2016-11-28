@@ -283,6 +283,8 @@ Public Class frmReportProfil
                 Me.statusLabel.Visible = True
             End Try
 
+            Me.rdbEPreports.Checked = True
+
         End If
 
     End Sub

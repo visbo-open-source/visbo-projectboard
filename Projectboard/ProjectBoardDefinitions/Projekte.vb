@@ -18489,9 +18489,16 @@ Public Module Projekte
     Public Function getPnameFromKey(ByVal key As String) As String
         Dim tmpStr(5) As String
         Dim trennzeichen As String = "#"
+        Dim tmpValue As String = ""
 
-        tmpStr = key.Split(New Char() {CChar(trennzeichen)}, 4)
-        getPnameFromKey = tmpStr(0)
+        If Not IsNothing(key) Then
+            If key.Trim.Length > 0 Then
+                tmpStr = key.Split(New Char() {CChar(trennzeichen)}, 4)
+                tmpValue = tmpStr(0)
+            End If
+        End If
+
+        getPnameFromKey = tmpValue
 
     End Function
 
@@ -18504,13 +18511,19 @@ Public Module Projekte
     Public Function getVariantnameFromKey(ByVal key As String) As String
         Dim tmpStr(5) As String
         Dim trennzeichen As String = "#"
-        Dim tmpValue As String
+        Dim tmpValue As String = ""
 
-        tmpStr = key.Split(New Char() {CChar(trennzeichen)}, 4)
-        tmpValue = tmpStr(1)
+        If Not IsNothing(key) Then
+            If key.Trim.Length > 0 Then
+                tmpStr = key.Split(New Char() {CChar(trennzeichen)}, 4)
+                If tmpStr.Length > 1 Then
+                    tmpValue = tmpStr(1)
 
-        If IsNothing(tmpValue) Then
-            tmpValue = ""
+                    If IsNothing(tmpValue) Then
+                        tmpValue = ""
+                    End If
+                End If
+            End If
         End If
 
         getVariantnameFromKey = tmpValue

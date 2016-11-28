@@ -44,11 +44,11 @@ Partial Class frmReportProfil
         Me.RepProfilListbox.FormattingEnabled = True
         Me.RepProfilListbox.HorizontalScrollbar = True
         Me.RepProfilListbox.ItemHeight = 16
-        Me.RepProfilListbox.Location = New System.Drawing.Point(14, 22)
+        Me.RepProfilListbox.Location = New System.Drawing.Point(14, 30)
         Me.RepProfilListbox.Margin = New System.Windows.Forms.Padding(5)
         Me.RepProfilListbox.Name = "RepProfilListbox"
         Me.RepProfilListbox.ScrollAlwaysVisible = True
-        Me.RepProfilListbox.Size = New System.Drawing.Size(579, 372)
+        Me.RepProfilListbox.Size = New System.Drawing.Size(579, 356)
         Me.RepProfilListbox.Sorted = True
         Me.RepProfilListbox.TabIndex = 1
         '
@@ -56,7 +56,7 @@ Partial Class frmReportProfil
         '
         Me.zeitLabel.AutoSize = True
         Me.zeitLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte), True)
-        Me.zeitLabel.Location = New System.Drawing.Point(231, 405)
+        Me.zeitLabel.Location = New System.Drawing.Point(249, 399)
         Me.zeitLabel.Name = "zeitLabel"
         Me.zeitLabel.Size = New System.Drawing.Size(63, 16)
         Me.zeitLabel.TabIndex = 2
@@ -68,7 +68,7 @@ Partial Class frmReportProfil
         Me.vonDate.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.vonDate.Location = New System.Drawing.Point(336, 402)
+        Me.vonDate.Location = New System.Drawing.Point(336, 397)
         Me.vonDate.Name = "vonDate"
         Me.vonDate.Size = New System.Drawing.Size(108, 22)
         Me.vonDate.TabIndex = 5
@@ -77,7 +77,7 @@ Partial Class frmReportProfil
         '
         Me.bisDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.bisDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.bisDate.Location = New System.Drawing.Point(486, 402)
+        Me.bisDate.Location = New System.Drawing.Point(466, 397)
         Me.bisDate.Name = "bisDate"
         Me.bisDate.Size = New System.Drawing.Size(107, 22)
         Me.bisDate.TabIndex = 6
@@ -85,7 +85,7 @@ Partial Class frmReportProfil
         'ReportErstellen
         '
         Me.ReportErstellen.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ReportErstellen.Location = New System.Drawing.Point(234, 445)
+        Me.ReportErstellen.Location = New System.Drawing.Point(125, 445)
         Me.ReportErstellen.Name = "ReportErstellen"
         Me.ReportErstellen.Size = New System.Drawing.Size(145, 27)
         Me.ReportErstellen.TabIndex = 7
@@ -95,7 +95,7 @@ Partial Class frmReportProfil
         'changeProfil
         '
         Me.changeProfil.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.changeProfil.Location = New System.Drawing.Point(455, 445)
+        Me.changeProfil.Location = New System.Drawing.Point(320, 445)
         Me.changeProfil.Name = "changeProfil"
         Me.changeProfil.Size = New System.Drawing.Size(138, 27)
         Me.changeProfil.TabIndex = 8
@@ -126,23 +126,19 @@ Partial Class frmReportProfil
         'rdbEPreports
         '
         Me.rdbEPreports.AutoSize = True
-        Me.rdbEPreports.Checked = True
-        Me.rdbEPreports.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.rdbEPreports.Location = New System.Drawing.Point(14, 405)
+        Me.rdbEPreports.Location = New System.Drawing.Point(14, 7)
         Me.rdbEPreports.Name = "rdbEPreports"
-        Me.rdbEPreports.Size = New System.Drawing.Size(142, 19)
+        Me.rdbEPreports.Size = New System.Drawing.Size(125, 17)
         Me.rdbEPreports.TabIndex = 44
-        Me.rdbEPreports.TabStop = True
         Me.rdbEPreports.Text = "Einzelprojekt Reports"
         Me.rdbEPreports.UseVisualStyleBackColor = True
         '
         'rdbMPreports
         '
         Me.rdbMPreports.AutoSize = True
-        Me.rdbMPreports.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.rdbMPreports.Location = New System.Drawing.Point(14, 430)
+        Me.rdbMPreports.Location = New System.Drawing.Point(171, 7)
         Me.rdbMPreports.Name = "rdbMPreports"
-        Me.rdbMPreports.Size = New System.Drawing.Size(135, 19)
+        Me.rdbMPreports.Size = New System.Drawing.Size(119, 17)
         Me.rdbMPreports.TabIndex = 45
         Me.rdbMPreports.Text = "Multiprojekt Reports"
         Me.rdbMPreports.UseVisualStyleBackColor = True

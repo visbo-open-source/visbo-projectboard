@@ -720,38 +720,14 @@ Public Module BMWItOModul
 
                                     ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
                                     Dim ok2 As Boolean = True
+
                                     If Not PhaseDefinitions.Contains(stdName) And ok1 Then
 
-                                        Dim hphaseDef As clsPhasenDefinition
-                                        hphaseDef = New clsPhasenDefinition
-
-                                        hphaseDef.darstellungsKlasse = txtVorgangsKlasse
-                                        hphaseDef.shortName = txtAbbrev
-                                        hphaseDef.name = stdName
-                                        hphaseDef.UID = phaseIX
-                                        phaseIX = phaseIX + 1
-
-
-                                        If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
-                                            ' in die Phase-Definitions aufnehmen 
-                                            Try
-                                                PhaseDefinitions.Add(hphaseDef)
-                                            Catch ex As Exception
-                                            End Try
+                                        If isMissingDefinitionOK(stdName, isVorlage, False) Then
+                                            ok2 = True
                                         Else
-                                            ' in Abhängigkeit vom Setting die Elemente aufnehmen oder nicht 
-                                            Try
-                                                If awinSettings.importUnknownNames Then
-                                                    ok2 = True
-                                                Else
-                                                    ok2 = False
-                                                    logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
-                                                End If
-                                                missingPhaseDefinitions.Add(hphaseDef)
-                                            Catch ex As Exception
-                                            End Try
-
-
+                                            ok2 = False
+                                            logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
                                         End If
 
                                     End If
@@ -885,43 +861,12 @@ Public Module BMWItOModul
                                         Dim ok2 As Boolean = True
                                         If Not MilestoneDefinitions.Contains(stdName) And ok1 Then
 
-                                            Dim hMilestoneDef As New clsMeilensteinDefinition
-
-                                            With hMilestoneDef
-                                                .name = stdName
-                                                .belongsTo = parentElemName
-                                                .shortName = txtAbbrev
-                                                .darstellungsKlasse = txtVorgangsKlasse
-                                                .UID = milestoneIX
-                                            End With
-
-                                            milestoneIX = milestoneIX + 1
-
-                                            If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
-                                                ' in die Milestone-Definitions aufnehmen 
-                                                Try
-                                                    MilestoneDefinitions.Add(hMilestoneDef)
-                                                Catch ex As Exception
-                                                End Try
-
+                                            If isMissingDefinitionOK(stdName, isVorlage, True) Then
+                                                ok2 = True
                                             Else
-
+                                                ok2 = False
                                                 logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
-
-                                                ' in die Missing Milestone-Definitions aufnehmen 
-                                                Try
-                                                    ' das Element aufnehmen, in Abhängigkeit vom Setting 
-                                                    If awinSettings.importUnknownNames Then
-                                                        ok2 = True
-                                                    Else
-                                                        ok2 = False
-                                                    End If
-
-                                                    missingMilestoneDefinitions.Add(hMilestoneDef)
-                                                Catch ex As Exception
-                                                End Try
                                             End If
-
 
                                         End If
 

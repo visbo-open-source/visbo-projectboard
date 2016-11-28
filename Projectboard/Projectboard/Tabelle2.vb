@@ -98,7 +98,7 @@ Public Class Tabelle2
 
         Try
             With Application.ActiveWindow
-                .SplitColumn = 0
+                .SplitColumn = columnRC + 2
                 .SplitRow = 1
                 .DisplayWorkbookTabs = False
                 .GridlineColor = RGB(220, 220, 220)
@@ -337,288 +337,426 @@ Public Class Tabelle2
                     End If
 
 
-                Else
-
-                    ' es handelt sich um eine Datenänderung
+                ElseIf Target.Column = columnRC + 1 Then
+                    ' es handelt sich um eine Summenänderung
                     Dim newDblValue As Double
                     Dim difference As Double
-
-                    ' zu welcher / welchen Sammelrollen gehört die ausgewählte Rolle ? 
-                    Dim sammelRollenName As String = ""
-                    Dim zeileSammelRolle As Integer = 0
-                    Dim isRole As Boolean
-
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                    Dim ok As Boolean = False
+                    Dim isRole As Boolean
+                    Dim uid As Integer
+
                     If RoleDefinitions.containsName(rcName) Then
                         isRole = True
-                        ' hier muss jetzt bestimmt werden, wo die zugehörige Sammelrolle steht ... 
-                    End If
-
-                    If isRole Or CostDefinitions.containsName(rcName) Then
-                        ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
-
-                        Try
-                            If IsNothing(Target.Cells(1, 1).value) Then
-                                newDblValue = 0.0
-                            ElseIf IsNumeric(Target.Cells(1, 1).value) Then
-                                newDblValue = CDbl(Target.Cells(1, 1).value)
-                            Else
-                                newDblValue = 0.0
-                            End If
-                        Catch ex As Exception
-                            newDblValue = 0.0
-                        End Try
-
-                        Try
-                            If IsNothing(visboZustaende.oldValue) Then
-                                difference = newDblValue
-                                visboZustaende.oldValue = "0"
-                            ElseIf visboZustaende.oldValue = "" Then
-                                difference = newDblValue
-                                visboZustaende.oldValue = "0"
-                            Else
-                                difference = newDblValue - CDbl(visboZustaende.oldValue)
-                            End If
-                        Catch ex As Exception
-                            difference = newDblValue
-                            visboZustaende.oldValue = "0"
-                        End Try
-
-                        Dim monthCol As Integer = showRangeLeft + CInt(((Target.Column - columnStartData) / 2))
-
-                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-
-                        If Not IsNothing(hproj) Then
-                            Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
-
-                            If Not IsNothing(cphase) Then
-
-                                Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
-                                ' fuer Testzwecke ... 
-                                ''Dim xWerteIndexChck As Integer = monthCol - (hproj.Start + cphase.relStart - 1)
-                                ''If xWerteIndex <> xWerteIndexChck Then
-                                ''    Call MsgBox("Kontrolle ... in Change Werte: " & xWerteIndex & ", " & _
-                                ''                 xWerteIndexChck)
-                                ''End If
-
-
-                                Dim xWerte() As Double
-                                'Dim tmpSum As Double
-
-
-
-                                If isRole Then
-                                    ' es handelt sich um eine gültige Rolle
-
-                                    If awinSettings.meAutoReduce Then
-                                        'If awinSettings.meAutoReduce And difference > 0 Then
-                                        ' nur dann muss die Sammelrolle entsprechend automatisch reduziert werden ...
-                                        ' es darf nur maximal in einem Monat das zugeordnet/ersetzt werden, was in der Parent-Rolle auch vorhanden ist
-                                        ' andernfalls wird eine ggf. unbewusste Kapa-Erhöhung vorgenommen 
-
-                                        Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, rcName)
-
-                                        If zeileOFSummaryRole >= 2 And zeileOFSummaryRole <= visboZustaende.meMaxZeile Then
-
-                                            Dim parentRoleName As String = CStr(meWS.Cells(zeileOFSummaryRole, columnRC).value)
-
-                                            Dim parentPhaseName As String = CStr(meWS.Cells(zeileOFSummaryRole, 4).value)
-                                            Dim parentPhaseNameID As String = calcHryElemKey(parentPhaseName, False)
-                                            Dim parentComment As Excel.Comment = CType(meWS.Cells(zeileOFSummaryRole, 4), Excel.Range).Comment
-                                            If Not IsNothing(parentComment) Then
-                                                phaseNameID = parentComment.Text
-                                            End If
-
-                                            Dim cParentPhase As clsPhase
-                                            If parentPhaseNameID = phaseNameID Then
-                                                cParentPhase = cphase
-                                            Else
-                                                cParentPhase = hproj.getPhaseByID(parentPhaseNameID)
-                                            End If
-
-                                            ' das ist der Wert, um den der Index für die Parentphase korrigiert werden muss, da ja 
-                                            ' die RootPhase wesentlich weiter links anfangen kann als die cphase
-                                            ' es ist sicher gestellt, dass nur in zulässigen Wertebereichen aktualisiert wird 
-                                            Dim offset As Integer = cphase.relStart - cParentPhase.relStart
-
-                                            ' jetzt muss in der Sammel-Rolle aktualisiert werden 
-                                            Dim parentRole As clsRolle = Nothing
-                                            Try
-                                                parentRole = cParentPhase.getRole(parentRoleName)
-                                            Catch ex As Exception
-
-                                            End Try
-
-
-                                            If IsNothing(parentRole) Then
-                                                ' nichts tun 
-                                            Else
-                                                ' der Monatswert muss in der parentRole geändert werden 
-                                                xWerte = parentRole.Xwerte
-                                                If xWerteIndex + offset >= 0 And xWerteIndex + offset <= xWerte.Length - 1 Then
-                                                    Dim alterWert As Double = xWerte(xWerteIndex + offset)
-                                                    xWerte(xWerteIndex + offset) = xWerte(xWerteIndex + offset) - difference
-                                                    If xWerte(xWerteIndex + offset) < 0 Then
-                                                        ' jetzt muss der newDblValue entsprechend geändert werden 
-                                                        ' plus, weil xWerte(..) < 0 
-                                                        newDblValue = newDblValue + xWerte(xWerteIndex + offset)
-
-                                                        ' jetzt muss eine Meldung erfolgen ... 
-                                                        Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
-                                                                    "Wert wird deshalb von " & CType(Target.Cells(1, 1), Excel.Range).Value & _
-                                                                    " auf " & newDblValue & " korrigiert ")
-
-                                                        ' jetzt muss der newDblValue in das Feld geschrieben werden 
-                                                        CType(meWS.Cells(Target.Row, Target.Column), Excel.Range).Value = newDblValue
-
-                                                        ' bestimmen der neuen Differenz 
-                                                        difference = newDblValue - CDbl(visboZustaende.oldValue)
-
-                                                        xWerte(xWerteIndex + offset) = 0
-                                                    End If
-                                                    ' die Monatszahl und dann die Summe updaten ... 
-                                                    CType(meWS.Cells(zeileOFSummaryRole, Target.Column), Excel.Range).Value = xWerte(xWerteIndex + offset)
-
-                                                    ' das wird nachher über updateSummen gemacht 
-                                                    'tmpSum = CDbl(CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value)
-                                                    'tmpSum = tmpSum - System.Math.Min(alterWert, difference)
-                                                    'CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value = tmpSum
-
-                                                    ' nur wenn die Differenz auch ungleich Null ist, muss geändert werden 
-                                                    If difference <> 0 Then
-                                                        summenChanged = True
-                                                    End If
-
-                                                Else
-                                                    Call MsgBox("Fehler in Übernahme Daten-Wert ...")
-                                                End If
-                                            End If
-                                        End If
-
-                                    End If
-
-                                    ' es muss einfach die Rolle hinzugefügt bzw. die Werte abgeändert werden 
-                                    Dim tmpRole As clsRolle = cphase.getRole(rcName)
-
-                                    If IsNothing(tmpRole) Then
-                                        ' die Rolle muss neu angelegt und der Phase hinzugefügt werden  
-
-                                        tmpRole = New clsRolle(cphase.relEnde - cphase.relStart)
-                                        tmpRole.RollenTyp = RoleDefinitions.getRoledef(rcName).UID
-
-                                        Call cphase.addRole(tmpRole)
-
-                                    End If
-
-                                    ' der Monatswert muss geändert werden 
-                                    xWerte = tmpRole.Xwerte
-                                    If xWerteIndex >= 0 And xWerteIndex <= xWerte.Length - 1 Then
-                                        If xWerte(xWerteIndex) <> newDblValue Then
-                                            xWerte(xWerteIndex) = newDblValue
-                                            summenChanged = True
-                                        End If
-                                    Else
-                                        Call MsgBox("Fehler in Übernahme Daten-Wert ...")
-                                    End If
-
-                                    'tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
-                                    'tmpSum = tmpSum + difference
-                                    'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
-
-                                    ' bestimmt zu welchen Rollen die Auslastungs-Werte neu berechnet werden müssen ..
-                                    roleCostNames = RoleDefinitions.getSummaryRoles(rcName)
-                                    If Not roleCostNames.Contains(rcName) Then
-                                        roleCostNames.Add(rcName, rcName)
-                                    End If
-
-                                    If difference <> 0 Then
-                                        auslastungChanged = True
-                                    End If
-
-
-                                Else
-                                    ' es handelt sich um eine gültige Kostenart - weiter oben wurde ja schon bestimmt, dass es entweder eine 
-                                    ' gültige Rolle oder Kotenart ist 
-
-                                    ' es muss einfach die Kostenart hinzugefügt bzw. die Werte abgeändert werden 
-                                    Dim tmpCost As clsKostenart = cphase.getCost(rcName)
-
-                                    If IsNothing(tmpCost) Then
-                                        ' die Rolle muss neu angelegt und der Phase hinzugefügt werden  
-
-                                        tmpCost = New clsKostenart(cphase.relEnde - cphase.relStart)
-                                        tmpCost.KostenTyp = CostDefinitions.getCostdef(rcName).UID
-
-                                        Call cphase.AddCost(tmpCost)
-
-                                    End If
-
-                                    ' der Monatswert muss geändert werden 
-                                    xWerte = tmpCost.Xwerte
-                                    If xWerteIndex >= 0 And xWerteIndex <= xWerte.Length - 1 Then
-                                        xWerte(xWerteIndex) = newDblValue
-                                        summenChanged = True
-                                    Else
-                                        Call MsgBox("Fehler in Übernahme Daten-Wert ...")
-                                    End If
-
-                                    ' jetzt die Summe neu ausgegeben ... 
-                                    'tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
-                                    'tmpSum = tmpSum + difference
-                                    'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
-
-                                    If Not roleCostNames.Contains(rcName) Then
-                                        roleCostNames.Add(rcName, rcName)
-                                    End If
-
-                                End If
-                            Else
-                                Call MsgBox("Projekt-Phase existiert nicht: " & pName & ", " & phaseName)
-                            End If
-                        Else
-                            Call MsgBox("Projekt existiert nicht: " & pName)
-                        End If
-
-
+                        uid = RoleDefinitions.getRoledef(rcName).UID
+                        ok = True
+                    ElseIf CostDefinitions.containsName(rcName) Then
+                        isRole = False
+                        uid = CostDefinitions.getCostdef(rcName).UID
+                        ok = True
                     Else
                         Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
                         Target.Cells(1, 1).value = visboZustaende.oldValue
                     End If
 
+                    If ok Then
+
+                        If inputIsAcknowledged(Target, newDblValue, difference) Then
+
+                            If Not IsNothing(hproj) Then
+                                Dim cPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                                
 
 
-                End If
+                                If Not IsNothing(cPhase) Then
+
+                                    Dim phStart As Integer = hproj.Start + cPhase.relStart - 1
+                                    Dim phEnde As Integer = hproj.Start + cPhase.relEnde - 1
+
+                                    Dim ixZeitraum As Integer
+                                    Dim ix As Integer
+                                    Dim breite As Integer
+                                    Call awinIntersectZeitraum(phStart, phEnde, ixZeitraum, ix, breite)
+                                    Dim vSum As Double()
+                                    ReDim vSum(0)
+                                    vSum(0) = newDblValue
+                                    Dim xStartDate As Date
+                                    Dim xEndDate As Date
+
+                                    If ix = 0 Then
+                                        xStartDate = cPhase.getStartDate
+                                    Else
+                                        xStartDate = cPhase.getStartDate.AddDays(-1 * (cPhase.getStartDate.Day - 1)).AddMonths(ix)
+                                    End If
+
+                                    xEndDate = xStartDate.AddDays(-1 * (xStartDate.Day - 1)).AddMonths(breite).AddDays(-1)
+
+                                    If DateDiff(DateInterval.Day, cPhase.getEndDate, xEndDate) > 0 Then
+                                        xEndDate = cPhase.getEndDate
+                                    End If
+
+                                    Dim xValues() As Double = cPhase.berechneBedarfeNew(xStartDate, _
+                                                                                        xEndDate, vSum, 1)
 
 
-                If auslastungChanged Then
-                    Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
-                End If
 
-                ' das Folgende ist eigentlich eine Test Routine , die normalerweise gar nicht nötig ist 
-                ' aber für Testzwecke gut geeignet ist ...
+                                    If isRole Then
+                                        ' jetzt muss die Rolle aktualisiert werden ...
+                                        Dim tmpRole As clsRolle = cPhase.getRole(rcName)
 
-                'Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
-                If summenChanged Then
-                    Call updateMassEditSummenValues(pName, phaseNameID, showRangeLeft, showRangeRight, roleCostNames)
-                End If
-                'Dim testValue2 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                                        If IsNothing(tmpRole) Then
+                                            tmpRole = New clsRolle(phEnde - phStart)
 
-                'If testValue1 <> testValue2 Then
-                '    Call MsgBox("Unterschiede: " & testValue1 & ", " & testValue2)
-                'End If
+                                            With tmpRole
+                                                .RollenTyp = uid
+                                            End With
+                                            With cPhase
+                                                .addRole(tmpRole)
+                                            End With
+                                        End If
 
-                visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+                                        If tmpRole.Xwerte.Length <> xValues.Length Then
+                                            For lx As Integer = 0 To breite - 1
+                                                tmpRole.Xwerte(lx + ix) = xValues(lx)
+                                            Next
+                                        Else
+                                            For i As Integer = 0 To tmpRole.Xwerte.Length - 1
+                                                tmpRole.Xwerte(i) = xValues(i)
+                                            Next
+                                        End If
 
-                ' aktualisieren der Charts 
-                Try
 
-                    If auslastungChanged Or summenChanged Then
-                        Call awinNeuZeichnenDiagramme(6)
+                                        ' jetzt muss die Excel Zeile geschreiben werden - dort wird auch der auslastungs-Array aktualisiert 
+                                        Call aktualisiereRollenZeile(Target.Row, rcName, visboZustaende.meColSD, showRangeLeft, showRangeRight, _
+                                                                     phStart, phEnde, xValues)
+                                    Else
+                                        ' es handelt sich um eine Kostenart 
+                                        Dim tmpCost As clsKostenart = cPhase.getCost(rcName)
+
+                                        If IsNothing(tmpCost) Then
+                                            tmpCost = New clsKostenart(phEnde - phStart)
+
+                                            With tmpCost
+                                                .KostenTyp = uid
+                                            End With
+                                            With cPhase
+                                                .AddCost(tmpCost)
+                                            End With
+                                        End If
+
+                                        If tmpCost.Xwerte.Length <> xValues.Length Then
+                                            For lx As Integer = 0 To breite - 1
+                                                tmpCost.Xwerte(lx + ix) = xValues(lx)
+                                            Next
+                                        Else
+                                            For i As Integer = 0 To tmpCost.Xwerte.Length - 1
+                                                tmpCost.Xwerte(i) = xValues(i)
+                                            Next
+                                        End If
+
+
+                                        ' jetzt muss die Excel Zeile geschreiben werden - dort wird auch der auslastungs-Array aktualisiert 
+                                        Call aktualisiereKostenZeile(Target.Row, rcName, visboZustaende.meColSD, showRangeLeft, showRangeRight, _
+                                                                     phStart, phEnde, xValues)
+
+
+                                    End If
+
+
+                                End If
+                            End If
+
+                        Else
+                            ' nichts tun 
+                        End If
+
                     End If
 
-                Catch ex As Exception
 
-                End Try
+
+                    Else
+
+                        ' es handelt sich um eine Datenänderung
+                        Dim newDblValue As Double
+                        Dim difference As Double
+
+                        ' zu welcher / welchen Sammelrollen gehört die ausgewählte Rolle ? 
+                        Dim sammelRollenName As String = ""
+                        Dim zeileSammelRolle As Integer = 0
+                        Dim isRole As Boolean
+
+                        Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                        If RoleDefinitions.containsName(rcName) Then
+                            isRole = True
+                            ' hier muss jetzt bestimmt werden, wo die zugehörige Sammelrolle steht ... 
+                        End If
+
+                        If isRole Or CostDefinitions.containsName(rcName) Then
+                            ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
+
+                            Try
+                                If IsNothing(Target.Cells(1, 1).value) Then
+                                    newDblValue = 0.0
+                                ElseIf IsNumeric(Target.Cells(1, 1).value) Then
+                                    newDblValue = CDbl(Target.Cells(1, 1).value)
+                                Else
+                                    newDblValue = 0.0
+                                End If
+                            Catch ex As Exception
+                                newDblValue = 0.0
+                            End Try
+
+                            Try
+                                If IsNothing(visboZustaende.oldValue) Then
+                                    difference = newDblValue
+                                    visboZustaende.oldValue = "0"
+                                ElseIf visboZustaende.oldValue = "" Then
+                                    difference = newDblValue
+                                    visboZustaende.oldValue = "0"
+                                Else
+                                    difference = newDblValue - CDbl(visboZustaende.oldValue)
+                                End If
+                            Catch ex As Exception
+                                difference = newDblValue
+                                visboZustaende.oldValue = "0"
+                            End Try
+
+                            Dim monthCol As Integer = showRangeLeft + CInt(((Target.Column - columnStartData) / 2))
+
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+
+                            If Not IsNothing(hproj) Then
+                                Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+                                If Not IsNothing(cphase) Then
+
+                                    Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
+                                    ' fuer Testzwecke ... 
+                                    ''Dim xWerteIndexChck As Integer = monthCol - (hproj.Start + cphase.relStart - 1)
+                                    ''If xWerteIndex <> xWerteIndexChck Then
+                                    ''    Call MsgBox("Kontrolle ... in Change Werte: " & xWerteIndex & ", " & _
+                                    ''                 xWerteIndexChck)
+                                    ''End If
+
+
+                                    Dim xWerte() As Double
+                                    'Dim tmpSum As Double
+
+
+
+                                    If isRole Then
+                                        ' es handelt sich um eine gültige Rolle
+
+                                        If awinSettings.meAutoReduce Then
+                                            'If awinSettings.meAutoReduce And difference > 0 Then
+                                            ' nur dann muss die Sammelrolle entsprechend automatisch reduziert werden ...
+                                            ' es darf nur maximal in einem Monat das zugeordnet/ersetzt werden, was in der Parent-Rolle auch vorhanden ist
+                                            ' andernfalls wird eine ggf. unbewusste Kapa-Erhöhung vorgenommen 
+
+                                            Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, rcName)
+
+                                            If zeileOFSummaryRole >= 2 And zeileOFSummaryRole <= visboZustaende.meMaxZeile Then
+
+                                                Dim parentRoleName As String = CStr(meWS.Cells(zeileOFSummaryRole, columnRC).value)
+
+                                                Dim parentPhaseName As String = CStr(meWS.Cells(zeileOFSummaryRole, 4).value)
+                                                Dim parentPhaseNameID As String = calcHryElemKey(parentPhaseName, False)
+                                                Dim parentComment As Excel.Comment = CType(meWS.Cells(zeileOFSummaryRole, 4), Excel.Range).Comment
+                                                If Not IsNothing(parentComment) Then
+                                                    phaseNameID = parentComment.Text
+                                                End If
+
+                                                Dim cParentPhase As clsPhase
+                                                If parentPhaseNameID = phaseNameID Then
+                                                    cParentPhase = cphase
+                                                Else
+                                                    cParentPhase = hproj.getPhaseByID(parentPhaseNameID)
+                                                End If
+
+                                                ' das ist der Wert, um den der Index für die Parentphase korrigiert werden muss, da ja 
+                                                ' die RootPhase wesentlich weiter links anfangen kann als die cphase
+                                                ' es ist sicher gestellt, dass nur in zulässigen Wertebereichen aktualisiert wird 
+                                                Dim offset As Integer = cphase.relStart - cParentPhase.relStart
+
+                                                ' jetzt muss in der Sammel-Rolle aktualisiert werden 
+                                                Dim parentRole As clsRolle = Nothing
+                                                Try
+                                                    parentRole = cParentPhase.getRole(parentRoleName)
+                                                Catch ex As Exception
+
+                                                End Try
+
+
+                                                If IsNothing(parentRole) Then
+                                                    ' nichts tun 
+                                                Else
+                                                    ' der Monatswert muss in der parentRole geändert werden 
+                                                    xWerte = parentRole.Xwerte
+                                                    If xWerteIndex + offset >= 0 And xWerteIndex + offset <= xWerte.Length - 1 Then
+                                                        Dim alterWert As Double = xWerte(xWerteIndex + offset)
+                                                        xWerte(xWerteIndex + offset) = xWerte(xWerteIndex + offset) - difference
+                                                        If xWerte(xWerteIndex + offset) < 0 Then
+                                                            ' jetzt muss der newDblValue entsprechend geändert werden 
+                                                            ' plus, weil xWerte(..) < 0 
+                                                            newDblValue = newDblValue + xWerte(xWerteIndex + offset)
+
+                                                            ' jetzt muss eine Meldung erfolgen ... 
+                                                            Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
+                                                                        "Wert wird deshalb von " & CType(Target.Cells(1, 1), Excel.Range).Value & _
+                                                                        " auf " & newDblValue & " korrigiert ")
+
+                                                            ' jetzt muss der newDblValue in das Feld geschrieben werden 
+                                                            CType(meWS.Cells(Target.Row, Target.Column), Excel.Range).Value = newDblValue
+
+                                                            ' bestimmen der neuen Differenz 
+                                                            difference = newDblValue - CDbl(visboZustaende.oldValue)
+
+                                                            xWerte(xWerteIndex + offset) = 0
+                                                        End If
+                                                        ' die Monatszahl und dann die Summe updaten ... 
+                                                        CType(meWS.Cells(zeileOFSummaryRole, Target.Column), Excel.Range).Value = xWerte(xWerteIndex + offset)
+
+                                                        ' das wird nachher über updateSummen gemacht 
+                                                        'tmpSum = CDbl(CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value)
+                                                        'tmpSum = tmpSum - System.Math.Min(alterWert, difference)
+                                                        'CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value = tmpSum
+
+                                                        ' nur wenn die Differenz auch ungleich Null ist, muss geändert werden 
+                                                        If difference <> 0 Then
+                                                            summenChanged = True
+                                                        End If
+
+                                                    Else
+                                                        Call MsgBox("Fehler in Übernahme Daten-Wert ...")
+                                                    End If
+                                                End If
+                                            End If
+
+                                        End If
+
+                                        ' es muss einfach die Rolle hinzugefügt bzw. die Werte abgeändert werden 
+                                        Dim tmpRole As clsRolle = cphase.getRole(rcName)
+
+                                        If IsNothing(tmpRole) Then
+                                            ' die Rolle muss neu angelegt und der Phase hinzugefügt werden  
+
+                                            tmpRole = New clsRolle(cphase.relEnde - cphase.relStart)
+                                            tmpRole.RollenTyp = RoleDefinitions.getRoledef(rcName).UID
+
+                                            Call cphase.addRole(tmpRole)
+
+                                        End If
+
+                                        ' der Monatswert muss geändert werden 
+                                        xWerte = tmpRole.Xwerte
+                                        If xWerteIndex >= 0 And xWerteIndex <= xWerte.Length - 1 Then
+                                            If xWerte(xWerteIndex) <> newDblValue Then
+                                                xWerte(xWerteIndex) = newDblValue
+                                                summenChanged = True
+                                            End If
+                                        Else
+                                            Call MsgBox("Fehler in Übernahme Daten-Wert ...")
+                                        End If
+
+                                        'tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                                        'tmpSum = tmpSum + difference
+                                        'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
+
+                                        ' bestimmt zu welchen Rollen die Auslastungs-Werte neu berechnet werden müssen ..
+                                        roleCostNames = RoleDefinitions.getSummaryRoles(rcName)
+                                        If Not roleCostNames.Contains(rcName) Then
+                                            roleCostNames.Add(rcName, rcName)
+                                        End If
+
+                                        If difference <> 0 Then
+                                            auslastungChanged = True
+                                        End If
+
+
+                                    Else
+                                        ' es handelt sich um eine gültige Kostenart - weiter oben wurde ja schon bestimmt, dass es entweder eine 
+                                        ' gültige Rolle oder Kotenart ist 
+
+                                        ' es muss einfach die Kostenart hinzugefügt bzw. die Werte abgeändert werden 
+                                        Dim tmpCost As clsKostenart = cphase.getCost(rcName)
+
+                                        If IsNothing(tmpCost) Then
+                                            ' die Rolle muss neu angelegt und der Phase hinzugefügt werden  
+
+                                            tmpCost = New clsKostenart(cphase.relEnde - cphase.relStart)
+                                            tmpCost.KostenTyp = CostDefinitions.getCostdef(rcName).UID
+
+                                            Call cphase.AddCost(tmpCost)
+
+                                        End If
+
+                                        ' der Monatswert muss geändert werden 
+                                        xWerte = tmpCost.Xwerte
+                                        If xWerteIndex >= 0 And xWerteIndex <= xWerte.Length - 1 Then
+                                            xWerte(xWerteIndex) = newDblValue
+                                            summenChanged = True
+                                        Else
+                                            Call MsgBox("Fehler in Übernahme Daten-Wert ...")
+                                        End If
+
+                                        ' jetzt die Summe neu ausgegeben ... 
+                                        'tmpSum = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                                        'tmpSum = tmpSum + difference
+                                        'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
+
+                                        If Not roleCostNames.Contains(rcName) Then
+                                            roleCostNames.Add(rcName, rcName)
+                                        End If
+
+                                    End If
+                                Else
+                                    Call MsgBox("Projekt-Phase existiert nicht: " & pName & ", " & phaseName)
+                                End If
+                            Else
+                                Call MsgBox("Projekt existiert nicht: " & pName)
+                            End If
+
+
+                        Else
+                            Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
+                            Target.Cells(1, 1).value = visboZustaende.oldValue
+                        End If
+
+
+
+                    End If
+
+
+                    If auslastungChanged Then
+                        Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
+                    End If
+
+                    ' das Folgende ist eigentlich eine Test Routine , die normalerweise gar nicht nötig ist 
+                    ' aber für Testzwecke gut geeignet ist ...
+
+                    'Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                    If summenChanged Then
+                        Call updateMassEditSummenValues(pName, phaseNameID, showRangeLeft, showRangeRight, roleCostNames)
+                    End If
+                    'Dim testValue2 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+
+                    'If testValue1 <> testValue2 Then
+                    '    Call MsgBox("Unterschiede: " & testValue1 & ", " & testValue2)
+                    'End If
+
+                    visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+
+                    ' aktualisieren der Charts 
+                    Try
+
+                        If auslastungChanged Or summenChanged Then
+                            Call awinNeuZeichnenDiagramme(6)
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
 
             Else
                 Call MsgBox("bitte nur eine Zelle selektieren ...")
@@ -784,7 +922,7 @@ Public Class Tabelle2
                 result = False
             Else
                 If rng.Row >= 2 And rng.Row <= visboZustaende.meMaxZeile Then
-                    If rng.Column = columnRC Then
+                    If rng.Column = columnRC Or (rng.Column = columnRC + 1 And awinSettings.allowSumEditing) Then
                         result = True
 
                     ElseIf rng.Column >= columnStartData And rng.Column <= columnEndData Then
@@ -814,6 +952,208 @@ Public Class Tabelle2
 
 
         isValidSelection = result
+
+    End Function
+
+    ''' <summary>
+    ''' aktualisiert die Werte in der angegebenen Zeile mit den Daten der Rolle
+    ''' der Auslastungs-Array wird in dieser Methode aktualisiert   
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="phStart">ist pStart+relstart-1</param>
+    ''' <param name="phEnd">ist pStart+relende -1</param>
+    ''' <param name="xWerte"></param>
+    ''' <remarks></remarks>
+    Private Sub aktualisiereRollenZeile(ByVal zeile As Integer, ByVal roleName As String, _
+                                      ByVal startSpalteDaten As Integer, _
+                                      ByVal von As Integer, ByVal bis As Integer, _
+                                      ByVal phStart As Integer, ByVal phEnd As Integer, _
+                                      ByVal xWerte() As Double)
+        Dim schnittmenge() As Double
+        Dim zeilenWerte() As Double
+        Dim zeilensumme As Double
+        Dim editRange As Excel.Range
+        Dim roleCollection As New Collection
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+        roleCollection.Add(roleName)
+        Dim auslastungsArray(,) As Double = visboZustaende.getUpDatedAuslastungsArray(roleCollection, von, bis, awinSettings.mePrzAuslastung)
+
+        Dim ixZeitraum As Integer
+        Dim ix As Integer
+        Dim breite As Integer
+        Call awinIntersectZeitraum(phStart, phEnd, ixZeitraum, ix, breite)
+
+        schnittmenge = calcArrayIntersection(von, bis, phStart, phEnd, xWerte)
+        zeilensumme = schnittmenge.Sum
+
+        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            If awinSettings.mePrzAuslastung Then
+                CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+            Else
+                CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
+            End If
+            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+        End With
+
+        ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+        For mis As Integer = 0 To bis - von
+            zeilenWerte(2 * mis) = schnittmenge(mis)
+            ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
+            zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+        Next
+
+        editRange.Value = zeilenWerte
+
+        ' jetzt werden die Zellenwerte noch gelöscht , die nicht zur Phase gehören ...  
+        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            For l As Integer = 0 To bis - von
+
+                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+
+                    ' nichts tun ...
+                Else
+                    ' diese Werte löschen, sie gehören nicht zum Zeitraum der Phase  
+                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                    CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                End If
+
+            Next
+        End With
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert die Werte in der angegebenen Zeile mit den Daten der Kostenart 
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    ''' <param name="costName"></param>
+    ''' <param name="startSpalteDaten"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="phStart"></param>
+    ''' <param name="phEnd"></param>
+    ''' <param name="xWerte"></param>
+    ''' <remarks></remarks>
+    Private Sub aktualisiereKostenZeile(ByVal zeile As Integer, ByVal costName As String, _
+                                          ByVal startSpalteDaten As Integer, _
+                                          ByVal von As Integer, ByVal bis As Integer, _
+                                          ByVal phStart As Integer, ByVal phEnd As Integer, _
+                                          ByVal xWerte() As Double)
+        Dim schnittmenge() As Double
+        Dim zeilenWerte() As Double
+        Dim zeilensumme As Double
+        Dim editRange As Excel.Range
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        Dim costUID As Integer = CostDefinitions.getCostdef(costName).UID
+
+        Dim ixZeitraum As Integer
+        Dim ix As Integer
+        Dim breite As Integer
+        Call awinIntersectZeitraum(phStart, phEnd, ixZeitraum, ix, breite)
+
+        schnittmenge = calcArrayIntersection(von, bis, phStart, phEnd, xWerte)
+        zeilensumme = schnittmenge.Sum
+
+        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            ' kein Auslastungs-Wert bei Kosten ... 
+            CType(.Cells(zeile, 7), Excel.Range).Value = ""
+            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+        End With
+
+        ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+        For mis As Integer = 0 To bis - von
+            zeilenWerte(2 * mis) = schnittmenge(mis)
+            ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
+            zeilenWerte(2 * mis + 1) = 0
+        Next
+
+        editRange.Value = zeilenWerte
+
+        ' jetzt werden die Zellenwerte noch gelöscht , die nicht zur Phase gehören ...  
+        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            For l As Integer = 0 To bis - von
+
+
+                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                    CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                Else
+                    ' diese Werte löschen, sie gehören nicht zum Zeitraum der Phase  
+                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                    CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                End If
+
+            Next
+        End With
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft den Input, setzt, wenn ok, den neuen Wert und die Differenz zum alten Wert 
+    ''' </summary>
+    ''' <param name="target"></param>
+    ''' <param name="newDblValue"></param>
+    ''' <param name="difference"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function inputIsAcknowledged(ByVal target As Excel.Range, _
+                                                ByRef newDblValue As Double, _
+                                                ByRef difference As Double) As Boolean
+
+        Dim ok As Boolean = False
+        ' Bestimmen des Wertes 
+        newDblValue = 0.0
+        Try
+            If IsNothing(target.Cells(1, 1).value) Then
+                newDblValue = 0.0
+            ElseIf IsNumeric(target.Cells(1, 1).value) Then
+                newDblValue = CDbl(target.Cells(1, 1).value)
+                If newDblValue > 0 Then
+                    ok = True
+                Else
+                    newDblValue = 0
+                End If
+            Else
+                newDblValue = 0.0
+            End If
+        Catch ex As Exception
+            newDblValue = 0.0
+        End Try
+
+        Try
+            If ok Then
+                If IsNothing(visboZustaende.oldValue) Then
+                    difference = newDblValue
+                    visboZustaende.oldValue = "0"
+                ElseIf visboZustaende.oldValue = "" Then
+                    difference = newDblValue
+                    visboZustaende.oldValue = "0"
+                Else
+                    difference = newDblValue - CDbl(visboZustaende.oldValue)
+                End If
+            End If
+
+        Catch ex As Exception
+            difference = newDblValue
+            visboZustaende.oldValue = "0"
+        End Try
+
+        inputIsAcknowledged = ok
 
     End Function
 
