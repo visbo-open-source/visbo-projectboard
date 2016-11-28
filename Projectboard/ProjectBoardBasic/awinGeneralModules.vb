@@ -1,8 +1,4 @@
-﻿
-'Option Explicit On
-'Option Strict On
-
-Imports ProjectBoardDefinitions
+﻿Imports ProjectBoardDefinitions
 Imports MongoDbAccess
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop
@@ -18085,8 +18081,11 @@ Public Module awinGeneralModules
 
     End Function
 
-    Function reportErstellen(ByVal projekte As String, ByVal variante As String, ByVal profilname As String) As Boolean
+    Public Function reportErstellen(ByVal projekte As String, ByVal variante As String, ByVal profilname As String, _
+                                    ByVal reportname As String, _
+                                    ByVal dbUsername As String, ByVal dbPassword As String) As Boolean
 
+        Dim currentPresentationName As String = ""
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim reportProfil As clsReportAll = XMLImportReportAllProfil(profilname)
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
@@ -18143,20 +18142,24 @@ Public Module awinGeneralModules
                 Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
                 If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
 
-                    ' Alle selektierten Projekte reporten
-                    For Each kvp In selectedProjekte.Liste
+                    'Das gewählte Projekt reporten
 
-                        Dim hproj As New clsProjekt
-                        hproj = request.retrieveOneProjectfromDB(projekte, variante, Date.Now)
 
-                        Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
-                                                        selectedPhases, selectedMilestones, _
-                                                        selectedRoles, selectedCosts, _
-                                                        selectedBUs, selectedTypes, True, _
-                                                        True, zeilenhoehe, legendFontSize, _
-                                                        Nothing, Nothing)
+                    Dim hproj As New clsProjekt
+                    hproj = request.retrieveOneProjectfromDB(projekte, variante, Date.Now)
 
+                    Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
+                                                    selectedPhases, selectedMilestones, _
+                                                    selectedRoles, selectedCosts, _
+                                                    selectedBUs, selectedTypes, True, _
+                                                    True, zeilenhoehe, legendFontSize, _
+                                                    Nothing, Nothing)
+                    For i = 1 To pptApp.Presentations.Count
+                        currentPresentationName = pptApp.Presentations.Item(i).Name
                     Next
+
+                    pptApp.Presentations.Item(1).SaveAs(reportOrdnerName & reportname)
+
 
                 End If
             Else
@@ -18186,6 +18189,10 @@ Public Module awinGeneralModules
                                                           selectedRoles, selectedCosts, _
                                                           selectedBUs, selectedTypes, True, _
                                                           Nothing, Nothing)
+
+                    For i = 1 To pptApp.Presentations.Count
+                        currentPresentationName = pptApp.Presentations.Item(i).Name
+                    Next
 
                 End If
 

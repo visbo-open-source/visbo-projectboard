@@ -70,33 +70,43 @@ Module Module1
                 Dim lastcolumn As Integer = CType(.Cells(1, 2000), Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
 
                 While zeile <= lastrow
-                    reportname = CStr(CType(.Cells(zeile, spalte), Microsoft.Office.Interop.Excel.Range).Value)
-                    profilname = CStr(CType(.Cells(zeile, spalte + 1), Microsoft.Office.Interop.Excel.Range).Value)
-                    portfolio_projname = CStr(CType(.Cells(zeile, spalte + 2), Microsoft.Office.Interop.Excel.Range).Value)
-                    variantname = CStr(CType(.Cells(zeile, spalte + 3), Microsoft.Office.Interop.Excel.Range).Value)
-                    If IsNothing(variantname) Then
-                        variantname = ""
-                    End If
-                    rangeleft = CType(.Cells(zeile, spalte + 4), Microsoft.Office.Interop.Excel.Range).Value
-                    rangeright = CType(.Cells(zeile, spalte + 5), Microsoft.Office.Interop.Excel.Range).Value
-                    
-                    showRangeLeft = getColumnOfDate(rangeleft)
-                    showRangeRight = getColumnOfDate(rangeright)
+                    Try
 
-                    If Not (IsNothing(reportname) _
-                        And IsNothing(profilname) _
-                        And IsNothing(portfolio_projname) _
-                        And IsNothing(rangeleft) _
-                        And IsNothing(rangeright)) Then
+                        reportname = CStr(CType(.Cells(zeile, spalte), Microsoft.Office.Interop.Excel.Range).Value)
+                        profilname = CStr(CType(.Cells(zeile, spalte + 1), Microsoft.Office.Interop.Excel.Range).Value)
+                        portfolio_projname = CStr(CType(.Cells(zeile, spalte + 2), Microsoft.Office.Interop.Excel.Range).Value)
+                        variantname = CStr(CType(.Cells(zeile, spalte + 3), Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(variantname) Then
+                            variantname = ""
+                        End If
+                        rangeleft = CType(.Cells(zeile, spalte + 4), Microsoft.Office.Interop.Excel.Range).Value
+                        rangeright = CType(.Cells(zeile, spalte + 5), Microsoft.Office.Interop.Excel.Range).Value
 
-                        Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname)
-                        If erfolgreich Then
-                            ' Powerpoint-Report unter dem namen reportname speichern
-                        Else
-                            Call logfileSchreiben("Fehler in der Angabe in Zeile " & zeile, "Main", 0)
+                        showRangeLeft = getColumnOfDate(rangeleft)
+                        showRangeRight = getColumnOfDate(rangeright)
+
+                        If Not (IsNothing(reportname) _
+                            And IsNothing(profilname) _
+                            And IsNothing(portfolio_projname) _
+                            And IsNothing(rangeleft) _
+                            And IsNothing(rangeright)) Then
+
+                            Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname, reportname, username, password)
+                            If erfolgreich Then
+                                ' Powerpoint-Report unter dem namen reportname speichern
+
+                            Else
+                                Call logfileSchreiben("Fehler in den Angaben:  Zeile " & zeile, "Main", 0)
+                            End If
+
                         End If
 
-                    End If
+
+                    Catch ex As Exception
+                        ' da alles im Batch ablaufen soll, soll nicht abgebrochen werden, sondern das komplette Batch-Vorgabe-File abgearbeitet
+                        ' Fehlt eine Angabe, so wird ein Logbuch-Eintrag vorgenommen und die nächste Zeile des Batch-Vorgabe-Files wird ausgelesen und verarbeitet
+
+                    End Try
 
                     zeile = zeile + 1
 
