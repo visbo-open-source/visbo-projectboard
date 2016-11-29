@@ -614,7 +614,7 @@ Public Module Module1
 
 
     ''' <summary>
-    ''' setzt enableEvents, enableOnUpdate auf true
+    ''' setzt EnableEvents, ScreenUpdating auf true
     ''' </summary>
     ''' <remarks></remarks>
     Sub projektTafelInit()

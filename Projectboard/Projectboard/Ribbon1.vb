@@ -9471,14 +9471,25 @@ Imports System.Windows
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Public Sub PTStoreCurReportProfil(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
         Dim profilNameForm As New frmStoreReportProfil
         Dim returnvalue As DialogResult
         returnvalue = profilNameForm.ShowDialog
-       
+
+        enableOnUpdate = True
     End Sub
 
     Public Sub PTDoReportOfProfil(control As IRibbonControl)
 
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+       
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
 
@@ -9491,6 +9502,8 @@ Imports System.Windows
             Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
         End If
 
+
+        enableOnUpdate = True
 
     End Sub
 
