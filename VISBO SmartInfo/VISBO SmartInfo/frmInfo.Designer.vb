@@ -22,6 +22,7 @@ Partial Class frmInfo
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
         Me.deleteAmpel = New System.Windows.Forms.Button()
@@ -57,6 +58,7 @@ Partial Class frmInfo
         Me.btnSendToHome = New System.Windows.Forms.Button()
         Me.PictureMarker = New System.Windows.Forms.PictureBox()
         Me.searchIcon = New System.Windows.Forms.Button()
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -487,4 +489,5 @@ Partial Class frmInfo
     Friend WithEvents rdbMV As System.Windows.Forms.RadioButton
     Friend WithEvents btnSendToHome As System.Windows.Forms.Button
     Friend WithEvents btnSentToChange As System.Windows.Forms.Button
+    Friend WithEvents ToolTip1 As System.Windows.Forms.ToolTip
 End Class

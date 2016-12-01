@@ -470,6 +470,10 @@ Public Class frmInfo
 
     End Sub
 
+    Private Sub filterText_MouseHover(sender As Object, e As EventArgs) Handles filterText.MouseHover
+        ToolTip1.Show("Text-Filter für Listbox", filterText, 2000)
+    End Sub
+
     Private Sub filterText_TextChanged(sender As Object, e As EventArgs) Handles filterText.TextChanged
         suchString = filterText.Text
         Call erstelleListbox()
@@ -1142,5 +1146,110 @@ Public Class frmInfo
 
     Private Sub aLuTvText_TextChanged(sender As Object, e As EventArgs) Handles aLuTvText.TextChanged
 
+    End Sub
+
+    Private Sub deleteText_MouseHover(sender As Object, e As EventArgs) Handles deleteText.MouseHover
+        ToolTip1.Show("Löscht die Text Beschriftung des Elements", deleteText, 2000)
+    End Sub
+
+    Private Sub positionTextButton_MouseHover(sender As Object, e As EventArgs) Handles positionTextButton.MouseHover
+        ToolTip1.Show("relative Position der Text-Beschriftung zum Plan-Element", positionTextButton, 2000)
+    End Sub
+
+    Private Sub writeText_GotFocus(sender As Object, e As EventArgs) Handles writeText.GotFocus
+        ToolTip1.Show("erstellt die Text-Beschriftung des Elements", writeText, 2000)
+    End Sub
+
+    Private Sub deleteDate_MouseHover(sender As Object, e As EventArgs) Handles deleteDate.MouseHover
+        ToolTip1.Show("Löscht die Datum-Beschriftung des Elements", deleteDate, 2000)
+    End Sub
+
+    Private Sub positionDateButton_MouseHover(sender As Object, e As EventArgs) Handles positionDateButton.MouseHover
+        ToolTip1.Show("relative Position der Datum-Beschriftung zum Plan-Element", positionDateButton, 2000)
+    End Sub
+
+    Private Sub writeDate_MouseHover(sender As Object, e As EventArgs) Handles writeDate.MouseHover
+        ToolTip1.Show("erstellt die Datum-Beschriftung des Elements", writeDate, 2000)
+    End Sub
+
+    Private Sub deleteAmpel_MouseHover(sender As Object, e As EventArgs) Handles deleteAmpel.MouseHover
+        If rdbLU.Checked Then
+            ToolTip1.Show("Löscht die Lieferumfänge-Notiz des Elements", deleteAmpel, 2000)
+        Else
+            ToolTip1.Show("Löscht die Ampel-Notiz des Elements", deleteAmpel, 2000)
+        End If
+
+    End Sub
+
+    Private Sub writeAmpel_MouseHover(sender As Object, e As EventArgs) Handles writeAmpel.MouseHover
+        If rdbLU.Checked Then
+            ToolTip1.Show("erstellt die Lieferumfänge-Notiz des Elements", writeAmpel, 2000)
+        Else
+            ToolTip1.Show("erstellt die Ampel-Notiz des Elements", writeAmpel, 2000)
+        End If
+    End Sub
+
+    Private Sub showAbbrev_MouseHover(sender As Object, e As EventArgs) Handles showAbbrev.MouseHover
+        ToolTip1.Show("Verwende Kurzform zur Beschriftung", showAbbrev, 2000)
+    End Sub
+
+    Private Sub PictureMarker_MouseHover(sender As Object, e As EventArgs) Handles PictureMarker.MouseHover
+        ToolTip1.Show("Element-Marker anzeigen", PictureMarker, 2000)
+    End Sub
+
+    Private Sub CheckBxMarker_MouseHover(sender As Object, e As EventArgs) Handles CheckBxMarker.MouseHover
+        ToolTip1.Show("Element-Marker anzeigen", PictureMarker, 2000)
+    End Sub
+
+    Private Sub shwOhneLight_MouseHover(sender As Object, e As EventArgs) Handles shwOhneLight.MouseHover
+        ToolTip1.Show("Elemente ohne Ampel-Bewertung kennzeichnen", shwOhneLight, 2000)
+    End Sub
+
+    Private Sub shwGreenLight_MouseHover(sender As Object, e As EventArgs) Handles shwGreenLight.MouseHover
+        ToolTip1.Show("Elemente mit grüner Ampel-Bewertung kennzeichnen", shwGreenLight, 2000)
+    End Sub
+
+    Private Sub shwYellowLight_MouseHover(sender As Object, e As EventArgs) Handles shwYellowLight.MouseHover
+        ToolTip1.Show("Elemente mit gelber Ampel-Bewertung kennzeichnen", shwYellowLight, 2000)
+    End Sub
+
+    Private Sub shwRedLight_MouseHover(sender As Object, e As EventArgs) Handles shwRedLight.MouseHover
+        ToolTip1.Show("Elemente mit roter Ampel-Bewertung kennzeichnen", shwRedLight, 2000)
+    End Sub
+
+    Private Sub btnSendToHome_MouseHover(sender As Object, e As EventArgs) Handles btnSendToHome.MouseHover
+        ToolTip1.Show("auf Home-Position positionieren", btnSendToHome, 2000)
+    End Sub
+
+    Private Sub btnSentToChange_MouseHover(sender As Object, e As EventArgs) Handles btnSentToChange.MouseHover
+        ToolTip1.Show("auf veränderter Position positionieren", btnSentToChange, 2000)
+    End Sub
+
+    Private Sub searchIcon_MouseHover(sender As Object, e As EventArgs) Handles searchIcon.MouseHover
+        ToolTip1.Show("Suchfeld und Listbox ein-/ausschalten", searchIcon, 2000)
+    End Sub
+
+    Private Sub rdbName_MouseHover(sender As Object, e As EventArgs) Handles rdbName.MouseHover
+        ToolTip1.Show("Anzeige von (fremdsprachigen) Element Namen in der Listbox", rdbName, 2000)
+    End Sub
+
+    Private Sub rdbLU_MouseHover(sender As Object, e As EventArgs) Handles rdbLU.MouseHover
+        ToolTip1.Show("Anzeige und Suche von Lieferumfängen in der Listbox", rdbLU, 2000)
+    End Sub
+
+    Private Sub rdbMV_MouseHover(sender As Object, e As EventArgs) Handles rdbMV.MouseHover
+        ToolTip1.Show("Anzeige und Suche von Elementen, deren Termin geändert wurde", rdbMV, 2000)
+    End Sub
+
+    Private Sub rdbOriginalName_MouseHover(sender As Object, e As EventArgs) Handles rdbOriginalName.MouseHover
+        ToolTip1.Show("Anzeige und Suche von Original-Namen der Elemente", rdbOriginalName, 2000)
+    End Sub
+
+    Private Sub rdbAbbrev_MouseHover(sender As Object, e As EventArgs) Handles rdbAbbrev.MouseHover
+        ToolTip1.Show("Anzeige und Suche von Abkürzungen", rdbAbbrev, 2000)
+    End Sub
+
+    Private Sub rdbBreadcrumb_MouseHover(sender As Object, e As EventArgs) Handles rdbBreadcrumb.MouseHover
+        ToolTip1.Show("Anzeige und Suche des vollen Projekt-Strukturpfades inkl Element-Namen", rdbBreadcrumb, 2000)
     End Sub
 End Class

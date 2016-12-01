@@ -1,5 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports MongoDbAccess
+Imports ProjectBoardBasic
 Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -296,13 +297,33 @@ Module Module1
                     Dim userName As String = My.Computer.Name
                     If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
                         ' in allen Slides den Sicht Schutz aufheben 
-
+                        protectionSolved = True
                         Call makeVisboShapesVisible(True)
 
                     End If
 
                 ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
                     ' die Login Maske aufschalten ... 
+                    ' muss noch eingeloggt werden ? 
+                    If noDBAccessInPPT Then
+                        ' jetzt die Login Maske aufrufen ... 
+
+                        If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                            ' tk: 17.11.16: Einloggen in Datenbank 
+                            noDBAccessInPPT = Not loginProzedur()
+
+                            If noDBAccessInPPT Then
+                                Call MsgBox("kein Datenbank Zugriff ... ")
+                            Else
+                                ' in allen Slides den Sicht Schutz aufheben 
+                                protectionSolved = True
+                                Call makeVisboShapesVisible(True)
+                            End If
+
+                        End If
+
+                    End If
 
                 End If
             End If
