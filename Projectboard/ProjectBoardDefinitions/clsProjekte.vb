@@ -32,7 +32,7 @@ Public Class clsProjekte
                     currentConstellation = currentConstellation & "(*)"
                 End If
             End If
-            
+
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)

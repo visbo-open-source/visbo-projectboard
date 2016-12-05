@@ -25,6 +25,7 @@ Module Module1
         Dim zeile As Integer = 2
         Dim spalte As Integer = 1
 
+        Dim speicherModus As String = ""
         Dim reportname As String = ""
         Dim profilname As String = ""
         Dim portfolio_projname As String = ""
@@ -71,33 +72,51 @@ Module Module1
 
                 While zeile <= lastrow
                     Try
+                        speicherModus = CStr(CType(.Cells(zeile, spalte), Microsoft.Office.Interop.Excel.Range).Value)
+                        If Not IsNothing(speicherModus) Then
+                            speicherModus = LCase(speicherModus)
+                            If speicherModus <> "a" Then
+                                speicherModus = ""
+                            End If
+                        Else
+                            speicherModus = ""
+                        End If
+                    
+                        reportname = CStr(CType(.Cells(zeile, spalte + 1), Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(reportname) Then
+                            reportname = ""
+                        End If
 
-                        reportname = CStr(CType(.Cells(zeile, spalte), Microsoft.Office.Interop.Excel.Range).Value)
-                        profilname = CStr(CType(.Cells(zeile, spalte + 1), Microsoft.Office.Interop.Excel.Range).Value)
-                        portfolio_projname = CStr(CType(.Cells(zeile, spalte + 2), Microsoft.Office.Interop.Excel.Range).Value)
-                        variantname = CStr(CType(.Cells(zeile, spalte + 3), Microsoft.Office.Interop.Excel.Range).Value)
+                        profilname = CStr(CType(.Cells(zeile, spalte + 2), Microsoft.Office.Interop.Excel.Range).Value)
+                        portfolio_projname = CStr(CType(.Cells(zeile, spalte + 3), Microsoft.Office.Interop.Excel.Range).Value)
+
+                        variantname = CStr(CType(.Cells(zeile, spalte + 4), Microsoft.Office.Interop.Excel.Range).Value)
                         If IsNothing(variantname) Then
                             variantname = ""
                         End If
-                        rangeleft = CType(.Cells(zeile, spalte + 4), Microsoft.Office.Interop.Excel.Range).Value
-                        rangeright = CType(.Cells(zeile, spalte + 5), Microsoft.Office.Interop.Excel.Range).Value
 
-                        showRangeLeft = getColumnOfDate(rangeleft)
-                        showRangeRight = getColumnOfDate(rangeright)
+                        rangeleft = CType(.Cells(zeile, spalte + 5), Microsoft.Office.Interop.Excel.Range).Value
+                        rangeright = CType(.Cells(zeile, spalte + 6), Microsoft.Office.Interop.Excel.Range).Value
 
-                        If Not (IsNothing(reportname) _
-                            And IsNothing(profilname) _
-                            And IsNothing(portfolio_projname) _
-                            And IsNothing(rangeleft) _
-                            And IsNothing(rangeright)) Then
 
-                            Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname, reportname, username, password)
+                        If Not IsNothing(profilname) And Not IsNothing(portfolio_projname) Then
+
+                            reportname = Trim(reportname)
+                            profilname = Trim(profilname)
+                            portfolio_projname = Trim(portfolio_projname)
+                            variantname = Trim(variantname)
+
+                            Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname, rangeleft, rangeright, _
+                                                                         reportname, speicherModus = "a", username, password)
                             If erfolgreich Then
-                                ' Powerpoint-Report unter dem namen reportname speichern
-
+                                ' Powerpoint-Report wurde unter dem Namen reportname in reportErstellen gespeichert
+                                ShowProjekte.Clear()
+                                AlleProjekte.Clear()
                             Else
-                                Call logfileSchreiben("Fehler in den Angaben:  Zeile " & zeile, "Main", 0)
+                                Call logfileSchreiben("Fehler beim Report-Erstellen für Zeile:  " & zeile & " in der Vorgabe!", "Main", 0)
                             End If
+
+                        Else
 
                         End If
 
@@ -113,13 +132,22 @@ Module Module1
                 End While
 
             End With
+
         Catch ex As Exception
 
+            Call MsgBox("Fehler beim Einlesen der Report Batch Datei:" & ex.Message)
 
         End Try
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, username, password)
 
+        If Not IsNothing(xlsBatchFile) Then
+
+            ' Schließen des Eingabe-Files
+            xlsBatchFile.Close()
+
+        End If
+        
+        Call logfileSchliessen()
     End Sub
 
 

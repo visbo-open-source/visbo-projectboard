@@ -18105,6 +18105,7 @@ Public Module Projekte
     ''' <param name="raster"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
+
     Public Function getDateofColumn(ByVal raster As Integer, ByVal isBisDate As Boolean) As Date
         Dim datum As Date = StartofCalendar
 
