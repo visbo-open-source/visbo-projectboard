@@ -16905,106 +16905,115 @@ Public Module Projekte
 
                 End If
 
-                ' tk: 14.10.16 Varianten Beschreibung wird geschrieben 
-                If Not IsNothing(hproj.variantDescription) Then
+                Try   ' Try catch, da in manchen Projekte bzw. Steckbriefen keine Variant_Description vorhanden
 
-                    .Range("Variant_Description").Value = hproj.variantDescription
-                    rng = .Range("Variant_Description")
-                    With rng
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                        .IndentLevel = 1
-                        .WrapText = True
-                    End With
+                    ' tk: 14.10.16 Varianten Beschreibung wird geschrieben 
+                    If Not IsNothing(hproj.variantDescription) Then
 
-                End If
+                        .Range("Variant_Description").Value = hproj.variantDescription
+                        rng = .Range("Variant_Description")
+                        With rng
+                            .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                            .IndentLevel = 1
+                            .WrapText = True
+                        End With
 
+                    End If
+                Catch ex As Exception
 
-                ' jetzt werden die weiteren Custom Fields weggeschrieben ....
-                ' und zwar immer in der Form <name> <Wert> <type>
+                End Try
 
-                rng = .Range("IndivName2")
-                Dim startZeileOfCFs As Integer = rng.Row
-                Dim zeilenoffset As Integer = 0
+                Try
+                    ' jetzt werden die weiteren Custom Fields weggeschrieben ....
+                    ' und zwar immer in der Form <name> <Wert> <type>
 
-                If customFieldDefinitions.count > 0 Then
-                    ' nur dann kann es Custom Fields geben 
+                    rng = .Range("IndivName2")
+                    Dim startZeileOfCFs As Integer = rng.Row
+                    Dim zeilenoffset As Integer = 0
 
-
-
-                    With hproj
-
-                        ' jetzt alle String Fields rausschreiben 
-                        For i As Integer = 1 To .customStringFields.Count
-                            Dim uid As Integer = .customStringFields.ElementAt(i - 1).Key
-                            Dim cfValue As String = .customStringFields.ElementAt(i - 1).Value
-
-                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
-                            Dim cfName As String = customFieldDefinitions.getName(uid)
-                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
-
-                            rng.Offset(zeilenoffset, -1).Value = cfName
-                            rng.Offset(zeilenoffset, 0).Value = cfValue
-                            rng.Offset(zeilenoffset, 0).NumberFormat = "@"
-                            rng.Offset(zeilenoffset, 2).Value = "String"
+                    If customFieldDefinitions.count > 0 Then
+                        ' nur dann kann es Custom Fields geben 
 
 
-                            zeilenoffset = zeilenoffset + 1
-                        Next
 
-                        ' jetzt alle Double Fields rausschreiben 
-                        For i As Integer = 1 To .customDblFields.Count
-                            Dim uid As Integer = .customDblFields.ElementAt(i - 1).Key
-                            Dim cfValue As Double = .customDblFields.ElementAt(i - 1).Value
+                        With hproj
 
-                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
-                            Dim cfName As String = customFieldDefinitions.getName(uid)
-                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+                            ' jetzt alle String Fields rausschreiben 
+                            For i As Integer = 1 To .customStringFields.Count
+                                Dim uid As Integer = .customStringFields.ElementAt(i - 1).Key
+                                Dim cfValue As String = .customStringFields.ElementAt(i - 1).Value
 
-                            rng.Offset(zeilenoffset, -1).Value = cfName
-                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
-                            rng.Offset(zeilenoffset, 0).NumberFormat = "#0.00"
-                            rng.Offset(zeilenoffset, 2).Value = "Zahl"
+                                ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                                Dim cfName As String = customFieldDefinitions.getName(uid)
+                                Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
 
-                            zeilenoffset = zeilenoffset + 1
-                        Next
-
-                        ' jetzt alle Flag Fields rausschreiben 
-                        For i As Integer = 1 To .customBoolFields.Count
-                            Dim uid As Integer = .customBoolFields.ElementAt(i - 1).Key
-                            Dim cfValue As Boolean = .customBoolFields.ElementAt(i - 1).Value
-
-                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
-                            Dim cfName As String = customFieldDefinitions.getName(uid)
-                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
-
-                            rng.Offset(zeilenoffset, -1).Value = cfName
-                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
-                            rng.Offset(zeilenoffset, 2).Value = "Flag"
-
-                            zeilenoffset = zeilenoffset + 1
-                        Next
-
-                    End With
-                    
-
-                End If
-
-                ' jetzt werden noch die Validation. also Auswahl aus Liste gesetzt ...
-                For iz As Integer = startZeileOfCFs To startZeileOfCFs + zeilenoffset + customFieldDefinitions.count
-                    Try
-                        rng.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                       Formula1:="=Custom_Fields")
-                    Catch ex As Exception
-
-                    End Try
-                Next
-                
+                                rng.Offset(zeilenoffset, -1).Value = cfName
+                                rng.Offset(zeilenoffset, 0).Value = cfValue
+                                rng.Offset(zeilenoffset, 0).NumberFormat = "@"
+                                rng.Offset(zeilenoffset, 2).Value = "String"
 
 
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                                zeilenoffset = zeilenoffset + 1
+                            Next
+
+                            ' jetzt alle Double Fields rausschreiben 
+                            For i As Integer = 1 To .customDblFields.Count
+                                Dim uid As Integer = .customDblFields.ElementAt(i - 1).Key
+                                Dim cfValue As Double = .customDblFields.ElementAt(i - 1).Value
+
+                                ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                                Dim cfName As String = customFieldDefinitions.getName(uid)
+                                Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                                rng.Offset(zeilenoffset, -1).Value = cfName
+                                rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                                rng.Offset(zeilenoffset, 0).NumberFormat = "#0.00"
+                                rng.Offset(zeilenoffset, 2).Value = "Zahl"
+
+                                zeilenoffset = zeilenoffset + 1
+                            Next
+
+                            ' jetzt alle Flag Fields rausschreiben 
+                            For i As Integer = 1 To .customBoolFields.Count
+                                Dim uid As Integer = .customBoolFields.ElementAt(i - 1).Key
+                                Dim cfValue As Boolean = .customBoolFields.ElementAt(i - 1).Value
+
+                                ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                                Dim cfName As String = customFieldDefinitions.getName(uid)
+                                Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                                rng.Offset(zeilenoffset, -1).Value = cfName
+                                rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                                rng.Offset(zeilenoffset, 2).Value = "Flag"
+
+                                zeilenoffset = zeilenoffset + 1
+                            Next
+
+                        End With
+
+                    End If
 
 
+
+                    ' jetzt werden noch die Validation. also Auswahl aus Liste gesetzt ...
+                    For iz As Integer = startZeileOfCFs To startZeileOfCFs + zeilenoffset + customFieldDefinitions.count
+                        Try
+                            rng.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=Custom_Fields")
+                        Catch ex As Exception
+
+                        End Try
+                    Next
+
+
+
+                    '' Blattschutz setzen
+                    '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+
+                Catch ex As Exception
+
+                End Try
 
 
             End With
