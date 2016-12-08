@@ -35,22 +35,22 @@ Imports System.Windows
 
 <Runtime.InteropServices.ComVisible(True)> _
     Public Class Ribbon1
-    Implements Office.IRibbonExtensibility
+    Implements Microsoft.Office.Core.IRibbonExtensibility
 
-    Private ribbon As Office.IRibbonUI
+    Private ribbon As Microsoft.Office.Core.IRibbonUI
 
     Private tempSkipChanges As Boolean = False
 
     Public Sub New()
     End Sub
 
-    Public Function GetCustomUI(ByVal ribbonID As String) As String Implements Office.IRibbonExtensibility.GetCustomUI
+    Public Function GetCustomUI(ByVal ribbonID As String) As String Implements Microsoft.Office.Core.IRibbonExtensibility.GetCustomUI
         Return GetResourceText("ExcelWorkbook1.Ribbon1.xml")
     End Function
 
 #Region "Menübandrückrufe"
     'Erstellen Sie hier Rückrufmethoden. Weitere Informationen über das Hinzufügen von Rückrufmethoden erhalten Sie, indem Sie das Menüband-XML-Element im Projektmappen-Explorer markieren und dann F1 drücken.
-    Public Sub Ribbon_Load(ByVal ribbonUI As Office.IRibbonUI)
+    Public Sub Ribbon_Load(ByVal ribbonUI As Microsoft.Office.Core.IRibbonUI)
         Me.ribbon = ribbonUI
     End Sub
 

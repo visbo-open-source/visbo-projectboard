@@ -16832,6 +16832,11 @@ Public Module testModule
                 '                                        .projectNameVorlagenShape, _
                 '                                        .durationArrowShape, .durationTextShape)
                 'End With
+            ElseIf zeilenhoehe_sav <> 0 And rds.zeilenHoehe = 0.0 Then
+                Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+                zeilenhoehe_sav = rds.zeilenHoehe
+            Else
+                Call MsgBox("pptfirsttime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
 
             End If
 
