@@ -3802,11 +3802,11 @@ Public Module testModule
                         Case "Plan/Forecast"
 
 
-                            Dim vglVersion As Integer = PThis.ersterStand
                             Dim auswahl As Integer
 
                             Dim ersterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.DayOfYear + 1)
                             Dim letzterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.Day + 1)
+                            Dim aktuellesDatum As Date = Date.Now
 
                             Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
                             qualifier = tmpQualifierStr(0)
@@ -3815,11 +3815,19 @@ Public Module testModule
 
                                 Try
                                     ersterStandDate = CDate(tmpQualifierStr(1))
-                                    letzterStandDate = CDate(tmpQualifierStr(2))
+                                    aktuellesDatum = CDate(tmpQualifierStr(2))
+                                    letzterStandDate = CDate(aktuellesDatum.AddMonths(-1))
                                 Catch ex As Exception
 
                                 End Try
 
+                            ElseIf tmpQualifierStr.Length = 2 Then
+                                Try
+                                    ersterStandDate = CDate(tmpQualifierStr(1))
+                                    letzterStandDate = CDate(aktuellesDatum.AddMonths(-1))
+                                Catch ex As Exception
+
+                                End Try
                             End If
 
 
@@ -3844,7 +3852,8 @@ Public Module testModule
                             hwidth = 450
                             hheight = awinSettings.ChartHoehe1
                             obj = Nothing
-                            Call createSollIstOfPortfolio(obj, Date.Now, auswahl, qualifier, ersterStandDate, letzterStandDate, _
+
+                            Call createSollIstOfPortfolio(obj, aktuellesDatum, auswahl, qualifier, ersterStandDate, letzterStandDate, _
                                                            htop, hleft, hheight, hwidth)
 
                             reportObj = obj
@@ -9314,7 +9323,7 @@ Public Module testModule
     ''' erstellt einen Soll-Ist Vergleich zwischen letztem bzw. erstem Plan-Stand 
     ''' </summary>
     ''' <param name="reportObj"></param>
-    ''' <param name="heute"></param>
+    ''' <param name="aktuellesDatum"></param>
     ''' <param name="auswahl">bestimmt , was verglichen werden soll </param>
     ''' <param name="qualifier"></param>
     ''' <param name="ersterStandDatum">gibt das Datum an, das den ersten Stand markiert</param>
@@ -9324,7 +9333,7 @@ Public Module testModule
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks></remarks>
-    Sub createSollIstOfPortfolio(ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, _
+    Sub createSollIstOfPortfolio(ByRef reportObj As Excel.ChartObject, ByVal aktuellesDatum As Date, ByVal auswahl As Integer, ByVal qualifier As String, _
                                  ByVal ersterStandDatum As Date, ByVal letzterStandDatum As Date, _
                                 ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
         Dim chtobj As Excel.ChartObject
@@ -9350,7 +9359,7 @@ Public Module testModule
         Dim tdatenreiheE() As Double
         Dim tdatenreiheL() As Double
 
-        Dim von As Integer, bis As Integer, heuteColumn As Integer = getColumnOfDate(heute)
+        Dim von As Integer, bis As Integer, heuteColumn As Integer = getColumnOfDate(aktuellesDatum)
         Dim pastAndFuture As Boolean = False
         Dim future As Boolean = True
 
@@ -9451,7 +9460,7 @@ Public Module testModule
             If request.pingMongoDb() Then
                 ' es soll mit der Standard-Variante verglichen werden ... 
                 projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:="", _
-                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                            storedEarliest:=StartofCalendar, storedLatest:=aktuellesDatum)
 
                 anzH = anzH + 1
                 anzSnapshots = projekthistorie.Count
@@ -9846,7 +9855,7 @@ Public Module testModule
 
                 With .SeriesCollection.NewSeries
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "aktueller Stand: " & Date.Now.ToShortDateString & " (" & anzH.ToString & " P)"
+                    .name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
                     '.name = "Current"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheH

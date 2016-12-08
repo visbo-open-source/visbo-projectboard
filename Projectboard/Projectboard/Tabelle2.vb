@@ -14,43 +14,25 @@ Public Class Tabelle2
     Private columnRC As Integer = 5
     Private oldColumn As Integer = 5
     Private oldRow As Integer = 2
-    Private meWS As Excel.Worksheet
 
 
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
 
-
         Application.DisplayFormulaBar = False
+
 
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
-        'meWS = CType(appInstance.ActiveSheet, Excel.Worksheet)
-        meWS = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+        Dim meWS As Excel.Worksheet = _
+            CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
 
         ' jetzt den Schutz aufheben , falls einer definiert ist 
         If meWS.ProtectContents Then
             meWS.Unprotect(Password:="x")
         End If
-
-        ' jetzt den AutoFilter setzen 
-        Try
-            ' einen Select machen ...
-            Try
-                CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-            Catch ex As Exception
-
-            End Try
-
-            ' jetzt die Autofilter aktivieren ... 
-            If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-            End If
-
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Filtersetzen und Speichern" & vbLf & ex.Message)
-        End Try
 
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
@@ -67,6 +49,25 @@ Public Class Tabelle2
 
         Catch ex As Exception
             Call MsgBox("Fehler in Laden des Sheets ...")
+        End Try
+
+        ' jetzt den AutoFilter setzen 
+        Try
+            ' einen Select machen ...
+            Try
+                'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                CType(CType(meWS, Excel.Worksheet).Cells(2, columnRC), Excel.Range).Select()
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
+                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Filtersetzen und Speichern" & vbLf & ex.Message)
         End Try
 
         Try
@@ -87,7 +88,7 @@ Public Class Tabelle2
                              AllowSorting:=True, _
                              AllowFiltering:=True)
                     .EnableSelection = XlEnableSelection.xlUnlockedCells
-                    ' .EnableAutoFilter = True
+                    .EnableAutoFilter = True
                 End With
             End If
 
@@ -704,6 +705,10 @@ Public Class Tabelle2
                                          ByVal xWerteIndex As Integer, ByRef difference As Double, _
                                          ByRef summenChanged As Boolean)
 
+        Dim meWS As Excel.Worksheet = _
+            CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
         Dim pName As String = hproj.name
         Dim phaseNameID As String = cPhase.nameID
 
@@ -806,7 +811,9 @@ Public Class Tabelle2
         Dim phaseNameID As String = cPhase.nameID
 
         Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, roleName)
-
+        Dim meWS As Excel.Worksheet = _
+            CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
 
 
         If zeileOFSummaryRole >= 2 And zeileOFSummaryRole <= visboZustaende.meMaxZeile Then
@@ -914,6 +921,10 @@ Public Class Tabelle2
     End Sub
     Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
 
+        Dim meWS As Excel.Worksheet = _
+            CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+
         appInstance.EnableEvents = False
 
         ' jetzt den Schutz aufheben , falls einer definiert ist 
@@ -924,7 +935,8 @@ Public Class Tabelle2
         Try
             ' einen Select machen ...
             Try
-                CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                'CType(CType(meWS, Excel.Worksheet).Cells(1,1), Excel.Range).Select()
+                CType(CType(meWS, Excel.Worksheet).Cells(2, visboZustaende.meColRC), Excel.Range).Select()
             Catch ex As Exception
 
             End Try
@@ -1226,7 +1238,7 @@ Public Class Tabelle2
                 newDblValue = 0.0
             ElseIf IsNumeric(target.Cells(1, 1).value) Then
                 newDblValue = CDbl(target.Cells(1, 1).value)
-                If newDblValue > 0 Then
+                If newDblValue >= 0 Then
                     ok = True
                 Else
                     newDblValue = 0

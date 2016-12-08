@@ -10522,13 +10522,21 @@ Public Module awinGeneralModules
                                     spalte = 2
                                     tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
-                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
-                                            spalte < 241 And spalte <= lastSpalte
-                                        index = getColumnOfDate(tmpDate)
-                                        tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+                                    ' erstmal dahin positionieren, wo das Datum auch mit StartOfCalendar harmoniert 
+                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
+                                        spalte = spalte + 1
+                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                    Loop
 
-                                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                            subRole.kapazitaet(index) = tmpKapa
+                                    Do While spalte < 241 And spalte <= lastSpalte
+
+                                        index = getColumnOfDate(tmpDate)
+                                        If index >= 1 Then
+                                            tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                            If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                                subRole.kapazitaet(index) = tmpKapa
+                                            End If
                                         End If
 
                                         spalte = spalte + 1
@@ -16511,106 +16519,11 @@ Public Module awinGeneralModules
         End With
 
 
-        'With CType(newWB.ActiveSheet, Excel.Worksheet)
-
-        '    Try
-        '        autoFilterRange = CType(.Columns("A:E"), Excel.Range)
-        '        autoFilterRange.AutoFilter()
-        '    Catch ex As Exception
-
-        '    End Try
-
-        '    Try
-
-        '        Dim rng1 As Excel.Range = CType(.Columns(1), Excel.Range)
-        '        Dim rng2 As Excel.Range = CType(.Columns(5), Excel.Range)
-        '        autoFilterRange = CType(.Range(rng1, rng2), Excel.Range)
-        '    Catch ex As Exception
-
-        '    End Try
-
-
-        'End With
-
-
-
-
-        ' jetzt den Bereich markieren bzw. schützen 
-        ''Dim startProtectedArea As Integer
-        ''Dim endProtectedArea As Integer
-        ''Dim protectedRange As Excel.Range = Nothing
-        ''Dim wbName As String
-
-        ''Select Case type
-        ''    Case 0
-        ''        startProtectedArea = 0
-        ''        endProtectedArea = 0
-        ''        wbName = "all"
-        ''    Case 1
-
-        ''        startProtectedArea = getColumnOfDate(Date.Now)
-        ''        endProtectedArea = bis
-        ''        wbName = "past"
-        ''    Case 2
-        ''        startProtectedArea = von
-        ''        endProtectedArea = getColumnOfDate(Date.Now)
-        ''        wbName = "future"
-        ''    Case Else
-        ''        Call MsgBox("Typ nicht erkannt, muss Werte 0, 1 oder 2 haben: ist aber" & type)
-        ''        appInstance.EnableEvents = True
-        ''        Exit Sub
-        ''End Select
-
-        ''Dim generalRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, 1), _
-        ''                                        newWB.ActiveSheet.cells(zeile - 1, startSpalteDaten - 1)),  _
-        ''                                        Excel.Range)
-        ''Dim valueRange As Excel.Range = CType(newWB.ActiveSheet.Range(newWB.ActiveSheet.cells(1, startSpalteDaten), _
-        ''                                        newWB.ActiveSheet.cells(zeile - 1, startSpalteDaten + 2 * (bis - von + 1))),  _
-        ''                                        Excel.Range)
-
-        ''With generalRange
-        ''    .Columns.AutoFit()
-        ''End With
-
-
-        'With ersteZeile
-        '    .Interior.Color = awinSettings.AmpelGruen
-        'End With
-
-
-        'If type <> 0 Then
-
-        '    With newWB.ActiveSheet
-        '        protectedRange = CType(.Range(.cells(1, startProtectedArea), _
-        '                                                       .cells(zeile - 1, endProtectedArea)),  _
-        '                                                        Excel.Range)
-
-        '    End With
-        '    protectedRange.Interior.Color = awinSettings.AmpelNichtBewertet
-        'End If
-
-        'With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-        '    .Protect(Password:="x", AllowDeletingColumns:=False, UserInterfaceOnly:=True, DrawingObjects:=True, _
-        '             AllowFormattingCells:=True, AllowDeletingRows:=True, AllowFiltering:=True, AllowFormattingColumns:=True, _
-        '             AllowFormattingRows:=True, AllowInsertingColumns:=False, AllowInsertingHyperlinks:=False, AllowInsertingRows:=True,
-        '             AllowSorting:=True, AllowUsingPivotTables:=True)
-        'End With
-
-        ' '' '' ''Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\EditNeeds_" & _
-        ' '' '' ''    Date.Now.ToString.Replace(":", ".") & ".xlsx"
-
-        '' ''Try
-        '' ''    'appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-        '' ''    'newWB.SaveAs(Filename:=expFName, ConflictResolution:=Microsoft.Office.Interop.Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-        '' ''    newWB.Save()
-
-        '' ''Catch ex As Exception
-
-        '' ''End Try
 
         Try
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
                 CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
             End If
 
@@ -16843,7 +16756,9 @@ Public Module awinGeneralModules
             currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(5)), Excel.Worksheet)
 
             Try
+                ' off setzen des AutoFilter Modus ... 
                 If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+                    CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
                     CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
                 End If
             Catch ex As Exception
@@ -16926,7 +16841,7 @@ Public Module awinGeneralModules
 
             Try
                 If Not IsNothing(CType(currentWB.Names.Item("RoleCost"), Excel.Name)) Then
-                    currentWB.Names.Item("RC").Delete()
+                    currentWB.Names.Item("RoleCost").Delete()
                 End If
             Catch ex As Exception
 
@@ -17424,12 +17339,13 @@ Public Module awinGeneralModules
         Next
 
 
-        ' jetzt die erste Zeile so groß wie nötig machen 
-        Try
-            ersteZeile.AutoFit()
-        Catch ex As Exception
+        ' tk 7.12.16 kommt immer auf Fehler, weil nur 1 Zeile und eine Auswahl von Spalten .... 
+        '' jetzt die erste Zeile so groß wie nötig machen 
+        'Try
+        '    ersteZeile.AutoFit()
+        'Catch ex As Exception
 
-        End Try
+        'End Try
 
         ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
         Dim infoBlock As Excel.Range
@@ -17475,77 +17391,6 @@ Public Module awinGeneralModules
 
         End With
 
-
-        ' das wird jetzt bei jeder einzelnen Zelle bereits gemacht ...
-        ' '' jetzt wird der RoleCostInput Bereich festgelegt 
-        ''With CType(currentWS, Excel.Worksheet)
-        ''    Dim maxRows As Integer = .Rows.Count
-        ''    roleCostInput = CType(.Range(.Cells(2, ressCostColumn), .Cells(maxRows, ressCostColumn)), Excel.Range)
-        ''End With
-
-
-
-        ''Dim sortedRCListe As New SortedList(Of String, String)
-        ''Dim rcDefinition As String = ""
-
-        ''For iz As Integer = 1 To RoleDefinitions.Count
-        ''    tmpName = RoleDefinitions.getRoledef(iz).name
-        ''    If Not sortedRCListe.ContainsKey(tmpName) Then
-        ''        sortedRCListe.Add(tmpName, tmpName)
-        ''    End If
-        ''Next
-
-        ''For iz As Integer = 1 To sortedRCListe.Count
-        ''    If rcDefinition.Length = 0 Then
-        ''        rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-        ''    Else
-        ''        rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-        ''    End If
-        ''Next
-
-        ''sortedRCListe.Clear()
-
-        ''For iz As Integer = 1 To CostDefinitions.Count - 1
-        ''    tmpName = CostDefinitions.getCostdef(iz).name
-        ''    If Not sortedRCListe.ContainsKey(tmpName) Then
-        ''        sortedRCListe.Add(tmpName, tmpName)
-        ''    End If
-        ''Next
-
-        ''For iz As Integer = 1 To sortedRCListe.Count
-        ''    If rcDefinition.Length = 0 Then
-        ''        rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-        ''    Else
-        ''        rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-        ''    End If
-        ''Next
-
-
-        ''With roleCostInput
-        ''    Try
-        ''        .Validation.Delete()
-        ''    Catch ex As Exception
-
-        ''    End Try
-
-        ''    ' jetzt wird die ValidationList aufgebaut 
-        ''    .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-        ''                                   Formula1:=rcDefinition)
-
-
-
-        ''End With
-
-        ' wird jetzt im Activate gemacht ... 
-        ''Try
-        ''    ' jetzt die Autofilter aktivieren ... 
-        ''    If Not CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
-        ''        CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-        ''    End If
-        ''Catch ex As Exception
-        ''    appInstance.EnableEvents = True
-        ''    Throw New ArgumentException("Fehler beim Filtersetzen und Speichern" & ex.Message)
-        ''End Try
 
         appInstance.EnableEvents = True
 

@@ -18081,17 +18081,17 @@ Public Module Projekte
                 spalte = CInt(DateDiff(DateInterval.Month, StartofCalendar, datum) + 1)
             Case "PW"
                 Call MsgBox("noch nicht implementiert")
-                spalte = 1
+                spalte = 0
             Case "PT"
                 Call MsgBox("noch nicht implementiert")
-                spalte = 1
+                spalte = 0
         End Select
 
-        If spalte <= 0 Then
-            getColumnOfDate = 1
-        Else
-            getColumnOfDate = spalte
+        If spalte < 1 Then
+            Throw New ArgumentException("Datum kann nicht vor dem Start des Kalenders liegen")
         End If
+
+        getColumnOfDate = spalte
 
     End Function
 

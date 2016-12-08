@@ -11,8 +11,8 @@ Public Class Ribbon1
 
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
-
-        If userIsEntitled() Then
+        Dim msg As String = ""
+        If userIsEntitled(msg) Then
 
             ' wird das Formular aktuell angezeigt ? 
             If IsNothing(infoFrm) And Not formIsShown Then
@@ -21,7 +21,8 @@ Public Class Ribbon1
                 infoFrm.Show()
             End If
 
-
+        Else
+            Call MsgBox(msg)
         End If
 
 
@@ -31,19 +32,23 @@ Public Class Ribbon1
 
     Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
 
+        Dim msg As String = ""
 
-        If userIsEntitled() Then
+        If userIsEntitled(msg) Then
             Dim settingsfrm As New frmSettings
             With settingsfrm
                 Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
             End With
+        Else
+            Call MsgBox(msg)
         End If
 
     End Sub
 
     Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs) Handles timeMachineTab.Click
+        Dim msg As String = ""
 
-        If userIsEntitled() Then
+        If userIsEntitled(msg) Then
             ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
             If smartSlideLists.countProjects > 0 Then
 
@@ -82,7 +87,7 @@ Public Class Ribbon1
 
                             smartSlideLists.addToListOfTS(tsCollection)
                         Next
-                        
+
                     End If
 
                     ' jetzt wird das Formular TimeStamps aufgerufen ...
@@ -94,6 +99,8 @@ Public Class Ribbon1
             Else
                 Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
             End If
+        Else
+            Call MsgBox(msg)
         End If
 
     End Sub

@@ -1198,7 +1198,7 @@ Public Class frmInfo
     End Sub
 
     Private Sub CheckBxMarker_MouseHover(sender As Object, e As EventArgs) Handles CheckBxMarker.MouseHover
-        ToolTip1.Show("Element-Marker anzeigen", PictureMarker, 2000)
+        ToolTip1.Show("Element-Marker anzeigen", CheckBxMarker, 2000)
     End Sub
 
     Private Sub shwOhneLight_MouseHover(sender As Object, e As EventArgs) Handles shwOhneLight.MouseHover
