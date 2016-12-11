@@ -344,6 +344,62 @@ namespace MongoDbAccess
             // alt: 2.x 
             //return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
+        /// <summary>
+        /// liest alle vorkommenden Namen ProjektName#VariantenName aus der Datenbank , die zum Zeitpunkt storedLatest auch in der Datenbank existiert haben 
+        /// dabei wird ein übergebener Zeitraum berücksichtigt ... also nur Projekte, die auch im Zeitraum liegen ...
+        /// </summary>
+        /// <param name="zeitraumStart"></param>
+        /// <param name="zeitraumEnde"></param>
+        /// <param name="storedEarliest"></param>
+        /// <param name="storedatOrBefore"></param>
+        /// <returns></returns>
+        public SortedList<string, string> retrieveProjectVariantNamesFromDB(DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedatOrBefore)
+        {
+            var result = new SortedList<string, string>();
+
+            // in der Datenbank sind die Zeiten als Universal time gespeichert .. 
+            // deshalb muss hier umgerechnet werden 
+            storedatOrBefore = storedatOrBefore.ToUniversalTime();
+            
+            int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
+            
+                
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore)
+                            .Select(c => c.name)
+                            .Distinct()
+                            .ToList();
+
+            foreach (string name in prequery)
+                {
+                                        
+                    try
+                    {
+
+                        if  (result.ContainsKey (name))  
+                        {
+                            // nichts tun 
+                        }
+                        else
+                        {
+                            result.Add(name, name);
+                        }
+                        
+
+                    }
+                    catch (Exception)
+                    {
+
+                        // nichts tun ...
+                    }
+
+
+                }
+          
+
+            return result;
+        }
+
 
         public SortedList<string, clsProjekt> retrieveProjectsFromDB(string projectname, string variantName, DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedEarliest, DateTime storedLatest, bool onlyLatest)
         {
@@ -455,6 +511,7 @@ namespace MongoDbAccess
 
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
                             .Where(c => c.name.Contains(searchstr))
+                            .OrderBy(c => c.variantName)
                             .Select(c => c.variantName)
                             .Distinct();
 

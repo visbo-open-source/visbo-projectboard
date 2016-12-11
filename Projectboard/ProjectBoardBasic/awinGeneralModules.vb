@@ -10688,12 +10688,13 @@ Public Module awinGeneralModules
     Friend Sub buildTreeview(ByRef projektHistorien As clsProjektDBInfos, _
                               ByRef TreeviewProjekte As TreeView, _
                               ByRef aktuelleGesamtListe As clsProjekteAlle, _
+                              ByRef pvNamesList As SortedList(Of String, String), _
                               ByVal aKtionskennung As Integer, _
+                              ByVal quickList As Boolean, _
                               ByVal applyFilter As Boolean, _
                               ByVal storedAtOrBefore As Date)
 
         Dim nodeLevel0 As TreeNode
-        Dim nodeLevel1 As TreeNode
         Dim zeitraumVon As Date = StartofCalendar
         Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
         'Dim storedHeute As Date = Now
@@ -10701,7 +10702,15 @@ Public Module awinGeneralModules
         Dim pname As String = ""
         Dim variantName As String = ""
         Dim loadErrorMsg As String = ""
-        'Dim listOfVariantNamesDB As New Collection
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' es ist ein Zeitraum definiert 
+            zeitraumVon = getDateofColumn(showRangeLeft, False)
+            zeitraumbis = getDateofColumn(showRangeRight, True)
+        End If
+
+        ' steuert, ob erstmal nur Projekt-Namen, Varianten-Namen gelesen werden 
+        ' geht wesentlich schneller, wenn es sich um eine Datenbank mit sehr vielen Projekten handelt ... 
 
 
         Dim deletedProj As Integer = 0
@@ -10723,12 +10732,14 @@ Public Module awinGeneralModules
 
             Case PTTvActions.delFromDB
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
+
+                pvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
+                quickList = True
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
 
             Case PTTvActions.delFromSession
                 aktuelleGesamtListe = AlleProjekte
@@ -10751,14 +10762,25 @@ Public Module awinGeneralModules
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.loadPV
+
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
                 pname = ""
                 variantName = ""
+                pvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
+                quickList = True
+                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
-                loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
+                ' alt tk 11.12.16
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                ''Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
+                'pname = ""
+                'variantName = ""
+
+                'aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
+                'loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
+
 
             Case PTTvActions.activateV
                 aktuelleGesamtListe = AlleProjekte
@@ -10768,36 +10790,44 @@ Public Module awinGeneralModules
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
-                ' '' ''ur: 10.08.2015: ''Case PTTvActions.definePortfolioDB
-                ' '' '' ''    pname = ""
-                ' '' '' ''    variantName = ""
-
-                ' '' '' ''    aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-                ' '' '' ''    loadErrorMsg = "es gibt keine Projekte in der Datenbank"
-
-                ' '' '' ''Case PTTvActions.definePortfolioSE
-                ' '' '' ''    pname = ""
-                ' '' '' ''    variantName = ""
-                ' '' '' ''    aktuelleGesamtListe = AlleProjekte
-                ' '' '' ''    loadErrorMsg = "es sind keine Projekte geladen"
-
 
         End Select
 
         ' jetzt wird der Filter angewendet, wenn er angewendet werden soll 
         ' das wird jetzt in der Routine mitgegeben 
-        If applyFilter Then
+        If applyFilter And aktuelleGesamtListe.Count > 0 Then
             aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
         End If
 
 
-        If aktuelleGesamtListe.Count >= 1 Then
+        If aktuelleGesamtListe.Count >= 1 Or pvNamesList.Count >= 1 Then
 
             With TreeviewProjekte
 
                 .CheckBoxes = True
 
-                Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
+                Dim projektliste As Collection
+
+                If quickList Then
+                    projektliste = New Collection
+                    For Each kvp As KeyValuePair(Of String, String) In pvNamesList
+                        Dim tmpName As String = kvp.Key
+                        If tmpName.Contains("#") Then
+                            Dim tmpStr() As String = tmpName.Split(New Char() {CChar("#")})
+                            If Not projektliste.Contains(tmpStr(0)) Then
+                                projektliste.Add(tmpStr(0), tmpStr(0))
+                            End If
+                        Else
+                            If Not projektliste.Contains(tmpName) Then
+                                projektliste.Add(tmpName, tmpName)
+                            End If
+                        End If
+                    Next
+
+                Else
+                    projektliste = aktuelleGesamtListe.getProjectNames
+                End If
+
                 Dim showPname As Boolean
 
 
@@ -10805,15 +10835,6 @@ Public Module awinGeneralModules
                 For Each pname In projektliste
 
                     showPname = True
-                    ' das wird hier doch überhaupt nicht gebraucht ... ? 
-                    'If noDB Then
-                    '    listOfVariantNamesDB.Clear()
-                    'Else
-                    '    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    '    Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
-
-                    '    listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
-                    'End If
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
                     If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then
@@ -10824,7 +10845,13 @@ Public Module awinGeneralModules
 
                     If showPname Then
 
-                        Dim variantNames As Collection = aktuelleGesamtListe.getVariantNames(pname, True)
+                        Dim variantNames As Collection
+
+                        If quickList Then
+                            variantNames = getVariantListeFromPVNames(pvNamesList, pname)
+                        Else
+                            variantNames = aktuelleGesamtListe.getVariantNames(pname, True)
+                        End If
 
                         nodeLevel0 = .Nodes.Add(pname)
 
@@ -10858,67 +10885,49 @@ Public Module awinGeneralModules
 
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
-                        If aKtionskennung = PTTvActions.delFromSession Or _
-                            aKtionskennung = PTTvActions.activateV Or _
-                            aKtionskennung = PTTvActions.chgInSession Or _
-                            aKtionskennung = PTTvActions.deleteV Or _
-                             aKtionskennung = PTTvActions.loadPV Or _
-                            aKtionskennung = PTTvActions.definePortfolioDB Or _
-                            aKtionskennung = PTTvActions.definePortfolioSE Then
 
-                            If variantNames.Count > 1 Then
+                        If variantNames.Count > 1 Or _
+                            aKtionskennung = PTTvActions.delFromDB Then
 
-                                nodeLevel0.Tag = "P"
-                                nodeLevel1 = nodeLevel0.Nodes.Add(CStr(variantNames.Item(1)))
-                                nodeLevel1.Tag = "P"
-
-                            Else
-                                nodeLevel0.Tag = "X"
-                            End If
-
-                            ' tk 28.9.16 wurde durch obiges abgelöst ...
-                            ''If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
-                            ''    listOfVariantNamesDB.Count > 0 Then
-
-                            ''    nodeLevel0.Tag = "P"
-                            ''    nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                            ''    nodeLevel1.Tag = "P"
-
-                            ''Else
-                            ''    nodeLevel0.Tag = "X"
-                            ''End If
-
-                            ' jetzt soll im Fall Bearbeiten Portfolio angezeigt werden, welche Projekte gerade in ShowProjekte sind ...
-                            ' bzw. welche quasi im NoShow sind 
-                            If aKtionskennung = PTTvActions.chgInSession Then
-                                If ShowProjekte.contains(pname) Then
-                                    nodeLevel0.Checked = True
-                                    ' herausfinden, ob es abhängige Projekte zu diesem Projekt gibt ... 
-
+                            nodeLevel0.Tag = "X"
+                            For iv As Integer = 1 To variantNames.Count
+                                Dim tmpNodeLevel1 As TreeNode = nodeLevel0.Nodes.Add(CStr(variantNames.Item(iv)))
+                                If aKtionskennung = PTTvActions.delFromDB Then
+                                    tmpNodeLevel1.Tag = "P"
+                                    Dim tmpNodeLevel2 As TreeNode = tmpNodeLevel1.Nodes.Add("Platzhalter-Datum")
+                                Else
+                                    tmpNodeLevel1.Tag = "X"
                                 End If
-                            End If
 
-                            '' ''ur:10.08.2015 '' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
-                            ' '' ''If aKtionskennung = PTTvActions.definePortfolioSE Then
-                            ' '' ''    If ShowProjekte.contains(pname) Then
-                            ' '' ''        ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
-                            ' '' ''        nodeLevel0.Checked = True
-
-                            ' '' ''    End If
-                            ' '' ''End If
-
+                            Next
 
                         Else
-                            nodeLevel0.Tag = "P"
-                            nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                            nodeLevel1.Tag = "P"
+                            nodeLevel0.Tag = "X"
                         End If
+
+                        If aKtionskennung = PTTvActions.chgInSession Then
+                            If ShowProjekte.contains(pname) Then
+                                nodeLevel0.Checked = True
+
+                                ' jetzt die betreffende Variante setzen
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+                                Dim vName As String = "(" & hproj.variantName & ")"
+
+                                For Each tmpNode As TreeNode In nodeLevel0.Nodes
+                                    If tmpNode.Text = vName Then
+                                        tmpNode.Checked = True
+                                    Else
+                                        tmpNode.Checked = False
+                                    End If
+                                Next
+
+
+                            End If
+                        End If
+
                     End If
 
-
-
                 Next
-
 
             End With
         Else
@@ -10927,6 +10936,213 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' aktualisiert die TreeView gemäß der aktuelleGesamtListe bzw. der pvNamesList 
+    ''' </summary>
+    ''' <param name="TreeviewProjekte"></param>
+    ''' <param name="aktuelleGesamtListe"></param>
+    ''' <param name="pvNamesList"></param>
+    ''' <param name="aKtionskennung"></param>
+    ''' <param name="quickList"></param>
+    ''' <remarks></remarks>
+    Friend Sub updateTreeview(ByRef TreeviewProjekte As TreeView, _
+                                  ByVal aktuelleGesamtListe As clsProjekteAlle, _
+                                  ByVal pvNamesList As SortedList(Of String, String), _
+                                  ByVal aKtionskennung As Integer, _
+                                  ByVal quickList As Boolean)
+
+        Dim nodeLevel0 As TreeNode
+        Dim zeitraumVon As Date = StartofCalendar
+        Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
+        'Dim storedHeute As Date = Now
+        Dim storedGestern As Date = StartofCalendar
+        Dim pname As String = ""
+        Dim variantName As String = ""
+        Dim loadErrorMsg As String = ""
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' es ist ein Zeitraum definiert 
+            zeitraumVon = getDateofColumn(showRangeLeft, False)
+            zeitraumbis = getDateofColumn(showRangeRight, True)
+        End If
+
+        ' steuert, ob erstmal nur Projekt-Namen, Varianten-Namen gelesen werden 
+        ' geht wesentlich schneller, wenn es sich um eine Datenbank mit sehr vielen Projekten handelt ... 
+
+
+        With TreeviewProjekte
+            .Nodes.Clear()
+        End With
+
+
+
+        If aktuelleGesamtListe.Count >= 1 Or pvNamesList.Count >= 1 Then
+
+            With TreeviewProjekte
+
+                .CheckBoxes = True
+
+                Dim projektliste As Collection
+
+                If quickList Then
+                    projektliste = New Collection
+                    For Each kvp As KeyValuePair(Of String, String) In pvNamesList
+                        Dim tmpName As String = kvp.Key
+                        If tmpName.Contains("#") Then
+                            Dim tmpStr() As String = tmpName.Split(New Char() {CChar("#")})
+                            If Not projektliste.Contains(tmpStr(0)) Then
+                                projektliste.Add(tmpStr(0), tmpStr(0))
+                            End If
+                        Else
+                            If Not projektliste.Contains(tmpName) Then
+                                projektliste.Add(tmpName, tmpName)
+                            End If
+                        End If
+                    Next
+
+                Else
+                    projektliste = aktuelleGesamtListe.getProjectNames
+                End If
+
+                Dim showPname As Boolean
+
+
+
+                For Each pname In projektliste
+
+                    showPname = True
+
+                    ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
+                    If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then
+                        If aktuelleGesamtListe.getVariantZahl(pname) = 0 Then
+                            showPname = False
+                        End If
+                    End If
+
+                    If showPname Then
+
+                        Dim variantNames As Collection
+
+                        If quickList Then
+                            variantNames = getVariantListeFromPVNames(pvNamesList, pname)
+                        Else
+                            variantNames = aktuelleGesamtListe.getVariantNames(pname, True)
+                        End If
+
+                        nodeLevel0 = .Nodes.Add(pname)
+
+                        ' damit kann evtl direkt auf den Node zugegriffen werden ...
+                        nodeLevel0.Name = pname
+
+                        ' Berücksichtigung der Abhängigkeiten im TreeView ...
+                        If allDependencies.projectCount > 0 Then
+                            ' es gibt irgendwelche Dependencies, die Lead-Projekte, abhängigen Projekte 
+                            ' und sowohl-als-auch-Projekte werden farblich markiert  
+
+                            ' die Projekte suchen, von denen dieses Projekt abhängt 
+                            Dim passivListe As Collection = allDependencies.passiveListe(pname, PTdpndncyType.inhalt)
+                            Dim aktivListe As Collection = allDependencies.activeListe(pname, PTdpndncyType.inhalt)
+
+                            If passivListe.Count > 0 And aktivListe.Count = 0 Then
+                                ' ist nur abhängiges Projekt ...
+                                nodeLevel0.ForeColor = Color.Gray
+
+
+                            ElseIf passivListe.Count = 0 And aktivListe.Count > 0 Then
+                                ' hat abhängige Projekte  
+                                nodeLevel0.ForeColor = Color.OrangeRed
+
+                            ElseIf passivListe.Count > 0 And aktivListe.Count > 0 Then
+                                ' hängt ab und hat abhängige Projekte 
+                                nodeLevel0.ForeColor = Color.Orange
+                            End If
+
+                        End If
+
+
+                        ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
+
+                        If variantNames.Count > 1 Or _
+                            aKtionskennung = PTTvActions.delFromDB Then
+
+                            nodeLevel0.Tag = "X"
+                            For iv As Integer = 1 To variantNames.Count
+                                Dim tmpNodeLevel1 As TreeNode = nodeLevel0.Nodes.Add(CStr(variantNames.Item(iv)))
+                                If aKtionskennung = PTTvActions.delFromDB Then
+                                    tmpNodeLevel1.Tag = "P"
+                                    Dim tmpNodeLevel2 As TreeNode = tmpNodeLevel1.Nodes.Add("Platzhalter-Datum")
+                                Else
+                                    tmpNodeLevel1.Tag = "X"
+                                End If
+
+                            Next
+
+                        Else
+                            nodeLevel0.Tag = "X"
+                        End If
+
+                        If aKtionskennung = PTTvActions.chgInSession Then
+                            If ShowProjekte.contains(pname) Then
+                                nodeLevel0.Checked = True
+
+                                ' jetzt die betreffende Variante setzen
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+                                Dim vName As String = "(" & hproj.variantName & ")"
+
+                                For Each tmpNode As TreeNode In nodeLevel0.Nodes
+                                    If tmpNode.Text = vName Then
+                                        tmpNode.Checked = True
+                                    Else
+                                        tmpNode.Checked = False
+                                    End If
+                                Next
+
+
+                            End If
+                        End If
+
+                    End If
+
+                Next
+
+            End With
+        Else
+            Call MsgBox(loadErrorMsg)
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' wird hauptsächlich benötigt in Verbindung mit buildTreeView und frmProjPortfolioAdmin 
+    ''' liefert eine Liste von Varianten-Namen, eingeschlossen in Klammern, die es zu Projekt pName gibt 
+    ''' (), (v1), etc..
+    ''' </summary>
+    ''' <param name="pvNames"></param>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getVariantListeFromPVNames(ByVal pvNames As SortedList(Of String, String), ByVal pName As String) As Collection
+        Dim tmpResult As New Collection
+
+        For Each kvp As KeyValuePair(Of String, String) In pvNames
+            If kvp.Key.StartsWith(pName) Then
+                Dim tmpStr() As String = kvp.Key.Split(New Char() {CChar("#")})
+                Dim tmpVariantName As String
+                If tmpStr.Length > 1 Then
+                    tmpVariantName = "(" & tmpStr(1) & ")"
+                Else
+                    tmpVariantName = "()"
+                End If
+                If Not tmpResult.Contains(tmpVariantName) Then
+                    tmpResult.Add(tmpVariantName, tmpVariantName)
+                End If
+            End If
+        Next
+        getVariantListeFromPVNames = tmpResult
+
+    End Function
 
     ''' <summary>
     ''' liest die Name-Mapping Definitionen der Phasen bzw Meilensteine ein

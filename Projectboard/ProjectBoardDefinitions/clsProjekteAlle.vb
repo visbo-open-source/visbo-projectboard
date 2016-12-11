@@ -535,28 +535,14 @@ Public Class clsProjekteAlle
     Public ReadOnly Property getProjectNames() As Collection
         Get
             Dim tmpCollection As New Collection
-            Dim i As Integer = 0
-            Dim found As Boolean = False
             Dim pName As String
 
-            If Me.Count > 0 Then
+            For i As Integer = 0 To Me.Count - 1
                 pName = _allProjects.ElementAt(i).Value.name
-                tmpCollection.Add(pName)
-                i = i + 1
-
-                While i < _allProjects.Count
-
-                    If _allProjects.ElementAt(i).Value.name <> pName Then
-                        pName = _allProjects.ElementAt(i).Value.name
-                        tmpCollection.Add(pName)
-                    End If
-
-                    i = i + 1
-
-                End While
-
-            End If
-
+                If Not tmpCollection.Contains(pName) Then
+                    tmpCollection.Add(pName, pName)
+                End If
+            Next
 
             getProjectNames = tmpCollection
 

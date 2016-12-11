@@ -9,7 +9,12 @@ Imports System.Windows.Forms
 ''' <remarks></remarks>
 Public Class frmProjPortfolioAdmin
 
+    ' wenn aus der Session gelesen wird oder aus der Datenbank mit Filter-Möglichkeit 
     Private aktuelleGesamtListe As New clsProjekteAlle
+    ' wenn aus der Datenbank schnell gelesen werden soll ..
+    Private pvNamesList As New SortedList(Of String, String)
+    Private quickList As Boolean
+
     Private projektHistorien As New clsProjektDBInfos
     Private stopRecursion As Boolean = False
     Private constellationName As String = ""
@@ -24,6 +29,10 @@ Public Class frmProjPortfolioAdmin
 
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Friend aKtionskennung As Integer
+
+    Private Sub frmProjPortfolioAdmin_Disposed(sender As Object, e As EventArgs) Handles Me.Disposed
+
+    End Sub
 
     Private Sub frmDefineEditPortfolio_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
@@ -147,6 +156,7 @@ Public Class frmProjPortfolioAdmin
                 .OKButton.Visible = True
                 .OKButton.Text = "Löschen"
 
+
             ElseIf aKtionskennung = PTTvActions.delFromSession Then
                 .Text = "Projekte, Varianten aus der Session löschen"
 
@@ -189,6 +199,7 @@ Public Class frmProjPortfolioAdmin
                 .OKButton.Visible = True
                 .OKButton.Text = "Laden"
 
+
             ElseIf aKtionskennung = PTTvActions.loadPVS Then
 
                 .Text = "Projekte und Varianten in die Session laden "
@@ -227,6 +238,14 @@ Public Class frmProjPortfolioAdmin
 
         If frmCoord(PTfrm.eingabeProj, PTpinfo.left) > 0 Then
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
+        End If
+
+        ' bestimmen, ob es sich um quicklist handelt ...
+        If aKtionskennung = PTTvActions.loadPV Or _
+            aKtionskennung = PTTvActions.delFromDB Then
+            quickList = True
+        Else
+            quickList = False
         End If
 
         ' je nachdem, wie die Aktionskennung ist: setzen der Button Visibilitäten 
@@ -286,11 +305,13 @@ Public Class frmProjPortfolioAdmin
         Else
             storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
         End If
-        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, pvNamesList, _
+                           aKtionskennung, quickList, _
                            Me.filterIsActive, storedAtOrBefore)
         stopRecursion = False
 
-        If aktuelleGesamtListe.liste.Count < 1 Then
+        If aktuelleGesamtListe.liste.Count < 1 And pvNamesList.Count < 1 Then
+            ' nichts in der Datenbank ...
             DialogResult = Windows.Forms.DialogResult.OK
         End If
 
@@ -836,7 +857,6 @@ Public Class frmProjPortfolioAdmin
         Dim key As String
 
 
-
         node = e.Node
         nodeLevel = node.Level
 
@@ -847,7 +867,11 @@ Public Class frmProjPortfolioAdmin
             ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
             If node.Tag = "P" Then
                 ' Inhalte der Sub-Nodes müssen neu aufgebaut werden 
-                variantListe = aktuelleGesamtListe.getVariantNames(projName, True)
+                If quickList Then
+                    variantListe = getVariantListeFromPVNames(pvNamesList, projName)
+                Else
+                    variantListe = aktuelleGesamtListe.getVariantNames(projName, True)
+                End If
 
                 ' hproj wird benötigt, um herauszufinden, welche Variante gerade aktiv ist
                 If aKtionskennung = PTTvActions.activateV Or _
@@ -916,7 +940,7 @@ Public Class frmProjPortfolioAdmin
                         nodeVariant.Tag = "X"
                     End If
 
-                   
+
                 Next
 
                 node.Tag = "X"
@@ -1085,8 +1109,14 @@ Public Class frmProjPortfolioAdmin
                         ' lösche in Datenbank pname#vname
 
                         'anzahlVarianten = projektNode.Nodes.Count
+                        Dim variantListe As New Collection
 
-                        Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname, True)
+                        If quickList Then
+                            variantListe = getVariantListeFromPVNames(pvNamesList, pname)
+                        Else
+                            variantListe = aktuelleGesamtListe.getVariantNames(pname, True)
+                        End If
+
                         anzahlVarianten = variantListe.Count
 
                         If aKtionskennung = PTTvActions.delFromSession Then
@@ -1458,7 +1488,11 @@ Public Class frmProjPortfolioAdmin
     Private Sub expandCompletely_Click(sender As Object, e As EventArgs) Handles expandCompletely.Click
 
         With TreeViewProjekte
+            .Cursor = Cursors.WaitCursor
+            .Visible = False
             .ExpandAll()
+            .Visible = True
+            .Cursor = Cursors.Default
         End With
 
     End Sub
@@ -1561,6 +1595,16 @@ Public Class frmProjPortfolioAdmin
 
         Dim filterFormular As New frmNameSelection
         Dim considerDependencies As Boolean
+        Dim zeitraumVon As Date = StartofCalendar
+        Dim zeitraumBis As Date = StartofCalendar.AddYears(20)
+        Dim storedGestern As Date = StartofCalendar
+
+        Dim storedAtOrBefore As Date
+        If IsNothing(dropBoxTimeStamps.SelectedItem) Then
+            storedAtOrBefore = Date.Now
+        Else
+            storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+        End If
 
         If allDependencies.projectCount > 0 Then
             considerDependencies = True
@@ -1569,6 +1613,29 @@ Public Class frmProjPortfolioAdmin
         End If
 
         Me.filterIsActive = True
+
+        Me.Cursor = Cursors.WaitCursor
+
+        ' jetzt erst mal überprüfen, ob quicklist = true ..
+        If quickList Then
+
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                ' es ist ein Zeitraum definiert 
+                zeitraumVon = getDateofColumn(showRangeLeft, False)
+                zeitraumBis = getDateofColumn(showRangeRight, True)
+            End If
+            ' es muss die Gesamtliste aufgebaut werden ... das dauert jetzt erst mal 
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
+            Dim pname As String = ""
+            Dim variantName As String = ""
+
+            'jetzt wird die aktuelleGesamtListe aufgebaut; sobald die mal aufgebaut wurde, muss sie nicht wieder aufgebaut werden ... 
+            ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
+            aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
+            quickList = False
+        End If
 
         With filterFormular
             If aKtionskennung = PTTvActions.loadPV Or _
@@ -1587,38 +1654,116 @@ Public Class frmProjPortfolioAdmin
                 stopRecursion = True
 
                 Me.Cursor = Cursors.WaitCursor
+                Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
+                Dim ok As Boolean
 
-                Dim storedAtOrBefore As Date
-                If IsNothing(dropBoxTimeStamps.SelectedItem) Then
-                    storedAtOrBefore = Date.Now
+                If aKtionskennung = PTTvActions.loadPV Or _
+                    aKtionskennung = PTTvActions.delFromDB Then
+
+                    Dim removeList As New Collection
+                    
+
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In aktuelleGesamtListe.liste
+
+                        If Not filter.isEmpty Then
+                            ok = filter.doesNotBlock(kvp.Value)
+                        Else
+                            ok = True
+                        End If
+
+                        If Not ok Then
+                            ' in RemoveListe aufnehmen - diese Projekte werden nachher alle aus aktuelleGesamtliste rausgenommen 
+                            Try
+
+                                If Not removeList.Contains(kvp.Key) Then
+                                    removeList.Add(kvp.Key, kvp.Key)
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+                        Else
+
+                        End If
+
+                    Next
+
+                    ' jetzt die Liste bereinigen ...
+                    For Each tmpPvName As String In removeList
+                        aktuelleGesamtListe.Remove(tmpPvName)
+                    Next
+
+                    If removeList.Count > 0 Then
+                        Call updateTreeview(TreeViewProjekte, aktuelleGesamtListe, pvNamesList, _
+                                            aKtionskennung, quickList)
+                        Call awinNeuZeichnenDiagramme(2)
+                    End If
+
+
                 Else
-                    storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
+                    ' hier geht es um chgInSession, ...
+                    Dim noShowNames As Collection = getProjectNamesNotFittingToFilter("Last")
+
+                    If noShowNames.Count > 0 Then
+                        aktuelleGesamtListe.Clear()
+
+                        For Each noShowName As String In noShowNames
+                            Call putProjectInNoShow(noShowName, considerDependencies, False)
+                        Next
+
+                        ' jetzt die aktuelleGesamtListe aufbauen 
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+
+                            If Not filter.isEmpty Then
+                                ok = filter.doesNotBlock(kvp.Value)
+                            Else
+                                ok = True
+                            End If
+
+                            If ok Then
+                                ' in RemoveListe aufnehmen - diese Projekte werden nachher alle aus aktuelleGesamtliste rausgenommen 
+                                Try
+
+                                    If Not aktuelleGesamtListe.Containskey(kvp.Key) Then
+                                        aktuelleGesamtListe.Add(kvp.Key, kvp.Value)
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
+                            Else
+
+                            End If
+
+                        Next
+
+                        Call updateTreeview(TreeViewProjekte, aktuelleGesamtListe, pvNamesList, _
+                                       aKtionskennung, False)
+
+                        ' erst am Ende alle Diagramme neu machen ...
+                        If noShowNames.Count > 0 Then
+                            Call awinNeuZeichnenDiagramme(2)
+                        End If
+                    End If
+                    
+
                 End If
+                
 
-                Dim noShowNames As Collection = getProjectNamesNotFittingToFilter("Last")
-
-                For Each noShowName As String In noShowNames
-                    Call putProjectInNoShow(noShowName, considerDependencies, False)
-                Next
-
-                ' erst am Ende alle Diagramme neu machen ...
-                If noShowNames.Count > 0 Then
-                    Call awinNeuZeichnenDiagramme(2)
-                End If
-
-                Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                                   Me.filterIsActive, storedAtOrBefore)
+                'Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, pvNamesList, _
+                '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
                 stopRecursion = False
 
                 ' Das DeleteFilterIcon mit Bild versehen 
                 Me.deleteFilterIcon.Image = My.Resources.funnel_delete
                 Me.deleteFilterIcon.Enabled = True
 
-                Me.Cursor = Cursors.Default
-
-
             End If
         End With
+
+        Me.Cursor = Cursors.Default
+
+
     End Sub
 
 
@@ -1635,8 +1780,8 @@ Public Class frmProjPortfolioAdmin
         Else
             storedAtOrBefore = CDate(dropBoxTimeStamps.SelectedItem)
         End If
-        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           Me.filterIsActive, storedAtOrBefore)
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, pvNamesList, _
+                           aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
 
         stopRecursion = False
 
@@ -1678,8 +1823,8 @@ Public Class frmProjPortfolioAdmin
         filterDefinitions.storeFilter(fName, lastFilter)
 
 
-        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           Me.filterIsActive, storedAtOrBefore)
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, pvNamesList, _
+                           aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
         stopRecursion = False
 
             ' Das DeleteFilterIcon mit Bild versehen 
