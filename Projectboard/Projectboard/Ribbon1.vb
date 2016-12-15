@@ -664,7 +664,7 @@ Imports System.Windows
 
             Call awinDeSelect()
 
-            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
 
 
             If anzDiagrams > 0 Then

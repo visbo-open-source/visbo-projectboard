@@ -56,7 +56,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("ds061196.mlab.com:61196")>  _
         Public ReadOnly Property mongoDBURL() As String
             Get
                 Return CType(Me("mongoDBURL"),String)
@@ -65,7 +65,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("mahle17")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("visbotest")>  _
         Public ReadOnly Property mongoDBName() As String
             Get
                 Return CType(Me("mongoDBName"),String)
@@ -83,7 +83,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Ute\Documents\VISBO\Test\Mahle 2017\")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Ute\Documents\VISBO\Test\Engineering Demo 2017\")>  _
         Public ReadOnly Property awinPath() As String
             Get
                 Return CType(Me("awinPath"),String)

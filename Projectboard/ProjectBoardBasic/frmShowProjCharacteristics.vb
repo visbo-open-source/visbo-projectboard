@@ -181,7 +181,7 @@ Public Class frmShowProjCharacteristics
         '
         ' hier wird bestimmt, welche Skalierungsfaktoren überhaupt bereücksicht werden müssen 
         '
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then
@@ -377,7 +377,7 @@ Public Class frmShowProjCharacteristics
         '
         ' jetzt werden wieder alle relevanten Diagramme durchgegangen, um sie auf die entsprechende Skalierung zu setzen ...
         '
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then

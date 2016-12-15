@@ -13,8 +13,6 @@ Imports System.IO
 Public Module testModule
 
 
-
-
     ' '' ''' <summary>
     ' '' ''' erzeugt den Report aller selektieren Projekte auf Grundlage des Templates templatedossier.pptx
     ' '' ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten ProFjekte steht 
@@ -521,6 +519,43 @@ Public Module testModule
         ' Änderung tk 1.2.16
         ' wird benötigt, um in Ergänzung zu pptLasttime im Falle von nur einem Projekt / vielen Swimlanes die bereits erstellte Folie zu löschen 
         'Dim swimlaneMode As Boolean = False
+
+        Try   ' Projekthistorie aufbauen, sofern sie für das aktuelle hproj nicht schon aufgebaut ist
+
+            Dim aktprojekthist As Boolean = False
+
+            If projekthistorie.Count > 0 Then
+
+                aktprojekthist = (hproj.getShapeText = projekthistorie.First.getShapeText)
+            End If
+
+            If Not aktprojekthist Then
+
+                If Not noDB Then
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                    If request.pingMongoDb() Then
+                        Try
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+
+                        Catch ex As Exception
+                            projekthistorie.clear()
+                        End Try
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+                Else
+                    Call logfileSchreiben("Datenbank-Anbindung ist nicht akiviert. Historie enthält nur das aktuelle Projekt " & hproj.name, "createPPTSlidesFromProject", anzFehler)
+                    projekthistorie.Add(Date.Now, hproj)
+                End If
+
+            ElseIf hproj.getShapeText <> projekthistorie.First.getShapeText Then
+
+            End If
+        Catch ex As Exception
+
+        End Try
 
         Try
             lastElem = projekthistorie.Count - 1
@@ -1334,7 +1369,7 @@ Public Module testModule
                                     End If
 
                                 Catch ex As Exception
-
+                                    Throw New ArgumentException("Fehler in MeilensteinTrendAnalyse in CreatePPTSlidesFromProject")
                                 End Try
 
                             Case "Projektphasen"
@@ -1658,6 +1693,11 @@ Public Module testModule
                                 ' jetzt die Aktion durchführen ...
 
                                 If lastproj Is Nothing Then
+                                    Try
+                                        .TextFrame2.TextRange.Text = "Fehler: ... " & repMessages.getmsg(27)
+                                    Catch ex As Exception
+                                        pptSize = 12
+                                    End Try
                                     'Throw New Exception("es gibt keinen letzten Stand")
                                     Throw New Exception(repMessages.getmsg(27))
                                 End If
@@ -1796,8 +1836,6 @@ Public Module testModule
 
 
                                 Try
-
-
 
                                     ' Für englische Version muss Template auf Englisch sein
                                     Call zeichneProjektTerminAenderungen(pptShape, hproj, bproj, lproj)
@@ -3420,7 +3458,7 @@ Public Module testModule
                                     .GridlineColor = RGB(255, 255, 255)
                                 End With
 
-                                With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
 
 
@@ -3564,7 +3602,7 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                    With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
                                         rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
                                         colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
@@ -5706,7 +5744,7 @@ Public Module testModule
 
 
 
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 '
@@ -5882,7 +5920,7 @@ Public Module testModule
                         Try
                             'Call Sleep(100)
                             .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                                  Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                  Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -7258,7 +7296,7 @@ Public Module testModule
 
         Call awinDeleteProjectChildShapes(0)
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
             allShapes = .Shapes
             projektShape = allShapes.Item(hproj.name)
@@ -7634,6 +7672,7 @@ Public Module testModule
         Dim unterschiede As New Collection
         Dim TimeCostColor(2) As Double
         Dim TimeTimeColor(2) As Double
+        Dim notavailable As String = "n.a."
 
 
         Try
@@ -7648,7 +7687,10 @@ Public Module testModule
 
         ' jetzt wird festgestellt, wo es über all Unterschiede gibt 
         ' wird für Bewertung Termine und Meilensteine benötigt 
+
         unterschiede = hproj.listOfDifferences(vglproj, True, 0)
+       
+
 
         ' jetzt werden die aktuellen bzw Vergleichswerte der finanziellen KPIs bestimmt 
         Try
@@ -7656,6 +7698,8 @@ Public Module testModule
 
             If Not IsNothing(vglproj) Then
                 vglproj.calculateRoundedKPI(vglBudget, vglPersCost, vglSonstCost, vglRiskCost, vglErgebnis)
+            Else
+
             End If
 
         Catch ex As Exception
@@ -7676,7 +7720,12 @@ Public Module testModule
 
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
-                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                    If Not IsNothing(vglproj) Then
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                    Else
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & repMessages.getmsg(32)
+                    End If
+
 
 
                     ' jetzt werden die Zeilen abgearbeitet, beginnend mit 2
@@ -7697,7 +7746,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(212)
 
                                 aktvalue = aktErgebnis
-                                vglValue = vglErgebnis
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7705,6 +7753,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglErgebnis
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7727,7 +7778,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(173)
 
                                 aktvalue = aktBudget
-                                vglValue = vglBudget
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7735,6 +7785,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglBudget
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7750,14 +7803,11 @@ Public Module testModule
                                 End If
 
 
-
-
                             Case "Personalkosten"
 
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(164)
 
                                 aktvalue = aktPersCost
-                                vglValue = vglPersCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7765,6 +7815,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglPersCost
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7787,7 +7840,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(165)
 
                                 aktvalue = aktSonstCost
-                                vglValue = vglSonstCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7795,6 +7847,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglSonstCost
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7943,7 +7998,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(243)
 
                                 aktvalue = hproj.StrategicFit
-                                vglValue = vglproj.StrategicFit
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7951,6 +8005,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.StrategicFit
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7973,7 +8030,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(244)
 
                                 aktvalue = hproj.Risiko
-                                vglValue = vglproj.Risiko
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7981,6 +8037,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.Risiko
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7997,13 +8056,12 @@ Public Module testModule
 
 
 
-
                             Case "Projekt-Ampel"
 
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(245)
 
                                 aktvalue = hproj.ampelStatus
-                                vglValue = vglproj.ampelStatus
+
                                 Dim tmpFarbe As Long
 
                                 If IsNothing(vglproj) Then
@@ -8019,10 +8077,12 @@ Public Module testModule
                                         tmpFarbe = farbeNeutral
                                     End If
 
-                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, tmpFarbe)
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 4, ampelShape, tmpFarbe)
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.ampelStatus
 
                                     Dim aktFarbe As Long, vglFarbe As Long
                                     If aktvalue = PTfarbe.red Then
@@ -8078,7 +8138,13 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(246)
 
                                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
-                                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+
+                                If Not IsNothing(vglproj) Then
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+                                Else
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)  ' nicht verfügbar
+                                End If
+
 
                             Case Else
 
@@ -9713,7 +9779,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -9798,7 +9864,7 @@ Public Module testModule
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10420,7 +10486,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -10784,7 +10850,7 @@ Public Module testModule
                     Try
                         'Call Sleep(100)
                         .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                          Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message

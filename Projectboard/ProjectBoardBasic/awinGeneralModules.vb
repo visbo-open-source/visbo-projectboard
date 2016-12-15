@@ -2261,7 +2261,7 @@ Public Module awinGeneralModules
             CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook).Activate()
         End If
 
-        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), _
+        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
         Dim tmpRange As Excel.Range
@@ -15785,7 +15785,7 @@ Public Module awinGeneralModules
     ''' <param name="cfgXMLfilename"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function XMLImportPBcfg(ByVal cfgXMLfilename As String) As configuration
+    Public Function XMLImportConfig(ByVal cfgXMLfilename As String) As configuration
 
         ' XML-Datei Öffnen
         ' A FileStream is needed to read the XML document.
@@ -15813,11 +15813,11 @@ Public Module awinGeneralModules
             ' data from the XML document. 
             cfgs = CType(deserializer.Deserialize(fs), configuration)
 
-            XMLImportPBcfg = cfgs
+            XMLImportConfig = cfgs
 
         Catch ex As Exception
-            XMLImportPBcfg = Nothing
-            Call MsgBox("Lesen der ProjectboardConfig.xml fehlgeschlagen")
+            XMLImportConfig = Nothing
+            Call MsgBox("Lesen der " & cfgXMLfilename & " fehlgeschlagen")
         End Try
 
         ' ProjectboardConfig.xml-Datei schließen
@@ -16890,7 +16890,7 @@ Public Module awinGeneralModules
 
             End Try
 
-            
+
         Catch ex As Exception
             Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
             appInstance.EnableEvents = True
@@ -18136,7 +18136,7 @@ Public Module awinGeneralModules
 
         Try
 
-            cfgs = XMLImportPBcfg(cfgFile)
+            cfgs = XMLImportConfig(cfgFile)
 
             If Not IsNothing(cfgs) Then
 
@@ -18201,7 +18201,7 @@ Public Module awinGeneralModules
 
 
         Dim currentPresentationName As String = ""
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPassword)
         Dim reportProfil As clsReportAll = XMLImportReportAllProfil(profilname)
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
@@ -18212,6 +18212,8 @@ Public Module awinGeneralModules
         Dim selectedCosts As New Collection
         Dim selectedBUs As New Collection
         Dim selectedTypes As New Collection
+
+        reportErstellen = False
 
         selectedPhases = copySortedListtoColl(reportProfil.Phases)
         selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
@@ -18243,151 +18245,59 @@ Public Module awinGeneralModules
 
         End With
 
-        If Not IsNothing(vonDate) Then
+        If Not (IsNothing(vonDate) Or vonDate = Date.MinValue) Then
             showRangeLeft = getColumnOfDate(vonDate)
         Else
             showRangeLeft = 0
         End If
-        If Not IsNothing(bisDate) Then
+        If Not (IsNothing(bisDate) Or bisDate = Date.MinValue) Then
             showRangeRight = getColumnOfDate(bisDate)
         Else
-            showRangeLeft = 0
+            showRangeRight = 0
         End If
 
 
         Try
             If Not reportProfil.isMpp Then
 
-                Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
-                If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+                Try
 
-                    'Das gewählte Projekt reporten
 
-                    Dim hproj As New clsProjekt
-                    hproj = request.retrieveOneProjectfromDB(projekte, variante, Date.Now)
+                    Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
+                    If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
 
-                    If Not IsNothing(hproj) Then
+                        'Das gewählte Projekt reporten
 
-                        Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
+                        Dim hproj As New clsProjekt
+                        hproj = request.retrieveOneProjectfromDB(projekte, variante, Date.Now)
+
+                        If Not IsNothing(hproj) Then
+
+                            Dim key As String = calcProjektKey(hproj)
+
+                            ' diese Liste wird benötigt, damit in zeichneMultiprojektSicht die Routine bestimmeProjekteAndMinMaxDates funktioniert
+                            If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
+                                AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                            End If
+
+
+                            If Not ShowProjekte.contains(hproj.name) Then  ' akt. Projekt nicht in ShowProjekte
+                                ShowProjekte.Add(hproj)
+
+                            Else   ' es ist eventuell nicht die richtige Variante enthalten
+                                If ShowProjekte.getProject(hproj.name).variantName <> hproj.variantName Then
+                                    ShowProjekte.Remove(hproj.name)
+                                    ShowProjekte.Add(hproj)
+                                End If
+                            End If
+
+                            Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
                                                         selectedPhases, selectedMilestones, _
                                                         selectedRoles, selectedCosts, _
                                                         selectedBUs, selectedTypes, True, _
                                                         True, zeilenhoehe, legendFontSize, _
                                                         Nothing, Nothing)
 
-
-                        Dim pptApp As Microsoft.Office.Interop.PowerPoint.Application = Nothing
-                        Try
-                            ' prüft, ob bereits Powerpoint geöffnet ist 
-                            pptApp = CType(GetObject(, "PowerPoint.Application"), Microsoft.Office.Interop.PowerPoint.Application)
-                        Catch ex As Exception
-                            Try
-                                pptApp = CType(CreateObject("PowerPoint.Application"), Microsoft.Office.Interop.PowerPoint.Application)
-
-                            Catch ex1 As Exception
-                                Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
-                                reportErstellen = False
-                                Exit Function
-                            End Try
-
-                        End Try
-
-                        ' aktive Präsentation unter angegebenem Namen "reportname" abspeichern
-                        Dim currentPraesi As Microsoft.Office.Interop.PowerPoint.Presentation = pptApp.ActivePresentation
-
-                        If reportname = "" Then
-                            Dim aktDate As String = Date.Now.ToString
-                            reportname = aktDate & "Report.pptx"
-                            Call logfileSchreiben("EinzelprojektReport mit ' " & projekte & "/" & variante & "/" & _
-                                                  profilname & "/ ... wurde in " & reportname & "ersatzweise gespeichert", "reportErstellen", anzFehler)
-                        End If
-
-                        If My.Computer.FileSystem.FileExists(reportOrdnerName & reportname & ".pptx") And append Then
-
-                            ' die Seiten 2 - ende der vorhandenen Powerpoint-Datei müssen in das currentPraesi eingefügt werden
-                            Dim oldPraesi As Microsoft.Office.Interop.PowerPoint.Presentation = pptApp.Presentations.Open(reportOrdnerName & reportname & ".pptx")
-                            Dim anzoldSlides As Integer = oldPraesi.Slides.Count
-                            currentPraesi.Slides.InsertFromFile(FileName:=reportOrdnerName & reportname & ".pptx", Index:=1, SlideStart:=2, SlideEnd:=oldPraesi.Slides.Count)
-                            currentPraesi.Save()
-                            currentPraesi.Close()
-                        Else
-                            'If My.Computer.FileSystem.FileExists(reportOrdnerName & reportname & ".pptx") Then
-                            '    My.Computer.FileSystem.DeleteFile(reportOrdnerName & reportname & ".pptx")
-                            'End If
-                            currentPraesi.SaveAs(reportOrdnerName & reportname & ".pptx")
-                            currentPraesi.Close()
-
-
-                        End If
-
-
-                    Else
-
-                            Call logfileSchreiben("reportErstellen", "Projekt '" & projekte & "' existiert nicht in DB!", anzFehler)
-
-                    End If
-
-                End If
-
-            Else    ' isMPP
-
-                If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
-
-                    showRangeLeft = getColumnOfDate(reportProfil.VonDate)
-                    showRangeRight = getColumnOfDate(reportProfil.BisDate)
-
-                End If
-
-                Dim hproj As New clsProjekt
-                Dim constellations As New clsConstellations
-                constellations = request.retrieveConstellationsFromDB()
-                If Not IsNothing(constellations) Then
-
-                    Dim curconstellation As clsConstellation = constellations.getConstellation(projekte)
-
-                    If Not IsNothing(curconstellation) Then
-
-                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In curconstellation.Liste
-
-                            hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, Date.Now)
-
-                            If Not IsNothing(hproj) Then
-
-                                Dim key As String = calcProjektKey(hproj)
-
-                                ' diese Liste wird benötigt, damit in zeichneMultiprojektSicht die Routine bestimmeProjekteAndMinMaxDates funktioniert
-                                If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
-                                    AlleProjekte.Add(calcProjektKey(hproj), hproj)
-                                End If
-
-                                If kvp.Value.show Then
-
-                                    If Not ShowProjekte.contains(hproj.name) Then
-                                        ShowProjekte.Add(hproj)
-                                    Else
-                                        If ShowProjekte.getProject(hproj.name).variantName <> kvp.Value.variantName Then
-                                            ShowProjekte.Remove(kvp.Value.projectName)
-                                            ShowProjekte.Add(hproj)
-                                        End If
-                                    End If
-
-                                End If
-                            Else
-
-                                Call logfileSchreiben("reportErstellen", "Projekt '" & kvp.Value.projectName & "' existiert nicht in DB!", anzFehler)
-
-                            End If  ' if hproj existiert
-                        Next
-
-
-                        Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
-                        If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
-
-                            Call createPPTSlidesFromConstellation(vorlagendateiname, _
-                                                                  selectedPhases, selectedMilestones, _
-                                                                  selectedRoles, selectedCosts, _
-                                                                  selectedBUs, selectedTypes, True, _
-                                                                  Nothing, Nothing)
 
                             Dim pptApp As Microsoft.Office.Interop.PowerPoint.Application = Nothing
                             Try
@@ -18404,58 +18314,190 @@ Public Module awinGeneralModules
                                 End Try
 
                             End Try
-
                             ' aktive Präsentation unter angegebenem Namen "reportname" abspeichern
                             Dim currentPraesi As Microsoft.Office.Interop.PowerPoint.Presentation = pptApp.ActivePresentation
 
                             If reportname = "" Then
                                 Dim aktDate As String = Date.Now.ToString
-                                reportname = aktDate & "MP Report.pptx"
-                                Call logfileSchreiben("MulitprojektReport mit ' " & projekte & "/" & _
+                                reportname = aktDate & "Report.pptx"
+                                Call logfileSchreiben("EinzelprojektReport mit ' " & projekte & "/" & variante & "/" & _
                                                       profilname & "/ ... wurde in " & reportname & "ersatzweise gespeichert", "reportErstellen", anzFehler)
+                            Else
+                                reportname = reportname & ".pptx"
                             End If
 
-                            If My.Computer.FileSystem.FileExists(reportOrdnerName & reportname & ".pptx") And append Then
+                            If My.Computer.FileSystem.FileExists(reportOrdnerName & reportname) And append Then
 
                                 ' die Seiten 2 - ende der vorhandenen Powerpoint-Datei müssen in das currentPraesi eingefügt werden
-                                Dim oldPraesi As Microsoft.Office.Interop.PowerPoint.Presentation = pptApp.Presentations.Open(reportOrdnerName & reportname & ".pptx")
+                                Dim oldPraesi As Microsoft.Office.Interop.PowerPoint.Presentation = pptApp.Presentations.Open(reportOrdnerName & reportname)
                                 Dim anzoldSlides As Integer = oldPraesi.Slides.Count
-                                currentPraesi.Slides.InsertFromFile(FileName:=reportOrdnerName & reportname & ".pptx", Index:=1, SlideStart:=2, SlideEnd:=oldPraesi.Slides.Count)
-                                currentPraesi.Save()
+                                oldPraesi.Close()
+
+                                currentPraesi.Slides.InsertFromFile(FileName:=reportOrdnerName & reportname, Index:=1, SlideStart:=2, SlideEnd:=anzoldSlides)
+                                currentPraesi.SaveAs(reportOrdnerName & reportname)
                                 currentPraesi.Close()
                             Else
-
                                 'If My.Computer.FileSystem.FileExists(reportOrdnerName & reportname & ".pptx") Then
                                 '    My.Computer.FileSystem.DeleteFile(reportOrdnerName & reportname & ".pptx")
                                 'End If
-                                currentPraesi.SaveAs(reportOrdnerName & reportname & ".pptx")
+                                currentPraesi.SaveAs(reportOrdnerName & reportname)
                                 currentPraesi.Close()
 
 
                             End If
+
+                            reportErstellen = True
+                        Else
+
+                            Call logfileSchreiben("reportErstellen", "Projekt '" & projekte & "' existiert nicht in DB!", anzFehler)
+
+                        End If
+                    Else
+                        Call logfileSchreiben("reportErstellen", "Vorlagendatei " & vorlagendateiname & " existiert nicht!", anzFehler)
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+            Else    ' isMPP
+
+                Try
+
+                    If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+
+                        showRangeLeft = getColumnOfDate(reportProfil.VonDate)
+                        showRangeRight = getColumnOfDate(reportProfil.BisDate)
+
+                    End If
+
+                    Dim hproj As New clsProjekt
+                    Dim constellations As New clsConstellations
+                    constellations = request.retrieveConstellationsFromDB()
+                    If Not IsNothing(constellations) Then
+
+                        Dim curconstellation As clsConstellation = constellations.getConstellation(projekte)
+
+                        If Not IsNothing(curconstellation) Then
+
+                            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In curconstellation.Liste
+
+                                hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, Date.Now)
+
+                                If Not IsNothing(hproj) Then
+
+                                    Dim key As String = calcProjektKey(hproj)
+
+                                    ' diese Liste wird benötigt, damit in zeichneMultiprojektSicht die Routine bestimmeProjekteAndMinMaxDates funktioniert
+                                    If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
+                                        AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                    End If
+
+                                    If kvp.Value.show Then
+
+                                        If Not ShowProjekte.contains(hproj.name) Then
+                                            ShowProjekte.Add(hproj)
+                                        Else
+                                            If ShowProjekte.getProject(hproj.name).variantName <> kvp.Value.variantName Then
+                                                ShowProjekte.Remove(kvp.Value.projectName)
+                                                ShowProjekte.Add(hproj)
+                                            End If
+                                        End If
+
+                                    End If
+                                Else
+
+                                    Call logfileSchreiben("reportErstellen", "Projekt '" & kvp.Value.projectName & "' existiert nicht in DB!", anzFehler)
+
+                                End If  ' if hproj existiert
+                            Next
+
+
+                            Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
+                            If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                                Call createPPTSlidesFromConstellation(vorlagendateiname, _
+                                                                      selectedPhases, selectedMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTypes, True, _
+                                                                      Nothing, Nothing)
+
+                                Dim pptApp As Microsoft.Office.Interop.PowerPoint.Application = Nothing
+                                Try
+                                    ' prüft, ob bereits Powerpoint geöffnet ist 
+                                    pptApp = CType(GetObject(, "PowerPoint.Application"), Microsoft.Office.Interop.PowerPoint.Application)
+                                Catch ex As Exception
+                                    Try
+                                        pptApp = CType(CreateObject("PowerPoint.Application"), Microsoft.Office.Interop.PowerPoint.Application)
+
+                                    Catch ex1 As Exception
+                                        Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
+                                        reportErstellen = False
+                                        Exit Function
+                                    End Try
+
+                                End Try
+
+                                ' aktive Präsentation unter angegebenem Namen "reportname" abspeichern
+                                Dim currentPraesi As Microsoft.Office.Interop.PowerPoint.Presentation = pptApp.ActivePresentation
+
+                                If reportname = "" Then
+                                    Dim aktDate As String = Date.Now.ToString
+                                    reportname = aktDate & "MP Report.pptx"
+                                    Call logfileSchreiben("MulitprojektReport mit ' " & projekte & "/" & _
+                                                          profilname & "/ ... wurde in " & reportname & "ersatzweise gespeichert", "reportErstellen", anzFehler)
+                                Else
+                                    reportname = reportname & ".pptx"
+                                End If
+
+                                If My.Computer.FileSystem.FileExists(reportOrdnerName & reportname) And append Then
+
+                                    ' die Seiten 2 - ende der vorhandenen Powerpoint-Datei müssen in das currentPraesi eingefügt werden
+                                    Dim oldPraesi As Microsoft.Office.Interop.PowerPoint.Presentation = pptApp.Presentations.Open(reportOrdnerName & reportname)
+                                    Dim anzoldSlides As Integer = oldPraesi.Slides.Count
+                                    oldPraesi.Close()
+
+                                    currentPraesi.Slides.InsertFromFile(FileName:=reportOrdnerName & reportname, Index:=1, SlideStart:=2, SlideEnd:=anzoldSlides)
+                                    currentPraesi.SaveAs(reportOrdnerName & reportname)
+                                    currentPraesi.Close()
+                                Else
+                                    'If My.Computer.FileSystem.FileExists(reportOrdnerName & reportname & ".pptx") Then
+                                    '    My.Computer.FileSystem.DeleteFile(reportOrdnerName & reportname & ".pptx")
+                                    'End If
+                                    currentPraesi.SaveAs(reportOrdnerName & reportname)
+                                    currentPraesi.Close()
+
+
+                                End If
+
+                                reportErstellen = True
+
+                            End If
+                        Else
+                            Call logfileSchreiben("reportErstellen", "angegebene Constellation nicht in der DB", anzFehler)
 
                         End If
 
                     Else
-                        Call logfileSchreiben("reportErstellen", "angegebene Constellation nicht in der DB", anzFehler)
-
+                        Call logfileSchreiben("reportErstellen", "keine Constellations in der DB vorhanden", anzFehler)
                     End If
 
-                Else
-                    Call logfileSchreiben("reportErstellen", "keine Constellations in der DB vorhanden", anzFehler)
-                End If
+                Catch ex As Exception
 
+                End Try
 
             End If
 
-            reportErstellen = True
+
 
         Catch ex As Exception
+
             Call MsgBox("Fehler: " & vbLf & ex.Message)
+
             reportErstellen = False
         End Try
 
-        pptApp.Quit()
+        'pptApp.Quit()
 
     End Function
 
