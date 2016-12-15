@@ -10917,7 +10917,7 @@ Public Module Projekte
 
         If anzOptimierungen > 0 Then
             ' wieder den alten Zustand herstellen 
-            Call loadSessionConstellation(autoSzenarioNamen(0), False, False, False)
+            Call loadSessionConstellation(autoSzenarioNamen(0), False, False, True)
         Else
             ' es hat sich eh nichts geändert ... 
             'Call loadSessionConstellation(autoSzenarioNamen(0), False, False)
@@ -19606,15 +19606,17 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' speichert die aktuelle Konstellation in currentProjektListe in eine Konstellation
-    ''' wenn die fullProjetNames vom Typ Collection übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen 
+    ''' speichert die aktuelle Konstellation in AlleProjekte in eine Konstellation
+    ''' wenn die fullProjectNames vom Typ Collection übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen
+    ''' wenn takeWhat angegeben wird (vom Typ Enumeration ptSzenarioConsider) dann wird das entsprechend dargestellt 
     ''' </summary>
     ''' <param name="constellationName"></param>
     ''' <remarks></remarks>
     Public Sub storeSessionConstellation(ByVal constellationName As String, _
-                                         Optional ByVal fullProjectNames As Collection = Nothing)
+                                         Optional ByVal fullProjectNames As SortedList(Of String, String) = Nothing, _
+                                         Optional ByVal takeWhat As Integer = ptSzenarioConsider.all)
 
-        'Dim request As New Request(awinSettings.databaseName)
+        Dim newC As clsConstellation
 
 
         ' prüfen, ob diese Constellation bereits existiert ..
@@ -19628,87 +19630,11 @@ Public Module Projekte
 
         End If
 
-        Dim newC As New clsConstellation
-        With newC
-            .constellationName = constellationName
-        End With
 
-        Dim newConstellationItem As clsConstellationItem
-
-        If Not IsNothing(fullProjectNames) Then
-            For Each fullName As String In fullProjectNames
-
-                Dim hproj As clsProjekt = AlleProjekte.getProject(fullName)
-
-                If Not IsNothing(hproj) Then
-                    newConstellationItem = New clsConstellationItem
-
-                    With newConstellationItem
-                        .projectName = hproj.name
-                        .variantName = hproj.variantName
-                        .zeile = 0
-                        .Start = hproj.startDate
-
-                        If ShowProjekte.contains(.projectName) Then
-
-                            Dim shownProject As clsProjekt = ShowProjekte.getProject(.projectName)
-
-                            If shownProject.variantName = .variantName Then
-                                .show = True
-                                .zeile = shownProject.tfZeile
-                            Else
-                                .show = False
-                            End If
-
-                        Else
-                            .show = False
-                        End If
-                        
-
-                    End With
-
-                    newC.Add(newConstellationItem)
-
-                End If
-                
-            Next
-        Else
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
-
-                newConstellationItem = New clsConstellationItem
-
-                With newConstellationItem
-                    .projectName = kvp.Value.name
-                    .variantName = kvp.Value.variantName
-                    .zeile = 0
-                    .Start = kvp.Value.startDate
-
-                    If ShowProjekte.contains(.projectName) Then
-
-                        Dim shownProject As clsProjekt = ShowProjekte.getProject(.projectName)
-
-                        If shownProject.variantName = .variantName Then
-                            .show = True
-                            ' Coord(0) enthält Top - Position des Shapes 
-                            .zeile = calcYCoordToZeile(projectboardShapes.getCoord(shownProject.name)(0))
-                            If .zeile < 2 Then
-                                .zeile = 0
-                            End If
-                        Else
-                            .show = False
-                        End If
-
-                    Else
-                        .show = False
-                    End If
-
-                End With
-
-                newC.Add(newConstellationItem)
-
-            Next
-        End If
-
+        newC = New clsConstellation(projektListe:=AlleProjekte, _
+                                        fullProjectNames:=Nothing, _
+                                        cName:=constellationName, _
+                                        takeWhat:=takeWhat)
 
 
         Try

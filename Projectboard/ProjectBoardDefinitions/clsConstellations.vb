@@ -48,6 +48,20 @@
 
     End Sub
 
+    ''' <summary>
+    ''' ersetzt oder fügt eine neue Konstellation mit dem Namen ein 
+    ''' </summary>
+    ''' <param name="item"></param>
+    ''' <remarks></remarks>
+    Public Sub update(item As clsConstellation)
+
+        If Me.allConstellations.ContainsKey(item.constellationName) Then
+            Me.allConstellations.Remove(item.constellationName)
+        End If
+
+        Me.allConstellations.Add(item.constellationName, item)
+    End Sub
+
     Sub Remove(ByVal key As String)
 
         Try

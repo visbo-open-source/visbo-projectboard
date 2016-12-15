@@ -255,17 +255,6 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
-            ' '' ''<<<<<<< HEAD
-            ' '' ''            ' Maus auf Wartemodus setzen
-            ' '' ''            appInstance.Cursor = XlMousePointer.xlWait
-
-            ' '' ''            If loadConstellationFrm.addToSession.Checked = True Then
-            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
-            ' '' ''                Call awinAddConstellation(constellationName, successMessage)
-            ' '' ''            Else
-            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
-            ' '' ''                Call awinLoadConstellation(constellationName, successMessage)
-            ' '' ''=======
             appInstance.ScreenUpdating = False
 
             If Not IsNothing(loadConstellationFrm.dropBoxTimeStamps.SelectedItem) Then
@@ -274,80 +263,16 @@ Imports System.Windows
                 storedAtOrBefore = Date.Now
             End If
 
-            Try
-                Dim boardWasEmpty As Boolean
-
-                If AlleProjekte.Count = 0 Then
-                    boardWasEmpty = True
-                Else
-                    boardWasEmpty = False
+            Dim constellationNames As New Collection
+            For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
+                If Not constellationNames.Contains(tmpName) Then
+                    constellationNames.Add(tmpName, tmpName)
                 End If
+            Next
 
-                If Not boardWasEmpty And Not loadConstellationFrm.addToSession.Checked = True Then
-
-                    Call awinClearPlanTafel()
-
-                    If ControlID = loadFromDatenbank Then
-                        Call clearCompleteSession()
-                    End If
-
-                End If
-
-                For i As Integer = 1 To loadConstellationFrm.ListBox1.SelectedItems.Count
-
-                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
-
-                    If i = 1 And (boardWasEmpty Or Not (ControlID = loadFromDatenbank)) Then
-                        Call awinLoadConstellation(constellationName, successMessage, storedAtOrBefore)
-                    Else
-                        Call awinAddConstellation(constellationName, successMessage, storedAtOrBefore)
-                    End If
-
-
-                Next
-
-                If loadConstellationFrm.ListBox1.SelectedItems.Count = 1 And _
-                    (boardWasEmpty Or loadConstellationFrm.addToSession.Checked = False) Then
-                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(0))
-
-                Else
-                    constellationName = "no Name Scenario"
-
-                End If
-                '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
-
-                currentConstellation = constellationName
-                Call awinNeuZeichnenDiagramme(2)
-
-                '' ''<<<<<<< HEAD
-                '' ''            appInstance.ScreenUpdating = False
-                '' ''            'Call diagramsVisible(False)
-                '' ''            Call awinClearPlanTafel()
-                '' ''            ' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario 
-                '' ''            'Call awinZeichnePlanTafel(False)
-                '' ''            Call awinZeichnePlanTafel(True)
-                '' ''            Call awinNeuZeichnenDiagramme(2)
-                '' ''            'Call diagramsVisible(True)
-
-                '' ''            ' Maus auf Wartemodus setzen
-                '' ''            appInstance.Cursor = XlMousePointer.xlDefault
-
-                '' ''            appInstance.ScreenUpdating = True
-                '' ''=======
-                ' Änderung tk am 2.6 
-                ''Call awinLoadConstellation(constellationName, successMessage)
-
-                ' '' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-                ''currentConstellation = constellationName
-
-
-                ' '' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario
-                ' '' mit fromScratch = false, weil di eReihenfolge erhalten bleiben soll 
-                ' ''Call awinZeichnePlanTafel(False)
-            Catch ex As Exception
-                Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
-            End Try
-            '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
+            Dim loadFromDB As Boolean = (ControlID = loadFromDatenbank)
+            Dim addToSession As Boolean = loadConstellationFrm.addToSession.Checked
+            Call showConstellations(constellationNames, addToSession, loadFromDB, storedAtOrBefore)
 
             appInstance.ScreenUpdating = True
 

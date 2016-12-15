@@ -28,11 +28,11 @@ Public Class clsProjekte
                 End If
 
                 ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
-                If Not currentConstellation.EndsWith("(*)") Then
+                If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
                     currentConstellation = currentConstellation & "(*)"
                 End If
             End If
-            
+
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -108,7 +108,7 @@ Public Class clsProjekte
             End If
 
             ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
-            If Not currentConstellation.EndsWith("(*)") Then
+            If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
                 currentConstellation = currentConstellation & "(*)"
             End If
 
@@ -382,7 +382,7 @@ Public Class clsProjekte
                         tmpListe.Add(tmpName, tmpName)
                     End If
                 Next
-                
+
             Next
             ' neu Ende
 

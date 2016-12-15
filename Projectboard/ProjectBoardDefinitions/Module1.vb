@@ -199,6 +199,12 @@ Public Module Module1
    
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum ptSzenarioConsider
+        all = 0
+        show = 1
+        noshow = 2
+    End Enum
+
     ' welche Art von CustomFields gibt es 
     ' kann später ggf erweitert werden auf StrArray, DblArray, etc
     ' muss dann auch in clsProjektVorlage und clsCustomField angepasst werden  
@@ -453,8 +459,6 @@ Public Module Module1
         delFromSession = 1
         loadPVS = 2
         activateV = 3
-        definePortfolioDB = 4
-        definePortfolioSE = 5
         loadPV = 6
         deleteV = 7
         chgInSession = 8

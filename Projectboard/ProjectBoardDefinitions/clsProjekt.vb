@@ -1835,7 +1835,7 @@ Public Class clsProjekt
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
-                If Not currentConstellation.EndsWith("(*)") Then
+                If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
                     currentConstellation = currentConstellation & "(*)"
                 End If
 
@@ -1845,7 +1845,7 @@ Public Class clsProjekt
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 If differenzInTagen <> 0 Then
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    If Not currentConstellation.EndsWith("(*)") Then
+                    If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
                         currentConstellation = currentConstellation & "(*)"
                     End If
                 End If
