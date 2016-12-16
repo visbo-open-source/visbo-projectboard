@@ -39,12 +39,18 @@ Partial Class frmProjPortfolioAdmin
         Me.expandCompletely = New System.Windows.Forms.PictureBox()
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.LblToolTipps = New System.Windows.Forms.Label()
+        Me.onlyActive = New System.Windows.Forms.PictureBox()
+        Me.onlyInactive = New System.Windows.Forms.PictureBox()
+        Me.backToInit = New System.Windows.Forms.PictureBox()
         CType(Me.deleteFilterIcon, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.filterIcon, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.onlyActive, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.onlyInactive, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.backToInit, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'TreeViewProjekte
@@ -96,7 +102,7 @@ Partial Class frmProjPortfolioAdmin
         'rdbTTDescription
         '
         Me.rdbTTDescription.AutoSize = True
-        Me.rdbTTDescription.Location = New System.Drawing.Point(308, 347)
+        Me.rdbTTDescription.Location = New System.Drawing.Point(71, 9)
         Me.rdbTTDescription.Name = "rdbTTDescription"
         Me.rdbTTDescription.Size = New System.Drawing.Size(126, 17)
         Me.rdbTTDescription.TabIndex = 61
@@ -108,7 +114,7 @@ Partial Class frmProjPortfolioAdmin
         'rdbTTDependencies
         '
         Me.rdbTTDependencies.AutoSize = True
-        Me.rdbTTDependencies.Location = New System.Drawing.Point(308, 365)
+        Me.rdbTTDependencies.Location = New System.Drawing.Point(71, 27)
         Me.rdbTTDependencies.Name = "rdbTTDependencies"
         Me.rdbTTDependencies.Size = New System.Drawing.Size(135, 17)
         Me.rdbTTDependencies.TabIndex = 62
@@ -121,7 +127,7 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.deleteFilterIcon.BackColor = System.Drawing.SystemColors.Control
         Me.deleteFilterIcon.Enabled = False
-        Me.deleteFilterIcon.Location = New System.Drawing.Point(196, 347)
+        Me.deleteFilterIcon.Location = New System.Drawing.Point(152, 347)
         Me.deleteFilterIcon.Name = "deleteFilterIcon"
         Me.deleteFilterIcon.Size = New System.Drawing.Size(16, 16)
         Me.deleteFilterIcon.TabIndex = 59
@@ -131,7 +137,7 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.filterIcon.BackColor = System.Drawing.SystemColors.Control
         Me.filterIcon.Image = Global.ProjectBoardBasic.My.Resources.Resources.funnel_add
-        Me.filterIcon.Location = New System.Drawing.Point(174, 347)
+        Me.filterIcon.Location = New System.Drawing.Point(130, 347)
         Me.filterIcon.Name = "filterIcon"
         Me.filterIcon.Size = New System.Drawing.Size(16, 16)
         Me.filterIcon.TabIndex = 57
@@ -143,7 +149,7 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
         Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(35, 348)
+        Me.SelectionSet.Location = New System.Drawing.Point(23, 348)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
         Me.SelectionSet.TabIndex = 55
@@ -153,7 +159,7 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(91, 348)
+        Me.collapseCompletely.Location = New System.Drawing.Point(68, 348)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
         Me.collapseCompletely.TabIndex = 54
@@ -163,7 +169,7 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(113, 348)
+        Me.expandCompletely.Location = New System.Drawing.Point(90, 348)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
         Me.expandCompletely.TabIndex = 53
@@ -174,7 +180,7 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
         Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(55, 348)
+        Me.SelectionReset.Location = New System.Drawing.Point(42, 348)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
         Me.SelectionReset.TabIndex = 52
@@ -183,17 +189,53 @@ Partial Class frmProjPortfolioAdmin
         'LblToolTipps
         '
         Me.LblToolTipps.AutoSize = True
-        Me.LblToolTipps.Location = New System.Drawing.Point(256, 349)
+        Me.LblToolTipps.Location = New System.Drawing.Point(19, 11)
         Me.LblToolTipps.Name = "LblToolTipps"
         Me.LblToolTipps.Size = New System.Drawing.Size(50, 13)
         Me.LblToolTipps.TabIndex = 60
         Me.LblToolTipps.Text = "Tooltipps"
+        '
+        'onlyActive
+        '
+        Me.onlyActive.BackColor = System.Drawing.SystemColors.Control
+        Me.onlyActive.Enabled = False
+        Me.onlyActive.Location = New System.Drawing.Point(230, 347)
+        Me.onlyActive.Name = "onlyActive"
+        Me.onlyActive.Size = New System.Drawing.Size(16, 16)
+        Me.onlyActive.TabIndex = 63
+        Me.onlyActive.TabStop = False
+        Me.onlyActive.Visible = False
+        '
+        'onlyInactive
+        '
+        Me.onlyInactive.BackColor = System.Drawing.SystemColors.Control
+        Me.onlyInactive.Enabled = False
+        Me.onlyInactive.Location = New System.Drawing.Point(252, 347)
+        Me.onlyInactive.Name = "onlyInactive"
+        Me.onlyInactive.Size = New System.Drawing.Size(16, 16)
+        Me.onlyInactive.TabIndex = 64
+        Me.onlyInactive.TabStop = False
+        Me.onlyInactive.Visible = False
+        '
+        'backToInit
+        '
+        Me.backToInit.BackColor = System.Drawing.SystemColors.Control
+        Me.backToInit.Enabled = False
+        Me.backToInit.Location = New System.Drawing.Point(274, 347)
+        Me.backToInit.Name = "backToInit"
+        Me.backToInit.Size = New System.Drawing.Size(16, 16)
+        Me.backToInit.TabIndex = 65
+        Me.backToInit.TabStop = False
+        Me.backToInit.Visible = False
         '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(467, 473)
+        Me.Controls.Add(Me.backToInit)
+        Me.Controls.Add(Me.onlyInactive)
+        Me.Controls.Add(Me.onlyActive)
         Me.Controls.Add(Me.rdbTTDependencies)
         Me.Controls.Add(Me.rdbTTDescription)
         Me.Controls.Add(Me.LblToolTipps)
@@ -217,6 +259,9 @@ Partial Class frmProjPortfolioAdmin
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.onlyActive, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.onlyInactive, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.backToInit, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -236,4 +281,7 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents LblToolTipps As System.Windows.Forms.Label
     Friend WithEvents rdbTTDescription As System.Windows.Forms.RadioButton
     Friend WithEvents rdbTTDependencies As System.Windows.Forms.RadioButton
+    Friend WithEvents onlyActive As System.Windows.Forms.PictureBox
+    Friend WithEvents onlyInactive As System.Windows.Forms.PictureBox
+    Friend WithEvents backToInit As System.Windows.Forms.PictureBox
 End Class

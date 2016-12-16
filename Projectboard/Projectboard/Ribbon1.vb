@@ -263,16 +263,27 @@ Imports System.Windows
                 storedAtOrBefore = Date.Now
             End If
 
-            Dim constellationNames As New Collection
+            Dim constellationsToDo As New clsConstellations
+
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
-                If Not constellationNames.Contains(tmpName) Then
-                    constellationNames.Add(tmpName, tmpName)
+
+                Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+                If Not IsNothing(constellation) Then
+                    If Not constellationsToDo.Contains(constellation.constellationName) Then
+                        constellationsToDo.Add(constellation)
+                    End If
                 End If
+
             Next
 
-            Dim loadFromDB As Boolean = (ControlID = loadFromDatenbank)
-            Dim addToSession As Boolean = loadConstellationFrm.addToSession.Checked
-            Call showConstellations(constellationNames, addToSession, loadFromDB, storedAtOrBefore)
+
+            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
+            'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
+            Dim clearSession As Boolean = False
+            If constellationsToDo.Count > 0 Then
+                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore)
+            End If
+
 
             appInstance.ScreenUpdating = True
 

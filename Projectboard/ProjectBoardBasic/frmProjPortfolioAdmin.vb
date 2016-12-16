@@ -1654,7 +1654,7 @@ Public Class frmProjPortfolioAdmin
         Dim zeitraumBis As Date = StartofCalendar.AddYears(20)
         Dim storedGestern As Date = StartofCalendar
 
-        Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+        Dim browserAlleProjekte As New clsProjekteAlle
 
         If IsNothing(browserConstellationSav) Then
             browserConstellationSav = currentBrowserConstellation.copy
@@ -1728,7 +1728,8 @@ Public Class frmProjPortfolioAdmin
                 Dim ok As Boolean
 
                 If aKtionskennung = PTTvActions.loadPV Or _
-                    aKtionskennung = PTTvActions.delFromDB Then
+                    aKtionskennung = PTTvActions.delFromDB Or _
+                    aKtionskennung = PTTvActions.chgInSession Then
 
                     Dim removeList As New Collection
 
@@ -1773,63 +1774,29 @@ Public Class frmProjPortfolioAdmin
                     If removeList.Count > 0 Then
                         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
                                             aKtionskennung, quickList)
-                        ' muss bei Loadpv, delfromDB nicht gemacht werden ! 
-                        'Call awinNeuZeichnenDiagramme(2)
+
+                        If aKtionskennung = PTTvActions.chgInSession Then
+                            ' erst am Ende alle Diagramme neu machen ...
+
+
+                            If removeList.Count > 0 Then
+                                Dim tmpConstellation As New clsConstellations
+                                tmpConstellation.Add(currentBrowserConstellation)
+
+                                Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                                        clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
+
+
+                                Call awinNeuZeichnenDiagramme(2)
+                            End If
+                        End If
+
                     End If
 
 
                 Else
-                    ' hier geht es um chgInSession, ...
 
-                    ' als erstes aktuelles Szenario speichern 
-                    'If browserConstellationOF.count = 0 Then
-                    '    browserConstellationOF = New clsConstellation(AlleProjekte, Nothing, "browserOF", ptSzenarioConsider.all)
-                    'End If
-
-                    Dim noShowNames As Collection = getProjectNamesNotFittingToFilter("Last")
-
-                    If noShowNames.Count > 0 Then
-                        browserAlleProjekte.Clear()
-
-                        For Each noShowName As String In noShowNames
-                            Call putProjectInNoShow(noShowName, considerDependencies, False)
-                        Next
-
-                        ' jetzt die aktuelleGesamtListe aufbauen 
-                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
-
-                            If Not filter.isEmpty Then
-                                ok = filter.doesNotBlock(kvp.Value)
-                            Else
-                                ok = True
-                            End If
-
-                            If ok Then
-                                ' in aktuelleGesamtListe aufnehmen - 
-                                Try
-
-                                    If Not browserAlleProjekte.Containskey(kvp.Key) Then
-                                        browserAlleProjekte.Add(kvp.Key, kvp.Value)
-                                    End If
-
-                                Catch ex As Exception
-
-                                End Try
-                            Else
-
-                            End If
-
-                        Next
-
-                        Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
-                                       aKtionskennung, False)
-
-                        ' erst am Ende alle Diagramme neu machen ...
-                        If noShowNames.Count > 0 Then
-                            Call awinNeuZeichnenDiagramme(2)
-                        End If
-                    End If
-
+                    Call MsgBox("nicht unterstützte Option")
 
                 End If
 
@@ -1891,6 +1858,14 @@ Public Class frmProjPortfolioAdmin
         Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
         browserConstellationSav = Nothing
 
+        ' jetzt das entzsprechende Szenario wieder laden 
+        Dim tmpConstellation As New clsConstellations
+        tmpConstellation.Add(currentBrowserConstellation)
+        Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+        ' neu Zeichnen der Diagramme
+        Call awinNeuZeichnenDiagramme(2)
 
         stopRecursion = True
 

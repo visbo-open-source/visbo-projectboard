@@ -10404,7 +10404,7 @@ Public Module Projekte
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
         If roentgenBlick.isOn Then
             With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
-                .range(.cells(2, 1), .cells(1000, 200)).clearcontents()
+                .range(.cells(2, 1), .cells(1000, 1000)).clearcontents()
             End With
         End If
 

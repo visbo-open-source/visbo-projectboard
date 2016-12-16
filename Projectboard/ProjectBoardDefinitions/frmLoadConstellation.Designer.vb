@@ -69,9 +69,9 @@ Partial Class frmLoadConstellation
         Me.addToSession.Location = New System.Drawing.Point(13, 237)
         Me.addToSession.Name = "addToSession"
         Me.addToSession.RightToLeft = System.Windows.Forms.RightToLeft.Yes
-        Me.addToSession.Size = New System.Drawing.Size(135, 17)
+        Me.addToSession.Size = New System.Drawing.Size(201, 17)
         Me.addToSession.TabIndex = 3
-        Me.addToSession.Text = "zur Session dazu laden"
+        Me.addToSession.Text = "zu angezeigten Projekten hinzufügen"
         Me.addToSession.UseVisualStyleBackColor = True
         '
         'dropBoxTimeStamps

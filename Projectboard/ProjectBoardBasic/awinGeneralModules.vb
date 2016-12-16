@@ -1204,6 +1204,22 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' setzt alle angezeigten Projekte, also ShowProjekte,  zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearProjectBoard()
+
+        Call awinClearPlanTafel()
+
+        ShowProjekte.Clear()
+        projectboardShapes.clear()
+
+        selectedProjekte.Clear()
+        ImportProjekte.Clear()
+
+
+    End Sub
 
     ''' <summary>
     ''' setzt die komplette Session zurück 
@@ -9437,10 +9453,6 @@ Public Module awinGeneralModules
             Exit Sub
         End If
 
-
-        ' die aktuelle Konstellation in "Last" speichern 
-        Call storeSessionConstellation("Session")
-
         ' jetzt werden die einzelnen Projekte dazugeholt 
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
@@ -9534,60 +9546,55 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' zeigt die Konstellation bzw Konstellationen auf der PRojekt-Tafel an 
+    ''' zeigt die Konstellation bzw Konstellationen auf der Projekt-Tafel an 
     ''' addToSession gibt an, ob AlleProjekte und ggf ShowProjekte ergänzt wird 
     ''' </summary>
-    ''' <param name="constellationNames"></param>
-    ''' <param name="addToSession"></param>
-    ''' <param name="loadFromDatabase"></param>
+    ''' <param name="constellationsToShow"></param>
+    ''' <param name="clearBoard">setzt ShowProjekte zurück, löscht das Zeichenbrett; lässt AlleProjekte unverändert </param>
+    ''' <param name="clearSession">setzt alles zurück></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <remarks></remarks>
-    Public Sub showConstellations(ByVal constellationNames As Collection, ByVal addToSession As Boolean, ByVal loadFromDatabase As Boolean, ByVal storedAtOrBefore As Date)
+    Public Sub showConstellations(ByVal constellationsToShow As clsConstellations, ByVal clearBoard As Boolean, ByVal clearSession As Boolean, ByVal storedAtOrBefore As Date)
 
         Try
-            Dim boardWasEmpty As Boolean
+            Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
+            Dim sessionWasEmpty As Boolean = (AlleProjekte.Count = 0)
 
-            If AlleProjekte.Count = 0 Then
-                boardWasEmpty = True
-            Else
-                boardWasEmpty = False
-            End If
+            ' die aktuelle Konstellation in "Last" speichern 
+            Call storeSessionConstellation("Session")
 
-            If boardWasEmpty Or addToSession Then
-                ' nichts tun 
-            Else
-                ' Projekt-Tafel leeren , ggf AlleProjekte leeren 
 
-                Call awinClearPlanTafel()
+            If clearSession And Not sessionWasEmpty Then
+                Call clearCompleteSession()
 
-                If loadFromDatabase Then
-                    Call clearCompleteSession()
-                End If
+            ElseIf clearBoard And Not boardWasEmpty Then
+                Call clearProjectBoard()
 
             End If
 
             Dim i As Integer = 0
-            For Each constellationName As String In constellationNames
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
-                Dim activeConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
-
-                If i = 0 And (boardWasEmpty Or Not addToSession) Then
-                    Call loadConstellation(activeConstellation, storedAtOrBefore)
-                Else
-                    Call addConstellation(activeConstellation, storedAtOrBefore)
-                End If
+                Dim activeConstellation As clsConstellation = kvp.Value
+                Call addConstellation(activeConstellation, storedAtOrBefore)
+                ' das Folgende ist unnötig, ggf wuden ja bereits die nötigen Resets gemacht ... 
+                ''If i = 0 And (boardWasEmpty Or Not addToSession) Then
+                ''    Call loadConstellation(activeConstellation, storedAtOrBefore)
+                ''Else
+                ''    Call addConstellation(activeConstellation, storedAtOrBefore)
+                ''End If
 
                 i = i + 1
 
             Next
 
-            If constellationNames.Count = 1 And _
-                (boardWasEmpty Or Not addToSession) Then
-                currentConstellation = constellationNames.Item(1)
-
+            If constellationsToShow.Count = 1 Then
+                If clearSession Or sessionWasEmpty Or _
+                    clearBoard Or boardWasEmpty Then
+                    currentConstellation = constellationsToShow.Liste.ElementAt(0).Value.constellationName
+                End If
             Else
                 currentConstellation = "combined Scenario"
-
             End If
 
             Call awinNeuZeichnenDiagramme(2)
