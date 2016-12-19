@@ -978,7 +978,11 @@ Public Module PBBModules
 
             With deleteProjects
 
-                .aKtionskennung = PTTvActions.delFromDB
+                If control.Id = "Pt5G3B4" Then
+                    .aKtionskennung = PTTvActions.delAllExceptFromDB
+                ElseIf control.Id = "Pt5G3B3" Then
+                    .aKtionskennung = PTTvActions.delFromDB
+                End If
 
             End With
 

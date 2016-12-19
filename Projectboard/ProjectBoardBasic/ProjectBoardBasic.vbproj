@@ -501,6 +501,24 @@
   <ItemGroup>
     <None Include="Resources\replace2.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\gear.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish2.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-gecheckte Projekte.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

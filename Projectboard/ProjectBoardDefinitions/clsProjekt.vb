@@ -1835,9 +1835,9 @@ Public Class clsProjekt
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
-                If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
-                    currentConstellation = currentConstellation & "(*)"
-                End If
+                'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+                '    currentConstellationName = currentConstellationName & "(*)"
+                'End If
 
 
             ElseIf _startDate = NullDatum Then
@@ -1845,9 +1845,9 @@ Public Class clsProjekt
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 If differenzInTagen <> 0 Then
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
-                        currentConstellation = currentConstellation & "(*)"
-                    End If
+                    'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+                    '    currentConstellationName = currentConstellationName & "(*)"
+                    'End If
                 End If
             ElseIf _Status <> ProjektStatus(0) Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")

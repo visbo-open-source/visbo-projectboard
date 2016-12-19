@@ -30,7 +30,8 @@ Public Class frmRenameProject
                         DialogResult = System.Windows.Forms.DialogResult.OK
                     End If
                 Catch ex As Exception
-
+                    Call MsgBox("Fehler bei Rename: " & ex.Message)
+                    DialogResult = System.Windows.Forms.DialogResult.Cancel
                 End Try
 
             End If

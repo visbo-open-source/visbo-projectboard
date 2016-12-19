@@ -59,6 +59,7 @@ Public Class frmNameSelection
 
                 If .actionCode = PTTvActions.loadPV Or _
                     .actionCode = PTTvActions.loadPVS Or _
+                    .actionCode = PTTvActions.delAllExceptFromDB Or _
                     .actionCode = PTTvActions.delFromDB Then
                     .OKButton.Text = "Anwenden"
                 Else

@@ -176,6 +176,7 @@
 
     End Sub
 
+
     Public ReadOnly Property copy(Optional ByVal cName As String = "Copy") As clsConstellation
         Get
             Dim copyResult As New clsConstellation
@@ -184,7 +185,8 @@
                 .constellationName = cName
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                    .add(kvp.Value)
+                    Dim copiedItem As clsConstellationItem = kvp.Value.copy
+                    .add(copiedItem)
                 Next
 
             End With
@@ -205,8 +207,6 @@
 
 
     End Sub
-
-    
 
 
     ''' <summary>
@@ -233,30 +233,55 @@
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function contains(ByVal pvName As String, ByVal withShowFlag As Boolean) As Boolean
+
         Dim found As Boolean = False
         Dim ix As Integer = 0
 
-        Do While ix <= Me._allItems.Count - 1 And Not found
+        If Me._allItems.ContainsKey(pvName) Then
 
-            If pvName = Me._allItems.ElementAt(ix).Key Then
-                If withShowFlag Then
-                    If Me._allItems.ElementAt(ix).Value.show = True Then
-                        found = True
-                    End If
-                Else
-                    found = True
-                End If
+            Dim cItem As clsConstellationItem = Me._allItems.Item(pvName)
+            If withShowFlag Then
+                found = cItem.show
+            Else
+                found = True
             End If
-
-            If Not found Then
-                ix = ix + 1
-            End If
-
-        Loop
+        Else
+            found = False
+        End If
 
         contains = found
     End Function
 
+    ''' <summary>
+    ''' ähnlich wie reduceToElementsWithShow, aber hier werden nur die Projekte rausgeschmissen, die gar nicht in ShowProjekte sind bzw. die in ShowProjekte sind 
+    ''' </summary>
+    ''' <param name="requiredShowAttribute"></param>
+    ''' <remarks></remarks>
+    Public Sub reduceToProjectsWith(ByVal requiredShowAttribute As Boolean)
+        Dim toDelete As New Collection
+
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In Me._allItems
+
+            If requiredShowAttribute = ShowProjekte.contains(kvp.Value.projectName) Then
+                ' nichts tun, soll ja nicht aus der Collection fliegen ...
+            Else
+                If Not toDelete.Contains(kvp.Key) Then
+                    toDelete.Add(kvp.Key, kvp.Key)
+                End If
+            End If
+
+        Next
+
+        ' jetzt alle Einträge, die nicht in das Raster fallen, aus der Constellation löschen 
+        For Each tmpName As String In toDelete
+
+            If Me._allItems.ContainsKey(tmpName) Then
+                Me._allItems.Remove(tmpName)
+            End If
+
+        Next
+
+    End Sub
     ''' <summary>
     ''' löscht aus dem Szenario alle Einträge von Elementen, die nicht das showAttribute haben 
     ''' </summary>
@@ -284,13 +309,55 @@
         Next
 
     End Sub
+
+    ''' <summary>
+    ''' ändert die Referenzen, die bisher auf oldvName gingen auf newVname 
+    ''' wenn oldkey existiert, wird einfach der newKey in der Constellation gelöscht 
+    ''' das ShowAttribute von pName (oldvName) muss übernommen werden ! 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="oldvName"></param>
+    ''' <param name="newvName"></param>
+    ''' <remarks></remarks>
+    Public Sub updateVariantName(ByVal pName As String, ByVal oldvName As String, ByVal newvName As String)
+
+        If oldvName = newvName Then
+            ' nichts tun 
+        Else
+            Dim oldKey As String = calcProjektKey(pName, oldvName)
+            Dim newKey As String = calcProjektKey(pName, newvName)
+
+            If _allItems.ContainsKey(oldKey) Then
+
+                Dim cItem As clsConstellationItem = _allItems.Item(oldKey)
+
+                ' das alte rausnehmen 
+                _allItems.Remove(oldKey)
+
+                ' umbenennen
+                cItem.variantName = newvName
+
+                ' in der Liste der  Items aufnehmen 
+                ' wenn der schon existiert , rausnehmen ... und durch das mit dem Varianten Namen aktualsierte oldkey ersetzen 
+                If _allItems.ContainsKey(newKey) Then
+                    _allItems.Remove(newKey)
+                End If
+                _allItems.Add(newKey, cItem)
+
+            End If
+        End If
+
+
+
+
+    End Sub
     ''' <summary>
     ''' sorgt dafür , dass in der Konstellation alle Projekte mit Name oldNAme mit dem neuen Namen bezeichnet werden 
     ''' </summary>
     ''' <param name="oldPName"></param>
     ''' <param name="newPname"></param>
     ''' <remarks></remarks>
-    Public Function rename(ByVal oldPName As String, ByVal newPname As String) As Integer
+    Public Function renameProject(ByVal oldPName As String, ByVal newPname As String) As Integer
 
         Dim toAddItems As New SortedList(Of String, clsConstellationItem)
         Dim toDelete As New Collection
@@ -327,7 +394,7 @@
             _allItems.Add(kvp.Key, kvp.Value)
         Next
 
-        rename = toAddItems.Count
+        renameProject = toAddItems.Count
 
     End Function
 
@@ -372,7 +439,7 @@
                             .projectName = hproj.name
                             .variantName = hproj.variantName
                             .zeile = 0
-                            .Start = hproj.startDate
+                            .start = hproj.startDate
 
                             If ShowProjekte.contains(.projectName) Then
 
@@ -418,7 +485,7 @@
                         .projectName = kvp.Value.name
                         .variantName = kvp.Value.variantName
                         .zeile = 0
-                        .Start = kvp.Value.startDate
+                        .start = kvp.Value.startDate
 
                         If ShowProjekte.contains(.projectName) Then
 

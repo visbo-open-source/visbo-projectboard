@@ -27,10 +27,10 @@ Public Class clsProjekte
                     _allShapes.Add(shpUID, pname)
                 End If
 
-                ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
-                If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
-                    currentConstellation = currentConstellation & "(*)"
-                End If
+                '' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
+                'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+                '    currentConstellationName = currentConstellationName & "(*)"
+                'End If
             End If
 
 
@@ -107,10 +107,10 @@ Public Class clsProjekte
                 _allShapes.Remove(SID)
             End If
 
-            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
-            If Not currentConstellation.EndsWith("(*)") And currentConstellation <> "Last" Then
-                currentConstellation = currentConstellation & "(*)"
-            End If
+            '' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
+            'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+            '    currentConstellationName = currentConstellationName & "(*)"
+            'End If
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)

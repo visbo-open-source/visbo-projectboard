@@ -513,6 +513,7 @@ namespace MongoDbAccess
                             .Where(c => c.name.Contains(searchstr))
                             .OrderBy(c => c.variantName)
                             .Select(c => c.variantName)
+                            .ToList()
                             .Distinct();
 
             foreach (string vName in prequery)
@@ -750,7 +751,7 @@ namespace MongoDbAccess
                         {
                             var c = new clsConstellation();
                             cDB.copyto(ref c);
-                            int a = c.rename(oldName, newName);
+                            int a = c.renameProject(oldName, newName);
 
                            if (a>0)
                            {

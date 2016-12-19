@@ -10615,11 +10615,11 @@ Public Module Projekte
 
                     ' Änderung THOMAS Start 
                     If .Status = ProjektStatus(0) Then
-                        .startDate = kvp.Value.Start
-                    ElseIf .startDate <> kvp.Value.Start Then
+                        .startDate = kvp.Value.start
+                    ElseIf .startDate <> kvp.Value.start Then
                         ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
                         successMessage = successMessage & vbLf & vbLf & loadDateMessage & vbLf & _
-                                            "        " & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                                            "        " & hproj.name & ": " & kvp.Value.start.ToShortDateString
                     End If
                     ' Änderung THOMAS Ende 
 
@@ -10666,7 +10666,7 @@ Public Module Projekte
         End If
 
         ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-        currentConstellation = constellationName
+        currentConstellationName = constellationName
 
 
     End Sub
@@ -10961,7 +10961,7 @@ Public Module Projekte
 
         If worker.CancellationPending Then
             e.Cancel = True
-            e.Result = "Berichterstellung abgebrochen ..."
+            e.Result = "Optimierung  abgebrochen ..."
             Exit Sub
         End If
 
@@ -11089,7 +11089,7 @@ Public Module Projekte
 
                 If worker.CancellationPending Then
                     e.Cancel = True
-                    e.Result = "Berichterstellung abgebrochen ..."
+                    e.Result = "Optimierung  abgebrochen ..."
                     Exit For
                 End If
 

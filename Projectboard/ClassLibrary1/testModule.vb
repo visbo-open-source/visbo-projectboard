@@ -2874,7 +2874,7 @@ Public Module testModule
         Dim fallendShape As pptNS.Shape = Nothing
 
         Dim pptShape As pptNS.Shape
-        Dim portfolioName As String = currentConstellation
+        Dim portfolioName As String = currentConstellationName
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Single = 18
@@ -4938,7 +4938,7 @@ Public Module testModule
                                 Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
                             End If
                         End If
-                        
+
                     Catch ex As Exception
 
                         ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
@@ -6004,7 +6004,7 @@ Public Module testModule
                     If IsNothing(vglProj) Then
                         vglProj = projekthistorie.ElementAt(0)
                     End If
-                    
+
 
 
                 Case 2
@@ -6630,7 +6630,7 @@ Public Module testModule
         Dim curZeile As Integer = 2
         Dim curSpalte As Integer = 1
 
-        
+
 
         Dim anzSpalten As Integer
 
@@ -6943,7 +6943,7 @@ Public Module testModule
             End With
         End If
         ' jetzt werden die eigentlichen Inhalte geschrieben 
-        
+
 
 
     End Sub
@@ -6992,9 +6992,9 @@ Public Module testModule
 
         With tabelle
 
-            If currentConstellation.Trim.Length > 0 Then
+            If currentConstellationName.Trim.Length > 0 Then
                 CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & currentConstellation
+                CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & currentConstellationName
             Else
                 'CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
                 '    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " <nicht benannt>"
@@ -8582,7 +8582,7 @@ Public Module testModule
                 Catch ex As Exception
 
                 End Try
-                
+
             End If
         Next
 
@@ -8724,7 +8724,7 @@ Public Module testModule
                     projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
                                                                     storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                 End If
-                
+
                 'If vergleichstyp = PThis.letzterStand Then
                 '    vproj = projekthistorie.Last
 
@@ -9415,7 +9415,7 @@ Public Module testModule
         End Select
 
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = currentConstellation & vbLf
+        titelTeile(1) = currentConstellationName & vbLf
         titelTeilLaengen(1) = titelTeile(1).Length
         titelTeile(2) = ""
         titelTeilLaengen(2) = titelTeile(2).Length

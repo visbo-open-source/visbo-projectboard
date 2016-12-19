@@ -42,11 +42,11 @@
           </menu>
         </group>
         <group id="PTPf" label="Charts">
-            <menu id="PTXG1M2" label ="Leistbarkeit analysieren" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
+            <menu id="PTXG1M2" label ="Engpass Analyse" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
             <button id="PTXG1B6" label="Auswahl über Namen" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
             <button id="PTXG1B7" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
           </menu>
-          <button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />
+          <button id="PTXG1B10" label="größter Engpass" onAction="PTXShowEngpass" />
           <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
          <separator id="PTXG1s4"/> 
           <menu id="PTOPT" label="Optimieren">
@@ -299,8 +299,11 @@
           <menu id ="PT5G3" label ="Löschen">
            <button id="Pt5G3B1" label="Multiprojekt-Szenario" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Datenbank gelöscht; damit wird lediglich die Definition des Szenarios in der Datenbank gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
             <!--<button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>-->
-           <button id="Pt5G3B3" label="Projekte/Varianten "  onAction="PT5DeleteProjectsInDB" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten, Varianten und zeitlichen Snapshots in der Datenbank; durch Selektieren können eine oder mehrere Projekte/Varianten/Snapshots gelöscht werden; Selektieren eines Projektes löscht alle auch alle zugehörigen Varianten des Projektes inkl aller Snapshots des Projekts aus der Datenbank; Selektieren einer Variante löscht alle zugehörigen Snapshots der Variante aus der Datenbank"/>
-         </menu>       
+            <menu id ="PT5G3M2" label ="Projekte/Varianten">
+              <button id="Pt5G3B3" label="Projekte/Varianten/TimeStamps auswählen"  onAction="PT5DeleteProjectsInDB" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten, Varianten und zeitlichen Snapshots in der Datenbank; durch Selektieren können eine oder mehrere Projekte/Varianten/Snapshots gelöscht werden; Selektieren eines Projektes löscht alle auch alle zugehörigen Varianten des Projektes inkl aller Snapshots des Projekts aus der Datenbank; Selektieren einer Variante löscht alle zugehörigen Snapshots der Variante aus der Datenbank"/>
+              <button id="Pt5G3B4" label="Letzten X Versionen behalten"  onAction="PT5DeleteProjectsInDBExceptF1" supertip ="Geben Sie an, wieviele unterschiedliche Versionen Sie behalten wollen; alle anderen werden gelöscht "/>
+            </menu>
+          </menu>       
         </group>
       </tab>  
       <!---->     

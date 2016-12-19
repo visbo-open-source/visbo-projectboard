@@ -74,7 +74,7 @@ Public Module Module1
 
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
-    Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
+    Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
@@ -462,6 +462,7 @@ Public Module Module1
         loadPV = 6
         deleteV = 7
         chgInSession = 8
+        delAllExceptFromDB = 9
     End Enum
 
     ''' <summary>
@@ -3102,7 +3103,6 @@ Public Module Module1
 
 
     End Sub
-
 
 
     Public Sub PPTstarten()
