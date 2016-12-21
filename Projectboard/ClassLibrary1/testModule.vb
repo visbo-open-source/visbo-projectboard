@@ -475,7 +475,7 @@ Public Module testModule
                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
-                                          ByRef pptFirstTime As Boolean, ByVal pptLastTime As Boolean, ByRef zeilenhoehe As Double, _
+                                          ByRef pptFirstTime As Boolean, ByVal pptLastTime As Boolean, ByRef zeilenhoehe_sav As Double, _
                                           ByRef legendFontSize As Single, _
                                           ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         Dim pptApp As pptNS.Application = Nothing
@@ -1120,7 +1120,7 @@ Public Module testModule
                                     ' die Slide mit Tag kennzeichnen ... 
 
                                     Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                  objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                  objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
                                                                   tmpphases, tmpMilestones, _
                                                                   selectedRoles, selectedCosts, _
                                                                   selectedBUs, selectedTyps, _
@@ -1138,7 +1138,7 @@ Public Module testModule
                                 Try
 
                                     Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
@@ -1156,7 +1156,7 @@ Public Module testModule
                                 Try
 
                                     Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
@@ -1175,7 +1175,7 @@ Public Module testModule
 
 
                                     Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
@@ -1201,7 +1201,7 @@ Public Module testModule
 
 
                                     Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
@@ -2874,11 +2874,11 @@ Public Module testModule
         Dim fallendShape As pptNS.Shape = Nothing
 
         Dim pptShape As pptNS.Shape
-        Dim portfolioName As String = currentConstellation
+        Dim portfolioName As String = currentConstellationName
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Single = 18
-        Dim zeilenhoehe As Double = 0.0
+        Dim zeilenhoehe_sav As Double = 0.0
         Dim legendFontSize As Single = 0.0
 
         Dim von As Integer, bis As Integer
@@ -3251,7 +3251,7 @@ Public Module testModule
                             Try
                                 Dim tmpProjekt As New clsProjekt
                                 Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                              objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                              objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
                                                               selectedPhases, selectedMilestones, _
                                                               selectedRoles, selectedCosts, _
                                                               selectedBUs, selectedTyps, _
@@ -3802,11 +3802,11 @@ Public Module testModule
                         Case "Plan/Forecast"
 
 
-                            Dim vglVersion As Integer = PThis.ersterStand
                             Dim auswahl As Integer
 
                             Dim ersterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.DayOfYear + 1)
                             Dim letzterStandDate As Date = Date.Now.AddDays(-1 * Date.Now.Day + 1)
+                            Dim aktuellesDatum As Date = Date.Now
 
                             Dim tmpQualifierStr() As String = qualifier.Split(New Char() {CChar("#")})
                             qualifier = tmpQualifierStr(0)
@@ -3815,11 +3815,19 @@ Public Module testModule
 
                                 Try
                                     ersterStandDate = CDate(tmpQualifierStr(1))
-                                    letzterStandDate = CDate(tmpQualifierStr(2))
+                                    aktuellesDatum = CDate(tmpQualifierStr(2))
+                                    letzterStandDate = CDate(aktuellesDatum.AddMonths(-1))
                                 Catch ex As Exception
 
                                 End Try
 
+                            ElseIf tmpQualifierStr.Length = 2 Then
+                                Try
+                                    ersterStandDate = CDate(tmpQualifierStr(1))
+                                    letzterStandDate = CDate(aktuellesDatum.AddMonths(-1))
+                                Catch ex As Exception
+
+                                End Try
                             End If
 
 
@@ -3844,7 +3852,8 @@ Public Module testModule
                             hwidth = 450
                             hheight = awinSettings.ChartHoehe1
                             obj = Nothing
-                            Call createSollIstOfPortfolio(obj, Date.Now, auswahl, qualifier, ersterStandDate, letzterStandDate, _
+
+                            Call createSollIstOfPortfolio(obj, aktuellesDatum, auswahl, qualifier, ersterStandDate, letzterStandDate, _
                                                            htop, hleft, hheight, hwidth)
 
                             reportObj = obj
@@ -3873,7 +3882,7 @@ Public Module testModule
                             End Try
 
 
-                        
+
 
                         Case "Übersicht Budget"
 
@@ -4929,7 +4938,7 @@ Public Module testModule
                                 Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
                             End If
                         End If
-                        
+
                     Catch ex As Exception
 
                         ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
@@ -5995,7 +6004,7 @@ Public Module testModule
                     If IsNothing(vglProj) Then
                         vglProj = projekthistorie.ElementAt(0)
                     End If
-                    
+
 
 
                 Case 2
@@ -6621,7 +6630,7 @@ Public Module testModule
         Dim curZeile As Integer = 2
         Dim curSpalte As Integer = 1
 
-        
+
 
         Dim anzSpalten As Integer
 
@@ -6934,7 +6943,7 @@ Public Module testModule
             End With
         End If
         ' jetzt werden die eigentlichen Inhalte geschrieben 
-        
+
 
 
     End Sub
@@ -6983,9 +6992,9 @@ Public Module testModule
 
         With tabelle
 
-            If currentConstellation.Trim.Length > 0 Then
+            If currentConstellationName.Trim.Length > 0 Then
                 CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & currentConstellation
+                CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & currentConstellationName
             Else
                 'CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
                 '    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " <nicht benannt>"
@@ -8573,7 +8582,7 @@ Public Module testModule
                 Catch ex As Exception
 
                 End Try
-                
+
             End If
         Next
 
@@ -8715,7 +8724,7 @@ Public Module testModule
                     projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
                                                                     storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                 End If
-                
+
                 'If vergleichstyp = PThis.letzterStand Then
                 '    vproj = projekthistorie.Last
 
@@ -9314,7 +9323,7 @@ Public Module testModule
     ''' erstellt einen Soll-Ist Vergleich zwischen letztem bzw. erstem Plan-Stand 
     ''' </summary>
     ''' <param name="reportObj"></param>
-    ''' <param name="heute"></param>
+    ''' <param name="aktuellesDatum"></param>
     ''' <param name="auswahl">bestimmt , was verglichen werden soll </param>
     ''' <param name="qualifier"></param>
     ''' <param name="ersterStandDatum">gibt das Datum an, das den ersten Stand markiert</param>
@@ -9324,7 +9333,7 @@ Public Module testModule
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks></remarks>
-    Sub createSollIstOfPortfolio(ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, _
+    Sub createSollIstOfPortfolio(ByRef reportObj As Excel.ChartObject, ByVal aktuellesDatum As Date, ByVal auswahl As Integer, ByVal qualifier As String, _
                                  ByVal ersterStandDatum As Date, ByVal letzterStandDatum As Date, _
                                 ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
         Dim chtobj As Excel.ChartObject
@@ -9350,7 +9359,7 @@ Public Module testModule
         Dim tdatenreiheE() As Double
         Dim tdatenreiheL() As Double
 
-        Dim von As Integer, bis As Integer, heuteColumn As Integer = getColumnOfDate(heute)
+        Dim von As Integer, bis As Integer, heuteColumn As Integer = getColumnOfDate(aktuellesDatum)
         Dim pastAndFuture As Boolean = False
         Dim future As Boolean = True
 
@@ -9406,7 +9415,7 @@ Public Module testModule
         End Select
 
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = currentConstellation & vbLf
+        titelTeile(1) = currentConstellationName & vbLf
         titelTeilLaengen(1) = titelTeile(1).Length
         titelTeile(2) = ""
         titelTeilLaengen(2) = titelTeile(2).Length
@@ -9451,7 +9460,7 @@ Public Module testModule
             If request.pingMongoDb() Then
                 ' es soll mit der Standard-Variante verglichen werden ... 
                 projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:="", _
-                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                            storedEarliest:=StartofCalendar, storedLatest:=aktuellesDatum)
 
                 anzH = anzH + 1
                 anzSnapshots = projekthistorie.Count
@@ -9846,7 +9855,7 @@ Public Module testModule
 
                 With .SeriesCollection.NewSeries
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "aktueller Stand: " & Date.Now.ToShortDateString & " (" & anzH.ToString & " P)"
+                    .name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
                     '.name = "Current"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheH
@@ -16636,7 +16645,7 @@ Public Module testModule
     ''' <param name="objectsToDo"></param>
     ''' <param name="objectsDone"></param>
     ''' <param name="pptFirstTime"></param>
-    ''' <param name="zeilenhoehe"></param>
+    ''' <param name="zeilenhoehe_sav"></param>
     ''' <param name="selectedPhases"></param>
     ''' <param name="selectedMilestones"></param>
     ''' <param name="selectedRoles"></param>
@@ -16653,7 +16662,7 @@ Public Module testModule
     ''' <remarks></remarks>
     Private Sub zeichneMultiprojektSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
                                              ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef pptFirstTime As Boolean, _
-                                             ByRef zeilenhoehe As Double, ByRef legendFontSize As Double, _
+                                             ByRef zeilenhoehe_sav As Double, ByRef legendFontSize As Double, _
                                              ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                              ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
@@ -16809,9 +16818,10 @@ Public Module testModule
 
 
             ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
-            If pptFirstTime And zeilenhoehe = 0.0 Then
+            If pptFirstTime And zeilenhoehe_sav = 0.0 Then
 
                 Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+                zeilenhoehe_sav = rds.zeilenHoehe
                 ' tk alt: 26.11.16
                 'With rds
 
@@ -16822,6 +16832,11 @@ Public Module testModule
                 '                                        .projectNameVorlagenShape, _
                 '                                        .durationArrowShape, .durationTextShape)
                 'End With
+            ElseIf zeilenhoehe_sav <> 0 And rds.zeilenHoehe = 0.0 Then
+                Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+                zeilenhoehe_sav = rds.zeilenHoehe
+            Else
+                Call MsgBox("pptfirsttime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
 
             End If
 
@@ -16831,7 +16846,7 @@ Public Module testModule
             Dim maxZeilen As Integer = 0
             Dim anzZeilen As Integer = 0
             Dim gesamtAnzZeilen As Integer = 0
-            Dim projekthoehe As Double = zeilenhoehe
+            Dim projekthoehe As Double = zeilenhoehe_sav
 
             If awinSettings.mppExtendedMode Then
 
@@ -16853,7 +16868,7 @@ Public Module testModule
 
 
             Else
-                projekthoehe = zeilenhoehe
+                projekthoehe = zeilenhoehe_sav
             End If
 
             '
@@ -16870,12 +16885,12 @@ Public Module testModule
 
             If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
                 If awinSettings.mppOnePage Then
-                    neededSpace = gesamtAnzZeilen * zeilenhoehe
+                    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
                 Else
-                    neededSpace = maxZeilen * zeilenhoehe
+                    neededSpace = maxZeilen * zeilenhoehe_sav
                 End If
             Else
-                neededSpace = projCollection.Count * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
+                neededSpace = projCollection.Count * zeilenhoehe_sav ' für normale Berichte hier: projekthoehe = zeilenhoehe
             End If
 
 

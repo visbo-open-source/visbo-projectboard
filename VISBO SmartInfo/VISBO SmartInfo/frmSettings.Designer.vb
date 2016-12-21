@@ -45,6 +45,7 @@ Partial Class frmSettings
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnLanguageExp = New System.Windows.Forms.Button()
         Me.btnLanguageImp = New System.Windows.Forms.Button()
+        Me.rdbDBLogin = New System.Windows.Forms.RadioButton()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
@@ -86,7 +87,7 @@ Partial Class frmSettings
         'rdbUserName
         '
         Me.rdbUserName.AutoSize = True
-        Me.rdbUserName.Location = New System.Drawing.Point(96, 6)
+        Me.rdbUserName.Location = New System.Drawing.Point(160, 6)
         Me.rdbUserName.Name = "rdbUserName"
         Me.rdbUserName.Size = New System.Drawing.Size(117, 17)
         Me.rdbUserName.TabIndex = 33
@@ -198,6 +199,7 @@ Partial Class frmSettings
         '
         'TabPage2
         '
+        Me.TabPage2.Controls.Add(Me.rdbDBLogin)
         Me.TabPage2.Controls.Add(Me.btnProtect)
         Me.TabPage2.Controls.Add(Me.frmProtectField2)
         Me.TabPage2.Controls.Add(Me.frmProtectField1)
@@ -285,6 +287,16 @@ Partial Class frmSettings
         Me.btnLanguageImp.Text = "Importieren"
         Me.btnLanguageImp.UseVisualStyleBackColor = True
         '
+        'rdbDBLogin
+        '
+        Me.rdbDBLogin.AutoSize = True
+        Me.rdbDBLogin.Location = New System.Drawing.Point(82, 6)
+        Me.rdbDBLogin.Name = "rdbDBLogin"
+        Me.rdbDBLogin.Size = New System.Drawing.Size(69, 17)
+        Me.rdbDBLogin.TabIndex = 39
+        Me.rdbDBLogin.Text = "DB Login"
+        Me.rdbDBLogin.UseVisualStyleBackColor = True
+        '
         'frmSettings
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -326,4 +338,5 @@ Partial Class frmSettings
     Friend WithEvents btnLanguageExp As System.Windows.Forms.Button
     Friend WithEvents btnLanguageImp As System.Windows.Forms.Button
     Friend WithEvents btnChangeLanguage As System.Windows.Forms.Button
+    Friend WithEvents rdbDBLogin As System.Windows.Forms.RadioButton
 End Class

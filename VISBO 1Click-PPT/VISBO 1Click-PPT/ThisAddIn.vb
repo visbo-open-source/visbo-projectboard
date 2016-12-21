@@ -56,6 +56,8 @@ Public Class ThisAddIn
 
                 If Not IsNothing(appInstance.Workbooks(myCustomizationFile)) Then
                     ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                    Call MsgBox("Anzahl Milestones: " & missingMilestoneDefinitions.Count & vbLf & _
+                                "Anzahl Phasen: " & missingPhaseDefinitions.Count)
                     appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
                 End If
                 appInstance.ScreenUpdating = True

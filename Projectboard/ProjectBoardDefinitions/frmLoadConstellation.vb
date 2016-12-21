@@ -2,7 +2,7 @@
 
     Private formerselect As String
     Public retrieveFromDB As Boolean
-    Public listOfTimeStamps As Collection
+    Public earliestDate As Date
     Public constellationsToShow As clsConstellations
     Private Sub frmLoadConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -14,22 +14,22 @@
         formerselect = ""
 
         If Not retrieveFromDB Then
-            dropBoxTimeStamps.Visible = False
+            requiredDate.Visible = False
             lblStandvom.Visible = False
         Else
 
-            Try
-                
-                dropBoxTimeStamps.Items.Clear()
+            'Try
 
-                For k As Integer = 1 To listOfTimeStamps.Count
-                    Dim tmpDate As Date = CDate(listOfTimeStamps.Item(k))
-                    dropBoxTimeStamps.Items.Add(tmpDate)
-                Next
+            '    dropBoxTimeStamps.Items.Clear()
 
-            Catch ex As Exception
+            '    For k As Integer = 1 To listOfTimeStamps.Count
+            '        Dim tmpDate As Date = CDate(listOfTimeStamps.Item(k))
+            '        dropBoxTimeStamps.Items.Add(tmpDate)
+            '    Next
 
-            End Try
+            'Catch ex As Exception
+
+            'End Try
 
             ' jetzt ist dropBoxTimeStamps.selecteditem = Nothing ..
         End If
@@ -73,7 +73,7 @@
 
     End Sub
 
-    Private Sub dropBoxTimeStamps_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropBoxTimeStamps.SelectedIndexChanged
+    Private Sub dropBoxTimeStamps_SelectedIndexChanged(sender As Object, e As EventArgs)
 
         ' den Fokus von diesem Element wegnehmen 
         ListBox1.Focus()
@@ -82,6 +82,23 @@
         Catch ex As Exception
 
         End Try
+
+    End Sub
+
+    Private Sub requiredDate_ValueChanged(sender As Object, e As EventArgs) Handles requiredDate.ValueChanged
+
+        If Not IsNothing(requiredDate) Then
+
+            If requiredDate.Value >= earliestDate Then
+                requiredDate.Value = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
+            Else
+                Call MsgBox("es gibt vor dem " & earliestDate.ToShortDateString & " keine Projekte in der Datenbank ")
+                requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
+            End If
+
+        Else
+            ' nichts tun ...
+        End If
 
     End Sub
 End Class

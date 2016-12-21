@@ -35,22 +35,22 @@ Imports System.Windows
 
 <Runtime.InteropServices.ComVisible(True)> _
     Public Class Ribbon1
-    Implements Office.IRibbonExtensibility
+    Implements Microsoft.Office.Core.IRibbonExtensibility
 
-    Private ribbon As Office.IRibbonUI
+    Private ribbon As Microsoft.Office.Core.IRibbonUI
 
     Private tempSkipChanges As Boolean = False
 
     Public Sub New()
     End Sub
 
-    Public Function GetCustomUI(ByVal ribbonID As String) As String Implements Office.IRibbonExtensibility.GetCustomUI
+    Public Function GetCustomUI(ByVal ribbonID As String) As String Implements Microsoft.Office.Core.IRibbonExtensibility.GetCustomUI
         Return GetResourceText("ExcelWorkbook1.Ribbon1.xml")
     End Function
 
 #Region "Menübandrückrufe"
     'Erstellen Sie hier Rückrufmethoden. Weitere Informationen über das Hinzufügen von Rückrufmethoden erhalten Sie, indem Sie das Menüband-XML-Element im Projektmappen-Explorer markieren und dann F1 drücken.
-    Public Sub Ribbon_Load(ByVal ribbonUI As Office.IRibbonUI)
+    Public Sub Ribbon_Load(ByVal ribbonUI As Microsoft.Office.Core.IRibbonUI)
         Me.ribbon = ribbonUI
     End Sub
 
@@ -80,7 +80,7 @@ Imports System.Windows
                 Call storeSessionConstellation(constellationName)
 
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-                currentConstellation = constellationName
+                currentConstellationName = constellationName
             End If
         Else
             Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
@@ -114,7 +114,7 @@ Imports System.Windows
             .constellationsToShow = projectConstellations
             .retrieveFromDB = False
             .lblStandvom.Visible = False
-            .dropBoxTimeStamps.Visible = False
+            .requiredDate.Visible = False
             .addToSession.Visible = False
         End With
 
@@ -124,64 +124,10 @@ Imports System.Windows
 
             For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
 
-                Dim anzahlNeue As Integer = 0
-                Dim anzahlChanged As Integer = 0
                 Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
                 Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
 
-                ' jetzt müssen auch alle Projekte, die in der Constellation referenziert werden, aber noch nicht 
-                ' in der Datenbank gespeichert sind, abgespeichert werden ... 
-                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
-
-                    Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
-
-                    If Not IsNothing(hproj) Then
-                        If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-                            ' speichern des Projektes 
-                            hproj.timeStamp = DBtimeStamp
-                            If request.storeProjectToDB(hproj) Then
-                                anzahlNeue = anzahlNeue + 1
-                            End If
-                        Else
-                            ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
-                            Dim oldProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
-                            ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
-                            If Not hproj.isIdenticalTo(oldProj) Then
-                                hproj.timeStamp = DBtimeStamp
-                                If request.storeProjectToDB(hproj) Then
-                                    ' alles ok
-                                    anzahlChanged = anzahlChanged + 1
-                                Else
-                                    Call MsgBox("Fehler bei Speichern Projekt:" & vbLf & hproj.name & ", " & hproj.variantName)
-                                End If
-                            End If
-                        End If
-                    End If
-
-
-                Next
-
-                ' jetzt wird die 
-                Try
-                    If request.storeConstellationToDB(currentConstellation) Then
-                    Else
-                        Call MsgBox("Fehler in Schreiben Constellation " & currentConstellation.constellationName)
-                    End If
-                Catch ex As Exception
-                    Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                End Try
-
-
-                Dim tsMessage As String = ""
-                If anzahlNeue + anzahlChanged > 0 Then
-                    tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
-                End If
-                Call MsgBox("Gespeichert ... " & vbLf & _
-                            "Szenario: " & constellationName & vbLf & _
-                            "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
-                            "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf & _
-                            tsMessage)
-
+                Call storeSingleConstellationToDB(currentConstellation)
 
             Next
 
@@ -195,7 +141,6 @@ Imports System.Windows
         Dim loadConstellationFrm As New frmLoadConstellation
         Dim storedAtOrBefore As Date = Date.Now
         Dim ControlID As String = control.Id
-        Dim constellationName As String
         Dim timeStampsCollection As New Collection
 
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
@@ -222,7 +167,14 @@ Imports System.Windows
                         With loadConstellationFrm
                             .constellationsToShow = dbConstellations
                             .retrieveFromDB = True
-                            .listOfTimeStamps = timeStampsCollection
+                            If timeStampsCollection.Count > 0 Then
+                                '.earliestDate = CDate(timeStampsCollection.Item(1))
+                                .earliestDate = CDate(timeStampsCollection.Item(timeStampsCollection.Count)).Date.AddHours(23).AddMinutes(59)
+                            Else
+                                .earliestDate = Date.Now.Date.AddHours(23).AddMinutes(59)
+                            End If
+
+                            '.listOfTimeStamps = timeStampsCollection
                         End With
                     End If
 
@@ -255,99 +207,35 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
-            ' '' ''<<<<<<< HEAD
-            ' '' ''            ' Maus auf Wartemodus setzen
-            ' '' ''            appInstance.Cursor = XlMousePointer.xlWait
-
-            ' '' ''            If loadConstellationFrm.addToSession.Checked = True Then
-            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
-            ' '' ''                Call awinAddConstellation(constellationName, successMessage)
-            ' '' ''            Else
-            ' '' ''                constellationName = loadConstellationFrm.ListBox1.Text
-            ' '' ''                Call awinLoadConstellation(constellationName, successMessage)
-            ' '' ''=======
             appInstance.ScreenUpdating = False
 
-            If Not IsNothing(loadConstellationFrm.dropBoxTimeStamps.SelectedItem) Then
-                storedAtOrBefore = CDate(loadConstellationFrm.dropBoxTimeStamps.SelectedItem)
+            If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
+                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value)
             Else
-                storedAtOrBefore = Date.Now
+                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
 
-            Try
-                Dim boardWasEmpty As Boolean
+            Dim constellationsToDo As New clsConstellations
 
-                If AlleProjekte.Count = 0 Then
-                    boardWasEmpty = True
-                Else
-                    boardWasEmpty = False
-                End If
+            For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
-                If Not boardWasEmpty And Not loadConstellationFrm.addToSession.Checked = True Then
-
-                    Call awinClearPlanTafel()
-
-                    If ControlID = loadFromDatenbank Then
-                        Call clearCompleteSession()
+                Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+                If Not IsNothing(constellation) Then
+                    If Not constellationsToDo.Contains(constellation.constellationName) Then
+                        constellationsToDo.Add(constellation)
                     End If
-
                 End If
 
-                For i As Integer = 1 To loadConstellationFrm.ListBox1.SelectedItems.Count
-
-                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
-
-                    If i = 1 And (boardWasEmpty Or Not (ControlID = loadFromDatenbank)) Then
-                        Call awinLoadConstellation(constellationName, successMessage, storedAtOrBefore)
-                    Else
-                        Call awinAddConstellation(constellationName, successMessage, storedAtOrBefore)
-                    End If
+            Next
 
 
-                Next
+            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
+            'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
+            Dim clearSession As Boolean = False
+            If constellationsToDo.Count > 0 Then
+                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore)
+            End If
 
-                If loadConstellationFrm.ListBox1.SelectedItems.Count = 1 And _
-                    (boardWasEmpty Or loadConstellationFrm.addToSession.Checked = False) Then
-                    constellationName = CStr(loadConstellationFrm.ListBox1.SelectedItems.Item(0))
-
-                Else
-                    constellationName = "no Name Scenario"
-
-                End If
-                '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
-
-                currentConstellation = constellationName
-                Call awinNeuZeichnenDiagramme(2)
-
-                '' ''<<<<<<< HEAD
-                '' ''            appInstance.ScreenUpdating = False
-                '' ''            'Call diagramsVisible(False)
-                '' ''            Call awinClearPlanTafel()
-                '' ''            ' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario 
-                '' ''            'Call awinZeichnePlanTafel(False)
-                '' ''            Call awinZeichnePlanTafel(True)
-                '' ''            Call awinNeuZeichnenDiagramme(2)
-                '' ''            'Call diagramsVisible(True)
-
-                '' ''            ' Maus auf Wartemodus setzen
-                '' ''            appInstance.Cursor = XlMousePointer.xlDefault
-
-                '' ''            appInstance.ScreenUpdating = True
-                '' ''=======
-                ' Änderung tk am 2.6 
-                ''Call awinLoadConstellation(constellationName, successMessage)
-
-                ' '' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-                ''currentConstellation = constellationName
-
-
-                ' '' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario
-                ' '' mit fromScratch = false, weil di eReihenfolge erhalten bleiben soll 
-                ' ''Call awinZeichnePlanTafel(False)
-            Catch ex As Exception
-                Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
-            End Try
-            '' ''>>>>>>> feature/PT176---Multiprojekttafel-ohne-DB
 
             appInstance.ScreenUpdating = True
 
@@ -360,7 +248,7 @@ Imports System.Windows
     Sub PTAendernKonstellation(control As IRibbonControl)
 
         Call PBBChangeCurrentPortfolio()
-        
+
     End Sub
     Sub PTRemoveKonstellation(control As IRibbonControl)
 
@@ -419,11 +307,11 @@ Imports System.Windows
                 Call awinRemoveConstellation(constFilterName, removeFromDB)
                 Call MsgBox(constFilterName & " wurde gelöscht ...")
 
-                If constFilterName = currentConstellation Then
+                If constFilterName = currentConstellationName Then
 
                     ' aktuelle Konstellation unter dem Namen 'Last' speichern
                     Call storeSessionConstellation("Last")
-                    currentConstellation = "Last"
+                    currentConstellationName = "Last"
                 Else
                     ' aktuelle Konstellation bleibt unverändert
                 End If
@@ -547,42 +435,10 @@ Imports System.Windows
 
         Call PBBDeleteProjectsInDB(control)
 
+    End Sub
 
-        ' ''Dim deletedProj As Integer = 0
-        ' ''Dim returnValue As DialogResult
-
-        '' ''Dim deleteProjects As New frmDeleteProjects
-        ' ''Dim deleteProjects As New frmProjPortfolioAdmin
-
-        ' ''Try
-
-        ' ''    With deleteProjects
-        ' ''        .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
-        ' ''        .aKtionskennung = PTTvActions.delFromDB
-        ' ''        .OKButton.Text = "Löschen"
-        ' ''        '' '' ''.portfolioName.Visible = False
-        ' ''        '' '' ''.Label1.Visible = False
-        ' ''    End With
-
-        ' ''    returnValue = deleteProjects.ShowDialog
-
-        ' ''    ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
-
-        ' ''    If returnValue = DialogResult.OK Then
-        ' ''        ' everything is done ... 
-
-        ' ''    Else
-        ' ''        ' everything is done ... 
-
-        ' ''    End If
-
-        ' ''Catch ex As Exception
-
-        ' ''    Call MsgBox(ex.Message)
-        ' ''End Try
-
-
-
+    Sub PT5DeleteProjectsInDBExceptF1(control As IRibbonControl)
+        Call PBBDeleteProjectsInDB(control)
     End Sub
 
     ''' <summary>
@@ -955,7 +811,7 @@ Imports System.Windows
 
                             ' jetzt werden alle Vorkommen in den Session Constellations umbenannt 
                             For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-                                Dim anzahl As Integer = kvp.Value.rename(pName, newName)
+                                Dim anzahl As Integer = kvp.Value.renameProject(pName, newName)
                             Next
 
                             ' jetzt werden alle Vorkommen in Dependencies umbenannt 
@@ -1492,6 +1348,9 @@ Imports System.Windows
                 ' das Projekt zur Standard Variante machen 
                 If hproj.variantName <> "" Then
 
+                    Dim oldvName As String = hproj.variantName
+                    Dim newvName As String = ""
+
                     ' die aktuelle Variante aus der AlleProjekte rausnehmen 
                     key = calcProjektKey(hproj)
                     AlleProjekte.Remove(key)
@@ -1514,6 +1373,9 @@ Imports System.Windows
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                    ' jetzt müssen noch alle Projekt-Constellationen aktualisiert werden 
+                    Call projectConstellations.updateVariantName(hproj.name, oldvName, newvName)
 
                 End If
 
@@ -4060,7 +3922,7 @@ Imports System.Windows
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim outputString As String = ""
-
+        Dim outPutCollection As New Collection
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -4100,17 +3962,18 @@ Imports System.Windows
                                 Try
                                     Call awinExportProjectmitHrchy(hproj)
 
-                                    outputString = outputString & hproj.getShapeText & " erfolgreich .." & vbLf
+                                    outputString = hproj.getShapeText & " erfolgreich .."
+                                    outPutCollection.Add(outputString)
                                 Catch ex As Exception
-                                    outputString = outputString & hproj.getShapeText & " nicht erfolgreich .." & vbLf & _
-                                                    ex.Message & vbLf & vbLf
+                                    outputString = hproj.getShapeText & " nicht erfolgreich .."
+                                    outPutCollection.Add(outputString)
                                 End Try
 
 
 
                             Catch ex As Exception
-                                Call MsgBox(singleShp.Name & " nicht gefunden ...")
-
+                                outputString = singleShp.Name & " nicht gefunden ..."
+                                outPutCollection.Add(outputString)
                             End Try
 
                         End If
@@ -4120,19 +3983,26 @@ Imports System.Windows
                         appInstance.ActiveWorkbook.Close(SaveChanges:=False, Filename:=awinPath & projektAustausch)
                     Catch ex As Exception
 
-                        Call MsgBox("Fehler beim Schließen der Projektaustausch Vorlage")
+                        outputString = "Fehler beim Schließen der Projektaustausch Vorlage"
+                        outPutCollection.Add(outputString)
 
                     End Try
                 Catch ex As Exception
 
-                    Call MsgBox("Fehler beim Öffnen der Projektaustausch Vorlage")
+                    outputString = "Fehler beim Öffnen der Projektaustausch Vorlage"
+                    outPutCollection.Add(outputString)
 
                 End Try
 
 
             Next
 
-            Call MsgBox(outputString & "exportiert !")
+            If outPutCollection.Count > 0 Then
+                Call showOutPut(outPutCollection, _
+                                 "Exportieren Steckbriefe", _
+                                 "erfolgreich exportierte Dateien liegen in " & vbLf & _
+                                 exportOrdnerNames(PTImpExp.visbo))
+            End If
 
         Else
             Call MsgBox("vorher Projekt selektieren ...")

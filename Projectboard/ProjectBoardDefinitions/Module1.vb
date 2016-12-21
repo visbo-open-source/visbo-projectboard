@@ -74,7 +74,7 @@ Public Module Module1
 
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
-    Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
+    Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
@@ -198,6 +198,12 @@ Public Module Module1
 
    
     Public Const maxProjektdauer As Integer = 60
+
+    Public Enum ptSzenarioConsider
+        all = 0
+        show = 1
+        noshow = 2
+    End Enum
 
     ' welche Art von CustomFields gibt es 
     ' kann später ggf erweitert werden auf StrArray, DblArray, etc
@@ -453,11 +459,10 @@ Public Module Module1
         delFromSession = 1
         loadPVS = 2
         activateV = 3
-        definePortfolioDB = 4
-        definePortfolioSE = 5
         loadPV = 6
         deleteV = 7
         chgInSession = 8
+        delAllExceptFromDB = 9
     End Enum
 
     ''' <summary>
@@ -3098,7 +3103,6 @@ Public Module Module1
 
 
     End Sub
-
 
 
     Public Sub PPTstarten()

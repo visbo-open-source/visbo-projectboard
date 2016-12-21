@@ -1835,9 +1835,9 @@ Public Class clsProjekt
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
-                If Not currentConstellation.EndsWith("(*)") Then
-                    currentConstellation = currentConstellation & "(*)"
-                End If
+                'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+                '    currentConstellationName = currentConstellationName & "(*)"
+                'End If
 
 
             ElseIf _startDate = NullDatum Then
@@ -1845,9 +1845,9 @@ Public Class clsProjekt
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 If differenzInTagen <> 0 Then
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    If Not currentConstellation.EndsWith("(*)") Then
-                        currentConstellation = currentConstellation & "(*)"
-                    End If
+                    'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+                    '    currentConstellationName = currentConstellationName & "(*)"
+                    'End If
                 End If
             ElseIf _Status <> ProjektStatus(0) Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
@@ -2127,6 +2127,25 @@ Public Class clsProjekt
         ' jetzt wird die Hierarchie kopiert 
         Call copyHryTo(newproject)
 
+        ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
+        Try
+            With newproject
+                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
+                    .customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
+                    .customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
+                    .customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+
+            End With
+        Catch ex As Exception
+
+        End Try
 
 
     End Sub

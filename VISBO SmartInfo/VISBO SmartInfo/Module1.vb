@@ -1,5 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports MongoDbAccess
+Imports ProjectBoardBasic
 Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -270,52 +271,91 @@ Module Module1
     ''' </summary>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Friend Function userIsEntitled() As Boolean
+    Friend Function userIsEntitled(ByRef msg As String) As Boolean
 
         Dim tmpResult As Boolean = False
 
-        If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Or _
+        If userhasValidLicence Then
+
+            If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Or _
             pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Or _
             pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
 
-            VisboProtected = True
+                VisboProtected = True
 
-            If Not protectionSolved Then
-                If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
+                If Not protectionSolved Then
+                    If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
 
-                    Dim pwdFormular As New frmPassword
-                    If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
-                        If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
+                        Dim pwdFormular As New frmPassword
+                        If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
+                            If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
+                                ' in allen Slides den Sicht Schutz aufheben 
+                                protectionSolved = True
+                                Call makeVisboShapesVisible(True)
+                            End If
+                        Else
+                            msg = "Password falsch ..."
+                            tmpResult = False
+                        End If
+
+                    ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
+                        Dim userName As String = My.Computer.Name
+                        If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
                             ' in allen Slides den Sicht Schutz aufheben 
                             protectionSolved = True
                             Call makeVisboShapesVisible(True)
+                        Else
+                            tmpResult = False
+                            msg = "nicht berechtigter Computer bzw. User ..."
                         End If
+
+                    ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
+                        ' die Login Maske aufschalten ... 
+                        ' muss noch eingeloggt werden ? 
+                        If noDBAccessInPPT Then
+                            ' jetzt die Login Maske aufrufen ... 
+
+                            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                                ' tk: 17.11.16: Einloggen in Dtenbank 
+                                noDBAccessInPPT = Not loginProzedur()
+
+                                If noDBAccessInPPT Then
+                                    tmpResult = False
+                                    msg = "kein Datenbank Zugriff ... "
+                                Else
+                                    ' in allen Slides den Sicht Schutz aufheben 
+                                    protectionSolved = True
+                                    Call makeVisboShapesVisible(True)
+                                End If
+
+                            End If
+
+                        End If
+
                     End If
-
-                ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
-                    Dim userName As String = My.Computer.Name
-                    If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
-                        ' in allen Slides den Sicht Schutz aufheben 
-
-                        Call makeVisboShapesVisible(True)
-
-                    End If
-
-                ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
-                    ' die Login Maske aufschalten ... 
-
                 End If
-            End If
 
-            If protectionSolved Then
+                If protectionSolved Then
+                    tmpResult = True
+                End If
+            Else
                 tmpResult = True
             End If
+
         Else
-            tmpResult = True
+            tmpResult = False
+            msg = "keine gültige Lizenz ... bitte kontaktieren Sie Ihren System-Administrator"
         End If
+
+        
 
         userIsEntitled = tmpResult
 
+    End Function
+
+    Private Function userHasValidLicence()
+        userHasValidLicence = (DateDiff(DateInterval.Day, Date.Now, CDate("16.12.2016")) > 0)
     End Function
 
     ''' <summary>
