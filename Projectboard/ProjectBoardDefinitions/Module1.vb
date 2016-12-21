@@ -1493,7 +1493,7 @@ Public Module Module1
         Dim i As Integer
         Dim chtobj As Excel.ChartObject
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
@@ -1528,7 +1528,7 @@ Public Module Module1
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
-        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
             Dim found As Boolean
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
@@ -1570,7 +1570,7 @@ Public Module Module1
 
 
 
-        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
@@ -1681,7 +1681,7 @@ Public Module Module1
         ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
 
         If selectedProjekte.Count > 0 Then
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             ReDim shpArray(selectedProjekte.Count - 1)
 
             For Each kvp In selectedProjekte.Liste
@@ -1689,7 +1689,7 @@ Public Module Module1
                 hproj = kvp.Value
                 i = i + 1
                 Try
-                    shpElement = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpElement = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
                     shpArray(i - 1) = shpElement.Name
 
                 Catch ex As Exception
@@ -1933,7 +1933,7 @@ Public Module Module1
         End Select
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
 
 
@@ -1978,7 +1978,7 @@ Public Module Module1
 
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             If pName = "" Then
                 For Each shpElement In worksheetShapes
@@ -3118,5 +3118,111 @@ Public Module Module1
             End Try
 
         End Try
+    End Sub
+
+
+
+    ''' <summary>
+    ''' initialisert das Logfile
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub logfileInit()
+
+        Try
+
+            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+                .Name = "logBuch"
+                CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
+                CType(.Columns(1), Excel.Range).ColumnWidth = 100
+                CType(.Columns(2), Excel.Range).ColumnWidth = 50
+                CType(.Columns(3), Excel.Range).ColumnWidth = 20
+            End With
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+    ''' <summary>
+    ''' schreibt in das logfile 
+    ''' </summary>
+    ''' <param name="text"></param>
+    ''' <param name="addOn"></param>
+    ''' <remarks></remarks>
+    Public Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+
+        Dim obj As Object
+
+        Try
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                CType(.Cells(1, 1), Excel.Range).Value = text
+                CType(.Cells(1, 2), Excel.Range).Value = addOn
+                CType(.Cells(1, 3), Excel.Range).Value = Date.Now
+            End With
+            anzFehler = anzFehler + 1
+
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+    ''' <summary>
+    ''' öffnet das LogFile
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub logfileOpen()
+
+        appInstance.ScreenUpdating = False
+
+        ' aktives Workbook merken im Variable actualWB
+        Dim actualWB As String = appInstance.ActiveWorkbook.Name
+
+        If My.Computer.FileSystem.FileExists(awinPath & logFileName) Then
+            Try
+                xlsLogfile = appInstance.Workbooks.Open(awinPath & logFileName)
+                myLogfile = appInstance.ActiveWorkbook.Name
+            Catch ex As Exception
+
+                logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf & _
+                                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+                'Call logfileSchreiben(logMessage, " ")
+                Throw New ArgumentException(logmessage)
+
+            End Try
+
+        Else
+            ' Logfile neu anlegen 
+            xlsLogfile = appInstance.Workbooks.Add
+            Call logfileInit()
+            xlsLogfile.SaveAs(awinPath & logFileName)
+            myLogfile = xlsLogfile.Name
+
+        End If
+
+        ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+        appInstance.Workbooks(actualWB).Activate()
+
+    End Sub
+
+
+
+    ''' <summary>
+    ''' schliesst  das logfile 
+    ''' </summary>  
+    ''' <remarks></remarks>
+    Public Sub logfileSchliessen()
+
+        appInstance.EnableEvents = False
+        Try
+
+            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Schließen des Logfiles")
+        End Try
+        appInstance.EnableEvents = True
     End Sub
 End Module

@@ -1,5 +1,6 @@
 ﻿Imports ClassLibrary1
 Imports ProjectBoardDefinitions
+
 Imports MongoDbAccess
 Imports Microsoft.Office.Core
 Imports pptNS = Microsoft.Office.Interop.PowerPoint
@@ -12,11 +13,9 @@ Imports System.IO
 Public Module testModule
 
 
-
-
     ' '' ''' <summary>
     ' '' ''' erzeugt den Report aller selektieren Projekte auf Grundlage des Templates templatedossier.pptx
-    ' '' ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten Projekte steht 
+    ' '' ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten ProFjekte steht 
     ' '' ''' </summary>
     ' '' ''' <param name="pptTemplate"></param>
     ' '' ''' <remarks></remarks>
@@ -521,6 +520,43 @@ Public Module testModule
         ' wird benötigt, um in Ergänzung zu pptLasttime im Falle von nur einem Projekt / vielen Swimlanes die bereits erstellte Folie zu löschen 
         'Dim swimlaneMode As Boolean = False
 
+        Try   ' Projekthistorie aufbauen, sofern sie für das aktuelle hproj nicht schon aufgebaut ist
+
+            Dim aktprojekthist As Boolean = False
+
+            If projekthistorie.Count > 0 Then
+
+                aktprojekthist = (hproj.getShapeText = projekthistorie.First.getShapeText)
+            End If
+
+            If Not aktprojekthist Then
+
+                If Not noDB Then
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                    If request.pingMongoDb() Then
+                        Try
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+
+                        Catch ex As Exception
+                            projekthistorie.clear()
+                        End Try
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+                Else
+                    Call logfileSchreiben("Datenbank-Anbindung ist nicht akiviert. Historie enthält nur das aktuelle Projekt " & hproj.name, "createPPTSlidesFromProject", anzFehler)
+                    projekthistorie.Add(Date.Now, hproj)
+                End If
+
+            ElseIf hproj.getShapeText <> projekthistorie.First.getShapeText Then
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
         Try
             lastElem = projekthistorie.Count - 1
             lastproj = projekthistorie.ElementAt(lastElem - 1)
@@ -621,9 +657,15 @@ Public Module testModule
                             pptTemplatePresentation.Saved = True
                             pptTemplatePresentation.Close()
 
-                            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-                            If worker.WorkerReportsProgress Then
-                                worker.ReportProgress(0, e)
+                            If Not IsNothing(worker) Then
+
+                                e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                                If worker.WorkerReportsProgress Then
+                                    worker.ReportProgress(0, e)
+                                End If
+                            Else
+                                Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromProject", 0)
+
                             End If
 
                             Exit Sub
@@ -637,9 +679,15 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+            If Not IsNothing(worker) Then
+
+                e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromProject", 0)
+
             End If
 
             Exit Sub
@@ -674,10 +722,15 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
+            If Not IsNothing(worker) Then
+                e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
 
-            e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen", "createPPTSlidesFromProject", 0)
+
             End If
 
             Exit Sub
@@ -697,12 +750,16 @@ Public Module testModule
         While folieIX <= anzSlidesToAdd
             'For j = 1 To anzSlidesToAdd
 
-            If worker.WorkerSupportsCancellation Then
+            If Not IsNothing(worker) Then
 
-                If worker.CancellationPending Then
-                    e.Cancel = True
-                    e.Result = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
-                    Exit While
+                If worker.WorkerSupportsCancellation Then
+
+                    If worker.CancellationPending Then
+                        e.Cancel = True
+                        e.Result = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
+                        Exit While
+                    End If
+
                 End If
 
             End If
@@ -762,12 +819,16 @@ Public Module testModule
             '' ''                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
 
 
+            If Not IsNothing(worker) Then
 
-            'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & folieIX & " wird aufgebaut ...."
+                'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                e.Result = "Bericht Seite " & folieIX & " wird aufgebaut ...."
 
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("Bericht Seite " & folieIX & " wird aufgebaut ....", "createPPTSlidesFromProject", 0)
             End If
 
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
@@ -1308,7 +1369,7 @@ Public Module testModule
                                     End If
 
                                 Catch ex As Exception
-
+                                    Throw New ArgumentException("Fehler in MeilensteinTrendAnalyse in CreatePPTSlidesFromProject")
                                 End Try
 
                             Case "Projektphasen"
@@ -1632,6 +1693,11 @@ Public Module testModule
                                 ' jetzt die Aktion durchführen ...
 
                                 If lastproj Is Nothing Then
+                                    Try
+                                        .TextFrame2.TextRange.Text = "Fehler: ... " & repMessages.getmsg(27)
+                                    Catch ex As Exception
+                                        pptSize = 12
+                                    End Try
                                     'Throw New Exception("es gibt keinen letzten Stand")
                                     Throw New Exception(repMessages.getmsg(27))
                                 End If
@@ -1770,8 +1836,6 @@ Public Module testModule
 
 
                                 Try
-
-
 
                                     ' Für englische Version muss Template auf Englisch sein
                                     Call zeichneProjektTerminAenderungen(pptShape, hproj, bproj, lproj)
@@ -2900,11 +2964,16 @@ Public Module testModule
 
         End Try
 
+        If Not IsNothing(worker) Then
 
-        'frmSelectPPTTempl.statusNotification.Text = "PowerPoint nun geöffnet ...."
-        e.Result = "PowerPoint ist nun geöffnet ...."
-        If worker.WorkerReportsProgress Then
-            worker.ReportProgress(0, e)
+            'frmSelectPPTTempl.statusNotification.Text = "PowerPoint nun geöffnet ...."
+            e.Result = "PowerPoint ist nun geöffnet ...."
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+        Else
+            Call logfileSchreiben("PowerPoint ist nun geöffnet", "createPPTSlidesFromConstellation", 0)
+
         End If
 
         ' jetzt wird das template geöffnet , um festzustellen , welches Format Quer oder Hoch die Vorlage hat 
@@ -2944,10 +3013,16 @@ Public Module testModule
                         pptTemplatePresentation.Saved = True
                         pptTemplatePresentation.Close()
 
-                        e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-                        If worker.WorkerReportsProgress Then
-                            worker.ReportProgress(0, e)
+                        If Not IsNothing(worker) Then
+
+                            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                            If worker.WorkerReportsProgress Then
+                                worker.ReportProgress(0, e)
+                            End If
+                        Else
+                            Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromConstellation", 0)
                         End If
+
 
                         Exit Sub
 
@@ -2958,10 +3033,17 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+
+            If Not IsNothing(worker) Then
+
+                e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben("Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... ", "createPPTSlidesFromConstellation", 0)
             End If
+
 
             Exit Sub
         End Try
@@ -3021,16 +3103,20 @@ Public Module testModule
         While folieIX <= anzSlidesToAdd
 
             tatsErstellt = tatsErstellt + 1
-            If worker.WorkerSupportsCancellation Then
 
-                If worker.CancellationPending Then
-                    e.Cancel = True
-                    e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+            If Not IsNothing(worker) Then
+                If worker.WorkerSupportsCancellation Then
 
-                    Exit While
+                    If worker.CancellationPending Then
+                        e.Cancel = True
+                        e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+
+                        Exit While
+                    End If
+
                 End If
-
             End If
+
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
             Dim tmpIX As Integer
@@ -3052,12 +3138,18 @@ Public Module testModule
                                                                               SlideStart:=folieIX, SlideEnd:=folieIX)
             End If
 
+            If Not IsNothing(worker) Then
 
-            'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
+                'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                e.Result = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
 
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+
+                Call logfileSchreiben("Bericht Seite " & tatsErstellt & " wird aufgebaut ....", "createPPTSlidesFromConstellation", 0)
+
             End If
 
 
@@ -3216,15 +3308,19 @@ Public Module testModule
                         boxName = ""
                     End If
 
+                    If Not IsNothing(worker) Then
 
-                    ' Fortschrittsmeldung im Formular SelectPPTTempl
+                        ' Fortschrittsmeldung im Formular SelectPPTTempl
 
-                    'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-                    e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
-                    If worker.WorkerReportsProgress Then
-                        worker.ReportProgress(0, e)
+                        'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                        e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
+                        If worker.WorkerReportsProgress Then
+                            worker.ReportProgress(0, e)
+                        End If
+                    Else
+                        Call logfileSchreiben("Chart '" & kennzeichnung & "' wird aufgebaut ....", "createPPTSlidesFromConstellation", 0)
+
                     End If
-
 
 
                     reportObj = Nothing
@@ -3362,7 +3458,7 @@ Public Module testModule
                                     .GridlineColor = RGB(255, 255, 255)
                                 End With
 
-                                With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
 
 
@@ -3506,7 +3602,7 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                    With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
                                         rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
                                         colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
@@ -4868,14 +4964,25 @@ Public Module testModule
 
         ' pptTemplate muss noch geschlossen werden
 
-        If tatsErstellt = 1 Then
-            e.Result = " Report mit " & tatsErstellt & " Seite erstellt !"
-        Else
-            e.Result = " Report mit " & tatsErstellt & " Seiten erstellt !"
-        End If
+        If Not IsNothing(worker) Then
 
-        If worker.WorkerReportsProgress Then
-            worker.ReportProgress(0, e)
+            If tatsErstellt = 1 Then
+                e.Result = " Report mit " & tatsErstellt & " Seite erstellt !"
+            Else
+                e.Result = " Report mit " & tatsErstellt & " Seiten erstellt !"
+            End If
+
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+        Else
+
+            If tatsErstellt = 1 Then
+                Call logfileSchreiben(" Report mit " & tatsErstellt & " Seite erstellt !", "createPPTSlidesFromConstellation", 0)
+            Else
+                Call logfileSchreiben(" Report mit " & tatsErstellt & " Seiten erstellt !", "createPPTSlidesFromConstellation", 0)
+            End If
+
         End If
 
         ' Vorlage in passender Größe wird nun nicht mehr benötigt
@@ -5646,7 +5753,7 @@ Public Module testModule
 
 
 
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 '
@@ -5822,7 +5929,7 @@ Public Module testModule
                         Try
                             'Call Sleep(100)
                             .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                                  Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                  Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -7198,7 +7305,7 @@ Public Module testModule
 
         Call awinDeleteProjectChildShapes(0)
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
             allShapes = .Shapes
             projektShape = allShapes.Item(hproj.name)
@@ -7574,6 +7681,7 @@ Public Module testModule
         Dim unterschiede As New Collection
         Dim TimeCostColor(2) As Double
         Dim TimeTimeColor(2) As Double
+        Dim notavailable As String = "n.a."
 
 
         Try
@@ -7588,7 +7696,10 @@ Public Module testModule
 
         ' jetzt wird festgestellt, wo es über all Unterschiede gibt 
         ' wird für Bewertung Termine und Meilensteine benötigt 
+
         unterschiede = hproj.listOfDifferences(vglproj, True, 0)
+       
+
 
         ' jetzt werden die aktuellen bzw Vergleichswerte der finanziellen KPIs bestimmt 
         Try
@@ -7596,6 +7707,8 @@ Public Module testModule
 
             If Not IsNothing(vglproj) Then
                 vglproj.calculateRoundedKPI(vglBudget, vglPersCost, vglSonstCost, vglRiskCost, vglErgebnis)
+            Else
+
             End If
 
         Catch ex As Exception
@@ -7616,7 +7729,12 @@ Public Module testModule
 
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
-                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                    If Not IsNothing(vglproj) Then
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                    Else
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & repMessages.getmsg(32)
+                    End If
+
 
 
                     ' jetzt werden die Zeilen abgearbeitet, beginnend mit 2
@@ -7637,7 +7755,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(212)
 
                                 aktvalue = aktErgebnis
-                                vglValue = vglErgebnis
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7645,6 +7762,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglErgebnis
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7667,7 +7787,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(173)
 
                                 aktvalue = aktBudget
-                                vglValue = vglBudget
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7675,6 +7794,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglBudget
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7690,14 +7812,11 @@ Public Module testModule
                                 End If
 
 
-
-
                             Case "Personalkosten"
 
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(164)
 
                                 aktvalue = aktPersCost
-                                vglValue = vglPersCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7705,6 +7824,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglPersCost
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7727,7 +7849,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(165)
 
                                 aktvalue = aktSonstCost
-                                vglValue = vglSonstCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7735,6 +7856,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglSonstCost
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7883,7 +8007,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(243)
 
                                 aktvalue = hproj.StrategicFit
-                                vglValue = vglproj.StrategicFit
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7891,6 +8014,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.StrategicFit
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7913,7 +8039,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(244)
 
                                 aktvalue = hproj.Risiko
-                                vglValue = vglproj.Risiko
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7921,6 +8046,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.Risiko
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7937,13 +8065,12 @@ Public Module testModule
 
 
 
-
                             Case "Projekt-Ampel"
 
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(245)
 
                                 aktvalue = hproj.ampelStatus
-                                vglValue = vglproj.ampelStatus
+
                                 Dim tmpFarbe As Long
 
                                 If IsNothing(vglproj) Then
@@ -7959,10 +8086,12 @@ Public Module testModule
                                         tmpFarbe = farbeNeutral
                                     End If
 
-                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, tmpFarbe)
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 4, ampelShape, tmpFarbe)
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.ampelStatus
 
                                     Dim aktFarbe As Long, vglFarbe As Long
                                     If aktvalue = PTfarbe.red Then
@@ -8018,7 +8147,13 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(246)
 
                                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
-                                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+
+                                If Not IsNothing(vglproj) Then
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+                                Else
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)  ' nicht verfügbar
+                                End If
+
 
                             Case Else
 
@@ -9653,7 +9788,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -9738,7 +9873,7 @@ Public Module testModule
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10360,7 +10495,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -10724,7 +10859,7 @@ Public Module testModule
                     Try
                         'Call Sleep(100)
                         .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                          Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message
@@ -10824,7 +10959,7 @@ Public Module testModule
         Dim tmpDate As Date
         Dim currentFilter As clsFilter
 
-        Dim hproj As clsProjekt
+        Dim hproj As clsProjekt = Nothing
         Dim cphase As clsPhase
         Dim projektstart As Integer
         'Dim found As Boolean
@@ -10925,42 +11060,29 @@ Public Module testModule
 
         For Each kvp As KeyValuePair(Of Double, String) In projektListe
 
-            'hproj = ShowProjekte.getProject(kvp.Value)
-            ' in Projektliste sind jetzt die Keys die zusammengesetzten Schlüssel aus pname und variantName
-            hproj = AlleProjekte.getProject(kvp.Value)
-            projektstart = hproj.Start + hproj.StartOffset
+            Try
+                'hproj = ShowProjekte.getProject(kvp.Value)
+                ' in Projektliste sind jetzt die Keys die zusammengesetzten Schlüssel aus pname und variantName
+                hproj = AlleProjekte.getProject(kvp.Value)
+                projektstart = hproj.Start + hproj.StartOffset
 
-            ' Phasen checken 
-            For Each fullPhaseName As String In selectedPhases
+                ' Phasen checken 
+                For Each fullPhaseName As String In selectedPhases
 
-                Dim breadcrumb As String = ""
-                Dim phaseName As String = ""
+                    Try
 
-                Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
-                Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                        Dim breadcrumb As String = ""
+                        Dim phaseName As String = ""
 
-                For px As Integer = 0 To phaseIndices.Length - 1
-                    If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
-                        cphase = hproj.getPhase(phaseIndices(px))
-                        If Not IsNothing(cphase) Then
-                            If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
-                                ' das umschliesst jetzt bereits fullyContained 
+                        Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
+                        Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
-                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
-                                    tmpMinimum = cphase.getStartDate
-                                End If
-
-                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
-                                    tmpMaximum = cphase.getEndDate
-                                End If
-
-
-                            Else
-                                ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
-                                ' andernfalls muss nichts gemacht werden 
-
-                                If awinSettings.mppFullyContained Then
-                                    If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+                        For px As Integer = 0 To phaseIndices.Length - 1
+                            If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                                cphase = hproj.getPhase(phaseIndices(px))
+                                If Not IsNothing(cphase) Then
+                                    If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
+                                        ' das umschliesst jetzt bereits fullyContained 
 
                                         If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
                                             tmpMinimum = cphase.getStartDate
@@ -10970,13 +11092,41 @@ Public Module testModule
                                             tmpMaximum = cphase.getEndDate
                                         End If
 
+
+                                    Else
+                                        ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
+                                        ' andernfalls muss nichts gemacht werden 
+
+                                        If awinSettings.mppFullyContained Then
+                                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+
+                                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                                    tmpMinimum = cphase.getStartDate
+                                                End If
+
+                                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                                    tmpMaximum = cphase.getEndDate
+                                                End If
+
+                                            End If
+                                        End If
                                     End If
                                 End If
                             End If
-                        End If
-                    End If
-                Next ' ix
-            Next ' phaseName
+                        Next ' ix
+                    Catch ex As Exception
+
+                        Call MsgBox(" in catch von for each phase")
+                    End Try
+
+
+                Next ' phaseName
+
+            Catch ex As Exception
+
+                Call MsgBox("in catch ex ")
+            End Try
+ 
 
             ' Meilensteine 
             ' das muss nur gemacht werden, wenn showAllIfOne=true 
@@ -14127,22 +14277,27 @@ Public Module testModule
                     End If
                 End If
 
-                If worker.WorkerSupportsCancellation Then
+                If Not IsNothing(worker) Then
 
-                    If worker.CancellationPending Then
-                        e.Cancel = True
-                        e.Result = "Berichterstellung abgebrochen ..."
-                        Exit For
+                    If worker.WorkerSupportsCancellation Then
+
+                        If worker.CancellationPending Then
+                            e.Cancel = True
+                            e.Result = "Berichterstellung abgebrochen ..."
+                            Exit For
+                        End If
+
                     End If
 
-                End If
+                    ' Zwischenbericht abgeben ...
+                    e.Result = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
+                    If worker.WorkerReportsProgress Then
+                        worker.ReportProgress(0, e)
+                    End If
+                Else
+                    Call logfileSchreiben("Projekt '" & hproj.getShapeText & "' wird gezeichnet  ....", "zeichnePPTprojects", 0)
 
-                ' Zwischenbericht abgeben ...
-                e.Result = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
-                If worker.WorkerReportsProgress Then
-                    worker.ReportProgress(0, e)
                 End If
-
 
                 '
                 ' zeichne den Projekt-Namen
@@ -16832,11 +16987,14 @@ Public Module testModule
                 '                                        .projectNameVorlagenShape, _
                 '                                        .durationArrowShape, .durationTextShape)
                 'End With
-            ElseIf zeilenhoehe_sav <> 0 And rds.zeilenHoehe = 0.0 Then
+
+                ' ur: 1.12.2016
+            ElseIf zeilenhoehe_sav <> 0.0 And rds.zeilenHoehe = 0.0 Then
+
                 Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
                 zeilenhoehe_sav = rds.zeilenHoehe
             Else
-                Call MsgBox("pptfirsttime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
+                Call MsgBox("pptfirstime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
 
             End If
 
@@ -17737,22 +17895,26 @@ Public Module testModule
                 Do While (curSwimlaneIndex <= swimLanesToDo) And _
                         (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
 
+                    If Not IsNothing(worker) Then
 
-                    ' Zwischen-Meldung ausgeben ...
-                    If worker.WorkerSupportsCancellation Then
+                        ' Zwischen-Meldung ausgeben ...
+                        If worker.WorkerSupportsCancellation Then
 
-                        If worker.CancellationPending Then
-                            e.Cancel = True
-                            e.Result = "Berichterstellung abgebrochen ..."
-                            Exit Sub
+                            If worker.CancellationPending Then
+                                e.Cancel = True
+                                e.Result = "Berichterstellung abgebrochen ..."
+                                Exit Sub
+                            End If
+
                         End If
 
-                    End If
-
-                    ' Zwischenbericht abgeben ...
-                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
-                    If worker.WorkerReportsProgress Then
-                        worker.ReportProgress(0, e)
+                        ' Zwischenbericht abgeben ...
+                        e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
+                        If worker.WorkerReportsProgress Then
+                            worker.ReportProgress(0, e)
+                        End If
+                    Else
+                        Call logfileSchreiben("Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
                     End If
 
                     ' jetzt die Swimlane zeichnen
@@ -18288,8 +18450,6 @@ Public Module testModule
         ' Ende neu 
 
     End Sub
-
-
 
 
 End Module

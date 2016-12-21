@@ -64,7 +64,7 @@ Public Module awinDiagrams
 
         If mon >= showRangeLeft And mon <= showRangeRight Then
 
-            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
 
                 '
                 ' erst den Bereich einfärben  
@@ -1218,7 +1218,7 @@ Public Module awinDiagrams
         appInstance.ScreenUpdating = False
 
 
-        'With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        'With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
 
 
         With chtobj.Chart
@@ -1900,7 +1900,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        'With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        'With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
 
 
@@ -2051,7 +2051,7 @@ Public Module awinDiagrams
             ''Do While Not achieved And anzahlVersuche < 10
             ''    Try
             ''        Call Sleep(100)
-            ''        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+            ''        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
             ''        achieved = True
             ''    Catch ex As Exception
             ''        errmsg = ex.Message
@@ -2796,7 +2796,7 @@ Public Module awinDiagrams
         datenreihe(2) = ShowProjekte.getAuslastungsValues(2).Sum
 
 
-        'With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        'With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
 
 
@@ -3006,7 +3006,7 @@ Public Module awinDiagrams
         Dim valueCrossesNull As Boolean = False
 
 
-        'With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        'With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
         With chtobj.Chart
             ' remove extra series
@@ -4179,7 +4179,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -4359,7 +4359,7 @@ Public Module awinDiagrams
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4834,7 +4834,7 @@ Public Module awinDiagrams
 
             ' hier muss jetzt tempArray gesetzt werden
 
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 Dim atleastOne As Boolean = False
                 For m = 1 To l
@@ -4896,7 +4896,7 @@ Public Module awinDiagrams
 
         Try
 
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in NoshowNeedsofProject: keine Shapes Zuordnung möglich ")
@@ -4913,7 +4913,7 @@ Public Module awinDiagrams
 
 
         Try
-            'tmpshapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            'tmpshapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             shpelement = worksheetShapes.Item(projektname)
             With shpelement
 
@@ -4986,7 +4986,7 @@ Public Module awinDiagrams
                 k = .tfspalte
             End With
 
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 appInstance.EnableEvents = False
 
@@ -5051,7 +5051,7 @@ Public Module awinDiagrams
     Sub diagramsVisible(ByVal show As Boolean)
 
         Dim anzDiagrams As Integer
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -5263,7 +5263,7 @@ Public Module awinDiagrams
     '    Dim testWSName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
     '    Dim testEnable As Boolean = appInstance.EnableEvents
     '    Try
-    '        appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).activate()
+    '        appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).activate()
     '        'appInstance.ActiveWorkbook.Windows(windowNames(5)).Activate()
     '    Catch ex As Exception
     '        Call MsgBox("Window " & windowNames(5) & " existiert nicht mehr !")
