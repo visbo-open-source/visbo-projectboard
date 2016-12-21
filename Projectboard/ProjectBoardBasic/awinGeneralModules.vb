@@ -18195,7 +18195,7 @@ Public Module awinGeneralModules
     ''' <param name="dbPassword">DB pwd</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function reportErstellen(ByVal projekte As String, ByVal variante As String, ByVal profilname As String, _
+    Public Function reportErstellen(ByVal projekte As String, ByVal variante As String, ByVal profilname As String, ByVal timestamp As Date, _
                                         ByVal vonDate As Date, ByVal bisDate As Date, ByVal reportname As String, ByVal append As Boolean, _
                                         ByVal dbUsername As String, ByVal dbPassword As String) As Boolean
 
@@ -18269,7 +18269,7 @@ Public Module awinGeneralModules
                         'Das gewählte Projekt reporten
 
                         Dim hproj As New clsProjekt
-                        hproj = request.retrieveOneProjectfromDB(projekte, variante, Date.Now)
+                        hproj = request.retrieveOneProjectfromDB(projekte, variante, timestamp)
 
                         If Not IsNothing(hproj) Then
 
@@ -18382,7 +18382,7 @@ Public Module awinGeneralModules
 
                             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In curconstellation.Liste
 
-                                hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, Date.Now)
+                                hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, timestamp)
 
                                 If Not IsNothing(hproj) Then
 
@@ -18407,7 +18407,7 @@ Public Module awinGeneralModules
                                     End If
                                 Else
 
-                                    Call logfileSchreiben("reportErstellen", "Projekt '" & kvp.Value.projectName & "' existiert nicht in DB!", anzFehler)
+                                    Call logfileSchreiben("reportErstellen", "Projekt '" & kvp.Value.projectName & " mit TimeStamp '" & timestamp.ToString & "' existiert nicht in DB!", anzFehler)
 
                                 End If  ' if hproj existiert
                             Next

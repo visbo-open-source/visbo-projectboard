@@ -24,7 +24,6 @@ Module Module1
             Dim username As String = args(1)
             Dim password As String = args(2)
 
-            Dim xlsBatchFile As Excel.Workbook = Nothing
             Dim currentBatchfile As String
 
             Dim zeile As Integer = 2
@@ -35,6 +34,7 @@ Module Module1
             Dim profilname As String = ""
             Dim portfolio_projname As String = ""
             Dim variantname As String = ""
+            Dim timestamp As Date = Date.Now
             Dim rangeleft As Date
             Dim rangeright As Date
 
@@ -59,6 +59,7 @@ Module Module1
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, username, password)
                 Dim ok As Boolean = request.createIndicesOnce()
+                ok = request.pingMongoDb()
                 If Not ok Then
                     Call logfileSchreiben("Datenbank-Zugriff verweigert", "ReportBatch", anzFehler)
                     noDB = True
@@ -118,11 +119,19 @@ Module Module1
                                 variantname = ""
                             End If
 
-                            rangeleft = CType(.Cells(zeile, spalte + 5), Microsoft.Office.Interop.Excel.Range).Value
+                            timestamp = CType(.Cells(zeile, spalte + 5), Microsoft.Office.Interop.Excel.Range).Value
+                            If timestamp = Date.MinValue Then
+                                timestamp = Date.Now
+                            Else
+                                timestamp = timestamp.Date ' zeit abgeschnitten
+                                timestamp = timestamp.AddHours(23).AddMinutes(59)
+                            End If
+
+                            rangeleft = CType(.Cells(zeile, spalte + 6), Microsoft.Office.Interop.Excel.Range).Value
                             If rangeleft = Date.MinValue Then
                                 rangeleft = Nothing
                             End If
-                            rangeright = CType(.Cells(zeile, spalte + 6), Microsoft.Office.Interop.Excel.Range).Value
+                            rangeright = CType(.Cells(zeile, spalte + 7), Microsoft.Office.Interop.Excel.Range).Value
                             If rangeright = Date.MinValue Then
                                 rangeright = Nothing
                             End If
@@ -133,9 +142,9 @@ Module Module1
                                 profilname = Trim(profilname)
                                 portfolio_projname = Trim(portfolio_projname)
                                 variantname = Trim(variantname)
-                                Call logfileSchreiben("Report-Erstellen für Zeile:  " & zeile & " " & reportname & " " & profilname & " " & portfolio_projname & " " & variantname, "ReportBatch", 0)
+                                Call logfileSchreiben("Report-Erstellen für Zeile:  " & zeile & " '" & reportname & "' '" & profilname & "' '" & portfolio_projname & "' '" & variantname, "ReportBatch", 0)
 
-                                Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname, rangeleft, rangeright, _
+                                Dim erfolgreich As Boolean = reportErstellen(portfolio_projname, variantname, profilname, timestamp, rangeleft, rangeright, _
                                                                              reportname, speicherModus = "a", username, password)
                                 If erfolgreich Then
                                     ' Powerpoint-Report wurde unter dem Namen reportname in reportErstellen gespeichert
@@ -176,10 +185,12 @@ Module Module1
             ' ordentliches Beenden von Excel-File ReportBatch.xlsx
 
             If Not IsNothing(xlsBatchFile) Then
-
-                ' Schließen des Eingabe-Files
-                xlsBatchFile.Close()
-
+                Try
+                    ' Schließen des Eingabe-Files
+                    xlsBatchFile.Close(SaveChanges:=False)
+                Catch ex As Exception
+                    Call logfileSchreiben("Fehler beim Schliessen des BatchReport-Files", "ReportBatch: " & ex.Message, anzFehler)
+                End Try
             End If
 
             ' CustomizationFile schliessen
@@ -193,9 +204,10 @@ Module Module1
                 End If
 
             Catch ex As Exception
-                Call logfileSchreiben("Fehler beim Schliessen des CustomizationFiles", "ReportBatch", anzFehler)
+                Call logfileSchreiben("Fehler beim Schliessen des CustomizationFiles", "ReportBatch: " & ex.Message, anzFehler)
             End Try
 
+            Call logfileSchliessen()
 
 
         Catch ex As Exception
@@ -203,10 +215,12 @@ Module Module1
             ' ordentliches Beenden von der noch offenen Excel-Instanzen
 
             If Not IsNothing(xlsBatchFile) Then
-
-                ' Schließen des Eingabe-Files
-                xlsBatchFile.Close()
-
+                Try
+                    ' Schließen des Eingabe-Files
+                    xlsBatchFile.Close(SaveChanges:=False)
+                Catch ex1 As Exception
+                    Call logfileSchreiben("Fehler beim Schliessen des BatchReport-Files", "ReportBatch: " & ex1.Message, anzFehler)
+                End Try
             End If
 
             ' CustomizationFile schliessen
@@ -227,9 +241,12 @@ Module Module1
             Console.WriteLine("{0} => {1}", "Fehler", ex.Message)
             Call MsgBox(ex.Message)
 
+            Call logfileSchliessen()
+
+
         End Try
 
-        Call logfileSchliessen()
+        'Call logfileSchliessen()
 
         Console.WriteLine("Ende - PowerPoint-Reports erstellt")
     End Sub
