@@ -8717,6 +8717,7 @@ Public Module Projekte
                     wsfound = True
                     'Call MsgBox("Es wurden " & k - 1 & " Charts eingefügt")
                 Catch ex As Exception
+                    appInstance.EnableEvents = True
                     xlsCockpits.Close(SaveChanges:=False)
                     Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
                 End Try
@@ -8730,6 +8731,7 @@ Public Module Projekte
             End If
 
         Catch ex As Exception
+            appInstance.EnableEvents = True
             xlsCockpits.Close(SaveChanges:=False)
             Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
         End Try
@@ -19618,32 +19620,40 @@ Public Module Projekte
 
         Dim newC As clsConstellation
 
+        ' es soll nur dann etwas gemacht werden, wenn AlleProjekte überhaupt Projekte enthält ... 
 
-        ' prüfen, ob diese Constellation bereits existiert ..
-        If projectConstellations.Contains(constellationName) Then
+        If AlleProjekte.Count = 0 Then
+            ' nichts tun 
+        Else
+
+            ' prüfen, ob diese Constellation bereits existiert ..
+            If projectConstellations.Contains(constellationName) Then
+
+                Try
+                    projectConstellations.Remove(constellationName)
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+
+            newC = New clsConstellation(projektListe:=AlleProjekte, _
+                                            fullProjectNames:=Nothing, _
+                                            cName:=constellationName, _
+                                            takeWhat:=takeWhat)
+
 
             Try
-                projectConstellations.Remove(constellationName)
-            Catch ex As Exception
+                projectConstellations.Add(newC)
 
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
             End Try
 
         End If
 
-
-        newC = New clsConstellation(projektListe:=AlleProjekte, _
-                                        fullProjectNames:=Nothing, _
-                                        cName:=constellationName, _
-                                        takeWhat:=takeWhat)
-
-
-        Try
-            projectConstellations.Add(newC)
-
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-        End Try
-
+        
 
 
 

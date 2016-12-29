@@ -630,7 +630,7 @@ Public Class clsReport
     Public Sub calcRepVonBis(ByVal von As Date, ByVal bis As Date)
 
         Try
-            If von > StartofCalendar And bis > StartofCalendar Then
+            If von >= StartofCalendar And bis > StartofCalendar Then
 
                 If DateDiff(DateInterval.Day, von, bis) > 0 Then
                     Me.reportVon = von

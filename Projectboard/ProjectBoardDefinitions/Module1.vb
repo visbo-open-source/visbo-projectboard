@@ -1794,7 +1794,7 @@ Public Module Module1
 
 
     Public Function magicBoardIstFrei(ByVal mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
-                                      ByVal spalte As Integer, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
+                                      ByVal startDate As Date, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
         Dim istfrei = True
         Dim ix As Integer = 1
         Dim anzahlP As Integer = ShowProjekte.Count
@@ -1805,12 +1805,14 @@ Public Module Module1
             If pname <> kvp.Key And Not mycollection.Contains(kvp.Key) And kvp.Value.shpUID <> "" Then
                 With kvp.Value
                     If .tfZeile >= zeile And .tfZeile <= zeile + anzahlZeilen - 1 Then
-                        If spalte <= .tfspalte Then
-                            If spalte + laenge - 1 >= .tfspalte Then
+                        If startDate.Date <= .startDate.Date Then
+                            If startDate.AddDays(laenge - 1).Date > .startDate.Date Then
                                 istfrei = False
                                 Exit For
+                            Else
+                                istfrei = True
                             End If
-                        ElseIf spalte <= .tfspalte + .anzahlRasterElemente - 1 Then
+                        ElseIf startDate < .endeDate Then
                             istfrei = False
                             Exit For
                         End If
@@ -1842,7 +1844,7 @@ Public Module Module1
             '    mycollection.Add(pname, pname)
             'End If
 
-            If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
+            If Not magicBoardIstFrei(mycollection, pname, zeile, hproj.startDate, hproj.dauerInDays, anzahlzeilen) Then
                 tryoben = zeile - 1
                 tryunten = zeile + 1
 
@@ -1850,7 +1852,7 @@ Public Module Module1
                 zeile = tryunten
                 lookDown = True
 
-                While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
+                While Not magicBoardIstFrei(mycollection, pname, zeile, hproj.startDate, hproj.dauerInDays, anzahlzeilen)
                     'lookDown = Not lookDown
                     If lookDown Then
                         tryunten = tryunten + 1

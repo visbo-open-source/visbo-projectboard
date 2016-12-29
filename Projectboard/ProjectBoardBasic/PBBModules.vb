@@ -750,7 +750,7 @@ Public Module PBBModules
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
         Dim returnValue As DialogResult
-
+        Dim outputCollection As New Collection
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -763,7 +763,7 @@ Public Module PBBModules
             awinSelection = Nothing
         End Try
 
-        If Not awinSelection Is Nothing Then
+        If Not IsNothing(awinSelection) Then
 
             bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
                                             "Vorsicht: alle Varianten werden mitgelöscht ..."
@@ -792,7 +792,17 @@ Public Module PBBModules
                     If isProjectType(shapeArt) Then
 
                         Try
-                            Call awinDeleteProjectInSession(pName:=.Name)
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+                            If Not IsNothing(hproj) Then
+                                If notReferencedByAnyPortfolio(hproj.name, hproj.variantName) Then
+                                    Call awinDeleteProjectInSession(pName:=.Name)
+                                Else
+                                    Dim outputline As String = "Löschen verweigert " & hproj.name & " wird in Szenarien referenziert: "
+                                    outputline = outputline & projectConstellations.getSzenarioNamesWith(hproj.name, hproj.variantName)
+                                    outputCollection.Add(outputline)
+                                End If
+                            End If
+
 
                         Catch ex As Exception
                             Exit For
@@ -806,6 +816,10 @@ Public Module PBBModules
 
             ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
             Call awinNeuZeichnenDiagramme(3)
+
+            If outputCollection.Count > 0 Then
+                Call showOutPut(outputCollection, "Löschen von Projekten", "folgende Fehler sind aufgetreten:")
+            End If
 
         Else
 

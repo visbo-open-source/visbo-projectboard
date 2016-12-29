@@ -313,7 +313,7 @@ Public Class clsProjekt
                             If Me.ampelStatus = .ampelStatus And _
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then
 
-                                If Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) And _
+                                If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And _
                                    Me.Erloes = .Erloes Then
 
                                     If Me.businessUnit = .businessUnit And _
@@ -2151,6 +2151,64 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' sogenannte Heil-Methode, um Varianten, die beim Erzeugen ihre CustomFields nicht mitbekommen haben (der Fehler ist inzwischen behoben) 
+    ''' diese CustomFileds wieder mitzugeben
+    ''' </summary>
+    ''' <param name="baseProject"></param>
+    ''' <remarks></remarks>
+    Public Sub copyCustomFieldsFrom(ByVal baseProject As clsProjekt)
+
+        ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
+        Try
+
+            ' wenn das Projekt keine Custom-Fields hat 
+            If Me.customStringFields.Count = 0 And _
+                Me.customDblFields.Count = 0 And _
+                Me.customBoolFields.Count = 0 Then
+
+                For Each kvp As KeyValuePair(Of Integer, String) In baseProject.customStringFields
+                    Me.customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Double) In baseProject.customDblFields
+                    Me.customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In baseProject.customBoolFields
+                    Me.customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' gibt die Anzahl insgesamt definierter CustomFields zurück  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomFieldsCount() As Integer
+        Get
+
+            Dim tmpResult As Integer = Me.customStringFields.Count + _
+                                        Me.customDblFields.Count + _
+                                        Me.customBoolFields.Count
+
+            getCustomFieldsCount = tmpResult
+
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' gibt die Bedarfe (Phasen / Rollen / Kostenarten / Ergebnis pro Monat zurück 
     ''' </summary>
     ''' <param name="mycollection">ist eine Liste mit Namen der zu betrachtenden Phasen-, Rollen-, Kosten bzw. Ergebnisse </param>
@@ -2492,7 +2550,7 @@ Public Class clsProjekt
             Dim projektDauer As Integer = Me.anzahlRasterElemente
             Dim start As Integer = Me.Start
 
-            
+
             If projektDauer > 0 Then
                 ReDim valueArray(projektDauer - 1)
                 valueArray = Me.getAlleRessourcen

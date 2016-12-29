@@ -109,6 +109,8 @@ Imports System.Windows
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim DBtimeStamp As Date = Date.Now
 
+        Dim outPutCollection As New Collection
+
         With storeConstellationFrm
             .Text = "Szenario(s) in Datenbank speichern"
             .constellationsToShow = projectConstellations
@@ -127,8 +129,13 @@ Imports System.Windows
                 Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
                 Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
 
-                Call storeSingleConstellationToDB(currentConstellation)
+                Call storeSingleConstellationToDB(outPutCollection, currentConstellation)
 
+                If outPutCollection.Count > 0 Then
+                    Call showOutPut(outPutCollection, _
+                                     "Speichern Szenario " & currentConstellation.constellationName, _
+                                     "folgende Probleme sind aufgetreten:")
+                End If
             Next
 
         End If
@@ -263,6 +270,7 @@ Imports System.Windows
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
+        Dim deleteFromSession As String = "PT2G2B3"
         Dim deleteFilter As String = "Pt6G3B5"
 
         Dim removeFromDB As Boolean
@@ -278,6 +286,10 @@ Imports System.Windows
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
             End If
+
+        ElseIf ControlID = deleteFromSession Then
+            removeConstFilterFrm.frmOption = "ProjConstellation"
+            removeFromDB = False
 
         ElseIf ControlID = deleteFilter And Not noDB Then
             removeConstFilterFrm.frmOption = "DBFilter"
@@ -300,7 +312,8 @@ Imports System.Windows
         returnValue = removeConstFilterFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            If ControlID = deleteDatenbank Then
+            If ControlID = deleteDatenbank Or _
+                ControlID = deleteFromSession Then
 
                 constFilterName = removeConstFilterFrm.ListBox1.Text
 
@@ -465,6 +478,11 @@ Imports System.Windows
             Call clearCompleteSession()
             
         End If
+
+    End Sub
+
+    Sub PTXHealingCustomFieldsOfVariants(control As IRibbonControl)
+        
 
     End Sub
 

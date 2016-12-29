@@ -183,6 +183,9 @@ Public Class clsPhase
         End If
 
         Try
+            If _bewertungen.ContainsKey(key) Then
+                _bewertungen.Remove(key)
+            End If
             _bewertungen.Add(key, b)
         Catch ex As Exception
             Throw New ArgumentException("Bewertung wurde bereits vergeben ..")
@@ -1988,6 +1991,14 @@ Public Class clsPhase
         _vorlagenParent = Nothing
 
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
+        Dim tmpB As New clsBewertung
+        With tmpB
+            .description = ""
+            .colorIndex = 0
+        End With
+        Me.addBewertung(tmpB)
+        
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)
         _allMilestones = New List(Of clsMeilenstein)
@@ -2030,6 +2041,14 @@ Public Class clsPhase
 
 
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
+        Dim tmpB As New clsBewertung
+        With tmpB
+            .description = ""
+            .colorIndex = 0
+        End With
+        Me.addBewertung(tmpB)
+
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)
         _allMilestones = New List(Of clsMeilenstein)
