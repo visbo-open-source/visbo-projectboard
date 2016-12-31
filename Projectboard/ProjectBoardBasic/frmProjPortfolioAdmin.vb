@@ -126,7 +126,7 @@ Public Class frmProjPortfolioAdmin
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
                 '.Text = "Zusammenstellung im Szenario ändern"
-                .Text = "Modify Multi-Project Scenario "
+                .Text = "Scenario "
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -363,7 +363,7 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
-        Me.Text = Me.Text & ": " & currentConstellationName
+
 
         ' was sollen die ToolTipps zeigen ? 
         toolTippsAreShowing = ptPPAtooltipps.description
@@ -380,6 +380,9 @@ Public Class frmProjPortfolioAdmin
 
         ' je nachdem, wie die Aktionskennung ist: setzen der Button Visibilitäten 
         Call defineButtonVisibility()
+
+        ' wie heisst das aktuelle Szenario ? 
+        Me.Text = Me.Text & ": " & currentConstellationName
 
         ' jetzt muss bestimmt werden , was die aktuelle SessionConstellation ist 
         If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
@@ -466,6 +469,7 @@ Public Class frmProjPortfolioAdmin
             End If
         End If
 
+        stopRecursion = True
         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
         'Call buildTreeview(projektHistorien, TreeViewProjekte, pvNamesList, currentBrowserConstellation, _
         '                   aKtionskennung, quickList, _
@@ -523,6 +527,8 @@ Public Class frmProjPortfolioAdmin
             If Not currentConstellationName.EndsWith("(*)") Then
                 currentConstellationName = currentConstellationName & " (*)"
             End If
+
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
 
@@ -788,7 +794,7 @@ Public Class frmProjPortfolioAdmin
                     End If
 
                     ' jetzt das Browser Szenario aktualsieren 
-                    currentBrowserConstellation.updateShowAttributes(pName)
+                    currentBrowserConstellation.updateShowAttributes()
 
                     ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
@@ -1025,27 +1031,6 @@ Public Class frmProjPortfolioAdmin
                     variantListe = currentBrowserConstellation.getVariantNames(projName, True)
                 End If
 
-                ' tk 29.12.16 macht doch hier keinen Sinn !? 
-                ' '' hproj wird benötigt, um herauszufinden, welche Variante gerade aktiv ist
-                ''If aKtionskennung = PTTvActions.activateV Or _
-                ''    (aKtionskennung = PTTvActions.chgInSession And selectedNode.Checked) Then
-                ''    hproj = ShowProjekte.getProject(projName)
-                ''ElseIf aKtionskennung = PTTvActions.chgInSession Then
-                ''    ' jetzt erst noch die Variante bestimmen ... 
-                ''    variantName = ""
-                ''    For j As Integer = 1 To selectedNode.Nodes.Count
-                ''        variantNode = selectedNode.Nodes.Item(j - 1)
-                ''        If variantNode.Checked Then
-                ''            variantName = variantNode.Text
-                ''        End If
-                ''    Next
-
-                ''    Dim tmpKey As String = calcProjektKey(projName, variantName)
-                ''    hproj = AlleProjekte.getProject(tmpKey)
-
-                ''End If
-
-
                 ' Löschen von Platzhalter
                 selectedNode.Nodes.Clear()
 
@@ -1276,14 +1261,7 @@ Public Class frmProjPortfolioAdmin
             outPutExplanation = "folgende Projekt-Varianten werden aktuell in Szenarien referenziert und können daher nicht gelöscht werden:"
         End If
 
-        ' bei Aktionen loadPV, delFromSession muss der currentConstellationName aktualisiert werden 
-        If aKtionskennung = PTTvActions.delFromSession Or _
-            aKtionskennung = PTTvActions.loadPV Or _
-            aKtionskennung = PTTvActions.deleteV Then
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & "(*)"
-            End If
-        End If
+        
 
 
         Dim p As Integer, v As Integer, t As Integer
@@ -1491,6 +1469,18 @@ Public Class frmProjPortfolioAdmin
 
             End With
 
+            ' bei Aktionen loadPV, delFromSession muss der currentConstellationName aktualisiert werden 
+            If aKtionskennung = PTTvActions.delFromSession Or _
+                aKtionskennung = PTTvActions.loadPV Or _
+                aKtionskennung = PTTvActions.deleteV Then
+                If Not currentConstellationName.EndsWith("(*)") Then
+                    currentConstellationName = currentConstellationName & " (*)"
+                End If
+
+                Call storeSessionConstellation("Last")
+            End If
+
+
             ' jetzt ggf die Outputs anzeigen 
             If outPutCollection.Count > 0 Then
                 Call showOutPut(outPutCollection, _
@@ -1522,8 +1512,15 @@ Public Class frmProjPortfolioAdmin
                         Call showOutPut(outPutCollection, _
                                         "Speichern Szenario " & toStoreConstellation.constellationName, _
                                         "folgende Probleme sind aufgetreten:")
+                    Else
+                        Call MsgBox("ok, " & currentConstellationName & " in Datenbank und Session gespeichert")
                     End If
+                Else
+                    Call MsgBox("ok, " & currentConstellationName & " in Session gespeichert")
                 End If
+
+                ' jetzt das EIngabe Feld wieder zurücksetzen 
+                dropboxScenarioNames.Text = ""
 
             End If
 
@@ -1617,6 +1614,8 @@ Public Class frmProjPortfolioAdmin
 
                 Next
 
+                ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
+                currentBrowserConstellation.updateShowAttributes()
 
                 ' jetzt muss die Plan-Tafel gelöscht werden 
                 Call awinClearPlanTafel()
@@ -1691,8 +1690,14 @@ Public Class frmProjPortfolioAdmin
 
         End With
 
-        If aKtionskennung = PTTvActions.chgInSession Then
-            currentBrowserConstellation.updateShowAttributes()
+        If aKtionskennung = PTTvActions.chgInSession Or _
+            aKtionskennung = PTTvActions.activateV Then
+            If Not currentConstellationName.EndsWith("(*)") Then
+                currentConstellationName = currentConstellationName & " (*)"
+                Me.Text = "Scenario " & currentConstellationName
+            End If
+
+
         End If
 
         stopRecursion = False
@@ -1846,6 +1851,9 @@ Public Class frmProjPortfolioAdmin
                 ' jetzt muss Showprojekte gelöscht werden 
                 ShowProjekte.Clear()
 
+                ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
+                currentBrowserConstellation.updateShowAttributes()
+
                 ' jetzt müssen die Diagramme neu gezeichnet werden 
                 Call awinNeuZeichnenDiagramme(2)
 
@@ -1871,8 +1879,14 @@ Public Class frmProjPortfolioAdmin
 
         End With
 
-        If aKtionskennung = PTTvActions.chgInSession Then
-            currentBrowserConstellation.updateShowAttributes()
+        If aKtionskennung = PTTvActions.chgInSession Or _
+            aKtionskennung = PTTvActions.activateV Then
+            If Not currentConstellationName.EndsWith("(*)") Then
+                currentConstellationName = currentConstellationName & " (*)"
+                Me.Text = "Scenario " & currentConstellationName
+            End If
+
+
         End If
 
         Me.Cursor = Cursors.Default
@@ -1905,7 +1919,9 @@ Public Class frmProjPortfolioAdmin
         Dim browserAlleProjekte As New clsProjekteAlle
 
         If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & "(*)"
+            currentConstellationName = currentConstellationName & " (*)"
+
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
 
@@ -2025,7 +2041,9 @@ Public Class frmProjPortfolioAdmin
                         currentBrowserConstellation.remove(tmpPvName)
                     Next
 
-
+                    ' jetzt müssen die tfZeile neu besetzt werden;
+                    '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
+                    currentBrowserConstellation.setTfZeilen(0)
 
                     If removeList.Count > 0 Then
                         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
@@ -2143,7 +2161,7 @@ Public Class frmProjPortfolioAdmin
         ' neu Zeichnen der Diagramme
         Call awinNeuZeichnenDiagramme(2)
 
-        stopRecursion = True
+
 
         Me.Cursor = Cursors.WaitCursor
 
@@ -2157,6 +2175,7 @@ Public Class frmProjPortfolioAdmin
                                         emptyCollection, emptyCollection, emptyCollection)
         filterDefinitions.storeFilter(fName, lastFilter)
 
+        stopRecursion = True
         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, aKtionskennung, False)
         'Call buildTreeview(projektHistorien, TreeViewProjekte, browserAlleProjekte, pvNamesList, _
         '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
@@ -2232,7 +2251,9 @@ Public Class frmProjPortfolioAdmin
     Private Sub onlyActive_Click(sender As Object, e As EventArgs) Handles onlyActive.Click
 
         If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & "(*)"
+            currentConstellationName = currentConstellationName & " (*)"
+
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2247,7 +2268,8 @@ Public Class frmProjPortfolioAdmin
     Private Sub onlyInactive_Click(sender As Object, e As EventArgs) Handles onlyInactive.Click
 
         If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & "(*)"
+            currentConstellationName = currentConstellationName & " (*)"
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2320,6 +2342,9 @@ Public Class frmProjPortfolioAdmin
 
         ' jetzt wird die CurrentBrowserConstellation entsprechend reduziert 
         If currentBrowserConstellation.count <> anzPVsBefore Then
+
+            ' die Positionierung entsprechend Standard setzen ...
+            currentBrowserConstellation.setTfZeilen(0)
 
             ' den TreeView updaten ... 
             stopRecursion = True

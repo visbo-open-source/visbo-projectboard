@@ -987,6 +987,11 @@ Imports System.Windows
             End With
         End If
 
+        If Not currentConstellationName.EndsWith("(*)") Then
+            currentConstellationName = currentConstellationName & " (*)"
+        End If
+
+        Call storeSessionConstellation("Last")
 
         enableOnUpdate = True
 

@@ -137,7 +137,7 @@
           <button id="PT1G1B1" label="Sprach-Einstellung" onAction="PTSpracheinstellung" supertip="Einstellung der möglichen Sprache für die Reports"/>
           <!--<button id="PT1G1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
           <button id="PT1G1B4" label="akt. ReportProfil speichern" onAction="PTStoreCurReportProfil" supertip ="Es wird das aktuelle ReportProfil in der XML-Datei mit angegebenen Namen gespeichert"/>
-          <button id="PT1G1B5" label="vordef. Report" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Projekte müssen geladen sein und Timezone ausgewählt"/>
+          <button id="PT1G1B5" label="Report Profil ausführen" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
         </group>
       </tab>
       <!--

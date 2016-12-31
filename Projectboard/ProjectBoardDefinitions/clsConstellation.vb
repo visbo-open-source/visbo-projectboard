@@ -27,6 +27,36 @@
     End Property
 
     ''' <summary>
+    ''' setzt in Abhängigkeit von type die Tfzeilen in den clsConstellationItems  
+    ''' 
+    ''' </summary>
+    ''' <param name="sortierTypus"></param>
+    ''' <remarks></remarks>
+    Public Sub setTfZeilen(ByVal sortierTypus As Integer)
+
+        Dim zeile As Integer = 2
+        'Dim sortierListe As SortedList(Of Double, String)
+
+        Select Case sortierTypus
+            Case 0
+                ' sortiert nach dem Key, also pName#VariantName 
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                    If kvp.Value.show Then
+                        kvp.Value.zeile = zeile
+                        zeile = zeile + 1
+                    Else
+                        kvp.Value.zeile = 0
+                    End If
+                Next
+            Case 1
+            Case 2
+            Case Else
+
+        End Select
+
+    End Sub
+
+    ''' <summary>
     ''' gibt eine komplette Liste an Projekt-Namen zurück, die in der Constellation auftreten;
     ''' by default unabhängig, ob mit Show Attribute oder ohne 
     ''' wenn considerShowAttr = true , dann werden nur die Elemente mit ShowValue gesucht 
@@ -150,7 +180,7 @@
     ''' <summary>
     ''' aktualisiert das oder die ShowAttribute gemäß dem Zustand in ShowProjekte
     ''' es wird nur Projekt-Name oder der leere Name (dann alle) übergeben; denn es müssen immer alle Varianten betrachtet werden; 
-    ''' ShowProjekte muss vorher aktualsiert worden sein  
+    ''' ShowProjekte muss vorher aktualisiert worden sein  
     ''' </summary>
     ''' <param name="pName">Projektname, wenn leer - alle behandeln</param>
     ''' <remarks></remarks>
@@ -165,9 +195,18 @@
 
                 If ShowProjekte.contains(kvp.Value.projectName) Then
                     hproj = ShowProjekte.getProject(kvp.Value.projectName)
-                    kvp.Value.show = (hproj.variantName = kvp.Value.variantName)
+                    ' jede Variante soll ja in der gleichen Zeile gezeichnet werden ...
+                    kvp.Value.zeile = hproj.tfZeile
+
+                    If (hproj.variantName = kvp.Value.variantName) Then
+                        kvp.Value.show = True
+                    Else
+                        kvp.Value.show = False
+                    End If
+
                 Else
                     kvp.Value.show = False
+                    kvp.Value.zeile = 0
                 End If
 
             End If
@@ -177,7 +216,7 @@
     End Sub
 
 
-    Public ReadOnly Property copy(Optional ByVal cName As String = "Copy") As clsConstellation
+    Public ReadOnly Property copy(Optional ByVal cName As String = "Last") As clsConstellation
         Get
             Dim copyResult As New clsConstellation
 

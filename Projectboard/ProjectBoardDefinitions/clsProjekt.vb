@@ -318,8 +318,6 @@ Public Class clsProjekt
 
                                     If Me.businessUnit = .businessUnit And _
                                         Me.complexity = .complexity And _
-                                        Me.earliestStartDate = .earliestStartDate And _
-                                        Me.latestStartDate = .latestStartDate And _
                                         Me.Status = .Status And _
                                         Me.StrategicFit = .StrategicFit And _
                                         Me.Risiko = .Risiko And _
@@ -328,6 +326,10 @@ Public Class clsProjekt
                                         Me.leadPerson = .leadPerson Then
 
                                         stillOK = True
+
+                                        ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
+                                        'Me.earliestStartDate = .earliestStartDate And _
+                                        'Me.latestStartDate = .latestStartDate And _
 
                                     End If
 
@@ -2109,6 +2111,7 @@ Public Class clsProjekt
             .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes
             .description = Me.description
+            .variantDescription = Me.variantDescription
             .volume = Me.volume
             .complexity = Me.complexity
             .businessUnit = Me.businessUnit

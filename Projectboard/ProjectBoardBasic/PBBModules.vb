@@ -657,6 +657,10 @@ Public Module PBBModules
 
                         End With
 
+                        If Not currentConstellationName.EndsWith("(*)") Then
+                            currentConstellationName = currentConstellationName & " (*)"
+                        End If
+
                         ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
                         ShowProjekte.Remove(hproj.name)
 
@@ -694,7 +698,7 @@ Public Module PBBModules
 
         End If
 
-        
+        Call storeSessionConstellation("Last")
 
         enableOnUpdate = True
 
@@ -814,6 +818,10 @@ Public Module PBBModules
 
             Next
 
+            If Not currentConstellationName.EndsWith("(*)") Then
+                currentConstellationName = currentConstellationName & " (*)"
+            End If
+
             ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
             Call awinNeuZeichnenDiagramme(3)
 
@@ -862,6 +870,8 @@ Public Module PBBModules
         End If
 
         Call awinDeSelect()
+
+        Call storeSessionConstellation("Last")
 
         enableOnUpdate = True
         appInstance.EnableEvents = True

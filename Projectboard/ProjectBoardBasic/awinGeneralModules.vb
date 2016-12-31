@@ -1253,6 +1253,7 @@ Public Module awinGeneralModules
         awinButtonEvents.Clear()
         projectboardShapes.clear()
 
+        currentConstellationName = ""
         
         ' tk, 10.11.16 allDependencies darf nicht gelöscht werden, weil das sonst nicht mehr vorhanden ist
         ' allDependencies wird aktull nur beim Start geladen - und das reicht ja auch ... 
@@ -3924,6 +3925,11 @@ Public Module awinGeneralModules
                         anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
 
             ' Änderung tk: jetzt wird das neu gezeichnet 
+            ' wenn anzNeuProjekte > 0, dann hat sich die Konstellataion verändert 
+            If Not currentConstellationName.EndsWith("(*)") Then
+                currentConstellationName = currentConstellationName & " (*)"
+            End If
+
 
             If drawPlanTafel Then
                 If wasNotEmpty Then
@@ -3935,6 +3941,7 @@ Public Module awinGeneralModules
                 Call awinNeuZeichnenDiagramme(2)
             End If
 
+            Call storeSessionConstellation("Last")
 
         End If
 
@@ -9350,9 +9357,6 @@ Public Module awinGeneralModules
             Exit Sub
         End If
 
-        ' die aktuelle Konstellation in "Last" speichern 
-        Call storeSessionConstellation("Last")
-
         ShowProjekte.Clear()
 
         ' jetzt werden die Start-Values entsprechend gesetzt ..
@@ -9428,6 +9432,9 @@ Public Module awinGeneralModules
 
 
         Next
+
+        ' die aktuelle Konstellation in "Last" speichern 
+        Call storeSessionConstellation("Last")
 
         If outPutCollection.Count > 0 Then
             Call showOutPut(outPutCollection, _
@@ -9598,11 +9605,6 @@ Public Module awinGeneralModules
             Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
             Dim sessionWasEmpty As Boolean = (AlleProjekte.Count = 0)
 
-            ' die aktuelle Konstellation in "Last" speichern 
-            If Not sessionWasEmpty Then
-                Call storeSessionConstellation("Last")
-            End If
-           
 
             If clearSession And Not sessionWasEmpty Then
                 Call clearCompleteSession()
@@ -9632,13 +9634,17 @@ Public Module awinGeneralModules
                 If clearSession Or sessionWasEmpty Or _
                     clearBoard Or boardWasEmpty Then
                     currentConstellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
+                Else
+                    currentConstellationName = "Last"
                 End If
             Else
-                currentConstellationName = "combined Scenario"
+                currentConstellationName = "Last"
             End If
 
             Call awinNeuZeichnenDiagramme(2)
 
+            ' die aktuelle Konstellation in "Last" speichern 
+            Call storeSessionConstellation("Last")
 
         Catch ex As Exception
             Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
@@ -13361,7 +13367,7 @@ Public Module awinGeneralModules
 
             ' Aktuelle Konstellation ändert sich dadurch
             If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
-                currentConstellationName = currentConstellationName & "(*)"
+                currentConstellationName = currentConstellationName & " (*)"
             End If
 
             hproj = ShowProjekte.getProject(pName)
