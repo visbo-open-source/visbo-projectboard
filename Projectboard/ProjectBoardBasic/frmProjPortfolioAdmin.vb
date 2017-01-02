@@ -1367,7 +1367,12 @@ Public Class frmProjPortfolioAdmin
 
                         ElseIf aKtionskennung = PTTvActions.loadPV Then
 
-                            Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+                            Dim hproj As clsProjekt = Nothing
+                            If ShowProjekte.Count > 0 Then
+                                If ShowProjekte.contains(pname) Then
+                                    hproj = ShowProjekte.getProject(pname)
+                                End If
+                            End If
 
                             For v = 1 To anzahlVarianten
 
