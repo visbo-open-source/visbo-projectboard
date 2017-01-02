@@ -11842,6 +11842,7 @@ Public Module testModule
             beschrifteLevel3 = True
         End If
         Dim positionPtr = 0
+        ReDim position(dimension)
 
         If beschrifteLevel3 Then
 
@@ -11849,7 +11850,7 @@ Public Module testModule
 
             ' Play it safe - einfach Puffer von 5 daruf geben 
 
-            ReDim position(dimension)
+
 
 
             If drawKWs Then

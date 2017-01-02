@@ -3677,7 +3677,7 @@ Public Module awinGeneralModules
         '                                   Optional ByVal scenarioName As String = "")
         Dim hproj As New clsProjekt, cproj As New clsProjekt
         Dim fullName As String, vglName As String
-        Dim pname As String
+        'Dim pname As String
 
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
@@ -3881,7 +3881,7 @@ Public Module awinGeneralModules
                         ' ggf Bedarfe anzeigen 
                         If roentgenBlick.isOn Then
                             With roentgenBlick
-                                Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
+                                Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=hproj.name)
                             End With
 
                         End If
