@@ -2040,7 +2040,7 @@ Public Module awinDiagrams
             ''.HasLegend = False
             ''.HasTitle = True
 
-            '.ChartTitle.Text = diagramTitle
+            .ChartTitle.Text = diagramTitle
             '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
 
             '

@@ -7127,7 +7127,6 @@ Public Module Projekte
         Dim pstart As Integer
         Dim mycollection As New Collection
         'Dim catName As String
-        Dim pname As String = hproj.name
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
         Dim kennung As String
@@ -7476,8 +7475,7 @@ Public Module Projekte
 
         Dim pstart As Integer
         Dim mycollection As New Collection
-        'Dim catName As String
-        Dim pname As String = hproj.name
+        
         Dim minscale As Double
 
         Dim titelTeile(1) As String
@@ -7490,7 +7488,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
 
 
@@ -7545,7 +7543,7 @@ Public Module Projekte
 
 
 
-        titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length

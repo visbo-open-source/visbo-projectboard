@@ -722,7 +722,7 @@ Public Class frmProjPortfolioAdmin
 
                     ' jetzt die Charts , Einzel- wie Multiprojekt-Charts aktualisieren 
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    Call aktualisiereCharts(hproj, False)
+                    Call aktualisiereCharts(hproj, True)
                     Call awinNeuZeichnenDiagramme(2)
 
 
@@ -864,7 +864,7 @@ Public Class frmProjPortfolioAdmin
                         currentBrowserConstellation.updateShowAttributes(pName)
 
                         Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                        Call aktualisiereCharts(hproj, False)
+                        Call aktualisiereCharts(hproj, True)
                         Call awinNeuZeichnenDiagramme(2)
 
                     End If
@@ -944,15 +944,27 @@ Public Class frmProjPortfolioAdmin
         If treeLevel = 0 Then
             projectName = node.Text
 
-            Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
-            variantName = ""
-
+            'Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
+            Dim variantNames As Collection = currentBrowserConstellation.getVariantNames(projectName, False)
+            If variantNames.Count > 0 Then
+                variantName = variantNames.Item(1)
+                If aKtionskennung = PTTvActions.chgInSession Then
+                    ' welche Varianten sind gecheckt ? 
+                    Dim checkedVariantNames As Collection = Me.getNamesOfChildNodes(node, True)
+                    If checkedVariantNames.Count > 0 Then
+                        variantName = checkedVariantNames.Item(1)
+                    End If
+                End If
+            Else
+                variantName = ""
+            End If
 
             hproj = AlleProjekte.getProject(projectName, variantName)
-            If IsNothing(hproj) And variantNames.Count > 0 Then
-                variantName = CStr(variantNames.Item(1))
-                hproj = AlleProjekte.getProject(projectName, variantName)
-            End If
+
+            'If IsNothing(hproj) And variantNames.Count > 0 Then
+            '    variantName = CStr(variantNames.Item(1))
+            '    hproj = AlleProjekte.getProject(projectName, variantName)
+            'End If
 
             ' jetzt muss bestimmt werden, was als ToolTipp Text angezeigt werden soll 
             If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
@@ -965,6 +977,11 @@ Public Class frmProjPortfolioAdmin
                 End If
             End If
 
+            ' tk, 2.1.17 Anzeige der Info zu diesem Projekt ... 
+            If Not IsNothing(hproj) Then
+                Call aktualisierePMSForms(hproj)
+                Call aktualisiereCharts(hproj, True)
+            End If
 
 
         ElseIf treeLevel = 1 Then
@@ -980,6 +997,11 @@ Public Class frmProjPortfolioAdmin
                     If hproj.variantDescription.Length > 0 Then
                         toolTippText = hproj.variantDescription
                     End If
+
+                    ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
+                    Call aktualisierePMSForms(hproj)
+                    Call aktualisiereCharts(hproj, True)
+
                 End If
 
             End If
