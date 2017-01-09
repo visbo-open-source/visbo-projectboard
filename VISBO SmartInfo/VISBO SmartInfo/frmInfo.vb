@@ -1156,7 +1156,7 @@ Public Class frmInfo
         ToolTip1.Show("relative Position der Text-Beschriftung zum Plan-Element", positionTextButton, 2000)
     End Sub
 
-    Private Sub writeText_GotFocus(sender As Object, e As EventArgs) Handles writeText.GotFocus
+    Private Sub writeText_MouseHover(sender As Object, e As EventArgs) Handles writeText.MouseHover
         ToolTip1.Show("erstellt die Text-Beschriftung des Elements", writeText, 2000)
     End Sub
 
@@ -1194,7 +1194,7 @@ Public Class frmInfo
     End Sub
 
     Private Sub PictureMarker_MouseHover(sender As Object, e As EventArgs) Handles PictureMarker.MouseHover
-        ToolTip1.Show("Element-Marker anzeigen", PictureMarker, 2000)
+        'ToolTip1.Show("Element-Marker anzeigen", PictureMarker, 2000)
     End Sub
 
     Private Sub CheckBxMarker_MouseHover(sender As Object, e As EventArgs) Handles CheckBxMarker.MouseHover
@@ -1252,4 +1252,6 @@ Public Class frmInfo
     Private Sub rdbBreadcrumb_MouseHover(sender As Object, e As EventArgs) Handles rdbBreadcrumb.MouseHover
         ToolTip1.Show("Anzeige und Suche des vollen Projekt-Strukturpfades inkl Element-Namen", rdbBreadcrumb, 2000)
     End Sub
+
+    
 End Class

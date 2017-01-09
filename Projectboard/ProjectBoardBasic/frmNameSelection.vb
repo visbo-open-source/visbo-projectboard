@@ -134,7 +134,7 @@ Public Class frmNameSelection
 
 
             ElseIf menuOption = PTmenue.visualisieren Then
-                .Text = "Plan-Elemente visualisieren"
+                .Text = "Phasen- und Meilensteine visualisieren"
                 .OKButton.Text = "Anzeigen"
 
                 .statusLabel.Text = ""
@@ -145,10 +145,10 @@ Public Class frmNameSelection
                 .pictureBU.Visible = False
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
-                .rdbRoles.Visible = True
-                .pictureRoles.Visible = True
-                .rdbCosts.Visible = True
-                .pictureCosts.Visible = True
+                .rdbRoles.Visible = False
+                .pictureRoles.Visible = False
+                .rdbCosts.Visible = False
+                .pictureCosts.Visible = False
 
                 ' Leistbarkeits-Charts
                 .chkbxOneChart.Checked = False
@@ -1470,7 +1470,7 @@ Public Class frmNameSelection
                 currentReportProfil.Ampeln = .mppShowAmpel
                 currentReportProfil.UseAbbreviation = .mppUseAbbreviation
 
-                currentReportProfil.projectsWithNoMPmayPass = .mppShowPhName
+                currentReportProfil.PhName = .mppShowPhName
                 currentReportProfil.PhDate = .mppShowPhDate
                 currentReportProfil.MSName = .mppShowMsName
                 currentReportProfil.MSDate = .mppShowMsDate

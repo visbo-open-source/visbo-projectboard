@@ -111,6 +111,7 @@ Public Class clsConstellationItem
                 .reasonToExclude = Me.reasonToExclude
                 .reasonToInclude = Me.reasonToInclude
                 .start = Me.start
+                .zeile = Me.zeile
             End With
 
             copy = copyResult

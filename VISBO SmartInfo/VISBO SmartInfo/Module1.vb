@@ -355,7 +355,7 @@ Module Module1
     End Function
 
     Private Function userHasValidLicence()
-        userHasValidLicence = (DateDiff(DateInterval.Day, Date.Now, CDate("16.12.2016")) > 0)
+        userHasValidLicence = (Date.Now < CDate("27.01.2017"))
     End Function
 
     ''' <summary>

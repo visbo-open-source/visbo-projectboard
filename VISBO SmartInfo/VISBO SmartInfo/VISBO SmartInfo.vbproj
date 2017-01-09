@@ -35,13 +35,13 @@
     <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.0.3</ApplicationVersion>
+    <ApplicationVersion>1.0.0.4</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>VISBO SmartInfo</ProductName>
-    <PublisherName />
+    <PublisherName>VISBO GmbH</PublisherName>
     <SupportUrl />
     <FriendlyName>VISBO SmartInfo</FriendlyName>
     <OfficeApplicationDescription />

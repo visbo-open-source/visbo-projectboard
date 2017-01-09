@@ -7127,7 +7127,6 @@ Public Module Projekte
         Dim pstart As Integer
         Dim mycollection As New Collection
         'Dim catName As String
-        Dim pname As String = hproj.name
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
         Dim kennung As String
@@ -7476,8 +7475,7 @@ Public Module Projekte
 
         Dim pstart As Integer
         Dim mycollection As New Collection
-        'Dim catName As String
-        Dim pname As String = hproj.name
+        
         Dim minscale As Double
 
         Dim titelTeile(1) As String
@@ -7490,7 +7488,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
 
 
@@ -7545,7 +7543,7 @@ Public Module Projekte
 
 
 
-        titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
@@ -8717,6 +8715,7 @@ Public Module Projekte
                     wsfound = True
                     'Call MsgBox("Es wurden " & k - 1 & " Charts eingefügt")
                 Catch ex As Exception
+                    appInstance.EnableEvents = True
                     xlsCockpits.Close(SaveChanges:=False)
                     Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
                 End Try
@@ -8730,6 +8729,7 @@ Public Module Projekte
             End If
 
         Catch ex As Exception
+            appInstance.EnableEvents = True
             xlsCockpits.Close(SaveChanges:=False)
             Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
         End Try
@@ -19634,32 +19634,40 @@ Public Module Projekte
 
         Dim newC As clsConstellation
 
+        ' es soll nur dann etwas gemacht werden, wenn AlleProjekte überhaupt Projekte enthält ... 
 
-        ' prüfen, ob diese Constellation bereits existiert ..
-        If projectConstellations.Contains(constellationName) Then
+        If AlleProjekte.Count = 0 Then
+            ' nichts tun 
+        Else
+
+            ' prüfen, ob diese Constellation bereits existiert ..
+            If projectConstellations.Contains(constellationName) Then
+
+                Try
+                    projectConstellations.Remove(constellationName)
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+
+            newC = New clsConstellation(projektListe:=AlleProjekte, _
+                                            fullProjectNames:=Nothing, _
+                                            cName:=constellationName, _
+                                            takeWhat:=takeWhat)
+
 
             Try
-                projectConstellations.Remove(constellationName)
-            Catch ex As Exception
+                projectConstellations.Add(newC)
 
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
             End Try
 
         End If
 
-
-        newC = New clsConstellation(projektListe:=AlleProjekte, _
-                                        fullProjectNames:=Nothing, _
-                                        cName:=constellationName, _
-                                        takeWhat:=takeWhat)
-
-
-        Try
-            projectConstellations.Add(newC)
-
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-        End Try
-
+        
 
 
 

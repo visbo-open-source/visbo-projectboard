@@ -36,7 +36,9 @@ namespace MongoDbAccess
         protected  IMongoDatabase Database;
         protected MongoServer Server;
         protected  IMongoCollection<clsProjektDB> CollectionProjects;
+        protected  IMongoCollection<clsProjektDB> CollectionTrashProjects;
         protected  IMongoCollection<clsConstellationDB> CollectionConstellations;
+        protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
         protected  IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
         protected  IMongoCollection<clsFilterDB> CollectionFilter;
         
@@ -74,7 +76,9 @@ namespace MongoDbAccess
             
                       
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
+            CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
+            CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
 
@@ -279,40 +283,56 @@ namespace MongoDbAccess
               
                                        
         }
-        //************************************/
-        public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
-        {
 
+        public bool storeProjectToTrash(clsProjektDB projektDB)
+        {
             try
             {
-                storedLatest = storedLatest.ToUniversalTime();
-                storedEarliest = storedEarliest.ToUniversalTime();
-                string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
-                               
-
-                var dResult = CollectionProjects.DeleteMany<clsProjektDB>(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-                if (dResult.DeletedCount > 0 )
-                    { return true; }
-                else
-                    { return false; }
                 
+                CollectionTrashProjects.InsertOne(projektDB);
+                  
+                return true;
             }
             catch (Exception)
             {
-                
                 return false;
             }
-            
-            // das folgende geht noch nicht , wer weiss warum ? 
-            ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-            ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-            
-            
-            // alt 2.x 
-            //var query = Query<clsProjektDB>
-            //         .Where(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-            //return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
+        //************************************/
+        // darf nicht mehr verwendet werden, weil damit keine Speicherung der TimeStamps im Papierkorb verbunden ist ... 
+        ////public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
+        ////{
+
+        ////    try
+        ////    {
+        ////        storedLatest = storedLatest.ToUniversalTime();
+        ////        storedEarliest = storedEarliest.ToUniversalTime();
+        ////        string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
+                               
+
+        ////        var dResult = CollectionProjects.DeleteMany<clsProjektDB>(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
+        ////        if (dResult.DeletedCount > 0 )
+        ////            { return true; }
+        ////        else
+        ////            { return false; }
+                
+        ////    }
+        ////    catch (Exception)
+        ////    {
+                
+        ////        return false;
+        ////    }
+            
+        ////    // das folgende geht noch nicht , wer weiss warum ? 
+        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
+        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
+            
+            
+        ////    // alt 2.x 
+        ////    //var query = Query<clsProjektDB>
+        ////    //         .Where(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
+        ////    //return !CollectionProjects.Remove(query).HasLastErrorMessage;
+        ////}
 
         //************************************/
         public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored)
@@ -326,12 +346,42 @@ namespace MongoDbAccess
                 var query = Query<clsProjektDB>
                             .Where(p => (p.name == searchstr && p.timestamp == stored));
 
-                var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
                 
-                if (dResult.DeletedCount > 0)
-                { return true; }
+                var sResult = CollectionProjects.Find<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+                
+                if (sResult == null)
+                {
+                    return false;
+                }
                 else
-                { return false; }
+                {
+                    try
+                    {
+                        clsProjektDB projektDB = sResult.Single();
+                        if (storeProjectToTrash(projektDB))
+                        {
+                            // jetzt wird erst gelöscht 
+                            var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+
+                            if (dResult.DeletedCount > 0)
+                            { return true; }
+                            else
+                            { return false; }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+
+                        
+                    }
+                    catch (Exception)
+                    {
+                        return false; 
+                    }
+                                      
+                }
+                
                
             }
             catch (Exception)
@@ -658,18 +708,61 @@ namespace MongoDbAccess
            
         }
 
+        public bool storeConstellationToTrash(clsConstellation c)
+        {
+            try
+            {
+                var cDB = new clsConstellationDB();
+                cDB.copyfrom(c);
+                cDB.Id = cDB.constellationName;
+
+                bool alreadyExisting = CollectionTrashConstellations.AsQueryable<clsConstellationDB>()
+                        .Any(p => p.constellationName == c.constellationName);
+
+                if (alreadyExisting)
+                {
+                    var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", c.constellationName);
+
+                    var rResult = CollectionTrashConstellations.ReplaceOne(filter, cDB);
+                    if (rResult.ModifiedCount > 0)
+                    { return true; }
+                    else
+                    { return false; }
+                }
+                else
+                {
+                    CollectionTrashConstellations.InsertOne(cDB);
+                    return true;
+                }
+
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
         public bool removeConstellationFromDB(clsConstellation c)
         {
             
           try 
 	        {	        
 		    // neu 3.0 
-            var dResult = CollectionConstellations.DeleteOne<clsConstellationDB>(p => (p.Id == c.constellationName));
-              if (dResult.DeletedCount >0 )
-              { return true; }
+
+              if (storeConstellationToTrash (c))
+              {
+                  var dResult = CollectionConstellations.DeleteOne<clsConstellationDB>(p => (p.Id == c.constellationName));
+                  if (dResult.DeletedCount > 0)
+                  { return true; }
+                  else
+                  { return false; }
+              }
               else
-              { return false; }
+              {
+                  return false;
+              }
             
+           
             
             // alt 2.x
             //var query = Query<clsConstellationDB>.EQ(e => e.Id, c.constellationName);

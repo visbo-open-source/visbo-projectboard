@@ -126,7 +126,7 @@ Public Class frmProjPortfolioAdmin
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
                 '.Text = "Zusammenstellung im Szenario ändern"
-                .Text = "Modify Multi-Project Scenario "
+                .Text = "Scenario "
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -363,7 +363,7 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
-        Me.Text = Me.Text & ": " & currentConstellationName
+
 
         ' was sollen die ToolTipps zeigen ? 
         toolTippsAreShowing = ptPPAtooltipps.description
@@ -381,6 +381,9 @@ Public Class frmProjPortfolioAdmin
         ' je nachdem, wie die Aktionskennung ist: setzen der Button Visibilitäten 
         Call defineButtonVisibility()
 
+        ' wie heisst das aktuelle Szenario ? 
+        Me.Text = Me.Text & ": " & currentConstellationName
+
         ' jetzt muss bestimmt werden , was die aktuelle SessionConstellation ist 
         If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
             currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy("Last")
@@ -395,6 +398,12 @@ Public Class frmProjPortfolioAdmin
             'currentBrowserConstellation = New clsConstellation(browserAlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
             currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
         End If
+
+        ' jetzt die Korrektheitsprüfung ...
+        If awinSettings.visboDebug Then
+            currentBrowserConstellation.checkAndCorrectYourself()
+        End If
+
 
         ' jetzt die vorkommenden Timestamps auslesen 
         ' aber nicht bei allen Aktionskennungen 
@@ -460,8 +469,13 @@ Public Class frmProjPortfolioAdmin
 
             pvNamesList = buildPvNamesList(storedAtOrBefore)
             quickList = True
+
+            If pvNamesList.Count = 0 Then
+                Call MsgBox("keine Projekte in der Datenbank vorhanden ...")
+            End If
         End If
 
+        stopRecursion = True
         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
         'Call buildTreeview(projektHistorien, TreeViewProjekte, pvNamesList, currentBrowserConstellation, _
         '                   aKtionskennung, quickList, _
@@ -519,6 +533,8 @@ Public Class frmProjPortfolioAdmin
             If Not currentConstellationName.EndsWith("(*)") Then
                 currentConstellationName = currentConstellationName & " (*)"
             End If
+
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
 
@@ -706,7 +722,7 @@ Public Class frmProjPortfolioAdmin
 
                     ' jetzt die Charts , Einzel- wie Multiprojekt-Charts aktualisieren 
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    Call aktualisiereCharts(hproj, False)
+                    Call aktualisiereCharts(hproj, True)
                     Call awinNeuZeichnenDiagramme(2)
 
 
@@ -784,7 +800,7 @@ Public Class frmProjPortfolioAdmin
                     End If
 
                     ' jetzt das Browser Szenario aktualsieren 
-                    currentBrowserConstellation.updateShowAttributes(pName)
+                    currentBrowserConstellation.updateShowAttributes()
 
                     ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
@@ -848,7 +864,7 @@ Public Class frmProjPortfolioAdmin
                         currentBrowserConstellation.updateShowAttributes(pName)
 
                         Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                        Call aktualisiereCharts(hproj, False)
+                        Call aktualisiereCharts(hproj, True)
                         Call awinNeuZeichnenDiagramme(2)
 
                     End If
@@ -928,15 +944,27 @@ Public Class frmProjPortfolioAdmin
         If treeLevel = 0 Then
             projectName = node.Text
 
-            Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
-            variantName = ""
-
+            'Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
+            Dim variantNames As Collection = currentBrowserConstellation.getVariantNames(projectName, False)
+            If variantNames.Count > 0 Then
+                variantName = variantNames.Item(1)
+                If aKtionskennung = PTTvActions.chgInSession Then
+                    ' welche Varianten sind gecheckt ? 
+                    Dim checkedVariantNames As Collection = Me.getNamesOfChildNodes(node, True)
+                    If checkedVariantNames.Count > 0 Then
+                        variantName = checkedVariantNames.Item(1)
+                    End If
+                End If
+            Else
+                variantName = ""
+            End If
 
             hproj = AlleProjekte.getProject(projectName, variantName)
-            If IsNothing(hproj) And variantNames.Count > 0 Then
-                variantName = CStr(variantNames.Item(1))
-                hproj = AlleProjekte.getProject(projectName, variantName)
-            End If
+
+            'If IsNothing(hproj) And variantNames.Count > 0 Then
+            '    variantName = CStr(variantNames.Item(1))
+            '    hproj = AlleProjekte.getProject(projectName, variantName)
+            'End If
 
             ' jetzt muss bestimmt werden, was als ToolTipp Text angezeigt werden soll 
             If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
@@ -949,6 +977,11 @@ Public Class frmProjPortfolioAdmin
                 End If
             End If
 
+            ' tk, 2.1.17 Anzeige der Info zu diesem Projekt ... 
+            If Not IsNothing(hproj) Then
+                Call aktualisierePMSForms(hproj)
+                Call aktualisiereCharts(hproj, True)
+            End If
 
 
         ElseIf treeLevel = 1 Then
@@ -964,6 +997,11 @@ Public Class frmProjPortfolioAdmin
                     If hproj.variantDescription.Length > 0 Then
                         toolTippText = hproj.variantDescription
                     End If
+
+                    ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
+                    Call aktualisierePMSForms(hproj)
+                    Call aktualisiereCharts(hproj, True)
+
                 End If
 
             End If
@@ -977,7 +1015,7 @@ Public Class frmProjPortfolioAdmin
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
         ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim projectNode As New TreeNode
+        Dim selectedNode As New TreeNode
         Dim variantNode As New TreeNode
         Dim nodeTimeStamp As New TreeNode
         Dim projName As String = ""
@@ -988,50 +1026,45 @@ Public Class frmProjPortfolioAdmin
         Dim hproj As New clsProjekt
         Dim key As String
 
-        Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+        'Platzhalter ...
+        ' '' jetzt für chgInSession und activateV prüfen, welche Projekte denn im Show sind ... 
+        ''If aKtionskennung = PTTvActions.chgInSession Or _
+        ''    aKtionskennung = PTTvActions.activateV Then
 
-        projectNode = e.Node
-        nodeLevel = projectNode.Level
+        ''    ' es muss nur was gecheckt werden, wenn das Projekt im Show ist 
+        ''    If projectIsShown And (CStr(variantNames.Item(iv)) = shownVariant) Then
+        ''        tmpNodeLevel1.Checked = True
+        ''    End If
+
+        ''End If
+        ' Platzhalter Ende ... 
+
+
+        selectedNode = e.Node
+        nodeLevel = e.Node.Level
 
         If nodeLevel = 0 Then
 
-            projName = projectNode.Text
+
+            projName = selectedNode.Text
 
             ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
-            If projectNode.Tag = "P" Then
+            If selectedNode.Tag = "P" Then
+
+                'Call MsgBox("sollte eigentlich gar nicht mehr vorkommen ...")
                 ' Inhalte der Sub-Nodes müssen neu aufgebaut werden 
                 If quickList Then
                     variantListe = getVariantListeFromPVNames(pvNamesList, projName)
                 Else
-                    variantListe = browserAlleProjekte.getVariantNames(projName, True)
+                    variantListe = currentBrowserConstellation.getVariantNames(projName, True)
                 End If
-
-                ' hproj wird benötigt, um herauszufinden, welche Variante gerade aktiv ist
-                If aKtionskennung = PTTvActions.activateV Or _
-                    (aKtionskennung = PTTvActions.chgInSession And projectNode.Checked) Then
-                    hproj = ShowProjekte.getProject(projName)
-                ElseIf aKtionskennung = PTTvActions.chgInSession Then
-                    ' jetzt erst noch die Variante bestimmen ... 
-                    variantName = ""
-                    For j As Integer = 1 To projectNode.Nodes.Count
-                        variantNode = projectNode.Nodes.Item(j - 1)
-                        If variantNode.Checked Then
-                            variantName = variantNode.Text
-                        End If
-                    Next
-
-                    Dim tmpKey As String = calcProjektKey(projName, variantName)
-                    hproj = AlleProjekte.getProject(tmpKey)
-
-                End If
-
 
                 ' Löschen von Platzhalter
-                projectNode.Nodes.Clear()
+                selectedNode.Nodes.Clear()
 
                 ' Eintragen der zum Projekt gehörenden Varianten
                 For Each variantName In variantListe
-                    variantNode = projectNode.Nodes.Add(CType(variantName, String))
+                    variantNode = selectedNode.Nodes.Add(CType(variantName, String))
 
                     ' jetzt muss gecheckt werden , ob es sich um das Aktivieren handelt oder nicht
                     If aKtionskennung = PTTvActions.activateV Or _
@@ -1051,7 +1084,7 @@ Public Class frmProjPortfolioAdmin
 
                         stopRecursion = True
                         ' soll gesetzt sein, wenn es entweder bereits geladen ist oder aber sowieso alle geladen werden sollen
-                        If AlleProjekte.Containskey(key) Or projectNode.Checked = True Then
+                        If AlleProjekte.Containskey(key) Or selectedNode.Checked = True Then
                             variantNode.Checked = True
                         Else
                             variantNode.Checked = False
@@ -1061,11 +1094,11 @@ Public Class frmProjPortfolioAdmin
                     ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
                         ' es können alle Elemente selektiert werden ...
                         stopRecursion = True
-                        variantNode.Checked = projectNode.Checked
+                        variantNode.Checked = selectedNode.Checked
                         stopRecursion = False
                     Else
                         stopRecursion = True
-                        variantNode.Checked = projectNode.Checked
+                        variantNode.Checked = selectedNode.Checked
                         stopRecursion = False
                     End If
 
@@ -1084,10 +1117,26 @@ Public Class frmProjPortfolioAdmin
 
                 Next
 
-                projectNode.Tag = "X"
+                selectedNode.Tag = "X"
 
 
+            Else
+                ' und das hier sollte der Standard-Fall sein ...
+                ' einfach im Falle chgInSession bzw. ActivateV die Variante aktiv setzen, die im showprojekte gezeigt wird 
+                If (selectedNode.Checked And aKtionskennung = PTTvActions.chgInSession) Or _
+                    aKtionskennung = PTTvActions.activateV Then
 
+                    If ShowProjekte.contains(projName) Then
+                        hproj = ShowProjekte.getProject(projName)
+                        variantName = "(" & hproj.variantName & ")"
+                        stopRecursion = True
+                        For Each tmpNode As TreeNode In selectedNode.Nodes
+                            tmpNode.Checked = (tmpNode.Text = variantName)
+                        Next
+                        stopRecursion = False
+                    End If
+
+                End If
             End If
 
 
@@ -1097,11 +1146,11 @@ Public Class frmProjPortfolioAdmin
 
             ' hier wurde eine Variante selektiert ...
 
-            If projectNode.Tag = "P" Then
+            If selectedNode.Tag = "P" Then
 
-                projectNode.Tag = "X"
-                projName = projectNode.Parent.Text
-                variantName = getVariantNameOf(projectNode.Text)
+                selectedNode.Tag = "X"
+                projName = selectedNode.Parent.Text
+                variantName = getVariantNameOf(selectedNode.Text)
 
                 hliste = projektHistorien.getTimeStamps(calcProjektKey(projName, variantName))
 
@@ -1135,25 +1184,25 @@ Public Class frmProjPortfolioAdmin
                     If projekthistorie.Count > 0 Then
 
                         projektHistorien.Remove(projName & "#" & variantName, Date.MinValue) 'Platzhalter wieder entfernen
-                        projectNode.Nodes.Clear()  ' Löschen von Platzhalter
+                        selectedNode.Nodes.Clear()  ' Löschen von Platzhalter
 
                         ' Aufbau der Listen 
                         projektHistorien.Add(projekthistorie)
 
-
+                        stopRecursion = True
                         ' Eintragen der zur Projekt-Variante gehörenden TimeStamps
                         For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                            nodeTimeStamp = projectNode.Nodes.Add(CType(kvp1.Value.timeStamp, String))
-                            nodeTimeStamp.Checked = projectNode.Checked
+                            nodeTimeStamp = selectedNode.Nodes.Add(CType(kvp1.Value.timeStamp, String))
+                            nodeTimeStamp.Checked = selectedNode.Checked
                         Next kvp1
-
+                        stopRecursion = False
 
                     Else
 
                         If projekthistorie.Count = 0 Then
                             ' keine ProjektHistorie vorhanden
                             projektHistorien.Remove(projName & "#" & variantName, Date.MinValue) 'Platzhalter wieder entfernen
-                            projectNode.Nodes.Clear()  ' Löschen von Platzhalter
+                            selectedNode.Nodes.Clear()  ' Löschen von Platzhalter
                         End If
                     End If
 
@@ -1216,7 +1265,6 @@ Public Class frmProjPortfolioAdmin
         Dim outPutHeader As String = ""
         Dim outPutExplanation As String = ""
 
-        Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
 
         If allDependencies.projectCount > 0 Then
             considerDependencies = True
@@ -1241,14 +1289,7 @@ Public Class frmProjPortfolioAdmin
             outPutExplanation = "folgende Projekt-Varianten werden aktuell in Szenarien referenziert und können daher nicht gelöscht werden:"
         End If
 
-        ' bei Aktionen loadPV, delFromSession muss der currentConstellationName aktualisiert werden 
-        If aKtionskennung = PTTvActions.delFromSession Or _
-            aKtionskennung = PTTvActions.loadPV Or _
-            aKtionskennung = PTTvActions.deleteV Then
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & "(*)"
-            End If
-        End If
+        
 
 
         Dim p As Integer, v As Integer, t As Integer
@@ -1279,7 +1320,7 @@ Public Class frmProjPortfolioAdmin
                         If quickList Then
                             variantListe = getVariantListeFromPVNames(pvNamesList, pname)
                         Else
-                            variantListe = browserAlleProjekte.getVariantNames(pname, True)
+                            variantListe = currentBrowserConstellation.getVariantNames(pname, True)
                         End If
 
                         anzahlVarianten = variantListe.Count
@@ -1304,7 +1345,8 @@ Public Class frmProjPortfolioAdmin
                             For v = 1 To anzahlVarianten
 
                                 variantName = getVariantNameOf(CStr(variantListe.Item(v)))
-                                Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung, versionsToKeep.Value)
+                                Call deleteCompleteProjectVariant(outPutCollection, _
+                                                                  pname, variantName, aKtionskennung, versionsToKeep.Value)
 
                             Next
 
@@ -1315,25 +1357,22 @@ Public Class frmProjPortfolioAdmin
                             For v = 1 To anzahlVarianten
 
                                 variantName = getVariantNameOf(CStr(variantListe.Item(v)))
-                                If notReferencedByAnyPortfolio(pname, variantName) Then
-                                    Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
-                                Else
-                                    Dim outputline As String
-                                    If variantName = "" Then
-                                        outputline = pname & " - Szenarien: "
-                                    Else
-                                        outputline = pname & " (" & variantName & ") " & " - Szenarien: "
-
-                                    End If
-                                    outputline = outputline & projectConstellations.getSzenarioNamesWith(pname, variantName)
-                                    outPutCollection.Add(outputline)
-                                End If
+                                ' Fehler-Behandlung, d.h auch Abfrage ob PName#vName referenziert in Szenario ist, passiert dort drin ... 
+                                Call deleteCompleteProjectVariant(outPutCollection, _
+                                                                  pname, variantName, aKtionskennung)
+                                
 
                             Next
 
 
                         ElseIf aKtionskennung = PTTvActions.loadPV Then
 
+                            Dim hproj As clsProjekt = Nothing
+                            If ShowProjekte.Count > 0 Then
+                                If ShowProjekte.contains(pname) Then
+                                    hproj = ShowProjekte.getProject(pname)
+                                End If
+                            End If
 
                             For v = 1 To anzahlVarianten
 
@@ -1341,24 +1380,35 @@ Public Class frmProjPortfolioAdmin
                                 'variantName = getVariantNameOf(variantNode.Text)
                                 variantName = getVariantNameOf(CStr(variantListe.Item(v)))
 
-                                If v = 1 Then
-                                    Call loadProjectfromDB(pname, variantName, True, storedAtOrBefore)
+                                Dim showAttribute As Boolean
+                                If IsNothing(hproj) Then
+                                    If v = 1 Then
+                                        showAttribute = True
+                                    Else
+                                        showAttribute = False
+                                    End If
                                 Else
-                                    Call loadProjectfromDB(pname, variantName, False, storedAtOrBefore)
+                                    If variantName = hproj.variantName Then
+                                        showAttribute = True
+                                    Else
+                                        showAttribute = False
+                                    End If
                                 End If
+                                
+                                Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
 
                                 If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
                                     ' nichts tun , ist schon drin 
+                                    currentBrowserConstellation.getItem(calcProjektKey(pname, variantName)).show = showAttribute
                                 Else
                                     Dim cItem As New clsConstellationItem
                                     With cItem
                                         .projectName = pname
                                         .variantName = variantName
-                                        .show = (v = 1)
+                                        .show = showAttribute
                                     End With
                                     currentBrowserConstellation.add(cItem)
                                 End If
-
 
 
                             Next
@@ -1386,54 +1436,47 @@ Public Class frmProjPortfolioAdmin
 
                                 If aKtionskennung = PTTvActions.delFromDB Then
 
-                                    If notReferencedByAnyPortfolio(pname, variantName) Then
-                                        Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
-                                    Else
-                                        Dim outputline As String
-                                        If variantName = "" Then
-                                            outputline = pname & " - Szenarien: "
-                                        Else
-                                            outputline = pname & " (" & variantName & ") " & " - Szenarien: "
-
-                                        End If
-                                        outputline = outputline & projectConstellations.getSzenarioNamesWith(pname, variantName)
-                                        outPutCollection.Add(outputline)
-                                    End If
+                                    ' Fehler Check, ob in Szenario refernziert , passiert in der Routine 
+                                    Call deleteCompleteProjectVariant(outPutCollection, _
+                                                                      pname, variantName, aKtionskennung)
+                                
 
 
-                                ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
+                            ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
-                                    Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung, versionsToKeep.Value)
+                                    ' hier muss ja gar kein Check auf Szenario referenz erfolgen, da ohnehin immer min 2 Stände behalten werdne  
+                                Call deleteCompleteProjectVariant(outPutCollection, _
+                                                                  pname, variantName, aKtionskennung, versionsToKeep.Value)
 
-                                ElseIf aKtionskennung = PTTvActions.delFromSession Or _
-                                        aKtionskennung = PTTvActions.deleteV Then
+                            ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+                                    aKtionskennung = PTTvActions.deleteV Then
 
-                                    Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies, vName:=variantName)
+                                Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies, vName:=variantName)
 
-                                    ' jetzt in der currentBrowserConstellation ändern 
-                                    Dim tmpKey As String = calcProjektKey(pname, variantName)
-                                    currentBrowserConstellation.remove(tmpKey)
-
-
-                                ElseIf aKtionskennung = PTTvActions.loadPV Then
-
-                                    Call loadProjectfromDB(pname, variantName, first, storedAtOrBefore)
-                                    first = False
-
-                                    If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
-                                        ' nichts tun , ist schon drin 
-                                    Else
-                                        Dim cItem As New clsConstellationItem
-                                        With cItem
-                                            .projectName = pname
-                                            .variantName = variantName
-                                            .show = (v = 1)
-                                        End With
-                                        currentBrowserConstellation.add(cItem)
-                                    End If
+                                ' jetzt in der currentBrowserConstellation ändern 
+                                Dim tmpKey As String = calcProjektKey(pname, variantName)
+                                currentBrowserConstellation.remove(tmpKey)
 
 
+                            ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+                                Call loadProjectfromDB(outPutCollection, pname, variantName, first, storedAtOrBefore)
+                                first = False
+
+                                If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
+                                    ' nichts tun , ist schon drin 
+                                Else
+                                    Dim cItem As New clsConstellationItem
+                                    With cItem
+                                        .projectName = pname
+                                        .variantName = variantName
+                                        .show = (v = 1)
+                                    End With
+                                    currentBrowserConstellation.add(cItem)
                                 End If
+
+
+                            End If
 
 
                             ElseIf aKtionskennung = PTTvActions.delFromDB Or _
@@ -1449,7 +1492,8 @@ Public Class frmProjPortfolioAdmin
 
                                         timestamp = CType(timeStampNode.Text, Date)
                                         If aKtionskennung = PTTvActions.delFromDB Then
-                                            Call deleteProjectVariantTimeStamp(pname, variantName, timestamp, firstTS)
+                                            Call deleteProjectVariantTimeStamp(outPutCollection, _
+                                                                               pname, variantName, timestamp, firstTS)
                                         Else
                                             ' Aktion für LoadPVS : aber hier gibt es wahrscheinlich gar keinen OK-Button
                                         End If
@@ -1469,6 +1513,18 @@ Public Class frmProjPortfolioAdmin
                 End If
 
             End With
+
+            ' bei Aktionen loadPV, delFromSession muss der currentConstellationName aktualisiert werden 
+            If aKtionskennung = PTTvActions.delFromSession Or _
+                aKtionskennung = PTTvActions.loadPV Or _
+                aKtionskennung = PTTvActions.deleteV Then
+                If Not currentConstellationName.EndsWith("(*)") Then
+                    currentConstellationName = currentConstellationName & " (*)"
+                End If
+
+                Call storeSessionConstellation("Last")
+            End If
+
 
             ' jetzt ggf die Outputs anzeigen 
             If outPutCollection.Count > 0 Then
@@ -1490,14 +1546,35 @@ Public Class frmProjPortfolioAdmin
 
                 Dim toStoreConstellation As clsConstellation = _
                     currentBrowserConstellation.copy(currentConstellationName)
-                
+
+                ' Korrektheitsprüfung
+                If awinSettings.visboDebug Then
+                    toStoreConstellation.checkAndCorrectYourself()
+                End If
+
                 projectConstellations.update(toStoreConstellation)
 
                 If storeToDBasWell.Checked Then
-                    Call storeSingleConstellationToDB(toStoreConstellation)
+                    Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation)
+
+                    ' jetzt ggf die Outputs anzeigen 
+                    If outPutCollection.Count > 0 Then
+                        Call showOutPut(outPutCollection, _
+                                        "Speichern Szenario " & toStoreConstellation.constellationName, _
+                                        "folgende Probleme sind aufgetreten:")
+                    Else
+                        Call MsgBox("ok, " & currentConstellationName & " in Datenbank und Session gespeichert")
+                    End If
+                Else
+                    Call MsgBox("ok, " & currentConstellationName & " in Session gespeichert")
                 End If
 
+                ' jetzt das EIngabe Feld wieder zurücksetzen 
+                dropboxScenarioNames.Text = ""
+
             End If
+
+            
             ' im Fesnter bleiben ... 
             'DialogResult = Windows.Forms.DialogResult.OK
             'MyBase.Close()
@@ -1587,6 +1664,8 @@ Public Class frmProjPortfolioAdmin
 
                 Next
 
+                ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
+                currentBrowserConstellation.updateShowAttributes()
 
                 ' jetzt muss die Plan-Tafel gelöscht werden 
                 Call awinClearPlanTafel()
@@ -1661,8 +1740,14 @@ Public Class frmProjPortfolioAdmin
 
         End With
 
-        If aKtionskennung = PTTvActions.chgInSession Then
-            currentBrowserConstellation.updateShowAttributes()
+        If aKtionskennung = PTTvActions.chgInSession Or _
+            aKtionskennung = PTTvActions.activateV Then
+            If Not currentConstellationName.EndsWith("(*)") Then
+                currentConstellationName = currentConstellationName & " (*)"
+                Me.Text = "Scenario " & currentConstellationName
+            End If
+
+
         End If
 
         stopRecursion = False
@@ -1816,6 +1901,9 @@ Public Class frmProjPortfolioAdmin
                 ' jetzt muss Showprojekte gelöscht werden 
                 ShowProjekte.Clear()
 
+                ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
+                currentBrowserConstellation.updateShowAttributes()
+
                 ' jetzt müssen die Diagramme neu gezeichnet werden 
                 Call awinNeuZeichnenDiagramme(2)
 
@@ -1841,8 +1929,14 @@ Public Class frmProjPortfolioAdmin
 
         End With
 
-        If aKtionskennung = PTTvActions.chgInSession Then
-            currentBrowserConstellation.updateShowAttributes()
+        If aKtionskennung = PTTvActions.chgInSession Or _
+            aKtionskennung = PTTvActions.activateV Then
+            If Not currentConstellationName.EndsWith("(*)") Then
+                currentConstellationName = currentConstellationName & " (*)"
+                Me.Text = "Scenario " & currentConstellationName
+            End If
+
+
         End If
 
         Me.Cursor = Cursors.Default
@@ -1870,10 +1964,14 @@ Public Class frmProjPortfolioAdmin
         Dim zeitraumBis As Date = StartofCalendar.AddYears(20)
         Dim storedGestern As Date = StartofCalendar
 
+        ' hier ist der einzige Grund für browserAlleProjekte: es muss etwas da sein, wo reingeladen werden kann 
+        ' wenn auf der Datenbank gefiltert werden soll - und das geht nur , in dem etwas geladen wird ... 
         Dim browserAlleProjekte As New clsProjekteAlle
 
         If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & "(*)"
+            currentConstellationName = currentConstellationName & " (*)"
+
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
 
@@ -1993,6 +2091,10 @@ Public Class frmProjPortfolioAdmin
                         currentBrowserConstellation.remove(tmpPvName)
                     Next
 
+                    ' jetzt müssen die tfZeile neu besetzt werden;
+                    '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
+                    currentBrowserConstellation.setTfZeilen(0)
+
                     If removeList.Count > 0 Then
                         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
                                             aKtionskennung, quickList)
@@ -2109,7 +2211,7 @@ Public Class frmProjPortfolioAdmin
         ' neu Zeichnen der Diagramme
         Call awinNeuZeichnenDiagramme(2)
 
-        stopRecursion = True
+
 
         Me.Cursor = Cursors.WaitCursor
 
@@ -2123,6 +2225,7 @@ Public Class frmProjPortfolioAdmin
                                         emptyCollection, emptyCollection, emptyCollection)
         filterDefinitions.storeFilter(fName, lastFilter)
 
+        stopRecursion = True
         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, aKtionskennung, False)
         'Call buildTreeview(projektHistorien, TreeViewProjekte, browserAlleProjekte, pvNamesList, _
         '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
@@ -2182,7 +2285,17 @@ Public Class frmProjPortfolioAdmin
         ToolTipStand.Show("Szenario-Name auswählen oder neuen Namen eingeben", dropboxScenarioNames, 2000)
     End Sub
 
+    Private Sub onlyActive_MouseHover(sender As Object, e As EventArgs) Handles onlyActive.MouseHover
+        ToolTipStand.Show("Filter auf angezeigte Projekte und Projekt-Varianten", onlyActive, 2000)
+    End Sub
 
+    Private Sub onlyInactive_MouseHover(sender As Object, e As EventArgs) Handles onlyInactive.MouseHover
+        ToolTipStand.Show("Filter auf nicht angezeigte Projekte und Projekt-Varianten", onlyInactive, 2000)
+    End Sub
+
+    Private Sub backToInit_MouseHover(sender As Object, e As EventArgs) Handles backToInit.MouseHover
+        ToolTipStand.Show("Filter auf angezeigte / nicht angezeigte Projekte und Projekt-Varianten aufheben", backToInit, 2000)
+    End Sub
     
     Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
 
@@ -2198,7 +2311,9 @@ Public Class frmProjPortfolioAdmin
     Private Sub onlyActive_Click(sender As Object, e As EventArgs) Handles onlyActive.Click
 
         If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & "(*)"
+            currentConstellationName = currentConstellationName & " (*)"
+
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2213,7 +2328,8 @@ Public Class frmProjPortfolioAdmin
     Private Sub onlyInactive_Click(sender As Object, e As EventArgs) Handles onlyInactive.Click
 
         If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & "(*)"
+            currentConstellationName = currentConstellationName & " (*)"
+            Me.Text = "Scenario " & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2245,7 +2361,7 @@ Public Class frmProjPortfolioAdmin
     ''' <param name="appliesToVariantsAsWell"></param>
     ''' <remarks></remarks>
     Private Sub modifyTreeviewToShowAttribute(ByVal showKennung As Integer, _
-                                                  Optional ByVal appliesToVariantsAsWell As Boolean = False)
+                                                  Optional ByVal appliesToVariantsAsWell As Boolean = True)
 
         Dim requiredShowAttribute As Boolean = True
 
@@ -2287,12 +2403,8 @@ Public Class frmProjPortfolioAdmin
         ' jetzt wird die CurrentBrowserConstellation entsprechend reduziert 
         If currentBrowserConstellation.count <> anzPVsBefore Then
 
-            ' den TreeView updaten ... 
-            stopRecursion = True
-            Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
-                                            aKtionskennung, quickList)
-            stopRecursion = False
-
+            ' die Positionierung entsprechend Standard setzen ...
+            currentBrowserConstellation.setTfZeilen(0)
 
             Dim tmpConstellation As New clsConstellations
             tmpConstellation.Add(currentBrowserConstellation)
@@ -2300,6 +2412,12 @@ Public Class frmProjPortfolioAdmin
             ' auf der Multiprojekt-Tafel entsprechend anzeigen 
             Call showConstellations(constellationsToShow:=tmpConstellation, _
                                     clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
+
+            ' den TreeView updaten ... 
+            stopRecursion = True
+            Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
+                                            aKtionskennung, quickList)
+            stopRecursion = False
 
             ' die Diagramme aktualisieren 
             If aKtionskennung = PTTvActions.chgInSession Then
@@ -2363,4 +2481,6 @@ Public Class frmProjPortfolioAdmin
         ' Fokus an TreeViewPRojekte geben 
         TreeViewProjekte.Focus()
     End Sub
+
+   
 End Class

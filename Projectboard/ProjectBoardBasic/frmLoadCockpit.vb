@@ -34,7 +34,7 @@ Public Class frmLoadCockpit
     Private Sub frmStoreCockpit_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim i As Integer
         Dim fileName As String
-        Dim wsSheet As xlNS.Worksheet = Nothing
+        Dim wsSheet As xlNS.Worksheet
 
         appInstance.ScreenUpdating = False
         Dim formerEE As Boolean = appInstance.EnableEvents

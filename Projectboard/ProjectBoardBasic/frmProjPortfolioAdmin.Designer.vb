@@ -98,18 +98,17 @@ Partial Class frmProjPortfolioAdmin
         'lblVersionen1
         '
         Me.lblVersionen1.AutoSize = True
-        Me.lblVersionen1.Location = New System.Drawing.Point(43, 378)
+        Me.lblVersionen1.Location = New System.Drawing.Point(97, 378)
         Me.lblVersionen1.Name = "lblVersionen1"
-        Me.lblVersionen1.Size = New System.Drawing.Size(157, 13)
+        Me.lblVersionen1.Size = New System.Drawing.Size(105, 13)
         Me.lblVersionen1.TabIndex = 66
-        Me.lblVersionen1.Text = "alles löschen ausser den letzten"
+        Me.lblVersionen1.Text = "alles löschen, ausser"
         Me.lblVersionen1.Visible = False
         '
         'versionsToKeep
         '
         Me.versionsToKeep.Location = New System.Drawing.Point(205, 375)
-        Me.versionsToKeep.Maximum = New Decimal(New Integer() {20, 0, 0, 0})
-        Me.versionsToKeep.Minimum = New Decimal(New Integer() {1, 0, 0, 0})
+        Me.versionsToKeep.Minimum = New Decimal(New Integer() {2, 0, 0, 0})
         Me.versionsToKeep.Name = "versionsToKeep"
         Me.versionsToKeep.Size = New System.Drawing.Size(43, 20)
         Me.versionsToKeep.TabIndex = 67
@@ -122,9 +121,9 @@ Partial Class frmProjPortfolioAdmin
         Me.lblVersionen2.AutoSize = True
         Me.lblVersionen2.Location = New System.Drawing.Point(255, 378)
         Me.lblVersionen2.Name = "lblVersionen2"
-        Me.lblVersionen2.Size = New System.Drawing.Size(54, 13)
+        Me.lblVersionen2.Size = New System.Drawing.Size(140, 13)
         Me.lblVersionen2.TabIndex = 68
-        Me.lblVersionen2.Text = "Versionen"
+        Me.lblVersionen2.Text = "unterschiedlichen Versionen"
         Me.lblVersionen2.Visible = False
         '
         'settingsBtn
