@@ -7748,7 +7748,7 @@ Public Module awinGeneralModules
                             verbRange.Merge()
                         Next
 
-                    
+
                         zeile = 0
 
                         For Each zelle In rng
