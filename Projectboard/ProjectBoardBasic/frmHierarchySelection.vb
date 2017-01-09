@@ -961,17 +961,102 @@ Public Class frmHierarchySelection
 
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         Dim vorlagenDateiName As String = CType(e.Argument, String)
+        currentReportProfil.name = "Last"
+        currentReportProfil.Phases = copyColltoSortedList(selectedPhases)
+        currentReportProfil.Milestones = copyColltoSortedList(selectedMilestones)
+        currentReportProfil.Roles = copyColltoSortedList(selectedRoles)
+        currentReportProfil.Costs = copyColltoSortedList(selectedCosts)
+        currentReportProfil.Typs = copyColltoSortedList(selectedTyps)
+        currentReportProfil.BUs = copyColltoSortedList(selectedBUs)
+
+        currentReportProfil.CalendarVonDate = StartofCalendar
+
+        ' Änderung von Thomas: 24.11.2016
+        ' ''Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
+        ' ''Dim bisDate As Date = getDateofColumn(showRangeRight, True)
+
+        ' ''If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        ' ''    vonDate = getDateofColumn(showRangeLeft, False)
+        ' ''    bisDate = getDateofColumn(showRangeRight, True)
+        ' ''Else
+        ' ''    vonDate = StartofCalendar
+        ' ''    bisDate = StartofCalendar
+        ' ''End If
+
+        ' ''Try
+        ' ''    currentReportProfil.calcRepVonBis(vonDate, bisDate)
+        ' ''Catch ex As Exception
+        ' ''    Throw New ArgumentException(ex.Message)
+        ' ''End Try
+
 
         Try
             With awinSettings
 
+                If .mppSortiertDauer Then
+                    .mppShowAllIfOne = True
+                End If
+
+                currentReportProfil.ProjectLine = .mppShowProjectLine
+                currentReportProfil.AllIfOne = .mppShowAllIfOne
+                currentReportProfil.Ampeln = .mppShowAmpel
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+
+                currentReportProfil.PhName = .mppShowPhName
+                currentReportProfil.PhDate = .mppShowPhDate
+                currentReportProfil.MSName = .mppShowMsName
+                currentReportProfil.MSDate = .mppShowMsDate
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+                currentReportProfil.KwInMilestone = .mppKwInMilestone
+
+
+                currentReportProfil.VLinien = .mppVertikalesRaster
+                currentReportProfil.ShowHorizontals = .mppShowHorizontals
+                currentReportProfil.Legend = .mppShowLegend
+                currentReportProfil.OnePage = .mppOnePage
+
+                currentReportProfil.SortedDauer = .mppSortiertDauer
+                currentReportProfil.ExtendedMode = .mppExtendedMode
+                currentReportProfil.FullyContained = .mppFullyContained
+
+                currentReportProfil.projectsWithNoMPmayPass = .mppProjectsWithNoMPmayPass
+
+                ' VorlagenDateiname eliminieren, ohne Pfadangaben im ReportProfil speichern
+                Dim hstr() As String
+                hstr = Split(vorlagenDateiName, "\")
+                currentReportProfil.PPTTemplate = hstr(hstr.Length - 1)
+
                 If vorlagenDateiName.Contains(RepPortfolioVorOrdner) Then
+
+                    ' Multiprojekt-Bericht
+                    currentReportProfil.isMpp = True
+
+                    ' für Multiprojekt-Report muss ein Time-Range angegeben sein
+                    Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
+                    Dim bisDate As Date = getDateofColumn(showRangeRight, True)
+                    Try
+                        currentReportProfil.calcRepVonBis(vonDate, bisDate)
+                    Catch ex As Exception
+                        Throw New ArgumentException(ex.Message)
+                    End Try
+
                     Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       selectedPhases, selectedMilestones, _
                                                       selectedRoles, selectedCosts, _
                                                       selectedBUs, selectedTyps, True, _
                                                       worker, e)
                 Else
+                    ' Einzelprojekt-Bericht
+
+                    currentReportProfil.isMpp = False
+
+                    ' für Einzelprojekt-Bericht ist kein Time-Range erforderlich => keine Fehlermeldung
+                    Try
+                        currentReportProfil.calcRepVonBis(StartofCalendar, StartofCalendar)
+                    Catch ex As Exception
+
+                    End Try
+
                     Call createPPTReportFromProjects(vorlagenDateiName, _
                                                      selectedPhases, selectedMilestones, _
                                                      selectedRoles, selectedCosts, _
@@ -981,6 +1066,7 @@ Public Class frmHierarchySelection
 
 
             End With
+
         Catch ex As Exception
             Call MsgBox("Fehler " & ex.Message)
         End Try
@@ -1482,7 +1568,7 @@ Public Class frmHierarchySelection
                                                 selectedPhases, selectedMilestones, _
                                                 selectedRoles, selectedCosts, _
                                                 selectedBUs, selectedTyps, True, _
-                                                True, _
+                                                True, zeilenhoehe, _
                                                 legendFontSize, _
                                                 worker, e)
 
@@ -1550,10 +1636,6 @@ Public Class frmHierarchySelection
 
         End If
 
-    End Sub
-
-    Private Sub createPPTSlidesFromProject(hproj As clsProjekt, vorlagendateiname As String, selectedPhases As Collection, selectedMilestones As Collection, selectedRoles As Collection, selectedCosts As Collection, selectedBUs As Collection, selectedTyps As Collection, p9 As Boolean, p10 As Boolean, legendFontSize As Single, worker As BackgroundWorker, e As DoWorkEventArgs)
-        Throw New NotImplementedException
     End Sub
 
 End Class

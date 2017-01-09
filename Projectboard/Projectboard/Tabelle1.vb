@@ -22,8 +22,14 @@ Public Class Tabelle1
                 .DisplayWorkbookTabs = False
                 .DisplayHeadings = False
 
-                .SplitColumn = 0
-                .SplitRow = 1
+
+                If .SplitRow = 1 Then
+                    ' nichts tun
+                Else
+                    .SplitColumn = 0
+                    .SplitRow = 1
+                End If
+
 
                 .GridlineColor = RGB(220, 220, 220)
                 a = Application.ActiveWindow.Panes.Count

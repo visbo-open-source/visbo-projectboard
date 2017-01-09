@@ -74,7 +74,7 @@ Public Module Module1
 
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
-    Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
+    Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
@@ -153,6 +153,9 @@ Public Module Module1
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
 
+    Public visboFarbeBlau As Integer = RGB(69, 140, 203)
+    Public visboFarbeOrange As Integer = RGB(247, 148, 30)
+
     ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
     Public Const rootPhaseNameDB As String = "0"
@@ -195,6 +198,12 @@ Public Module Module1
 
    
     Public Const maxProjektdauer As Integer = 60
+
+    Public Enum ptSzenarioConsider
+        all = 0
+        show = 1
+        noshow = 2
+    End Enum
 
     ' welche Art von CustomFields gibt es 
     ' kann später ggf erweitert werden auf StrArray, DblArray, etc
@@ -380,6 +389,17 @@ Public Module Module1
         datum = 1
     End Enum
 
+    ''' <summary>
+    ''' kann überall do verwendet werden, wo es wichtig ist, die CallerApp zu unterscheiden, 
+    ''' also wurde ein bestimmtes Formular aus der Multiprojekt Tafel aufgerufen, aus dem Project Add-In oder aus dem Powerpoint Add-In 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTCallerApp
+        projektTafel = 0
+        projectAddIn = 1
+        pptAddIn = 2
+    End Enum
+
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
@@ -439,11 +459,10 @@ Public Module Module1
         delFromSession = 1
         loadPVS = 2
         activateV = 3
-        definePortfolioDB = 4
-        definePortfolioSE = 5
         loadPV = 6
         deleteV = 7
         chgInSession = 8
+        delAllExceptFromDB = 9
     End Enum
 
     ''' <summary>
@@ -464,7 +483,6 @@ Public Module Module1
 
     ' SoftwareKomponenten für die Lizensierung
     Public Enum PTSWKomp
-
         ProjectAdmin = 0
         Swimlanes2 = 1
         SWkomp2 = 2
@@ -473,8 +491,9 @@ Public Module Module1
         Premium = 5
     End Enum
 
-
-    Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
+    ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
+    ' soll so früh gesetzt sein, damit 
+    Public StartofCalendar As Date = #1/1/2000#
 
     Public weightStrategicFit As Double
 
@@ -490,18 +509,28 @@ Public Module Module1
     ' geplant
     ' beauftragt
     ' abgeschlossen
-    Public ProjektStatus(4) As String
+    Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen"}
+
+
+    '
+    ' aktuell angewendetes ReportProfil
+    '
+    Public currentReportProfil As New clsReportAll
+
+
     '
     'ReportSprache kann sein:
-    ' deutsch
-    ' englisch
-    ' französisch
-    ' spanisch
+    '   deutsch
+    '   englisch
+    '   französisch
+    '   spanisch
+    '
     Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"), _
                                          New CultureInfo("en-US"), _
                                          New CultureInfo("fr-FR"), _
                                          New CultureInfo("es-ES")}
-
+    ' aktuell verwendete Sprache
+    '
     Public repCult As CultureInfo
 
     '
@@ -590,7 +619,7 @@ Public Module Module1
 
 
     ''' <summary>
-    ''' setzt enableEvents, enableOnUpdate auf true
+    ''' setzt EnableEvents, ScreenUpdating auf true
     ''' </summary>
     ''' <remarks></remarks>
     Sub projektTafelInit()
@@ -1424,7 +1453,7 @@ Public Module Module1
     ''' <param name="anfang">Anfang Zeitraum 2</param>
     ''' <param name="ende">Ende Zeitraum 2</param>
     ''' <param name="ixZeitraum">gibt an , in welchem Monat des Zeitraums die Überdeckung anfängt: 0 = 1. Monat</param>
-    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / ende definierten Zeitraums die Überdeckung anfängt</param>
+    ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / Ende definierten Zeitraums die Überdeckung anfängt</param>
     ''' <param name="anzahl">enthält die Breite der Überdeckung</param>
     ''' <remarks></remarks>
     Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, _
@@ -1765,7 +1794,7 @@ Public Module Module1
 
 
     Public Function magicBoardIstFrei(ByVal mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
-                                      ByVal spalte As Integer, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
+                                      ByVal startDate As Date, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
         Dim istfrei = True
         Dim ix As Integer = 1
         Dim anzahlP As Integer = ShowProjekte.Count
@@ -1776,12 +1805,14 @@ Public Module Module1
             If pname <> kvp.Key And Not mycollection.Contains(kvp.Key) And kvp.Value.shpUID <> "" Then
                 With kvp.Value
                     If .tfZeile >= zeile And .tfZeile <= zeile + anzahlZeilen - 1 Then
-                        If spalte <= .tfspalte Then
-                            If spalte + laenge - 1 >= .tfspalte Then
+                        If startDate.Date <= .startDate.Date Then
+                            If startDate.AddDays(laenge - 1).Date > .startDate.Date Then
                                 istfrei = False
                                 Exit For
+                            Else
+                                istfrei = True
                             End If
-                        ElseIf spalte <= .tfspalte + .anzahlRasterElemente - 1 Then
+                        ElseIf startDate < .endeDate Then
                             istfrei = False
                             Exit For
                         End If
@@ -1813,7 +1844,7 @@ Public Module Module1
             '    mycollection.Add(pname, pname)
             'End If
 
-            If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
+            If Not magicBoardIstFrei(mycollection, pname, zeile, hproj.startDate, hproj.dauerInDays, anzahlzeilen) Then
                 tryoben = zeile - 1
                 tryunten = zeile + 1
 
@@ -1821,7 +1852,7 @@ Public Module Module1
                 zeile = tryunten
                 lookDown = True
 
-                While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
+                While Not magicBoardIstFrei(mycollection, pname, zeile, hproj.startDate, hproj.dauerInDays, anzahlzeilen)
                     'lookDown = Not lookDown
                     If lookDown Then
                         tryunten = tryunten + 1
@@ -2949,16 +2980,12 @@ Public Module Module1
 
     ''' <summary>
     ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
-    ''' fügt 
+    ''' fügt die Kennzeichnung "SMART" mit type an, StartofCalendar, CreationDate und Datenbank Infos 
     ''' </summary>
     ''' <param name="pptSlide"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
                                     ByVal type As String, _
-                                    ByVal drawingAreaLeft As Double, _
-                                    ByVal drawingAreaRight As Double, _
-                                    ByVal drawingAreaBottom As Double, _
-                                    ByVal drawingAreaTop As Double, _
                                     ByVal calendarLeft As Date, _
                                     ByVal calendarRight As Date)
 
@@ -2967,18 +2994,25 @@ Public Module Module1
 
                 If Not IsNothing(type) Then
                     .Tags.Add("SMART", type)
-                    .Tags.Add("DAL", drawingAreaLeft.ToString)
-                    .Tags.Add("DAR", drawingAreaRight.ToString)
-                    .Tags.Add("DAB", drawingAreaBottom.ToString)
-                    .Tags.Add("DAT", drawingAreaTop.ToString)
+                    .Tags.Add("SOC", StartofCalendar.ToShortDateString)
+                    .Tags.Add("CRD", Date.Now.ToString)
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)
                     .Tags.Add("CALR", calendarRight.ToShortDateString)
+
+                    If Not noDB Then
+                        If awinSettings.databaseURL.Length > 0 Then
+                            .Tags.Add("DBURL", awinSettings.databaseURL)
+                        End If
+                        If awinSettings.databaseName.Length > 0 Then
+                            .Tags.Add("DBNAME", awinSettings.databaseName)
+                        End If
+
+                    End If
                 End If
+
 
             End With
         End If
-
-
 
 
     End Sub
@@ -3000,7 +3034,8 @@ Public Module Module1
     Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
-                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
+                                          ByVal lieferumfaenge As String)
 
         Dim nullDate As Date = Nothing
 
@@ -3047,10 +3082,21 @@ Public Module Module1
                     Else
                         .Tags.Add("AC", "0")
                     End If
+
+                    If Not IsNothing(ampelErlaeuterung) Then
+                        If ampelErlaeuterung.Length > 0 Then
+                            .Tags.Add("AE", ampelErlaeuterung)
+                        End If
+
+                    End If
+
                 End If
 
-                If Not IsNothing(ampelErlaeuterung) Then
-                    .Tags.Add("AE", ampelErlaeuterung)
+                If Not IsNothing(lieferumfaenge) Then
+                    If lieferumfaenge.Length > 0 Then
+                        .Tags.Add("LU", lieferumfaenge)
+                    End If
+
                 End If
 
             End With
@@ -3060,44 +3106,6 @@ Public Module Module1
 
     End Sub
 
-    ''' <summary>
-    ''' setzt die komplette Session zurück 
-    ''' löscht alle Shapes, sofern noch welche vorhanden sind, löscht Showprojekte, alleprojekte, etc. 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub clearCompleteSession()
-
-        Dim allShapes As Excel.Shapes
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        ' jetzt: Löschen der Session 
-
-        Try
-
-            allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
-            For Each element As Excel.Shape In allShapes
-                element.Delete()
-            Next
-
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Löschen der Shapes ...")
-        End Try
-
-        ShowProjekte.Clear()
-        AlleProjekte.Clear()
-        selectedProjekte.Clear()
-        ImportProjekte.Clear()
-        DiagramList.Clear()
-        awinButtonEvents.Clear()
-
-        allDependencies.Clear()
-        projectboardShapes.clear()
-        ' Session gelöscht
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-    End Sub
 
     Public Sub PPTstarten()
         Try

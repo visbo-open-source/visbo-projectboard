@@ -365,6 +365,7 @@
         Public AllRoles As List(Of clsRolleDB)
         Public AllCosts As List(Of clsKostenartDB)
         Public AllResults As List(Of clsResultDB)
+        Public AllBewertungen As SortedList(Of String, clsBewertungDB)
 
         Public ampelStatus As Integer
         Public ampelErlaeuterung As String
@@ -453,6 +454,21 @@
                     AllCosts.Add(newCost)
                 Next
 
+
+                ' jetzt evtl vorhandene Bewertungen abspeichern ... 
+                Try
+                    For i = 1 To .bewertungsCount
+                        Dim newb As New clsBewertungDB
+                        newb.Copyfrom(.getBewertung(i))
+                        Me.addBewertung(newb)
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+
+
+
             End With
 
         End Sub
@@ -491,7 +507,7 @@
 
                 End Try
 
-                
+
                 ' Änderung tk 20.4.2015
                 ' damit alte Datenbank Einträge ohne Hierarchie auch noch gelesen werden können ..
                 If Not istElemID(Me.name) Then
@@ -520,24 +536,32 @@
 
                 Dim dimension As Integer
 
-                ' in der Datenbank wird es konsistent gespeichert
-                For r = 1 To Me.AllRoles.Count
-                    'Dim newRole As New clsRolle(.relEnde - .relStart)
+                ' macht nur Sinn, die Rollen zu holen, wenn auch Rollen-Definitionen vorhanden isnd
+                ' im PPTSmartInfo sindsie es noch nicht ! 
+                If RoleDefinitions.Count > 0 Then
+                    ' nur aufrufen, wenn 
+                    For r = 1 To Me.AllRoles.Count
+                        'Dim newRole As New clsRolle(.relEnde - .relStart)
 
-                    dimension = Me.AllRoles.Item(r - 1).Bedarf.Length - 1
-                    Dim newRole As New clsRolle(dimension)
-                    Me.AllRoles.Item(r - 1).copyto(newRole)
-                    .addRole(newRole)
+                        dimension = Me.AllRoles.Item(r - 1).Bedarf.Length - 1
+                        Dim newRole As New clsRolle(dimension)
+                        Me.AllRoles.Item(r - 1).copyto(newRole)
+                        .addRole(newRole)
 
-                Next
+                    Next
+                End If
 
-                For k = 1 To Me.AllCosts.Count
-                    'Dim newCost As New clsKostenart(.relEnde - relStart)
-                    dimension = Me.AllCosts.Item(k - 1).Bedarf.Length - 1
-                    Dim newCost As New clsKostenart(dimension)
-                    Me.AllCosts.Item(k - 1).copyto(newCost)
-                    .AddCost(newCost)
-                Next
+                ' macht nur Sinn, die Rollen zu holen, wenn auch Rollen-Definitionen vorhanden isnd
+                ' im PPTSmartInfo sind sie es noch nicht ! 
+                If CostDefinitions.Count > 0 Then
+                    For k = 1 To Me.AllCosts.Count
+                        'Dim newCost As New clsKostenart(.relEnde - relStart)
+                        dimension = Me.AllCosts.Item(k - 1).Bedarf.Length - 1
+                        Dim newCost As New clsKostenart(dimension)
+                        Me.AllCosts.Item(k - 1).copyto(newCost)
+                        .AddCost(newCost)
+                    Next
+                End If
 
                 .changeStartandDauer(startoffset, dauer)
 
@@ -559,6 +583,18 @@
 
                 End Try
 
+                ' evtl vorhandene Bewertungen kopieren .... 
+                For b As Integer = 1 To Me.AllBewertungen.Count
+                    Dim newb As New clsBewertung
+                    Me.AllBewertungen.ElementAt(b - 1).Value.CopyTo(newb)
+
+                    Try
+                        .addBewertung(newb)
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
 
 
 
@@ -567,10 +603,30 @@
 
         End Sub
 
+        Friend Sub addBewertung(ByVal b As clsBewertungDB)
+            Dim key As String
+
+            If Not IsNothing(b.bewerterName) Then
+                key = b.bewerterName.Trim & "#" & b.datum.ToString("MMM yy")
+            Else
+                key = "#" & b.datum.ToString("MMM yy")
+            End If
+
+            Try
+                Me.AllBewertungen.Add(key, b)
+            Catch ex As Exception
+
+                Throw New ArgumentException("Bewertung wurde bereits vergeben ..")
+
+            End Try
+
+        End Sub
+
         Sub New()
             AllRoles = New List(Of clsRolleDB)
             AllCosts = New List(Of clsKostenartDB)
             AllResults = New List(Of clsResultDB)
+            AllBewertungen = New SortedList(Of String, clsBewertungDB)
 
             ampelStatus = 0
             ampelErlaeuterung = ""

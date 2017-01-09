@@ -46,13 +46,7 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.Office.Interop.MSProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -137,10 +131,22 @@
     <Compile Include="frmSelectRepSprache.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmStoreReportProfil.Designer.vb">
+      <DependentUpon>frmStoreReportProfil.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmStoreReportProfil.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmTestLicences.Designer.vb">
       <DependentUpon>frmTestLicences.vb</DependentUpon>
     </Compile>
     <Compile Include="frmTestLicences.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmTimeMachine.Designer.vb">
+      <DependentUpon>frmTimeMachine.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmTimeMachine.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmWbListInfo.Designer.vb">
@@ -366,8 +372,14 @@
     <EmbeddedResource Include="frmStoreCockpit.resx">
       <DependentUpon>frmStoreCockpit.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmStoreReportProfil.resx">
+      <DependentUpon>frmStoreReportProfil.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmTestLicences.resx">
       <DependentUpon>frmTestLicences.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTimeMachine.resx">
+      <DependentUpon>frmTimeMachine.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmWbListInfo.resx">
       <DependentUpon>frmWbListInfo.vb</DependentUpon>
@@ -431,6 +443,33 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+    <COMReference Include="Microsoft.Office.Interop.Excel1">
+      <Guid>{00020813-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>7</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="Microsoft.Office.Interop.PowerPoint1">
+      <Guid>{91493440-5A91-11CF-8700-00AA0060263B}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>10</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="VBIDE">
+      <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>5</VersionMajor>
+      <VersionMinor>3</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\funnel_add.png" />
@@ -440,6 +479,45 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\branch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_end.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_right2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_left.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_left2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_beginning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\home.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\replace2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\gear.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish2.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-gecheckte Projekte.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

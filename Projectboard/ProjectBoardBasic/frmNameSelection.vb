@@ -59,6 +59,7 @@ Public Class frmNameSelection
 
                 If .actionCode = PTTvActions.loadPV Or _
                     .actionCode = PTTvActions.loadPVS Or _
+                    .actionCode = PTTvActions.delAllExceptFromDB Or _
                     .actionCode = PTTvActions.delFromDB Then
                     .OKButton.Text = "Anwenden"
                 Else
@@ -133,7 +134,7 @@ Public Class frmNameSelection
 
 
             ElseIf menuOption = PTmenue.visualisieren Then
-                .Text = "Plan-Elemente visualisieren"
+                .Text = "Phasen- und Meilensteine visualisieren"
                 .OKButton.Text = "Anzeigen"
 
                 .statusLabel.Text = ""
@@ -144,10 +145,10 @@ Public Class frmNameSelection
                 .pictureBU.Visible = False
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
-                .rdbRoles.Visible = True
-                .pictureRoles.Visible = True
-                .rdbCosts.Visible = True
-                .pictureCosts.Visible = True
+                .rdbRoles.Visible = False
+                .pictureRoles.Visible = False
+                .rdbCosts.Visible = False
+                .pictureCosts.Visible = False
 
                 ' Leistbarkeits-Charts
                 .chkbxOneChart.Checked = False
@@ -1447,16 +1448,85 @@ Public Class frmNameSelection
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         Dim vorlagenDateiName As String = CType(e.Argument, String)
 
+        currentReportProfil.name = "Last"
+        currentReportProfil.Phases = copyColltoSortedList(selectedPhases)
+        currentReportProfil.Milestones = copyColltoSortedList(selectedMilestones)
+        currentReportProfil.Roles = copyColltoSortedList(selectedRoles)
+        currentReportProfil.Costs = copyColltoSortedList(selectedCosts)
+        currentReportProfil.Typs = copyColltoSortedList(selectedTyps)
+        currentReportProfil.BUs = copyColltoSortedList(selectedBUs)
+
+        currentReportProfil.CalendarVonDate = StartofCalendar
+
         Try
             With awinSettings
 
+                If .mppSortiertDauer Then
+                    .mppShowAllIfOne = True
+                End If
+
+                currentReportProfil.ProjectLine = .mppShowProjectLine
+                currentReportProfil.AllIfOne = .mppShowAllIfOne
+                currentReportProfil.Ampeln = .mppShowAmpel
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+
+                currentReportProfil.PhName = .mppShowPhName
+                currentReportProfil.PhDate = .mppShowPhDate
+                currentReportProfil.MSName = .mppShowMsName
+                currentReportProfil.MSDate = .mppShowMsDate
+                currentReportProfil.UseAbbreviation = .mppUseAbbreviation
+                currentReportProfil.KwInMilestone = .mppKwInMilestone
+
+
+                currentReportProfil.VLinien = .mppVertikalesRaster
+                currentReportProfil.ShowHorizontals = .mppShowHorizontals
+                currentReportProfil.Legend = .mppShowLegend
+                currentReportProfil.OnePage = .mppOnePage
+
+                currentReportProfil.SortedDauer = .mppSortiertDauer
+                currentReportProfil.ExtendedMode = .mppExtendedMode
+                currentReportProfil.FullyContained = .mppFullyContained
+
+                currentReportProfil.projectsWithNoMPmayPass = .mppProjectsWithNoMPmayPass
+
+                ' Dateiname eliminieren, ohne Pfadangaben im ReportProfil speichern
+                Dim hstr() As String
+                hstr = Split(vorlagenDateiName, "\")
+                currentReportProfil.PPTTemplate = hstr(hstr.Length - 1)
+
                 If vorlagenDateiName.Contains(RepPortfolioVorOrdner) Then
+
+                    ' Multiprojekt-Bericht
+                    currentReportProfil.isMpp = True
+
+                    ' für Multiprojekt-Report muss ein Time-Range angegeben sein
+                    Dim vonDate As Date = getDateofColumn(showRangeLeft, False)
+                    Dim bisDate As Date = getDateofColumn(showRangeRight, True)
+                    Try
+                        currentReportProfil.calcRepVonBis(vonDate, bisDate)
+                    Catch ex As Exception
+                        Throw New ArgumentException(ex.Message)
+                    End Try
+
+
                     Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       selectedPhases, selectedMilestones, _
                                                       selectedRoles, selectedCosts, _
                                                       selectedBUs, selectedTyps, True, _
                                                       worker, e)
                 Else
+                    ' Einzelprojekt-Bericht
+
+                    currentReportProfil.isMpp = False
+
+                    ' für Einzelprojekt-Bericht ist kein Time-Range erforderlich => keine Fehlermeldung
+                    Try
+                        currentReportProfil.calcRepVonBis(StartofCalendar, StartofCalendar)
+                    Catch ex As Exception
+
+                    End Try
+
+
                     Call createPPTReportFromProjects(vorlagenDateiName, _
                                                      selectedPhases, selectedMilestones, _
                                                      selectedRoles, selectedCosts, _

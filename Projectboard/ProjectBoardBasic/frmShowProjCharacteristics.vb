@@ -5,101 +5,17 @@ Imports System.Windows.Forms
 
 
 Public Class frmShowProjCharacteristics
-    Dim nrSnapshots As Integer
-    Dim valueBeauftragung As Integer
-    Dim minmaxScales(1, 6) As Double
-    Dim necessary(6) As Boolean
-    Dim hproj As clsProjekt
-    Dim showAll As Boolean = False
-    Dim phaseList As Collection
-    Dim milestoneList As Collection
-    Dim typCollection As New Collection
-    Dim lastAmpel As Integer
+    Private nrSnapshots As Integer
+    Private valueBeauftragung As Integer
+    Private minmaxScales(1, 6) As Double
+    Private necessary(6) As Boolean
+    Private hproj As clsProjekt
+    Private showAll As Boolean = False
+    Private phaseList As Collection
+    Private milestoneList As Collection
+    Private typCollection As New Collection
+    Private lastAmpel As Integer
 
-    Private Sub timeSlider_MouseUp(sender As Object, e As MouseEventArgs) Handles timeSlider.MouseUp
-        'Dim chtobj As Excel.ChartObject
-        'Dim vglName As String = hproj.name.Trim
-
-        'Dim formerSU As Boolean = appInstance.ScreenUpdating
-        'appInstance.ScreenUpdating = False
-
-        'Call aktualisiereCharts(hproj, False)
-
-        'With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
-        '    Dim tmpArray() As String
-        '    Dim anzDiagrams As Integer
-        '    anzDiagrams = .Chartobjects.count
-
-        '    If anzDiagrams > 0 Then
-        '        For i = 1 To anzDiagrams
-        '            chtobj = .ChartObjects(i)
-        '            If chtobj.Name <> "" Then
-        '                tmpArray = chtobj.Name.Split(New Char() {"#"}, 5)
-
-        '                If tmpArray(0).Trim = vglName Then
-        '                    Select Case tmpArray(1)
-        '                        Case "Phasen"
-        '                            ' Update Phasen Diagramm
-        '                            Call updatePhasesBalken(hproj, chtobj)
-
-        '                        Case "Personalbedarf"
-        '                            If tmpArray(2) = "1" Then
-        '                                ' Update Balken-Diagramm
-        '                                Call updateRessBalkenOfProject(hproj, chtobj, 1, minmaxScales(0, 2), minmaxScales(1, 2))
-        '                            End If
-
-        '                        Case "Personalkosten"
-
-        '                            If tmpArray(2) = "1" Then
-        '                                ' Update Balken-Diagramm
-        '                                Call updateRessBalkenOfProject(hproj, chtobj, 2, minmaxScales(0, 2), minmaxScales(1, 2))
-        '                            End If
-
-        '                        Case "Sonstige Kosten"
-
-        '                            If tmpArray(2) = "1" Then
-        '                                ' Update Balken-Diagramm
-        '                                Call updateCostBalkenOfProject(hproj, chtobj, 1, minmaxScales(0, 3), minmaxScales(1, 3))
-        '                            ElseIf tmpArray(2) = "2" Then
-        '                                ' Update Pie-Diagramm
-        '                                Call updateCostPieOfProject(hproj, chtobj, 1)
-        '                            End If
-
-        '                        Case "Gesamtkosten"
-
-        '                            If tmpArray(2) = "1" Then
-        '                                ' Update Balken-Diagramm
-        '                                Call updateCostBalkenOfProject(hproj, chtobj, 2, minmaxScales(0, 3), minmaxScales(1, 3))
-        '                            ElseIf tmpArray(2) = "2" Then
-        '                                ' Update Pie-Diagramm
-        '                                Call updateCostPieOfProject(hproj, chtobj, 2)
-        '                            End If
-
-
-        '                        Case "Strategie"
-
-
-        '                        Case "Ergebnis"
-
-
-        '                        Case Else
-
-
-
-        '                    End Select
-
-        '                End If
-
-        '            End If
-
-        '        Next
-        '    End If
-
-        'End With
-
-        'appInstance.ScreenUpdating = True
-        'appInstance.ScreenUpdating = formerSU
-    End Sub
 
 
     Private Sub timeSlider_Scroll(sender As Object, e As EventArgs) Handles timeSlider.Scroll

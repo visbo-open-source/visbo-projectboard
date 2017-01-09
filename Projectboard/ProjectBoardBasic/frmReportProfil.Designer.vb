@@ -22,6 +22,7 @@ Partial Class frmReportProfil
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmReportProfil))
         Me.RepProfilListbox = New System.Windows.Forms.ListBox()
         Me.zeitLabel = New System.Windows.Forms.Label()
@@ -31,6 +32,10 @@ Partial Class frmReportProfil
         Me.changeProfil = New System.Windows.Forms.Button()
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.BGworkerReportBHTC = New System.ComponentModel.BackgroundWorker()
+        Me.BGWorkerReportGen = New System.ComponentModel.BackgroundWorker()
+        Me.rdbEPreports = New System.Windows.Forms.RadioButton()
+        Me.rdbMPreports = New System.Windows.Forms.RadioButton()
+        Me.ToolTipProfil = New System.Windows.Forms.ToolTip(Me.components)
         Me.SuspendLayout()
         '
         'RepProfilListbox
@@ -39,11 +44,11 @@ Partial Class frmReportProfil
         Me.RepProfilListbox.FormattingEnabled = True
         Me.RepProfilListbox.HorizontalScrollbar = True
         Me.RepProfilListbox.ItemHeight = 16
-        Me.RepProfilListbox.Location = New System.Drawing.Point(14, 14)
+        Me.RepProfilListbox.Location = New System.Drawing.Point(14, 30)
         Me.RepProfilListbox.Margin = New System.Windows.Forms.Padding(5)
         Me.RepProfilListbox.Name = "RepProfilListbox"
         Me.RepProfilListbox.ScrollAlwaysVisible = True
-        Me.RepProfilListbox.Size = New System.Drawing.Size(579, 372)
+        Me.RepProfilListbox.Size = New System.Drawing.Size(579, 356)
         Me.RepProfilListbox.Sorted = True
         Me.RepProfilListbox.TabIndex = 1
         '
@@ -51,7 +56,7 @@ Partial Class frmReportProfil
         '
         Me.zeitLabel.AutoSize = True
         Me.zeitLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte), True)
-        Me.zeitLabel.Location = New System.Drawing.Point(23, 410)
+        Me.zeitLabel.Location = New System.Drawing.Point(249, 399)
         Me.zeitLabel.Name = "zeitLabel"
         Me.zeitLabel.Size = New System.Drawing.Size(63, 16)
         Me.zeitLabel.TabIndex = 2
@@ -63,7 +68,7 @@ Partial Class frmReportProfil
         Me.vonDate.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.vonDate.Location = New System.Drawing.Point(171, 410)
+        Me.vonDate.Location = New System.Drawing.Point(336, 397)
         Me.vonDate.Name = "vonDate"
         Me.vonDate.Size = New System.Drawing.Size(108, 22)
         Me.vonDate.TabIndex = 5
@@ -72,7 +77,7 @@ Partial Class frmReportProfil
         '
         Me.bisDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.bisDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.bisDate.Location = New System.Drawing.Point(406, 410)
+        Me.bisDate.Location = New System.Drawing.Point(466, 397)
         Me.bisDate.Name = "bisDate"
         Me.bisDate.Size = New System.Drawing.Size(107, 22)
         Me.bisDate.TabIndex = 6
@@ -80,7 +85,7 @@ Partial Class frmReportProfil
         'ReportErstellen
         '
         Me.ReportErstellen.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ReportErstellen.Location = New System.Drawing.Point(150, 453)
+        Me.ReportErstellen.Location = New System.Drawing.Point(125, 445)
         Me.ReportErstellen.Name = "ReportErstellen"
         Me.ReportErstellen.Size = New System.Drawing.Size(145, 27)
         Me.ReportErstellen.TabIndex = 7
@@ -90,7 +95,7 @@ Partial Class frmReportProfil
         'changeProfil
         '
         Me.changeProfil.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.changeProfil.Location = New System.Drawing.Point(318, 453)
+        Me.changeProfil.Location = New System.Drawing.Point(320, 445)
         Me.changeProfil.Name = "changeProfil"
         Me.changeProfil.Size = New System.Drawing.Size(138, 27)
         Me.changeProfil.TabIndex = 8
@@ -101,7 +106,7 @@ Partial Class frmReportProfil
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(23, 488)
+        Me.statusLabel.Location = New System.Drawing.Point(14, 479)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(51, 17)
         Me.statusLabel.TabIndex = 43
@@ -113,11 +118,44 @@ Partial Class frmReportProfil
         '
         Me.BGworkerReportBHTC.WorkerReportsProgress = True
         '
+        'BGWorkerReportGen
+        '
+        Me.BGWorkerReportGen.WorkerReportsProgress = True
+        Me.BGWorkerReportGen.WorkerSupportsCancellation = True
+        '
+        'rdbEPreports
+        '
+        Me.rdbEPreports.AutoSize = True
+        Me.rdbEPreports.Location = New System.Drawing.Point(14, 7)
+        Me.rdbEPreports.Name = "rdbEPreports"
+        Me.rdbEPreports.Size = New System.Drawing.Size(125, 17)
+        Me.rdbEPreports.TabIndex = 44
+        Me.rdbEPreports.Text = "Einzelprojekt Reports"
+        Me.rdbEPreports.UseVisualStyleBackColor = True
+        '
+        'rdbMPreports
+        '
+        Me.rdbMPreports.AutoSize = True
+        Me.rdbMPreports.Location = New System.Drawing.Point(171, 7)
+        Me.rdbMPreports.Name = "rdbMPreports"
+        Me.rdbMPreports.Size = New System.Drawing.Size(119, 17)
+        Me.rdbMPreports.TabIndex = 45
+        Me.rdbMPreports.Text = "Multiprojekt Reports"
+        Me.rdbMPreports.UseVisualStyleBackColor = True
+        '
+        'ToolTipProfil
+        '
+        Me.ToolTipProfil.AutoPopDelay = 5000
+        Me.ToolTipProfil.InitialDelay = 500
+        Me.ToolTipProfil.ReshowDelay = 100
+        '
         'frmReportProfil
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(612, 510)
+        Me.ClientSize = New System.Drawing.Size(612, 499)
+        Me.Controls.Add(Me.rdbMPreports)
+        Me.Controls.Add(Me.rdbEPreports)
         Me.Controls.Add(Me.statusLabel)
         Me.Controls.Add(Me.changeProfil)
         Me.Controls.Add(Me.ReportErstellen)
@@ -140,4 +178,8 @@ Partial Class frmReportProfil
     Friend WithEvents changeProfil As System.Windows.Forms.Button
     Friend WithEvents statusLabel As System.Windows.Forms.Label
     Friend WithEvents BGworkerReportBHTC As System.ComponentModel.BackgroundWorker
+    Friend WithEvents BGWorkerReportGen As System.ComponentModel.BackgroundWorker
+    Friend WithEvents rdbEPreports As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbMPreports As System.Windows.Forms.RadioButton
+    Friend WithEvents ToolTipProfil As System.Windows.Forms.ToolTip
 End Class

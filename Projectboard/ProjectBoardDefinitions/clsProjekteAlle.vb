@@ -9,6 +9,35 @@ Public Class clsProjekteAlle
         _allProjects = New SortedList(Of String, clsProjekt)
     End Sub
 
+    ''' <summary>
+    ''' erstellt eine Kopie der Liste 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property createCopy(Optional filteredBy As clsConstellation = Nothing) As clsProjekteAlle
+        Get
+            Dim tmpKopie As New clsProjekteAlle
+
+            If IsNothing(filteredBy) Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    If Not tmpKopie.Containskey(kvp.Key) Then
+                        tmpKopie.Add(kvp.Key, kvp.Value)
+                    End If
+                Next
+            Else
+                ' nur die übernehmen, die auch in der Constellation enthalten sind 
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    If filteredBy.contains(kvp.Key, False) And Not tmpKopie.Containskey(kvp.Key) Then
+                        tmpKopie.Add(kvp.Key, kvp.Value)
+                    End If
+                Next
+            End If
+
+            createCopy = tmpKopie
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
@@ -67,6 +96,8 @@ Public Class clsProjekteAlle
             Count = _allProjects.Count
         End Get
     End Property
+
+    
 
     ''' <summary>
     ''' gibt das erste Element der Liste zurück 
@@ -535,28 +566,14 @@ Public Class clsProjekteAlle
     Public ReadOnly Property getProjectNames() As Collection
         Get
             Dim tmpCollection As New Collection
-            Dim i As Integer = 0
-            Dim found As Boolean = False
             Dim pName As String
 
-            If Me.Count > 0 Then
+            For i As Integer = 0 To Me.Count - 1
                 pName = _allProjects.ElementAt(i).Value.name
-                tmpCollection.Add(pName)
-                i = i + 1
-
-                While i < _allProjects.Count
-
-                    If _allProjects.ElementAt(i).Value.name <> pName Then
-                        pName = _allProjects.ElementAt(i).Value.name
-                        tmpCollection.Add(pName)
-                    End If
-
-                    i = i + 1
-
-                End While
-
-            End If
-
+                If Not tmpCollection.Contains(pName) Then
+                    tmpCollection.Add(pName, pName)
+                End If
+            Next
 
             getProjectNames = tmpCollection
 

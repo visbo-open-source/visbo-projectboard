@@ -26,8 +26,8 @@ Partial Class frmLoadConstellation
         Me.OKButton = New System.Windows.Forms.Button()
         Me.Abbrechen = New System.Windows.Forms.Button()
         Me.addToSession = New System.Windows.Forms.CheckBox()
-        Me.dropBoxTimeStamps = New System.Windows.Forms.ComboBox()
         Me.lblStandvom = New System.Windows.Forms.Label()
+        Me.requiredDate = New System.Windows.Forms.DateTimePicker()
         Me.SuspendLayout()
         '
         'ListBox1
@@ -69,28 +69,27 @@ Partial Class frmLoadConstellation
         Me.addToSession.Location = New System.Drawing.Point(13, 237)
         Me.addToSession.Name = "addToSession"
         Me.addToSession.RightToLeft = System.Windows.Forms.RightToLeft.Yes
-        Me.addToSession.Size = New System.Drawing.Size(135, 17)
+        Me.addToSession.Size = New System.Drawing.Size(201, 17)
         Me.addToSession.TabIndex = 3
-        Me.addToSession.Text = "zur Session dazu laden"
+        Me.addToSession.Text = "zu angezeigten Projekten hinzufügen"
         Me.addToSession.UseVisualStyleBackColor = True
-        '
-        'dropBoxTimeStamps
-        '
-        Me.dropBoxTimeStamps.FormattingEnabled = True
-        Me.dropBoxTimeStamps.Location = New System.Drawing.Point(180, 11)
-        Me.dropBoxTimeStamps.Name = "dropBoxTimeStamps"
-        Me.dropBoxTimeStamps.Size = New System.Drawing.Size(172, 21)
-        Me.dropBoxTimeStamps.TabIndex = 39
         '
         'lblStandvom
         '
         Me.lblStandvom.AutoSize = True
         Me.lblStandvom.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblStandvom.Location = New System.Drawing.Point(119, 14)
+        Me.lblStandvom.Location = New System.Drawing.Point(86, 19)
         Me.lblStandvom.Name = "lblStandvom"
         Me.lblStandvom.Size = New System.Drawing.Size(61, 13)
         Me.lblStandvom.TabIndex = 38
         Me.lblStandvom.Text = "Stand vom:"
+        '
+        'requiredDate
+        '
+        Me.requiredDate.Location = New System.Drawing.Point(153, 16)
+        Me.requiredDate.Name = "requiredDate"
+        Me.requiredDate.Size = New System.Drawing.Size(200, 20)
+        Me.requiredDate.TabIndex = 39
         '
         'frmLoadConstellation
         '
@@ -98,7 +97,7 @@ Partial Class frmLoadConstellation
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(366, 305)
-        Me.Controls.Add(Me.dropBoxTimeStamps)
+        Me.Controls.Add(Me.requiredDate)
         Me.Controls.Add(Me.lblStandvom)
         Me.Controls.Add(Me.addToSession)
         Me.Controls.Add(Me.Abbrechen)
@@ -116,5 +115,5 @@ Partial Class frmLoadConstellation
     Public WithEvents Abbrechen As System.Windows.Forms.Button
     Public WithEvents addToSession As System.Windows.Forms.CheckBox
     Public WithEvents lblStandvom As System.Windows.Forms.Label
-    Public WithEvents dropBoxTimeStamps As System.Windows.Forms.ComboBox
+    Public WithEvents requiredDate As System.Windows.Forms.DateTimePicker
 End Class

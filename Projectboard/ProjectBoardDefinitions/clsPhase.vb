@@ -34,6 +34,129 @@ Public Class clsPhase
     Private _allCosts As List(Of clsKostenart)
 
 
+    ''' <summary>
+    ''' gibt zurück, ob die Phase identisch mit der übergebenen Phase ist  
+    ''' </summary>
+    ''' <param name="vPhase"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vPhase As clsPhase) As Boolean
+        Get
+            Dim stillOK As Boolean = False
+            Dim ix As Integer = 0
+
+            Try
+                With vPhase
+                    ' administratives ...
+                    If Me.nameID = .nameID Then
+
+                        If Me.dauerInDays = .dauerInDays And _
+                            Me.startOffsetinDays = .startOffsetinDays Then
+
+                            If Me.countCosts = .countCosts And _
+                                Me.countRoles = .countRoles And _
+                                Me.countMilestones = .countMilestones And _
+                                Me.bewertungsCount = .bewertungsCount Then
+
+                                If Me.ampelErlaeuterung = .ampelErlaeuterung And _
+                                    Me.ampelStatus = .ampelStatus Then
+
+                                    If Me.shortName = .shortName And _
+                                        Me.originalName = .originalName And _
+                                        Me.verantwortlich = .verantwortlich Then
+
+                                        If Me.appearance = .appearance And _
+                                            Me.individualColor = .individualColor And _
+                                            Me.earliestStart = .earliestStart And _
+                                            Me.latestStart = .latestStart And _
+                                            Me.offset = .offset Then
+
+                                            stillOK = True
+                                        
+                                        End If
+
+                                    End If
+
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
+
+
+                    ' jetzt die Rollen, Kosten, Milestones und Bewertungen abfragen 
+                    If stillOK Then
+                        ' sind die Rollen identisch 
+                        ix = 1
+                        Do While stillOK And ix <= Me.countRoles
+                            Dim MeRole As clsRolle = Me.getRole(ix)
+                            Dim vglRole As clsRolle = .getRole(ix)
+                            If MeRole.isIdenticalTo(vglRole) Then
+                                ix = ix + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
+
+                        If stillOK Then
+                            ' sind die Kostenarten identisch ?
+                            ix = 1
+                            Do While stillOK And ix <= Me.countCosts
+                                Dim MeCost As clsKostenart = Me.getCost(ix)
+                                Dim vglCost As clsKostenart = .getCost(ix)
+                                If MeCost.isIdenticalTo(vglCost) Then
+                                    ix = ix + 1
+                                Else
+                                    stillOK = False
+                                End If
+                            Loop
+
+                            If stillOK Then
+                                ' sind die Phasen Bewertungen identisch?
+                                ix = 1
+                                Do While stillOK And ix <= Me.bewertungsCount
+                                    Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
+                                    Dim vglBewertung As clsBewertung = .getBewertung(ix)
+                                    If MeBewertung.isIdenticalTo(vglBewertung) Then
+                                        ix = ix + 1
+                                    Else
+                                        stillOK = False
+                                    End If
+                                Loop
+
+                                If stillOK Then
+                                    ' jetzt die Meilensteine, Bewertungen und Deliverables prüfen ... 
+                                    ix = 1
+                                    Do While stillOK And ix <= Me.countMilestones
+                                        Dim MeMs As clsMeilenstein = Me.getMilestone(ix)
+                                        Dim vglMs As clsMeilenstein = .getMilestone(ix)
+                                        If MeMs.isIdenticalTo(vglMs) Then
+                                            ix = ix + 1
+                                        Else
+                                            stillOK = False
+                                        End If
+                                    Loop
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
+
+                End With
+
+            Catch ex As Exception
+                stillOK = False
+            End Try
+
+            isIdenticalTo = stillOK
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' liest/schreibt das Feld für vrantwortlich
@@ -60,6 +183,9 @@ Public Class clsPhase
         End If
 
         Try
+            If _bewertungen.ContainsKey(key) Then
+                _bewertungen.Remove(key)
+            End If
             _bewertungen.Add(key, b)
         Catch ex As Exception
             Throw New ArgumentException("Bewertung wurde bereits vergeben ..")
@@ -1865,6 +1991,14 @@ Public Class clsPhase
         _vorlagenParent = Nothing
 
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
+        Dim tmpB As New clsBewertung
+        With tmpB
+            .description = ""
+            .colorIndex = 0
+        End With
+        Me.addBewertung(tmpB)
+        
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)
         _allMilestones = New List(Of clsMeilenstein)
@@ -1907,6 +2041,14 @@ Public Class clsPhase
 
 
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
+        Dim tmpB As New clsBewertung
+        With tmpB
+            .description = ""
+            .colorIndex = 0
+        End With
+        Me.addBewertung(tmpB)
+
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)
         _allMilestones = New List(Of clsMeilenstein)
@@ -2099,5 +2241,154 @@ Public Class clsPhase
 
 
     End Sub
+
+    ''' <summary>
+    ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
+    ''' soll nach Testphase die bisherige berechneBedarev ablösen
+    ''' ist jetzt als Function realisiert, die die Dimension aus Startdatum, Endedatum zieht 
+    ''' wie die MEthode vorher ja auch ... 
+    ''' </summary>
+    ''' <param name="startdate"></param>
+    ''' <param name="endedate"></param>
+    ''' <param name="oldXwerte"></param>
+    ''' <param name="corrFakt"></param>
+    ''' <remarks></remarks>
+    Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
+                               ByVal corrFakt As Double) As Double()
+        Dim k As Integer
+        Dim newXwerte() As Double
+        Dim gesBedarf As Double
+        Dim Rest As Integer
+        Dim hDatum As Date
+        Dim anzDaysthisMonth As Double
+        Dim arrayLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+
+        ReDim newXwerte(arrayLength - 1)
+
+        ' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
+        ' andernfalls ist eh schon alles richtig 
+        If oldXwerte.Sum > 0 Then
+
+            Try
+
+
+                gesBedarf = oldXwerte.Sum
+                If awinSettings.propAnpassRess Then
+                    ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
+                    gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+                End If
+
+                If arrayLength = oldXwerte.Length Then
+
+                    'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
+
+                    If Not awinSettings.propAnpassRess Then
+                        newXwerte = oldXwerte
+                    Else
+                        For i = 0 To arrayLength - 1
+                            newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
+                        Next
+
+                        ' jetzt ggf die Reste verteilen 
+                        Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
+
+                        k = newXwerte.Length - 1
+                        While Rest <> 0
+
+                            If Rest > 0 Then
+                                newXwerte(k) = newXwerte(k) + 1
+                                Rest = Rest - 1
+                            Else
+
+                                If newXwerte(k) - 1 >= 0 Then
+                                    newXwerte(k) = newXwerte(k) - 1
+                                    Rest = Rest + 1
+                                End If
+
+                            End If
+                            k = k - 1
+                            If k < 0 Then
+                                k = newXwerte.Length - 1
+                            End If
+
+                        End While
+
+                    End If
+
+                Else
+
+                    Dim tmpSum As Double = 0
+                    For k = 0 To newXwerte.Length - 1
+
+                        If k = 0 Then
+                            ' damit ist 00:00 des Startdates gemeint 
+                            hDatum = startdate
+
+                            anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+                            'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                            'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+                        ElseIf k = newXwerte.Length - 1 Then
+                            ' damit hDatum das End-Datum um 23.00 Uhr
+
+                            anzDaysthisMonth = endedate.Day
+                            'hDatum = endedate.AddHours(23)
+                            'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                        Else
+                            hDatum = startdate
+                            anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+                            'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                        End If
+
+                        newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+                        tmpSum = tmpSum + anzDaysthisMonth
+                    Next k
+
+                    ' Kontrolle für Test ... aChck muss immer Null sein !
+                    'Dim aChck As Double = Me.dauerInDays - tmpSum
+
+
+                    ' Rest wird auf alle newXwerte verteilt
+
+                    Rest = CInt(gesBedarf - newXwerte.Sum)
+
+                    k = newXwerte.Length - 1
+                    While Rest <> 0
+                        If Rest > 0 Then
+                            newXwerte(k) = newXwerte(k) + 1
+                            Rest = Rest - 1
+                        Else
+                            If newXwerte(k) - 1 >= 0 Then
+                                newXwerte(k) = newXwerte(k) - 1
+                                Rest = Rest + 1
+                            End If
+                        End If
+                        k = k - 1
+                        If k < 0 Then
+                            k = newXwerte.Length - 1
+                        End If
+
+                    End While
+
+                End If
+
+
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' alles auf Null setzen 
+            For ix = 0 To arrayLength - 1
+                newXwerte(ix) = 0
+            Next
+        End If
+
+        berechneBedarfeNew = newXwerte
+
+    End Function
 
 End Class

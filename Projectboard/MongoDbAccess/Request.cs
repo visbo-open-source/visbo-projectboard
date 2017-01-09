@@ -36,7 +36,9 @@ namespace MongoDbAccess
         protected  IMongoDatabase Database;
         protected MongoServer Server;
         protected  IMongoCollection<clsProjektDB> CollectionProjects;
+        protected  IMongoCollection<clsProjektDB> CollectionTrashProjects;
         protected  IMongoCollection<clsConstellationDB> CollectionConstellations;
+        protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
         protected  IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
         protected  IMongoCollection<clsFilterDB> CollectionFilter;
         
@@ -45,16 +47,21 @@ namespace MongoDbAccess
             //var databaseURL = "localhost";
             if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
-                var connectionString = "mongodb://" + databaseURL + "?connectTimeoutMS=30&SocketTimeoutMS=10"; 
+
+                //var connectionString = "mongodb://" + databaseURL + "?connectTimeoutMS=30&SocketTimeoutMS=10";
+                var connectionString = "mongodb://" + databaseURL; 
+
                 //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             else
 
-
             {
 
-                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
+                // wird nicht mehr verwendet , führt ggf zu Problemen bei zu schnellem Timeout 
+                // var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
+                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
+                
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
                 
@@ -69,7 +76,9 @@ namespace MongoDbAccess
             
                       
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
+            CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
+            CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
 
@@ -274,40 +283,56 @@ namespace MongoDbAccess
               
                                        
         }
-        //************************************/
-        public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
-        {
 
+        public bool storeProjectToTrash(clsProjektDB projektDB)
+        {
             try
             {
-                storedLatest = storedLatest.ToUniversalTime();
-                storedEarliest = storedEarliest.ToUniversalTime();
-                string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
-                               
-
-                var dResult = CollectionProjects.DeleteMany<clsProjektDB>(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-                if (dResult.DeletedCount > 0 )
-                    { return true; }
-                else
-                    { return false; }
                 
+                CollectionTrashProjects.InsertOne(projektDB);
+                  
+                return true;
             }
             catch (Exception)
             {
-                
                 return false;
             }
-            
-            // das folgende geht noch nicht , wer weiss warum ? 
-            ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-            ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-            
-            
-            // alt 2.x 
-            //var query = Query<clsProjektDB>
-            //         .Where(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-            //return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
+        //************************************/
+        // darf nicht mehr verwendet werden, weil damit keine Speicherung der TimeStamps im Papierkorb verbunden ist ... 
+        ////public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
+        ////{
+
+        ////    try
+        ////    {
+        ////        storedLatest = storedLatest.ToUniversalTime();
+        ////        storedEarliest = storedEarliest.ToUniversalTime();
+        ////        string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
+                               
+
+        ////        var dResult = CollectionProjects.DeleteMany<clsProjektDB>(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
+        ////        if (dResult.DeletedCount > 0 )
+        ////            { return true; }
+        ////        else
+        ////            { return false; }
+                
+        ////    }
+        ////    catch (Exception)
+        ////    {
+                
+        ////        return false;
+        ////    }
+            
+        ////    // das folgende geht noch nicht , wer weiss warum ? 
+        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
+        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
+            
+            
+        ////    // alt 2.x 
+        ////    //var query = Query<clsProjektDB>
+        ////    //         .Where(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
+        ////    //return !CollectionProjects.Remove(query).HasLastErrorMessage;
+        ////}
 
         //************************************/
         public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored)
@@ -321,12 +346,42 @@ namespace MongoDbAccess
                 var query = Query<clsProjektDB>
                             .Where(p => (p.name == searchstr && p.timestamp == stored));
 
-                var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
                 
-                if (dResult.DeletedCount > 0)
-                { return true; }
+                var sResult = CollectionProjects.Find<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+                
+                if (sResult == null)
+                {
+                    return false;
+                }
                 else
-                { return false; }
+                {
+                    try
+                    {
+                        clsProjektDB projektDB = sResult.Single();
+                        if (storeProjectToTrash(projektDB))
+                        {
+                            // jetzt wird erst gelöscht 
+                            var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+
+                            if (dResult.DeletedCount > 0)
+                            { return true; }
+                            else
+                            { return false; }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+
+                        
+                    }
+                    catch (Exception)
+                    {
+                        return false; 
+                    }
+                                      
+                }
+                
                
             }
             catch (Exception)
@@ -339,6 +394,62 @@ namespace MongoDbAccess
             // alt: 2.x 
             //return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
+        /// <summary>
+        /// liest alle vorkommenden Namen ProjektName#VariantenName aus der Datenbank , die zum Zeitpunkt storedLatest auch in der Datenbank existiert haben 
+        /// dabei wird ein übergebener Zeitraum berücksichtigt ... also nur Projekte, die auch im Zeitraum liegen ...
+        /// </summary>
+        /// <param name="zeitraumStart"></param>
+        /// <param name="zeitraumEnde"></param>
+        /// <param name="storedEarliest"></param>
+        /// <param name="storedatOrBefore"></param>
+        /// <returns></returns>
+        public SortedList<string, string> retrieveProjectVariantNamesFromDB(DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedatOrBefore)
+        {
+            var result = new SortedList<string, string>();
+
+            // in der Datenbank sind die Zeiten als Universal time gespeichert .. 
+            // deshalb muss hier umgerechnet werden 
+            storedatOrBefore = storedatOrBefore.ToUniversalTime();
+            
+            int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
+            
+                
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore)
+                            .Select(c => c.name)
+                            .Distinct()
+                            .ToList();
+
+            foreach (string name in prequery)
+                {
+                                        
+                    try
+                    {
+
+                        if  (result.ContainsKey (name))  
+                        {
+                            // nichts tun 
+                        }
+                        else
+                        {
+                            result.Add(name, name);
+                        }
+                        
+
+                    }
+                    catch (Exception)
+                    {
+
+                        // nichts tun ...
+                    }
+
+
+                }
+          
+
+            return result;
+        }
+
 
         public SortedList<string, clsProjekt> retrieveProjectsFromDB(string projectname, string variantName, DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedEarliest, DateTime storedLatest, bool onlyLatest)
         {
@@ -450,7 +561,9 @@ namespace MongoDbAccess
 
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
                             .Where(c => c.name.Contains(searchstr))
+                            .OrderBy(c => c.variantName)
                             .Select(c => c.variantName)
+                            .ToList()
                             .Distinct();
 
             foreach (string vName in prequery)
@@ -461,7 +574,7 @@ namespace MongoDbAccess
             return result;
         }
 
-        // bringt alle vorkommenden TimeStamps zurück 
+        // bringt alle vorkommenden TimeStamps zurück , in absteigender Sortierung
         public Collection retrieveZeitstempelFromDB()
         {
             var result = new Collection();
@@ -480,8 +593,32 @@ namespace MongoDbAccess
             }
 
             return result;
+        }
+
+
+        
+        // bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+        public Collection retrieveZeitstempelFromDB(string pvName)
+        {
+            var result = new Collection();
+
+
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.name == pvName)
+                            .OrderByDescending(c => c.timestamp)
+                            .Select(c => c.timestamp)
+                            .ToList()
+                            .Distinct();
+
+            foreach (DateTime tStamp in prequery)
+            {
+                DateTime tmpStamp = tStamp.ToLocalTime();
+                result.Add(tmpStamp);
+            }
+
+            return result;
         }   
-   
+
         //
         // gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
         //
@@ -571,18 +708,61 @@ namespace MongoDbAccess
            
         }
 
+        public bool storeConstellationToTrash(clsConstellation c)
+        {
+            try
+            {
+                var cDB = new clsConstellationDB();
+                cDB.copyfrom(c);
+                cDB.Id = cDB.constellationName;
+
+                bool alreadyExisting = CollectionTrashConstellations.AsQueryable<clsConstellationDB>()
+                        .Any(p => p.constellationName == c.constellationName);
+
+                if (alreadyExisting)
+                {
+                    var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", c.constellationName);
+
+                    var rResult = CollectionTrashConstellations.ReplaceOne(filter, cDB);
+                    if (rResult.ModifiedCount > 0)
+                    { return true; }
+                    else
+                    { return false; }
+                }
+                else
+                {
+                    CollectionTrashConstellations.InsertOne(cDB);
+                    return true;
+                }
+
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
         public bool removeConstellationFromDB(clsConstellation c)
         {
             
           try 
 	        {	        
 		    // neu 3.0 
-            var dResult = CollectionConstellations.DeleteOne<clsConstellationDB>(p => (p.Id == c.constellationName));
-              if (dResult.DeletedCount >0 )
-              { return true; }
+
+              if (storeConstellationToTrash (c))
+              {
+                  var dResult = CollectionConstellations.DeleteOne<clsConstellationDB>(p => (p.Id == c.constellationName));
+                  if (dResult.DeletedCount > 0)
+                  { return true; }
+                  else
+                  { return false; }
+              }
               else
-              { return false; }
+              {
+                  return false;
+              }
             
+           
             
             // alt 2.x
             //var query = Query<clsConstellationDB>.EQ(e => e.Id, c.constellationName);
@@ -664,7 +844,7 @@ namespace MongoDbAccess
                         {
                             var c = new clsConstellation();
                             cDB.copyto(ref c);
-                            int a = c.rename(oldName, newName);
+                            int a = c.renameProject(oldName, newName);
 
                            if (a>0)
                            {

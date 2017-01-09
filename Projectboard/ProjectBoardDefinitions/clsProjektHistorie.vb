@@ -19,6 +19,47 @@
         End Set
     End Property
 
+    ''' <summary>
+    ''' gibt zurück, ob das angegebene Datum in der Projekt-Historie existiert ... 
+    ''' </summary>
+    ''' <param name="dateItem"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property contains(ByVal dateItem As Date) As Boolean
+        Get
+            contains = _liste.ContainsKey(dateItem)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' entfernt das ELement mit Datum dateItem 
+    ''' wenn es nicht existiert, wird eine Exception geworfen ... 
+    ''' </summary>
+    ''' <param name="dateItem"></param>
+    ''' <remarks></remarks>
+    Public Sub remove(ByVal dateItem As Date)
+
+        _liste.Remove(dateItem)
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt das Element zurück, das tsDate as Schlüssel hat 
+    ''' </summary>
+    ''' <param name="tsDate"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property item(ByVal tsDate As Date) As clsProjekt
+        Get
+            If _liste.ContainsKey(tsDate) Then
+                item = _liste.Item(tsDate)
+            Else
+                item = Nothing
+            End If
+        End Get
+    End Property
     Public ReadOnly Property getZeitraum As String
         Get
 
@@ -182,7 +223,6 @@
                             milestoneDate = awinSettings.nullDatum
                         End If
 
-                        
                     Else
                         ' in diesem Fall wurde kein Planungs-Stand im gesuchten Monat gefunden ...
                         If i > 0 Then
@@ -581,7 +621,9 @@
     Public ReadOnly Property ElementAt(ByVal index As Integer) As clsProjekt
         Get
             If index < 0 Or index > _liste.Count - 1 Then
-                Throw New ArgumentException("index liegt ausserhalb der zulässigen Grenzen")
+                ElementAt = Nothing
+                ' alt tk, 14.11.16
+                'Throw New ArgumentException("index liegt ausserhalb der zulässigen Grenzen")
             Else
                 ElementAt = _liste.ElementAt(index).Value
                 _currentIndex = index
@@ -684,17 +726,25 @@
     Public Sub Add(ByVal datum As Date, ByVal value As clsProjekt)
 
         Try
-            If _liste.First.Value.name <> value.name Then
-                Throw New ArgumentException _
-                    ("Projekte mit unterschiedlichen Namen können nicht in einer Projekt-Historie sein")
+
+            If _liste.Count > 0 Then
+                If _liste.First.Value.name <> value.name Then
+                    Throw New ArgumentException _
+                        ("Projekte mit unterschiedlichen Namen können nicht in einer Projekt-Historie sein")
+                Else
+                    If _liste.ContainsKey(datum) Then
+                        _liste.Remove(datum)
+                    End If
+                    _liste.Add(datum, value)
+                End If
             Else
                 _liste.Add(datum, value)
             End If
+
+
         Catch ex As Exception
             Throw New ArgumentException("es gibt keine Einträge in der Datenbank")
         End Try
-
-
 
     End Sub
 
