@@ -313,13 +313,11 @@ Public Class clsProjekt
                             If Me.ampelStatus = .ampelStatus And _
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then
 
-                                If Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) And _
+                                If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And _
                                    Me.Erloes = .Erloes Then
 
                                     If Me.businessUnit = .businessUnit And _
                                         Me.complexity = .complexity And _
-                                        Me.earliestStartDate = .earliestStartDate And _
-                                        Me.latestStartDate = .latestStartDate And _
                                         Me.Status = .Status And _
                                         Me.StrategicFit = .StrategicFit And _
                                         Me.Risiko = .Risiko And _
@@ -328,6 +326,10 @@ Public Class clsProjekt
                                         Me.leadPerson = .leadPerson Then
 
                                         stillOK = True
+
+                                        ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
+                                        'Me.earliestStartDate = .earliestStartDate And _
+                                        'Me.latestStartDate = .latestStartDate And _
 
                                     End If
 
@@ -1657,9 +1659,9 @@ Public Class clsProjekt
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
-                If Not currentConstellation.EndsWith("(*)") Then
-                    currentConstellation = currentConstellation & "(*)"
-                End If
+                'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+                '    currentConstellationName = currentConstellationName & "(*)"
+                'End If
 
 
             ElseIf _startDate = NullDatum Then
@@ -1667,9 +1669,9 @@ Public Class clsProjekt
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 If differenzInTagen <> 0 Then
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    If Not currentConstellation.EndsWith("(*)") Then
-                        currentConstellation = currentConstellation & "(*)"
-                    End If
+                    'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
+                    '    currentConstellationName = currentConstellationName & "(*)"
+                    'End If
                 End If
             ElseIf _Status <> ProjektStatus(0) Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
@@ -1931,6 +1933,7 @@ Public Class clsProjekt
             .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes
             .description = Me.description
+            .variantDescription = Me.variantDescription
             .volume = Me.volume
             .complexity = Me.complexity
             .businessUnit = Me.businessUnit
@@ -1949,9 +1952,86 @@ Public Class clsProjekt
         ' jetzt wird die Hierarchie kopiert 
         Call copyHryTo(newproject)
 
+        ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
+        Try
+            With newproject
+                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
+                    .customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
+                    .customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
+                    .customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+
+            End With
+        Catch ex As Exception
+
+        End Try
 
 
     End Sub
+
+    ''' <summary>
+    ''' sogenannte Heil-Methode, um Varianten, die beim Erzeugen ihre CustomFields nicht mitbekommen haben (der Fehler ist inzwischen behoben) 
+    ''' diese CustomFileds wieder mitzugeben
+    ''' </summary>
+    ''' <param name="baseProject"></param>
+    ''' <remarks></remarks>
+    Public Sub copyCustomFieldsFrom(ByVal baseProject As clsProjekt)
+
+        ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
+        Try
+
+            ' wenn das Projekt keine Custom-Fields hat 
+            If Me.customStringFields.Count = 0 And _
+                Me.customDblFields.Count = 0 And _
+                Me.customBoolFields.Count = 0 Then
+
+                For Each kvp As KeyValuePair(Of Integer, String) In baseProject.customStringFields
+                    Me.customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Double) In baseProject.customDblFields
+                    Me.customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In baseProject.customBoolFields
+                    Me.customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' gibt die Anzahl insgesamt definierter CustomFields zurück  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomFieldsCount() As Integer
+        Get
+
+            Dim tmpResult As Integer = Me.customStringFields.Count + _
+                                        Me.customDblFields.Count + _
+                                        Me.customBoolFields.Count
+
+            getCustomFieldsCount = tmpResult
+
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt die Bedarfe (Phasen / Rollen / Kostenarten / Ergebnis pro Monat zurück 
@@ -2295,7 +2375,7 @@ Public Class clsProjekt
             Dim projektDauer As Integer = Me.anzahlRasterElemente
             Dim start As Integer = Me.Start
 
-            
+
             If projektDauer > 0 Then
                 ReDim valueArray(projektDauer - 1)
                 valueArray = Me.getAlleRessourcen

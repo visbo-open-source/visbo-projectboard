@@ -87,6 +87,9 @@ Public Class frmSettings
         If rdbPWD.Checked Then
             pptAPP.ActivePresentation.Tags.Add(protectionTag, "PWD")
             pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text)
+        ElseIf rdbDBLogin.Checked Then
+            pptAPP.ActivePresentation.Tags.Add(protectionTag, "DATABASE")
+            pptAPP.ActivePresentation.Tags.Add(protectionValue, "")
         Else
             pptAPP.ActivePresentation.Tags.Add(protectionTag, "COMPUTER")
             pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text & "\" & frmProtectField2.Text)
@@ -98,18 +101,45 @@ Public Class frmSettings
 
     Private Sub rdbPWD_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPWD.CheckedChanged
         If rdbPWD.Checked = True Then
+
             lblProtectField1.Text = "Passwort:"
+            lblProtectField1.Visible = True
+            frmProtectField1.Visible = True
 
             lblProtectField2.Visible = False
             frmProtectField2.Visible = False
             frmProtectField2.Text = ""
-        Else
-            lblProtectField1.Text = "Domain-Name:"
+        
+        End If
+    End Sub
+
+    Private Sub rdbDBLogin_CheckedChanged(sender As Object, e As EventArgs) Handles rdbDBLogin.CheckedChanged
+
+        If rdbDBLogin.Checked = True Then
+            lblProtectField1.Text = ""
+            lblProtectField1.Visible = False
+            frmProtectField1.Visible = False
+
+            lblProtectField2.Visible = False
+            frmProtectField2.Visible = False
+            frmProtectField2.Text = ""
+        End If
+
+    End Sub
+
+    Private Sub rdbUserName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbUserName.CheckedChanged
+
+        If rdbUserName.Checked = True Then
+            lblProtectField1.Text = ""
+            lblProtectField1.Visible = True
+            frmProtectField1.Visible = True
 
             lblProtectField2.Visible = True
-
             frmProtectField2.Visible = True
             frmProtectField2.Text = ""
+
+
+            frmProtectField1.PasswordChar = ""
         End If
     End Sub
 
@@ -220,15 +250,10 @@ Public Class frmSettings
         Call changeLanguageInAnnotations()
     End Sub
 
-    Private Sub rdbUserName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbUserName.CheckedChanged
-
-        If rdbUserName.Checked = True Then
-            frmProtectField1.PasswordChar = ""
-        End If
-    End Sub
-
 
     Private Sub TabPage4_Click(sender As Object, e As EventArgs) Handles TabPage4.Click
         Call MsgBox("jetzt in TabPage4")
     End Sub
+
+    
 End Class

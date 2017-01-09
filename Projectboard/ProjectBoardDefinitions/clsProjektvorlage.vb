@@ -1237,6 +1237,27 @@
         ' jetzt wird die Hierarchie kopiert 
         Call copyHryTo(newproject)
 
+        ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
+        Try
+            With newproject
+                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
+                    .customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
+                    .customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
+                    .customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+
+            End With
+        Catch ex As Exception
+
+        End Try
+        
+
 
     End Sub
 

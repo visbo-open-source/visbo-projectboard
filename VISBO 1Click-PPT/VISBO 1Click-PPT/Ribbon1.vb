@@ -48,6 +48,7 @@ Public Class Ribbon1
                     Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
 
                     If hproj.name <> "" And Not IsNothing(hproj.name) Then
+                        reportAuswahl.calledFrom = "MS Project"
                         reportAuswahl.hproj = hproj
                         reportAuswahl.calledFrom = "MS Project"
                         returnvalue = reportAuswahl.ShowDialog

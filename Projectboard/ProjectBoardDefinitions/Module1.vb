@@ -74,7 +74,7 @@ Public Module Module1
 
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
-    Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
+    Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
@@ -198,6 +198,12 @@ Public Module Module1
 
    
     Public Const maxProjektdauer As Integer = 60
+
+    Public Enum ptSzenarioConsider
+        all = 0
+        show = 1
+        noshow = 2
+    End Enum
 
     ' welche Art von CustomFields gibt es 
     ' kann später ggf erweitert werden auf StrArray, DblArray, etc
@@ -453,11 +459,10 @@ Public Module Module1
         delFromSession = 1
         loadPVS = 2
         activateV = 3
-        definePortfolioDB = 4
-        definePortfolioSE = 5
         loadPV = 6
         deleteV = 7
         chgInSession = 8
+        delAllExceptFromDB = 9
     End Enum
 
     ''' <summary>
@@ -1789,7 +1794,7 @@ Public Module Module1
 
 
     Public Function magicBoardIstFrei(ByVal mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
-                                      ByVal spalte As Integer, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
+                                      ByVal startDate As Date, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
         Dim istfrei = True
         Dim ix As Integer = 1
         Dim anzahlP As Integer = ShowProjekte.Count
@@ -1800,12 +1805,14 @@ Public Module Module1
             If pname <> kvp.Key And Not mycollection.Contains(kvp.Key) And kvp.Value.shpUID <> "" Then
                 With kvp.Value
                     If .tfZeile >= zeile And .tfZeile <= zeile + anzahlZeilen - 1 Then
-                        If spalte <= .tfspalte Then
-                            If spalte + laenge - 1 >= .tfspalte Then
+                        If startDate.Date <= .startDate.Date Then
+                            If startDate.AddDays(laenge - 1).Date > .startDate.Date Then
                                 istfrei = False
                                 Exit For
+                            Else
+                                istfrei = True
                             End If
-                        ElseIf spalte <= .tfspalte + .anzahlRasterElemente - 1 Then
+                        ElseIf startDate < .endeDate Then
                             istfrei = False
                             Exit For
                         End If
@@ -1837,7 +1844,7 @@ Public Module Module1
             '    mycollection.Add(pname, pname)
             'End If
 
-            If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
+            If Not magicBoardIstFrei(mycollection, pname, zeile, hproj.startDate, hproj.dauerInDays, anzahlzeilen) Then
                 tryoben = zeile - 1
                 tryunten = zeile + 1
 
@@ -1845,7 +1852,7 @@ Public Module Module1
                 zeile = tryunten
                 lookDown = True
 
-                While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
+                While Not magicBoardIstFrei(mycollection, pname, zeile, hproj.startDate, hproj.dauerInDays, anzahlzeilen)
                     'lookDown = Not lookDown
                     If lookDown Then
                         tryunten = tryunten + 1
@@ -3098,7 +3105,6 @@ Public Module Module1
 
 
     End Sub
-
 
 
     Public Sub PPTstarten()

@@ -225,7 +225,7 @@ Public Class frmSelectPPTTempl
                 currentReportProfil.Ampeln = .mppShowAmpel
                 currentReportProfil.UseAbbreviation = .mppUseAbbreviation
 
-                currentReportProfil.projectsWithNoMPmayPass = .mppShowPhName
+                currentReportProfil.PhName = .mppShowPhName
                 currentReportProfil.PhDate = .mppShowPhDate
                 currentReportProfil.MSName = .mppShowMsName
                 currentReportProfil.MSDate = .mppShowMsDate
@@ -326,7 +326,7 @@ Public Class frmSelectPPTTempl
                 currentReportProfil.Ampeln = .mppShowAmpel
                 currentReportProfil.UseAbbreviation = .mppUseAbbreviation
 
-                currentReportProfil.projectsWithNoMPmayPass = .mppShowPhName
+                currentReportProfil.PhName = .mppShowPhName
                 currentReportProfil.PhDate = .mppShowPhDate
                 currentReportProfil.MSName = .mppShowMsName
                 currentReportProfil.MSDate = .mppShowMsDate

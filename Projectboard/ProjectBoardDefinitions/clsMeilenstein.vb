@@ -645,6 +645,9 @@ Public Class clsMeilenstein
         End If
 
         Try
+            If _bewertungen.ContainsKey(key) Then
+                _bewertungen.Remove(key)
+            End If
             _bewertungen.Add(key, b)
         Catch ex As Exception
             Throw New ArgumentException("Bewertung wurde bereites vergeben ..")

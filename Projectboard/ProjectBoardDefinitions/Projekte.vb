@@ -7127,7 +7127,6 @@ Public Module Projekte
         Dim pstart As Integer
         Dim mycollection As New Collection
         'Dim catName As String
-        Dim pname As String = hproj.name
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
         Dim kennung As String
@@ -7476,8 +7475,7 @@ Public Module Projekte
 
         Dim pstart As Integer
         Dim mycollection As New Collection
-        'Dim catName As String
-        Dim pname As String = hproj.name
+        
         Dim minscale As Double
 
         Dim titelTeile(1) As String
@@ -7490,7 +7488,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
 
 
@@ -7545,7 +7543,7 @@ Public Module Projekte
 
 
 
-        titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
@@ -8717,6 +8715,7 @@ Public Module Projekte
                     wsfound = True
                     'Call MsgBox("Es wurden " & k - 1 & " Charts eingefügt")
                 Catch ex As Exception
+                    appInstance.EnableEvents = True
                     xlsCockpits.Close(SaveChanges:=False)
                     Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
                 End Try
@@ -8730,6 +8729,7 @@ Public Module Projekte
             End If
 
         Catch ex As Exception
+            appInstance.EnableEvents = True
             xlsCockpits.Close(SaveChanges:=False)
             Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
         End Try
@@ -10403,8 +10403,10 @@ Public Module Projekte
 
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
         If roentgenBlick.isOn Then
+
             With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
                 .range(.cells(2, 1), .cells(1000, 200)).clearcontents()
+
             End With
         End If
 
@@ -10615,11 +10617,11 @@ Public Module Projekte
 
                     ' Änderung THOMAS Start 
                     If .Status = ProjektStatus(0) Then
-                        .startDate = kvp.Value.Start
-                    ElseIf .startDate <> kvp.Value.Start Then
+                        .startDate = kvp.Value.start
+                    ElseIf .startDate <> kvp.Value.start Then
                         ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
                         successMessage = successMessage & vbLf & vbLf & loadDateMessage & vbLf & _
-                                            "        " & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                                            "        " & hproj.name & ": " & kvp.Value.start.ToShortDateString
                     End If
                     ' Änderung THOMAS Ende 
 
@@ -10666,7 +10668,7 @@ Public Module Projekte
         End If
 
         ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-        currentConstellation = constellationName
+        currentConstellationName = constellationName
 
 
     End Sub
@@ -10917,7 +10919,7 @@ Public Module Projekte
 
         If anzOptimierungen > 0 Then
             ' wieder den alten Zustand herstellen 
-            Call loadSessionConstellation(autoSzenarioNamen(0), False, False, False)
+            Call loadSessionConstellation(autoSzenarioNamen(0), False, False, True)
         Else
             ' es hat sich eh nichts geändert ... 
             'Call loadSessionConstellation(autoSzenarioNamen(0), False, False)
@@ -10961,7 +10963,7 @@ Public Module Projekte
 
         If worker.CancellationPending Then
             e.Cancel = True
-            e.Result = "Berichterstellung abgebrochen ..."
+            e.Result = "Optimierung  abgebrochen ..."
             Exit Sub
         End If
 
@@ -11089,7 +11091,7 @@ Public Module Projekte
 
                 If worker.CancellationPending Then
                     e.Cancel = True
-                    e.Result = "Berichterstellung abgebrochen ..."
+                    e.Result = "Optimierung  abgebrochen ..."
                     Exit For
                 End If
 
@@ -16905,106 +16907,115 @@ Public Module Projekte
 
                 End If
 
-                ' tk: 14.10.16 Varianten Beschreibung wird geschrieben 
-                If Not IsNothing(hproj.variantDescription) Then
+                Try   ' Try catch, da in manchen Projekte bzw. Steckbriefen keine Variant_Description vorhanden
 
-                    .Range("Variant_Description").Value = hproj.variantDescription
-                    rng = .Range("Variant_Description")
-                    With rng
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                        .IndentLevel = 1
-                        .WrapText = True
-                    End With
+                    ' tk: 14.10.16 Varianten Beschreibung wird geschrieben 
+                    If Not IsNothing(hproj.variantDescription) Then
 
-                End If
+                        .Range("Variant_Description").Value = hproj.variantDescription
+                        rng = .Range("Variant_Description")
+                        With rng
+                            .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                            .IndentLevel = 1
+                            .WrapText = True
+                        End With
 
+                    End If
+                Catch ex As Exception
 
-                ' jetzt werden die weiteren Custom Fields weggeschrieben ....
-                ' und zwar immer in der Form <name> <Wert> <type>
+                End Try
 
-                rng = .Range("IndivName2")
-                Dim startZeileOfCFs As Integer = rng.Row
-                Dim zeilenoffset As Integer = 0
+                Try
+                    ' jetzt werden die weiteren Custom Fields weggeschrieben ....
+                    ' und zwar immer in der Form <name> <Wert> <type>
 
-                If customFieldDefinitions.count > 0 Then
-                    ' nur dann kann es Custom Fields geben 
+                    rng = .Range("IndivName2")
+                    Dim startZeileOfCFs As Integer = rng.Row
+                    Dim zeilenoffset As Integer = 0
 
-
-
-                    With hproj
-
-                        ' jetzt alle String Fields rausschreiben 
-                        For i As Integer = 1 To .customStringFields.Count
-                            Dim uid As Integer = .customStringFields.ElementAt(i - 1).Key
-                            Dim cfValue As String = .customStringFields.ElementAt(i - 1).Value
-
-                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
-                            Dim cfName As String = customFieldDefinitions.getName(uid)
-                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
-
-                            rng.Offset(zeilenoffset, -1).Value = cfName
-                            rng.Offset(zeilenoffset, 0).Value = cfValue
-                            rng.Offset(zeilenoffset, 0).NumberFormat = "@"
-                            rng.Offset(zeilenoffset, 2).Value = "String"
+                    If customFieldDefinitions.count > 0 Then
+                        ' nur dann kann es Custom Fields geben 
 
 
-                            zeilenoffset = zeilenoffset + 1
-                        Next
 
-                        ' jetzt alle Double Fields rausschreiben 
-                        For i As Integer = 1 To .customDblFields.Count
-                            Dim uid As Integer = .customDblFields.ElementAt(i - 1).Key
-                            Dim cfValue As Double = .customDblFields.ElementAt(i - 1).Value
+                        With hproj
 
-                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
-                            Dim cfName As String = customFieldDefinitions.getName(uid)
-                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+                            ' jetzt alle String Fields rausschreiben 
+                            For i As Integer = 1 To .customStringFields.Count
+                                Dim uid As Integer = .customStringFields.ElementAt(i - 1).Key
+                                Dim cfValue As String = .customStringFields.ElementAt(i - 1).Value
 
-                            rng.Offset(zeilenoffset, -1).Value = cfName
-                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
-                            rng.Offset(zeilenoffset, 0).NumberFormat = "#0.00"
-                            rng.Offset(zeilenoffset, 2).Value = "Zahl"
+                                ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                                Dim cfName As String = customFieldDefinitions.getName(uid)
+                                Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
 
-                            zeilenoffset = zeilenoffset + 1
-                        Next
-
-                        ' jetzt alle Flag Fields rausschreiben 
-                        For i As Integer = 1 To .customBoolFields.Count
-                            Dim uid As Integer = .customBoolFields.ElementAt(i - 1).Key
-                            Dim cfValue As Boolean = .customBoolFields.ElementAt(i - 1).Value
-
-                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
-                            Dim cfName As String = customFieldDefinitions.getName(uid)
-                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
-
-                            rng.Offset(zeilenoffset, -1).Value = cfName
-                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
-                            rng.Offset(zeilenoffset, 2).Value = "Flag"
-
-                            zeilenoffset = zeilenoffset + 1
-                        Next
-
-                    End With
-                    
-
-                End If
-
-                ' jetzt werden noch die Validation. also Auswahl aus Liste gesetzt ...
-                For iz As Integer = startZeileOfCFs To startZeileOfCFs + zeilenoffset + customFieldDefinitions.count
-                    Try
-                        rng.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                       Formula1:="=Custom_Fields")
-                    Catch ex As Exception
-
-                    End Try
-                Next
-                
+                                rng.Offset(zeilenoffset, -1).Value = cfName
+                                rng.Offset(zeilenoffset, 0).Value = cfValue
+                                rng.Offset(zeilenoffset, 0).NumberFormat = "@"
+                                rng.Offset(zeilenoffset, 2).Value = "String"
 
 
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                                zeilenoffset = zeilenoffset + 1
+                            Next
+
+                            ' jetzt alle Double Fields rausschreiben 
+                            For i As Integer = 1 To .customDblFields.Count
+                                Dim uid As Integer = .customDblFields.ElementAt(i - 1).Key
+                                Dim cfValue As Double = .customDblFields.ElementAt(i - 1).Value
+
+                                ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                                Dim cfName As String = customFieldDefinitions.getName(uid)
+                                Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                                rng.Offset(zeilenoffset, -1).Value = cfName
+                                rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                                rng.Offset(zeilenoffset, 0).NumberFormat = "#0.00"
+                                rng.Offset(zeilenoffset, 2).Value = "Zahl"
+
+                                zeilenoffset = zeilenoffset + 1
+                            Next
+
+                            ' jetzt alle Flag Fields rausschreiben 
+                            For i As Integer = 1 To .customBoolFields.Count
+                                Dim uid As Integer = .customBoolFields.ElementAt(i - 1).Key
+                                Dim cfValue As Boolean = .customBoolFields.ElementAt(i - 1).Value
+
+                                ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                                Dim cfName As String = customFieldDefinitions.getName(uid)
+                                Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                                rng.Offset(zeilenoffset, -1).Value = cfName
+                                rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                                rng.Offset(zeilenoffset, 2).Value = "Flag"
+
+                                zeilenoffset = zeilenoffset + 1
+                            Next
+
+                        End With
+
+                    End If
 
 
+
+                    ' jetzt werden noch die Validation. also Auswahl aus Liste gesetzt ...
+                    For iz As Integer = startZeileOfCFs To startZeileOfCFs + zeilenoffset + customFieldDefinitions.count
+                        Try
+                            rng.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=Custom_Fields")
+                        Catch ex As Exception
+
+                        End Try
+                    Next
+
+
+
+                    '' Blattschutz setzen
+                    '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+
+                Catch ex As Exception
+
+                End Try
 
 
             End With
@@ -18094,17 +18105,17 @@ Public Module Projekte
                 spalte = CInt(DateDiff(DateInterval.Month, StartofCalendar, datum) + 1)
             Case "PW"
                 Call MsgBox("noch nicht implementiert")
-                spalte = 1
+                spalte = 0
             Case "PT"
                 Call MsgBox("noch nicht implementiert")
-                spalte = 1
+                spalte = 0
         End Select
 
-        If spalte <= 0 Then
-            getColumnOfDate = 1
-        Else
-            getColumnOfDate = spalte
+        If spalte < 1 Then
+            Throw New ArgumentException("Datum kann nicht vor dem Start des Kalenders liegen")
         End If
+
+        getColumnOfDate = spalte
 
     End Function
 
@@ -19611,118 +19622,52 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' speichert die aktuelle Konstellation in currentProjektListe in eine Konstellation
-    ''' wenn die fullProjetNames vom Typ Collection übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen 
+    ''' speichert die aktuelle Konstellation in AlleProjekte in eine Konstellation
+    ''' wenn die fullProjectNames vom Typ Collection übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen
+    ''' wenn takeWhat angegeben wird (vom Typ Enumeration ptSzenarioConsider) dann wird das entsprechend dargestellt 
     ''' </summary>
     ''' <param name="constellationName"></param>
     ''' <remarks></remarks>
     Public Sub storeSessionConstellation(ByVal constellationName As String, _
-                                         Optional ByVal fullProjectNames As Collection = Nothing)
+                                         Optional ByVal fullProjectNames As SortedList(Of String, String) = Nothing, _
+                                         Optional ByVal takeWhat As Integer = ptSzenarioConsider.all)
 
-        'Dim request As New Request(awinSettings.databaseName)
+        Dim newC As clsConstellation
+
+        ' es soll nur dann etwas gemacht werden, wenn AlleProjekte überhaupt Projekte enthält ... 
+
+        If AlleProjekte.Count = 0 Then
+            ' nichts tun 
+        Else
+
+            ' prüfen, ob diese Constellation bereits existiert ..
+            If projectConstellations.Contains(constellationName) Then
+
+                Try
+                    projectConstellations.Remove(constellationName)
+                Catch ex As Exception
+
+                End Try
+
+            End If
 
 
-        ' prüfen, ob diese Constellation bereits existiert ..
-        If projectConstellations.Contains(constellationName) Then
+            newC = New clsConstellation(projektListe:=AlleProjekte, _
+                                            fullProjectNames:=Nothing, _
+                                            cName:=constellationName, _
+                                            takeWhat:=takeWhat)
+
 
             Try
-                projectConstellations.Remove(constellationName)
-            Catch ex As Exception
+                projectConstellations.Add(newC)
 
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
             End Try
 
         End If
 
-        Dim newC As New clsConstellation
-        With newC
-            .constellationName = constellationName
-        End With
-
-        Dim newConstellationItem As clsConstellationItem
-
-        If Not IsNothing(fullProjectNames) Then
-            For Each fullName As String In fullProjectNames
-
-                Dim hproj As clsProjekt = AlleProjekte.getProject(fullName)
-
-                If Not IsNothing(hproj) Then
-                    newConstellationItem = New clsConstellationItem
-
-                    With newConstellationItem
-                        .projectName = hproj.name
-                        .variantName = hproj.variantName
-                        .zeile = 0
-                        .Start = hproj.startDate
-
-                        If ShowProjekte.contains(.projectName) Then
-
-                            Dim shownProject As clsProjekt = ShowProjekte.getProject(.projectName)
-
-                            If shownProject.variantName = .variantName Then
-                                .show = True
-                                .zeile = shownProject.tfZeile
-                            Else
-                                .show = False
-                            End If
-
-                        Else
-                            .show = False
-                        End If
-                        
-
-                    End With
-
-                    newC.Add(newConstellationItem)
-
-                End If
-                
-            Next
-        Else
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
-
-                newConstellationItem = New clsConstellationItem
-
-                With newConstellationItem
-                    .projectName = kvp.Value.name
-                    .variantName = kvp.Value.variantName
-                    .zeile = 0
-                    .Start = kvp.Value.startDate
-
-                    If ShowProjekte.contains(.projectName) Then
-
-                        Dim shownProject As clsProjekt = ShowProjekte.getProject(.projectName)
-
-                        If shownProject.variantName = .variantName Then
-                            .show = True
-                            ' Coord(0) enthält Top - Position des Shapes 
-                            .zeile = calcYCoordToZeile(projectboardShapes.getCoord(shownProject.name)(0))
-                            If .zeile < 2 Then
-                                .zeile = 0
-                            End If
-                        Else
-                            .show = False
-                        End If
-
-                    Else
-                        .show = False
-                    End If
-
-                End With
-
-                newC.Add(newConstellationItem)
-
-            Next
-        End If
-
-
-
-        Try
-            projectConstellations.Add(newC)
-
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-        End Try
-
+        
 
 
 

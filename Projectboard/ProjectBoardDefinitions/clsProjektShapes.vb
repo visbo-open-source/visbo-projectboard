@@ -880,7 +880,7 @@ Public Class clsProjektShapes
 
                         ' Platz schaffen auf der Projekt-Tafel
                         If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                            spalte:=hproj.Start, laenge:=hproj.anzahlRasterElemente, _
+                                            startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
                                             anzahlZeilen:=anzahlZeilen) Then
 
                             If curCoord(0) < oldCoord(0) Then
@@ -1226,7 +1226,7 @@ Public Class clsProjektShapes
                         Dim tmpCollection As New Collection
                         Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
                         If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                            spalte:=hproj.Start, laenge:=hproj.anzahlRasterElemente, _
+                                            startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
                                             anzahlZeilen:=anzahlZeilen) Then
 
                             If curCoord(0) < oldCoord(0) Then

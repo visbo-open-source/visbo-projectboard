@@ -434,6 +434,7 @@
     <None Include="Resources\selection_delete.png" />
   </ItemGroup>
   <ItemGroup>
+
     <None Include="Resources\funnel_add.png" />
   </ItemGroup>
   <ItemGroup>
@@ -464,6 +465,22 @@
     <None Include="Resources\replace2.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\gear.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte_finish2.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-ungecheckte Projekte.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nur-gecheckte Projekte.jpg" />
     <COMReference Include="Microsoft.Office.Core">
       <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
       <VersionMajor>2</VersionMajor>
@@ -500,6 +517,8 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

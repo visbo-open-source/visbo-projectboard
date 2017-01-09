@@ -20,6 +20,31 @@
     End Property
 
     ''' <summary>
+    ''' gibt zurück, ob das angegebene Datum in der Projekt-Historie existiert ... 
+    ''' </summary>
+    ''' <param name="dateItem"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property contains(ByVal dateItem As Date) As Boolean
+        Get
+            contains = _liste.ContainsKey(dateItem)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' entfernt das ELement mit Datum dateItem 
+    ''' wenn es nicht existiert, wird eine Exception geworfen ... 
+    ''' </summary>
+    ''' <param name="dateItem"></param>
+    ''' <remarks></remarks>
+    Public Sub remove(ByVal dateItem As Date)
+
+        _liste.Remove(dateItem)
+
+    End Sub
+
+    ''' <summary>
     ''' gibt das Element zurück, das tsDate as Schlüssel hat 
     ''' </summary>
     ''' <param name="tsDate"></param>
