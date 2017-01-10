@@ -9400,7 +9400,24 @@ Imports System.Windows
 
     End Sub
 
+    Public Sub PTCreateReportGenTemplate(control As IRibbonControl)
 
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        If AlleProjekte.Count > 0 Then
+
+            Call createReportGenTemplate()
+            Call awinDeSelect()
+        Else
+            Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
+        End If
+
+
+        enableOnUpdate = True
+
+    End Sub
 #End Region
 
 #Region "Hilfsprogramme"

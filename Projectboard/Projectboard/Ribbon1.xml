@@ -138,6 +138,7 @@
           <!--<button id="PT1G1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
           <button id="PT1G1B4" label="akt. ReportProfil speichern" onAction="PTStoreCurReportProfil" supertip ="Es wird das aktuelle ReportProfil in der XML-Datei mit angegebenen Namen gespeichert"/>
           <button id="PT1G1B5" label="Report Profil ausführen" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
+          <button id="PT1G1B6" label="ReportGenTemplate erstellen" onAction="PTCreateReportGenTemplate" supertip ="Es wird ein Template erstellt für die InputDatei, die den Batch-Report triggert"/>
         </group>
       </tab>
       <!--

@@ -23,6 +23,22 @@ Module Module1
             Dim inputfile As String = args(0)
             Dim username As String = args(1)
             Dim password As String = args(2)
+            Dim sprache As String = args(3)
+            Select Case sprache
+
+                Case ReportLang(PTSprache.deutsch).Name
+                    repCult = ReportLang(PTSprache.deutsch)
+                Case ReportLang(PTSprache.englisch).Name
+                    repCult = ReportLang(PTSprache.englisch)
+                Case ReportLang(PTSprache.französisch).Name
+                    repCult = ReportLang(PTSprache.französisch)
+                Case ReportLang(PTSprache.spanisch).Name
+                    repCult = ReportLang(PTSprache.spanisch)
+                Case Else
+                   repCult = ReportLang(PTSprache.deutsch)
+            End Select
+
+            awinSettings.ReportLanguage = repCult.Name
 
             Dim currentBatchfile As String
 

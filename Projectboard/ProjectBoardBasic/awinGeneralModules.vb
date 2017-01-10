@@ -876,10 +876,11 @@ Public Module awinGeneralModules
             Try
                 ''repCult = CultureInfo.CurrentCulture
                 'repCult = ReportLang(PTSprache.englisch)
-                repCult = ReportLang(PTSprache.deutsch)
+                'repCult = ReportLang(PTSprache.deutsch)
 
+                'awinSettings.ReportLanguage = repCult.Name
 
-                repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+                repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
 
                 Call setLanguageMessages()
 
@@ -12645,6 +12646,315 @@ Public Module awinGeneralModules
 
 
     End Sub
+    ''' <summary>
+    ''' erstellt die Vorlage für die InputDatei des Batch-Report
+    ''' Input-Tabelle wird erzeugt, wie vom VISBO ReportGen erwartet
+    ''' ReportProfile - Tabelle wird bestückt aus den vorhandenen ReportProfilen in Directory ReportProfile
+    ''' ProjekteSzenarien - Tabelle wird bestückt aus Liste AlleProjekte (d.h. es müssen Projekte oder Szenarien geladen sein
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub createReportGenTemplate()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim tmpRange As Excel.Range
+
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+            'appInstance.Workbooks.Open(awinPath & requirementsOrdner & excelExportVorlage)
+            appInstance.Workbooks.Add()
+
+
+        Catch ex As Exception
+            appInstance.EnableEvents = formerEE
+            enableOnUpdate = True
+            Throw New ArgumentException("Excel Export nicht gefunden - Abbruch")
+        End Try
+
+      
+       
+        Dim wsName As Excel.Worksheet
+        appInstance.Worksheets.Add()
+        wsName = CType(appInstance.ActiveSheet, _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+        wsName.Name = "ProjekteSzenarien"
+
+        zeile = 1
+        spalte = 1
+
+
+        Dim anzahlProjekte As Integer = AlleProjekte.Count
+
+        With wsName
+            ' jetzt werden alle Spalten auf Breite 25 gesetzt 
+            tmpRange = CType(.Range(.Cells(zeile, spalte), .Cells(zeile, spalte).offset(0, 200)), Excel.Range)
+            tmpRange.ColumnWidth = 25
+
+
+            ' jetzt wird der Header geschrieben 
+            With CType(.Cells(zeile, spalte), Excel.Range)
+                .Value = "Projekte "
+                With .Font
+                    .Name = "Arial"
+                    .FontStyle = "Fett"
+                    .Size = 11
+                    .Strikethrough = False
+                    .Superscript = False
+                    .Subscript = False
+                    .OutlineFont = False
+                    .Shadow = False
+                End With
+            End With
+
+            With CType(.Cells(zeile, spalte + 1), Excel.Range)
+                .Value = "Varianten"
+                With .Font
+                    .Name = "Arial"
+                    .FontStyle = "Fett"
+                    .Size = 11
+                    .Strikethrough = False
+                    .Superscript = False
+                    .Subscript = False
+                    .OutlineFont = False
+                    .Shadow = False
+                End With
+            End With
+
+            spalte = spalte + 1
+        End With
+
+
+        zeile = 2
+        spalte = 1
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+
+            Dim projName As String = kvp.Value.name
+            Dim variantName As String = kvp.Value.variantName
+
+            With wsName
+
+
+                ' Name schreiben 
+                CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Value.name
+
+                ' Varianten-Name schreiben 
+                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.variantName
+
+
+
+            End With
+
+            zeile = zeile + 1
+            spalte = 1
+
+        Next
+
+
+        zeile = zeile + 1   ' eine Leerzeile
+        spalte = 1
+        With wsName
+            With CType(.Cells(zeile, spalte), Excel.Range)
+                .Value = "Szenarien"
+                With .Font
+                    .Name = "Arial"
+                    .FontStyle = "Fett"
+                    .Size = 11
+                    .Strikethrough = False
+                    .Superscript = False
+                    .Subscript = False
+                    .OutlineFont = False
+                    .Shadow = False
+                End With
+            End With
+        End With
+
+        zeile = zeile + 1   ' eine Leerzeile
+        spalte = 1
+
+        ' alle möglichen Szenario-Namen eintragen
+        For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+
+            Dim szenarioName As String = kvp.Value.constellationName
+
+            With wsName
+
+
+                ' SzenarioName schreiben 
+                CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Value.constellationName
+
+            End With
+
+            zeile = zeile + 1
+            spalte = 1
+
+        Next
+
+        Dim wsReportProfile As Excel.Worksheet
+        appInstance.Worksheets.Add()
+        wsReportProfile = CType(appInstance.ActiveSheet, _
+                                              Global.Microsoft.Office.Interop.Excel.Worksheet)
+        wsReportProfile.Name = "ReportProfile"
+
+        zeile = 1
+        spalte = 1
+
+        With wsReportProfile
+
+            ' jetzt wird der Header geschrieben 
+            With CType(.Cells(zeile, spalte), Excel.Range)
+                .ColumnWidth = 40
+                .Value = "ReportProfile"
+                With .Font
+                    .Name = "Arial"
+                    .FontStyle = "Fett"
+                    .Size = 11
+                    .Strikethrough = False
+                    .Superscript = False
+                    .Subscript = False
+                    .OutlineFont = False
+                    .Shadow = False
+                End With
+            End With
+
+        End With
+
+        zeile = 2
+        spalte = 1
+
+        Dim dateiName As String = ""
+
+        Try
+
+            With wsReportProfile
+
+                Dim i As Integer
+                Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, ReportProfileOrdner)
+
+                ' ReportProfile vom Directory lesen
+                Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+
+                ' und in das Excel-File eintragen
+                For i = 1 To listOfVorlagen.Count
+
+                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    CType(.Cells(zeile, spalte), Excel.Range).Value = dateiName
+                    zeile = zeile + 1
+
+                Next i
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+        Dim wsInput As Excel.Worksheet
+        appInstance.Worksheets.Add()
+        wsInput = CType(appInstance.ActiveSheet, _
+                                              Global.Microsoft.Office.Interop.Excel.Worksheet)
+        wsInput.Name = "Input"
+
+        zeile = 1
+        spalte = 1
+
+        With wsInput
+            ' jetzt werden alle Spalten auf Breite 40 gesetzt 
+            tmpRange = CType(.Range(.Cells(zeile, spalte), .Cells(zeile, spalte).offset(0, 200)), Excel.Range)
+            With tmpRange
+                .RowHeight = 20
+                .HorizontalAlignment = XlHAlign.xlHAlignCenter
+                .VerticalAlignment = XlVAlign.xlVAlignCenter
+
+                With .Font
+                    .Name = "Arial"
+                    .FontStyle = "Fett"
+                    .Size = 11
+                    .Strikethrough = False
+                    .Superscript = False
+                    .Subscript = False
+                    .OutlineFont = False
+                    .Shadow = False
+                End With
+            End With
+
+            ' jetzt wird der Header geschrieben 
+
+            With CType(.Cells(zeile, spalte), Excel.Range)
+                .Value = "Name des Reports"
+                .ColumnWidth = 40
+            End With
+
+            With CType(.Cells(zeile, spalte + 1), Excel.Range)
+                .Value = "SpeicherModus"
+                .ColumnWidth = 15
+            End With
+
+            With CType(.Cells(zeile, spalte + 2), Excel.Range)
+                .Value = "Name des ReportProfils"
+                .ColumnWidth = 45
+            End With
+
+            With CType(.Cells(zeile, spalte + 3), Excel.Range)
+                .Value = "Names des Szenarios / Projekt"
+                .ColumnWidth = 30
+            End With
+
+            With CType(.Cells(zeile, spalte + 4), Excel.Range)
+                .Value = "VariantenName"
+                .ColumnWidth = 30
+            End With
+
+            With CType(.Cells(zeile, spalte + 5), Excel.Range)
+                .Value = "TimeStamp"
+                .ColumnWidth = 30
+            End With
+
+            With CType(.Cells(zeile, spalte + 6), Excel.Range)
+                .Value = " von"
+                .ColumnWidth = 18
+            End With
+
+            With CType(.Cells(zeile, spalte + 7), Excel.Range)
+                .Value = "bis"
+                .ColumnWidth = 18
+            End With
+
+        End With
+
+
+
+        'Dim expFName As String = awinPath & exportFilesOrdner & _
+        '    "\Report_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.modulScen) & _
+            "\ReportGenTemplate_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Try
+            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+
+
+
+    End Sub
 
     ''' <summary>
     ''' ruft das Formular auf, um Filter zu definieren
@@ -13474,7 +13784,7 @@ Public Module awinGeneralModules
                 anzahlZeilen = _
                     hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
             End If
-            
+
             'pZeile = ShowProjekte.getPTZeile(selectedProjectName)
             'Call MsgBox("Zeile: " & pZeile.ToString)
 
@@ -13504,7 +13814,7 @@ Public Module awinGeneralModules
             ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
             Call awinNeuZeichnenDiagramme(2)
         End If
-        
+
 
     End Sub
 
@@ -14090,7 +14400,7 @@ Public Module awinGeneralModules
                                         End If
 
 
-                                        
+
 
                                         If itemName = "Projektphasen" Then
                                             Try
@@ -19191,7 +19501,7 @@ Public Module awinGeneralModules
 
         If isMilestone And Not MilestoneDefinitions.Contains(definitionName) Then
             ' Behandlung Meilenstein Definition, aber nur wenn nicht enthalten ... 
-            
+
             Dim hMilestoneDef As New clsMeilensteinDefinition
 
             With hMilestoneDef
