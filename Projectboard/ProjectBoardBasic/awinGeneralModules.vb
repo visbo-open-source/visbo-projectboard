@@ -12844,8 +12844,8 @@ Public Module awinGeneralModules
 
                 ' und in das Excel-File eintragen
                 For i = 1 To listOfVorlagen.Count
-
-                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    Dim tmpstr() As String = Split(Dir(listOfVorlagen.Item(i - 1)), ".xml")
+                    dateiName = tmpstr(0)
                     CType(.Cells(zeile, spalte), Excel.Range).Value = dateiName
                     zeile = zeile + 1
 
