@@ -29,7 +29,17 @@ Public Class frmHierarchySelection
 
     Private Sub defineFrmButtonVisibility()
 
+
+        
         With Me
+
+            ' Änderung tk: die Hierarchie soll, wie bisher nur bei BHTC nie sichtbar sein; 
+            ' der Default Value auf 50 
+            ' 
+            .hryStufenLabel.Visible = False
+            .hryStufen.Value = 50
+            .hryStufen.Visible = False
+
             If .menuOption = PTmenue.filterdefinieren Then
 
                 .Text = "Datenbank Filter definieren"
@@ -62,8 +72,22 @@ Public Class frmHierarchySelection
 
             ElseIf .menuOption = PTmenue.visualisieren Then
 
-                .Text = "Plan-Elemente visualisieren"
-                .OKButton.Text = "Anzeigen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Phasen / Meilensteine visualisieren"
+                    .OKButton.Text = "Anzeigen"
+                    .filterLabel.Text = "Auswahl"
+                    .auswSpeichern.Text = "Speichern"
+                    .AbbrButton.Text = "Abbrechen"
+                    .chkbxOneChart.Text = "alles in einem Chart"
+                Else
+                    .Text = "Visualize phases & milestones"
+                    .OKButton.Text = "Visualize"
+                    .filterLabel.Text = "Selection"
+                    .auswSpeichern.Text = "Store"
+                    .AbbrButton.Text = "Cancel"
+                    .chkbxOneChart.Text = "all in one chart"
+                End If
+                
                 .AbbrButton.Visible = False
                 .AbbrButton.Enabled = False
                 .statusLabel.Text = ""
@@ -80,7 +104,7 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
 
             ElseIf .menuOption = PTmenue.leistbarkeitsAnalyse Then

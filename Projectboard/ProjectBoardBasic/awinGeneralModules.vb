@@ -871,7 +871,7 @@ Public Module awinGeneralModules
                 ''repCult = CultureInfo.CurrentCulture
                 'repCult = ReportLang(PTSprache.englisch)
                 repCult = ReportLang(PTSprache.deutsch)
-
+                menuCult = ReportLang(PTSprache.englisch)
 
                 repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
 
@@ -5088,8 +5088,16 @@ Public Module awinGeneralModules
                         ' es muss sich um eine Zahl größer 0 handeln, Rolle 1 wird angenommen 
 
                         Try
-                            If CDbl(roleCostStr(0).Trim) >= 0 Then
-                                ' ok, nichts tun
+                            If IsNumeric(roleCostStr(0).Trim) Then
+                                If CDbl(roleCostStr(0).Trim) >= 0 Then
+                                    ' ok, nichts tun
+                                Else
+                                    resultValue = False
+                                End If
+
+                            ElseIf Not checkRoles And roleCostStr(0) = "filltobudget" Then
+                                ' ok , nichts tun 
+
                             Else
                                 resultValue = False
                             End If

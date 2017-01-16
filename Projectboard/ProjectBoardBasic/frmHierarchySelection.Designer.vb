@@ -103,9 +103,9 @@ Partial Class frmHierarchySelection
         Me.labelPPTVorlage.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelPPTVorlage.Location = New System.Drawing.Point(9, 414)
         Me.labelPPTVorlage.Name = "labelPPTVorlage"
-        Me.labelPPTVorlage.Size = New System.Drawing.Size(126, 16)
+        Me.labelPPTVorlage.Size = New System.Drawing.Size(136, 16)
         Me.labelPPTVorlage.TabIndex = 39
-        Me.labelPPTVorlage.Text = "Powerpoint Vorlage"
+        Me.labelPPTVorlage.Text = "Powerpoint Template"
         Me.labelPPTVorlage.Visible = False
         '
         'statusLabel
@@ -166,9 +166,9 @@ Partial Class frmHierarchySelection
         Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.filterLabel.Location = New System.Drawing.Point(9, 386)
         Me.filterLabel.Name = "filterLabel"
-        Me.filterLabel.Size = New System.Drawing.Size(91, 16)
+        Me.filterLabel.Size = New System.Drawing.Size(37, 16)
         Me.filterLabel.TabIndex = 49
-        Me.filterLabel.Text = "Filter-Auswahl"
+        Me.filterLabel.Text = "Filter"
         Me.filterLabel.Visible = False
         '
         'auswSpeichern

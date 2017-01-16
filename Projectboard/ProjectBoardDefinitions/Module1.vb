@@ -43,7 +43,10 @@ Public Module Module1
 
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
     Public repMessages As clsReportMessages
-   
+
+    'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
+    Public menuMessages As clsReportMessages
+
     
     'Definitionen zum Schreiben eines Logfiles
     Public xlsLogfile As Excel.Workbook = Nothing
@@ -529,10 +532,12 @@ Public Module Module1
                                          New CultureInfo("en-US"), _
                                          New CultureInfo("fr-FR"), _
                                          New CultureInfo("es-ES")}
-    ' aktuell verwendete Sprache
+    ' aktuell verwendete Sprache für reports
     '
     Public repCult As CultureInfo
 
+    ' aktuell verwendete Sprache für Menu Strukturen 
+    Public menuCult As CultureInfo
     '
     '
     ' Diagramm-Typ kann sein:

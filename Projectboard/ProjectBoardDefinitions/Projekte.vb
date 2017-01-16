@@ -7944,7 +7944,16 @@ Public Module Projekte
         Dim heute As Date = Now
         Dim key As String = pname & "#"
 
-        Const extCost As String = "Kosten Externe"
+        'Const extCost As String = "Kosten Externe"
+        Dim extCost As String
+        If CostDefinitions.Count > 1 Then
+            extCost = CostDefinitions.getCostdef(1).name
+        ElseIf CostDefinitions.Count = 1 And CostDefinitions.getCostdef(1).name = "Kosten Externe" Then
+            ' Mahle ...
+            extCost = "Kosten Externe"
+        Else
+            extCost = "undefined"
+        End If
 
 
         '
@@ -8007,35 +8016,48 @@ Public Module Projekte
                 Dim completeStr() As String = capacityNeeded.Split(New Char() {CType("#", Char)}, 100)
 
 
-                ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
+                ' jetzt die angegebenen Rollenabarbeiten 
                 For i As Integer = 1 To completeStr.Length
 
-                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim roleStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
                     Dim isRole As Boolean = False
-                    Dim isCost As Boolean = False
                     Dim tagessatz As Double = 0.0
 
-                    If roleCostStr.Length > 1 Then
+                    If roleStr.Length > 0 Then
 
                         Try
-                            Dim roleCostName As String = roleCostStr(0).Trim
-                            If RoleDefinitions.containsName(roleCostName) Then
-                                isRole = True
-                                rk = CInt(RoleDefinitions.getRoledef(roleCostName).UID)
-                                tagessatz = RoleDefinitions.getRoledef(roleCostName).tagessatzIntern
+                            Dim summeBedarfe As Double
 
-                            ElseIf CostDefinitions.containsName(roleCostName) Then
-                                isCost = True
-                                rk = CInt(CostDefinitions.getCostdef(roleCostName).UID)
-
+                            If roleStr.Length = 1 Then
+                                ' Vereinbarung: 
+                                ' wenn nur eine Zahl angegeben ist, soll einfach die erste Rolle genommen werden ... 
+                                If IsNumeric(roleStr(0)) Then
+                                    If CDbl(roleStr(0)) > 0 Then
+                                        isRole = True
+                                        summeBedarfe = CDbl(roleStr(0))
+                                        rk = 1
+                                        tagessatz = RoleDefinitions.getRoledef(rk).tagessatzIntern
+                                    End If
+                                End If
                             Else
-                                rk = -1
+                                Dim roleName As String = roleStr(0).Trim
 
+                                If RoleDefinitions.containsName(roleName) Then
+                                    isRole = True
+                                    summeBedarfe = CDbl(roleStr(1))
+                                    rk = CInt(RoleDefinitions.getRoledef(roleName).UID)
+                                    tagessatz = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+
+                                Else
+
+                                    rk = -1
+
+                                End If
                             End If
 
-                            If rk > -1 Then
+                            If rk > -1 And isRole Then
 
-                                Dim summeBedarfe As Double = CDbl(roleCostStr(1))
+
 
                                 If summeBedarfe > 0.0 Then
 
@@ -8054,40 +8076,19 @@ Public Module Projekte
 
                                     End With
 
-                                    ' dabei jetzt auch die Kosten schon mal berechnen  
+                                    'Dim crole As New clsRolle(ende - anfang + 1)
+                                    ' tk: Änderung 26.7.16
+                                    Dim crole As New clsRolle(ende - anfang)
+                                    With crole
+                                        .RollenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
 
+                                    With cphase
+                                        .addRole(crole)
+                                    End With
 
-                                    If isRole Then
-                                        'Dim crole As New clsRolle(ende - anfang + 1)
-                                        ' tk: Änderung 26.7.16
-                                        Dim crole As New clsRolle(ende - anfang)
-                                        With crole
-                                            .RollenTyp = rk
-                                            .Xwerte = Xwerte
-                                        End With
-
-                                        With cphase
-                                            .addRole(crole)
-                                        End With
-
-                                        summeCost = summeCost + crole.Xwerte.Sum * tagessatz
-
-
-                                    ElseIf isCost Then
-                                        'Dim ccost As New clsKostenart(ende - anfang + 1)
-                                        Dim ccost As New clsKostenart(ende - anfang)
-                                        With ccost
-                                            .KostenTyp = rk
-                                            .Xwerte = Xwerte
-                                        End With
-
-                                        With cphase
-                                            .AddCost(ccost)
-                                        End With
-
-                                        summeCost = summeCost + ccost.Xwerte.Sum
-
-                                    End If
+                                    summeCost = summeCost + crole.Xwerte.Sum * tagessatz
 
                                 End If
 
@@ -8103,64 +8104,102 @@ Public Module Projekte
             End If
         End If
 
-        If Not IsNothing(externCostInput) And CostDefinitions.containsName(extCost) Then
+        ' Anfang neu 
 
-            Dim summeExtCost As Double = 0.0
+        If Not IsNothing(externCostInput) Then
+            If externCostInput.Trim.Length > 0 Then
 
-            If externCostInput.Trim = "filltobudget" Then
-                summeExtCost = Math.Truncate(100 * (newprojekt.Erloes * (1 - newprojekt.risikoKostenfaktor) - newprojekt.getGesamtKostenBedarf.Sum)) / 100
+                Dim completeStr() As String = externCostInput.Split(New Char() {CType("#", Char)}, 100)
+                Dim summeExtCost As Double = 0.0
 
-            ElseIf IsNumeric(externCostInput) Then
-                If CDbl(externCostInput) > 0 Then
-                    summeExtCost = CDbl(externCostInput)
-                End If
+                ' jetzt die angegebenen Rollenabarbeiten 
+                For i As Integer = 1 To completeStr.Length
 
-            End If
+                    Dim costStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim isCost As Boolean = False
 
-            ' es soll ausgerechnet werden, was denn an externen Kosten anfällt 
-            ' getriggert durch Mahle ...
-            'Dim summeExtCost As Double = Math.Truncate(hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)
+                    If costStr.Length > 0 Then
 
+                        Try
+                            If costStr.Length = 1 Then
+                                ' Vereinbarung: 
+                                ' wenn nur eine Zahl angegeben ist, soll einfach die erste Rolle genommen werden ... 
+                                If costStr(0) = "filltobudget" Then
+                                    summeExtCost = Math.Truncate(100 * (newprojekt.Erloes * (1 - newprojekt.risikoKostenfaktor) - newprojekt.getGesamtKostenBedarf.Sum)) / 100
+                                    isCost = True
+                                    rk = 1
 
-            ' wenn jetzt noch ein Restbetrag übrig ist .... 
-            If summeExtCost > 0 Then
-                rk = CInt(CostDefinitions.getCostdef(extCost).UID)
+                                ElseIf IsNumeric(costStr(0)) Then
 
+                                    If CDbl(costStr(0)) > 0 Then
+                                        isCost = True
+                                        rk = 1
+                                        summeExtCost = CDbl(costStr(0))
+                                    End If
+                                End If
 
-                Try
-                    ReDim oldXwerte(0)
-                    oldXwerte(0) = summeExtCost
+                            Else
+                                Dim costName As String = costStr(0).Trim
 
-                    Dim anfang As Integer, ende As Integer
+                                If CostDefinitions.containsName(costName) Then
+                                    isCost = True
+                                    rk = CInt(CostDefinitions.getCostdef(costName).UID)
+                                    summeExtCost = CDbl(costStr(1))
+                                Else
 
-                    With cphase
+                                    rk = -1
 
-                        anfang = .relStart
-                        ende = .relEnde
-                        ReDim Xwerte(ende - anfang)
+                                End If
+                            End If
 
-                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-
-                    End With
-
-                    'Dim ccost As New clsKostenart(ende - anfang + 1)
-                    Dim ccost As New clsKostenart(ende - anfang)
-                    With ccost
-                        .KostenTyp = rk
-                        .Xwerte = Xwerte
-                    End With
-
-                    With cphase
-                        .AddCost(ccost)
-                    End With
+                            If rk > -1 And isCost Then
 
 
-                Catch ex As Exception
+                                If summeExtCost > 0.0 Then
 
-                End Try
+                                    ReDim oldXwerte(0)
+                                    oldXwerte(0) = summeExtCost
+
+                                    Dim anfang As Integer, ende As Integer
+
+                                    With cphase
+
+                                        anfang = .relStart
+                                        ende = .relEnde
+                                        ReDim Xwerte(ende - anfang)
+
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+
+                                    End With
+
+                                    Dim ccost As New clsKostenart(ende - anfang)
+                                    With ccost
+                                        .KostenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
+
+                                    With cphase
+                                        .AddCost(ccost)
+                                    End With
+                                    
+                                    summeCost = summeCost + Xwerte.Sum
+
+                                End If
+
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
+                Next
 
             End If
         End If
+
+        ' Ende neu 
+
 
         ' jetzt ggf die Custom Fields eintragen 
         If Not IsNothing(listOfCustomFields) Then
@@ -20588,6 +20627,12 @@ Public Module Projekte
         Dim currentValue As Double
         Dim heuteColumn As Integer = getColumnOfDate(heute)
 
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            expl = "Erläuterung ..."
+        Else
+            expl = "Explanation ..."
+        End If
+
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
             allMilestones = 0
@@ -20622,18 +20667,24 @@ Public Module Projekte
                                         currentValue <= redBaseValue + redPercentage Then
 
                                         Dim b As clsBewertung
+                                        Dim tmpDescription As String
+                                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                            tmpDescription = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
+                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
+                                        Else
+                                            tmpDescription = "Date and Deliverables not to achieve; " & vbLf & _
+                                                "Reasons:  ... " & vbLf & "Measures: ...."
+                                        End If
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
-                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelRot
                                             b.colorIndex = PTfarbe.red
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
-                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelRot
                                             b.colorIndex = PTfarbe.red
                                         End If
@@ -20647,18 +20698,25 @@ Public Module Projekte
                                     ElseIf currentValue >= yellowBaseValue And _
                                         currentValue <= yellowBaseValue + yellowPercentage Then
                                         Dim b As clsBewertung
+                                        Dim tmpDescription As String
+                                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                            tmpDescription = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
+                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
+                                        Else
+                                            tmpDescription = "there are risks to achieve date and deliverables;" & vbLf & _
+                                                "Risks: ... " & vbLf & "Measures: ..."
+                                        End If
+
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
-                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGelb
                                             b.colorIndex = PTfarbe.yellow
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
-                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGelb
                                             b.colorIndex = PTfarbe.yellow
                                         End If
@@ -20670,16 +20728,23 @@ Public Module Projekte
 
                                     Else
                                         Dim b As clsBewertung
+                                        Dim tmpDescription As String
+                                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                            tmpDescription = "Forecast für Termin / Qualität aktuell grün"
+                                        Else
+                                            tmpDescription = "positive Forecast for date and deliverables"
+                                        End If
+
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Forecast für Termin / Qualität aktuell grün"
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGruen
                                             b.colorIndex = PTfarbe.green
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Forecast für Termin / Qualität aktuell grün"
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGruen
                                             b.colorIndex = PTfarbe.green
                                         End If
@@ -20696,6 +20761,10 @@ Public Module Projekte
                                 ' hier sind wir in der Vergangenheit : nur dann etwas tun, wenn der Meilenstein noch keine Bewertung hat 
                                 ' oder aber eine graue Bewertung hat 
                                 Dim b As clsBewertung
+                                Dim tmpDescription As String
+                                
+
+
                                 Dim notYetDone As Boolean = False
                                 If milestone.bewertungsCount = 0 Then
                                     b = New clsBewertung
@@ -20715,13 +20784,19 @@ Public Module Projekte
                                         If currentValue >= redBaseValue And _
                                             currentValue <= redBaseValue + redPercentage Then
 
+                                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                                tmpDescription = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                            Else
+                                                tmpDescription = "finished: deliverables were reduced considerably, due to ..."
+                                            End If
+
                                             If .bewertungsCount = 0 Then
-                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelRot
                                                 b.colorIndex = PTfarbe.red
                                                 .addBewertung(b)
                                             Else
-                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelRot
                                                 b.colorIndex = PTfarbe.red
                                             End If
@@ -20730,14 +20805,20 @@ Public Module Projekte
                                         ElseIf currentValue >= yellowBaseValue And _
                                             currentValue <= yellowBaseValue + yellowPercentage Then
 
+                                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                                tmpDescription = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                            Else
+                                                tmpDescription = "finished: deliverables were not achieved completely, due to ..."
+                                            End If
+
                                             If .bewertungsCount = 0 Then
-                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGelb
                                                 b.colorIndex = PTfarbe.yellow
                                                 .addBewertung(b)
                                             Else
                                                 b = .getBewertung(1)
-                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGelb
                                                 b.colorIndex = PTfarbe.yellow
                                             End If
@@ -20746,14 +20827,20 @@ Public Module Projekte
 
                                         Else
 
+                                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                                tmpDescription = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                            Else
+                                                tmpDescription = "finished: all deliverables achieved"
+                                            End If
+
                                             If .bewertungsCount = 0 Then
-                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGruen
                                                 b.colorIndex = PTfarbe.green
                                                 .addBewertung(b)
                                             Else
                                                 b = .getBewertung(1)
-                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGruen
                                                 b.colorIndex = PTfarbe.green
                                             End If
@@ -20780,26 +20867,42 @@ Public Module Projekte
 
                 End If
 
+                Dim tmpDescription1 As String
+                Dim tmpDescription2 As String
+                Dim tmpDescription3 As String
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpDescription3 = "aktuell sehr kritische Lage des Projektes" & vbLf & _
+                            "Gründe: ...." & _
+                            "Massnahmen: ...."
+                    tmpDescription2 = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                            "Risiken: ...." & _
+                            "Massnahmen: ...."
+                    tmpDescription1 = "aktuell alles plangemäß"
+                Else
+                    tmpDescription3 = "currently very critical project situation" & vbLf & _
+                            "Reasons: ...." & _
+                            "Measures: ...."
+                    tmpDescription2 = "existing risks in project" & vbLf & _
+                            "Risks: ...." & _
+                            "Measures: ...."
+                    tmpDescription1 = "currently positiv forecast for project"
+                End If
+
                 ' jetzt noch die Ampel-Farbe setzen 
                 If redMilestones > 0 Then
 
                     If greenMilestones > 0 Then
                         If redMilestones / greenMilestones > 0.02 Then
-                            .ampelErlaeuterung = "aktuell sehr kritische Lage des Projektes" & vbLf & _
-                                "Gründe: ...." & _
-                                "Massnahmen: ...."
+                            .ampelErlaeuterung = tmpDescription3
                             .ampelStatus = 3
                         Else
-                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                                "Risiken: ...." & _
-                                "Massnahmen: ...."
+                            .ampelErlaeuterung = tmpDescription2
                             .ampelStatus = 2
                         End If
                     Else
                         ' in diesem Fall wird es unmittelbar vor Projekt-Abschluss sein ... 
-                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                                "Risiken: ...." & _
-                                "Massnahmen: ...."
+                        .ampelErlaeuterung = tmpDescription2
                         .ampelStatus = 2
                     End If
 
@@ -20808,22 +20911,18 @@ Public Module Projekte
                     If greenMilestones > 0 Then
 
                         If yellowMilestones / greenMilestones > 0.05 Then
-                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                            "Risiken: ...." & _
-                            "Massnahmen: ...."
+                            .ampelErlaeuterung = tmpDescription2
                             .ampelStatus = 2
                         Else
-                            .ampelErlaeuterung = "aktuell alles plangemäß"
+                            .ampelErlaeuterung = tmpDescription1
                             .ampelStatus = 1
                         End If
                     Else
-                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                            "Risiken: ...." & _
-                            "Massnahmen: ...."
+                        .ampelErlaeuterung = tmpDescription2
                         .ampelStatus = 2
                     End If
                 Else
-                    .ampelErlaeuterung = "aktuell alles plangemäß"
+                    .ampelErlaeuterung = tmpDescription1
                     .ampelStatus = 1
                 End If
 

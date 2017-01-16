@@ -169,6 +169,8 @@ Public Class clsawinSettings
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
+    ' Setting für Menu Language 
+    Public Property menuLanguage As String
     ' Setting, ob bei Vergleichen mit früheren Ständen mit der standard-Variante verglichen werden soll 
     ' oder mit einem früheren Stand der Variante
     Public Property compareWithStandardVariant As Boolean
