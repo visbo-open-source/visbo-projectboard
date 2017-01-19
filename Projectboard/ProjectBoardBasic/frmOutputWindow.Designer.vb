@@ -29,7 +29,7 @@ Partial Class frmOutputWindow
         'lblOutput
         '
         Me.lblOutput.AutoSize = True
-        Me.lblOutput.Location = New System.Drawing.Point(12, 16)
+        Me.lblOutput.Location = New System.Drawing.Point(12, 10)
         Me.lblOutput.Name = "lblOutput"
         Me.lblOutput.Size = New System.Drawing.Size(39, 13)
         Me.lblOutput.TabIndex = 0

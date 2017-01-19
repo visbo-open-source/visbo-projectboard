@@ -270,7 +270,7 @@ Imports System.Windows
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-        Dim deleteFromSession As String = "PT2G2B3"
+        Dim deleteFromSession As String = "PT2G3M1B3"
         Dim deleteFilter As String = "Pt6G3B5"
 
         Dim removeFromDB As Boolean
@@ -1641,6 +1641,977 @@ Imports System.Windows
 
     End Sub
 
+    Function bestimmeLabel(control As IRibbonControl) As String
+        Dim tmpLabel As String = "?"
+        Select Case control.Id
+            Case "PTMEC" ' Charts
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts"
+                Else
+                    tmpLabel = "Charts"
+                End If
+
+            Case "PTMEC1" ' Rollen und Kosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Rollen und Kosten"
+                Else
+                    tmpLabel = "Roles and Cost"
+                End If
+
+            Case "PTMEC2" ' Budget/Kosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Budget/Kosten"
+                Else
+                    tmpLabel = "Budget/Cost"
+                End If
+
+            Case "PTX" ' Multiprojekt-Info
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Multiprojekt-Info"
+                Else
+                    tmpLabel = "Multiproject-Info"
+                End If
+
+            Case "PTXG1" ' Analysen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Analysen"
+                Else
+                    tmpLabel = "Analyzes"
+                End If
+
+            Case "PTXG1B1" ' Projekt-Ampeln
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt-Ampeln"
+                Else
+                    tmpLabel = "Project Trafficlights"
+                End If
+
+            Case "PTXG1B2" ' Meilenstein-Ampeln
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Meilenstein-Ampeln"
+                Else
+                    tmpLabel = "Milestone Trafficlights"
+                End If
+
+            Case "PTXG1M1" ' Planelemente visualisieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Phasen/Meilensteine visualisieren"
+                Else
+                    tmpLabel = "Visualize Phases/Milestones"
+                End If
+
+            Case "PTXG1B4" ' Auswahl über Namen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Namen"
+                Else
+                    tmpLabel = "Select by Names"
+                End If
+
+            Case "PTXG1B5" ' Auswahl über Projekt-Struktur
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Projekt-Struktur"
+                Else
+                    tmpLabel = "Select by Structure"
+                End If
+
+            Case "PTPf" ' Charts
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts"
+                Else
+                    tmpLabel = "Charts"
+                End If
+
+            Case "PTXG1M2" ' Engpass Analyse
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Engpass Analyse"
+                Else
+                    tmpLabel = "Bottleneck Analyzes"
+                End If
+
+            Case "PTXG1B6" ' Auswahl über Namen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Namen"
+                Else
+                    tmpLabel = "Select by Names"
+                End If
+
+            Case "PTXG1B7" ' Auswahl über Hierarchie
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Projekt-Struktur"
+                Else
+                    tmpLabel = "Select by Structure"
+                End If
+
+            Case "PTXG1B10" ' größter Engpass
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "größter Engpass"
+                Else
+                    tmpLabel = "Worst bottleneck"
+                End If
+
+            Case "PTXG1B3" ' Auslastung
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auslastung"
+                Else
+                    tmpLabel = "Capacity utilization"
+                End If
+
+            Case "PTOPT" ' Optimieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Optimieren"
+                Else
+                    tmpLabel = "Optimization"
+                End If
+
+            Case "PTOPTB1" ' optimale Varianten-Kombination
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "optimale Kombination finden"
+                Else
+                    tmpLabel = "Find best combination"
+                End If
+
+            Case "PTXG1B8" ' Strategie/Risiko/Marge
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Strategie/Risiko/Marge"
+                Else
+                    tmpLabel = "Strategy/Risk/Margin"
+                End If
+
+            Case "PTFKB1" ' Budget/Kosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Budget/Kosten/Ergebnis"
+                Else
+                    tmpLabel = "Budget/Cost/Profit"
+                End If
+
+            Case "PTFKB2" ' Ergebnis/Auslastung
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ergebnis/Auslastung"
+                Else
+                    tmpLabel = "Profit/Utilization"
+                End If
+
+            Case "PT0" ' Einzelprojekt-Info
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einzelprojekt-Info"
+                Else
+                    tmpLabel = "Project-Info"
+                End If
+
+            Case "PT0G1" ' Analysen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Analysen"
+                Else
+                    tmpLabel = "Analyzes"
+                End If
+
+            Case "PT0G1B0" ' Projekt-Ampel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt-Ampel"
+                Else
+                    tmpLabel = "Trafficlight"
+                End If
+
+            Case "PT0G1B2" ' Meilenstein-Ampel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Meilenstein-Ampel"
+                Else
+                    tmpLabel = "Milestone Trafficlights"
+                End If
+
+            Case "PT0G1M0" ' Planelemente visualisieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Phasen/Meilensteine visualisieren"
+                Else
+                    tmpLabel = "Visualize Phases/Milestones"
+                End If
+
+            Case "PT0G1B8" ' Auswahl über Namen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Namen"
+                Else
+                    tmpLabel = "Select by Names"
+                End If
+
+            Case "PT0G1B9" ' Auswahl über Projekt-Struktur
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Projekt-Struktur"
+                Else
+                    tmpLabel = "Select by Structure"
+                End If
+
+            Case "PT3G1B5" ' Zeit-Maschine
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zeit-Maschine"
+                Else
+                    tmpLabel = "Time Machine"
+                End If
+
+            Case "PT0G2" ' Charts
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts"
+                Else
+                    tmpLabel = "Charts"
+                End If
+
+            Case "PT0G1M0B2" ' Phasen Übersicht
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Phasen Übersicht"
+                Else
+                    tmpLabel = "Overview Phases"
+                End If
+
+            Case "PT0G1M2B7" ' Meilenstein Trend Analyse
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Meilenstein Trend Analyse"
+                Else
+                    tmpLabel = "Milestone Trend Analysis"
+                End If
+
+            Case "PT0G1M1B1" ' Personal Bedarfe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Personal Bedarfe"
+                Else
+                    tmpLabel = "Personnel Needs"
+                End If
+
+            Case "PT0G1M1B2" ' Kosten Bedarfe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Kosten Bedarfe"
+                Else
+                    tmpLabel = "Cost Needs"
+                End If
+
+            Case "PT0G1B3" ' Strategie/Risiko/Marge
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Strategie/Risiko/Marge"
+                Else
+                    tmpLabel = "Strategy/Risk/Margin"
+                End If
+
+            Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Strategie/Risiko/Abhängigkeiten"
+                Else
+                    tmpLabel = "Strategy/Risk/Dependencies"
+                End If
+
+            Case "PT3G1M1" ' Plan/Aktuell
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Plan/Aktuell"
+                Else
+                    tmpLabel = "Plan/Actual"
+                End If
+
+            Case "PT3G1M1B1" ' Personalkosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Personalkosten"
+                Else
+                    tmpLabel = "Personnel Cost"
+                End If
+
+            Case "PT3G1M1B2" ' Sonstige Kosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Sonstige Kosten"
+                Else
+                    tmpLabel = "Other Cost"
+                End If
+
+            Case "PT3G1M1B3" ' Gesamt Kosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Gesamt Kosten"
+                Else
+                    tmpLabel = "Total Cost"
+                End If
+
+            Case "PT0G1B7" ' Ergebnis
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ergebnis"
+                Else
+                    tmpLabel = "Profit"
+                End If
+
+            Case "PT7" ' Cockpit
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Cockpit"
+                Else
+                    tmpLabel = "Cockpit"
+                End If
+
+            Case "PT0G1M3B1" ' Cockpit visualisieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Laden"
+                Else
+                    tmpLabel = "Load"
+                End If
+
+            Case "PT0G1M3B2" ' Cockpit speichern
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Speichern"
+                Else
+                    tmpLabel = "Store"
+                End If
+
+            Case "PT0G1M3B3" ' Cockpit-Charts löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts löschen"
+                Else
+                    tmpLabel = "Delete Charts"
+                End If
+
+            Case "PT0G1M3B3" ' Cockpit-Charts löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts löschen"
+                Else
+                    tmpLabel = "Delete Charts"
+                End If
+
+            Case "PT1" ' Reports
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Reports"
+                Else
+                    tmpLabel = "Reports"
+                End If
+
+            Case "PT1G1" ' Powerpoint Report Profile
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Powerpoint Report Profile"
+                Else
+                    tmpLabel = "Powerpoint Report Profiles"
+                End If
+
+            Case "PT1G1M0" ' Report-Profil definieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Report-Profil definieren"
+                Else
+                    tmpLabel = "Define a Report-Profile"
+                End If
+
+            Case "PT1G1M01" ' Einzelprojekt-Berichte
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einzelprojekt-Berichte"
+                Else
+                    tmpLabel = "Singleproject Reports"
+                End If
+
+            Case "PT1G1M01B0" ' Typ I
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Typ I"
+                Else
+                    tmpLabel = "Type I"
+                End If
+
+            Case "PT1G1M1" ' Typ II
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Typ II"
+                Else
+                    tmpLabel = "Type II"
+                End If
+
+            Case "PT1G1M1B1" ' Auswahl über Namen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Namen"
+                Else
+                    tmpLabel = "Select by Names"
+                End If
+
+            Case "PT1G1M1B2" ' Auswahl über Hierarchie
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Projekt-Struktur"
+                Else
+                    tmpLabel = "Select by Structure"
+                End If
+
+            Case "PT1G1M02" ' Multiprojekt-Berichte
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Multiprojekt-Berichte"
+                Else
+                    tmpLabel = "Multiproject Reports"
+                End If
+
+            Case "PT1G1B2" ' Typ I
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Typ I"
+                Else
+                    tmpLabel = "Type I"
+                End If
+
+            Case "PT1G1M2" ' Typ II
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Typ II"
+                Else
+                    tmpLabel = "Type II"
+                End If
+
+            Case "PT1G1M2B1" ' Auswahl über Namen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Namen"
+                Else
+                    tmpLabel = "Select by Names"
+                End If
+
+            Case "PT1G1M2B2" ' Auswahl über Hierarchie
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl über Projekt-Struktur"
+                Else
+                    tmpLabel = "Select by Structure"
+                End If
+
+            Case "PT1G1B4" ' letztes Report-Profil speichern
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Letztes Report-Profil speichern"
+                Else
+                    tmpLabel = "Store last Report-Profile"
+                End If
+
+            Case "PT1G1B5" ' Report-Profil ausführen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Bericht erstellen"
+                Else
+                    tmpLabel = "Create Report"
+                End If
+
+            Case "PT1G1B1" ' Report Sprache
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Report Sprache"
+                Else
+                    tmpLabel = "Report Language"
+                End If
+
+            Case "PT2" ' Bearbeiten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Bearbeiten"
+                Else
+                    tmpLabel = "Edit"
+                End If
+
+            Case "PT2G1" ' Einzelprojekte
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einzelprojekte"
+                Else
+                    tmpLabel = "Singleprojects"
+                End If
+
+            Case "PT2G1M0" ' Neues Projekt anlegen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Neues Projekt anlegen"
+                Else
+                    tmpLabel = "Create new project"
+                End If
+
+            Case "PT2G1M0B0" ' Neu auf Basis Vorlage
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Neu auf Basis Vorlage"
+                Else
+                    tmpLabel = "Based on template"
+                End If
+
+            Case "PT2G1M0B1" ' Neu auf Basis Projekt
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Neu auf Basis Projekt"
+                Else
+                    tmpLabel = "Based on project"
+                End If
+
+            Case "PT2G1M1" ' Variante
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Varianten"
+                Else
+                    tmpLabel = "Variants"
+                End If
+
+            Case "PT2G1M1B0" ' neue Variante anlegen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "neue Variante anlegen"
+                Else
+                    tmpLabel = "Create new variant"
+                End If
+
+            Case "PT2G1M1B1" ' Variante aktivieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Variante aktivieren"
+                Else
+                    tmpLabel = "Activate Variant"
+                End If
+
+            Case "PT2G1M1B2" ' Variante löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Variante löschen"
+                Else
+                    tmpLabel = "Delete Variant"
+                End If
+
+            Case "PT2G1M1B3" ' Variante zum Standard machen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Variante zum Standard machen"
+                Else
+                    tmpLabel = "declare as base-Variant"
+                End If
+
+            Case "PT2G1M2B4" ' Ressource/Kostenart hinzufügen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ressource/Kostenart hinzufügen"
+                Else
+                    tmpLabel = "Add resource / cost"
+                End If
+
+            Case "PT2G1M2B5" ' Ressource/Kostenart löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ressource/Kostenart löschen"
+                Else
+                    tmpLabel = "Delete resource / cost"
+                End If
+
+            Case "PT2G1M2" ' Editieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Editieren"
+                Else
+                    tmpLabel = "Edit"
+                End If
+
+            Case "PT2G1M2B1" ' Ressourcen und Kosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ressourcen und Kosten"
+                Else
+                    tmpLabel = "Resources and Cost"
+                End If
+
+            Case "PT2G1M2B2" ' Strategie/Risiko/Budget
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Strategie/Risiko/Budget"
+                Else
+                    tmpLabel = "Strategy/Risk/Budget"
+                End If
+
+            Case "PT2G1M2B3" ' Zeitspanne f. Projektstart
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zeitspanne f. Projektstart"
+                Else
+                    tmpLabel = "Timespan for projectstart"
+                End If
+
+            Case "PT6G2B3" ' prozentuale Auslastungs-Werte anzeigen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Prozentuale Auslastungs-Werte anzeigen"
+                Else
+                    tmpLabel = "Show percentil values"
+                End If
+
+            Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Platzhalter Rollen automatisch reduzieren"
+                Else
+                    tmpLabel = "Automatically reduce placeholder values"
+                End If
+
+            Case "PT6G2B5" ' Sortierung ermöglichen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Sortierung ermöglichen"
+                Else
+                    tmpLabel = "Enable sorting"
+                End If
+
+            Case "PT2G1B2" ' Fixieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Fixieren"
+                Else
+                    tmpLabel = "Freeze"
+                End If
+
+            Case "PT2G1B3" ' Fixierung aufheben
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Fixierung aufheben"
+                Else
+                    tmpLabel = "De-freeze"
+                End If
+
+            Case "PT2G1M2B7" ' zurück zur Multiprojekt-Tafel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zurück zur Multiprojekt-Tafel"
+                Else
+                    tmpLabel = "Back to Multiproject Board"
+                End If
+
+            Case "PT2G1M2B6" ' Änderungen verwerfen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Änderungen verwerfen"
+                Else
+                    tmpLabel = "Skip changes"
+                End If
+
+            Case "PT2G1B4" ' Beschriften
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Beschriften"
+                Else
+                    tmpLabel = "Annotate"
+                End If
+
+            Case "PT2G1B5" ' alle Beschriftungen löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Alle Beschriftungen löschen"
+                Else
+                    tmpLabel = "Delete annotations"
+                End If
+
+            Case "PT2G1B6" ' Extended View
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Extended View"
+                Else
+                    tmpLabel = "Extended View"
+                End If
+
+            Case "PT2G1B7" ' Rollup View
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Rollup View"
+                Else
+                    tmpLabel = "Rollup View"
+                End If
+
+            Case "PT2G1B8" ' Umbenennen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Umbenennen"
+                Else
+                    tmpLabel = "Rename"
+                End If
+
+            Case "PT2G1B8" ' Umbenennen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Umbenennen"
+                Else
+                    tmpLabel = "Rename"
+                End If
+
+            Case "PT2G2" ' Multiprojekt-Szenario
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Multiprojekt-Szenario"
+                Else
+                    tmpLabel = "Multiproject-Scenario"
+                End If
+
+            Case "PT2G2B2" ' Laden
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Laden"
+                Else
+                    tmpLabel = "Load"
+                End If
+
+
+            Case "PT2G2B4" ' Ändern/Speichern
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ändern/Speichern"
+                Else
+                    tmpLabel = "Modify/Store"
+                End If
+
+
+            Case "PT2G3" ' Session
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Session"
+                Else
+                    tmpLabel = "Session"
+                End If
+
+            Case "PT2G3M1" ' aus der Session löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Aus der Session löschen"
+                Else
+                    tmpLabel = "Delete from Session"
+                End If
+
+            Case "PT2G3M1B1" ' alles
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Alles"
+                Else
+                    tmpLabel = "All"
+                End If
+
+            Case "PT2G3M1B2" ' einzelne Projekte und Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einzelne Projekte und Varianten"
+                Else
+                    tmpLabel = "Selected projects and variants"
+                End If
+
+            Case "PT2G3M1B3" ' Szenario
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Szenario"
+                Else
+                    tmpLabel = "Scenario"
+                End If
+
+            Case "PT2G3M2" ' Zeichen-Elemente löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zeichen-Elemente löschen"
+                Else
+                    tmpLabel = "Delete drawing elements"
+                End If
+
+            Case "PT2G3M4B1" ' Meilensteine, Phasen, Stati
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Meilensteine, Phasen, Stati"
+                Else
+                    tmpLabel = "Milestones, Phases, Stati"
+                End If
+
+            Case "PT2G3M4B3" ' Beschriftungen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Beschriftungen"
+                Else
+                    tmpLabel = "Annotations"
+                End If
+
+            Case "PT2G3M4B2" ' Charts
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts"
+                Else
+                    tmpLabel = "Charts"
+                End If
+
+            Case "PT4" ' Datenmanagement
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Datenmanagement"
+                Else
+                    tmpLabel = "Data management"
+                End If
+
+            Case "PT4G1" ' IMPORT
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "IMPORT"
+                Else
+                    tmpLabel = "Data IMPORT"
+                End If
+
+            Case "PT4G1B1" ' Import Projekte (Batch)
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Projekte (Batch)"
+                Else
+                    tmpLabel = "Import Projects (Batch)"
+                End If
+
+            Case "PT4G1B2" ' Import Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Excel"
+                Else
+                    tmpLabel = "Import Excel"
+                End If
+
+            Case "PT4G1B3" ' Import RPLAN RXF
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import RPLAN RXF"
+                Else
+                    tmpLabel = "Import RPLAN RXF"
+                End If
+
+            Case "PT4G1B4" ' Import MS Project
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import MS Project"
+                Else
+                    tmpLabel = "Import MS Project"
+                End If
+
+            Case "PT4G1M1B1" ' Import VISBO-Steckbriefe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import VISBO-Steckbriefe"
+                Else
+                    tmpLabel = "Import VISBO lean project briefs"
+                End If
+
+            Case "PT4G2" ' EXPORT
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "EXPORT"
+                Else
+                    tmpLabel = "EXPORT"
+                End If
+
+            Case "PT4G1B7" ' Export FC-52
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export FC-52"
+                Else
+                    tmpLabel = "Export FC-52"
+                End If
+
+            Case "PT4G1B8" ' Export RPLAN Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export RPLAN Excel"
+                Else
+                    tmpLabel = "Export RPLAN Excel"
+                End If
+
+            Case "PT4G1M1B3" ' Export VISBO-Steckbriefe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export VISBO-Steckbriefe"
+                Else
+                    tmpLabel = "Export VISBO lean project briefs"
+                End If
+
+            Case "PT4G12" ' Datenbank
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Datenbank"
+                Else
+                    tmpLabel = "Database"
+                End If
+
+            Case "PT5G1" ' Laden
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Laden"
+                Else
+                    tmpLabel = "Load"
+                End If
+
+            Case "PT5G1B1" ' Multiprojekt-Szenario
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Multiprojekt-Szenario"
+                Else
+                    tmpLabel = "Multiproject-Scenario"
+                End If
+
+            Case "PT5G1B3" ' Projekte/Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten"
+                Else
+                    tmpLabel = "Projects/Variants"
+                End If
+
+            Case "PT5G2" ' Speichern
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Speichern"
+                Else
+                    tmpLabel = "Store"
+                End If
+
+            Case "Pt5G2B1" ' Multiprojekt-Szenario
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Multiprojekt-Szenario"
+                Else
+                    tmpLabel = "Multiproject-Scenario"
+                End If
+
+            Case "Pt5G2B3" ' Projekte/Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten"
+                Else
+                    tmpLabel = "Projects/Variants"
+                End If
+
+            Case "Pt5G2B4" ' Alles Speichern
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Alles Speichern"
+                Else
+                    tmpLabel = "Store everything"
+                End If
+
+            Case "PT5G3" ' Löschen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Löschen"
+                Else
+                    tmpLabel = "Delete"
+                End If
+
+            Case "Pt5G3B1" ' Multiprojekt-Szenario
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Multiprojekt-Szenario"
+                Else
+                    tmpLabel = "Multiproject-Scenario"
+                End If
+
+            Case "PT5G3M2" ' Projekte/Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten"
+                Else
+                    tmpLabel = "Projects/Variants"
+                End If
+
+            Case "Pt5G3B3" ' Projekte/Varianten/TimeStamps auswählen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten/TimeStamps auswählen"
+                Else
+                    tmpLabel = "Select Projects/Variants/TimeStamps"
+                End If
+
+            Case "Pt5G3B4" ' X Versionen behalten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "X Versionen behalten"
+                Else
+                    tmpLabel = "Keep X Versions"
+                End If
+
+            Case "PT6" ' Einstellungen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einstellungen"
+                Else
+                    tmpLabel = "Settings"
+                End If
+
+            Case "PT6G1" ' Visualisierung
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Visualisierung"
+                Else
+                    tmpLabel = "Visualization"
+                End If
+
+            Case "PT6G1B4" ' Anzeigen selekt. Objekte im Summenchart
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Anzeigen selekt. Objekte im Summenchart"
+                Else
+                    tmpLabel = "Show selected objects in charts"
+                End If
+
+            Case "PT6G1B5" ' Ampeln anzeigen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ampeln anzeigen"
+                Else
+                    tmpLabel = "Show trafficlights"
+                End If
+
+            Case "PT6G2" ' Berechnung
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Berechnung"
+                Else
+                    tmpLabel = "Calculation"
+                End If
+
+            Case "PT6G2B1" ' Bei Dehnen/Stauchen proportional anpassen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Bei Dehnen/Stauchen proportional anpassen"
+                Else
+                    tmpLabel = "Adjust resource/cost when expanding/shortening"
+                End If
+
+            Case "PT6G2B2" ' Phasenhäufigkeit anteilig berechnen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Phasenhäufigkeit anteilig berechnen"
+                Else
+                    tmpLabel = "Calculate phase-frequency proportionally"
+                End If
+
+            Case "PT6G3" ' Diverses
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Diverses"
+                Else
+                    tmpLabel = "Miscellaneous"
+                End If
+
+            Case "Pt6G3B3" ' Zeitraum verschieben
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zeitraum verschieben"
+                Else
+                    tmpLabel = "Move Timespan"
+                End If
+
+            Case "Pt6G3B4" ' Wörterbuch editieren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Wörterbuch editieren"
+                Else
+                    tmpLabel = "Edit Synonyms"
+                End If
+
+            Case Else
+                tmpLabel = "undefined"
+        End Select
+        
+        bestimmeLabel = tmpLabel
+
+    End Function
     Function chckVisibility(control As IRibbonControl) As Boolean
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             Select Case control.Id
@@ -2125,21 +3096,25 @@ Imports System.Windows
                                         .Erloes = CType(ProjektAendern.Erloes.Text, Double)
 
                                         ' Workaround: 
-                                        Dim tmpValue As Integer = hproj.dauerInDays
-                                        Call awinCreateBudgetWerte(hproj)
+
+                                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                                        ' Call awinCreateBudgetWerte(hproj)
                                     Else
                                         Try
-                                            Call awinUpdateBudgetWerte(hproj, CType(ProjektAendern.Erloes.Text, Double))
+                                            ' tk 19.1.17, nicht mehr notwendig, gibt jetzt Methode budgetWerte 
+                                            'Call awinUpdateBudgetWerte(hproj, CType(ProjektAendern.Erloes.Text, Double))
                                             .Erloes = CType(ProjektAendern.Erloes.Text, Double)
                                         Catch ex As Exception
                                             .Erloes = CType(ProjektAendern.Erloes.Text, Double)
                                             ' Workaround: 
-                                            Dim tmpValue As Integer = hproj.dauerInDays
-                                            Call awinCreateBudgetWerte(hproj)
+                                            ' Änderung tk, wird nicht mehr benötigt , gibt jetzt Methode budgetWerte 
+                                            ' Call awinCreateBudgetWerte(hproj)
                                         End Try
 
                                     End If
                                 End If
+
+                                Dim tmpValue As Integer = hproj.dauerInDays
 
                                 .StrategicFit = CType(ProjektAendern.sFit.Text, Double)
                                 .Risiko = CType(ProjektAendern.risiko.Text, Double)
@@ -9392,7 +10367,12 @@ Imports System.Windows
             returnvalue = reportAuswahl.ShowDialog
             Call awinDeSelect()
         Else
-            Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load some projects first ...")
+            Else
+                Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
+            End If
+
         End If
 
 

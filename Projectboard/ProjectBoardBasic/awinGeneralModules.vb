@@ -867,19 +867,6 @@ Public Module awinGeneralModules
             DiagrammTypen(5) = "Meilenstein"
             DiagrammTypen(6) = "Meilenstein Trendanalyse"
 
-            Try
-                ''repCult = CultureInfo.CurrentCulture
-                'repCult = ReportLang(PTSprache.englisch)
-                repCult = ReportLang(PTSprache.deutsch)
-                menuCult = ReportLang(PTSprache.englisch)
-
-                repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
-
-                Call setLanguageMessages()
-
-            Catch ex As Exception
-
-            End Try
 
             autoSzenarioNamen(0) = "vor Optimierung"
             autoSzenarioNamen(1) = "1. Optimum"
@@ -1080,8 +1067,18 @@ Public Module awinGeneralModules
                     End Try
 
 
-                    ' auslesen der anderen Informationen 
+                    ' auslesen der anderen Informationen , unter anderem welche Sprache ...
                     Call readOtherDefinitions(wsName4)
+
+                    Try
+                        ' die Info, welche Sprache gelten soll, ist in ReadOtherDefinitions ...
+
+                        repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+                        Call setLanguageMessages()
+
+                    Catch ex As Exception
+
+                    End Try
 
                     ' sollen die missingDefinitions gelesen / geschrieben werden 
                     Dim needToBeSaved As Boolean = False
@@ -1953,6 +1950,11 @@ Public Module awinGeneralModules
                 awinSettings.kalenderStart = CDate(.Range("Start_Kalender").Value)
                 awinSettings.zeitEinheit = CStr(.Range("Zeiteinheit").Value)
                 awinSettings.kapaEinheit = CStr(.Range("kapaEinheit").Value)
+                If awinSettings.kapaEinheit <> "PT" And _
+                    awinSettings.kapaEinheit <> "FTE" Then
+                    awinSettings.kapaEinheit = "PT"
+                    Call MsgBox("Kapa-Einheit: PT")
+                End If
                 awinSettings.offsetEinheit = CStr(.Range("offsetEinheit").Value)
                 'ur: 6.08.2015: umgestellt auf Settings in app.config ''awinSettings.databaseName = CStr(.Range("Datenbank").Value)
                 awinSettings.EinzelRessExport = CInt(.Range("EinzelRessourcenExport").Value)
@@ -2041,13 +2043,38 @@ Public Module awinGeneralModules
             End Try
 
 
-            ' sollen im Massen-Edit bei der Berechnung der auslastungsWerte die internen mitberücksichtigt werden ? 
+            ' sollen im Massen-Edit bei der Berechnung der auslastungsWerte die externen aus der Kapa-Datei mitberücksichtigt werden ? 
             Try
-                awinSettings.meAuslastungIsInclExt = CInt(.Range("KapaIstMitExt").Value)
+                awinSettings.meAuslastungIsInclExt = CBool(.Range("KapaIstMitExt").Value)
             Catch ex As Exception
                 awinSettings.meAuslastungIsInclExt = True
             End Try
 
+            ' welche Sprache soll verwendet werden: wenn english, alles andere ist deutsch
+            Try
+                awinSettings.englishLanguage = CBool(.Range("englishLanguage").Value)
+                If awinSettings.englishLanguage Then
+                    menuCult = ReportLang(PTSprache.englisch)
+                    repCult = menuCult
+                    awinSettings.kapaEinheit = "FTE"
+                Else
+                    awinSettings.kapaEinheit = "PT"
+                    menuCult = ReportLang(PTSprache.deutsch)
+                    repCult = menuCult
+                End If
+            Catch ex As Exception
+                awinSettings.englishLanguage = False
+                awinSettings.kapaEinheit = "PT"
+                menuCult = ReportLang(PTSprache.deutsch)
+                repCult = menuCult
+            End Try
+
+            ' sollen die Risiko Kennzahlen bei der Berechnung der Portfolio / Projekt-Ergebnisse mitgerechnet werden ?  
+            Try
+                awinSettings.considerRiskFee = CBool(.Range("considerRiskFee").Value)
+            Catch ex As Exception
+                awinSettings.considerRiskFee = False
+            End Try
 
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
@@ -3813,7 +3840,8 @@ Public Module awinGeneralModules
 
                             ' Workaround: 
                             Dim tmpValue As Integer = hproj.dauerInDays
-                            Call awinCreateBudgetWerte(hproj)
+                            ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                            'Call awinCreateBudgetWerte(hproj)
                             tafelZeile = tafelZeile + 1
 
                             anzNeuProjekte = anzNeuProjekte + 1
@@ -4001,7 +4029,8 @@ Public Module awinGeneralModules
                 If .Erloes > 0 Then
                     ' Workaround: 
                     Dim tmpValue As Integer = hproj.dauerInDays
-                    Call awinCreateBudgetWerte(hproj)
+                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                    ' Call awinCreateBudgetWerte(hproj)
 
                 End If
 
@@ -4540,12 +4569,12 @@ Public Module awinGeneralModules
         Dim endElem As String = ""
         Dim ende As Date, inputEnde As Date
         Dim budget As Double
+        Dim budgetInput As String = ""
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
         Dim capacityNeeded As String = ""
         Dim externCostInput As String = ""
-        Dim externCost As Double = 0.0
-        'Dim volume As Double, complexity As Double
+        
         Dim description As String = ""
         Dim businessUnit As String = ""
         Dim createdProjects As Integer = 0
@@ -4722,10 +4751,20 @@ Public Module awinGeneralModules
                                     dauer = CInt(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                                     lastSpaltenValue = spalte + 8
-                                    budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                    If budget < 0 Then
-                                        Throw New ArgumentException("negative Werte nicht zugelassen!")
+
+                                    budgetInput = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                    If budgetInput <> "calcNeeded" And IsNumeric(budgetInput) Then
+                                        budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        If budget < 0 Then
+                                            Throw New ArgumentException("negative Werte nicht zugelassen!")
+                                        End If
+                                    ElseIf budgetInput = "calcNeeded" Then
+                                        ' das bedeutet, dass das Budget errechnet werden soll ... 
+                                        budget = -999
+                                    Else
+                                        Throw New ArgumentException("mit dieser Angabe konnte nichts angefangen werden ...")
                                     End If
+                                    
 
                                     lastSpaltenValue = spalte + 9
                                     capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -4737,6 +4776,12 @@ Public Module awinGeneralModules
                                     externCostInput = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If Not isValidRoleCostInput(externCostInput, False) Then
                                         Throw New ArgumentException("ungültige Kosten-Angabe")
+                                    End If
+
+                                    ' Konsistenzprüfung ...
+                                    ' es darf nicht sein, dass Budget und externe Kosten berechnet werden sollen ...
+                                    If budget = -999 And externCostInput = "filltobudget" Then
+                                        Throw New ArgumentException("unterbestimmt: es können nicht sowohl Budget als auch externe Kosten berechnet werden")
                                     End If
 
                                     lastSpaltenValue = spalte + 11
@@ -9275,7 +9320,8 @@ Public Module awinGeneralModules
                     Else
                         ' Workaround: 
                         Dim tmpValue As Integer = kvp.Value.dauerInDays
-                        Call awinCreateBudgetWerte(kvp.Value)
+                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                        ' Call awinCreateBudgetWerte(kvp.Value)
 
                         AlleProjekte.Add(kvp.Key, kvp.Value)
                         If ShowProjekte.contains(kvp.Value.name) Then
@@ -9313,7 +9359,8 @@ Public Module awinGeneralModules
                 If ok Then
 
                     Dim tmpValue As Integer = kvp.Value.dauerInDays
-                    Call awinCreateBudgetWerte(kvp.Value)
+                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                    ' Call awinCreateBudgetWerte(kvp.Value)
                     AlleProjekte.Add(kvp.Key, kvp.Value)
 
                     Try
@@ -9721,13 +9768,29 @@ Public Module awinGeneralModules
 
         Dim tsMessage As String = ""
         If anzahlNeue + anzahlChanged > 0 Then
-            tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+            Else
+                tsMessage = "Timestamp: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+            End If
+
         End If
-        Call MsgBox("Gespeichert ... " & vbLf & _
+        Dim txtMsg As String
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            txtMsg = "Gespeichert ... " & vbLf & _
                     "Szenario: " & currentConstellation.constellationName & vbLf & vbLf & _
                     "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
                     "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf & _
-                    tsMessage)
+                    tsMessage
+        Else
+            txtMsg = "Stored ... " & vbLf & _
+                    "Scenario: " & currentConstellation.constellationName & vbLf & vbLf & _
+                    "Number of new projects and project-variants: " & anzahlNeue.ToString & vbLf & _
+                    "Number of changed projects and project-variants: " & anzahlChanged.ToString & vbLf & _
+                    tsMessage
+        End If
+
+        Call MsgBox(txtMsg)
 
 
     End Sub

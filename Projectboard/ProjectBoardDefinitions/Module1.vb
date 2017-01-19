@@ -2590,86 +2590,89 @@ Public Module Module1
 
     End Function
 
-    ''' <summary>
-    ''' erzeugt die monatlichen Budget Werte für ein Projekt
-    ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <remarks></remarks>
 
-    Public Sub awinCreateBudgetWerte(ByRef hproj As clsProjekt)
+    ' '' Änderung tk - das wird nicht mehr benötigt - budgetwerte wird jetzt immer berechnet
+    '' ''' <summary>
+    '' ''' erzeugt die monatlichen Budget Werte für ein Projekt
+    '' ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
+    '' ''' </summary>
+    '' ''' <param name="hproj"></param>
+    '' ''' <remarks></remarks>
 
-
-        Dim costValues() As Double, budgetValues() As Double
-        Dim curBudget As Double, avgbudget As Double
-
-        ' Ergänzung am 26.5.14: wenn hproj in den Längen der Bedarfe Arrays nicht konsistent ist: 
-        ' anpassen 
-        If Not hproj.isConsistent Then
-            Call hproj.syncXWertePhases()
-        End If
-
-        costValues = hproj.getGesamtKostenBedarf
-        ReDim budgetValues(costValues.Length - 1)
-
-        curBudget = hproj.Erloes
-        avgbudget = curBudget / costValues.Length
-
-        If curBudget > 0 Then
-            If costValues.Sum > 0 Then
-                Dim pMarge As Double = hproj.ProjectMarge
-                For i = 0 To costValues.Length - 1
-                    budgetValues(i) = costValues(i) * (1 + pMarge)
-                Next
-            Else
-                For i = 0 To costValues.Length - 1
-                    budgetValues(i) = avgbudget
-                Next
-            End If
-        End If
+    'Public Sub awinCreateBudgetWerte(ByRef hproj As clsProjekt)
 
 
-        hproj.budgetWerte = budgetValues
+    '    Dim costValues() As Double, budgetValues() As Double
+    '    Dim curBudget As Double, avgbudget As Double
+
+    '    ' Ergänzung am 26.5.14: wenn hproj in den Längen der Bedarfe Arrays nicht konsistent ist: 
+    '    ' anpassen 
+    '    If Not hproj.isConsistent Then
+    '        Call hproj.syncXWertePhases()
+    '    End If
+
+    '    costValues = hproj.getGesamtKostenBedarf
+    '    ReDim budgetValues(costValues.Length - 1)
+
+    '    curBudget = hproj.Erloes
+    '    avgbudget = curBudget / costValues.Length
+
+    '    If curBudget > 0 Then
+    '        If costValues.Sum > 0 Then
+    '            Dim pMarge As Double = hproj.ProjectMarge
+    '            For i = 0 To costValues.Length - 1
+    '                budgetValues(i) = costValues(i) * (1 + pMarge)
+    '            Next
+    '        Else
+    '            For i = 0 To costValues.Length - 1
+    '                budgetValues(i) = avgbudget
+    '            Next
+    '        End If
+    '    End If
 
 
-    End Sub
-
-    ''' <summary>
-    ''' aktualisiert die Budget werte , wobei die Charakteristik erhalten bleibt 
-    ''' Vorbedingung ist, daß das bisherige Budget > 0 Null ist 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <param name="newBudget">Gesamt Wert des neuen Budgets</param>
-    ''' <remarks></remarks>
-    Public Sub awinUpdateBudgetWerte(ByRef hproj As clsProjekt, ByVal newBudget As Double)
+    '    hproj.budgetWerte = budgetValues
 
 
+    'End Sub
 
-        Dim curValues() As Double, budgetValues() As Double
-        Dim oldBudget As Double
-        Dim faktor As Double
+    ' nicht mehr notwendig, budgetWerte ist jetzt readonly Eigenschaft ... 
+    '' ''' <summary>
+    '' ''' aktualisiert die Budget werte , wobei die Charakteristik erhalten bleibt 
+    '' ''' Vorbedingung ist, daß das bisherige Budget > 0 Null ist 
+    '' ''' </summary>
+    '' ''' <param name="hproj"></param>
+    '' ''' <param name="newBudget">Gesamt Wert des neuen Budgets</param>
+    '' ''' <remarks></remarks>
+    ''Public Sub awinUpdateBudgetWerte(ByRef hproj As clsProjekt, ByVal newBudget As Double)
 
-        curValues = hproj.budgetWerte
-        ReDim budgetValues(curValues.Length - 1)
-        oldBudget = curValues.Sum
 
-        If oldBudget = 0 Then
-            Throw New Exception("altes Budget darf beim Update nicht Null sein")
-        Else
-            If newBudget <= 0 Then
-                ' budgetvalues ist bereits auf Null gesetzt  
-            Else
-                faktor = newBudget / oldBudget
-                For i = 0 To curValues.Length - 1
-                    budgetValues(i) = curValues(i) * faktor
-                Next
-            End If
 
-        End If
+    ''    Dim curValues() As Double, budgetValues() As Double
+    ''    Dim oldBudget As Double
+    ''    Dim faktor As Double
 
-        hproj.budgetWerte = budgetValues
+    ''    curValues = hproj.budgetWerte
+    ''    ReDim budgetValues(curValues.Length - 1)
+    ''    oldBudget = curValues.Sum
 
-    End Sub
+    ''    If oldBudget = 0 Then
+    ''        Throw New Exception("altes Budget darf beim Update nicht Null sein")
+    ''    Else
+    ''        If newBudget <= 0 Then
+    ''            ' budgetvalues ist bereits auf Null gesetzt  
+    ''        Else
+    ''            faktor = newBudget / oldBudget
+    ''            For i = 0 To curValues.Length - 1
+    ''                budgetValues(i) = curValues(i) * faktor
+    ''            Next
+    ''        End If
+
+    ''    End If
+
+    ''    hproj.budgetWerte = budgetValues
+
+    ''End Sub
 
     ''' <summary>
     ''' bereichnet zu einer gegebenen Y-Koordinate (Top) die dazugehörige Zeile in der Projekt-Tafel

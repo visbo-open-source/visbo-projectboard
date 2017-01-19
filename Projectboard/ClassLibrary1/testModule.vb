@@ -262,6 +262,7 @@ Public Module testModule
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
         Dim tatsErstellt As Integer = 0
+        Dim msgTxt As String
 
         Dim todoListe As New Collection
 
@@ -283,7 +284,11 @@ Public Module testModule
                         hproj = kvp.Value
                         todoListe.Add(hproj.name)
                     Catch ex As Exception
-                        Call MsgBox(kvp.Value.name & " nicht gefunden ...")
+                        msgTxt = kvp.Value.name & " nicht gefunden ..."
+                        If awinSettings.englishLanguage Then
+                            msgTxt = kvp.Value.name & " not found ..."
+                        End If
+                        Call MsgBox(msgTxt)
                         Exit Sub
                     End Try
                     If hproj.calcNeededLines() > maxZeilen Then
@@ -337,7 +342,11 @@ Public Module testModule
 
             End If
 
-            e.Result = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+            msgTxt = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+            If awinSettings.englishLanguage Then
+                msgTxt = " creating Report for project '" & maxProj.getShapeText
+            End If
+            e.Result = msgTxt
             worker.ReportProgress(0, e)
 
 
@@ -402,8 +411,12 @@ Public Module testModule
 
                     End If
 
+                    msgTxt = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+                    If awinSettings.englishLanguage Then
+                        msgTxt = " creating Report for project '" & maxProj.getShapeText
+                    End If
+                    e.Result = msgTxt
 
-                    e.Result = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
                     worker.ReportProgress(0, e)
 
                     If tatsErstellt = 0 Then
@@ -450,12 +463,22 @@ Public Module testModule
 
         End If
 
+
         If tatsErstellt = 1 Then
-            e.Result = " Report für " & tatsErstellt & " Projekt erstellt !"
+            msgTxt = " Report für " & tatsErstellt & " Projekt erstellt !"
         Else
-            e.Result = " Report für " & tatsErstellt & " Projekte erstellt !"
+            msgTxt = " Report für " & tatsErstellt & " Projekte erstellt !"
         End If
 
+        If awinSettings.englishLanguage Then
+            If tatsErstellt = 1 Then
+                msgTxt = " Report for " & tatsErstellt & " project created !"
+            Else
+                msgTxt = " Report for " & tatsErstellt & " projects created !"
+            End If
+        End If
+
+        e.Result = msgTxt
         worker.ReportProgress(0, e)
         'frmSelectPPTTempl.statusNotification.Text = " Report mit " & tatsErstellt & " Seite erstellt !"
 
@@ -516,6 +539,7 @@ Public Module testModule
         Dim ampelShape As pptNS.Shape = Nothing
         Dim sternShape As pptNS.Shape = Nothing
 
+        Dim msgTxt As String
 
         ' Änderung tk 1.2.16
         ' wird benötigt, um in Ergänzung zu pptLasttime im Falle von nur einem Projekt / vielen Swimlanes die bereits erstellte Folie zu löschen 
@@ -620,8 +644,11 @@ Public Module testModule
 
                             pptTemplatePresentation.Saved = True
                             pptTemplatePresentation.Close()
-
-                            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                            msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "Cancelled ... please close/store all open presentations ..."
+                            End If
+                            e.Result = msgTxt
                             If worker.WorkerReportsProgress Then
                                 worker.ReportProgress(0, e)
                             End If
@@ -637,7 +664,12 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            If awinSettings.englishLanguage Then
+                msgTxt = "Cancelled ... please close/store all open presentations ..."
+            End If
+            e.Result = msgTxt
+
             If worker.WorkerReportsProgress Then
                 worker.ReportProgress(0, e)
             End If
@@ -674,8 +706,11 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-
-            e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
+            msgTxt = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
+            If awinSettings.englishLanguage Then
+                msgTxt = "please close the file 'Report.pptx' or store it with another name"
+            End If
+            e.Result = msgTxt
             If worker.WorkerReportsProgress Then
                 worker.ReportProgress(0, e)
             End If
@@ -701,7 +736,11 @@ Public Module testModule
 
                 If worker.CancellationPending Then
                     e.Cancel = True
-                    e.Result = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
+                    msgTxt = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Report Creation abandoned after " & folieIX - 1 & " pages ..."
+                    End If
+                    e.Result = msgTxt
                     Exit While
                 End If
 
@@ -764,7 +803,11 @@ Public Module testModule
 
 
             'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & folieIX & " wird aufgebaut ...."
+            msgTxt = "Bericht Seite " & folieIX & " wird aufgebaut ...."
+            If awinSettings.englishLanguage Then
+                msgTxt = "Drawing Report Page Nr " & folieIX & " ...."
+            End If
+            e.Result = msgTxt
 
             If worker.WorkerReportsProgress Then
                 worker.ReportProgress(0, e)
@@ -2886,6 +2929,8 @@ Public Module testModule
         Dim notYetDone As Boolean = False
         Dim listofShapes As New Collection
 
+        Dim msgtxt As String = ""
+
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
@@ -2894,7 +2939,11 @@ Public Module testModule
             Try
                 pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
             Catch ex1 As Exception
-                Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
+                msgtxt = "Powerpoint konnte nicht gestartet werden ..." & ex1.Message
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Powerpoint could not be started ..." & ex1.Message
+                End If
+                Call MsgBox(msgtxt)
                 Exit Sub
             End Try
 
@@ -2902,7 +2951,11 @@ Public Module testModule
 
 
         'frmSelectPPTTempl.statusNotification.Text = "PowerPoint nun geöffnet ...."
-        e.Result = "PowerPoint ist nun geöffnet ...."
+        msgtxt = "PowerPoint ist nun geöffnet ...."
+        If awinSettings.englishLanguage Then
+            msgtxt = "Powerpoint now open ..."
+        End If
+        e.Result = msgtxt
         If worker.WorkerReportsProgress Then
             worker.ReportProgress(0, e)
         End If
@@ -2944,7 +2997,12 @@ Public Module testModule
                         pptTemplatePresentation.Saved = True
                         pptTemplatePresentation.Close()
 
-                        e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                        msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..."
+                        End If
+                        e.Result = msgtxt
+
                         If worker.WorkerReportsProgress Then
                             worker.ReportProgress(0, e)
                         End If
@@ -2958,7 +3016,11 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            If awinSettings.englishLanguage Then
+                msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..."
+            End If
+            e.Result = msgtxt
             If worker.WorkerReportsProgress Then
                 worker.ReportProgress(0, e)
             End If
@@ -3025,7 +3087,12 @@ Public Module testModule
 
                 If worker.CancellationPending Then
                     e.Cancel = True
-                    e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+                    msgtxt = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "Report Creation cancelled after " & tatsErstellt & " pages ..."
+                    End If
+
+                    e.Result = msgtxt
 
                     Exit While
                 End If
@@ -3053,8 +3120,12 @@ Public Module testModule
             End If
 
 
-            'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
+            msgtxt = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
+            If awinSettings.englishLanguage Then
+                msgtxt = "Page " & tatsErstellt & " now creating ...."
+            End If
+            e.Result = msgtxt
+
 
             If worker.WorkerReportsProgress Then
                 worker.ReportProgress(0, e)
@@ -3219,8 +3290,12 @@ Public Module testModule
 
                     ' Fortschrittsmeldung im Formular SelectPPTTempl
 
-                    'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-                    e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
+                    msgtxt = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "Chart '" & kennzeichnung & "' creating ...."
+                    End If
+                    e.Result = msgtxt
+
                     If worker.WorkerReportsProgress Then
                         worker.ReportProgress(0, e)
                     End If
@@ -4868,12 +4943,22 @@ Public Module testModule
 
         ' pptTemplate muss noch geschlossen werden
 
-        If tatsErstellt = 1 Then
-            e.Result = " Report mit " & tatsErstellt & " Seite erstellt !"
+        If awinSettings.englishLanguage Then
+            If tatsErstellt = 1 Then
+                msgtxt = " Report with " & tatsErstellt & " page created !"
+            Else
+                msgtxt = " Report with " & tatsErstellt & " page created !"
+            End If
         Else
-            e.Result = " Report mit " & tatsErstellt & " Seiten erstellt !"
+            If tatsErstellt = 1 Then
+                msgtxt = " Report mit " & tatsErstellt & " Seite erstellt !"
+            Else
+                msgtxt = " Report mit " & tatsErstellt & " Seiten erstellt !"
+            End If
         End If
+        
 
+        e.Result = msgtxt
         If worker.WorkerReportsProgress Then
             worker.ReportProgress(0, e)
         End If
@@ -8517,7 +8602,9 @@ Public Module testModule
             vproj = Nothing
 
             ' Ermitteln der Kennzahlen 
-            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
+            'hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
+            ' sollte hier genauso aufgerufen, wie im CreateProjektErgebnisCharakteristik 
+            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
 
             If showPersonalBedarf Then
                 hpersonalBedarf = hproj.getAlleRessourcen.Sum
@@ -8635,7 +8722,9 @@ Public Module testModule
 
 
             Else
-                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis, False)
+                ' sollte genauso aufgerufen werden, wie sonst auch immer 
+                'vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis, False)
+                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
 
                 If showPersonalBedarf Then
                     vPersonalBedarf = vproj.getAlleRessourcen.Sum
@@ -13898,6 +13987,7 @@ Public Module testModule
                                 ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
 
         Dim addOn As Double = 0.0
+        Dim msgTxt As String = ""
 
         If Not IsNothing(rds.durationArrowShape) And Not IsNothing(rds.durationTextShape) Then
 
@@ -14045,14 +14135,22 @@ Public Module testModule
 
                     If worker.CancellationPending Then
                         e.Cancel = True
-                        e.Result = "Berichterstellung abgebrochen ..."
+                        msgTxt = "Berichterstellung abgebrochen ..."
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "Report Creation cancelled ..."
+                        End If
+                        e.Result = msgTxt
                         Exit For
                     End If
 
                 End If
 
                 ' Zwischenbericht abgeben ...
-                e.Result = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
+                msgTxt = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
+                If awinSettings.englishLanguage Then
+                    msgTxt = "drawing Project '" & hproj.getShapeText & "'"
+                End If
+                e.Result = msgTxt
                 If worker.WorkerReportsProgress Then
                     worker.ReportProgress(0, e)
                 End If
@@ -17234,6 +17332,7 @@ Public Module testModule
         Dim anzZeilen As Integer = 0
         Dim gesamtAnzZeilen As Integer = 0
 
+        Dim msgTxt As String
 
 
         dinFormatA(0, 0) = 3120.0
@@ -17773,14 +17872,22 @@ Public Module testModule
 
                         If worker.CancellationPending Then
                             e.Cancel = True
-                            e.Result = "Berichterstellung abgebrochen ..."
+                            msgTxt = "Berichterstellung abgebrochen ..."
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "Report Creation cancelled ..."
+                            End If
+                            e.Result = msgTxt
                             Exit Sub
                         End If
 
                     End If
 
                     ' Zwischenbericht abgeben ...
-                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
+                    msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Drawing Swimlane '" & elemNameOfElemID(curSwl.nameID) & "'  ...."
+                    End If
+                    e.Result = msgTxt
                     If worker.WorkerReportsProgress Then
                         worker.ReportProgress(0, e)
                     End If
@@ -17835,12 +17942,15 @@ Public Module testModule
                     ' es wurde in der Schleife keine Swimmlane gezeichnet, da sie zu groß ist für eine Seite
                     ' Abbruch provoziere
                     ' Zwischenbericht abgeben ...
-                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
+                    msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' could not be drawn: not enough space ...."
+                    End If
+                    e.Result = msgTxt
                     If worker.WorkerReportsProgress Then
                         worker.ReportProgress(0, e)
                     End If
-                    Throw New ArgumentException("Das Zeichnen der Swimlanes für Projekt '" & hproj.name & "' wird abgebrochen." & vbLf & _
-                                                "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ....")
+                    Throw New ArgumentException(msgTxt)
                     swimLanesDone = 0
                     swimLanesToDo = 0
 

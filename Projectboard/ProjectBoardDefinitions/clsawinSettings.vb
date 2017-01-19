@@ -164,6 +164,8 @@ Public Class clsawinSettings
     ' Default = no 
     Public Property meAuslastungIsInclExt As Boolean = True
 
+    Public Property englishLanguage As Boolean = False
+
     Public Property allowSumEditing As Boolean
 
     ' Settings für Report-Message-Language
@@ -171,6 +173,10 @@ Public Class clsawinSettings
 
     ' Setting für Menu Language 
     Public Property menuLanguage As String
+
+    ' Setting, ob Risiko Kennzahl in Budget Übersicht Berechnung eingehen soll 
+    Public Property considerRiskFee As Boolean = False
+
     ' Setting, ob bei Vergleichen mit früheren Ständen mit der standard-Variante verglichen werden soll 
     ' oder mit einem früheren Stand der Variante
     Public Property compareWithStandardVariant As Boolean
@@ -299,8 +305,10 @@ Public Class clsawinSettings
         _meAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
+        _englishLanguage = False
         _allowSumEditing = True
 
+        _considerRiskFee = False
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True
 

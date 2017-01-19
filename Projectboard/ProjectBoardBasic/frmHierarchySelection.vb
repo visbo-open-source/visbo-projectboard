@@ -530,7 +530,12 @@ Public Class frmHierarchySelection
                 ' Prüfen, ob die Datei überhaupt existirt 
                 If repVorlagenDropbox.Text.Length = 0 Then
                     ' Call MsgBox("bitte PPT Vorlage auswählen !")
-                    Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                    If awinSettings.englishLanguage Then
+                        Me.statusLabel.Text = "please select a PPT template !"
+                    Else
+                        Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                    End If
+
                     Me.statusLabel.Visible = True
                 ElseIf My.Computer.FileSystem.FileExists(vorlagenDateiName) Then
 
@@ -553,7 +558,12 @@ Public Class frmHierarchySelection
                         statusLabel.Visible = True
 
                         Me.Cursor = Cursors.WaitCursor
-                        AbbrButton.Text = "Abbrechen"
+                        If awinSettings.englishLanguage Then
+                            AbbrButton.Text = "Cancel"
+                        Else
+                            AbbrButton.Text = "Abbrechen"
+                        End If
+
 
                         ' Alternativ ohne Background Worker
                         If Me.menuOption = PTmenue.reportBHTC Then
@@ -591,16 +601,26 @@ Public Class frmHierarchySelection
 
                 Else
 
-                    'Call MsgBox("bitte PPT Vorlage auswählen !")
-                    Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                    If awinSettings.englishLanguage Then
+                        Me.statusLabel.Text = "please select a PPT template !"
+                    Else
+                        Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                    End If
+
                     Me.statusLabel.Visible = True
                 End If
 
 
             Else
                 'Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & "einen Zeitraum angeben ...")
-                Me.statusLabel.Text = "bitte mindestens ein Element selektieren bzw. " & vbLf & _
+                If awinSettings.englishLanguage Then
+                    Me.statusLabel.Text = "please select at least one planelement resp. " & vbLf & _
+                             "provide a timespan ..."
+                Else
+                    Me.statusLabel.Text = "bitte mindestens ein Element selektieren bzw. " & vbLf & _
                              "einen Zeitraum angeben ..."
+                End If
+                
                 Me.statusLabel.Visible = True
             End If
 
@@ -849,7 +869,12 @@ Public Class frmHierarchySelection
             End With
 
         Else
-            Call MsgBox("es ist keine Hierarchie gegeben")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("there is no hierarchy")
+            Else
+                Call MsgBox("es ist keine Hierarchie gegeben")
+            End If
+
         End If
     End Sub
 
@@ -1092,7 +1117,11 @@ Public Class frmHierarchySelection
             End With
 
         Catch ex As Exception
-            Call MsgBox("Fehler " & ex.Message)
+            Dim msgTxt As String = "Fehler " & ex.Message
+            If awinSettings.englishLanguage Then
+                msgTxt = "Error: " & ex.Message
+            End If
+            Call MsgBox(msgTxt)
         End Try
 
     End Sub
@@ -1377,7 +1406,12 @@ Public Class frmHierarchySelection
 
                 If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
                     (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-                    Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("either phases/milestones or Roles/cost may be selected ...")
+                    Else
+                        Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+                    End If
+
                 Else
                     filterName = filterDropbox.Text
                     ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
@@ -1468,7 +1502,12 @@ Public Class frmHierarchySelection
             If repVorlagenDropbox.Text.Length = 0 Then
 
                 ' Call MsgBox("bitte PPT Vorlage auswählen !")
-                Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                If awinSettings.englishLanguage Then
+                    Me.statusLabel.Text = "please select a PPT template !"
+                Else
+                    Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                End If
+
                 Me.statusLabel.Visible = True
 
             ElseIf My.Computer.FileSystem.FileExists(vorlagenDateiName) Then
@@ -1487,8 +1526,14 @@ Public Class frmHierarchySelection
 
 
                 Else
-                    Call MsgBox("Bitte geben Sie einen Namen für diese Report-Profil an")
-                    Me.statusLabel.Text = "Bitte geben Sie einen Namen für diese Report-Profil an"
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please provide a name for the Report Profile")
+                        Me.statusLabel.Text = "please provide a name for the Report Profile"
+                    Else
+                        Call MsgBox("Bitte geben Sie einen Namen für diese Report-Profil an")
+                        Me.statusLabel.Text = "Bitte geben Sie einen Namen für diese Report-Profil an"
+                    End If
+                    
                     Me.statusLabel.Visible = True
                 End If
 
@@ -1497,16 +1542,26 @@ Public Class frmHierarchySelection
             Else
 
                 'Call MsgBox("bitte PPT Vorlage auswählen !")
-                Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                If awinSettings.englishLanguage Then
+                    Me.statusLabel.Text = "please select a PPT template !"
+                Else
+                    Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                End If
+
                 Me.statusLabel.Visible = True
 
             End If
 
-            Me.statusLabel.Text = "ReportProfile '" & repProfil.name & "' gespeichert"
+            If awinSettings.englishLanguage Then
+                Me.statusLabel.Text = "Report-Profile '" & repProfil.name & "' stored"
+            Else
+                Me.statusLabel.Text = "ReportProfil '" & repProfil.name & "' gespeichert"
+            End If
+
             Me.statusLabel.Visible = True
 
         Else
-            Call MsgBox("nicht reportBHTC aber auch reportBHTC: also eigentlich nicht möglich")
+            'Call MsgBox("nicht reportBHTC aber auch reportBHTC: also eigentlich nicht möglich")
         End If
 
 
@@ -1651,7 +1706,12 @@ Public Class frmHierarchySelection
 
         If menuOption = PTmenue.reportBHTC Then
 
-            statusLabel.Text = "Berichterstellung wurde beendet"
+            If awinSettings.englishLanguage Then
+                statusLabel.Text = "Report Creation cancelled"
+            Else
+                statusLabel.Text = "Berichterstellung wurde beendet"
+            End If
+
             Try
                 Me.BackgroundWorker3.CancelAsync()
             Catch ex As Exception

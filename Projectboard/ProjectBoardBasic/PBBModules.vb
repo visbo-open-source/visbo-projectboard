@@ -651,9 +651,6 @@ Public Module PBBModules
                             .shpUID = hproj.shpUID
                             .tfZeile = hproj.tfZeile
                             .Status = ProjektStatus(0)
-                            If Not IsNothing(hproj.budgetWerte) Then
-                                .budgetWerte = hproj.budgetWerte
-                            End If
 
                         End With
 

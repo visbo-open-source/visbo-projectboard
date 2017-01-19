@@ -94,9 +94,18 @@ Public Class frmProjPortfolioAdmin
             ' bei Beginn immer disabled
             .deleteFilterIcon.Enabled = False
 
+            ' Text des Versions-Feldes
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                .lblStandvom.Text = "Version at:"
+            End If
+
             If aKtionskennung = PTTvActions.activateV Then
 
-                .Text = "Variante aktivieren"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Variante aktivieren"
+                Else
+                    .Text = "Activate Variant"
+                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -125,8 +134,12 @@ Public Class frmProjPortfolioAdmin
 
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
-                '.Text = "Zusammenstellung im Szenario ändern"
-                .Text = "Scenario "
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Szenario "
+                Else
+                    .Text = "Scenario "
+                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -145,11 +158,20 @@ Public Class frmProjPortfolioAdmin
                 .OKButton.Visible = True
                 '.OKButton.Text = "Szenario speichern"
 
-                If storeToDBasWell.Checked Then
-                    .OKButton.Text = "Store to Session and DB"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    If storeToDBasWell.Checked Then
+                        .OKButton.Text = "in Session und DB speichern"
+                    Else
+                        .OKButton.Text = "in Session speichern"
+                    End If
                 Else
-                    .OKButton.Text = "Store to Session"
+                    If storeToDBasWell.Checked Then
+                        .OKButton.Text = "Store to Session and DB"
+                    Else
+                        .OKButton.Text = "Store to Session"
+                    End If
                 End If
+
 
                 Dim testName As String = .OKButton.Name
 
@@ -165,7 +187,11 @@ Public Class frmProjPortfolioAdmin
 
             ElseIf aKtionskennung = PTTvActions.deleteV Then
 
-                .Text = "Variante löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Variante löschen"
+                Else
+                    .Text = "Delete Variant"
+                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -181,8 +207,14 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "aus Session Löschen"
+                Else
+                    .OKButton.Text = "Delete from Session"
+                End If
+
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+
 
                 .lblVersionen1.Visible = False
                 .lblVersionen2.Visible = False
@@ -196,7 +228,12 @@ Public Class frmProjPortfolioAdmin
 
             ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
-                .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+                Else
+                    .Text = "Delete projects, variants, timestamps from DB"
+                End If
+
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -213,7 +250,12 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "in DB Löschen"
+                Else
+                    .OKButton.Text = "Delete from DB"
+                End If
+
 
                 .lblVersionen1.Visible = False
                 .lblVersionen2.Visible = False
@@ -227,7 +269,12 @@ Public Class frmProjPortfolioAdmin
 
             ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
-                .Text = "alle Projekte, Varianten löschen ausser den letzten Ständen ..."
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Alle Zeitstempel löschen ausser ... "
+                Else
+                    .Text = "Delete all timestamps except ..."
+                End If
+
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -244,10 +291,21 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "in DB Löschen"
+                Else
+                    .OKButton.Text = "Delete from DB"
+                End If
+
 
                 .lblVersionen1.Visible = True
                 .lblVersionen2.Visible = True
+
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    lblVersionen1.Text = "delete all except"
+                    lblVersionen2.Text = "different versions"
+                End If
+
                 .versionsToKeep.Visible = True
                 .versionsToKeep.Value = 3
                 .lblVersionen1.Top = .lblVersionen1.Top + versionenOffset
@@ -262,7 +320,13 @@ Public Class frmProjPortfolioAdmin
                 storeToDBasWell.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delFromSession Then
-                .Text = "Projekte, Varianten aus der Session löschen"
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte, Varianten aus der Session löschen"
+                Else
+                    .Text = "Delete projects, variants from Session"
+                End If
+
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -279,7 +343,12 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Löschen"
+                Else
+                    .OKButton.Text = "Delete"
+                End If
+
 
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
@@ -289,7 +358,12 @@ Public Class frmProjPortfolioAdmin
 
             ElseIf aKtionskennung = PTTvActions.loadPV Then
 
-                .Text = "Projekte und Varianten in die Session laden "
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte und Varianten in die Session laden "
+                Else
+                    .Text = "Load projects and variants to the session "
+                End If
+
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -307,7 +381,12 @@ Public Class frmProjPortfolioAdmin
 
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Laden"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Laden"
+                Else
+                    .OKButton.Text = "Load"
+                End If
+
 
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
@@ -318,7 +397,11 @@ Public Class frmProjPortfolioAdmin
 
             ElseIf aKtionskennung = PTTvActions.loadPVS Then
 
-                .Text = "Projekte und Varianten in die Session laden "
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte und Varianten in die Session laden "
+                Else
+                    .Text = "Load projects and variants to the session "
+                End If
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -336,7 +419,11 @@ Public Class frmProjPortfolioAdmin
 
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Laden"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Laden"
+                Else
+                    .OKButton.Text = "Load"
+                End If
 
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
@@ -471,7 +558,13 @@ Public Class frmProjPortfolioAdmin
             quickList = True
 
             If pvNamesList.Count = 0 Then
-                Call MsgBox("keine Projekte in der Datenbank vorhanden ...")
+                Dim txtmsg As String
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    txtmsg = "keine Projekte in der Datenbank vorhanden ..."
+                Else
+                    txtmsg = "there are no projects in database ..."
+                End If
+                Call MsgBox(txtmsg)
             End If
         End If
 
@@ -534,7 +627,14 @@ Public Class frmProjPortfolioAdmin
                 currentConstellationName = currentConstellationName & " (*)"
             End If
 
-            Me.Text = "Scenario " & currentConstellationName
+            Dim preText As String
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                preText = "Szenario "
+            Else
+                preText = "Scenario "
+            End If
+
+            Me.Text = preText & currentConstellationName
         End If
 
 
@@ -1161,7 +1261,13 @@ Public Class frmProjPortfolioAdmin
                         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         If request.pingMongoDb() Then
                         Else
-                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                            Dim msgText As String
+                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                msgText = "Datenbank-Verbindung ist unterbrochen!"
+                            Else
+                                msgText = "no connection to Database!"
+                            End If
+                            Call MsgBox(msgText)
                         End If
 
                         ' Lesen der TimeStamp Snapshots für ProjNAme, variantName 
@@ -1285,8 +1391,18 @@ Public Class frmProjPortfolioAdmin
 
         ' Bestimmen der Überschrift des Output Headers, falls es irgendwelche Meldungen gibt
         If aKtionskennung = PTTvActions.delFromDB Then
-            outPutHeader = "Projekt-Varianten können nicht gelöscht werden !"
-            outPutExplanation = "folgende Projekt-Varianten werden aktuell in Szenarien referenziert und können daher nicht gelöscht werden:"
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Projekt-Varianten können nicht gelöscht werden !"
+                outPutExplanation = "folgende Projekt-Varianten werden aktuell in Szenarien referenziert" & vbLf & _
+                                    "und können daher nicht gelöscht werden:"
+            Else
+                outPutHeader = "Project-Variants can not be deleted !"
+                outPutExplanation = "following project-variants are referenced in scenarios " & vbLf & _
+                                    "and con not be deleted:"
+            End If
+
+            
         End If
 
         
@@ -1554,19 +1670,39 @@ Public Class frmProjPortfolioAdmin
 
                 projectConstellations.update(toStoreConstellation)
 
+                Dim txtMsg1 As String = ""
+                Dim txtMsg2 As String = ""
                 If storeToDBasWell.Checked Then
                     Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation)
 
                     ' jetzt ggf die Outputs anzeigen 
+                    
                     If outPutCollection.Count > 0 Then
-                        Call showOutPut(outPutCollection, _
-                                        "Speichern Szenario " & toStoreConstellation.constellationName, _
-                                        "folgende Probleme sind aufgetreten:")
+                        
+                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                            txtMsg1 = "Speichern Szenario " & toStoreConstellation.constellationName
+                            txtMsg2 = "folgende Probleme sind aufgetreten:"
+                        Else
+                            txtMsg1 = "Store Scenario " & toStoreConstellation.constellationName
+                            txtMsg2 = "following problems occurred:"
+                        End If
+                        Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
+
                     Else
-                        Call MsgBox("ok, " & currentConstellationName & " in Datenbank und Session gespeichert")
+                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                            txtMsg1 = "ok, " & currentConstellationName & " in Datenbank und Session gespeichert"
+                        Else
+                            txtMsg1 = "ok, " & currentConstellationName & " stored in Session and database"
+                        End If
+                        Call MsgBox(txtMsg1)
                     End If
                 Else
-                    Call MsgBox("ok, " & currentConstellationName & " in Session gespeichert")
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        txtMsg1 = "ok, " & currentConstellationName & " in Session gespeichert"
+                    Else
+                        txtMsg1 = "ok, " & currentConstellationName & " stored in Session"
+                    End If
+                    Call MsgBox(txtMsg1)
                 End If
 
                 ' jetzt das EIngabe Feld wieder zurücksetzen 
@@ -1579,7 +1715,14 @@ Public Class frmProjPortfolioAdmin
             'DialogResult = Windows.Forms.DialogResult.OK
             'MyBase.Close()
         Else
-            Call MsgBox("nicht unterstützte Option in ProjPortfolio Admin Formular ...")
+            Dim txtMsg As String = ""
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                txtMsg = "nicht unterstützte Option in ProjPortfolioAdmin Formular ..."
+            Else
+                txtMsg = "not supported option in form ProjPortfolioAdmin ..."
+            End If
+            Call MsgBox(txtMsg)
+
         End If
 
 
@@ -1720,8 +1863,14 @@ Public Class frmProjPortfolioAdmin
 
                 '    Next
                 'Else
-                Call MsgBox("beim Löschen nicht zulässig ...")
-                'End If
+                Dim txtMsg As String = ""
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    txtMsg = "beim Löschen nicht zulässig ..."
+                Else
+                    txtMsg = "not allowed option ..."
+                End If
+                Call MsgBox(txtMsg)
+               
 
             Else
                 ' in allen anderen Fällen: loadPV, loadPVS, delAllExceptFromDB, delFromSession
@@ -1744,7 +1893,12 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Then
             If Not currentConstellationName.EndsWith("(*)") Then
                 currentConstellationName = currentConstellationName & " (*)"
-                Me.Text = "Scenario " & currentConstellationName
+                Dim preText As String = "Szenario "
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    preText = "Scenario "
+                End If
+
+                Me.Text = preText & currentConstellationName
             End If
 
 
@@ -1933,7 +2087,12 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Then
             If Not currentConstellationName.EndsWith("(*)") Then
                 currentConstellationName = currentConstellationName & " (*)"
-                Me.Text = "Scenario " & currentConstellationName
+
+                Dim preText As String = "Szenario "
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    preText = "Scenario "
+                End If
+                Me.Text = preText & currentConstellationName
             End If
 
 
@@ -1971,7 +2130,11 @@ Public Class frmProjPortfolioAdmin
         If Not currentConstellationName.EndsWith("(*)") Then
             currentConstellationName = currentConstellationName & " (*)"
 
-            Me.Text = "Scenario " & currentConstellationName
+            Dim preText As String = "Szenario "
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                preText = "Scenario "
+            End If
+            Me.Text = preText & currentConstellationName
         End If
 
 
@@ -2245,56 +2408,130 @@ Public Class frmProjPortfolioAdmin
     'End Sub
 
     Private Sub requiredDate_MouseHover(sender As Object, e As EventArgs) Handles requiredDate.MouseHover
-        ToolTipStand.Show("Angabe des Referenzdatums, zu dem die Projekte geladen werden; Default ist immer der aktuelle Stand", requiredDate, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Angabe des Referenzdatums, zu dem die Projekte geladen werden; Default ist immer der aktuelle Stand"
+        Else
+            ttText = "Reference-Date: all projects are selected with timestamp at or before that date; Default is current date & time"
+        End If
+        ToolTipStand.Show(ttText, requiredDate, 2000)
     End Sub
 
     Private Sub SelectionSet_MouseHover(sender As Object, e As EventArgs) Handles SelectionSet.MouseHover
+        Dim ttText As String = ""
 
-        If aKtionskennung = PTTvActions.chgInSession Then
-            ToolTipStand.Show("alle Projekte anzeigen", SelectionSet, 2000)
-        ElseIf aKtionskennung = PTTvActions.delFromDB Then
-            ToolTipStand.Show("alle Projekte und Projekt-Varianten auswählen, die den oben ausgewählten Zeitstempel haben", SelectionSet, 2000)
-        ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVS Then
-            ToolTipStand.Show("alle Projekte auswählen", SelectionSet, 2000)
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            If aKtionskennung = PTTvActions.chgInSession Then
+                ttText = "alle Projekte auswählen"
+            ElseIf aKtionskennung = PTTvActions.delFromDB Then
+                ttText = "alle Projekte und Projekt-Varianten auswählen, die den oben ausgewählten Zeitstempel haben"
+            ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVS Then
+                ttText = "alle Projekte auswählen"
+            End If
+        Else
+            If aKtionskennung = PTTvActions.chgInSession Then
+                ttText = "select all projects"
+            ElseIf aKtionskennung = PTTvActions.delFromDB Then
+                ttText = "select all projects and variants with timestamps at above mentioned date"
+            ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVS Then
+                ttText = "select all projects"
+            End If
         End If
+        
+
+        ToolTipStand.Show(ttText, SelectionSet, 2000)
 
     End Sub
 
     Private Sub SelectionReset_MouseHover(sender As Object, e As EventArgs) Handles SelectionReset.MouseHover
-        ToolTipStand.Show("alle Elemente de-selektieren", SelectionReset, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "alle Elemente de-selektieren"
+        Else
+            ttText = "de-select all elements"
+        End If
+        ToolTipStand.Show(ttText, SelectionReset, 2000)
     End Sub
 
     Private Sub collapseCompletely_MouseHover(sender As Object, e As EventArgs) Handles collapseCompletely.MouseHover
-        ToolTipStand.Show("Struktur ganz zusammenklappen", collapseCompletely, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Struktur ganz zusammenklappen"
+        Else
+            ttText = "collapse structure completely"
+        End If
+        ToolTipStand.Show(ttText, SelectionReset, 2000)
     End Sub
 
     Private Sub expandCompletely_MouseHover(sender As Object, e As EventArgs) Handles expandCompletely.MouseHover
-        ToolTipStand.Show("Struktur ganz öffnen", expandCompletely, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Struktur ganz öffnen"
+        Else
+            ttText = "expand structure completely"
+        End If
+        ToolTipStand.Show(ttText, expandCompletely, 2000)
     End Sub
 
     Private Sub filterIcon_MouseHover(sender As Object, e As EventArgs) Handles filterIcon.MouseHover
-        ToolTipStand.Show("Filter definieren und anwenden", filterIcon, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter definieren und anwenden"
+        Else
+            ttText = "Define and apply filter"
+        End If
+        ToolTipStand.Show(ttText, filterIcon, 2000)
     End Sub
 
     Private Sub deleteFilterIcon_MouseHover(sender As Object, e As EventArgs) Handles deleteFilterIcon.MouseHover
-        ToolTipStand.Show("Filter löschen und zurücksetzen", deleteFilterIcon, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter löschen und zurücksetzen"
+        Else
+            ttText = "Reset Filter"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
 
     Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
-        ToolTipStand.Show("Szenario-Name auswählen oder neuen Namen eingeben", dropboxScenarioNames, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Szenario-Name auswählen oder neuen Namen eingeben"
+        Else
+            ttText = "Select scenario Name and/or edit new name"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
     Private Sub onlyActive_MouseHover(sender As Object, e As EventArgs) Handles onlyActive.MouseHover
-        ToolTipStand.Show("Filter auf angezeigte Projekte und Projekt-Varianten", onlyActive, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter auf angezeigte Projekte und Projekt-Varianten"
+        Else
+            ttText = "Filter: only selected projects and variants"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
     Private Sub onlyInactive_MouseHover(sender As Object, e As EventArgs) Handles onlyInactive.MouseHover
-        ToolTipStand.Show("Filter auf nicht angezeigte Projekte und Projekt-Varianten", onlyInactive, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter auf nicht angezeigte Projekte und Projekt-Varianten"
+        Else
+            ttText = "Filter: only un-selected projects and variants"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
     Private Sub backToInit_MouseHover(sender As Object, e As EventArgs) Handles backToInit.MouseHover
-        ToolTipStand.Show("Filter auf angezeigte / nicht angezeigte Projekte und Projekt-Varianten aufheben", backToInit, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter auf angezeigte / nicht angezeigte Projekte und Projekt-Varianten aufheben"
+        Else
+            ttText = "Reset Filter selected/un-selected projects"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
     
     Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
@@ -2313,7 +2550,11 @@ Public Class frmProjPortfolioAdmin
         If Not currentConstellationName.EndsWith("(*)") Then
             currentConstellationName = currentConstellationName & " (*)"
 
-            Me.Text = "Scenario " & currentConstellationName
+            Dim preText As String = "Szenario "
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                preText = "Scenario "
+            End If
+            Me.Text = preText & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2329,7 +2570,12 @@ Public Class frmProjPortfolioAdmin
 
         If Not currentConstellationName.EndsWith("(*)") Then
             currentConstellationName = currentConstellationName & " (*)"
-            Me.Text = "Scenario " & currentConstellationName
+
+            Dim preText As String = "Szenario "
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                preText = "Scenario "
+            End If
+            Me.Text = preText & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2431,10 +2677,18 @@ Public Class frmProjPortfolioAdmin
     
     Private Sub storeToDBasWell_CheckedChanged(sender As Object, e As EventArgs) Handles storeToDBasWell.CheckedChanged
 
-        If storeToDBasWell.Checked Then
-            OKButton.Text = "in Session und DB speichern"
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            If storeToDBasWell.Checked Then
+                Me.OKButton.Text = "in Session und DB speichern"
+            Else
+                Me.OKButton.Text = "in Session speichern"
+            End If
         Else
-            OKButton.Text = "in Session speichern"
+            If storeToDBasWell.Checked Then
+                Me.OKButton.Text = "Store to Session and DB"
+            Else
+                Me.OKButton.Text = "Store to Session"
+            End If
         End If
 
     End Sub
@@ -2455,7 +2709,14 @@ Public Class frmProjPortfolioAdmin
                 requiredDate.Value = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
                 storedAtOrBefore = requiredDate.Value
             Else
-                Call MsgBox("es gibt vor dem " & earliestDate.ToShortDateString & " keine Projekte in der Datenbank ")
+
+                Dim msgText As String = "es gibt vor dem " & earliestDate.ToShortDateString & " keine Projekte in der Datenbank "
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    msgText = "there are no projects at or before " & earliestDate.ToShortDateString & " in the database"
+                End If
+                
+                Call MsgBox(msgText)
+
                 requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
                 storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If

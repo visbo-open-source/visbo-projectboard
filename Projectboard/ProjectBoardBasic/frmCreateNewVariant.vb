@@ -11,6 +11,23 @@ Public Class frmCreateNewVariant
 
     End Sub
 
+    ''' <summary>
+    ''' setzt in Abhängigkeit von menuCult die Texte der Formular-Felder 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub languageSettings()
+
+        If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+            ' auf Englisch darstellen 
+            Me.Text = "Create new Variant"
+            lblNeueVariante.Text = "New Variant"
+            lblDescription.Text = "Short description"
+            infoText.Text = "The new variant will be created on base of this project-variant:"
+            Label3.Text = "Project:"
+            Label4.Text = "Variant:"
+        End If
+
+    End Sub
     Private Sub frmCreateNewVariant_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Me.Top = frmCoord(PTfrm.createVariant, PTpinfo.top)
@@ -18,8 +35,14 @@ Public Class frmCreateNewVariant
 
         txtDescription.Text = ""
 
+
         If multiSelect Then
-            infoText.Text = "den oben angegebenen Namen für alle selektierten Projekte verwenden"
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                infoText.Text = "den oben angegebenen Namen für alle selektierten Projekte verwenden"
+            Else
+                infoText.Text = "use the above given variantname for all selected projects"
+            End If
             Label3.Visible = False
             Label4.Visible = False
             projektName.Visible = False
@@ -47,12 +70,25 @@ Public Class frmCreateNewVariant
                     ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
                     ok = True
                 Else
-                    Call MsgBox(" Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                                "existiert bereits in DB!")
+                    Dim msgTxt As String
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        msgTxt = "Projekt (Variante) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                                "existiert bereits in DB!"
+                    Else
+                        msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                                "does already exist in DB!"
+                    End If
+                    Call MsgBox(msgTxt)
                 End If
 
             Else
-                Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                Dim msgTxt As String
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    msgTxt = "Datenbank- Verbindung ist unterbrochen!"
+                Else
+                    msgTxt = "no database connection!"
+                End If
+                Call MsgBox(msgTxt)
 
             End If
         Else
@@ -61,8 +97,16 @@ Public Class frmCreateNewVariant
                 ' Projekt-Variante existiert noch nicht in der Session, kann also eingetragen werden
                 ok = True
             Else
-                Call MsgBox(" Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                            "existiert bereits in der Session!")
+                Dim msgTxt As String
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    msgTxt = " Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                            "existiert bereits in der Session!"
+                Else
+                    msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                            "does already exist in session!"
+                End If
+                Call MsgBox(msgTxt)
+
             End If
         End If
       

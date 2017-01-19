@@ -66,7 +66,12 @@ Public Class clsProjekt
         End Get
         Set(value As Double)
             If Not IsNothing(value) Then
-                _Risiko = value
+                If value >= 0 And value < 10 Then
+                    _Risiko = value
+                Else
+                    _Risiko = 5
+                End If
+
             Else
                 _Risiko = 0.0
             End If
@@ -86,7 +91,12 @@ Public Class clsProjekt
         End Get
         Set(value As Double)
             If Not IsNothing(value) Then
-                _StrategicFit = value
+                If value >= 0 And value < 10 Then
+                    _StrategicFit = value
+                Else
+                    _StrategicFit = 5
+                End If
+
             Else
                 _StrategicFit = 0.0
             End If
@@ -105,12 +115,49 @@ Public Class clsProjekt
         End Get
         Set(value As Double)
             If Not IsNothing(value) Then
-                _Erloes = value
+                If value > 0 Then
+                    _Erloes = value
+                Else
+                    _Erloes = 0.0
+                End If
             Else
                 _Erloes = 0.0
             End If
 
         End Set
+    End Property
+
+    ''' <summary>
+    ''' gibt die Budgetwerte des Projekts zurück
+    ''' die werden 
+    ''' beim Laden aus der Datenbank bestimmt oder 
+    ''' beim Ändern des Erlös Werts 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property budgetWerte As Double()
+        Get
+            Dim costvalues() As Double = Me.getGesamtKostenBedarf()
+            Dim gK As Double = costvalues.Sum
+            Dim _budgetWerte() As Double
+            ReDim _budgetWerte(_Dauer - 1)
+            Dim avgBudget As Double = Me.Erloes / _Dauer
+            Dim pMarge As Double = Me.ProjectMarge
+            Dim riskCost As Double = Me.risikoKosten
+
+            ' ProjectMarge = (Me.Erloes - gk) / gk
+
+            For i As Integer = 0 To _Dauer - 1
+                If gK > 0 Then
+                    _budgetWerte(i) = costvalues(i) * (1 + pMarge)
+                Else
+                    _budgetWerte(i) = avgBudget
+                End If
+            Next
+
+            budgetWerte = _budgetWerte
+        End Get
     End Property
 
     Private _leadPerson As String = ""
@@ -2083,16 +2130,44 @@ Public Class clsProjekt
 
     Public ReadOnly Property risikoKostenfaktor As Double
         Get
-            Dim tmp As Double
-            'tmp = (Me.Risiko - weightStrategicFit * Me.StrategicFit) / 100'
-            ' wieso soll das Risiko geringer sein, wenn die Strategische Relevanz höher ist ? 
-            tmp = Me.Risiko / 100
-            If tmp < 0 Then
-                tmp = 0
+            Dim tmp As Double = 0.0
+
+            If awinSettings.considerRiskFee Then
+                tmp = Me.Risiko / 100
+                If tmp < 0 Then
+                    tmp = 0
+                End If
+
+                If DateDiff(DateInterval.Day, Me.endeDate, Date.Now) >= 0 Then
+                    tmp = 0
+                End If
             End If
+
             risikoKostenfaktor = tmp
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt die Risikokosten zurück
+    ''' pro Risiko Punkt 1% vom Erloes
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property risikoKosten As Double
+        Get
+
+            Dim tmp As Double
+            tmp = Me.Erloes * risikoKostenfaktor
+            If tmp < 0 Then
+                tmp = 0
+            End If
+
+            risikoKosten = tmp
+
+        End Get
+    End Property
+
     ''' <summary>
     ''' kopiert die Attribute eines Projektes in newproject;  bei der Quelle handelt es sich um 
     ''' ein normales Projekt 
@@ -2293,7 +2368,9 @@ Public Class clsProjekt
                                 Next
 
                             ElseIf itemName = ergebnisChartName(1) Then
-                                riskShare = (Me.Risiko - weightStrategicFit * Me.StrategicFit) / 100
+
+                                riskShare = Me.risikoKostenfaktor
+
                                 If riskShare < 0 Then
                                     riskShare = 0
                                 End If
@@ -2304,7 +2381,8 @@ Public Class clsProjekt
 
                             ElseIf itemName = ergebnisChartName(3) Then
 
-                                riskShare = (Me.Risiko - weightStrategicFit * Me.StrategicFit) / 100
+                                riskShare = Me.risikoKostenfaktor
+
                                 If riskShare < 0 Then
                                     riskShare = 0
                                 End If
@@ -3173,12 +3251,6 @@ Public Class clsProjekt
 
 
         End Get
-
-        'Set(value As Double)
-
-        '    imarge = value
-
-        'End Set
 
     End Property
 

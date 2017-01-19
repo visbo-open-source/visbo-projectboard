@@ -917,7 +917,8 @@ Public Class clsProjektShapes
                     newProjekt.timeStamp = Date.Now
                     ' Workaround: 
                     Dim tmpValue As Integer = newProjekt.dauerInDays
-                    Call awinCreateBudgetWerte(newProjekt)
+                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                    'Call awinCreateBudgetWerte(newProjekt)
 
                     ' jetzt muss das Projekt aus der Showprojekte und der AlleProjekte herausgenommen werden 
                     ' und in der kopierten Form wieder aufgenommen werden 
@@ -960,7 +961,8 @@ Public Class clsProjektShapes
 
                     ' workaround: 
                     tmpDauerIndays = hproj.dauerInDays
-                    Call awinCreateBudgetWerte(hproj)
+                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                    'Call awinCreateBudgetWerte(hproj)
 
 
                 ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
@@ -1113,7 +1115,8 @@ Public Class clsProjektShapes
                         ' jetzt noch die Budget Werte neu berechnen 
                         ' Workaround: 
                         Dim tmpValue As Integer = hproj.dauerInDays
-                        Call awinCreateBudgetWerte(hproj)
+                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                        'Call awinCreateBudgetWerte(hproj)
 
                     End If
 
