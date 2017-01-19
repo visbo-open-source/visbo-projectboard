@@ -17,13 +17,13 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
+    <PublishUrl>C:\Users\Ute\Documents\Publish Folder MPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.2.2.11</ApplicationVersion>
+    <ApplicationVersion>3.0.4.9</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
-    <UpdateInterval>0</UpdateInterval>
+    <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>Projectboard</ProductName>
     <PublisherName />
@@ -94,6 +94,11 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\14.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -133,7 +138,6 @@
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
-    <Import Include="Office = Microsoft.Office.Core" />
     <Import Include="System" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.Linq" />
@@ -142,6 +146,7 @@
     <Import Include="System.Xml.Linq" />
     <Import Include="Microsoft.Office.Tools.Excel" />
     <Import Include="Microsoft.VisualStudio.Tools.Applications.Runtime" />
+    <Import Include="Office = Microsoft.Office.Core" />
     <Import Include="Excel = Microsoft.Office.Interop.Excel" />
   </ItemGroup>
   <ItemGroup>
@@ -243,10 +248,6 @@
       <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
       <Name>ClassLibrary1</Name>
     </ProjectReference>
-    <ProjectReference Include="..\FileCopyPDA\FileCopyPDA.vbproj">
-      <Project>{7b0da877-d7c3-47a6-993b-9bb2e0c652d5}</Project>
-      <Name>FileCopyPDA</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
       <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
       <Name>MongoDbAccess</Name>
@@ -262,6 +263,10 @@
     <ProjectReference Include="..\WPFPieChart\WPFPieChart.csproj">
       <Project>{59210896-68d1-4a34-91cc-8d015eca7061}</Project>
       <Name>WPFPieChart</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WpfWindow\WpfWindow.csproj">
+      <Project>{0934cc5e-361f-443e-8af2-2468a38214a1}</Project>
+      <Name>WpfWindow</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -308,26 +313,7 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
-    <COMReference Include="Microsoft.Office.Interop.Excel1">
-      <Guid>{00020813-0000-0000-C000-000000000046}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>7</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="VBIDE">
-      <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
-      <VersionMajor>5</VersionMajor>
-      <VersionMinor>3</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -359,7 +345,7 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
+        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files (x86)\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="453AD57C08540C0F42079FCA83BE658033F2D2F9">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />

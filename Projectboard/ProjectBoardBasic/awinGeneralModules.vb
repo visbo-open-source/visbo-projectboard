@@ -7240,6 +7240,16 @@ Public Module awinGeneralModules
                             Dim hilfselemID As String = ""
 
 
+                            ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
+                            Dim verbRange As Excel.Range
+                            Dim iv As Integer
+
+                            For iv = 0 To lastrow - rowOffset + 1
+                                verbRange = .Range(.Cells(rowOffset + iv, columnOffset), .Cells(rowOffset + iv, columnOffset + 1))
+                                verbRange.Merge()
+                            Next
+
+
                             For zeile = rowOffset To lastrow
 
 
@@ -7749,11 +7759,23 @@ Public Module awinGeneralModules
 
                         End If
 
+                        ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
+                        Dim verbRange As Excel.Range
+                        Dim iv As Integer
+
+                        For iv = 0 To rng.Rows.Count - 1
+                            verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
+                            verbRange.Merge()
+                        Next
+
+                    
                         zeile = 0
 
                         For Each zelle In rng
 
                             zeile = zeile + 1
+
+
 
                             ' nachsehen, ob Phase angegeben oder Rolle/Kosten
                             hstr = CStr(zelle.Value)
