@@ -210,7 +210,10 @@ namespace MongoDbAccess
             //        .Last();
 
             var builder = Builders<clsProjektDB>.Filter;
+            
             var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedAtOrBefore);
+            // das folgende könnte auch gemacht werden 
+            // var filter = builder.Eq(c => c.name, searchstr) & builder.Lte(c => c.timestamp, storedAtOrBefore);
             var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
 
             try
@@ -641,6 +644,7 @@ namespace MongoDbAccess
             //    searchstr = projectname;
 
             var builder = Builders<clsProjektDB>.Filter;
+            
             var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedLatest);
             var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
             //var result = await collection.Find(filter).Sort(sort).ToListAsync();

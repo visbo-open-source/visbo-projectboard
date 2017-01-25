@@ -3010,7 +3010,7 @@ Public Class clsProjekte
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "FTE" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3145,7 +3145,7 @@ Public Class clsProjekte
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "FTE" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3280,7 +3280,7 @@ Public Class clsProjekte
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "FTE" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3540,7 +3540,7 @@ Public Class clsProjekte
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "FTE" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3743,7 +3743,7 @@ Public Class clsProjekte
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "FTE" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1

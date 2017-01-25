@@ -7538,7 +7538,7 @@ Public Module Projekte
             itemColor(1) = farbeExterne
 
             itemValue(2) = projektSonstKosten
-            itemColor(2) = farbeInternOP
+            itemColor(2) = farbeExterne
 
             itemValue(3) = projektErgebnis
             If projektErgebnis > 0 Then
@@ -7897,7 +7897,7 @@ Public Module Projekte
             itemColor(1) = farbeExterne
 
             itemValue(2) = projektSonstKosten
-            itemColor(2) = farbeInternOP
+            itemColor(2) = farbeExterne
 
             itemValue(3) = projektErgebnis
             If projektErgebnis > 0 Then

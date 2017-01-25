@@ -17,7 +17,8 @@ Public Class frmCreateNewVariant
     ''' <remarks></remarks>
     Private Sub languageSettings()
 
-        If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+        'If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+        If awinSettings.englishLanguage Then
             ' auf Englisch darstellen 
             Me.Text = "Create new Variant"
             lblNeueVariante.Text = "New Variant"
@@ -35,10 +36,11 @@ Public Class frmCreateNewVariant
 
         txtDescription.Text = ""
 
+        Call languageSettings()
 
         If multiSelect Then
 
-            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            If awinSettings.englishLanguage Then
                 infoText.Text = "den oben angegebenen Namen für alle selektierten Projekte verwenden"
             Else
                 infoText.Text = "use the above given variantname for all selected projects"
@@ -71,7 +73,7 @@ Public Class frmCreateNewVariant
                     ok = True
                 Else
                     Dim msgTxt As String
-                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    If awinSettings.englishLanguage Then
                         msgTxt = "Projekt (Variante) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
                                 "existiert bereits in DB!"
                     Else
@@ -83,7 +85,7 @@ Public Class frmCreateNewVariant
 
             Else
                 Dim msgTxt As String
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                If awinSettings.englishLanguage Then
                     msgTxt = "Datenbank- Verbindung ist unterbrochen!"
                 Else
                     msgTxt = "no database connection!"
@@ -98,7 +100,7 @@ Public Class frmCreateNewVariant
                 ok = True
             Else
                 Dim msgTxt As String
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                If awinSettings.englishLanguage Then
                     msgTxt = " Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
                             "existiert bereits in der Session!"
                 Else

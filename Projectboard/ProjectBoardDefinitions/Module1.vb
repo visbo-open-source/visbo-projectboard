@@ -1741,26 +1741,26 @@ Public Module Module1
         ' das folgende selektiert die Zelle in der Mitte des aktuell gezeigten Fensters
         ' das verhindert, daß sich plötzlich der Fenster Ausschnitt verändert
         '
-        Try
-            With appInstance.ActiveWindow
-                hziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
-                vziel = CInt((.VisibleRange.Top + .VisibleRange.Height / 2) / boxHeight)
-                If vziel < 2 Then
-                    vziel = 2
-                End If
-            End With
+        'Try
+        '    With appInstance.ActiveWindow
+        '        hziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
+        '        vziel = CInt((.VisibleRange.Top + .VisibleRange.Height / 2) / boxHeight)
+        '        If vziel < 2 Then
+        '            vziel = 2
+        '        End If
+        '    End With
 
-            With appInstance.ActiveSheet
-                '.Cells(2, hziel).Select()
-                .Cells(vziel, hziel).Select()
-            End With
-        Catch ex As Exception
+        '    With appInstance.ActiveSheet
+        '        '.Cells(2, hziel).Select()
+        '        .Cells(vziel, hziel).Select()
+        '    End With
+        'Catch ex As Exception
 
-            With appInstance.ActiveSheet
-                .Cells(2, 20).Select()
-            End With
+        '    With appInstance.ActiveSheet
+        '        .Cells(2, 20).Select()
+        '    End With
 
-        End Try
+        'End Try
 
 
 

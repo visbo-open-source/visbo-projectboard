@@ -1951,7 +1951,7 @@ Public Module awinGeneralModules
                 awinSettings.zeitEinheit = CStr(.Range("Zeiteinheit").Value)
                 awinSettings.kapaEinheit = CStr(.Range("kapaEinheit").Value)
                 If awinSettings.kapaEinheit <> "PT" And _
-                    awinSettings.kapaEinheit <> "FTE" Then
+                    awinSettings.kapaEinheit <> "PD" Then
                     awinSettings.kapaEinheit = "PT"
                     Call MsgBox("Kapa-Einheit: PT")
                 End If
@@ -2056,7 +2056,7 @@ Public Module awinGeneralModules
                 If awinSettings.englishLanguage Then
                     menuCult = ReportLang(PTSprache.englisch)
                     repCult = menuCult
-                    awinSettings.kapaEinheit = "FTE"
+                    awinSettings.kapaEinheit = "PD"
                 Else
                     awinSettings.kapaEinheit = "PT"
                     menuCult = ReportLang(PTSprache.deutsch)
@@ -4731,14 +4731,17 @@ Public Module awinGeneralModules
 
                                     lastSpaltenValue = spalte + 3
                                     start = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                    If start < StartofCalendar Then
-                                        Throw New ArgumentException("Datum vor Kalender-Start")
-                                    End If
+                                    ' eines der beiden Daten Start bzw Ende darf ohne Angabe bleiben ...
+                                    'If start < StartofCalendar Then
+                                    '    Throw New ArgumentException("Datum vor Kalender-Start")
+                                    'End If
 
                                     lastSpaltenValue = spalte + 4
                                     ende = CDate(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                    If ende < StartofCalendar Then
-                                        Throw New ArgumentException("Datum vor Kalender-Start")
+
+
+                                    If start < StartofCalendar And ende < StartofCalendar Then
+                                        Throw New ArgumentException("sowohl Start wie Ende-Datum liegen vor dem Kalender-Start")
                                     End If
 
                                     lastSpaltenValue = spalte + 5
@@ -4750,8 +4753,12 @@ Public Module awinGeneralModules
                                     lastSpaltenValue = spalte + 7
                                     dauer = CInt(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                                    lastSpaltenValue = spalte + 8
+                                    ' Konsistenzprüfung 
+                                    If start > StartofCalendar And ende > StartofCalendar And dauer > 0 Then
+                                        Throw New ArgumentException("Überbestimmt: es kann nicht Start, Ende und Dauer angegeben werden .. ")
+                                    End If
 
+                                    lastSpaltenValue = spalte + 8
                                     budgetInput = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                     If budgetInput <> "calcNeeded" And IsNumeric(budgetInput) Then
                                         budget = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
