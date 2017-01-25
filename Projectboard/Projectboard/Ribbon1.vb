@@ -2,8 +2,6 @@
 Imports ProjectBoardBasic
 Imports ClassLibrary1
 Imports MongoDbAccess
-' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
-' '' ''Imports WpfWindow
 Imports WPFPieChart
 Imports Microsoft.Office.Core
 'Imports Microsoft.Office.Interop.Excel

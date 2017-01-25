@@ -1718,8 +1718,8 @@ Public Module Module1
     ''' <remarks></remarks>
     Sub awinDeSelect()
         Dim srow As Integer = 1
-        Dim hziel As Integer
-        Dim vziel As Integer
+        'Dim hziel As Integer
+        'Dim vziel As Integer
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
