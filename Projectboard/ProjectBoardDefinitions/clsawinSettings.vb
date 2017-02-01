@@ -177,6 +177,9 @@ Public Class clsawinSettings
     ' Setting, ob Risiko Kennzahl in Budget Übersicht Berechnung eingehen soll 
     Public Property considerRiskFee As Boolean = False
 
+    ' Setting, ob bei einer Sammelrolle die Unterscheidung in zugeordnet / Platzhalter gemacht werden soll 
+    Public Property showPlaceholderAndAssigned As Boolean = False
+
     ' Setting, ob bei Vergleichen mit früheren Ständen mit der standard-Variante verglichen werden soll 
     ' oder mit einem früheren Stand der Variante
     Public Property compareWithStandardVariant As Boolean
@@ -309,10 +312,12 @@ Public Class clsawinSettings
         _allowSumEditing = True
 
         _considerRiskFee = False
+
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True
 
         _compareWithStandardVariant = True
+        _showPlaceholderAndAssigned = False
 
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True

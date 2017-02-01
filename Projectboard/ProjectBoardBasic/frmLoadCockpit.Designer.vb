@@ -25,6 +25,7 @@ Partial Class frmLoadCockpit
         Me.ListBox1 = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
+        Me.deleteOtherCharts = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'ListBox1
@@ -41,7 +42,7 @@ Partial Class frmLoadCockpit
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(18, 213)
+        Me.OKButton.Location = New System.Drawing.Point(18, 233)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(130, 22)
         Me.OKButton.TabIndex = 2
@@ -50,7 +51,7 @@ Partial Class frmLoadCockpit
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(169, 213)
+        Me.AbbrButton.Location = New System.Drawing.Point(169, 233)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(122, 22)
         Me.AbbrButton.TabIndex = 3
@@ -58,21 +59,36 @@ Partial Class frmLoadCockpit
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
+        'deleteOtherCharts
+        '
+        Me.deleteOtherCharts.AutoSize = True
+        Me.deleteOtherCharts.Checked = True
+        Me.deleteOtherCharts.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.deleteOtherCharts.Location = New System.Drawing.Point(18, 207)
+        Me.deleteOtherCharts.Name = "deleteOtherCharts"
+        Me.deleteOtherCharts.Size = New System.Drawing.Size(132, 17)
+        Me.deleteOtherCharts.TabIndex = 5
+        Me.deleteOtherCharts.Text = "andere Charts löschen"
+        Me.deleteOtherCharts.UseVisualStyleBackColor = True
+        '
         'frmLoadCockpit
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(308, 241)
+        Me.ClientSize = New System.Drawing.Size(308, 265)
+        Me.Controls.Add(Me.deleteOtherCharts)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
-        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmLoadCockpit"
         Me.Text = "Chart - Cockpit Laden"
         Me.ResumeLayout(False)
+        Me.PerformLayout()
 
     End Sub
     Public WithEvents ListBox1 As System.Windows.Forms.ListBox
     Public WithEvents OKButton As System.Windows.Forms.Button
     Public WithEvents AbbrButton As System.Windows.Forms.Button
+    Public WithEvents deleteOtherCharts As System.Windows.Forms.CheckBox
 End Class

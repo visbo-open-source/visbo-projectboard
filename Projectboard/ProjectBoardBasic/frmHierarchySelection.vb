@@ -29,7 +29,13 @@ Public Class frmHierarchySelection
 
     Private Sub defineFrmButtonVisibility()
 
-
+        If awinSettings.englishLanguage Then
+            chkbxOneChart.Text = "all in one chart"
+            statusLabel.Text = ""
+            einstellungen.Text = "Settings"
+            labelPPTVorlage.Text = "Powerpoint Template"
+            AbbrButton.Text = "Reset Selection"
+        End If
         
         With Me
 
@@ -42,8 +48,16 @@ Public Class frmHierarchySelection
 
             If .menuOption = PTmenue.filterdefinieren Then
 
-                .Text = "Datenbank Filter definieren"
-                .OKButton.Text = "Speichern"
+                If awinSettings.englishLanguage Then
+                    .Text = "define Database Filter"
+                    .OKButton.Text = "Store"
+                    .filterLabel.Text = "Name of Filter"
+                Else
+                    .Text = "Datenbank Filter definieren"
+                    .OKButton.Text = "Speichern"
+                    .filterLabel.Text = "Name des Filters"
+                End If
+
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -62,7 +76,7 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Name des Filters"
+
 
                 ' Auswahl Speichern
                 .auswSpeichern.Visible = False
@@ -72,20 +86,20 @@ Public Class frmHierarchySelection
 
             ElseIf .menuOption = PTmenue.visualisieren Then
 
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                If awinSettings.englishLanguage Then
+                    .Text = "Visualize Phases & Milestones"
+                    .OKButton.Text = "Visualize"
+                    .filterLabel.Text = "Selection"
+                    .auswSpeichern.Text = "Store"
+                    .AbbrButton.Text = "Cancel"
+                    .chkbxOneChart.Text = "all in one chart"
+                Else
                     .Text = "Phasen / Meilensteine visualisieren"
                     .OKButton.Text = "Anzeigen"
                     .filterLabel.Text = "Auswahl"
                     .auswSpeichern.Text = "Speichern"
                     .AbbrButton.Text = "Abbrechen"
                     .chkbxOneChart.Text = "alles in einem Chart"
-                Else
-                    .Text = "Visualize phases & milestones"
-                    .OKButton.Text = "Visualize"
-                    .filterLabel.Text = "Selection"
-                    .auswSpeichern.Text = "Store"
-                    .AbbrButton.Text = "Cancel"
-                    .chkbxOneChart.Text = "all in one chart"
                 End If
                 
                 .AbbrButton.Visible = False
@@ -109,8 +123,18 @@ Public Class frmHierarchySelection
 
             ElseIf .menuOption = PTmenue.leistbarkeitsAnalyse Then
 
-                .Text = "Leistbarkeits-Charts erstellen"
-                .OKButton.Text = "Charts erstellen"
+
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Feasibility Charts"
+                    .filterLabel.Text = "Selection"
+                    .OKButton.Text = "Create Charts"
+                Else
+                    .Text = "Leistbarkeits-Charts erstellen"
+                    .filterLabel.Text = "Auswahl"
+                    .OKButton.Text = "Charts erstellen"
+                End If
+
+
                 .AbbrButton.Visible = False
                 .AbbrButton.Enabled = False
                 .statusLabel.Text = ""
@@ -128,12 +152,20 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf .menuOption = PTmenue.einzelprojektReport Then
 
-                .Text = "Projekt-Varianten Report erzeugen"
-                .OKButton.Text = "Bericht erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Project-/Variant Report"
+                    .OKButton.Text = "Create Report"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "Projekt-Varianten Report erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
 
@@ -152,12 +184,19 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Name des Filters"
 
             ElseIf .menuOption = PTmenue.multiprojektReport Then
 
-                .Text = "Multiprojekt Reports erzeugen"
-                .OKButton.Text = "Bericht erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Multiproject Reports"
+                    .OKButton.Text = "Create Report"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "Multiprojekt Reports erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
 
@@ -175,12 +214,20 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf .menuOption = PTmenue.excelExport Then
 
-                .Text = "Excel Report erzeugen"
-                .OKButton.Text = "Report erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Excel Report"
+                    .OKButton.Text = "Create Report"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "Excel Report erzeugen"
+                    .OKButton.Text = "Report erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
                 .statusLabel.Text = ""
 
                 .AbbrButton.Visible = False
@@ -196,14 +243,21 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
 
                 .einstellungen.Visible = False
 
             ElseIf .menuOption = PTmenue.vorlageErstellen Then
 
-                .Text = "modulare Vorlagen erzeugen"
-                .OKButton.Text = "Vorlage erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create modular templates"
+                    .OKButton.Text = "Create Template"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "modulare Vorlagen erzeugen"
+                    .OKButton.Text = "Vorlage erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
                 .statusLabel.Text = ""
 
                 .AbbrButton.Visible = False
@@ -220,12 +274,21 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf .menuOption = PTmenue.reportBHTC Then
 
-                .Text = "Projekt-Report erzeugen"
-                .OKButton.Text = "Bericht erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Project Report"
+                    .OKButton.Text = "Create Report"
+                    .filterLabel.Text = "Name of Report-Profile"
+                Else
+                    .Text = "Projekt-Report erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .filterLabel.Text = "Name Report-Profil"
+                End If
+
+                
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -249,7 +312,7 @@ Public Class frmHierarchySelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Name Report-Profil"
+
 
             End If
 

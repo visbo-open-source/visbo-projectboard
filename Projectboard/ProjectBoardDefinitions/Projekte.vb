@@ -20833,6 +20833,28 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' gibt für das Projekt zurück, ob es in dem angegebenen Zeitraum liegt oder nicht 
+    ''' wenn kein Zeitraum angegeben ist, wird true zurürkgegeben 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function projectWithinTimeFrame(ByVal hproj As clsProjekt) As Boolean
+        Dim within As Boolean = False
+
+        Dim startM As Integer = getColumnOfDate(hproj.startDate)
+        Dim endM As Integer = getColumnOfDate(hproj.endeDate)
+
+        Dim relStart As Integer = 1
+        Dim relEnde As Integer = relStart + (endM - startM)
+
+        within = phaseWithinTimeFrame(hproj.Start, relStart, relEnde, _
+                                       showRangeLeft, showRangeRight)
+
+        projectWithinTimeFrame = within
+    End Function
+
+    ''' <summary>
     ''' gibt für die Phase zurück, ob Sie in dem angegebenen Zeitraum liegt oder nicht
     ''' wenn kein Timeframe definiert ist, dann wird true zurückgegeben  
     ''' wenn completeWithin angegeben ist, dann wird nur true zurückgegeben, wenn die Phase vollständig im Zeitraum liegt 

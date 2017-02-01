@@ -80,17 +80,17 @@
         '
         'activateTab
         '
-        Me.activateTab.Label = "Info Fenster aktivieren"
+        Me.activateTab.Label = "Activate"
         Me.activateTab.Name = "activateTab"
         '
         'timeMachineTab
         '
-        Me.timeMachineTab.Label = "Zeit-Maschine"
+        Me.timeMachineTab.Label = "Time-Machine"
         Me.timeMachineTab.Name = "timeMachineTab"
         '
         'settingsTab
         '
-        Me.settingsTab.Label = "Einstellungen"
+        Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
         'Ribbon1

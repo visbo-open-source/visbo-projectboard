@@ -15,6 +15,9 @@ Module Module1
     Friend VisboProtected As Boolean = False
     Friend protectionSolved As Boolean = False
 
+    ' bestimmt, ob in englisch oder auf deutsch ..
+    Friend englishLanguage As Boolean = True
+
     ' der Key ist der Name des Referenz-Shapes, zu dem der Marker gezeichnet wird , der Value ist der Name des Marker-Shapes 
     Friend markerShpNames As New SortedList(Of String, String)
 
@@ -294,7 +297,12 @@ Module Module1
                                 Call makeVisboShapesVisible(True)
                             End If
                         Else
-                            msg = "Password falsch ..."
+                            If englishLanguage Then
+                                msg = "wrong password ..."
+                            Else
+                                msg = "Password falsch ..."
+                            End If
+
                             tmpResult = False
                         End If
 
@@ -306,7 +314,12 @@ Module Module1
                             Call makeVisboShapesVisible(True)
                         Else
                             tmpResult = False
-                            msg = "nicht berechtigter Computer bzw. User ..."
+                            If englishLanguage Then
+                                msg = "computer / user not entitled ..."
+                            Else
+                                msg = "nicht berechtigter Computer bzw. User ..."
+                            End If
+
                         End If
 
                     ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
@@ -322,7 +335,12 @@ Module Module1
 
                                 If noDBAccessInPPT Then
                                     tmpResult = False
-                                    msg = "kein Datenbank Zugriff ... "
+                                    If englishLanguage Then
+                                        msg = "no database access ... "
+                                    Else
+                                        msg = "kein Datenbank Zugriff ... "
+                                    End If
+
                                 Else
                                     ' in allen Slides den Sicht Schutz aufheben 
                                     protectionSolved = True
@@ -345,7 +363,12 @@ Module Module1
 
         Else
             tmpResult = False
-            msg = "keine gültige Lizenz ... bitte kontaktieren Sie Ihren System-Administrator"
+            If englishLanguage Then
+                msg = "no valid licence ... please contact your system-administrator"
+            Else
+                msg = "keine gültige Lizenz ... bitte kontaktieren Sie Ihren System-Administrator"
+            End If
+
         End If
 
         
@@ -355,7 +378,7 @@ Module Module1
     End Function
 
     Private Function userHasValidLicence()
-        userHasValidLicence = (Date.Now < CDate("27.01.2017"))
+        userHasValidLicence = True
     End Function
 
     ''' <summary>
@@ -410,7 +433,12 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_PresentationSave(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationSave
         If VisboProtected And Not Pres.Name.EndsWith(".pptx") Then
-            Call MsgBox("Speichern nur als .pptx möglich!")
+            If englishLanguage Then
+                Call MsgBox("Store only possible with file extension .pptx !")
+            Else
+                Call MsgBox("Speichern nur als .pptx möglich!")
+            End If
+
             Dim vollerName As String = Pres.FullName
             Dim correctName As String = Pres.Name & ".pptx"
 
@@ -896,6 +924,10 @@ Module Module1
 
         Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
         Dim defaultExplanation As String = "manuell verschoben durch " & My.Computer.Name
+
+        If englishLanguage Then
+            defaultExplanation = "moved manually by " & My.Computer.Name
+        End If
 
         If IsNothing(tmpShape) Then
             Exit Sub
@@ -1422,7 +1454,12 @@ Module Module1
             End With
         Else
             With tsMsgBox
-                .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+                If englishLanguage Then
+                    .TextFrame2.TextRange.Text = "Version: " & currentTimestamp.ToString
+                Else
+                    .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+                End If
+
             End With
         End If
     End Sub
@@ -2885,7 +2922,12 @@ Module Module1
                         pHistory = Nothing
                     End Try
                 Else
-                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    If englishLanguage Then
+                        Call MsgBox("database connection lost !")
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+
                 End If
 
 

@@ -21,6 +21,9 @@
         showTrafficLights(3) = False
         showTrafficLights(4) = False
 
+        ' muss hier noch auf andere Art und Weise bestimmt werden 
+        englishLanguage = True
+
 
     End Sub
 

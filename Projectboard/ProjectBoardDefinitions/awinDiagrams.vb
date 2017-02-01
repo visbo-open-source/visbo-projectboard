@@ -271,8 +271,6 @@ Public Module awinDiagrams
             End If
 
         Else
-            'chtobjName = "Übersicht"
-            'diagramTitle = "Übersicht"
             chtobjName = repMessages.getmsg(114)
             diagramTitle = repMessages.getmsg(114)
         End If
@@ -398,11 +396,11 @@ Public Module awinDiagrams
                     Loop
 
                     ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
-                    Dim roleISCombinedRole As Boolean
+                    Dim sumRoleShowsPlaceHolderAndAssigned As Boolean
 
                     For r = 1 To myCollection.Count
 
-                        roleISCombinedRole = False
+                        sumRoleShowsPlaceHolderAndAssigned = False
                         'prcName = CStr(myCollection.Item(r))
                         ' wird jetzt über das folgende bestimmt
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
@@ -434,15 +432,23 @@ Public Module awinDiagrams
                             objektFarbe = tmpRole.farbe
 
                             If tmpRole.isCombinedRole Then
-                                roleISCombinedRole = True
-                                datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                               considerAllSubRoles:=True, _
-                                                                               type:=PTcbr.placeholders, _
-                                                                               excludedNames:=myCollection)
-                                edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                               considerAllSubRoles:=True, _
-                                                                               type:=PTcbr.realRoles, _
-                                                                               excludedNames:=myCollection)
+                                If awinSettings.showPlaceholderAndAssigned Then
+                                    sumRoleShowsPlaceHolderAndAssigned = True
+                                    datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                                   considerAllSubRoles:=True, _
+                                                                                   type:=PTcbr.placeholders, _
+                                                                                   excludedNames:=myCollection)
+                                    edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                                   considerAllSubRoles:=True, _
+                                                                                   type:=PTcbr.realRoles, _
+                                                                                   excludedNames:=myCollection)
+                                Else
+                                    datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                                   considerAllSubRoles:=True, _
+                                                                                   type:=PTcbr.all, _
+                                                                                   excludedNames:=myCollection)
+                                End If
+
                             Else
                                 datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
                             End If
@@ -524,7 +530,7 @@ Public Module awinDiagrams
 
                         End If
 
-                        If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                        If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                             For i = 0 To bis - von
                                 seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
                                                             edatenreihe(i)
@@ -588,35 +594,6 @@ Public Module awinDiagrams
                                 End With
 
 
-
-
-                                ' Alt: vor 8.10.14
-                                'For c = 0 To 3
-
-                                '    For i = 0 To bis - von
-                                '        datenreihe(i) = msdatenreihe(c, i)
-                                '    Next
-
-                                '    With .SeriesCollection.NewSeries
-                                '        If c = 0 Then
-                                '            .name = prcName & ", ohne Ampel"
-                                '        ElseIf c = 1 Then
-                                '            .name = prcName & ", grüne Ampel"
-                                '        ElseIf c = 2 Then
-                                '            .name = prcName & ", gelbe Ampel"
-                                '        Else
-                                '            .name = prcName & ", rote Ampel"
-                                '        End If
-                                '        .Interior.color = ampelfarbe(c)
-                                '        .Values = datenreihe
-                                '        .XValues = Xdatenreihe
-                                '        .ChartType = Excel.XlChartType.xlColumnStacked
-                                '        .HasDataLabels = False
-                                '    End With
-
-
-                                'Next
-
                             Else
 
                                 With CType(.SeriesCollection.NewSeries, Excel.Series)
@@ -627,7 +604,7 @@ Public Module awinDiagrams
                                         Else
                                             .Name = breadcrumb & "-" & prcName
                                         End If
-                                    ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                                    ElseIf prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                         ' repmsg!
                                         .Name = prcName & ": Platzhalter"
                                     Else
@@ -638,7 +615,7 @@ Public Module awinDiagrams
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
                                     If myCollection.Count = 1 Then
-                                        If isWeightedValues Or roleISCombinedRole Then
+                                        If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Then
                                             .ChartType = Excel.XlChartType.xlColumnStacked
                                         Else
                                             .ChartType = Excel.XlChartType.xlColumnClustered
@@ -649,7 +626,7 @@ Public Module awinDiagrams
                                     .HasDataLabels = False
                                 End With
 
-                                If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                     ' alle anderen zeigen 
                                     With CType(.SeriesCollection.NewSeries, Excel.Series)
 
@@ -1228,11 +1205,11 @@ Public Module awinDiagrams
             Loop
 
             ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
-            Dim roleISCombinedRole As Boolean
+            Dim sumRoleShowsPlaceHolderAndAssigned As Boolean
 
             For r = 1 To myCollection.Count
 
-                roleISCombinedRole = False
+                sumRoleShowsPlaceHolderAndAssigned = False
 
                 If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                     Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
@@ -1276,15 +1253,24 @@ Public Module awinDiagrams
                     objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
 
                     If tmpRole.isCombinedRole Then
-                        roleISCombinedRole = True
-                        datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                       considerAllSubRoles:=True, _
-                                                                       type:=PTcbr.placeholders, _
-                                                                       excludedNames:=myCollection)
-                        edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                       considerAllSubRoles:=True, _
-                                                                       type:=PTcbr.realRoles, _
-                                                                       excludedNames:=myCollection)
+
+                        If awinSettings.showPlaceholderAndAssigned Then
+                            sumRoleShowsPlaceHolderAndAssigned = True
+                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                           considerAllSubRoles:=True, _
+                                                                           type:=PTcbr.placeholders, _
+                                                                           excludedNames:=myCollection)
+                            edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                           considerAllSubRoles:=True, _
+                                                                           type:=PTcbr.realRoles, _
+                                                                           excludedNames:=myCollection)
+                        Else
+                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
+                                                                           considerAllSubRoles:=True, _
+                                                                           type:=PTcbr.all, _
+                                                                           excludedNames:=myCollection)
+                        End If
+
                     Else
                         datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
                     End If
@@ -1305,7 +1291,7 @@ Public Module awinDiagrams
                         For ix = 0 To bis - von
                             datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
 
-                            If tmpRole.isCombinedRole Then
+                            If tmpRole.isCombinedRole And sumRoleShowsPlaceHolderAndAssigned Then
                                 ' in diesem Fall kann datenreihe(ix) auch negativ werden, muss also auch von edatenreihe abgezogen werden ...
                                 If datenreihe(ix) < 0 Then
                                     ' datenreihe(ix) ist negativ, also heisst das abziehen 
@@ -1400,7 +1386,7 @@ Public Module awinDiagrams
                     msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
                 End If
 
-                If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                     For i = 0 To bis - von
                         seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
                                                     edatenreihe(i)
@@ -1477,7 +1463,7 @@ Public Module awinDiagrams
                                 Else
                                     .Name = breadcrumb & "-" & prcName
                                 End If
-                            ElseIf prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                            ElseIf prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                 ' repmsg!
                                 .Name = prcName & ": Platzhalter"
                             Else
@@ -1488,7 +1474,7 @@ Public Module awinDiagrams
                             .Values = datenreihe
                             .XValues = Xdatenreihe
                             If myCollection.Count = 1 Then
-                                If isWeightedValues Or roleISCombinedRole Then
+                                If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Then
                                     .ChartType = Excel.XlChartType.xlColumnStacked
                                 Else
                                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -1499,7 +1485,7 @@ Public Module awinDiagrams
                             .HasDataLabels = False
                         End With
 
-                        If prcTyp = DiagrammTypen(1) And roleISCombinedRole Then
+                        If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                             ' alle anderen zeigen 
                             With CType(.SeriesCollection.NewSeries, Excel.Series)
 

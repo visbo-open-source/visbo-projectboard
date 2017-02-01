@@ -609,6 +609,18 @@ Imports System.Windows
 
                     appInstance.ScreenUpdating = False
 
+                    If loadCockpitFrm.deleteOtherCharts.Checked Then
+                        ' erst alle anderen Charts löschen ... 
+                        Dim currentWsName As String
+                        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                            currentWsName = arrWsNames(3)
+                        Else
+                            currentWsName = arrWsNames(5)
+                        End If
+
+                        Call deleteChartsInSheet(currentWsName)
+                    End If
+
                     Try
                         Call awinLoadCockpit(cockpitName)
 

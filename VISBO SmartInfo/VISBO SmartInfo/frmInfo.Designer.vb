@@ -357,7 +357,7 @@ Partial Class frmInfo
         'CheckBxMarker
         '
         Me.CheckBxMarker.AutoSize = True
-        Me.CheckBxMarker.Location = New System.Drawing.Point(402, 12)
+        Me.CheckBxMarker.Location = New System.Drawing.Point(376, 12)
         Me.CheckBxMarker.Name = "CheckBxMarker"
         Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
         Me.CheckBxMarker.TabIndex = 43
@@ -404,7 +404,7 @@ Partial Class frmInfo
         'PictureMarker
         '
         Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(388, 11)
+        Me.PictureMarker.Location = New System.Drawing.Point(362, 11)
         Me.PictureMarker.Name = "PictureMarker"
         Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
         Me.PictureMarker.TabIndex = 32

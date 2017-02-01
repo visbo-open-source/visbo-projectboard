@@ -67,12 +67,17 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsBewertungDB.vb" />
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
+    <Compile Include="clsHierarchyDB.vb" />
+    <Compile Include="clsHierarchyNodeDB.vb" />
+    <Compile Include="clsKostenartDB.vb" />
     <Compile Include="clsLicences.vb" />
     <Compile Include="clsListOfCostAndRoles.vb" />
     <Compile Include="clsOpenXML.vb" />
+    <Compile Include="clsPhaseDB.vb" />
     <Compile Include="clsPPTShapes.vb" />
     <Compile Include="clsAddElementRules.vb" />
     <Compile Include="clsAddElementRuleItem.vb" />
@@ -81,7 +86,9 @@
     <Compile Include="clsReport.vb" />
     <Compile Include="clsReportAll.vb" />
     <Compile Include="clsReportMessages.vb" />
+    <Compile Include="clsResultDB.vb" />
     <Compile Include="clsRiskChance.vb" />
+    <Compile Include="clsRolleDB.vb" />
     <Compile Include="clsVisboZustaende.vb" />
     <Compile Include="clsHierarchy.vb" />
     <Compile Include="clsHierarchyNode.vb" />

@@ -31,5 +31,11 @@ Public Class frmMoveTimeSpan
 
     Private Sub frmMoveTimeSpan_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        If awinSettings.englishLanguage Then
+            Me.Text = "Move Timespan"
+        Else
+            Me.Text = "Zeitraum verschieben"
+        End If
+
     End Sub
 End Class

@@ -2069,6 +2069,13 @@ Public Module awinGeneralModules
                 repCult = menuCult
             End Try
 
+            ' sollen Sammelrollen immer nur in Summe dargestellt werden, oder aufgeteilt in Platzhalter / Assigned 
+            Try
+                awinSettings.showPlaceholderAndAssigned = CBool(.Range("ShowPlaceHolderAndAssigned").Value)
+            Catch ex As Exception
+                awinSettings.showPlaceholderAndAssigned = False
+            End Try
+
             ' sollen die Risiko Kennzahlen bei der Berechnung der Portfolio / Projekt-Ergebnisse mitgerechnet werden ?  
             Try
                 awinSettings.considerRiskFee = CBool(.Range("considerRiskFee").Value)
@@ -4768,6 +4775,8 @@ Public Module awinGeneralModules
                                     ElseIf budgetInput = "calcNeeded" Then
                                         ' das bedeutet, dass das Budget errechnet werden soll ... 
                                         budget = -999
+                                    ElseIf budgetInput = "" Then
+                                        budget = 0
                                     Else
                                         Throw New ArgumentException("mit dieser Angabe konnte nichts angefangen werden ...")
                                     End If

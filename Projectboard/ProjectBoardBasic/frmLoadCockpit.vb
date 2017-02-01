@@ -14,6 +14,15 @@ Public Class frmLoadCockpit
 
     End Sub
 
+    Private Sub languageSettings()
+        If awinSettings.englishLanguage Then
+            Me.Text = "Load Chart-Cockpit"
+            Me.AbbrButton.Text = "Cancel"
+            Me.OKButton.Text = "Load"
+            Me.deleteOtherCharts.Text = "delete other Charts"
+        End If
+    End Sub
+
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
         Dim cName As String
@@ -44,6 +53,8 @@ Public Class frmLoadCockpit
 
         If My.Computer.FileSystem.FileExists(fileName) Then
 
+            Call languageSettings()
+
             Try
 
                 xlsCockpits = appInstance.Workbooks.Open(fileName)
@@ -59,17 +70,17 @@ Public Class frmLoadCockpit
                     End If
                 End While
 
-                'If Not fileIsOpen Then
-                '    logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
-                '                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
-
-                '    Throw New ArgumentException(logMessage)
-                'End If
 
             End Try
         Else
             appInstance.EnableEvents = True
-            Throw New ArgumentException("Die Datei " & fileName & " existiert nicht.")
+            Dim errMsg As String
+            If awinSettings.englishLanguage Then
+                errMsg = "File " & fileName & " does not exist"
+            Else
+                errMsg = "Die Datei " & fileName & " existiert nicht."
+            End If
+            Throw New ArgumentException(errMsg)
         End If
 
         ' alle vorhandenen Cockpits (=Tabellenblätter) zur Auswahl anzeigen

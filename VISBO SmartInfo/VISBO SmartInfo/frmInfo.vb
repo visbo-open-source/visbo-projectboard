@@ -127,11 +127,35 @@ Public Class frmInfo
 
     End Sub
 
+    ''' <summary>
+    ''' setzt im Fall englisch die Formular Texte auf englische Bezeichner 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub languageSettings()
+
+        If englishLanguage Then
+            With Me
+                .TabControl1.TabPages.Item(0).Text = "Information"
+                .TabControl1.TabPages.Item(1).Text = "Measure"
+                .showAbbrev.Text = "Abbreviation"
+                .lblAmpeln.Text = "Traffic-Light"
+                .lblAmpeln.Left = 432 - 15
+                .rdbLU.Text = "Deliverables"
+                .rdbMV.Text = "Changed Dates"
+                .rdbAbbrev.Text = "Abbreviation"
+                .rdbBreadcrumb.Text = "full breadcrumb"
+            End With
+        End If
+
+    End Sub
 
     Private Sub frmInfo_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         ' sind irgendwelche Ampel-Farben gesetzt 
         Dim ix As Integer = 1
+
+        ' sprach-Einstellung 
+        Call languageSettings()
 
         formIsShown = True
 
@@ -374,7 +398,12 @@ Public Class frmInfo
     Private Sub listboxNames_DoubleClick(sender As Object, e As EventArgs) Handles listboxNames.DoubleClick
         If rdbMV.Checked = True Then
             ' jetzt kann der Erläuterungstext eingegeben werden ... 
-            Call MsgBox("Erläuterung eingeben ...")
+            If englishLanguage Then
+                Call MsgBox("Provide Explanation ...")
+            Else
+                Call MsgBox("Erläuterung eingeben ...")
+            End If
+
         End If
     End Sub
 
@@ -471,7 +500,13 @@ Public Class frmInfo
     End Sub
 
     Private Sub filterText_MouseHover(sender As Object, e As EventArgs) Handles filterText.MouseHover
-        ToolTip1.Show("Text-Filter für Listbox", filterText, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "Text-filter for listbox"
+        Else
+            tsMSG = "Text-Filter für Listbox"
+        End If
+        ToolTip1.Show(tsMSG, filterText, 2000)
     End Sub
 
     Private Sub filterText_TextChanged(sender As Object, e As EventArgs) Handles filterText.TextChanged
@@ -942,14 +977,6 @@ Public Class frmInfo
     End Sub
 
 
-    Private Sub TabPage1_Click(sender As Object, e As EventArgs) Handles TabPage1.Click
-
-    End Sub
-
-    Private Sub TabPage2_Click(sender As Object, e As EventArgs) Handles TabPage2.Click
-
-    End Sub
-
     Private Sub writeAmpel_Click(sender As Object, e As EventArgs) Handles writeAmpel.Click
         Try
 
@@ -1149,48 +1176,114 @@ Public Class frmInfo
     End Sub
 
     Private Sub deleteText_MouseHover(sender As Object, e As EventArgs) Handles deleteText.MouseHover
-        ToolTip1.Show("Löscht die Text Beschriftung des Elements", deleteText, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "delete text annotation of element"
+        Else
+            tsMSG = "Löscht die Text Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, deleteText, 2000)
     End Sub
 
     Private Sub positionTextButton_MouseHover(sender As Object, e As EventArgs) Handles positionTextButton.MouseHover
-        ToolTip1.Show("relative Position der Text-Beschriftung zum Plan-Element", positionTextButton, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "relative position of text annotation to plan-element"
+        Else
+            tsMSG = "relative Position der Text-Beschriftung zum Plan-Element"
+        End If
+        ToolTip1.Show(tsMSG, positionTextButton, 2000)
     End Sub
 
     Private Sub writeText_MouseHover(sender As Object, e As EventArgs) Handles writeText.MouseHover
-        ToolTip1.Show("erstellt die Text-Beschriftung des Elements", writeText, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "annotate element with name"
+        Else
+            tsMSG = "erstellt die Text-Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, writeText, 2000)
     End Sub
 
     Private Sub deleteDate_MouseHover(sender As Object, e As EventArgs) Handles deleteDate.MouseHover
-        ToolTip1.Show("Löscht die Datum-Beschriftung des Elements", deleteDate, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "delete date annotation of element"
+        Else
+            tsMSG = "Löscht die Datum-Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, deleteDate, 2000)
     End Sub
 
     Private Sub positionDateButton_MouseHover(sender As Object, e As EventArgs) Handles positionDateButton.MouseHover
-        ToolTip1.Show("relative Position der Datum-Beschriftung zum Plan-Element", positionDateButton, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "relative position of date annotation to plan-element"
+        Else
+            tsMSG = "relative Position der Datum-Beschriftung zum Plan-Element"
+        End If
+        ToolTip1.Show(tsMSG, positionDateButton, 2000)
     End Sub
 
     Private Sub writeDate_MouseHover(sender As Object, e As EventArgs) Handles writeDate.MouseHover
-        ToolTip1.Show("erstellt die Datum-Beschriftung des Elements", writeDate, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "annotate element with date"
+        Else
+            tsMSG = "erstellt die Datum-Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, writeDate, 2000)
     End Sub
 
     Private Sub deleteAmpel_MouseHover(sender As Object, e As EventArgs) Handles deleteAmpel.MouseHover
         If rdbLU.Checked Then
-            ToolTip1.Show("Löscht die Lieferumfänge-Notiz des Elements", deleteAmpel, 2000)
+            Dim tsMSG As String
+            If englishLanguage Then
+                tsMSG = "delete annotation of deliverables"
+            Else
+                tsMSG = "Löscht die Lieferumfänge-Notiz des Elements"
+            End If
+            ToolTip1.Show(tsMSG, deleteAmpel, 2000)
         Else
-            ToolTip1.Show("Löscht die Ampel-Notiz des Elements", deleteAmpel, 2000)
+            Dim tsMSG As String
+            If englishLanguage Then
+                tsMSG = "delete annotation of traffic light"
+            Else
+                tsMSG = "Löscht die Ampel-Notiz des Elements"
+            End If
+            ToolTip1.Show(tsMSG, deleteAmpel, 2000)
         End If
 
     End Sub
 
     Private Sub writeAmpel_MouseHover(sender As Object, e As EventArgs) Handles writeAmpel.MouseHover
         If rdbLU.Checked Then
-            ToolTip1.Show("erstellt die Lieferumfänge-Notiz des Elements", writeAmpel, 2000)
+            Dim tsMSG As String
+            If englishLanguage Then
+                tsMSG = "create annotation of deliverables"
+            Else
+                tsMSG = "erstellt die Lieferumfänge-Notiz des Elements"
+            End If
+            ToolTip1.Show(tsMSG, writeAmpel, 2000)
         Else
-            ToolTip1.Show("erstellt die Ampel-Notiz des Elements", writeAmpel, 2000)
+            Dim tsMSG As String
+            If englishLanguage Then
+                tsMSG = "create annotation of traffic light"
+            Else
+                tsMSG = "erstellt die Ampel-Notiz des Elements"
+            End If
+            ToolTip1.Show(tsMSG, writeAmpel, 2000)
         End If
     End Sub
 
     Private Sub showAbbrev_MouseHover(sender As Object, e As EventArgs) Handles showAbbrev.MouseHover
-        ToolTip1.Show("Verwende Kurzform zur Beschriftung", showAbbrev, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "use abbreviation when annotating"
+        Else
+            tsMSG = "Verwende Kurzform zur Beschriftung"
+        End If
+        ToolTip1.Show(tsMSG, showAbbrev, 2000)
     End Sub
 
     Private Sub PictureMarker_MouseHover(sender As Object, e As EventArgs) Handles PictureMarker.MouseHover
@@ -1198,59 +1291,143 @@ Public Class frmInfo
     End Sub
 
     Private Sub CheckBxMarker_MouseHover(sender As Object, e As EventArgs) Handles CheckBxMarker.MouseHover
-        ToolTip1.Show("Element-Marker anzeigen", CheckBxMarker, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show element marker"
+        Else
+            tsMSG = "Element-Marker anzeigen"
+        End If
+        ToolTip1.Show(tsMSG, CheckBxMarker, 2000)
     End Sub
 
     Private Sub shwOhneLight_MouseHover(sender As Object, e As EventArgs) Handles shwOhneLight.MouseHover
-        ToolTip1.Show("Elemente ohne Ampel-Bewertung kennzeichnen", shwOhneLight, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show elements without traffic-light"
+        Else
+            tsMSG = "Elemente ohne Ampel-Bewertung kennzeichnen"
+        End If
+        ToolTip1.Show(tsMSG, shwOhneLight, 2000)
     End Sub
 
     Private Sub shwGreenLight_MouseHover(sender As Object, e As EventArgs) Handles shwGreenLight.MouseHover
-        ToolTip1.Show("Elemente mit grüner Ampel-Bewertung kennzeichnen", shwGreenLight, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show elements with green traffic-light"
+        Else
+            tsMSG = "Elemente mit grüner Ampel-Bewertung kennzeichnen"
+        End If
+        ToolTip1.Show(tsMSG, shwGreenLight, 2000)
     End Sub
 
     Private Sub shwYellowLight_MouseHover(sender As Object, e As EventArgs) Handles shwYellowLight.MouseHover
-        ToolTip1.Show("Elemente mit gelber Ampel-Bewertung kennzeichnen", shwYellowLight, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show elements with yellow traffic-light"
+        Else
+            tsMSG = "Elemente mit gelber Ampel-Bewertung kennzeichnen"
+        End If
+        ToolTip1.Show(tsMSG, shwYellowLight, 2000)
     End Sub
 
     Private Sub shwRedLight_MouseHover(sender As Object, e As EventArgs) Handles shwRedLight.MouseHover
-        ToolTip1.Show("Elemente mit roter Ampel-Bewertung kennzeichnen", shwRedLight, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show elements with red traffic-light"
+        Else
+            tsMSG = "Elemente mit roter Ampel-Bewertung kennzeichnen"
+        End If
+        ToolTip1.Show(tsMSG, shwRedLight, 2000)
     End Sub
 
     Private Sub btnSendToHome_MouseHover(sender As Object, e As EventArgs) Handles btnSendToHome.MouseHover
-        ToolTip1.Show("auf Home-Position positionieren", btnSendToHome, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "move to Home-position"
+        Else
+            tsMSG = "auf Home-Position positionieren"
+        End If
+        ToolTip1.Show(tsMSG, btnSendToHome, 2000)
     End Sub
 
     Private Sub btnSentToChange_MouseHover(sender As Object, e As EventArgs) Handles btnSentToChange.MouseHover
-        ToolTip1.Show("auf veränderter Position positionieren", btnSentToChange, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "move to Changed-position"
+        Else
+            tsMSG = "auf veränderter Position positionieren"
+        End If
+        ToolTip1.Show(tsMSG, btnSentToChange, 2000)
     End Sub
 
     Private Sub searchIcon_MouseHover(sender As Object, e As EventArgs) Handles searchIcon.MouseHover
-        ToolTip1.Show("Suchfeld und Listbox ein-/ausschalten", searchIcon, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "set search and listbox on/off"
+        Else
+            tsMSG = "Suchfeld und Listbox ein-/ausschalten"
+        End If
+        ToolTip1.Show(tsMSG, searchIcon, 2000)
     End Sub
 
     Private Sub rdbName_MouseHover(sender As Object, e As EventArgs) Handles rdbName.MouseHover
-        ToolTip1.Show("Anzeige von (fremdsprachigen) Element Namen in der Listbox", rdbName, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show foreign language names"
+        Else
+            tsMSG = "Anzeige von (fremdsprachigen) Element Namen in der Listbox"
+        End If
+        ToolTip1.Show(tsMSG, rdbName, 2000)
     End Sub
 
     Private Sub rdbLU_MouseHover(sender As Object, e As EventArgs) Handles rdbLU.MouseHover
-        ToolTip1.Show("Anzeige und Suche von Lieferumfängen in der Listbox", rdbLU, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show and search deliverables"
+        Else
+            tsMSG = "Anzeige und Suche von Lieferumfängen in der Listbox"
+        End If
+        ToolTip1.Show(tsMSG, rdbLU, 2000)
     End Sub
 
     Private Sub rdbMV_MouseHover(sender As Object, e As EventArgs) Handles rdbMV.MouseHover
-        ToolTip1.Show("Anzeige und Suche von Elementen, deren Termin geändert wurde", rdbMV, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show and search elements with changed date"
+        Else
+            tsMSG = "Anzeige und Suche von Elementen, deren Termin geändert wurde"
+        End If
+        ToolTip1.Show(tsMSG, rdbMV, 2000)
     End Sub
 
     Private Sub rdbOriginalName_MouseHover(sender As Object, e As EventArgs) Handles rdbOriginalName.MouseHover
-        ToolTip1.Show("Anzeige und Suche von Original-Namen der Elemente", rdbOriginalName, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show and search for original names"
+        Else
+            tsMSG = "Anzeige und Suche von Original-Namen der Elemente"
+        End If
+        ToolTip1.Show(tsMSG, rdbOriginalName, 2000)
     End Sub
 
     Private Sub rdbAbbrev_MouseHover(sender As Object, e As EventArgs) Handles rdbAbbrev.MouseHover
-        ToolTip1.Show("Anzeige und Suche von Abkürzungen", rdbAbbrev, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show and search for abbreviations"
+        Else
+            tsMSG = "Anzeige und Suche von Abkürzungen"
+        End If
+        ToolTip1.Show(tsMSG, rdbAbbrev, 2000)
     End Sub
 
     Private Sub rdbBreadcrumb_MouseHover(sender As Object, e As EventArgs) Handles rdbBreadcrumb.MouseHover
-        ToolTip1.Show("Anzeige und Suche des vollen Projekt-Strukturpfades inkl Element-Namen", rdbBreadcrumb, 2000)
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "show and search full breadcrumb names incl element names"
+        Else
+            tsMSG = "Anzeige und Suche des vollen Projekt-Strukturpfades inkl Element-Namen"
+        End If
+        ToolTip1.Show(tsMSG, rdbBreadcrumb, 2000)
     End Sub
 
     

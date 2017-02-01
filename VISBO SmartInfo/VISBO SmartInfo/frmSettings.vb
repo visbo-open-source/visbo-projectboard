@@ -41,14 +41,41 @@ Public Class frmSettings
         extSearch = frmExtendedSearch.Checked
     End Sub
 
+
+    Private Sub languageSettings()
+        If englishLanguage Then
+
+            With Me
+                .TabControl1.TabPages.Item(0).Text = "Basics"
+                .TabControl1.TabPages.Item(1).Text = "Protection"
+                .TabControl1.TabPages.Item(2).Text = "Language I/E"
+                .lbl_schrift.Text = "Font Size"
+                .Label5.Text = "distance unit"
+                .lblLanguage.Text = "Language"
+                .frmShowInfoBC.Text = "show full BreadCrumb"
+                .frmExtendedSearch.Text = "extended search"
+                .btnChangeLanguage.Text = "Translate Annotations"
+                .rdbPWD.Text = "Password"
+                .lblProtectField1.Text = "Password:"
+                .btnProtect.Text = "Protect"
+                .Label1.Text = "Language File"
+                .btnLanguageImp.Text = "Import"
+                .btnLanguageExp.Text = "Export"
+            End With
+
+        End If
+
+    End Sub
     Private Sub frmSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         frmShowInfoBC.Checked = showBreadCrumbField
         frmExtendedSearch.Checked = extSearch
 
-
+        Call languageSettings()
 
         rdbPWD.Checked = True
-        lblProtectField1.Text = "Passwort:"
+        lblProtectField1.Text = "Password:"
+
+
 
         lblProtectField2.Visible = False
         frmProtectField2.Visible = False
