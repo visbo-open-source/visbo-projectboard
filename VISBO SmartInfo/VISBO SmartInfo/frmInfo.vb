@@ -139,7 +139,7 @@ Public Class frmInfo
                 .TabControl1.TabPages.Item(1).Text = "Measure"
                 .showAbbrev.Text = "Abbreviation"
                 .lblAmpeln.Text = "Traffic-Light"
-                .lblAmpeln.Left = 432 - 15
+                .lblAmpeln.Left = 432 - 20
                 .rdbLU.Text = "Deliverables"
                 .rdbMV.Text = "Changed Dates"
                 .rdbAbbrev.Text = "Abbreviation"

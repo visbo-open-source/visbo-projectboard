@@ -1705,7 +1705,7 @@ Public Module awinGeneralModules
                         Dim cp As Integer
                         With hrole
                             .name = tmpStr.Trim
-                            .Startkapa = CDbl(c.Offset(0, 1).Value)
+                            .defaultKapa = CDbl(c.Offset(0, 1).Value)
                             .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
 
                             Try
@@ -1722,7 +1722,7 @@ Public Module awinGeneralModules
                             ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
                             For cp = 1 To 240
 
-                                .kapazitaet(cp) = .Startkapa
+                                .kapazitaet(cp) = .defaultKapa
                                 .externeKapazitaet(cp) = 0.0
 
                             Next
@@ -3036,7 +3036,7 @@ Public Module awinGeneralModules
                 Catch ex As Exception
                     visbo_ampel = 0
                 End Try
-               
+
                 If modus = "BHTC" Then
                     ' In Missing..Definitions sind noch die Definitionen des vorausgegangenen Projekts definiert.
                     ' Diese sollen nicht mehr aktiv sein.
@@ -3053,7 +3053,7 @@ Public Module awinGeneralModules
                 ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
                 '' ''For proj_i = beginnProjekt To endeProjekt
 
-            
+
 
                 hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
 
@@ -3108,7 +3108,7 @@ Public Module awinGeneralModules
                 Dim anzTasks As Integer = msproj.Tasks.Count
                 anzTasks = msproj.NumberOfTasks
 
-           
+
                 Dim resPool As MSProject.Resources = msproj.Resources
 
                 Dim res(resPool.Count) As Object
@@ -3126,7 +3126,7 @@ Public Module awinGeneralModules
 
                     msTask = msproj.Tasks.Item(i)
 
-                  
+
 
 
                     ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
@@ -3310,7 +3310,7 @@ Public Module awinGeneralModules
                                                 Dim newRoleDef As New clsRollenDefinition
                                                 newRoleDef.name = ass.ResourceName
                                                 newRoleDef.farbe = RGB(120, 120, 120)
-                                                newRoleDef.Startkapa = 200000
+                                                newRoleDef.defaultKapa = 200000
 
                                                 ' OvertimeRate in Tagessatz umrechnen
                                                 Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)

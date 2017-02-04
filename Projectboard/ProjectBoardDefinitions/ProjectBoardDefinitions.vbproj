@@ -74,6 +74,7 @@
     <Compile Include="clsHierarchyDB.vb" />
     <Compile Include="clsHierarchyNodeDB.vb" />
     <Compile Include="clsKostenartDB.vb" />
+    <Compile Include="clsKostenartDefinitionDB.vb" />
     <Compile Include="clsLicences.vb" />
     <Compile Include="clsListOfCostAndRoles.vb" />
     <Compile Include="clsOpenXML.vb" />
@@ -89,6 +90,7 @@
     <Compile Include="clsResultDB.vb" />
     <Compile Include="clsRiskChance.vb" />
     <Compile Include="clsRolleDB.vb" />
+    <Compile Include="clsRollenDefinitionDB.vb" />
     <Compile Include="clsVisboZustaende.vb" />
     <Compile Include="clsHierarchy.vb" />
     <Compile Include="clsHierarchyNode.vb" />

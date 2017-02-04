@@ -120,7 +120,7 @@ Public Class clsRolle
 
         Get
 
-            Startkapa = RoleDefinitions.getRoledef(_typus).Startkapa
+            Startkapa = RoleDefinitions.getRoledef(_typus).defaultKapa
 
         End Get
 

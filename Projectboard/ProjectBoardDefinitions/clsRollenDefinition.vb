@@ -8,7 +8,7 @@
 
     Public Property name As String
     Public Property farbe As Object
-    Public Property Startkapa As Double
+    Public Property defaultKapa As Double
     Public Property tagessatzIntern As Double
     Public Property tagessatzExtern As Double
     Public Property kapazitaet As Double()

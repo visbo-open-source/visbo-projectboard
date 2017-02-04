@@ -1867,7 +1867,7 @@ Public Class clsProjekte
 
             For r = 1 To realCollection.Count
                 rname = CStr(realCollection.Item(r))
-                hkapa = RoleDefinitions.getRoledef(rname).Startkapa
+                hkapa = RoleDefinitions.getRoledef(rname).defaultKapa
 
                 For i = showRangeLeft To showRangeRight
                     If includingExterns Then

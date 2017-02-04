@@ -11,19 +11,19 @@ Public Class Ribbon1
 
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
-        Dim msg As String = ""
-        If userIsEntitled(msg) Then
+        'Dim msg As String = ""
+        'If userIsEntitled(msg) Then
 
-            ' wird das Formular aktuell angezeigt ? 
-            If IsNothing(infoFrm) And Not formIsShown Then
-                infoFrm = New frmInfo
-                formIsShown = True
-                infoFrm.Show()
-            End If
+        '    ' wird das Formular aktuell angezeigt ? 
+        '    If IsNothing(infoFrm) And Not formIsShown Then
+        '        infoFrm = New frmInfo
+        '        formIsShown = True
+        '        infoFrm.Show()
+        '    End If
 
-        Else
-            Call MsgBox(msg)
-        End If
+        'Else
+        '    Call MsgBox(msg)
+        'End If
 
 
     End Sub

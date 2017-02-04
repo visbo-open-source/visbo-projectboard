@@ -238,7 +238,6 @@
             Dim ix As Integer
             Dim fullName As String
             Dim considerTimeFrame As Boolean = False
-            Dim leftArrayElem As Integer, rightArrayElem As Integer
 
             Dim arrayIX As Integer, ixZeitraum As Integer
             Dim anzLoops As Integer

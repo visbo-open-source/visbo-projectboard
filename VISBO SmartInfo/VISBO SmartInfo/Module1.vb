@@ -456,11 +456,7 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_SlideSelectionChanged(SldRange As PowerPoint.SlideRange) Handles pptAPP.SlideSelectionChanged
 
-        ' die HomeButtonRelevanz setzen 
-        homeButtonRelevance = False
-        changedButtonRelevance = False
-
-        ' die aktuelle Slide setzen 
+            ' die aktuelle Slide setzen 
         If SldRange.Count = 1 Then
             currentSlide = SldRange.Item(1)
 
@@ -468,34 +464,49 @@ Module Module1
                 Try
                     If currentSlide.Tags.Item("SMART").Length > 0 Then
 
-                        slideHasSmartElements = True
+                        Dim msg As String = ""
+                        If userIsEntitled(msg) Then
 
-                        Try
+                            ' die HomeButtonRelevanz setzen 
+                            homeButtonRelevance = False
+                            changedButtonRelevance = False
 
-                            slideCoordInfo = New clsPPTShapes
-                            slideCoordInfo.pptSlide = currentSlide
+                            slideHasSmartElements = True
 
-                            With currentSlide
-                                If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-                                    Dim tmpSD As String = .Tags.Item("CALL")
-                                    Dim tmpED As String = .Tags.Item("CALR")
-                                    slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-                                End If
+                            Try
 
-                                If .Tags.Item("SOC").Length > 0 Then
-                                    StartofCalendar = CDate(.Tags.Item("SOC"))
-                                End If
+                                slideCoordInfo = New clsPPTShapes
+                                slideCoordInfo.pptSlide = currentSlide
 
+                                With currentSlide
+                                    If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
+                                        Dim tmpSD As String = .Tags.Item("CALL")
+                                        Dim tmpED As String = .Tags.Item("CALR")
+                                        slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                                    End If
 
-
-                            End With
-
-                        Catch ex As Exception
-                            slideCoordInfo = Nothing
-                        End Try
+                                    If .Tags.Item("SOC").Length > 0 Then
+                                        StartofCalendar = CDate(.Tags.Item("SOC"))
+                                    End If
 
 
-                        Call buildSmartSlideLists()
+
+                                End With
+
+                            Catch ex As Exception
+                                slideCoordInfo = Nothing
+                            End Try
+
+
+                            Call buildSmartSlideLists()
+
+                            ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                            initialHomeButtonRelevance = homeButtonRelevance
+                            initialChangedButtonRelevance = changedButtonRelevance
+
+                        Else
+                            Call MsgBox(msg)
+                        End If
 
                     End If
                 Catch ex As Exception
@@ -509,10 +520,6 @@ Module Module1
         Else
             ' nichts tun, das heisst auch nichts verändern ...
         End If
-
-        ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-        initialHomeButtonRelevance = homeButtonRelevance
-        initialChangedButtonRelevance = changedButtonRelevance
 
     End Sub
 
@@ -649,6 +656,13 @@ Module Module1
                 '' Anfang ... das war vorher innerhalb der next Schleife .. 
                 ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
                 If relevantShapeNames.Count >= 1 Then
+
+                    ' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
+                    If IsNothing(infoFrm) And Not formIsShown Then
+                        infoFrm = New frmInfo
+                        formIsShown = True
+                        infoFrm.Show()
+                    End If
 
                     ReDim arrayOfNames(relevantShapeNames.Count - 1)
 
@@ -2061,33 +2075,55 @@ Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function bestimmeElemALuTvText(ByVal curShape As PowerPoint.Shape, _
-                                          Optional ByVal type As Integer = pptInfoType.aExpl) As String
+                                          Optional ByVal type As Integer = pptInfoType.aExpl, _
+                                          Optional ByVal shortForm As Boolean = True) As String
+
         Dim tmpText As String = ""
+
+        If Not shortForm Then
+            tmpText = curShape.Tags.Item("CN") & " "
+        End If
 
         Try
 
             If type = pptInfoType.lUmfang Then
+                ' bestimmen der ersten Zeile:
+                If englishLanguage Then
+                    tmpText = tmpText & "Deliverables:" & vbLf
+                Else
+                    tmpText = tmpText & "Lieferumfänge:" & vbLf
+                End If
+
+
                 Dim tmpStr() As String
                 If curShape.Tags.Item("LU").Length > 0 Then
                     tmpStr = curShape.Tags.Item("LU").Split(New Char() {CType("#", Char)})
                     For i As Integer = 0 To tmpStr.Length - 1
-                        If i = 0 Then
-                            tmpText = tmpStr(i)
-                        Else
-                            tmpText = tmpText & vbLf & tmpStr(i)
-                        End If
+                        tmpText = tmpText & vbLf & tmpStr(i)
                     Next
                 End If
 
             ElseIf type = pptInfoType.mvElement Then
+                If englishLanguage Then
+                    tmpText = tmpText & "moved:" & vbLf
+                Else
+                    tmpText = tmpText & "verschoben:" & vbLf
+                End If
+
                 If curShape.Tags.Item("MVE").Length > 0 Then
-                    tmpText = curShape.Tags.Item("MVE")
+                    tmpText = tmpText & curShape.Tags.Item("MVE")
                 End If
 
             Else
                 ' in allen anderen Fällen den Ampel-Text wählen 
                 If curShape.Tags.Item("AE").Length > 0 Then
-                    tmpText = curShape.Tags.Item("AE")
+                    If englishLanguage Then
+                        tmpText = tmpText & "traffic light explanation:" & vbLf
+                    Else
+                        tmpText = tmpText & "Ampel-Erläuterung:" & vbLf
+                    End If
+
+                    tmpText = tmpText & curShape.Tags.Item("AE")
                 End If
             End If
 
@@ -2534,14 +2570,14 @@ Module Module1
             End If
 
             If descriptionType = pptAnnotationType.movedExplanation Then
-                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.mvElement)
+                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.mvElement, False)
                 ampelFarbe = 4
 
             ElseIf descriptionType = pptAnnotationType.lieferumfang Then
-                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.lUmfang)
+                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.lUmfang, False)
             Else
 
-                descriptionText = bestimmeElemALuTvText(selectedPlanShape)
+                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.aExpl, False)
             End If
 
             txtShpLeft = selectedPlanShape.Left + 1.5 * selectedPlanShape.Width + 5
