@@ -1059,6 +1059,8 @@ Public Module awinGeneralModules
                     ' Auslesen der Kosten Definitionen 
                     Call readCostDefinitions(wsName4)
 
+
+
                     ' Auslesen der Custom Field Definitions
                     Try
                         Call readCustomFieldDefinitions(wsName4)
@@ -1155,6 +1157,20 @@ Public Module awinGeneralModules
 
                     ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
                     Call readRessourcenDetails()
+
+                    ' Auslesen der Rollen aus der Datenbank ! 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
+                    Dim costDefinitions2 As clsKostenarten = request.retrieveCostsFromDB(Date.Now)
+
+                    If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And _
+                            CostDefinitions.isIdenticalTo(costDefinitions2) Then
+                        Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
+                        'RoleDefinitions = RoleDefinitions2
+                        'CostDefinitions = costDefinitions2
+                    Else
+                        Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
+                    End If
 
 
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
@@ -1678,6 +1694,7 @@ Public Module awinGeneralModules
         Dim hrole As clsRollenDefinition
 
 
+
         Try
 
 
@@ -1739,6 +1756,7 @@ Public Module awinGeneralModules
                 Next
 
             End With
+
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Customization-File: Rolle")
@@ -1877,6 +1895,7 @@ Public Module awinGeneralModules
 
             End With
 
+            
         Catch ex As Exception
             Throw New ArgumentException("Fehler in Customization File: Kosten")
         End Try

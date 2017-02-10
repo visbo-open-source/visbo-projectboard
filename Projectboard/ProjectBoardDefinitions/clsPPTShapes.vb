@@ -549,10 +549,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Meilenstein-Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -560,10 +560,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Meilenstein-Datum"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -571,10 +571,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Phasen-Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -582,10 +582,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Phasen-Datum"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -593,10 +593,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Projekt-/Swimlane Name"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -604,10 +604,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalender-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -615,10 +615,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Quartals/Monats/Kalenderwoche Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -626,10 +626,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Jahres-Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -637,10 +637,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Projekt-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -648,10 +648,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Phasen-Form"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -659,10 +659,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Meilenstein-Form"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -670,10 +670,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Ampel-Form"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -681,10 +681,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Jahres-Trenn-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -692,10 +692,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Q/M/KW-Trenn-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -703,10 +703,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -714,10 +714,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Titel"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -725,10 +725,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Textvorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -736,10 +736,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Phasen-Vorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -747,10 +747,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Meilenstein-Vorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -758,10 +758,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Container Shape"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -769,10 +769,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalenderbegrenzung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -780,10 +780,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalendestep-Begrenzung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -791,10 +791,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalender-Markierung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -802,10 +802,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Fehlertext-Vorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -813,10 +813,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Zeilen-Hervorhebung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -826,10 +826,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Meilenstein-Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -837,10 +837,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Meilenstein-Datum"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -848,10 +848,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Phasen-Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -859,10 +859,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Phasen-Datum"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -870,10 +870,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Projekt-Name"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -881,10 +881,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalender-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -892,10 +892,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Quartals/Monats/Kalenderwoche Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -903,10 +903,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Jahres-Beschriftung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -914,10 +914,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Projekt-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -925,10 +925,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Phasen-Form"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -936,10 +936,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Meilenstein-Form"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -948,10 +948,10 @@ Public Class clsPPTShapes
                 '    ok = False
                 '    tmpName = "Ampel-Form"
                 '    If firstTime Then
-                '        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                '        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                 '        firstTime = False
                 '    Else
-                '        tmpErg = tmpErg & vbLf & tmpName
+                '        tmpErg = tmpErg & vbLF & tmpName
                 '    End If
                 'End If
 
@@ -959,10 +959,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Jahres-Trenn-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -971,10 +971,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Q/M/KW-Trenn-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -982,10 +982,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "horizontale Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -993,10 +993,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Linie"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1004,10 +1004,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Titel"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1015,10 +1015,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Textvorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1026,10 +1026,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Phasen-Vorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1037,10 +1037,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Legenden-Meilenstein-Vorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1048,10 +1048,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Container Shape"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1059,10 +1059,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalenderbegrenzung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1070,10 +1070,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalendestep-Begrenzung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1081,10 +1081,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Kalender-Markierung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1092,10 +1092,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Fehlertext-Vorlage"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1103,10 +1103,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Zeilen-Hervorhebung"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1114,10 +1114,10 @@ Public Class clsPPTShapes
                     ok = False
                     tmpName = "Beschriftung Hierarchiestufe 1"
                     If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                        tmpErg = "fehlende PPT-Shapes: " & vbLF & tmpName
                         firstTime = False
                     Else
-                        tmpErg = tmpErg & vbLf & tmpName
+                        tmpErg = tmpErg & vbLF & tmpName
                     End If
                 End If
 
@@ -1375,7 +1375,7 @@ Public Class clsPPTShapes
                     End If
                 End If
             Else
-                Throw New ArgumentException("Das Startdatum in der Konfigurations-Datei muss vor dem gewählten Start-Datum liegen" & vbLf _
+                Throw New ArgumentException("Das Startdatum in der Konfigurations-Datei muss vor dem gewählten Start-Datum liegen" & vbLF _
                                             & "bitte ändern Sie das Datum ggf. in der Konfigurations-Datei")
             End If
         Else

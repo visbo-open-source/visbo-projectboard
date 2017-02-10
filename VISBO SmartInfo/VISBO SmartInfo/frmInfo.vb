@@ -61,6 +61,8 @@ Public Class frmInfo
                 .rdbName.Top = .rdbName.Top - deltaAmpel
                 .rdbLU.Top = .rdbLU.Top - deltaAmpel
                 .rdbMV.Top = .rdbMV.Top - deltaAmpel
+                .rdbResources.Top = .rdbResources.Top - deltaAmpel
+                .rdbCosts.Top = .rdbCosts.Top - deltaAmpel
                 .rdbOriginalName.Top = rdbOriginalName.Top - deltaAmpel
                 .rdbAbbrev.Top = rdbAbbrev.Top - deltaAmpel
                 .rdbBreadcrumb.Top = .rdbBreadcrumb.Top - deltaAmpel
@@ -79,6 +81,8 @@ Public Class frmInfo
                 .rdbName.Top = .rdbName.Top + deltaAmpel
                 .rdbLU.Top = .rdbLU.Top + deltaAmpel
                 .rdbMV.Top = .rdbMV.Top + deltaAmpel
+                .rdbResources.Top = .rdbResources.Top + deltaAmpel
+                .rdbCosts.Top = .rdbCosts.Top + deltaAmpel
                 .rdbOriginalName.Top = rdbOriginalName.Top + deltaAmpel
                 .rdbAbbrev.Top = rdbAbbrev.Top + deltaAmpel
                 .rdbBreadcrumb.Top = .rdbBreadcrumb.Top + deltaAmpel
@@ -111,6 +115,9 @@ Public Class frmInfo
             rdbOriginalName.Visible = False
             rdbAbbrev.Visible = False
             rdbBreadcrumb.Visible = False
+            rdbResources.Visible = False
+            rdbCosts.Visible = False
+
         Else
             Me.Height = Me.Height + deltaSearchBox
             filterText.Visible = True
@@ -118,6 +125,8 @@ Public Class frmInfo
             rdbName.Visible = True
             rdbLU.Visible = True
             rdbMV.Visible = True
+            rdbResources.Visible = True
+            rdbCosts.Visible = True
             If extSearch Then
                 rdbOriginalName.Visible = True
                 rdbAbbrev.Visible = True
@@ -142,6 +151,8 @@ Public Class frmInfo
                 .lblAmpeln.Left = 432 - 20
                 .rdbLU.Text = "Deliverables"
                 .rdbMV.Text = "Changed Dates"
+                .rdbResources.Text = "Resources"
+                .rdbCosts.Text = "Cost"
                 .rdbAbbrev.Text = "Abbreviation"
                 .rdbBreadcrumb.Text = "full breadcrumb"
             End With
@@ -235,7 +246,11 @@ Public Class frmInfo
 
 
         If rdbName.Checked = True Then
-            Me.aLuTvText.Text = setALuTvText
+            Dim tmpStr() As String
+
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+
+            Me.aLuTvText.Lines = tmpStr
 
 
             Call erstelleListbox()
@@ -247,7 +262,7 @@ Public Class frmInfo
     ''' erstellt die Listbox aufgrund der Settings bei Ampeln, Radio-Button und Suchstr neu 
     ''' </summary>
     ''' <remarks></remarks>
-    Private Sub erstelleListbox()
+    Friend Sub erstelleListbox()
 
         If Not dontFire Then
 
@@ -267,6 +282,10 @@ Public Class frmInfo
                 rdbCode = pptInfoType.lUmfang
             ElseIf rdbMV.Checked Then
                 rdbCode = pptInfoType.mvElement
+            ElseIf rdbResources.Checked Then
+                rdbCode = pptInfoType.resources
+            ElseIf rdbCosts.Checked Then
+                rdbCode = pptInfoType.costs
             Else
                 rdbCode = pptInfoType.cName
             End If
@@ -346,7 +365,10 @@ Public Class frmInfo
 
     Private Sub rdbOriginalName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbOriginalName.CheckedChanged
         If rdbOriginalName.Checked = True Then
-            Me.aLuTvText.Text = setALuTvText
+
+            Dim tmpStr() As String
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+            Me.aLuTvText.Lines = tmpStr
 
             Call erstelleListbox()
 
@@ -355,7 +377,11 @@ Public Class frmInfo
 
     Private Sub rdbAbbrev_CheckedChanged(sender As Object, e As EventArgs) Handles rdbAbbrev.CheckedChanged
         If rdbAbbrev.Checked = True Then
-            Me.aLuTvText.Text = setALuTvText
+
+            Dim tmpStr() As String
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+            Me.aLuTvText.Lines = tmpStr
+
             Call erstelleListbox()
 
         End If
@@ -365,12 +391,77 @@ Public Class frmInfo
 
         If rdbBreadcrumb.Checked = True Then
 
-            Me.aLuTvText.Text = setALuTvText
+            Dim tmpStr() As String
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+            Me.aLuTvText.Lines = tmpStr
             
             Call erstelleListbox()
 
         End If
 
+    End Sub
+
+
+    Private Sub rdbResources_CheckedChanged(sender As Object, e As EventArgs) Handles rdbResources.CheckedChanged
+        If rdbResources.Checked = True Then
+
+            ' jetzt zu erstmal prüfen, ob überhaupt ein Datenbank Zugang da ist
+            If noDBAccessInPPT Then
+                Call logInToMongoDB()
+
+                If Not noDBAccessInPPT Then
+                    ' wenn der Login erfolgreich war ...
+                    Call buildSmartSlideLists()
+                End If
+            End If
+
+            ' prüfen , ob der AmpelBlock sichtbar ist ...
+            If Me.aLuTvText.Visible Then
+                ' alles ok 
+            Else
+                Call aLuTvBlockVisible(True)
+            End If
+
+            Dim tmpStr() As String
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+            Me.aLuTvText.Lines = tmpStr
+
+            Call erstelleListbox()
+
+        End If
+    End Sub
+
+    Private Sub rdbCosts_CheckedChanged(sender As Object, e As EventArgs) Handles rdbCosts.CheckedChanged
+
+        If rdbCosts.Checked = True Then
+
+            ' jetzt zu erstmal prüfen, ob überhaupt ein Datenbank Zugang da ist
+            If noDBAccessInPPT Then
+                Call logInToMongoDB()
+
+                If Not noDBAccessInPPT Then
+                    ' wenn der Login erfolgreich war ...
+                    Call buildSmartSlideLists()
+                End If
+            End If
+
+
+            ' wenn der Login erfolgreich war ...
+            ' prüfen , ob der AmpelBlock sichtbar ist ...
+            If Me.aLuTvText.Visible Then
+                ' alles ok 
+            Else
+                Call aLuTvBlockVisible(True)
+            End If
+
+            Dim tmpStr() As String
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+            Me.aLuTvText.Lines = tmpStr
+
+            Call erstelleListbox()
+
+
+        End If
     End Sub
 
     ''' <summary>
@@ -432,6 +523,10 @@ Public Class frmInfo
             rdbCode = pptInfoType.lUmfang
         ElseIf rdbMV.Checked Then
             rdbCode = pptInfoType.mvElement
+        ElseIf rdbResources.Checked Then
+            rdbCode = pptInfoType.resources
+        ElseIf rdbCosts.Checked Then
+            rdbCode = pptInfoType.costs
         Else
             rdbCode = pptInfoType.cName
         End If
@@ -985,6 +1080,8 @@ Public Class frmInfo
                 type = pptAnnotationType.movedExplanation
             ElseIf rdbLU.Checked Then
                 type = pptAnnotationType.lieferumfang
+            ElseIf rdbResources.Checked Or rdbCosts.Checked Then
+                type = pptAnnotationType.resourceCost
             Else
                 type = pptAnnotationType.ampelText
             End If
@@ -1047,7 +1144,9 @@ Public Class frmInfo
 
         If rdbLU.Checked = True Then
 
-            Me.aLuTvText.Text = setALuTvText()
+            Dim tmpStr() As String
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+            Me.aLuTvText.Lines = tmpStr
 
             ' prüfen , ob der AmpelBlock sichtbar ist ...
             If Me.aLuTvText.Visible Then
@@ -1064,7 +1163,9 @@ Public Class frmInfo
     Private Sub rdbMV_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMV.CheckedChanged
         If rdbMV.Checked = True Then
 
-            Me.aLuTvText.Text = setALuTvText
+            Dim tmpStr() As String
+            tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+            Me.aLuTvText.Lines = tmpStr
 
             ' prüfen , ob der AmpelBlock sichtbar ist ...
             If Me.aLuTvText.Visible Then
@@ -1430,5 +1531,5 @@ Public Class frmInfo
         ToolTip1.Show(tsMSG, rdbBreadcrumb, 2000)
     End Sub
 
-    
+   
 End Class

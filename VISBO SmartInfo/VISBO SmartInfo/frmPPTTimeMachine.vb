@@ -1,6 +1,5 @@
 ﻿Public Class frmPPTTimeMachine
     Private currentTSIndex As Integer = -1
-    Private currentTimestamp As Date = Date.MinValue
     Private timeStamps As SortedList(Of Date, Boolean) = Nothing
 
     Private anzahlShapesOnSlide As Integer = currentSlide.Shapes.Count
@@ -180,14 +179,13 @@
         currentTSIndex = -1
         ' gibt es ein Creation Date ?
         If smartSlideLists.creationDate > Date.MinValue Then
-            currentTimestamp = smartSlideLists.creationDate
             txtboxCurrentDate.Text = currentTimestamp.ToShortDateString
         Else
             txtboxCurrentDate.Text = ""
         End If
 
         If noDBAccessInPPT Then
-            Call MsgBox("kein Datenbank Zugriff ... Abbruch ...")
+            Call MsgBox("no Database Access  ... action cancelled ...")
             MyBase.Close()
         Else
             ' gibt es überhaupt TimeStamps ? 

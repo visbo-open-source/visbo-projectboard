@@ -318,6 +318,32 @@ Public Class clsRollen
         End Get
     End Property
 
+    ''' <summary>
+    ''' liefert true zurück, wenn alle Rollendefinitionen der einen Liste identisch mit der anderen sind
+    ''' </summary>
+    ''' <param name="vglDefinitionen"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vglDefinitionen As clsRollen)
+        Get
+            Dim stillIdentical = True
+
+            If Me.Count = vglDefinitionen.Count Then
+                Dim i As Integer = 0
+                Do While i < _allRollen.Count And stillIdentical
+                    stillIdentical = _allRollen.ElementAt(i).Value.isIdenticalTo(vglDefinitionen.getRoledef(i + 1))
+                    i = i + 1
+                Loop
+
+            Else
+                stillIdentical = False
+            End If
+
+            isIdenticalTo = stillIdentical
+        End Get
+    End Property
+
     '
     '
     '
@@ -355,6 +381,21 @@ Public Class clsRollen
             End If
             
             containsName = found
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zurück, ob der Key bereits enthalten ist 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsUid(uid As Integer) As Boolean
+        Get
+
+            containsUid = _allRollen.ContainsKey(uid)
+
         End Get
     End Property
 

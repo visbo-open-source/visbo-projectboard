@@ -80,7 +80,7 @@
         '
         'activateTab
         '
-        Me.activateTab.Label = "Activate"
+        Me.activateTab.Label = "Search"
         Me.activateTab.Name = "activateTab"
         '
         'timeMachineTab

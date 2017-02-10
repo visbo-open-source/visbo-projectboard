@@ -15,6 +15,7 @@ Public Class clsSmartSlideListen
     Private _planShapeIDs As SortedList(Of String, Integer)
     Private _IDplanShapes As SortedList(Of Integer, String)
 
+    ' enthält die Liste der Namen der Phasen und Meilensteine
     Private _cNList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Original Namen 
     Private _oNList As SortedList(Of String, SortedList(Of Integer, Boolean))
@@ -33,6 +34,11 @@ Public Class clsSmartSlideListen
     ' enthält die Liste an TimeStamps, die in der Time-Machine betrachtet werden können 
     ' der bool'sche Wert kann später dafür sorgen, dass ein Eintrag berücksichtigt / nicht berücksichtigt werden soll 
     Private _listOfTimeStamps As SortedList(Of Date, Boolean)
+    ' enthält die Liste der Rollen -> ShapiID , Summe ; erfordert Datenbank Access 
+    Private _resourceList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' enthält die Liste der Kosten -> ShapeID, Summe; erfordert Datenbank Access
+    Private _costList As SortedList(Of String, SortedList(Of Integer, Boolean))
+
 
     Private _creationDate As Date
 
@@ -135,14 +141,27 @@ Public Class clsSmartSlideListen
                     End If
                 Else
                     timeStamps = New clsProjektHistorie
-                    ' jetzt aus Datenbank holen 
-                    tmpProject = request.retrieveOneProjectfromDB(pName, vName, tsDate)
-
-                    If Not IsNothing(tmpProject) Then
-                        timeStamps.Add(tsDate, tmpProject)
+                    Dim tmpDateVon As Date = Date.Now.AddMonths(-60)
+                    If Not IsNothing(_listOfTimeStamps) Then
+                        If _listOfTimeStamps.Count > 0 Then
+                            tmpDateVon = _listOfTimeStamps.First.Key
+                        End If
                     End If
-
+                    timeStamps.liste = request.retrieveProjectHistoryFromDB(pName, vName, _listOfTimeStamps.First.Key, Date.Now)
                     _projectTimeStamps.Item(pvName) = timeStamps
+
+                    tmpProject = timeStamps.ElementAtorBefore(tsDate)
+
+                    ' das folgende ist alt , holte jeweils nur 1 TimeStamp , das ist nicht eindeutig, weil wenn zuerst das jüngste geholt wird, 
+                    '' werden alle anderen imThen Zweig oben nicht mehr geholt ... 
+                    '' jetzt aus Datenbank holen 
+                    ''tmpProject = request.retrieveOneProjectfromDB(pName, vName, tsDate)
+
+                    ''If Not IsNothing(tmpProject) Then
+                    ''    timeStamps.Add(tsDate, tmpProject)
+                    ''End If
+
+
 
                 End If
 
@@ -300,16 +319,21 @@ Public Class clsSmartSlideListen
 
     Public ReadOnly Property historiesExist() As Boolean
         Get
-            Dim tmpResult As Boolean = True
+            Dim tmpResult As Boolean
 
-            Dim i As Integer = 0
-            Do While i <= _projectTimeStamps.Count - 1 And tmpResult
-                If IsNothing(_projectTimeStamps.ElementAt(i).Value) Then
-                    tmpResult = False
-                Else
-                    i = i + 1
-                End If
-            Loop
+            If _projectTimeStamps.Count > 0 Then
+                tmpResult = True
+                Dim i As Integer = 0
+                Do While i <= _projectTimeStamps.Count - 1 And tmpResult
+                    If IsNothing(_projectTimeStamps.ElementAt(i).Value) Then
+                        tmpResult = False
+                    Else
+                        i = i + 1
+                    End If
+                Loop
+            Else
+                tmpResult = False
+            End If
 
             historiesExist = tmpResult
 
@@ -534,6 +558,64 @@ Public Class clsSmartSlideListen
 
     End Sub
 
+    'Private _resourceList As SortedList(Of String, SortedList(Of Integer, Double))
+    '' enthält die Liste der Kosten -> ShapeID, Summe; erfordert Datenbank Access
+    'Private _costList As SortedList(Of String, SortedList(Of Integer, Double))
+
+
+    ''' <summary>
+    ''' fügt in die Smartliste ein, wieviel Ressourcen und Kostenbedarf da ist  
+    ''' </summary>
+    ''' <param name="roleInfos"></param>
+    ''' <param name="costInfos"></param>
+    ''' <param name="shapeName"></param>
+    ''' <remarks></remarks>
+    Public Sub addRoleAndCostInfos(ByVal roleInfos As SortedList(Of String, Double), _
+                                       ByVal costInfos As SortedList(Of String, Double), _
+                                       ByVal shapeName As String)
+
+        Dim uid As Integer = Me.getUID(shapeName)
+        Dim listPV As SortedList(Of Integer, Boolean)
+
+        For Each kvp As KeyValuePair(Of String, Double) In roleInfos
+            ' aber nur, wenn die Bedarfe größer Null sind  
+            If kvp.Value > 0 Then
+                If _resourceList.ContainsKey(kvp.Key) Then
+                    listPV = _resourceList.Item(kvp.Key)
+                    If Not listPV.ContainsKey(uid) Then
+                        ' einen neuen Eintrag hinzufügen 
+                        listPV.Add(uid, True)
+                    End If
+                Else
+                    listPV = New SortedList(Of Integer, Boolean)
+                    listPV.Add(uid, True)
+                    _resourceList.Add(kvp.Key, listPV)
+                End If
+            End If
+            
+        Next
+
+        ' jetzt die Kosten ...
+        For Each kvp As KeyValuePair(Of String, Double) In costInfos
+
+            If kvp.Value > 0 Then
+                If _costList.ContainsKey(kvp.Key) Then
+                    listPV = _costList.Item(kvp.Key)
+                    If Not listPV.ContainsKey(uid) Then
+                        ' einen neuen Eintrag hinzufügen 
+                        listPV.Add(uid, True)
+                    End If
+                Else
+                    listPV = New SortedList(Of Integer, Boolean)
+                    listPV.Add(uid, True)
+                    _costList.Add(kvp.Key, listPV)
+                End If
+            End If
+            
+        Next
+
+    End Sub
+
     ''' <summary>
     ''' fügt der Liste an "verschobenen Elementen" ein weiteres hinzu ...
     ''' </summary>
@@ -725,6 +807,10 @@ Public Class clsSmartSlideListen
                     NList = _LUList
                 Case pptInfoType.mvElement
                     NList = _cNList
+                Case pptInfoType.resources
+                    NList = _resourceList
+                Case pptInfoType.costs
+                    NList = _costList
                 Case Else
                     NList = _cNList
             End Select
@@ -812,6 +898,10 @@ Public Class clsSmartSlideListen
                     NList = _LUList
                 Case pptInfoType.mvElement
                     NList = _cNList
+                Case pptInfoType.resources
+                    NList = _resourceList
+                Case pptInfoType.costs
+                    NList = _costList
                 Case Else
                     NList = _cNList
             End Select
@@ -1134,6 +1224,8 @@ Public Class clsSmartSlideListen
         _mVList = New SortedList(Of Integer, Boolean)
         _projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
         _listOfTimeStamps = New SortedList(Of Date, Boolean)
+        _resourceList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        _costList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _creationDate = Date.MinValue
         _slideDBUrl = ""
         _slideDBName = ""

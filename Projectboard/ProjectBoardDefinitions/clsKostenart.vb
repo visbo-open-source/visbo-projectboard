@@ -89,17 +89,18 @@
 
     Public ReadOnly Property summe() As Double
         Get
-            Dim isum As Double
-            Dim i As Integer
-            Dim ende As Integer
+            'Dim isum As Double
+            'Dim i As Integer
+            'Dim ende As Integer
 
-            ende = UBound(_bedarf)
-            isum = 0
-            For i = 0 To ende
-                isum = isum + _bedarf(i)
-            Next i
+            'ende = UBound(_bedarf)
+            'isum = 0
+            'For i = 0 To ende
+            '    isum = isum + _bedarf(i)
+            'Next i
 
-            summe = isum
+            'summe = isum
+            summe = _bedarf.Sum
         End Get
     End Property
 

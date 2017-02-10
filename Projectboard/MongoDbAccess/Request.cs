@@ -35,12 +35,14 @@ namespace MongoDbAccess
         protected  IMongoClient Client;
         protected  IMongoDatabase Database;
         protected MongoServer Server;
-        protected  IMongoCollection<clsProjektDB> CollectionProjects;
-        protected  IMongoCollection<clsProjektDB> CollectionTrashProjects;
-        protected  IMongoCollection<clsConstellationDB> CollectionConstellations;
+        protected IMongoCollection<clsProjektDB> CollectionProjects;
+        protected IMongoCollection<clsRollenDefinitionDB> CollectionRoles;
+        protected IMongoCollection<clsKostenartDefinitionDB> CollectionCosts;
+        protected IMongoCollection<clsProjektDB> CollectionTrashProjects;
+        protected IMongoCollection<clsConstellationDB> CollectionConstellations;
         protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
-        protected  IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
-        protected  IMongoCollection<clsFilterDB> CollectionFilter;
+        protected IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
+        protected IMongoCollection<clsFilterDB> CollectionFilter;
         
         public Request(string databaseURL, string databaseName, string username, string dbPasswort)
         {
@@ -77,6 +79,8 @@ namespace MongoDbAccess
                       
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
+            CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
+            CollectionCosts = Database.GetCollection<clsKostenartDefinitionDB>("costdefinitions");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
@@ -243,8 +247,193 @@ namespace MongoDbAccess
             
         }
 
+        /// <summary>
+        /// liest die angegebene Rollen Definition aus der Datenbank
+        /// </summary>
+        /// <param name="roleID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsRollenDefinition retrieveOneRoleFromDB(int roleID,  DateTime storedAtOrBefore)
+        {
+            var result = new clsRollenDefinitionDB();
+            
+            if (storedAtOrBefore == null)
+            {
 
-        
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+                
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            
+            var builder = Builders<clsRollenDefinitionDB>.Filter;
+
+            var filter = builder.Eq("uid", roleID) & builder.Lte("timestamp", storedAtOrBefore);
+
+            var sort = Builders<clsRollenDefinitionDB>.Sort.Ascending("timestamp");
+
+            try
+            {
+                result = CollectionRoles.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch
+            {
+                result = null;
+            }
+
+            //TODO: rückumwandeln
+            if (result == null)
+            {
+
+                return null;
+            }
+            else
+            {
+                var currentrole = new clsRollenDefinition();
+                result.copyTo(ref currentrole);
+                return currentrole;
+            }
+
+        }
+        /// <summary>
+        /// liest die Rollendefinitionen aus der Datenbank 
+        /// </summary>
+        /// <param name="roleID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsRollen retrieveRolesFromDB(DateTime storedAtOrBefore)
+        {
+            var result = new clsRollen();
+
+            if (storedAtOrBefore == null)
+            {
+
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var prequery = CollectionRoles.AsQueryable<clsRollenDefinitionDB>()
+                            .Where(c => c.timestamp <= storedAtOrBefore)
+                            .Select(c => c.uid)
+                            .Distinct()
+                            .ToList();
+
+            foreach (int tmpUid in prequery)
+            {
+
+                clsRollenDefinition tmpRole = retrieveOneRoleFromDB(tmpUid, storedAtOrBefore);
+                if (!result.get_containsUid(tmpRole.UID))
+                {
+                    result.Add(tmpRole);
+                }
+
+                
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// liest die Kostenartdefinitionen aus der Datenbank 
+        /// </summary>
+        /// <param name="roleID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsKostenarten retrieveCostsFromDB(DateTime storedAtOrBefore)
+        {
+            var result = new clsKostenarten();
+
+            if (storedAtOrBefore == null)
+            {
+
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var prequery = CollectionCosts.AsQueryable<clsKostenartDefinitionDB>()
+                            .Where(c => c.timestamp <= storedAtOrBefore)
+                            .Select(c => c.uid)
+                            .Distinct()
+                            .ToList();
+
+            foreach (int tmpUid in prequery)
+            {
+
+                clsKostenartDefinition tmpCost = retrieveOneCostFromDB(tmpUid, storedAtOrBefore);
+                if (!result.get_containsUid(tmpCost.UID))
+                {
+                    result.Add(tmpCost);
+                }
+
+
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// liest die angegebene Kostenart aus der Datenbank 
+        /// </summary>
+        /// <param name="costID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsKostenartDefinition retrieveOneCostFromDB(int costID, DateTime storedAtOrBefore)
+        {
+            var result = new clsKostenartDefinitionDB();
+
+            if (storedAtOrBefore == null)
+            {
+
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+
+            var builder = Builders<clsKostenartDefinitionDB>.Filter;
+
+            var filter = builder.Eq("uid", costID) & builder.Lte("timestamp", storedAtOrBefore);
+
+            var sort = Builders<clsKostenartDefinitionDB>.Sort.Ascending("timestamp");
+
+            try
+            {
+                result = CollectionCosts.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch
+            {
+                result = null;
+            }
+
+            //TODO: rückumwandeln
+            if (result == null)
+            {
+
+                return null;
+            }
+            else
+            {
+                var currentcost = new clsKostenartDefinition();
+                result.copyTo(ref currentcost);
+                return currentcost;
+            }
+
+        }
+
         /**
          * prüft die Verfügbarkeit der MongoDB
          */
@@ -306,43 +495,15 @@ namespace MongoDbAccess
                 return false;
             }
         }
-        //************************************/
-        // darf nicht mehr verwendet werden, weil damit keine Speicherung der TimeStamps im Papierkorb verbunden ist ... 
-        ////public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
-        ////{
 
-        ////    try
-        ////    {
-        ////        storedLatest = storedLatest.ToUniversalTime();
-        ////        storedEarliest = storedEarliest.ToUniversalTime();
-        ////        string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
-                               
-
-        ////        var dResult = CollectionProjects.DeleteMany<clsProjektDB>(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-        ////        if (dResult.DeletedCount > 0 )
-        ////            { return true; }
-        ////        else
-        ////            { return false; }
-                
-        ////    }
-        ////    catch (Exception)
-        ////    {
-                
-        ////        return false;
-        ////    }
-            
-        ////    // das folgende geht noch nicht , wer weiss warum ? 
-        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-            
-            
-        ////    // alt 2.x 
-        ////    //var query = Query<clsProjektDB>
-        ////    //         .Where(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-        ////    //return !CollectionProjects.Remove(query).HasLastErrorMessage;
-        ////}
-
-        //************************************/
+        
+        /// <summary>
+        /// löscht den angegebenen TimeStamp der Projekt-Variante aus der Datenbank 
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantName"></param>
+        /// <param name="stored"></param>
+        /// <returns></returns>
         public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored)
         {
             try
@@ -402,6 +563,7 @@ namespace MongoDbAccess
             // alt: 2.x 
             //return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
+
         /// <summary>
         /// liest alle vorkommenden Namen ProjektName#VariantenName aus der Datenbank , die zum Zeitpunkt storedLatest auch in der Datenbank existiert haben 
         /// dabei wird ein übergebener Zeitraum berücksichtigt ... also nur Projekte, die auch im Zeitraum liegen ...
@@ -458,7 +620,18 @@ namespace MongoDbAccess
             return result;
         }
 
-
+        /// <summary>
+        /// entweder alle Projekte im angegebenen Zeitraum 
+        /// oder aber alle Timestamps der übergebenen Projektvariante im angegeben Zeitfenster
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantName"></param>
+        /// <param name="zeitraumStart"></param>
+        /// <param name="zeitraumEnde"></param>
+        /// <param name="storedEarliest"></param>
+        /// <param name="storedLatest"></param>
+        /// <param name="onlyLatest"></param>
+        /// <returns></returns>
         public SortedList<string, clsProjekt> retrieveProjectsFromDB(string projectname, string variantName, DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedEarliest, DateTime storedLatest, bool onlyLatest)
         {
             var result = new SortedList<string, clsProjekt>();
@@ -552,7 +725,11 @@ namespace MongoDbAccess
             return result;
         }
 
-
+        /// <summary>
+        /// liefert alle Varianten Namen eines bestimmten Projektes zurück 
+        /// </summary>
+        /// <param name="projectName"></param>
+        /// <returns></returns>
         public Collection retrieveVariantNamesFromDB(string projectName)
         {
             var result = new Collection();
@@ -582,7 +759,10 @@ namespace MongoDbAccess
             return result;
         }
 
-        // bringt alle vorkommenden TimeStamps zurück , in absteigender Sortierung
+        /// <summary>
+        /// bringt alle in der Datenbank vorkommenden TimeStamps zurück , in absteigender Sortierung
+        /// </summary>
+        /// <returns></returns>
         public Collection retrieveZeitstempelFromDB()
         {
             var result = new Collection();
@@ -605,7 +785,11 @@ namespace MongoDbAccess
 
 
         
-        // bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+        /// <summary>
+        /// bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+        /// </summary>
+        /// <param name="pvName"></param>
+        /// <returns></returns>
         public Collection retrieveZeitstempelFromDB(string pvName)
         {
             var result = new Collection();
@@ -627,9 +811,14 @@ namespace MongoDbAccess
             return result;
         }   
 
-        //
-        // gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
-        //
+        /// <summary>
+        /// gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantName"></param>
+        /// <param name="storedEarliest"></param>
+        /// <param name="storedLatest"></param>
+        /// <returns></returns>
         public SortedList<DateTime, clsProjekt> retrieveProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
         {
             var result = new SortedList<DateTime, clsProjekt>();
@@ -674,6 +863,199 @@ namespace MongoDbAccess
             
 
             return result;
+        }
+
+        /// <summary>
+        /// speichert eine Rolle in der Datenbank; 
+        /// wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
+        /// andernfalls wird die Rolle Replaced 
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="insertNewDate"></param>
+        /// <param name="ts"></param>
+        /// <returns></returns>
+        public bool storeRoleDefinitionToDB(clsRollenDefinition role, bool insertNewDate, DateTime ts)
+        {
+            bool tmpResult = true;
+            try
+            {
+                var roleDB = new clsRollenDefinitionDB();
+                roleDB.copyFrom(role);
+
+                if (insertNewDate)
+                {
+                    roleDB.timestamp = ts;
+                    CollectionRoles.InsertOne(roleDB);
+                }
+                else
+                {
+
+                    var filter = Builders<clsRollenDefinitionDB>.Filter.Eq("uid", role.UID);
+                    var sort = Builders<clsRollenDefinitionDB>.Sort.Ascending("timestamp");
+
+                    try
+                    {
+
+                        if (CollectionRoles == null) 
+                        {
+                            CollectionRoles.InsertOne(roleDB);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                clsRollenDefinitionDB tmpRole = CollectionRoles.Find(filter).Sort(sort).ToList().Last();
+                                if (tmpRole == null)
+                                {
+                                    // existiert noch nicht 
+                                    CollectionRoles.InsertOne(roleDB);
+                                }
+                                else
+                                {
+                                    // existiert bereits , soll also ersetzt werden , aber mit dem bisherigen TimeStamp 
+                                    // und das nur, wenn es nicht identisch ist mit der bereits existierenden 
+                                    if (!tmpRole.get_isIdenticalTo(roleDB))
+                                    {
+                                        roleDB.timestamp = tmpRole.timestamp;
+
+                                        var builder = Builders<clsRollenDefinitionDB>.Filter;
+                                        filter = builder.Eq("uid", role.UID) & builder.Eq("timestamp", tmpRole.timestamp);
+
+                                        var rResult = CollectionRoles.ReplaceOne(filter, roleDB);
+                                        tmpResult = rResult.IsAcknowledged;
+
+                                    }
+                                    else
+                                    {
+                                        // nichts tun
+                                    }
+
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                
+                                 // es gibt noch überhaupt keine Elemente in der Collection 
+                                CollectionRoles.InsertOne(roleDB);
+                            }
+
+
+
+                        }
+
+
+
+                    }
+                    catch (Exception)
+                    {
+
+                        tmpResult = false;
+                    }
+                 }       
+                                
+                                
+            }
+            catch (Exception)
+            {
+                tmpResult =  false;
+            }
+
+            return tmpResult;
+        }
+
+        /// <summary>
+        /// speichert eine Kostenart in der Datenbank; 
+        /// wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
+        /// andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="insertNewDate"></param>
+        /// <param name="ts"></param>
+        /// <returns></returns>
+        public bool storeCostDefinitionToDB(clsKostenartDefinition cost, bool insertNewDate, DateTime ts)
+        {
+            bool tmpResult = true;
+            try
+            {
+                var costDefDB = new clsKostenartDefinitionDB();
+                costDefDB.copyFrom(cost);
+
+                if (insertNewDate)
+                {
+                    costDefDB.timestamp = ts;
+                    CollectionCosts.InsertOne(costDefDB);
+                }
+                else
+                {
+
+                    var filter = Builders<clsKostenartDefinitionDB>.Filter.Eq("uid", cost.UID);
+                    var sort = Builders<clsKostenartDefinitionDB>.Sort.Ascending("timestamp");
+
+                    try
+                    {
+
+                        if (CollectionCosts == null)
+                        {
+                            // existiert noch nicht 
+                            CollectionCosts.InsertOne(costDefDB);
+                        }
+                        else
+                        {
+
+                            try
+                            {
+                                clsKostenartDefinitionDB tmpCost = CollectionCosts.Find(filter).Sort(sort).ToList().Last();
+                                if (tmpCost == null)
+                                {
+                                    // existiert noch nicht 
+                                    CollectionCosts.InsertOne(costDefDB);
+                                }
+                                else
+                                {
+                                    // existiert bereits , soll also ersetzt werden , dann mit dem bisherigen TimeStamp 
+                                    // aber nur, wenn es nicht identisch ist mit der bereits existierenden 
+                                    if (!tmpCost.get_isIdenticalTo(costDefDB))
+                                    {
+                                        costDefDB.timestamp = tmpCost.timestamp;
+
+                                        var builder = Builders<clsKostenartDefinitionDB>.Filter;
+                                        filter = builder.Eq("uid", cost.UID) & builder.Eq("timestamp", tmpCost.timestamp);
+
+                                        var rResult = CollectionCosts.ReplaceOne(filter, costDefDB);
+                                        tmpResult = rResult.IsAcknowledged;
+
+                                    }
+                                    else
+                                    {
+                                        // nichts tun
+                                    }
+
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                // existiert noch nicht 
+                                CollectionCosts.InsertOne(costDefDB);
+                            }
+
+                        }
+                                                
+                    }
+                    catch (Exception)
+                    {
+
+                        tmpResult = false;
+                    }
+                }
+
+
+            }
+            catch (Exception)
+            {
+                tmpResult = false;
+            }
+
+            return tmpResult;
         }
 
         public bool storeConstellationToDB(clsConstellation c)

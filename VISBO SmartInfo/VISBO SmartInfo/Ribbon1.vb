@@ -11,19 +11,19 @@ Public Class Ribbon1
 
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
-        'Dim msg As String = ""
-        'If userIsEntitled(msg) Then
+        Dim msg As String = ""
+        If userIsEntitled(msg) Then
 
-        '    ' wird das Formular aktuell angezeigt ? 
-        '    If IsNothing(infoFrm) And Not formIsShown Then
-        '        infoFrm = New frmInfo
-        '        formIsShown = True
-        '        infoFrm.Show()
-        '    End If
+            ' wird das Formular aktuell angezeigt ? 
+            If IsNothing(infoFrm) And Not formIsShown Then
+                infoFrm = New frmInfo
+                formIsShown = True
+                infoFrm.Show()
+            End If
 
-        'Else
-        '    Call MsgBox(msg)
-        'End If
+        Else
+            Call MsgBox(msg)
+        End If
 
 
     End Sub
@@ -54,18 +54,8 @@ Public Class Ribbon1
 
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
-                    ' jetzt die Login Maske aufrufen ... 
 
-                    If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
-
-                        ' tk: 17.11.16: Einloggen in Datenbank 
-                        noDBAccessInPPT = Not loginProzedur()
-
-                        If noDBAccessInPPT Then
-                            Call MsgBox("kein Datenbank Zugriff ... ")
-                        End If
-
-                    End If
+                    Call logInToMongoDB()
 
                 End If
 
@@ -73,8 +63,6 @@ Public Class Ribbon1
 
                     If Not smartSlideLists.historiesExist Then
 
-                        ' dazu erst mal alle TimeStamps eines Projektes holen 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                         Dim anzahlProjekte As Integer = smartSlideLists.countProjects
                         For i As Integer = 1 To anzahlProjekte
@@ -82,7 +70,7 @@ Public Class Ribbon1
                             Dim pName As String = getPnameFromKey(tmpName)
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
-
+                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                             Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
 
                             smartSlideLists.addToListOfTS(tsCollection)

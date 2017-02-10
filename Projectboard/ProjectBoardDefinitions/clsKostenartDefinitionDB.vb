@@ -3,7 +3,9 @@
     Public name As String
     Public farbe As Long
     Public uid As Integer
-    Public timeStamp As Date
+    Public timestamp As Date
+    ' Id wird von MongoDB automatisch gesetzt 
+    Public Id As String
 
     Public Sub copyTo(ByRef costDef As clsKostenartDefinition)
         With costDef
@@ -18,6 +20,7 @@
             Me.name = .name
             Me.uid = .UID
             Me.farbe = CLng(.farbe)
+            Me.Id = "Cost" & "#" & CStr(Me.uid) & "#" & Date.UtcNow.ToString
         End With
     End Sub
 
@@ -28,7 +31,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property isIdenticalTo(ByVal vglCost As clsKostenartDefinitionDB)
+    Public ReadOnly Property isIdenticalTo(ByVal vglCost As clsKostenartDefinitionDB) As Boolean
         Get
 
             isIdenticalTo = (Me.name = vglCost.name And _
@@ -39,10 +42,12 @@
     End Property
 
     Public Sub New()
-        timeStamp = Date.UtcNow
+        timestamp = Date.UtcNow
+        Id = ""
     End Sub
 
     Public Sub New(ByVal tmpDate As Date)
-        timeStamp = Date.UtcNow
+        timestamp = Date.UtcNow
+        Id = ""
     End Sub
 End Class

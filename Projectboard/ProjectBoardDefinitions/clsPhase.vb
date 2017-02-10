@@ -1229,6 +1229,56 @@ Public Class clsPhase
 
     End Property
 
+    ''' <summary>
+    ''' liefert die Namen und Bedarfs-Summen aller Rollen, die in der Phase referenziert werden ...
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleNamesAndValues() As SortedList(Of String, Double)
+        Get
+            Dim zwResult As New SortedList(Of String, Double)
+
+            For i As Integer = 1 To _allRoles.Count
+                Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
+
+                If Not zwResult.ContainsKey(tmpRole.name) Then
+                    zwResult.Add(tmpRole.name, tmpRole.summe)
+                Else
+                    zwResult.Item(tmpRole.name) = zwResult.Item(tmpRole.name) + tmpRole.summe
+                End If
+            Next
+
+            getRoleNamesAndValues = zwResult
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Namen und Bedarfs-Summen aller Rollen, die in der Phase referenziert werden ...
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCostNamesAndValues() As SortedList(Of String, Double)
+        Get
+            Dim zwResult As New SortedList(Of String, Double)
+
+            For i As Integer = 1 To _allCosts.Count
+                Dim tmpCost As clsKostenart = _allCosts.Item(i - 1)
+
+                If Not zwResult.ContainsKey(tmpCost.name) Then
+                    zwResult.Add(tmpCost.name, tmpCost.summe)
+                Else
+                    zwResult.Item(tmpCost.name) = zwResult.Item(tmpCost.name) + tmpCost.summe
+                End If
+            Next
+
+            getCostNamesAndValues = zwResult
+
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' addRole fügt die Rollen Instanz hinzu, wenn sie nicht schon existiert
@@ -1440,6 +1490,7 @@ Public Class clsPhase
         End If
 
     End Sub
+
 
     Public ReadOnly Property rollenListe() As List(Of clsRolle)
 
@@ -1925,6 +1976,8 @@ Public Class clsPhase
 
     End Sub
 
+
+
     ''' <summary>
     ''' gibt die Kostenart Instanz der Phase zurück, die den Namen costName hat 
     ''' </summary>
@@ -1962,6 +2015,7 @@ Public Class clsPhase
         End Get
 
     End Property
+
 
 
     Public ReadOnly Property getCost(ByVal index As Integer) As clsKostenart
@@ -2233,7 +2287,7 @@ Public Class clsPhase
 
         Catch ex As Exception
 
-            Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
+            Call MsgBox("Fehler in berechneBedarfe: " & vbLF & ex.Message)
 
         End Try
 

@@ -5077,6 +5077,22 @@ Public Module testModule
 
                     Next
 
+                    ' jetzt werden die Rollen weggeschrieben 
+                    Dim storedRoles As Integer = 0
+                    For i As Integer = 1 To RoleDefinitions.Count
+                        Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+                        If request.storeRoleDefinitionToDB(role, False, Date.Now) Then
+                            Dim success As String = role.name
+                        End If
+                    Next
+
+                    For i As Integer = 1 To CostDefinitions.Count
+                        Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
+                        If request.storeCostDefinitionToDB(cost, False, Date.Now) Then
+                            Dim success As String = cost.name
+                        End If
+                    Next
+
                 End If
 
 

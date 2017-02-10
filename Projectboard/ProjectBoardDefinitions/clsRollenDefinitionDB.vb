@@ -1,6 +1,6 @@
 ﻿Public Class clsRollenDefinitionDB
-
-    Public subRoleIDs As SortedList(Of Integer, String)
+    ' bei subRoleIDs eigentlich integer, string), muss wegen Mongo auf String geändert werden 
+    Public subRoleIDs As SortedList(Of String, String)
     Public uid As Integer
     Public name As String
     Public farbe As Long
@@ -9,18 +9,21 @@
     Public tagessatzExtern As Double
     Public kapazitaet() As Double
     Public externeKapazitaet() As Double
-    Public timeStamp As Date
+    Public timestamp As Date
+    ' Id wird von MongoDB automatisch gesetzt 
+    Public Id As String
 
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
     Public startOfCal As Date
 
-    Public Sub copyTo(ByRef costDef As clsRollenDefinition)
+    Public Sub copyTo(ByRef roleDef As clsRollenDefinition)
 
-        With costDef
+        With roleDef
             If subRoleIDs.Count >= 1 Then
+                ' wegen Mongo müssen die Keys in String Format sein ... 
                 Dim maxNr As Integer = 1000
-                For Each kvp As KeyValuePair(Of Integer, String) In subRoleIDs
-                    .addSubRole(kvp.Key, kvp.Value, maxNr)
+                For Each kvp As KeyValuePair(Of String, String) In Me.subRoleIDs
+                    .addSubRole(CInt(kvp.Key), kvp.Value, maxNr)
                 Next
             End If
             .UID = Me.uid
@@ -163,12 +166,12 @@
         End With
     End Sub
 
-    Public Sub copyFrom(ByVal costDef As clsRollenDefinition)
-        With costDef
+    Public Sub copyFrom(ByVal roleDef As clsRollenDefinition)
+        With roleDef
 
             If .getSubRoleCount >= 1 Then
                 For Each kvp As KeyValuePair(Of Integer, String) In .getSubRoleIDs
-                    Me.subRoleIDs.Add(kvp.Key, kvp.Value)
+                    Me.subRoleIDs.Add(CStr(kvp.Key), kvp.Value)
                 Next
             End If
 
@@ -180,6 +183,7 @@
             Me.tagessatzExtern = .tagessatzExtern
             Me.kapazitaet = .kapazitaet
             Me.externeKapazitaet = .externeKapazitaet
+            Me.Id = "Role" & "#" & CStr(Me.uid) & "#" & Date.UtcNow.ToString
 
         End With
     End Sub
@@ -191,7 +195,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinitionDB)
+    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinitionDB) As Boolean
         Get
             Dim stillok As Boolean = True
 
@@ -201,11 +205,11 @@
                 Else
                     Dim i As Integer = 0
                     Do While i < Me.subRoleIDs.Count And stillok
-                        i = i + 1
                         stillok = (Me.subRoleIDs.ElementAt(i).Key = vglRole.subRoleIDs.ElementAt(i).Key And _
                                    Me.subRoleIDs.ElementAt(i).Value = vglRole.subRoleIDs.ElementAt(i).Value)
+                        i = i + 1
                     Loop
-                    
+
                 End If
             Else
                 stillok = False
@@ -236,15 +240,17 @@
     End Property
 
     Public Sub New()
-        subRoleIDs = New SortedList(Of Integer, String)
-        timeStamp = Date.UtcNow
+        subRoleIDs = New SortedList(Of String, String)
+        timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
+        Id = ""
     End Sub
 
     Public Sub New(ByVal tmpDate As Date)
-        subRoleIDs = New SortedList(Of Integer, String)
-        timeStamp = Date.UtcNow
+        subRoleIDs = New SortedList(Of String, String)
+        timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
+        Id = ""
     End Sub
 
 End Class

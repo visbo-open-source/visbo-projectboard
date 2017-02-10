@@ -106,6 +106,57 @@
 
     End Property
 
+    ''' <summary>
+    ''' true, if both Roledefinitions are identical , except timestamp 
+    ''' </summary>
+    ''' <param name="vglRole"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinition) As Boolean
+        Get
+            Dim stillok As Boolean = True
+
+            If Me._subRoleIDs.Count = vglRole.getSubRoleIDs.Count Then
+                If Me._subRoleIDs.Count = 0 Then
+                    stillok = True
+                Else
+                    Dim i As Integer = 0
+                    Do While i < Me._subRoleIDs.Count And stillok
+                        stillok = (Me._subRoleIDs.ElementAt(i).Key = vglRole.getSubRoleIDs.ElementAt(i).Key And _
+                                   Me._subRoleIDs.ElementAt(i).Value = vglRole.getSubRoleIDs.ElementAt(i).Value)
+                        i = i + 1
+                    Loop
+
+                End If
+            Else
+                stillok = False
+            End If
+
+
+            ' jetzt alle anderen Attribute überprüfen ...
+            If stillok Then
+
+                stillok = (Me.UID = vglRole.UID) And _
+                            (Me.name = vglRole.name) And _
+                            (CLng(Me.farbe) = CLng(vglRole.farbe)) And _
+                            (Me.defaultKapa = vglRole.defaultKapa) And _
+                            (Me.tagessatzIntern = vglRole.tagessatzIntern) And _
+                            (Me.tagessatzExtern = vglRole.tagessatzExtern)
+
+            End If
+
+            ' jetzt die Kapa-Arrays vergleichen 
+            If stillok Then
+                stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet) And _
+                            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
+            End If
+
+            isIdenticalTo = stillok
+
+        End Get
+    End Property
+
     Public Sub New()
 
         ' Änderung 29.5.14 damit man zwanzig Jahre vom Start der Projekt-Tafel betrachten kann 

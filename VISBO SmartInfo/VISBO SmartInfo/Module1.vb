@@ -18,6 +18,8 @@ Module Module1
     ' bestimmt, ob in englisch oder auf deutsch ..
     Friend englishLanguage As Boolean = True
 
+    ' was ist der aktuelle Timestamp der Slide 
+    Friend currentTimestamp As Date = Date.MinValue
     ' der Key ist der Name des Referenz-Shapes, zu dem der Marker gezeichnet wird , der Value ist der Name des Marker-Shapes 
     Friend markerShpNames As New SortedList(Of String, String)
 
@@ -102,6 +104,7 @@ Module Module1
         ampelText = 2
         lieferumfang = 3
         movedExplanation = 4
+        resourceCost = 5
     End Enum
 
     Friend Enum pptInfoType
@@ -114,6 +117,8 @@ Module Module1
         appClass = 6
         lUmfang = 7
         mvElement = 8
+        resources = 9
+        costs = 10
     End Enum
 
     Friend Enum pptPositionType
@@ -330,21 +335,13 @@ Module Module1
 
                             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                                ' tk: 17.11.16: Einloggen in Dtenbank 
-                                noDBAccessInPPT = Not loginProzedur()
+                                Call logInToMongoDB()
 
-                                If noDBAccessInPPT Then
-                                    tmpResult = False
-                                    If englishLanguage Then
-                                        msg = "no database access ... "
-                                    Else
-                                        msg = "kein Datenbank Zugriff ... "
-                                    End If
-
-                                Else
+                                If Not noDBAccessInPPT Then
                                     ' in allen Slides den Sicht Schutz aufheben 
                                     protectionSolved = True
                                     Call makeVisboShapesVisible(True)
+
                                 End If
 
                             End If
@@ -479,6 +476,12 @@ Module Module1
                                 slideCoordInfo.pptSlide = currentSlide
 
                                 With currentSlide
+
+                                    ' currentTimeStamp setzen 
+                                    If .Tags.Item("CRD").Length > 0 Then
+                                        currentTimestamp = CDate(.Tags.Item("CRD"))
+                                    End If
+
                                     If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
                                         Dim tmpSD As String = .Tags.Item("CALL")
                                         Dim tmpED As String = .Tags.Item("CALR")
@@ -533,6 +536,7 @@ Module Module1
         smartSlideLists = New clsSmartSlideListen
         bekannteIDs = New SortedList(Of Integer, String)
 
+
         With currentSlide
             If .Tags.Item("CRD").Length > 0 Then
                 smartSlideLists.creationDate = CDate(.Tags.Item("CRD"))
@@ -554,15 +558,15 @@ Module Module1
                 End If
             End If
 
+            
+
 
         End With
-
 
         Dim anzShapes As Integer = currentSlide.Shapes.Count
         ' jetzt werden die ganzen Listen aufgebaut 
 
         For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-            Dim tstName As String = tmpShape.Name
             If tmpShape.Tags.Count > 0 Then
                 If isRelevantShape(tmpShape) Then
 
@@ -576,6 +580,30 @@ Module Module1
                 End If
             End If
         Next
+
+        If Not noDBAccessInPPT Then
+            ' hier müssen jetzt die Timestamps noch aufgebaut werden 
+            For i As Integer = 1 To smartSlideLists.countProjects
+                Dim tmpName As String = smartSlideLists.getPVName(i)
+                Dim pName As String = getPnameFromKey(tmpName)
+                Dim vName As String = getVariantnameFromKey(tmpName)
+                Dim pvName As String = calcProjektKeyDB(pName, vName)
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
+                smartSlideLists.addToListOfTS(tsCollection)
+            Next
+
+            For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+                If tmpShape.Tags.Count > 0 Then
+                    If isRelevantShape(tmpShape) Then
+
+                        Call aktualisiereRoleCostLists(tmpShape)
+
+                    End If
+                End If
+            Next
+
+        End If
 
     End Sub
     Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
@@ -598,10 +626,23 @@ Module Module1
 
             If Not IsNothing(shpRange) And slideHasSmartElements Then
 
-
+                
                 ' es sind ein oder mehrere Shapes selektiert worden 
                 Dim i As Integer = 0
                 If shpRange.Count = 1 Then
+
+                    ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
+                    ' Listbox passt 
+
+                    ' prüfen, ob das Infor Fenster offen ist und der Search bereich sichtbar - 
+                    ' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
+                    If Not IsNothing(infoFrm) And formIsShown Then
+                        If infoFrm.rdbName.Visible Then
+                            If infoFrm.listboxNames.SelectedItems.Count > 0 Then
+                                Call infoFrm.listboxNames.SelectedItems.Clear()
+                            End If
+                        End If
+                    End If
 
                     If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
                         Call deleteMarkerShapes()
@@ -683,12 +724,13 @@ Module Module1
 
                 If Not IsNothing(selectedPlanShapes) Then
 
-
-                    For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
+                    Dim tmpShape As PowerPoint.Shape = Nothing
+                    Dim elemWasMoved As Boolean = False
+                    For Each tmpShape In selectedPlanShapes
                         ' hier sind nur noch richtige Shapes  
 
                         ' sollen Home- bzw. Change-Button angezeigt werden ? 
-                        Dim elemWasMoved As Boolean = isMovedElement(tmpShape)
+                        elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
                         If elemWasMoved Then
                             homeButtonRelevance = True
                         Else
@@ -697,19 +739,12 @@ Module Module1
                             End If
                         End If
 
-                        If formIsShown Then
-                            Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
-                        End If
-
-
-
-                        'If Not formIsShown Then
-                        '    ' Festlegen der Beschriftungs-Position für Name und Text
-                        '    infoFrm.Show()
-                        '    formIsShown = True
-                        'End If
-
                     Next
+
+                    If formIsShown Then
+                        Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                    End If
+
 
                     ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
                     ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
@@ -808,6 +843,10 @@ Module Module1
                     tmpResult = pptInfoType.lUmfang
                 ElseIf .rdbMV.Checked Then
                     tmpResult = pptInfoType.mvElement
+                ElseIf .rdbResources.Checked Then
+                    tmpResult = pptInfoType.resources
+                ElseIf .rdbCosts.Checked Then
+                    tmpResult = pptInfoType.costs
                 Else
                     tmpResult = pptInfoType.cName
                 End If
@@ -819,6 +858,47 @@ Module Module1
         calcRDB = tmpResult
 
     End Function
+
+    ''' <summary>
+    ''' ruft Formular zum Login auf und holt die RoleDefinitions, CostDefinitions aus der Datenbank 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub logInToMongoDB()
+        ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
+
+        If noDBAccessInPPT Then
+            Dim msg As String
+            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                ' tk: 17.11.16: Einloggen in Datenbank 
+                noDBAccessInPPT = Not loginProzedur()
+
+                If noDBAccessInPPT Then
+                    If englishLanguage Then
+                        msg = "no database access ... "
+                    Else
+                        msg = "kein Datenbank Zugriff ... "
+                    End If
+                    Call MsgBox(msg)
+                Else
+                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                    CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                End If
+            Else
+                If englishLanguage Then
+                    If englishLanguage Then
+                        msg = "no database URL information available ... "
+                    Else
+                        msg = "keine Datenbank URL verfügbar ... "
+                    End If
+                    Call MsgBox(msg)
+                End If
+            End If
+        End If
+        
+    End Sub
 
     ''' <summary>
     ''' wird nur für relevante Shapes aufgerufen
@@ -920,6 +1000,89 @@ Module Module1
             ' wurde das Element verschoben ? 
             ' SmartslideLists werden auch gleich mit aktualisiert ... 
             Call checkShpOnManualMovement(tmpShape.Name)
+
+            ' wenn Datenbank Zugang vorliegt und es sich um eine Phase handelt, 
+            ' denn nur die können Resourcen und Kostenbedarfe haben 
+            ' das wird jetzt in der Routine aktualisiereRoleCostLists 
+            ''If Not noDBAccessInPPT And pptShapeIsPhase(tmpShape) Then
+
+            ''    Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+            ''    Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
+            ''    Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
+            ''    Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
+            ''    Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
+
+            ''    Try
+            ''        Call smartSlideLists.addRoleAndCostInfos(roleInformations, _
+            ''                                                 costInformations, _
+            ''                                                 shapeName)
+            ''    Catch ex As Exception
+
+            ''    End Try
+
+            ''End If
+
+            ' jetzt wird noch die Liste der Projekt-Varianten aufgebaut 
+
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' wird nur für relevante Shapes aufgerufen
+    ''' baut die intelligenten Listen für das Slide auf 
+    ''' wenn das Shape keine Abkürzung hat, so wird eine aus der laufenden Nummer erzeugt ...
+    ''' 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <remarks></remarks>
+    Private Sub aktualisiereRoleCostLists(ByVal tmpShape As PowerPoint.Shape)
+        Dim shapeName As String = tmpShape.Name
+        Dim checkIT As Boolean = False
+
+
+        Dim pvName As String = getPnameFromShpName(tmpShape.Name)
+
+
+        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or _
+            tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine Then
+            ' nichts tun 
+        Else
+            ' es werden nur die aufgebaut, die Meilensteine oder Phasen sind ...  
+            If pptShapeIsMilestone(tmpShape) Then
+                checkIT = True
+                ' nichts tun 
+            ElseIf pptShapeIsPhase(tmpShape) Then
+                checkIT = True
+            Else
+                ' nichts tun 
+                checkIT = False
+            End If
+        End If
+
+
+        If checkIT Then
+
+            ' wenn Datenbank Zugang vorliegt und es sich um eine Phase handelt, 
+            ' denn nur die können Resourcen und Kostenbedarfe haben 
+            If Not noDBAccessInPPT And pptShapeIsPhase(tmpShape) Then
+
+                Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
+                Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
+                Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
+                Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
+
+                Try
+                    Call smartSlideLists.addRoleAndCostInfos(roleInformations, _
+                                                             costInformations, _
+                                                             shapeName)
+                Catch ex As Exception
+
+                End Try
+
+            End If
 
             ' jetzt wird noch die Liste der Projekt-Varianten aufgebaut 
 
@@ -1627,7 +1790,10 @@ Module Module1
                             .elemDate.Text = bestimmeElemDateText(tmpShape, False)
 
                             Dim rdbCode As Integer = calcRDB()
-                            .aLuTvText.Text = bestimmeElemALuTvText(tmpShape, rdbCode)
+
+                            Dim tmpStr() As String
+                            tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+                            .aLuTvText.Lines = tmpStr
 
                             ' Änderungen bei Datum und Erläuterung erlauben 
                             If isMovedShape Then
@@ -1922,6 +2088,7 @@ Module Module1
 
     ''' <summary>
     ''' gibt die ElemID eines Elements zurück 
+    ''' 
     ''' </summary>
     ''' <param name="shapeName"></param>
     ''' <returns></returns>
@@ -2099,7 +2266,7 @@ Module Module1
                 If curShape.Tags.Item("LU").Length > 0 Then
                     tmpStr = curShape.Tags.Item("LU").Split(New Char() {CType("#", Char)})
                     For i As Integer = 0 To tmpStr.Length - 1
-                        tmpText = tmpText & vbLf & tmpStr(i)
+                        tmpText = tmpText & tmpStr(i) & vbLf
                     Next
                 End If
 
@@ -2113,6 +2280,80 @@ Module Module1
                 If curShape.Tags.Item("MVE").Length > 0 Then
                     tmpText = tmpText & curShape.Tags.Item("MVE")
                 End If
+
+            ElseIf type = pptInfoType.resources Or type = pptInfoType.costs Then
+                If Not noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+                    Try
+                        Dim pvName As String = getPnameFromShpName(curShape.Name)
+                        Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                        Dim phNameID As String = getElemIDFromShpName(curShape.Name)
+                        Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
+                        Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
+                        Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
+
+                        If Not shortForm Then
+
+                            If englishLanguage Then
+                                tmpText = getElemNameFromShpName(curShape.Name) & " Resource/Costs :" & vbLf
+                            Else
+                                tmpText = getElemNameFromShpName(curShape.Name) & " Ressourcen/Kosten:" & vbLf
+                            End If
+
+                        Else
+                            tmpText = ""
+                        End If
+
+
+                        Dim unit As String
+                        If englishLanguage Then
+                            unit = " PD"
+                        Else
+                            unit = " PT"
+                        End If
+
+                        For i As Integer = 1 To roleInformations.Count
+                            tmpText = tmpText & _
+                                roleInformations.ElementAt(i - 1).Key & ": " & CInt(roleInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
+                        Next
+
+                        If costInformations.Count > 0 And roleInformations.Count > 0 Then
+                            tmpText = tmpText & vbLf
+                        End If
+
+                        unit = " TE"
+                        For i As Integer = 1 To costInformations.Count
+                            tmpText = tmpText & _
+                                costInformations.ElementAt(i - 1).Key & ": " & CInt(costInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
+                        Next
+
+                    Catch ex As Exception
+                        tmpText = "Phase " & getElemNameFromShpName(curShape.Name)
+                    End Try
+
+
+
+                ElseIf noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+                    If Not shortForm Then
+                        If englishLanguage Then
+                            tmpText = "Resource/Costs " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
+                            "no DB access ..."
+                        Else
+                            tmpText = "Ressourcen / Kosten " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
+                                "kein DB Zugriff ..."
+                        End If
+
+                    Else
+                        If englishLanguage Then
+                            tmpText = "no DB access"
+                        Else
+                            tmpText = "kein DB Zugriff"
+                        End If
+
+                    End If
+                Else
+                    tmpText = ""
+                End If
+
 
             Else
                 ' in allen anderen Fällen den Ampel-Text wählen 
@@ -2584,6 +2825,9 @@ Module Module1
             txtShpTop = selectedPlanShape.Top - 75
             txtShpWidth = 70
             txtShpHeight = 70
+
+        ElseIf descriptionType = pptAnnotationType.resourceCost Then
+            descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.resources, False)
         End If
 
         Try
@@ -2606,7 +2850,8 @@ Module Module1
             newShape = currentSlide.Shapes(shapeName)
             If descriptionType = pptAnnotationType.ampelText Or _
                     descriptionType = pptAnnotationType.movedExplanation Or _
-                    descriptionType = pptAnnotationType.lieferumfang Then
+                    descriptionType = pptAnnotationType.lieferumfang Or _
+                    descriptionType = pptAnnotationType.resourceCost Then
                 newShape.Delete()
                 newShape = Nothing
             End If
@@ -2619,7 +2864,8 @@ Module Module1
 
             If descriptionType = pptAnnotationType.ampelText Or _
                     descriptionType = pptAnnotationType.movedExplanation Or _
-                    descriptionType = pptAnnotationType.lieferumfang Then
+                    descriptionType = pptAnnotationType.lieferumfang Or _
+                    descriptionType = pptAnnotationType.resourceCost Then
 
                 newShape = currentSlide.Shapes.AddComment()
                 'newShape = currentSlide.Shapes.AddCallout(Microsoft.Office.Core.MsoCalloutType.msoCalloutOne, _
@@ -2650,7 +2896,8 @@ Module Module1
                     .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = normalFarbe
                     .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignLeft
                     .Name = shapeName
-                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoTrue
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.AutoSize = Microsoft.Office.Core.MsoAutoSize.msoAutoSizeShapeToFitText
                 End With
             Else
                 newShape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
@@ -2681,7 +2928,9 @@ Module Module1
 
         If ((Not descriptionType = pptAnnotationType.ampelText) And _
              (Not descriptionType = pptAnnotationType.movedExplanation) And _
-             (Not descriptionType = pptAnnotationType.lieferumfang)) Then
+             (Not descriptionType = pptAnnotationType.lieferumfang) And _
+             (Not descriptionType = pptAnnotationType.resourceCost)) Then
+
             Select Case positionIndex
 
                 Case pptPositionType.center
@@ -2804,7 +3053,7 @@ Module Module1
         Else
             With newShape
                 .Top = selectedPlanShape.Top - .Height - selectedPlanShape.Height / 2
-                .Left = selectedPlanShape.Left + 2 * selectedPlanShape.Width
+                .Left = selectedPlanShape.Left
             End With
         End If
 
