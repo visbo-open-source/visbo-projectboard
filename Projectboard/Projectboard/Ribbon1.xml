@@ -199,6 +199,8 @@
           <separator id="PT1G1s0"/>
           <!--label="Report Sprache"-->
           <button id="PT1G1B1" getLabel ="bestimmeLabel" onAction="PTSpracheinstellung" supertip="Einstellung der möglichen Sprache für die Reports"/>
+          <!--label="ReportGenTemplate erstellen"-->
+          <button id="PT1G1B6" getLabel ="bestimmeLabel" onAction="PTCreateReportGenTemplate" supertip ="Es wird ein Template erstellt für die InputDatei, die den Batch-Report triggert"/>
           <!--<button id="PT1G1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
         </group>
       </tab>

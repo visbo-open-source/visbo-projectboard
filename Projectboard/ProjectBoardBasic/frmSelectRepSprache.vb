@@ -46,7 +46,10 @@ Public Class frmSelectRepSprache
                 repCult = ReportLang(PTSprache.deutsch)
 
         End Select
-        repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
+
+        awinSettings.ReportLanguage = repCult.Name
+
+        repMessages = XMLImportReportMsg(repMsgFileName, awinSettings.ReportLanguage)
 
         Call setLanguageMessages()
 

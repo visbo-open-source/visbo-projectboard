@@ -536,7 +536,7 @@ Imports System.Windows
 
             Call awinDeSelect()
 
-            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
 
 
             If anzDiagrams > 0 Then
@@ -2086,6 +2086,13 @@ Imports System.Windows
                     tmpLabel = "Report Sprache"
                 Else
                     tmpLabel = "Report Language"
+                End If
+
+            Case "PT1G1B6" ' Report Generator Template erstellen Sprache
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Rep.-Generator Vorlage erstellen"
+                Else
+                    tmpLabel = "Create Rep.-Generator Template"
                 End If
 
             Case "PT2" ' Bearbeiten
@@ -10390,7 +10397,24 @@ Imports System.Windows
 
     End Sub
 
+    Public Sub PTCreateReportGenTemplate(control As IRibbonControl)
 
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        If AlleProjekte.Count > 0 Then
+
+            Call createReportGenTemplate()
+            Call awinDeSelect()
+        Else
+            Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
+        End If
+
+
+        enableOnUpdate = True
+
+    End Sub
 #End Region
 
 #Region "Hilfsprogramme"

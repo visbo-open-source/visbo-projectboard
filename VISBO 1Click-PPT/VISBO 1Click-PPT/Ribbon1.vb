@@ -35,6 +35,7 @@ Public Class Ribbon1
 
                 ' Lesen des Lizenzen-Files
 
+
                 Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
 
                 ' Prüfen der Lizenzen
@@ -49,6 +50,7 @@ Public Class Ribbon1
                     If hproj.name <> "" And Not IsNothing(hproj.name) Then
                         reportAuswahl.calledFrom = "MS Project"
                         reportAuswahl.hproj = hproj
+                        reportAuswahl.calledFrom = "MS Project"
                         returnvalue = reportAuswahl.ShowDialog
                     End If
                 Else
