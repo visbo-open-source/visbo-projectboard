@@ -75,6 +75,9 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
 
+    ' die globale Variable für die Write Protections
+    Public pvWriteProtections As New SortedList(Of String, clsWriteProtectionItem)
+
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
     Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
@@ -201,6 +204,11 @@ Public Module Module1
 
    
     Public Const maxProjektdauer As Integer = 60
+
+    Public Enum ptWriteProtectionType
+        project = 0
+        scenario = 1
+    End Enum
 
     Public Enum ptSzenarioConsider
         all = 0

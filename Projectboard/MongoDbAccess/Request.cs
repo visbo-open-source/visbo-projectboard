@@ -38,6 +38,7 @@ namespace MongoDbAccess
         protected IMongoCollection<clsProjektDB> CollectionProjects;
         protected IMongoCollection<clsRollenDefinitionDB> CollectionRoles;
         protected IMongoCollection<clsKostenartDefinitionDB> CollectionCosts;
+        protected IMongoCollection<clsProjectWriteProtectionItemDB> CollectionWriteProtections;
         protected IMongoCollection<clsProjektDB> CollectionTrashProjects;
         protected IMongoCollection<clsConstellationDB> CollectionConstellations;
         protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
@@ -81,6 +82,7 @@ namespace MongoDbAccess
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
             CollectionCosts = Database.GetCollection<clsKostenartDefinitionDB>("costdefinitions");
+            CollectionWriteProtections = Database.GetCollection<clsProjectWriteProtectionItemDB>("ProjectWriteProtections");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
@@ -246,6 +248,8 @@ namespace MongoDbAccess
             }
             
         }
+
+
 
         /// <summary>
         /// liest die angegebene Rollen Definition aus der Datenbank
@@ -432,6 +436,44 @@ namespace MongoDbAccess
                 return currentcost;
             }
 
+        }
+
+
+        public SortedList<string, clsProjectWriteProtectionItem> retrieveWriteProtectionsFromDB()
+        {
+            var result = new SortedList<string, clsProjectWriteProtectionItem>();
+
+            // holt von allen Projekt-Varianten in AlleProjekte die Write-Protections
+
+
+            return result;
+        }
+
+        /// <summary>
+        /// setzt für das entsprechende Item das Flag, das es geschützt ist 
+        /// gibt true zurück, wenn die Aktion erfolgreich war, false andernfalls
+        /// </summary>
+        /// <param name="wpItem"></param>
+        /// <returns></returns>
+        public bool setWriteProtection(clsProjectWriteProtectionItem wpItem)
+        {
+            try
+            {
+                clsProjectWriteProtectionItemDB wpItemDB = new clsProjectWriteProtectionItemDB();
+                wpItemDB.copyFrom(wpItem);                
+
+                // jetzt soll ein Update / Insert gemacht werden; 
+                // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
+                // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
+                // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
+                // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /**

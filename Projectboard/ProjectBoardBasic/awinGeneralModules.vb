@@ -1165,11 +1165,17 @@ Public Module awinGeneralModules
 
                     If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And _
                             CostDefinitions.isIdenticalTo(costDefinitions2) Then
-                        Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
+                        End If
+
                         'RoleDefinitions = RoleDefinitions2
                         'CostDefinitions = costDefinitions2
                     Else
-                        Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
+                        End If
+
                     End If
 
 
