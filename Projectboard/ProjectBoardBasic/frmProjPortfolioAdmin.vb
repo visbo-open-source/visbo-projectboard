@@ -41,6 +41,7 @@ Public Class frmProjPortfolioAdmin
         description = 0
         dependencies = 1
         scenarioReferences = 2
+        protectedBy = 3
     End Enum
 
     ''' <summary>
@@ -132,6 +133,8 @@ Public Class frmProjPortfolioAdmin
 
                 storeToDBasWell.Visible = False
 
+                chkbxPermanent.Visible = False
+
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
@@ -185,6 +188,8 @@ Public Class frmProjPortfolioAdmin
 
                 storeToDBasWell.Visible = True
 
+                chkbxPermanent.Visible = False
+
             ElseIf aKtionskennung = PTTvActions.deleteV Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -225,6 +230,7 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
@@ -266,6 +272,7 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
@@ -318,6 +325,7 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delFromSession Then
 
@@ -355,6 +363,7 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.loadPV Then
 
@@ -393,6 +402,7 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
 
             ElseIf aKtionskennung = PTTvActions.loadPVS Then
@@ -430,6 +440,46 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
+
+            ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Schreibschutz für Projekt-Varianten"
+                Else
+                    .Text = "Write Protections for Project Variants"
+                End If
+
+                .requiredDate.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .dropboxScenarioNames.Visible = False
+
+
+                .OKButton.Visible = False
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = ""
+                Else
+                    .OKButton.Text = ""
+                End If
+
+                onlyActive.Visible = False
+                onlyInactive.Visible = False
+                backToInit.Visible = False
+
+                storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = True
+
+
             End If
 
         End With
@@ -453,7 +503,12 @@ Public Class frmProjPortfolioAdmin
 
 
         ' was sollen die ToolTipps zeigen ? 
-        toolTippsAreShowing = ptPPAtooltipps.description
+        If aKtionskennung = PTTvActions.setWriteProtection Then
+            toolTippsAreShowing = ptPPAtooltipps.protectedBy
+        Else
+            toolTippsAreShowing = ptPPAtooltipps.description
+        End If
+
 
         ' bestimmen, ob es sich um quicklist handelt ...
         If aKtionskennung = PTTvActions.loadPV Or _
@@ -552,7 +607,8 @@ Public Class frmProjPortfolioAdmin
         ' hier wird jetzt die Browser Gesamt-Liste bestimmt  
         If aKtionskennung = PTTvActions.loadPV Or _
             aKtionskennung = PTTvActions.delFromDB Or _
-            aKtionskennung = PTTvActions.delAllExceptFromDB Then
+            aKtionskennung = PTTvActions.delAllExceptFromDB Or _
+            aKtionskennung = PTTvActions.setWriteProtection Then
 
             pvNamesList = buildPvNamesList(storedAtOrBefore)
             quickList = True
@@ -758,6 +814,51 @@ Public Class frmProjPortfolioAdmin
 
             stopRecursion = False
 
+        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+            stopRecursion = True
+
+            Select Case treeLevel
+
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                    For i = 1 To node.Nodes.Count
+                        childNode = node.Nodes.Item(i - 1)
+                        childNode.Checked = node.Checked
+                        For j = 1 To childNode.Nodes.Count
+                            childNode.Nodes.Item(j - 1).Checked = node.Checked
+                        Next
+                    Next
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+                    ' nach unten: das Gleiche 
+                    For i = 1 To node.Nodes.Count
+                        childNode = node.Nodes.Item(i - 1)
+                        childNode.Checked = node.Checked
+                    Next
+                    ' nach oben 
+
+                    If node.Checked = False Then
+                        node.Parent.Checked = False
+                    End If
+
+                    ' wenn mit diesem Knoten jetzt alle gesetzt sind, soll auch parent wieder gesetzt werden 
+                    If node.Checked = True Then
+                        parentNode = node.Parent
+                        Dim allchecked As Boolean = True
+                        For i = 1 To parentNode.Nodes.Count
+                            allchecked = allchecked And parentNode.Nodes.Item(i - 1).Checked
+                        Next
+                        If allchecked Then
+                            parentNode.Checked = True
+                        End If
+                    End If
+
+
+            End Select
+
+            stopRecursion = False
 
         ElseIf aKtionskennung = PTTvActions.activateV Then
 

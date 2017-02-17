@@ -538,7 +538,7 @@ Public Module testModule
         Dim ampelShape As pptNS.Shape = Nothing
         Dim sternShape As pptNS.Shape = Nothing
 
-        Dim msgTxt As String
+        Dim msgTxt As String = ""
 
         ' Änderung tk 1.2.16
         ' wird benötigt, um in Ergänzung zu pptLasttime im Falle von nur einem Projekt / vielen Swimlanes die bereits erstellte Folie zu löschen 
@@ -5062,7 +5062,7 @@ Public Module testModule
             If tatsErstellt = 1 Then
                 Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
             Else
-                Call logfileSchreiben(msgtext, "createPPTSlidesFromConstellation", 0)
+                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
             End If
 
         End If

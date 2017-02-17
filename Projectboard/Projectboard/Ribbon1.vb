@@ -452,6 +452,26 @@ Imports System.Windows
         Call PBBDeleteProjectsInDB(control)
     End Sub
 
+
+    ''' <summary>
+    ''' ruft den Portfolio Browser auf, um Projekte, die in der Datenbank liegen zu schützen bzw. die Projekte, die aktuell in der Session geladen sind  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT5SetWriteProtection(control As IRibbonControl)
+        Call PBBWriteProtections(control, True)
+    End Sub
+
+    ''' <summary>
+    ''' ruft den Portfolio Browser auf, um den Schreibschutz von Projekten aus der Datenbank bzw aus der Session 
+    ''' aufzuheben  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT5unSetWriteProtection(control As IRibbonControl)
+        Call PBBWriteProtections(control, False)
+    End Sub
+
     ''' <summary>
     ''' löscht alles, was aktuell in der Session ist 
     ''' Projekte, Charts, Shapes ... 
@@ -1651,6 +1671,12 @@ Imports System.Windows
 
     End Sub
 
+    ''' <summary>
+    ''' setzt die Menu-Labels im Ribbon, je nachdem auf Englisch oder deutsch
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Function bestimmeLabel(control As IRibbonControl) As String
         Dim tmpLabel As String = "?"
         Select Case control.Id
@@ -2552,6 +2578,27 @@ Imports System.Windows
                     tmpLabel = "Keep X Versions"
                 End If
 
+            Case "PT5G4" ' Schreibsperren
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Schreibsperre"
+                Else
+                    tmpLabel = "Write-Protection"
+                End If
+
+            Case "PT5G4B1" ' Sperre setzen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Sperre setzen"
+                Else
+                    tmpLabel = "Set Write-Protection"
+                End If
+
+            Case "PT5G4B2" ' Sperre aufheben
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Sperre aufheben"
+                Else
+                    tmpLabel = "Delete Write-Protection"
+                End If
+
             Case "PT6" ' Einstellungen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Einstellungen"
@@ -2625,7 +2672,7 @@ Imports System.Windows
             Case Else
                 tmpLabel = "undefined"
         End Select
-        
+
         bestimmeLabel = tmpLabel
 
     End Function

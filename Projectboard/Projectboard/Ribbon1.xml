@@ -433,6 +433,13 @@
               <button id="Pt5G3B4" getLabel ="bestimmeLabel"  onAction="PT5DeleteProjectsInDBExceptF1" supertip ="es werden immer der erste und der letzte sowie X-2 weitere Versionen behalten; alle anderen werden gelöscht "/>
             </menu>
           </menu>
+          <!--label="Schreibsperren"-->
+          <menu id="PT5G4" getLabel="bestimmeLabel">
+            <!--label="Sperre setzen"-->
+            <button id="Pt5G4B1" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
+            <!--label="Sperre aufheben"-->
+            <button id="Pt5G4B2" getLabel ="bestimmeLabel"  onAction="PT5unSetWriteProtection" supertip ="Schreibschutz für Projekte aufheben"/>                       
+          </menu>
         </group>
       </tab>
       <!---->

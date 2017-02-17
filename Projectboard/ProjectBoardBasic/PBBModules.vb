@@ -1025,12 +1025,50 @@ Public Module PBBModules
 
 
     End Sub
+
+    Sub PBBWriteProtections(ByVal control As IRibbonControl, ByVal setFlag As Boolean)
+
+
+        Dim returnValue As DialogResult
+
+        Dim writeProtectProjects As New frmProjPortfolioAdmin
+
+        Try
+
+            With writeProtectProjects
+
+                If control.Id = "Pt5G4B1" Then
+                    .aKtionskennung = PTTvActions.setWriteProtection
+                ElseIf control.Id = "Pt5G4B2" Then
+                    .aKtionskennung = PTTvActions.unSetWriteProtection
+                End If
+
+            End With
+
+            returnValue = writeProtectProjects.ShowDialog
+
+            ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
+
+            If returnValue = DialogResult.OK Then
+                ' everything is done ... 
+
+            Else
+                ' everything is done ... 
+
+            End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+    End Sub
     ''' <summary>
     ''' aktiviert die selektierte Variante 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub PBBVarianteAktiv(control As IRibbonControl)
+    Sub PBBVarianteAktiv(ByVal control As IRibbonControl)
 
         Dim deletedProj As Integer = 0
         'Dim returnValue As DialogResult

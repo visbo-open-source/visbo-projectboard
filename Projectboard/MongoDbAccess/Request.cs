@@ -38,7 +38,7 @@ namespace MongoDbAccess
         protected IMongoCollection<clsProjektDB> CollectionProjects;
         protected IMongoCollection<clsRollenDefinitionDB> CollectionRoles;
         protected IMongoCollection<clsKostenartDefinitionDB> CollectionCosts;
-        protected IMongoCollection<clsProjectWriteProtectionItemDB> CollectionWriteProtections;
+        protected IMongoCollection<clsWriteProtectionItemDB> CollectionWriteProtections;
         protected IMongoCollection<clsProjektDB> CollectionTrashProjects;
         protected IMongoCollection<clsConstellationDB> CollectionConstellations;
         protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
@@ -82,7 +82,7 @@ namespace MongoDbAccess
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
             CollectionCosts = Database.GetCollection<clsKostenartDefinitionDB>("costdefinitions");
-            CollectionWriteProtections = Database.GetCollection<clsProjectWriteProtectionItemDB>("ProjectWriteProtections");
+            CollectionWriteProtections = Database.GetCollection<clsWriteProtectionItemDB>("ProjectWriteProtections");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
@@ -439,9 +439,9 @@ namespace MongoDbAccess
         }
 
 
-        public SortedList<string, clsProjectWriteProtectionItem> retrieveWriteProtectionsFromDB()
+        public SortedList<string, clsWriteProtectionItem> retrieveWriteProtectionsFromDB()
         {
-            var result = new SortedList<string, clsProjectWriteProtectionItem>();
+            var result = new SortedList<string, clsWriteProtectionItem>();
 
             // holt von allen Projekt-Varianten in AlleProjekte die Write-Protections
 
@@ -455,11 +455,11 @@ namespace MongoDbAccess
         /// </summary>
         /// <param name="wpItem"></param>
         /// <returns></returns>
-        public bool setWriteProtection(clsProjectWriteProtectionItem wpItem)
+        public bool setWriteProtection(clsWriteProtectionItem wpItem)
         {
             try
             {
-                clsProjectWriteProtectionItemDB wpItemDB = new clsProjectWriteProtectionItemDB();
+                clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
                 wpItemDB.copyFrom(wpItem);                
 
                 // jetzt soll ein Update / Insert gemacht werden; 

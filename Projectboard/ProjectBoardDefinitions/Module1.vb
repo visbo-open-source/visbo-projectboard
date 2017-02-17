@@ -76,7 +76,7 @@ Public Module Module1
     Public AlleProjekte As New clsProjekteAlle
 
     ' die globale Variable für die Write Protections
-    Public pvWriteProtections As New SortedList(Of String, clsWriteProtectionItem)
+    Public writeProtections As New clsWriteProtections
 
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
@@ -389,6 +389,8 @@ Public Module Module1
         filterAuswahl = 9
         reportBHTC = 10
         sessionFilterDefinieren = 11
+        setWriteProtection = 12
+        unsetWriteProtection = 13
     End Enum
     Public Enum PTlicense
         swimlanes = 0
@@ -474,6 +476,8 @@ Public Module Module1
         deleteV = 7
         chgInSession = 8
         delAllExceptFromDB = 9
+        setWriteProtection = 10
+        unSetWriteProtection = 11
     End Enum
 
     ''' <summary>

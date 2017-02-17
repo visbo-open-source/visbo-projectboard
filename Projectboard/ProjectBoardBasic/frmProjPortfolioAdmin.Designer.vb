@@ -44,6 +44,7 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.storeToDBasWell = New System.Windows.Forms.CheckBox()
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
+        Me.chkbxPermanent = New System.Windows.Forms.CheckBox()
         CType(Me.versionsToKeep, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.settingsBtn, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.backToInit, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -249,11 +250,22 @@ Partial Class frmProjPortfolioAdmin
         Me.requiredDate.Size = New System.Drawing.Size(200, 20)
         Me.requiredDate.TabIndex = 71
         '
+        'chkbxPermanent
+        '
+        Me.chkbxPermanent.AutoSize = True
+        Me.chkbxPermanent.Location = New System.Drawing.Point(334, 348)
+        Me.chkbxPermanent.Name = "chkbxPermanent"
+        Me.chkbxPermanent.Size = New System.Drawing.Size(76, 17)
+        Me.chkbxPermanent.TabIndex = 72
+        Me.chkbxPermanent.Text = "permanent"
+        Me.chkbxPermanent.UseVisualStyleBackColor = True
+        '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(467, 473)
+        Me.Controls.Add(Me.chkbxPermanent)
         Me.Controls.Add(Me.requiredDate)
         Me.Controls.Add(Me.storeToDBasWell)
         Me.Controls.Add(Me.settingsBtn)
@@ -311,4 +323,5 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents settingsBtn As System.Windows.Forms.PictureBox
     Friend WithEvents storeToDBasWell As System.Windows.Forms.CheckBox
     Friend WithEvents requiredDate As System.Windows.Forms.DateTimePicker
+    Friend WithEvents chkbxPermanent As System.Windows.Forms.CheckBox
 End Class
