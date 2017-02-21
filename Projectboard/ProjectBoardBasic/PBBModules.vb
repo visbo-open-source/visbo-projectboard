@@ -1037,10 +1037,10 @@ Public Module PBBModules
 
             With writeProtectProjects
 
-                If control.Id = "Pt5G4B1" Then
+                If control.Id = "PT5G4B1" Then
                     .aKtionskennung = PTTvActions.setWriteProtection
-                ElseIf control.Id = "Pt5G4B2" Then
-                    .aKtionskennung = PTTvActions.unSetWriteProtection
+                ElseIf control.Id = "PT5G4B2" Then
+                    '.aKtionskennung = PTTvActions.unSetWriteProtection
                 End If
 
             End With

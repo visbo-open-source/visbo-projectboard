@@ -42,6 +42,9 @@
                 Dim tmpItem As clsWriteProtectionItem = _allWriteProtections.Item(pvName)
                 If tmpItem.isProtected Then
                     tmpResult = _allWriteProtections.Item(pvName).userName
+                Else
+                    ' auch beim Release wird ja der User-Name eingetragen 
+                    tmpResult = _allWriteProtections.Item(pvName).userName
                 End If
             End If
             wasProtectedBy = tmpResult
@@ -58,6 +61,30 @@
                 End If
             End If
             wasReleasedBy = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert das Datum zurück, wann das Item geschützt / released wurde
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property changeDate(ByVal pvName As String) As Date
+        Get
+            Dim tmpResult As Date
+            If _allWriteProtections.ContainsKey(pvName) Then
+                Dim tmpItem As clsWriteProtectionItem = _allWriteProtections.Item(pvName)
+
+                If tmpItem.isProtected Then
+                    tmpResult = _allWriteProtections.Item(pvName).lastDateSet
+                Else
+                    tmpResult = _allWriteProtections.Item(pvName).lastDateReleased
+                End If
+
+            End If
+            changeDate = tmpResult
         End Get
     End Property
 

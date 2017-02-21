@@ -436,9 +436,9 @@
           <!--label="Schreibsperren"-->
           <menu id="PT5G4" getLabel="bestimmeLabel">
             <!--label="Sperre setzen"-->
-            <button id="Pt5G4B1" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
+            <button id="PT5G4B1" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
             <!--label="Sperre aufheben"-->
-            <button id="Pt5G4B2" getLabel ="bestimmeLabel"  onAction="PT5unSetWriteProtection" supertip ="Schreibschutz für Projekte aufheben"/>                       
+            <button id="PT5G4B2" getLabel ="bestimmeLabel"  onAction="PT5unSetWriteProtection" supertip ="Schreibschutz für Projekte aufheben"/>                       
           </menu>
         </group>
       </tab>

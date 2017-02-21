@@ -392,6 +392,24 @@ Public Module Module1
         setWriteProtection = 12
         unsetWriteProtection = 13
     End Enum
+
+    Public Enum PTProtectedMode
+        noProtection = 0
+        byOther = 1
+        byMe = 2
+    End Enum
+
+    Public Enum PTLeadOrDependency
+        none = 0
+        lead = 1
+        dependent = 2
+    End Enum
+
+    Public Enum PTTreeNodeTyp
+        project = 0
+        pVariant = 1
+        timestamp = 2
+    End Enum
     Public Enum PTlicense
         swimlanes = 0
        
@@ -477,7 +495,6 @@ Public Module Module1
         chgInSession = 8
         delAllExceptFromDB = 9
         setWriteProtection = 10
-        unSetWriteProtection = 11
     End Enum
 
     ''' <summary>
