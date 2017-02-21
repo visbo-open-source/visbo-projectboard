@@ -107,8 +107,8 @@ Public Class clsReport
                 .AllIfOne = Me.reportAllIfOne
                 .PhName = Me.reportPhName
                 .PhDate = Me.reportPhDate
-                .MSName = Me.reportMsName
-                .MSDate = Me.reportMsDate
+                .MSName = Me.reportMSName
+                .MSDate = Me.reportMSDate
                 .VLinien = Me.reportVLinien
                 .Legend = Me.reportLegend
                 .SortedDauer = Me.reportSortedDauer
@@ -418,10 +418,10 @@ Public Class clsReport
     ''' <remarks></remarks>
     Public Property MSName As Boolean
         Get
-            MSName = reportMsName
+            MSName = reportMSName
         End Get
         Set(value As Boolean)
-            reportMsName = value
+            reportMSName = value
         End Set
     End Property
     ''' <summary>
@@ -432,10 +432,10 @@ Public Class clsReport
     ''' <remarks></remarks>
     Public Property MSDate As Boolean
         Get
-            MSDate = reportMsDate
+            MSDate = reportMSDate
         End Get
         Set(value As Boolean)
-            reportMsDate = value
+            reportMSDate = value
         End Set
     End Property
     ''' <summary>
@@ -722,8 +722,8 @@ Public Class clsReport
 
         reportPhName = True
         reportPhDate = True
-        reportMsName = True
-        reportMsDate = True
+        reportMSName = True
+        reportMSDate = True
         reportVLinien = False
         reportLegend = False
         reportOnePage = True

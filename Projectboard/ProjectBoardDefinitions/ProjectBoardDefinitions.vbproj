@@ -148,6 +148,7 @@
     <Compile Include="clsRollen.vb" />
     <Compile Include="clsRollenDefinition.vb" />
     <Compile Include="clsVerknuepfung.vb" />
+    <Compile Include="clsWriteProtections.vb" />
     <Compile Include="frmMppSettings.Designer.vb">
       <DependentUpon>frmMppSettings.vb</DependentUpon>
     </Compile>

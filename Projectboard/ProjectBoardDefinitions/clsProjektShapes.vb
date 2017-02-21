@@ -77,7 +77,7 @@ Public Class clsProjektShapes
             Dim projectShape As Excel.ShapeRange
 
             ' hier sind alle Shapes drin
-            projectShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            projectShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             ' hole das Projekt-Shape 
             projectShape = projectShapes.Range(pName)
@@ -109,7 +109,7 @@ Public Class clsProjektShapes
             Try
                 hproj = ShowProjekte.getProject(pName)
 
-                With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
                     worksheetShapes = .Shapes
                 End With
 
@@ -956,7 +956,7 @@ Public Class clsProjektShapes
 
                     ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
                     ' damit die aufrufende Routine das shpelement wieder hat 
-                    tmpRange = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
+                    tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                     shpElement = tmpRange.Item(1)
 
                     ' workaround: 
@@ -1109,7 +1109,7 @@ Public Class clsProjektShapes
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
                         ' Projekt-Shape zugewiesen werden 
-                        tmpRange = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
+                        tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                         shpElement = tmpRange.Item(1)
 
                         ' jetzt noch die Budget Werte neu berechnen 
@@ -1197,7 +1197,7 @@ Public Class clsProjektShapes
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
                         ' Projekt-Shape zugewiesen werden 
-                        tmpRange = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
+                        tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                         shpElement = tmpRange.Item(1)
 
                     End If
@@ -1283,7 +1283,7 @@ Public Class clsProjektShapes
 
                 ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
                 ' Projekt-Shape zugewiesen werden 
-                tmpRange = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
+                tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                 shpElement = tmpRange.Item(1)
 
             End If
