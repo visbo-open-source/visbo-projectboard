@@ -10233,6 +10233,43 @@ Imports System.Windows
 
 
     End Sub
+    Public Sub PTTestWriteProtect(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+        Dim wpItem As clsWriteProtectionItem
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        Dim ok2 As Boolean = request.cancelWriteProtections(dbUsername)
+
+        ' ''For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+
+        ' ''    wpItem = New clsWriteProtectionItem(kvp.Key, dbUsername, True)
+        ' ''    ' ''wpItem = New clsWriteProtectionItem(kvp.Key, dbUsername, False)
+        ' ''    ' ''wpItem.isProtected = False
+        ' ''    Dim ok As Boolean = request.setWriteProtection(wpItem)
+        ' ''    If ok Then
+        ' ''        'Call MsgBox("Projekt " & wpItem.pvName & " wurde von User " & wpItem.userName & _
+        ' ''        '            "nicht permanent geschützt: Date: " & wpItem.lastDateSet.ToShortDateString)
+        ' ''    Else
+
+        ' ''        Dim writeProtections As SortedList(Of String, clsWriteProtectionItem) = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+        ' ''        Dim resultstr As String = ""
+        ' ''        For Each elem As KeyValuePair(Of String, clsWriteProtectionItem) In writeProtections
+        ' ''            resultstr = resultstr & vbLf & elem.Key & elem.Value.userName
+        ' ''        Next
+        ' ''        Call MsgBox("Projekt " & wpItem.pvName & " konnte nicht für User " & wpItem.userName & _
+        ' ''                    " geschützt werden: Date: " & wpItem.lastDateSet.ToShortDateString & vbLf & _
+        ' ''                    "writeProtections: " & resultstr)
+        ' ''    End If
+
+        ' ''Next
+
+        enableOnUpdate = True
+
+    End Sub
 
     Public Sub PTCreateLicense(control As IRibbonControl)
 
@@ -10367,7 +10404,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         enableOnUpdate = False
-       
+
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
 

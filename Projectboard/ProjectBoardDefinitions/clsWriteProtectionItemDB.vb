@@ -1,10 +1,10 @@
-﻿''' <summary>
+﻿Imports MongoDB.Bson
+''' <summary>
 ''' die Datenbank Klasse für Projekt-Write Protections
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsWriteProtectionItemDB
-
-    Public Id As String
+    Public Id As ObjectId
     Public pvName As String
     Public type As Integer
     Public userName As String
@@ -17,7 +17,6 @@ Public Class clsWriteProtectionItemDB
 
         With wpItem
 
-            Me.Id = .pvName
             Me.pvName = .pvName
             Me.type = .type
             Me.userName = .userName
