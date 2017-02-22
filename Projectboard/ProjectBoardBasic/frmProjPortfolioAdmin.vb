@@ -607,8 +607,7 @@ Public Class frmProjPortfolioAdmin
         ' hier wird jetzt die Browser Gesamt-Liste bestimmt  
         If aKtionskennung = PTTvActions.loadPV Or _
             aKtionskennung = PTTvActions.delFromDB Or _
-            aKtionskennung = PTTvActions.delAllExceptFromDB Or _
-            aKtionskennung = PTTvActions.setWriteProtection Then
+            aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
             pvNamesList = buildPvNamesList(storedAtOrBefore)
             quickList = True
@@ -621,6 +620,26 @@ Public Class frmProjPortfolioAdmin
                     txtmsg = "there are no projects in database ..."
                 End If
                 Call MsgBox(txtmsg)
+            End If
+
+        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+            If AlleProjekte.Count > 0 Then
+                pvNamesList.Clear()
+            Else
+
+                pvNamesList = buildPvNamesList(storedAtOrBefore)
+                quickList = True
+
+                If pvNamesList.Count = 0 Then
+                    Dim txtmsg As String
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        txtmsg = "keine Projekte in der Datenbank vorhanden ..."
+                    Else
+                        txtmsg = "there are no projects in database ..."
+                    End If
+                    Call MsgBox(txtmsg)
+                End If
             End If
         End If
 
@@ -655,7 +674,7 @@ Public Class frmProjPortfolioAdmin
         Dim schluessel As String = ""
         'Dim selCollection As SortedList(Of Date, String)
         'Dim timeStamp As Date
-        Dim treeLevel As Integer
+        Dim treeLevel As IntegerquickList
         Dim i As Integer, j As Integer
         Dim childNode As TreeNode
         Dim parentNode As TreeNode
@@ -821,7 +840,7 @@ Public Class frmProjPortfolioAdmin
             If Not noDB Then
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB()
+                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 Select Case treeLevel
 
@@ -856,8 +875,14 @@ Public Class frmProjPortfolioAdmin
                                     node.Checked = Not node.Checked
                                 End If
                                 ' Liste aktualisieren ...
-                                writeProtections.liste = request.retrieveWriteProtectionsFromDB()
+                                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
                                 Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, vName, True)
+
+
+                            Else ' protected und falscher User
+
+                                ' nicht erfolgreich
+                                node.Checked = Not node.Checked
                             End If
 
                         Else
@@ -891,7 +916,7 @@ Public Class frmProjPortfolioAdmin
                                         ' keine Änderung von childNode.checked ... 
                                     End If
                                     ' Liste aktualisieren ...
-                                    writeProtections.liste = request.retrieveWriteProtectionsFromDB()
+                                    writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
                                     Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName, False)
                                 Else
                                     atleastOneError = True
@@ -937,7 +962,7 @@ Public Class frmProjPortfolioAdmin
                                 node.Checked = Not node.Checked
                             End If
                             ' Liste aktualisieren ...
-                            writeProtections.liste = request.retrieveWriteProtectionsFromDB()
+                            writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
                             Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName, False)
                         End If
 
@@ -1402,7 +1427,7 @@ Public Class frmProjPortfolioAdmin
         If Not noDB Then
             ' jetzt die writeProtections neu bestimmen 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            writeProtections.liste = request.retrieveWriteProtectionsFromDB()
+            writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         selectedNode = e.Node

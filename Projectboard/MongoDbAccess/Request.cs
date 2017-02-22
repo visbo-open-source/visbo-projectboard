@@ -111,7 +111,7 @@ namespace MongoDbAccess
                 keys = Builders<clsProjektDB>.IndexKeys.Ascending("endDate");
                 ergebnis = CollectionProjects.Indexes.CreateOne(keys);
 
-                var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pvName").Ascending("type").;
+                var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pvName").Ascending("type");
                 ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2);
              
                 return true;

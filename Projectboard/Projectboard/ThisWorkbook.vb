@@ -208,6 +208,11 @@ Public Class ThisWorkbook
                         Call MsgBox("keine Projekte zu speichern ...")
 
                     End If
+
+                    If request.cancelWriteProtections(dbUsername) Then
+                        Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                    End If
+
                 End If
 
 

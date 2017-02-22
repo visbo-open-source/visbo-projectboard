@@ -11692,7 +11692,7 @@ Public Module awinGeneralModules
 
             If Not noDB Then
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB()
+                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             With TreeviewProjekte
@@ -11828,17 +11828,20 @@ Public Module awinGeneralModules
     ''' <param name="currentNode"></param>
     ''' <param name="aktionskennung"></param>
     ''' <param name="nodeTyp"></param>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="solo"></param>
     ''' <remarks></remarks>
     Public Sub bestimmeNodeAppearance(ByRef currentNode As TreeNode, _
-                                          ByVal aktionskennung As Integer, ByVal nodeTyp As Integer, _
-                                          ByVal pName As String, ByVal vName As String, ByVal solo As Boolean)
+                                              ByVal aktionskennung As Integer, ByVal nodeTyp As Integer, _
+                                              ByVal pName As String, ByVal vName As String, ByVal solo As Boolean)
 
 
         'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Italic)
         Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
         Dim fontProtectedbyMe As System.Drawing.Font = New System.Drawing.Font(fontProtectedbyOther, System.Drawing.FontStyle.Bold)
-        
-        If nodeTyp = ptTreeNodeTyp.project Then
+
+        If nodeTyp = PTTreeNodeTyp.project Then
 
             If aktionskennung = PTTvActions.chgInSession Then
                 If vName = "" Then
@@ -11891,7 +11894,7 @@ Public Module awinGeneralModules
                         currentNode.NodeFont = fontProtectedbyOther
                         currentNode.ForeColor = Color.Gray
                     End If
-                    
+
                 End If
 
             ElseIf solo And aktionskennung = PTTvActions.delFromDB And Not noDB Then
@@ -11905,7 +11908,7 @@ Public Module awinGeneralModules
             End If
 
 
-        ElseIf nodeTyp = ptTreeNodeTyp.pVariant Then
+        ElseIf nodeTyp = PTTreeNodeTyp.pVariant Then
 
             ' der Current Node Text für die Variante ist schon gesetzt ...
             ' in updateTreeView
