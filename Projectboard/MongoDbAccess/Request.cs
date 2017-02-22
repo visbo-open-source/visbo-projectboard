@@ -82,7 +82,7 @@ namespace MongoDbAccess
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
             CollectionCosts = Database.GetCollection<clsKostenartDefinitionDB>("costdefinitions");
-            CollectionWriteProtections = Database.GetCollection<clsWriteProtectionItemDB>("ProjectWriteProtections");
+            CollectionWriteProtections = Database.GetCollection<clsWriteProtectionItemDB>("WriteProtections");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
@@ -110,6 +110,10 @@ namespace MongoDbAccess
                 
                 keys = Builders<clsProjektDB>.IndexKeys.Ascending("endDate");
                 ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+
+                var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pvName").Ascending("type");
+                ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2);
+             
                 return true;
             }
             catch
@@ -136,6 +140,15 @@ namespace MongoDbAccess
                     break;
                 case "filters":
                     result = CollectionFilter.AsQueryable<clsFilterDB>().Count();
+                    break;
+                case "roledefinitions":
+                    result = CollectionRoles.AsQueryable<clsRollenDefinitionDB>().Count();
+                    break;
+                case "costdefinitions":
+                    result = CollectionCosts.AsQueryable<clsKostenartDefinitionDB>().Count();
+                    break;
+                case "WriteProtections":
+                    result = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>().Count();
                     break;
                 default:
                     result = 0;
@@ -189,6 +202,7 @@ namespace MongoDbAccess
          */
         public clsProjekt retrieveOneProjectfromDB(string projectname, string variantname, DateTime storedAtOrBefore)
         {
+           
             var result = new clsProjektDB();
             string searchstr = Projekte.calcProjektKeyDB(projectname, variantname);
 
@@ -439,47 +453,137 @@ namespace MongoDbAccess
         }
 
 
-        public SortedList<string, clsWriteProtectionItem> retrieveWriteProtectionsFromDB()
+        /// <summary>
+        /// holt von allen Projekt-Varianten in AlleProjekte die Write-Protections
+        /// </summary>
+        /// <param name="AlleProjekte"></param>
+        /// <returns></returns>
+        public SortedList<string, clsWriteProtectionItem> retrieveWriteProtectionsFromDB(clsProjekteAlle AlleProjekte)
         {
-            var result = new SortedList<string, clsWriteProtectionItem>();
-
             // holt von allen Projekt-Varianten in AlleProjekte die Write-Protections
 
+            var result = new SortedList<string, clsWriteProtectionItem>();
+            var writeProtectDB = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>().Select(cDB => cDB);
 
+            foreach (clsWriteProtectionItemDB cDB in writeProtectDB)
+            {
+                if (AlleProjekte.get_Containskey(cDB.pvName))
+                {
+                    var wpi = new clsWriteProtectionItem();
+                    cDB.copyTo(ref wpi);
+                    result.Add(wpi.pvName, wpi);
+                }
+            }
+            
+      
             return result;
         }
 
         /// <summary>
-        /// setzt für das entsprechende Item das Flag, das es geschützt ist 
+        /// setzt für das entsprechende Item das Flag, dass es geschützt ist 
         /// gibt true zurück, wenn die Aktion erfolgreich war, false andernfalls
         /// </summary>
         /// <param name="wpItem"></param>
         /// <returns></returns>
         public bool setWriteProtection(clsWriteProtectionItem wpItem)
         {
+            clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+            
+            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName)  &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
+            //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+
+
+            // jetzt soll ein Update / Insert gemacht werden; 
+            // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
+            // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
+            // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
+            // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
+             
+            
             try
             {
-                clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
-                wpItemDB.copyFrom(wpItem);                
 
-                // jetzt soll ein Update / Insert gemacht werden; 
-                // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
-                // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
-                // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
-                // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
+                bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                               .Any(wp => wp.pvName == wpItem.pvName && wp.type == wpItem.type);
 
-                return true;
+                if (alreadyExisting )
+                {
+
+                    wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
+                   //var fresult = CollectionWriteProtections.Find(filter).ToList();
+
+                      switch (wpItemDB.isProtected)
+                      {
+                          case true:
+
+                            if (wpItemDB.userName == wpItem.userName)
+                            {
+                                wpItemDB.copyFrom(wpItem);
+                                var r1Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
+                                return r1Result.IsAcknowledged;
+
+                            }
+                            else
+                            {
+                                return false;
+                            };
+                            break;
+
+                        case false:
+
+                            wpItemDB.copyFrom(wpItem);
+                            var r2Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
+                            return r2Result.IsAcknowledged;
+                            break;
+
+                        default:
+
+                            return false;
+                            break;
+                      }
+                }
+                else
+                {
+                    wpItemDB.copyFrom(wpItem);
+                    CollectionWriteProtections.InsertOne(wpItemDB);
+                    return true;
+                }
+          
+
             }
             catch (Exception)
             {
+                
+                //wpItemDB.copyFrom(wpItem);
+                //CollectionWriteProtections.InsertOne(wpItemDB);
                 return false;
+                
             }
         }
+        /// <summary>
+        /// löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public bool cancelWriteProtections(string user)
+        {  
+            // löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
 
-        /**
-         * prüft die Verfügbarkeit der MongoDB
-         */
-        public bool pingMongoDb()
+            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("userName", user) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("permanent", false);
+            
+            var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected",false);
+            //////var fliste = CollectionWriteProtections.Find(filter).ToList();
+            var uresult = CollectionWriteProtections.UpdateMany(filter,updatedef);
+            return uresult.IsAcknowledged;
+        }
+      
+        /// <summary>
+        ///  prüft die Verfügbarkeit der MongoDB
+        /// </summary>
+        /// <returns></returns>
+         public bool pingMongoDb()
         {
             bool ping;
             try
@@ -497,6 +601,12 @@ namespace MongoDbAccess
             return ping;
         }
 
+
+        /// <summary>
+        /// speichert ein einzelnes Projekt in der Datenbank
+        /// </summary>
+        /// <param name="projekt"></param>
+        /// <returns></returns>
         public bool storeProjectToDB(clsProjekt projekt)
         {
             try

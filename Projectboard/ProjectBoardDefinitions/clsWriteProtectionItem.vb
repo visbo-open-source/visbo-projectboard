@@ -127,6 +127,7 @@
     End Property
     Sub New()
         _pvName = ""
+        _type = 0
         _userName = ""
         _isProtected = True
         _permanent = False
@@ -142,6 +143,7 @@
             ByVal userN As String, _
             ByVal prmnnt As Boolean)
         _pvName = pvN
+        _type = 0
         _userName = userN
         _isProtected = True
         _permanent = prmnnt
