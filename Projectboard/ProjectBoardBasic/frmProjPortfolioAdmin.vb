@@ -674,7 +674,7 @@ Public Class frmProjPortfolioAdmin
         Dim schluessel As String = ""
         'Dim selCollection As SortedList(Of Date, String)
         'Dim timeStamp As Date
-        Dim treeLevel As IntegerquickList
+        Dim treeLevel As Integer
         Dim i As Integer, j As Integer
         Dim childNode As TreeNode
         Dim parentNode As TreeNode

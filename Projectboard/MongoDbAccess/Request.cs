@@ -45,6 +45,13 @@ namespace MongoDbAccess
         protected IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
         protected IMongoCollection<clsFilterDB> CollectionFilter;
         
+        /// <summary>
+        /// Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort
+        /// </summary>
+        /// <param name="databaseURL"></param>
+        /// <param name="databaseName"></param>
+        /// <param name="username"></param>
+        /// <param name="dbPasswort"></param>
         public Request(string databaseURL, string databaseName, string username, string dbPasswort)
         {
             //var databaseURL = "localhost";
@@ -89,7 +96,11 @@ namespace MongoDbAccess
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
 
         }
-
+        
+        /// <summary>
+        /// wichtige Indices für CollectionProjects und CollectionWriteProtections setzen
+        /// </summary>
+        /// <returns></returns>
         public  bool createIndicesOnce()
         {
             try
@@ -112,7 +123,8 @@ namespace MongoDbAccess
                 ergebnis = CollectionProjects.Indexes.CreateOne(keys);
 
                 var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pvName").Ascending("type");
-                ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2);
+                var options = new CreateIndexOptions() { Unique = true };
+                ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2,options);
              
                 return true;
             }
@@ -123,6 +135,11 @@ namespace MongoDbAccess
            
         }
 
+        /// <summary>
+        /// Abfrage, ob die Collection 'name' Inhalte hat
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public bool collectionEmpty(string name)
         {
             //return Database.GetCollection<clsProjektDB>(name).Count() == 0;
@@ -158,9 +175,14 @@ namespace MongoDbAccess
             return result == 0; 
         }
 
-        /** prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
-         *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
-         */
+        /// <summary>
+        /// prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
+        /// falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantname"></param>
+        /// <param name="storedAtorBefore"></param>
+        /// <returns></returns>
         public bool projectNameAlreadyExists(string projectname, string variantname, DateTime storedAtorBefore)
         {
             bool result;
@@ -197,9 +219,15 @@ namespace MongoDbAccess
                                    
         }
 
-        /** liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
-         *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
-         */
+    
+        /// <summary>
+        /// liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
+        /// falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantname"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
         public clsProjekt retrieveOneProjectfromDB(string projectname, string variantname, DateTime storedAtOrBefore)
         {
            
@@ -487,22 +515,21 @@ namespace MongoDbAccess
         /// <returns></returns>
         public bool setWriteProtection(clsWriteProtectionItem wpItem)
         {
-            clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
-            
-            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName)  &
-                         Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
-            //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
-
-
-            // jetzt soll ein Update / Insert gemacht werden; 
-            // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
-            // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
-            // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
-            // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
-             
-            
             try
             {
+                clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+            
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName)  &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
+                //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+
+
+                // jetzt soll ein Update / Insert gemacht werden; 
+                // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
+                // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
+                // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
+                // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
+                          
 
                 bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
                                .Any(wp => wp.pvName == wpItem.pvName && wp.type == wpItem.type);
@@ -561,6 +588,8 @@ namespace MongoDbAccess
                 
             }
         }
+
+
         /// <summary>
         /// löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
         /// </summary>
@@ -571,10 +600,11 @@ namespace MongoDbAccess
             // löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
 
             var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("userName", user) &
-                         Builders<clsWriteProtectionItemDB>.Filter.Eq("permanent", false);
-            
-            var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected",false);
-            //////var fliste = CollectionWriteProtections.Find(filter).ToList();
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("permanent", false) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("isProtected", true);
+
+            var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected", false).Set("lastDateReleased", DateTime.UtcNow);
+           
             var uresult = CollectionWriteProtections.UpdateMany(filter,updatedef);
             return uresult.IsAcknowledged;
         }
@@ -632,7 +662,11 @@ namespace MongoDbAccess
               
                                        
         }
-
+        /// <summary>
+        /// speichert ein Projekt in der Trash-Datenbank
+        /// </summary>
+        /// <param name="projektDB"></param>
+        /// <returns></returns>
         public bool storeProjectToTrash(clsProjektDB projektDB)
         {
             try
@@ -1210,6 +1244,12 @@ namespace MongoDbAccess
             return tmpResult;
         }
 
+
+        /// <summary>
+        /// Speichern einen Multiprojekt-Szenarios in der Datenbank
+        /// </summary>
+        /// <param name="c"> - Constellation</param>
+        /// <returns></returns>
         public bool storeConstellationToDB(clsConstellation c)
         {
 
@@ -1251,6 +1291,11 @@ namespace MongoDbAccess
            
         }
 
+        /// <summary>
+        /// Speichern einen Multiprojekt-Szenarios in der Trash-Datenbank
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
         public bool storeConstellationToTrash(clsConstellation c)
         {
             try
@@ -1285,6 +1330,12 @@ namespace MongoDbAccess
                 return false;
             }
         }
+
+        /// <summary>
+        /// Löschen der übergebenen Constellation aus der Datenbank
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
         public bool removeConstellationFromDB(clsConstellation c)
         {
             
@@ -1318,9 +1369,14 @@ namespace MongoDbAccess
            
         }
 
-        //
-        // benennt alle Projekte mit Namen oldName um
-        // aber nur, wenn der neue Name nicht schon in der Datenbank existiert 
+      
+        /// <summary>
+        /// nennt alle Projekte mit Namen oldName um
+        /// aber nur, wenn der neue Name nicht schon in der Datenbank existiert 
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        /// <returns></returns>
         public bool renameProjectsInDB(string oldName, String newName)
         {
             if (projectNameAlreadyExists(newName, "", DateTime.Now))
@@ -1432,6 +1488,11 @@ namespace MongoDbAccess
             // return true;
         }
 
+        /// <summary>
+        /// Alle MultiprojektSzenarios (Constellations) aus der Datenbank holen 
+        /// Das Ergebnis dieser Funktion ist eine Liste (string, clsConstellation) 
+        /// </summary>
+        /// <returns></returns>
         public clsConstellations retrieveConstellationsFromDB()
         {
             var result = new clsConstellations();
@@ -1451,7 +1512,11 @@ namespace MongoDbAccess
         }
 
 
-        // * speichert Dependencies in DB 
+        /// <summary>
+        /// speichert Dependencies in DB 
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
         public bool storeDependencyofPToDB(clsDependenciesOfP d)
         {
 
@@ -1500,6 +1565,11 @@ namespace MongoDbAccess
             //return !CollectionDependencies.Save(depDB).HasLastErrorMessage;
         }
 
+        /// <summary>
+        /// Alle Abhängigkeiten aus der Datenbank lesen
+        /// und als Ergebnis ein Liste von Abhängigkeiten zurückgeben
+        /// </summary>
+        /// <returns></returns>
         public clsDependencies  retrieveDependenciesFromDB()
         {
             var result = new clsDependencies();
@@ -1519,8 +1589,12 @@ namespace MongoDbAccess
             return result;
         }
 
-        /** liest einen bestimmten Filter aus der DB               */
-
+       
+        /// <summary>
+        /// liest einen bestimmten Filter aus der DB  
+        /// </summary>
+        /// <param name="filtername"></param>
+        /// <returns></returns>
         public clsFilter retrieveOneFilterfromDB(string filtername)
         {
             var result = new clsFilterDB();
@@ -1548,8 +1622,12 @@ namespace MongoDbAccess
             return filter;
         }
 
-        /** speichert einen Filter mit Namen 'name' in der Datenbank*/
-
+       /// <summary>
+        /// speichert einen Filter mit Namen 'name' in der Datenbank
+       /// </summary>
+       /// <param name="ptFilter"></param>
+       /// <param name="selfilter"></param>
+       /// <returns></returns>
         public bool storeFilterToDB(clsFilter ptFilter, Boolean selfilter)
         {
 
@@ -1594,8 +1672,12 @@ namespace MongoDbAccess
             //filterDB.Id = ptFilter.name;
             //return !CollectionFilter.Save(filterDB).HasLastErrorMessage;
         }
-        /** löscht einen bestimmten Filter aus der Datenbank */
-
+        
+        /// <summary>
+        /// löscht einen bestimmten Filter aus der Datenbank
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         public bool removeFilterFromDB(clsFilter filter)
         {
 
@@ -1625,7 +1707,11 @@ namespace MongoDbAccess
             //return !CollectionFilter.Remove(query).HasLastErrorMessage;
         }
 
-        /** liest alle Filter aus der Datenbank */
+        /// <summary>
+        /// liest alle Filter aus der Datenbank 
+        /// </summary>
+        /// <param name="selfilter"></param>
+        /// <returns></returns>
         public SortedList<String, clsFilter> retrieveAllFilterFromDB(Boolean selfilter)
         {
             var result = new SortedList<String, clsFilter>();
