@@ -487,11 +487,14 @@ namespace MongoDbAccess
         /// <returns></returns>
         public bool setWriteProtection(clsWriteProtectionItem wpItem)
         {
-            clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+            try
+            {
+                
+                clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
             
-            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName)  &
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName)  &
                          Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
-            //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+                //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
 
 
             // jetzt soll ein Update / Insert gemacht werden; 
@@ -501,8 +504,7 @@ namespace MongoDbAccess
             // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
              
             
-            try
-            {
+            
 
                 bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
                                .Any(wp => wp.pvName == wpItem.pvName && wp.type == wpItem.type);
@@ -528,20 +530,18 @@ namespace MongoDbAccess
                             {
                                 return false;
                             };
-                            break;
+                            
 
                         case false:
 
                             wpItemDB.copyFrom(wpItem);
                             var r2Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
                             return r2Result.IsAcknowledged;
-                            break;
-
+                            
                         default:
 
                             return false;
-                            break;
-                      }
+                       }
                 }
                 else
                 {

@@ -674,7 +674,7 @@ Public Class frmProjPortfolioAdmin
         Dim schluessel As String = ""
         'Dim selCollection As SortedList(Of Date, String)
         'Dim timeStamp As Date
-        Dim treeLevel As IntegerquickList
+        Dim treeLevel As Integer
         Dim i As Integer, j As Integer
         Dim childNode As TreeNode
         Dim parentNode As TreeNode
@@ -1318,7 +1318,7 @@ Public Class frmProjPortfolioAdmin
             ElseIf toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
 
                 If variantNames.Count = 1 Then
-                    Dim pvName As String = calcProjektKey(projectName, projectName)
+                    Dim pvName As String = calcProjektKey(projectName, variantName)
                     Dim lastUser As String = ""
                     Dim zeitpunkt As Date
                     lastUser = writeProtections.wasProtectedBy(pvName)
@@ -1363,17 +1363,9 @@ Public Class frmProjPortfolioAdmin
                     If toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
 
 
-                        Dim pvName As String = calcProjektKey(projectName, projectName)
-                        Dim lastUser As String = ""
-                        Dim zeitpunkt As Date
-                        lastUser = writeProtections.wasProtectedBy(pvName)
-                        zeitpunkt = writeProtections.changeDate(pvName)
-
-                        If writeProtections.isProtected(pvName) Then
-                            toolTippText = "protected by: " & lastUser & ", at: " & zeitpunkt.ToShortDateString
-                        Else
-                            toolTippText = "no protection"
-                        End If
+                        Dim pvName As String = calcProjektKey(projectName, variantName)
+                        toolTippText = protectionToolTippText(pvName)
+                        
 
 
                     Else
@@ -1396,6 +1388,29 @@ Public Class frmProjPortfolioAdmin
 
 
     End Sub
+
+    ''' <summary>
+    ''' liefert für den pvName den ToolTipp Text: ist (permanent) geschützt durch ... oder eben nicht 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function protectionToolTippText(ByVal pvName As String) As String
+        Dim lastUser As String = ""
+        Dim zeitpunkt As Date
+        lastUser = writeProtections.wasProtectedBy(pvName)
+        zeitpunkt = writeProtections.changeDate(pvName)
+        Dim tmpText As String = ""
+
+        If writeProtections.isProtected(pvName) Then
+            tmpText = "protected by: " & lastUser & ", at: " & zeitpunkt.ToShortDateString
+        Else
+            tmpText = "no protection"
+        End If
+        protectionToolTippText = tmpText
+    End Function
+
+
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
@@ -1488,7 +1503,7 @@ Public Class frmProjPortfolioAdmin
                         stopRecursion = False
 
                     ElseIf aKtionskennung = PTTvActions.setWriteProtection And Not noDB Then
-                        
+
                         variantName = getVariantNameOfTreeNode(variantName)
 
                         Dim pvName As String = calcProjektKey(projName, variantName)
@@ -2725,7 +2740,7 @@ Public Class frmProjPortfolioAdmin
 
         Me.Cursor = Cursors.WaitCursor
 
-        
+
 
         ' jetzt muss der Last-Filter zurückgesetzt werden 
         Dim emptyCollection As New Collection
@@ -2784,7 +2799,7 @@ Public Class frmProjPortfolioAdmin
                 ttText = "select all projects"
             End If
         End If
-        
+
 
         ToolTipStand.Show(ttText, SelectionSet, 2000)
 
@@ -2880,7 +2895,7 @@ Public Class frmProjPortfolioAdmin
         End If
         ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
-    
+
     Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
 
     End Sub
@@ -3021,7 +3036,7 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    
+
     Private Sub storeToDBasWell_CheckedChanged(sender As Object, e As EventArgs) Handles storeToDBasWell.CheckedChanged
 
         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3040,7 +3055,7 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    
+
 
     Private Sub requiredDate_ValueChanged(sender As Object, e As EventArgs) Handles requiredDate.ValueChanged
 
@@ -3061,13 +3076,13 @@ Public Class frmProjPortfolioAdmin
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                     msgText = "there are no projects at or before " & earliestDate.ToShortDateString & " in the database"
                 End If
-                
+
                 Call MsgBox(msgText)
 
                 requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
                 storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
-            
+
         Else
             requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
             storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
@@ -3090,5 +3105,5 @@ Public Class frmProjPortfolioAdmin
         TreeViewProjekte.Focus()
     End Sub
 
-   
+
 End Class
