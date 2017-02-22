@@ -35,7 +35,7 @@
         End Get
     End Property
 
-    Public ReadOnly Property wasProtectedBy(ByVal pvName As String) As String
+    Public ReadOnly Property lastModifiedBy(ByVal pvName As String) As String
         Get
             Dim tmpResult As String = ""
             If _allWriteProtections.ContainsKey(pvName) Then
@@ -47,20 +47,7 @@
                     tmpResult = _allWriteProtections.Item(pvName).userName
                 End If
             End If
-            wasProtectedBy = tmpResult
-        End Get
-    End Property
-
-    Public ReadOnly Property wasReleasedBy(ByVal pvName As String) As String
-        Get
-            Dim tmpResult As String = ""
-            If _allWriteProtections.ContainsKey(pvName) Then
-                Dim tmpItem As clsWriteProtectionItem = _allWriteProtections.Item(pvName)
-                If Not tmpItem.isProtected Then
-                    tmpResult = _allWriteProtections.Item(pvName).userName
-                End If
-            End If
-            wasReleasedBy = tmpResult
+            lastModifiedBy = tmpResult
         End Get
     End Property
 

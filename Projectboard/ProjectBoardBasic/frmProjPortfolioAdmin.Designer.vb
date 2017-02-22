@@ -204,6 +204,7 @@ Partial Class frmProjPortfolioAdmin
         'collapseCompletely
         '
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.collapseCompletely.Cursor = System.Windows.Forms.Cursors.Default
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
         Me.collapseCompletely.Location = New System.Drawing.Point(68, 348)
         Me.collapseCompletely.Name = "collapseCompletely"

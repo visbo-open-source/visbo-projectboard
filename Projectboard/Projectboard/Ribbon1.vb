@@ -10293,7 +10293,7 @@ Imports System.Windows
 
         enableOnUpdate = False
         appInstance.EnableEvents = True
-        Dim wpItem As clsWriteProtectionItem
+        'Dim wpItem As clsWriteProtectionItem
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim ok2 As Boolean = request.cancelWriteProtections(dbUsername)

@@ -11789,7 +11789,16 @@ Public Module awinGeneralModules
 
                             projectNode.Tag = "X"
                             For iv As Integer = 1 To variantNames.Count
-                                Dim variantNode As TreeNode = projectNode.Nodes.Add(CStr(variantNames.Item(iv)))
+                                vName = CStr(variantNames.Item(iv))
+                                Dim vNameStripped As String = ""
+                                Dim tmpStr() As String = vName.Split(New Char() {CChar("("), CChar(")")})
+                                If tmpStr.Length = 1 Then
+                                    vNameStripped = tmpStr(0)
+                                ElseIf tmpStr.Length >= 3 Then
+                                    vNameStripped = tmpStr(1).Trim
+                                End If
+
+                                Dim variantNode As TreeNode = projectNode.Nodes.Add(vName)
 
                                 If aKtionskennung = PTTvActions.delFromDB Then
                                     variantNode.Tag = "P"
@@ -11798,7 +11807,7 @@ Public Module awinGeneralModules
                                     variantNode.Tag = "X"
                                 End If
 
-                                Call bestimmeNodeAppearance(variantNode, aKtionskennung, ptTreeNodeTyp.pVariant, pname, "", False)
+                                Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pname, vNameStripped, False)
 
                             Next
 
@@ -11838,8 +11847,13 @@ Public Module awinGeneralModules
 
 
         'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Italic)
-        Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
-        Dim fontProtectedbyMe As System.Drawing.Font = New System.Drawing.Font(fontProtectedbyOther, System.Drawing.FontStyle.Bold)
+        'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
+        'Dim fontProtectedbyMe As System.Drawing.Font = New System.Drawing.Font(fontProtectedbyOther, System.Drawing.FontStyle.Bold)
+
+        Dim colorProtectedByMe As System.Drawing.Color = Color.Green
+        Dim colorProtectedByOther As System.Drawing.Color = Color.OrangeRed
+        Dim colorNormal As System.Drawing.Color = Color.Black
+        Dim colorNoShow As System.Drawing.Color = Color.DimGray
 
         If nodeTyp = PTTreeNodeTyp.project Then
 
@@ -11878,35 +11892,80 @@ Public Module awinGeneralModules
 
             End If
 
-            If solo And aktionskennung = PTTvActions.setWriteProtection And Not noDB Then
-                Dim pvName As String = calcProjektKey(pName, vName)
-                If writeProtections.isProtected(pvName) Then
+            If aktionskennung = PTTvActions.setWriteProtection And Not noDB Then
+                If solo Then
+                    Dim pvName As String = calcProjektKey(pName, vName)
+                    If writeProtections.isProtected(pvName) Then
 
-                    If dbUsername = writeProtections.wasProtectedBy(pvName) Then
-                        ' den Haken setzen
-                        currentNode.Checked = True
-                        ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyMe
+                        If dbUsername = writeProtections.lastModifiedBy(pvName) Then
+                            ' den Haken setzen
+                            currentNode.Checked = True
+                            ' entsprechend kennzeichnen 
+                            currentNode.ForeColor = colorProtectedByMe
+
+                            'currentNode.NodeFont = fontProtectedbyMe
+                        Else
+                            ' den Haken setzen
+                            currentNode.Checked = True
+                            ' entsprechend kennzeichnen 
+                            currentNode.ForeColor = colorProtectedByOther
+
+                            'currentNode.NodeFont = fontProtectedbyOther
+                            'currentNode.ForeColor = Color.Gray
+                        End If
+
                     Else
-                        ' den Haken setzen
-                        currentNode.Checked = True
-                        ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyOther
-                        currentNode.ForeColor = Color.Gray
+                        currentNode.ForeColor = colorNormal
                     End If
-
-                End If
-
-            ElseIf solo And aktionskennung = PTTvActions.delFromDB And Not noDB Then
-                If notReferencedByAnyPortfolio(pName, vName) Then
-                    ' kann gelöscht werden  
-                    currentNode.ForeColor = Color.Black
                 Else
-                    currentNode.ForeColor = Color.Gray
+                    currentNode.ForeColor = colorNormal
+                    ' wenn alle Varianten drunter geschützt / nicht geschützt sind: entsprechend setzen 
+                    ' müsste an dieser stelle noch gemacht werden 
+                End If
+                
+
+            ElseIf aktionskennung = PTTvActions.delFromDB And Not noDB Then
+                If solo Then
+                    If notReferencedByAnyPortfolio(pName, vName) Then
+                        ' kann gelöscht werden  
+                        currentNode.ForeColor = colorNormal
+                    Else
+                        currentNode.ForeColor = colorNoShow
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
                 End If
 
-            End If
+            ElseIf aktionskennung = PTTvActions.delFromSession Then
+                ' alle  markieren, die im NoShow sind 
+                If ShowProjekte.contains(pName) Then
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    If hproj.variantName = vName Then
+                        currentNode.ForeColor = colorNormal
+                    Else
+                        currentNode.ForeColor = colorNoShow
+                    End If
+                Else
+                    currentNode.ForeColor = colorNoShow
+                End If
 
+            ElseIf aktionskennung = PTTvActions.loadPV Then
+                ' alle  markieren, die noch nicht geladen sind, ob im Show oder NoShow  
+                Dim tmpKey As String = calcProjektKey(pName, vName)
+                If AlleProjekte.Containskey(tmpKey) Then
+                    Dim hproj As clsProjekt = AlleProjekte.getProject(tmpKey)
+                    If Not IsNothing(hproj) Then
+                        currentNode.ForeColor = colorNoShow
+                    Else
+                        currentNode.ForeColor = colorNormal
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
+                End If
+
+            Else
+                currentNode.ForeColor = colorNormal
+            End If
 
         ElseIf nodeTyp = PTTreeNodeTyp.pVariant Then
 
@@ -11917,29 +11976,63 @@ Public Module awinGeneralModules
                 Dim pvName As String = calcProjektKey(pName, vName)
                 If writeProtections.isProtected(pvName) Then
 
-                    If dbUsername = writeProtections.wasProtectedBy(pvName) Then
+                    If dbUsername = writeProtections.lastModifiedBy(pvName) Then
                         ' den Haken setzen
                         currentNode.Checked = True
                         ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyMe
+                        currentNode.ForeColor = colorProtectedByMe
+
+                        'currentNode.NodeFont = fontProtectedbyMe
                     Else
                         ' den Haken setzen
                         currentNode.Checked = True
                         ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyOther
-                        currentNode.ForeColor = Color.Gray
-                    End If
+                        currentNode.ForeColor = colorProtectedByOther
 
+                        'currentNode.NodeFont = fontProtectedbyOther
+                        'currentNode.ForeColor = Color.Gray
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
                 End If
 
             ElseIf aktionskennung = PTTvActions.delFromDB And Not noDB Then
                 If notReferencedByAnyPortfolio(pName, vName) Then
                     ' alles ok 
-                    currentNode.ForeColor = Color.Black
+                    currentNode.ForeColor = colorNormal
                 Else
-                    currentNode.ForeColor = Color.Gray
+                    currentNode.ForeColor = colorNoShow
                 End If
 
+            ElseIf aktionskennung = PTTvActions.delFromSession Then
+                ' alle  markieren, die im NoShow sind 
+                If ShowProjekte.contains(pName) Then
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    If hproj.variantName = vName Then
+                        currentNode.ForeColor = colorNormal
+                    Else
+                        currentNode.ForeColor = colorNoShow
+                    End If
+                Else
+                    currentNode.ForeColor = colorNoShow
+                End If
+
+            ElseIf aktionskennung = PTTvActions.loadPV Then
+                ' alle  markieren, die noch nicht geladen sind, ob im Show oder NoShow  
+                Dim tmpKey As String = calcProjektKey(pName, vName)
+                If AlleProjekte.Containskey(tmpKey) Then
+                    Dim hproj As clsProjekt = AlleProjekte.getProject(tmpKey)
+                    If Not IsNothing(hproj) Then
+                        currentNode.ForeColor = colorNoShow
+                    Else
+                        currentNode.ForeColor = colorNormal
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
+                End If
+
+            Else
+                currentNode.ForeColor = Color.Black
             End If
 
         End If
