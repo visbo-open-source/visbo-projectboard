@@ -3,7 +3,7 @@ Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports MongoDbAccess
 Imports ClassLibrary1
-Imports WPFPieChart
+'Imports WPFPieChart ' wird nicht verwendet 
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel

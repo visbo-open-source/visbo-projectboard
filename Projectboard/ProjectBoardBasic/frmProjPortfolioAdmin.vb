@@ -493,6 +493,14 @@ Public Class frmProjPortfolioAdmin
         ' erstmal den WaitCursor zeigen ... 
         Me.Cursor = Cursors.Default
 
+        ' den hilfetext setzen ...
+        If awinSettings.englishLanguage Then
+            Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf & _
+                                                  "das ist die 1.Zeile " & vbLf & _
+                                                  "das ist die zweite Zeile")
+            Me.portfolioBrowserHelp.SetShowHelp(TreeViewProjekte, True)
+        End If
+
         If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
         End If
@@ -1802,18 +1810,37 @@ Public Class frmProjPortfolioAdmin
         End If
 
         ' Bestimmen der Überschrift des Output Headers, falls es irgendwelche Meldungen gibt
-        If aKtionskennung = PTTvActions.delFromDB Then
+        If aKtionskennung = PTTvActions.delFromDB Or _
+            aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
             If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                outPutHeader = "Projekt-Varianten können nicht gelöscht werden !"
-                outPutExplanation = "folgende Projekt-Varianten werden aktuell in Szenarien referenziert" & vbLf & _
-                                    "und können daher nicht gelöscht werden:"
+                outPutHeader = "Löschen von Projekt-Varianten in der Datenbank "
+                outPutExplanation = "Meldungen: "
             Else
-                outPutHeader = "Project-Variants can not be deleted !"
-                outPutExplanation = "following project-variants are referenced in scenarios " & vbLf & _
-                                    "and con not be deleted:"
+                outPutHeader = "Delete Project-Variants in Database"
+                outPutExplanation = "Messages"
             End If
 
+        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+            aKtionskennung = PTTvActions.deleteV Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Löschen von Projekt-Varianten in der Session "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Delete Project-Variants in Session"
+                outPutExplanation = "Messages"
+            End If
+
+        ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Laden von Projekt-Varianten aus der Datenbank "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Load Project-Variants from Database"
+                outPutExplanation = "Messages"
+            End If
 
         End If
 
@@ -2136,6 +2163,7 @@ Public Class frmProjPortfolioAdmin
             Else
                 txtMsg = "not supported option in form ProjPortfolioAdmin ..."
             End If
+
             Call MsgBox(txtMsg)
 
         End If

@@ -555,19 +555,19 @@ namespace MongoDbAccess
                             {
                                 return false;
                             };
-                            break;
+                            
 
                         case false:
 
                             wpItemDB.copyFrom(wpItem);
                             var r2Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
                             return r2Result.IsAcknowledged;
-                            break;
+                            
 
                         default:
 
                             return false;
-                            break;
+                            
                       }
                 }
                 else

@@ -109,8 +109,14 @@ Imports System.Windows
 
         Dim outPutCollection As New Collection
 
+
         With storeConstellationFrm
-            .Text = "Szenario(s) in Datenbank speichern"
+            If awinSettings.englishLanguage Then
+                .Text = "store Scenario(s) in Datenbase"
+            Else
+                .Text = "Szenario(s) in Datenbank speichern"
+            End If
+
             .constellationsToShow = projectConstellations
             .retrieveFromDB = False
             .lblStandvom.Visible = False
@@ -130,9 +136,17 @@ Imports System.Windows
                 Call storeSingleConstellationToDB(outPutCollection, currentConstellation)
 
                 If outPutCollection.Count > 0 Then
-                    Call showOutPut(outPutCollection, _
-                                     "Speichern Szenario " & currentConstellation.constellationName, _
-                                     "folgende Probleme sind aufgetreten:")
+                    Dim msgH As String, msgE As String
+                    If awinSettings.englishLanguage Then
+                        msgH = "Store Scenario " & currentConstellation.constellationName
+                        msgE = "following problems:"
+                    Else
+                        msgH = "Speichern Szenario " & currentConstellation.constellationName
+                        msgE = "folgende Probleme sind aufgetreten:"
+                    End If
+
+                    Call showOutPut(outPutCollection, msgH, msgE)
+
                 End If
             Next
 
@@ -603,94 +617,94 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        If ShowProjekte.Count > 0 Then
+        'If ShowProjekte.Count > 0 Then
 
-            If showRangeRight - showRangeLeft >= minColumns - 1 Then
+        'If showRangeRight - showRangeLeft >= minColumns - 1 Then
 
-                Dim awinSelection As Excel.ShapeRange
+        Dim awinSelection As Excel.ShapeRange
 
-                Try
-                    'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-                Catch ex As Exception
-                    awinSelection = Nothing
-                End Try
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
 
-                appInstance.EnableEvents = False
-                enableOnUpdate = False
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
 
-                ' hier muss die Auswahl des Names für das Cockpit erfolgen
+        ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
-                returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+        returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
 
-                If returnValue = DialogResult.OK Then
+        If returnValue = DialogResult.OK Then
 
-                    cockpitName = loadCockpitFrm.ListBox1.Text
+            cockpitName = loadCockpitFrm.ListBox1.Text
 
-                    appInstance.ScreenUpdating = False
+            appInstance.ScreenUpdating = False
 
-                    If loadCockpitFrm.deleteOtherCharts.Checked Then
-                        ' erst alle anderen Charts löschen ... 
-                        Dim currentWsName As String
-                        If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                            currentWsName = arrWsNames(3)
-                        Else
-                            currentWsName = arrWsNames(5)
-                        End If
+            If loadCockpitFrm.deleteOtherCharts.Checked Then
+                ' erst alle anderen Charts löschen ... 
+                Dim currentWsName As String
+                If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                    currentWsName = arrWsNames(3)
+                Else
+                    currentWsName = arrWsNames(5)
+                End If
 
-                        Call deleteChartsInSheet(currentWsName)
+                Call deleteChartsInSheet(currentWsName)
+            End If
+
+            Try
+                Call awinLoadCockpit(cockpitName)
+
+                ' nur wenn ein Projekt selektiert wurde, werden die Projekt-Charts aktualisiert
+                If Not awinSelection Is Nothing Then
+
+
+                    If awinSelection.Count = 1 Then
+                        Dim singleShp As Excel.Shape
+                        Dim hproj As clsProjekt
+
+                        ' jetzt die Aktion durchführen ...
+                        singleShp = awinSelection.Item(1)
+
+                        Try
+                            hproj = ShowProjekte.getProject(singleShp.Name, True)
+                        Catch ex As Exception
+                            Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
+                            Exit Sub
+                        End Try
+
+                        Call aktualisiereCharts(hproj, True)
+
+                        Call awinDeSelect()
                     End If
 
-                    Try
-                        Call awinLoadCockpit(cockpitName)
-
-                        ' nur wenn ein Projekt selektiert wurde, werden die Projekt-Charts aktualisiert
-                        If Not awinSelection Is Nothing Then
-
-
-                            If awinSelection.Count = 1 Then
-                                Dim singleShp As Excel.Shape
-                                Dim hproj As clsProjekt
-
-                                ' jetzt die Aktion durchführen ...
-                                singleShp = awinSelection.Item(1)
-
-                                Try
-                                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                                Catch ex As Exception
-                                    Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
-                                    Exit Sub
-                                End Try
-
-                                Call aktualisiereCharts(hproj, True)
-
-                                Call awinDeSelect()
-                            End If
-
-                        End If
-
-                        Call awinNeuZeichnenDiagramme(9)
-
-                    Catch ex As Exception
-                        appInstance.ScreenUpdating = True
-                        Call MsgBox("Fehler beim Laden ..")
-                    End Try
-
-
-
-
-                    appInstance.ScreenUpdating = True
-
-                Else
-                    appInstance.ScreenUpdating = True
-
                 End If
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-            End If
+
+                Call awinNeuZeichnenDiagramme(9)
+
+            Catch ex As Exception
+                appInstance.ScreenUpdating = True
+                Call MsgBox("Fehler beim Laden ..")
+            End Try
+
+
+
+
+            appInstance.ScreenUpdating = True
+
         Else
-            Call MsgBox("Es sind noch keine Projekte geladen!")
+            appInstance.ScreenUpdating = True
+
         End If
+        'Else
+        '    Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+        'End If
+        'Else
+        '    Call MsgBox("Es sind noch keine Projekte geladen!")
+        'End If
 
         ' hier muss eventuell ein Neuzeichnen erfolgen
         enableOnUpdate = True
