@@ -14,11 +14,30 @@
         End Set
     End Property
 
-    Public ReadOnly Property isProtected(ByVal pvname As String) As Boolean
+    ''' <summary>
+    ''' wenn ein userName angegeben ist, wird nur dann true zurückgegeben, wenn der userName ungleich dem User ist, der das Projekt geschützt hat 
+    ''' wenn es der gleiche User ist, wird false zurückgegeben 
+    ''' </summary>
+    ''' <param name="pvname"></param>
+    ''' <param name="userName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isProtected(ByVal pvname As String, Optional ByVal userName As String = Nothing) As Boolean
         Get
             Dim tmpResult As Boolean = False
             If _allWriteProtections.ContainsKey(pvname) Then
-                tmpResult = _allWriteProtections.Item(pvname).isProtected
+                If IsNothing(userName) Then
+                    tmpResult = _allWriteProtections.Item(pvname).isProtected
+
+                ElseIf userName <> "" Then
+                    tmpResult = _allWriteProtections.Item(pvname).isProtected And _
+                                _allWriteProtections.Item(pvname).userName <> userName
+
+                Else
+                    tmpResult = _allWriteProtections.Item(pvname).isProtected
+                End If
+
             End If
             isProtected = tmpResult
         End Get
@@ -35,7 +54,7 @@
         End Get
     End Property
 
-    Public ReadOnly Property wasProtectedBy(ByVal pvName As String) As String
+    Public ReadOnly Property lastModifiedBy(ByVal pvName As String) As String
         Get
             Dim tmpResult As String = ""
             If _allWriteProtections.ContainsKey(pvName) Then
@@ -47,20 +66,7 @@
                     tmpResult = _allWriteProtections.Item(pvName).userName
                 End If
             End If
-            wasProtectedBy = tmpResult
-        End Get
-    End Property
-
-    Public ReadOnly Property wasReleasedBy(ByVal pvName As String) As String
-        Get
-            Dim tmpResult As String = ""
-            If _allWriteProtections.ContainsKey(pvName) Then
-                Dim tmpItem As clsWriteProtectionItem = _allWriteProtections.Item(pvName)
-                If Not tmpItem.isProtected Then
-                    tmpResult = _allWriteProtections.Item(pvName).userName
-                End If
-            End If
-            wasReleasedBy = tmpResult
+            lastModifiedBy = tmpResult
         End Get
     End Property
 

@@ -5085,53 +5085,85 @@ Public Module testModule
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         enableOnUpdate = False
 
+        Dim outPutCollection As New Collection
+        Dim outputline As String = ""
+
+        ' die aktuelle WriteProtection holen 
+        writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         Call storeSessionConstellation("Last")
 
-        If request.pingMongoDb() Then
+        If request.pingMongoDb() And Not noDB Then
 
             Try
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
                 Dim anzahlStores As Integer = 0
+
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                     Try
-                        ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                        Dim pvName As String = calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        If Not writeProtections.isProtected(pvName, dbUsername) Then
+                            ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
-                        If demoModusHistory Then
-                            kvp.Value.timeStamp = historicDate
-                        Else
-                            kvp.Value.timeStamp = jetzt
-                        End If
-
-                        Dim storeNeeded As Boolean
-                        If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
-                            ' prüfen, ob es Unterschied gibt 
-                            Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
-                            If Not IsNothing(standInDB) Then
-                                ' prüfe, ob es Unterschiede gibt
-                                storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
+                            If demoModusHistory Then
+                                kvp.Value.timeStamp = historicDate
                             Else
-                                ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                                kvp.Value.timeStamp = jetzt
+                            End If
+
+                            Dim storeNeeded As Boolean
+                            If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
+                                ' prüfen, ob es Unterschied gibt 
+                                Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
+                                If Not IsNothing(standInDB) Then
+                                    ' prüfe, ob es Unterschiede gibt
+                                    storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
+                                Else
+                                    ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                                    storeNeeded = True
+                                End If
+                            Else
                                 storeNeeded = True
                             End If
-                        Else
-                            storeNeeded = True
-                        End If
 
-                        If storeNeeded Then
-                            If request.storeProjectToDB(kvp.Value) Then
-                                anzahlStores = anzahlStores + 1
+                            If storeNeeded Then
+                                If request.storeProjectToDB(kvp.Value) Then
+                                    anzahlStores = anzahlStores + 1
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "protected project: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    End If
+                                End If
+                            End If
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                outPutCollection.Add(outputline)
                             Else
-                                Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
+                                outputline = "protected project: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                outPutCollection.Add(outputline)
                             End If
                         End If
+
+
 
                     Catch ex As Exception
 
+                        If awinSettings.englishLanguage Then
+                            outputline = "Error when writing to database ..." & vbLf & "Datenbase not up and running?"
+                            outPutCollection.Add(outputline)
+                        Else
+                            outputline = "Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?"
+                            outPutCollection.Add(outputline)
+                        End If
                         ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
-                        Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                        Throw New ArgumentException(outputline)
                         'Exit Sub
                     End Try
 
@@ -5152,10 +5184,22 @@ Public Module testModule
                         Try
                             If request.storeConstellationToDB(kvp.Value) Then
                             Else
-                                Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Error when writing Scenario " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                Else
+                                    outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                End If
+
                             End If
                         Catch ex As Exception
-                            Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            If awinSettings.englishLanguage Then
+                                outputline = "Error when writing Scenario " & kvp.Key
+                            Else
+                                outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                            End If
+                            Throw New ArgumentException(outputline)
                             'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
                             'Exit Sub
                         End Try
@@ -5170,12 +5214,22 @@ Public Module testModule
                         Try
                             If request.storeDependencyofPToDB(kvp.Value) Then
                             Else
-                                Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Error when writing dependency " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                Else
+                                    outputline = "Fehler in Schreiben Dependency " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                End If
+
                             End If
                         Catch ex As Exception
-                            Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                            'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
-                            'Exit Sub
+                            If awinSettings.englishLanguage Then
+                                outputline = "Error when writing dependency " & kvp.Key
+                            Else
+                                outputline = "Fehler in Schreiben Dependency " & kvp.Key
+                            End If
+                            Throw New ArgumentException(outputline)
                         End Try
 
 
@@ -5206,36 +5260,96 @@ Public Module testModule
 
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
-                            Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                            If awinSettings.englishLanguage Then
+                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                        "1 project/project-variant stored " & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
                                         "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         Else
-                            Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                            If awinSettings.englishLanguage Then
+                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                        anzahlStores & " projects/project-variants stored" & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
                                         "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         End If
                     Else
-                        Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
-                                    "keine Änderungen in Projekten bzw. Projekt-Varianten;" & vbLf & _
-                                    "daher wurden keine Projekte in der Datenbank gespeichert")
+                        If awinSettings.englishLanguage Then
+                            outputline = "ok, scenarios stored!" & vbLf & _
+                                "no projects stored, because of no changes"
+                        Else
+                            outputline = "ok, Szenarien gespeichert!" & vbLf & _
+                                "keine Projekte gespeichert, da es keine Änderungen gab"
+                        End If
+
                     End If
 
 
                 Else
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
-                            Call MsgBox("es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                            If awinSettings.englishLanguage Then
+                                outputline = "1 project/project-variant stored: " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = "1 Projekt/Projekt-Variante gespeichert " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         Else
-                            Call MsgBox("es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                            If awinSettings.englishLanguage Then
+                                outputline = anzahlStores & " projects/project-variants stored: " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = anzahlStores & " Projekte/Projekt-Varianten gespeichert: " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         End If
                     Else
-                        Call MsgBox("keine Änderungen in Projekten bzw. Projekt-Varianten;" & vbLf & _
-                                    "daher wurden keine Projekte in der Datenbank gespeichert")
+                        If awinSettings.englishLanguage Then
+                            outputline = "no changes in projects / project-variants, because of no changes;"
+                        Else
+                            outputline = "keine Projekte gespeichert, da es keine Änderungen gab"
+                        End If
+
                     End If
                 End If
 
+                outPutCollection.Add(outputline)
+
+                If outPutCollection.Count > 0 Then
+                    Dim msgH As String, msgE As String
+                    If awinSettings.englishLanguage Then
+                        If everythingElse Then
+                            msgH = "Store Everything (Projects, Scenarios, Dependencies, ..)"
+                        Else
+                            msgH = "Store Projects"
+                        End If
+
+                        msgE = "following results:"
+                    Else
+                        If everythingElse Then
+                            msgH = "Alles speichern (Projekte, Szenarien, Abhängigkeiten, ..)"
+                        Else
+                            msgH = "Projekte speichern"
+                        End If
+
+                        msgE = "Rückmeldungen"
+                    End If
+
+                    Call showOutPut(outPutCollection, msgH, msgE)
+
+                End If
 
                 ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
                 Try
@@ -5271,6 +5385,8 @@ Public Module testModule
         Dim anzStoredProj As Integer = 0
         Dim variantCollection As Collection
 
+        Dim outputCollection As New Collection
+        Dim outputline As String = ""
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim awinSelection As Excel.ShapeRange
@@ -5350,7 +5466,14 @@ Public Module testModule
                                     anzStoredProj = anzStoredProj + 1
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                                 Else
-                                    Call MsgBox("Fehler in Schreiben Projekt " & hproj.name)
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "project protected: " & hproj.name
+                                    Else
+                                        outputline = "geschütztes Projekt: " & hproj.name
+                                    End If
+
+                                    outputCollection.Add(outputline)
+
                                 End If
                             End If
                             

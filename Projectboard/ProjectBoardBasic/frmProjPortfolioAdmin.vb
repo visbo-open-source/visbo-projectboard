@@ -81,7 +81,7 @@ Public Class frmProjPortfolioAdmin
         
 
         ' Maus auf Normalmodus zurücksetzen
-        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+        'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
 
     End Sub
 
@@ -490,7 +490,16 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub frmDefineEditPortfolio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        'Dim browserAlleProjekte As New clsProjekteAlle
+        ' erstmal den WaitCursor zeigen ... 
+        Me.Cursor = Cursors.Default
+
+        ' den hilfetext setzen ...
+        If awinSettings.englishLanguage Then
+            Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf & _
+                                                  "das ist die 1.Zeile " & vbLf & _
+                                                  "das ist die zweite Zeile")
+            Me.portfolioBrowserHelp.SetShowHelp(TreeViewProjekte, True)
+        End If
 
         If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
@@ -499,8 +508,6 @@ Public Class frmProjPortfolioAdmin
         If frmCoord(PTfrm.eingabeProj, PTpinfo.left) > 0 Then
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
-
-
 
         ' was sollen die ToolTipps zeigen ? 
         If aKtionskennung = PTTvActions.setWriteProtection Then
@@ -584,7 +591,7 @@ Public Class frmProjPortfolioAdmin
 
 
         ' Maus auf Wartemodus setzen
-        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
+        'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
         If aKtionskennung = PTTvActions.chgInSession Then
 
@@ -660,7 +667,8 @@ Public Class frmProjPortfolioAdmin
         End If
 
         ' Maus auf Normalmodus zurücksetzen
-        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+        'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+        Me.Cursor = Cursors.Arrow
 
         ' Fokus auf was unverdächtiges setzen 
         dropboxScenarioNames.Focus()
@@ -855,7 +863,7 @@ Public Class frmProjPortfolioAdmin
                             Dim pvName As String = calcProjektKey(pName, vName)
 
                             If Not (writeProtections.isProtected(pvName)) Or _
-                                (writeProtections.isProtected(pvName) And dbUsername = writeProtections.wasProtectedBy(pvName)) Then
+                                (writeProtections.isProtected(pvName) And dbUsername = writeProtections.lastModifiedBy(pvName)) Then
 
                                 ' jetzt in der Datenbank setzen 
                                 Dim wpItem As New clsWriteProtectionItem
@@ -896,7 +904,7 @@ Public Class frmProjPortfolioAdmin
                                 Dim pvName As String = calcProjektKey(pName, vName)
 
                                 If Not (writeProtections.isProtected(pvName)) Or _
-                                    (writeProtections.isProtected(pvName) And dbUsername = writeProtections.wasProtectedBy(pvName)) Then
+                                    (writeProtections.isProtected(pvName) And dbUsername = writeProtections.lastModifiedBy(pvName)) Then
 
                                     ' jetzt in der Datenbank setzen 
                                     Dim wpItem As New clsWriteProtectionItem
@@ -942,7 +950,7 @@ Public Class frmProjPortfolioAdmin
                         Dim pvName As String = calcProjektKey(pName, vName)
 
                         If Not (writeProtections.isProtected(pvName)) Or _
-                            (writeProtections.isProtected(pvName) And dbUsername = writeProtections.wasProtectedBy(pvName)) Then
+                            (writeProtections.isProtected(pvName) And dbUsername = writeProtections.lastModifiedBy(pvName)) Then
 
                             ' jetzt in der Datenbank setzen 
                             Dim wpItem As New clsWriteProtectionItem
@@ -1138,7 +1146,7 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-                    
+
                     ' jetzt das Browser Szenario aktualisieren 
                     currentBrowserConstellation.updateShowAttributes()
 
@@ -1276,6 +1284,12 @@ Public Class frmProjPortfolioAdmin
         Next
 
     End Sub
+    ''' <summary>
+    ''' wird aufgerufen, wenn ein TreeItem (eine Zeile) selektiert wird 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
 
         Dim node As TreeNode = e.Node
@@ -1306,45 +1320,10 @@ Public Class frmProjPortfolioAdmin
 
             hproj = AlleProjekte.getProject(projectName, variantName)
 
-            'If IsNothing(hproj) And variantNames.Count > 0 Then
-            '    variantName = CStr(variantNames.Item(1))
-            '    hproj = AlleProjekte.getProject(projectName, variantName)
-            'End If
-
-            ' jetzt muss bestimmt werden, was als ToolTipp Text angezeigt werden soll 
-            If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
-                toolTippText = allDependencies.getDependencyInfos(projectName)
-
-            ElseIf toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
-
-                If variantNames.Count = 1 Then
-                    Dim pvName As String = calcProjektKey(projectName, projectName)
-                    Dim lastUser As String = ""
-                    Dim zeitpunkt As Date
-                    lastUser = writeProtections.wasProtectedBy(pvName)
-                    zeitpunkt = writeProtections.changeDate(pvName)
-
-                    If writeProtections.isProtected(pvName) Then
-                        toolTippText = "protected by: " & lastUser & ", at: " & zeitpunkt.ToShortDateString
-                    Else
-                        toolTippText = "no protection"
-                    End If
-
-                Else
-                    toolTippText = ""
-                End If
-                
-
-            Else
-                If Not IsNothing(hproj) Then
-                    If hproj.description.Length > 0 Then
-                        toolTippText = hproj.description
-                    End If
-                End If
-            End If
-
-            ' tk, 2.1.17 Anzeige der Info zu diesem Projekt ... 
             If Not IsNothing(hproj) Then
+                toolTippText = getToolTippText(hproj, treeLevel, variantNames.Count)
+
+                ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
                 Call aktualisierePMSForms(hproj)
                 Call aktualisiereCharts(hproj, True)
             End If
@@ -1360,28 +1339,7 @@ Public Class frmProjPortfolioAdmin
 
                 If Not IsNothing(hproj) Then
 
-                    If toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
-
-
-                        Dim pvName As String = calcProjektKey(projectName, projectName)
-                        Dim lastUser As String = ""
-                        Dim zeitpunkt As Date
-                        lastUser = writeProtections.wasProtectedBy(pvName)
-                        zeitpunkt = writeProtections.changeDate(pvName)
-
-                        If writeProtections.isProtected(pvName) Then
-                            toolTippText = "protected by: " & lastUser & ", at: " & zeitpunkt.ToShortDateString
-                        Else
-                            toolTippText = "no protection"
-                        End If
-
-
-                    Else
-                        If hproj.variantDescription.Length > 0 Then
-                            toolTippText = hproj.variantDescription
-                        End If
-                    End If
-
+                    toolTippText = getToolTippText(hproj, treeLevel, 0)
 
                     ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
                     Call aktualisierePMSForms(hproj)
@@ -1396,6 +1354,118 @@ Public Class frmProjPortfolioAdmin
 
 
     End Sub
+
+    ''' <summary>
+    ''' liefert für die übergebenen Parameter den TooltippText
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="level"></param>
+    ''' <param name="anzahlVariants"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getToolTippText(ByVal hproj As clsProjekt, _
+                                     ByVal level As Integer, ByVal anzahlVariants As Integer) As String
+
+        Dim tmpText As String = ""
+
+        If Not IsNothing(hproj) Then
+
+            Dim pName As String = hproj.name
+            Dim vName As String = hproj.variantName
+
+            ' Projekt-Stufe
+            If level = 0 Then
+
+                If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
+                    tmpText = allDependencies.getDependencyInfos(pName)
+
+                ElseIf toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
+
+                    If anzahlVariants = 1 Then
+                        Dim pvName As String = calcProjektKey(pName, vName)
+                        Dim lastUser As String = ""
+                        Dim zeitpunkt As Date
+                        lastUser = writeProtections.lastModifiedBy(pvName)
+                        zeitpunkt = writeProtections.changeDate(pvName)
+
+                        If writeProtections.isProtected(pvName) Then
+                            Dim permanent As String = ""
+                            If writeProtections.isPermanentProtected(pvName) Then
+                                permanent = "permanent "
+                            End If
+                            If awinSettings.englishLanguage Then
+                                tmpText = permanent & "protected by: " & lastUser & ", at: " & zeitpunkt.ToString
+                            Else
+                                tmpText = permanent & "geschützt von: " & lastUser & ", am: " & zeitpunkt.ToString
+                            End If
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                tmpText = "no protection"
+                            Else
+                                tmpText = "nicht geschützt"
+                            End If
+                        End If
+
+                    Else
+                        tmpText = ""
+                    End If
+
+
+                Else
+                    If hproj.description.Length > 0 Then
+                        tmpText = hproj.description
+                    End If
+                End If
+
+            ElseIf level = 1 Then
+
+                If toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
+
+                    Dim pvName As String = calcProjektKey(pName, vName)
+
+                    Dim lastUser As String = ""
+                    Dim zeitpunkt As Date
+                    lastUser = writeProtections.lastModifiedBy(pvName)
+                    zeitpunkt = writeProtections.changeDate(pvName)
+
+                    If writeProtections.isProtected(pvName) Then
+                        Dim permanent As String = ""
+                        If writeProtections.isPermanentProtected(pvName) Then
+                            permanent = "permanent "
+                        End If
+                        If awinSettings.englishLanguage Then
+                            tmpText = permanent & "protected by: " & lastUser & ", at: " & zeitpunkt.ToString
+                        Else
+                            tmpText = permanent & "geschützt von: " & lastUser & ", am: " & zeitpunkt.ToString
+                        End If
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            tmpText = "no protection"
+                        Else
+                            tmpText = "nicht geschützt"
+                        End If
+                    End If
+
+
+                Else
+                    If hproj.variantDescription.Length > 0 Then
+                        tmpText = hproj.variantDescription
+                    End If
+                End If
+
+            ElseIf level = 2 Then
+                ' noch kein ToolTippText verfügbar
+            End If
+
+        End If
+        
+        getToolTippText = tmpText
+
+    End Function
+
+
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
@@ -1488,7 +1558,7 @@ Public Class frmProjPortfolioAdmin
                         stopRecursion = False
 
                     ElseIf aKtionskennung = PTTvActions.setWriteProtection And Not noDB Then
-                        
+
                         variantName = getVariantNameOfTreeNode(variantName)
 
                         Dim pvName As String = calcProjektKey(projName, variantName)
@@ -1718,6 +1788,9 @@ Public Class frmProjPortfolioAdmin
         Dim outPutHeader As String = ""
         Dim outPutExplanation As String = ""
 
+        ' Cursor auf Wait-Cursor setzen ... 
+        Me.Cursor = Cursors.WaitCursor
+
 
         If allDependencies.projectCount > 0 Then
             considerDependencies = True
@@ -1737,18 +1810,37 @@ Public Class frmProjPortfolioAdmin
         End If
 
         ' Bestimmen der Überschrift des Output Headers, falls es irgendwelche Meldungen gibt
-        If aKtionskennung = PTTvActions.delFromDB Then
+        If aKtionskennung = PTTvActions.delFromDB Or _
+            aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
             If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                outPutHeader = "Projekt-Varianten können nicht gelöscht werden !"
-                outPutExplanation = "folgende Projekt-Varianten werden aktuell in Szenarien referenziert" & vbLf & _
-                                    "und können daher nicht gelöscht werden:"
+                outPutHeader = "Löschen von Projekt-Varianten in der Datenbank "
+                outPutExplanation = "Meldungen: "
             Else
-                outPutHeader = "Project-Variants can not be deleted !"
-                outPutExplanation = "following project-variants are referenced in scenarios " & vbLf & _
-                                    "and con not be deleted:"
+                outPutHeader = "Delete Project-Variants in Database"
+                outPutExplanation = "Messages"
             End If
 
+        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+            aKtionskennung = PTTvActions.deleteV Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Löschen von Projekt-Varianten in der Session "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Delete Project-Variants in Session"
+                outPutExplanation = "Messages"
+            End If
+
+        ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Laden von Projekt-Varianten aus der Datenbank "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Load Project-Variants from Database"
+                outPutExplanation = "Messages"
+            End If
 
         End If
 
@@ -1996,6 +2088,9 @@ Public Class frmProjPortfolioAdmin
                                 outPutExplanation)
             End If
 
+            ' Cursor auf Normal-Cursor setzen ... 
+            Me.Cursor = Cursors.Arrow
+
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
 
@@ -2068,10 +2163,13 @@ Public Class frmProjPortfolioAdmin
             Else
                 txtMsg = "not supported option in form ProjPortfolioAdmin ..."
             End If
+
             Call MsgBox(txtMsg)
 
         End If
 
+        ' Cursor auf Normal-Cursor setzen ... 
+        Me.Cursor = Cursors.Arrow
 
 
     End Sub
@@ -2090,14 +2188,15 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
 
+        ' jetzt im formular den Mauszeiger auf Warten ... setzen 
+        Me.Cursor = Cursors.WaitCursor
+
         With TreeViewProjekte
 
             ' die Behandlung von chgInSession ist etwas anders, weil sofort eine Aktion erfolgen muss ... 
-
             If aKtionskennung = PTTvActions.chgInSession Then
 
-                ' jetzt im formular den Mauszeiger auf Warten ... setzen 
-                Me.Cursor = Cursors.WaitCursor
+                
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2166,7 +2265,6 @@ Public Class frmProjPortfolioAdmin
                 ' jetzt müssen die Diagramme neu gezeichnet werden 
                 Call awinNeuZeichnenDiagramme(2)
 
-                Me.Cursor = Cursors.Default
 
             ElseIf aKtionskennung = PTTvActions.deleteV Or _
                 aKtionskennung = PTTvActions.activateV Then
@@ -2212,9 +2310,9 @@ Public Class frmProjPortfolioAdmin
                 'Else
                 Dim txtMsg As String = ""
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    txtMsg = "beim Löschen nicht zulässig ..."
+                    txtMsg = "beim Löschen kann nicht alles selektiert werden ..."
                 Else
-                    txtMsg = "not allowed option ..."
+                    txtMsg = "not allowed to select all when deleting ..."
                 End If
                 Call MsgBox(txtMsg)
 
@@ -2251,6 +2349,7 @@ Public Class frmProjPortfolioAdmin
 
         End If
 
+        Me.Cursor = Cursors.Default
         stopRecursion = False
 
     End Sub
@@ -2368,7 +2467,7 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
 
-        Me.Cursor = Cursors.WaitCursor
+        'Me.Cursor = Cursors.WaitCursor
 
         With TreeViewProjekte
 
@@ -2445,7 +2544,7 @@ Public Class frmProjPortfolioAdmin
 
         End If
 
-        Me.Cursor = Cursors.Default
+        'Me.Cursor = Cursors.Default
         stopRecursion = False
 
 
@@ -2552,7 +2651,7 @@ Public Class frmProjPortfolioAdmin
 
                 stopRecursion = True
 
-                Me.Cursor = Cursors.WaitCursor
+                'Me.Cursor = Cursors.WaitCursor
                 Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
                 Dim ok As Boolean
 
@@ -2699,6 +2798,8 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
 
+        Me.Cursor = Cursors.WaitCursor
+
         currentBrowserConstellation = browserConstellationSav.copy
         'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
         browserConstellationSav = Nothing
@@ -2721,11 +2822,6 @@ Public Class frmProjPortfolioAdmin
         ' neu Zeichnen der Diagramme
         Call awinNeuZeichnenDiagramme(2)
 
-
-
-        Me.Cursor = Cursors.WaitCursor
-
-        
 
         ' jetzt muss der Last-Filter zurückgesetzt werden 
         Dim emptyCollection As New Collection
@@ -2784,7 +2880,7 @@ Public Class frmProjPortfolioAdmin
                 ttText = "select all projects"
             End If
         End If
-        
+
 
         ToolTipStand.Show(ttText, SelectionSet, 2000)
 
@@ -2880,7 +2976,7 @@ Public Class frmProjPortfolioAdmin
         End If
         ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
-    
+
     Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
 
     End Sub
@@ -3021,7 +3117,7 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    
+
     Private Sub storeToDBasWell_CheckedChanged(sender As Object, e As EventArgs) Handles storeToDBasWell.CheckedChanged
 
         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3040,34 +3136,42 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    
+
 
     Private Sub requiredDate_ValueChanged(sender As Object, e As EventArgs) Handles requiredDate.ValueChanged
 
-        stopRecursion = True
+        If stopRecursion Then
+            Exit Sub
+        End If
 
-        Me.Cursor = Cursors.WaitCursor
+        stopRecursion = True
 
         Dim storedAtOrBefore As Date
 
         If Not IsNothing(requiredDate) Then
 
-            If requiredDate.Value >= earliestDate Then
-                requiredDate.Value = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
-                storedAtOrBefore = requiredDate.Value
+            If requiredDate.Value >= earliestDate And requiredDate.Value <= Date.Now Then
+
+                storedAtOrBefore = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
+
+            ElseIf requiredDate.Value > Date.Now Then
+
+                requiredDate.Value = Date.Now
+                storedAtOrBefore = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
+
             Else
 
                 Dim msgText As String = "es gibt vor dem " & earliestDate.ToShortDateString & " keine Projekte in der Datenbank "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                     msgText = "there are no projects at or before " & earliestDate.ToShortDateString & " in the database"
                 End If
-                
+
                 Call MsgBox(msgText)
 
-                requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
-                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
+                requiredDate.Value = earliestDate.Date.AddHours(23).AddMinutes(59)
+                storedAtOrBefore = earliestDate.Date.AddHours(23).AddMinutes(59)
             End If
-            
+
         Else
             requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
             storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
@@ -3084,11 +3188,14 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = False
 
-        Me.Cursor = Cursors.Default
 
         ' Fokus an TreeViewPRojekte geben 
         TreeViewProjekte.Focus()
     End Sub
 
-   
+
+    
+    Private Sub OKButton_MouseHover(sender As Object, e As EventArgs) Handles OKButton.MouseHover
+        Me.Cursor = Cursors.Default
+    End Sub
 End Class

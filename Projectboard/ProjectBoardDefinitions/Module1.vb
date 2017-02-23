@@ -3264,4 +3264,25 @@ Public Module Module1
         End Try
         appInstance.EnableEvents = True
     End Sub
+
+    ''' <summary>
+    ''' zeigt die in der OutputCollection gesammelten Rückmeldungen in einem Fenster mit Scrollbar 
+    ''' </summary>
+    ''' <param name="outPutCollection"></param>
+    ''' <param name="header"></param>
+    ''' <param name="explanation"></param>
+    ''' <remarks></remarks>
+    Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String)
+        If outPutCollection.Count > 0 Then
+
+            Dim outputFormular As New frmOutputWindow
+            With outputFormular
+                .Text = header
+                .lblOutput.Text = explanation
+                .textCollection = outPutCollection
+                .ShowDialog()
+            End With
+
+        End If
+    End Sub
 End Module

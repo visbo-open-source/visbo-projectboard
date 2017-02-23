@@ -45,6 +45,7 @@ Partial Class frmProjPortfolioAdmin
         Me.storeToDBasWell = New System.Windows.Forms.CheckBox()
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
         Me.chkbxPermanent = New System.Windows.Forms.CheckBox()
+        Me.portfolioBrowserHelp = New System.Windows.Forms.HelpProvider()
         CType(Me.versionsToKeep, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.settingsBtn, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.backToInit, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -204,6 +205,7 @@ Partial Class frmProjPortfolioAdmin
         'collapseCompletely
         '
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.collapseCompletely.Cursor = System.Windows.Forms.Cursors.Default
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
         Me.collapseCompletely.Location = New System.Drawing.Point(68, 348)
         Me.collapseCompletely.Name = "collapseCompletely"
@@ -285,7 +287,9 @@ Partial Class frmProjPortfolioAdmin
         Me.Controls.Add(Me.lblStandvom)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.TreeViewProjekte)
+        Me.portfolioBrowserHelp.SetHelpString(Me, """das ist die Hilfe""")
         Me.Name = "frmProjPortfolioAdmin"
+        Me.portfolioBrowserHelp.SetShowHelp(Me, True)
         Me.Text = "Multiprojekt-Szenario"
         Me.TopMost = True
         CType(Me.versionsToKeep, System.ComponentModel.ISupportInitialize).EndInit()
@@ -324,4 +328,5 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents storeToDBasWell As System.Windows.Forms.CheckBox
     Friend WithEvents requiredDate As System.Windows.Forms.DateTimePicker
     Friend WithEvents chkbxPermanent As System.Windows.Forms.CheckBox
+    Friend WithEvents portfolioBrowserHelp As System.Windows.Forms.HelpProvider
 End Class

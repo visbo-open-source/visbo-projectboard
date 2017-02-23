@@ -9822,6 +9822,8 @@ Public Module awinGeneralModules
         Dim anzahlNeue As Integer = 0
         Dim anzahlChanged As Integer = 0
         Dim DBtimeStamp As Date = Date.Now
+        Dim outputLine As String = ""
+
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -9837,6 +9839,14 @@ Public Module awinGeneralModules
                     hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj) Then
                         anzahlNeue = anzahlNeue + 1
+                    Else
+                        ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                        If awinSettings.englishLanguage Then
+                            outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
+                        Else
+                            outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+                        End If
+                        outPutCollection.Add(outputLine)
                     End If
                 Else
                     ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
@@ -9848,7 +9858,11 @@ Public Module awinGeneralModules
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
                         Else
-                            Dim outputLine As String = "Fehler bei Speichern Projekt:" & vbLf & hproj.name & ", " & hproj.variantName
+                            If awinSettings.englishLanguage Then
+                                outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
+                            Else
+                                outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+                            End If
                             outPutCollection.Add(outputLine)
                         End If
                     End If
@@ -9862,38 +9876,61 @@ Public Module awinGeneralModules
         Try
             If request.storeConstellationToDB(currentConstellation) Then
             Else
-                Call MsgBox("Fehler in Schreiben Constellation " & currentConstellation.constellationName)
+                If awinSettings.englishLanguage Then
+                    outputLine = "Error when writing scenario: " & currentConstellation.constellationName
+                Else
+                    outputLine = "Fehler beim Schreiben Szanario: " & currentConstellation.constellationName
+                End If
+                outPutCollection.Add(outputLine)
+
             End If
         Catch ex As Exception
-            Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+            If awinSettings.englishLanguage Then
+                outputLine = "Error when writing scenario - Database active?"
+            Else
+                outputLine = "Fehler beim Schreiben Szanario - Datenbank läuft?"
+            End If
+            Throw New ArgumentException(outputLine)
         End Try
 
 
         Dim tsMessage As String = ""
         If anzahlNeue + anzahlChanged > 0 Then
-            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            If awinSettings.englishLanguage Then
                 tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
             Else
                 tsMessage = "Timestamp: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
             End If
 
         End If
-        Dim txtMsg As String
-        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-            txtMsg = "Gespeichert ... " & vbLf & _
-                    "Szenario: " & currentConstellation.constellationName & vbLf & vbLf & _
-                    "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
-                    "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf & _
-                    tsMessage
+        
+        If awinSettings.englishLanguage Then
+            outputLine = "Stored ... " & vbLf & _
+                "Scenario: " & currentConstellation.constellationName & vbLf & vbLf & _
+                "Number new projects/project-variants: " & anzahlNeue.ToString & vbLf & _
+                "Number changed projects/project-variants: " & anzahlChanged.ToString & vbLf & _
+                tsMessage
         Else
-            txtMsg = "Stored ... " & vbLf & _
-                    "Scenario: " & currentConstellation.constellationName & vbLf & vbLf & _
-                    "Number of new projects and project-variants: " & anzahlNeue.ToString & vbLf & _
-                    "Number of changed projects and project-variants: " & anzahlChanged.ToString & vbLf & _
-                    tsMessage
+            outputLine = "Gespeichert ... " & vbLf & _
+                "Szenario: " & currentConstellation.constellationName & vbLf & vbLf & _
+                "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
+                "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf & _
+                tsMessage
+        End If
+        outPutCollection.Add(outputLine)
+
+        Dim msgH As String = ""
+        Dim msgE As String = ""
+        If awinSettings.englishLanguage Then
+            msgH = "Store Scenario "
+            msgE = "Messages"
+        Else
+            msgH = "Szenario speichern "
+            msgE = "Messages"
         End If
 
-        Call MsgBox(txtMsg)
+        Call showOutPut(outPutCollection, msgH, msgE)
+
 
 
     End Sub
@@ -10048,22 +10085,29 @@ Public Module awinGeneralModules
 
                     variantProject = AlleProjekte.getProject(keyV)
                     baseProject = AlleProjekte.getProject(keyB)
-
+                    '
+                    ' Sonderbehandlung alter Fehler bei Variantenbildung: Custom-Fields wurde nicht aus Base-Variant übernommen 
                     If Not IsNothing(variantProject) And Not IsNothing(baseProject) Then
 
+                        ' Sonderbehandlung wegen ehemaligem Fehler, wo bei Varianten-Bildung die Custom-fields aus der Base-Variant nicht übernommen wurden 
                         If variantProject.getCustomFieldsCount = 0 And baseProject.getCustomFieldsCount > 0 Then
                             variantProject.copyCustomFieldsFrom(baseProject)
                             Dim zeitStempel As Date = variantProject.timeStamp
 
-                            ' jetzt löschen, dann speichern 
-                            If request.deleteProjectTimestampFromDB(pname, variantName, zeitStempel) Then
-                                ' all ok 
-                                If request.storeProjectToDB(variantProject) Then
-                                    ' alles ok 
-                                Else
+                            ' jetzt löschen, dann speichern ; wenn das löschen schiefgeht aufgrund Schreibschutz, dann geht auch das Speichern schief ... 
+                            If writeProtections.isProtected(keyV, dbUsername) Then
+                                ' kann nichts machen ...
+                            Else
+                                If request.deleteProjectTimestampFromDB(pname, variantName, zeitStempel) Then
+                                    ' all ok 
+                                    If request.storeProjectToDB(variantProject) Then
+                                        ' alles ok; jetzt  
+                                    Else
 
+                                    End If
                                 End If
                             End If
+                            
 
                         End If
 
@@ -10082,6 +10126,8 @@ Public Module awinGeneralModules
                 End If
 
                 ' Ende Sonderbehandlung  
+                ' 
+                '
 
                 Dim timeStampsToDelete As Collection = identifyTimeStampsToDelete(pname, variantName, keepAnzVersions)
 
@@ -10095,17 +10141,32 @@ Public Module awinGeneralModules
                             ' all ok 
                             anzDeleted = anzDeleted + 1
                         Else
-                            outputLine = "-->Fehler beim Löschen von " & pname & ", " & variantName & ", " & singleTimeStamp.ToShortDateString
+                            If awinSettings.englishLanguage Then
+                                outputLine = "-->Error deleting (protected?): " & pname & ", " & variantName & ", " & singleTimeStamp.ToShortDateString
+                            Else
+                                outputLine = "-->Fehler beim Löschen (geschützt?): " & pname & ", " & variantName & ", " & singleTimeStamp.ToShortDateString
+                            End If
+
                             outputCollection.Add(outputLine)
                         End If
 
                     Next
 
-                    outputLine = pname & " (" & variantName & "): " & anzDeleted & " TimeStamps gelöscht"
+                    If awinSettings.englishLanguage Then
+                        outputLine = pname & " (" & variantName & "): " & anzDeleted & " timestamps deleted"
+                    Else
+                        outputLine = pname & " (" & variantName & "): " & anzDeleted & " TimeStamps gelöscht"
+                    End If
+
                     outputCollection.Add(outputLine)
 
                 Else
-                    outputLine = pname & " (" & variantName & "): 0 TimeStamps gelöscht"
+                    If awinSettings.englishLanguage Then
+                        outputLine = outputLine = pname & " (" & variantName & "): 0 timestamps deleted"
+                    Else
+                        outputLine = pname & " (" & variantName & "): 0 TimeStamps gelöscht"
+                    End If
+
                     outputCollection.Add(outputLine)
                 End If
 
@@ -10134,8 +10195,14 @@ Public Module awinGeneralModules
                                 ' all ok 
                                 anzDeleted = anzDeleted + 1
                             Else
-                                outputLine = "-->Fehler beim Löschen von " & pname & ", " & variantName & ", " & kvp.Key.ToShortDateString
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "-->Error deleting (protected?): " & pname & ", " & variantName & ", " & kvp.Key.ToShortDateString
+                                Else
+                                    outputLine = "-->Fehler beim Löschen (geschützt?): " & pname & ", " & variantName & ", " & kvp.Key.ToShortDateString
+                                End If
+
                                 outputCollection.Add(outputLine)
+
                             End If
 
                         Next
@@ -10146,9 +10213,18 @@ Public Module awinGeneralModules
 
                 Else
                     If variantName = "" Then
-                        outputLine = "Löschen verweigert:  " & pname & " - Szenarien: "
+                        If awinSettings.englishLanguage Then
+                            outputLine = "delete denied: " & pname & " - Scenarios: "
+                        Else
+                            outputLine = "Löschen verweigert:  " & pname & " - Szenarien: "
+                        End If
+
                     Else
-                        outputLine = "Löschen verweigert:  " & pname & " (" & variantName & ") " & " - Szenarien: "
+                        If awinSettings.englishLanguage Then
+                            outputLine = "delete denied: " & pname & " (" & variantName & ") " & " - Scenarios: "
+                        Else
+                            outputLine = "Löschen verweigert:  " & pname & " (" & variantName & ") " & " - Szenarien: "
+                        End If
 
                     End If
                     outputLine = outputLine & projectConstellations.getSzenarioNamesWith(pname, variantName)
@@ -10180,44 +10256,32 @@ Public Module awinGeneralModules
             ElseIf hproj.variantName <> variantName Then
                 Dim key As String = calcProjektKey(pname, variantName)
                 AlleProjekte.Remove(key)
+
             Else
-                If variantName = "" Then
+                ' es wird in Showprojekte und in AlleProjekte gelöscht, ausserdem auch auf der Projekt-Tafel 
+                
+                Dim key As String = calcProjektKey(pname, variantName)
 
-                    Call MsgBox("die Basis Variante kann nicht gelöscht werden")
+                Try
 
-                ElseIf hproj.variantName = variantName Then
-                    ' es wird die Standard-Variante aktiviert 
-                    Dim stdProj As clsProjekt
-                    Dim stdkey As String = calcProjektKey(pname, "")
+                    ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+                    ShowProjekte.Remove(hproj.name)
 
-                    Dim key As String = calcProjektKey(pname, variantName)
+                    ' die gewählte Variante wird rausgenommen
+                    AlleProjekte.Remove(key)
 
-                    Try
-                        stdProj = AlleProjekte.getProject(stdkey)
+                    Call clearProjektinPlantafel(pname)
 
-                        ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
-                        ShowProjekte.Remove(hproj.name)
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        outputLine = "delete denied: " & pname & " (" & variantName & ") " & " - Scenarios: ""Error when deleting: " & pname & " (" & variantName & ")"
+                    Else
+                        outputLine = "delete denied: " & pname & " (" & variantName & ") " & " - Scenarios: ""Fehler beim Löschen: " & pname & " (" & variantName & ")"
+                    End If
+                    outputCollection.Add(outputLine)
+                End Try
 
-                        ' die gewählte Variante wird rausgenommen
-                        AlleProjekte.Remove(key)
-
-                        ' die Standard Variante wird aufgenommen
-                        ShowProjekte.Add(stdProj)
-
-                        Call clearProjektinPlantafel(pname)
-
-                        ' neu zeichnen des Projekts 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, stdProj.name, hproj.tfZeile, tmpCollection, tmpCollection)
-
-
-                    Catch ex As Exception
-
-                    End Try
-
-                Else
-                    Call MsgBox("Fehler beim Löschen der Variante")
-                End If
+                
             End If
 
 
@@ -11789,7 +11853,16 @@ Public Module awinGeneralModules
 
                             projectNode.Tag = "X"
                             For iv As Integer = 1 To variantNames.Count
-                                Dim variantNode As TreeNode = projectNode.Nodes.Add(CStr(variantNames.Item(iv)))
+                                vName = CStr(variantNames.Item(iv))
+                                Dim vNameStripped As String = ""
+                                Dim tmpStr() As String = vName.Split(New Char() {CChar("("), CChar(")")})
+                                If tmpStr.Length = 1 Then
+                                    vNameStripped = tmpStr(0)
+                                ElseIf tmpStr.Length >= 3 Then
+                                    vNameStripped = tmpStr(1).Trim
+                                End If
+
+                                Dim variantNode As TreeNode = projectNode.Nodes.Add(vName)
 
                                 If aKtionskennung = PTTvActions.delFromDB Then
                                     variantNode.Tag = "P"
@@ -11798,7 +11871,7 @@ Public Module awinGeneralModules
                                     variantNode.Tag = "X"
                                 End If
 
-                                Call bestimmeNodeAppearance(variantNode, aKtionskennung, ptTreeNodeTyp.pVariant, pname, "", False)
+                                Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pname, vNameStripped, False)
 
                             Next
 
@@ -11838,8 +11911,13 @@ Public Module awinGeneralModules
 
 
         'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Italic)
-        Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
-        Dim fontProtectedbyMe As System.Drawing.Font = New System.Drawing.Font(fontProtectedbyOther, System.Drawing.FontStyle.Bold)
+        'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
+        'Dim fontProtectedbyMe As System.Drawing.Font = New System.Drawing.Font(fontProtectedbyOther, System.Drawing.FontStyle.Bold)
+
+        Dim colorProtectedByMe As System.Drawing.Color = Color.Green
+        Dim colorProtectedByOther As System.Drawing.Color = Color.OrangeRed
+        Dim colorNormal As System.Drawing.Color = Color.Black
+        Dim colorNoShow As System.Drawing.Color = Color.DimGray
 
         If nodeTyp = PTTreeNodeTyp.project Then
 
@@ -11878,35 +11956,80 @@ Public Module awinGeneralModules
 
             End If
 
-            If solo And aktionskennung = PTTvActions.setWriteProtection And Not noDB Then
-                Dim pvName As String = calcProjektKey(pName, vName)
-                If writeProtections.isProtected(pvName) Then
+            If aktionskennung = PTTvActions.setWriteProtection And Not noDB Then
+                If solo Then
+                    Dim pvName As String = calcProjektKey(pName, vName)
+                    If writeProtections.isProtected(pvName) Then
 
-                    If dbUsername = writeProtections.wasProtectedBy(pvName) Then
-                        ' den Haken setzen
-                        currentNode.Checked = True
-                        ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyMe
+                        If dbUsername = writeProtections.lastModifiedBy(pvName) Then
+                            ' den Haken setzen
+                            currentNode.Checked = True
+                            ' entsprechend kennzeichnen 
+                            currentNode.ForeColor = colorProtectedByMe
+
+                            'currentNode.NodeFont = fontProtectedbyMe
+                        Else
+                            ' den Haken setzen
+                            currentNode.Checked = True
+                            ' entsprechend kennzeichnen 
+                            currentNode.ForeColor = colorProtectedByOther
+
+                            'currentNode.NodeFont = fontProtectedbyOther
+                            'currentNode.ForeColor = Color.Gray
+                        End If
+
                     Else
-                        ' den Haken setzen
-                        currentNode.Checked = True
-                        ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyOther
-                        currentNode.ForeColor = Color.Gray
+                        currentNode.ForeColor = colorNormal
                     End If
-
-                End If
-
-            ElseIf solo And aktionskennung = PTTvActions.delFromDB And Not noDB Then
-                If notReferencedByAnyPortfolio(pName, vName) Then
-                    ' kann gelöscht werden  
-                    currentNode.ForeColor = Color.Black
                 Else
-                    currentNode.ForeColor = Color.Gray
+                    currentNode.ForeColor = colorNormal
+                    ' wenn alle Varianten drunter geschützt / nicht geschützt sind: entsprechend setzen 
+                    ' müsste an dieser stelle noch gemacht werden 
+                End If
+                
+
+            ElseIf aktionskennung = PTTvActions.delFromDB And Not noDB Then
+                If solo Then
+                    If notReferencedByAnyPortfolio(pName, vName) Then
+                        ' kann gelöscht werden  
+                        currentNode.ForeColor = colorNormal
+                    Else
+                        currentNode.ForeColor = colorNoShow
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
                 End If
 
-            End If
+            ElseIf aktionskennung = PTTvActions.delFromSession Then
+                ' alle  markieren, die im NoShow sind 
+                If ShowProjekte.contains(pName) Then
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    If hproj.variantName = vName Then
+                        currentNode.ForeColor = colorNormal
+                    Else
+                        currentNode.ForeColor = colorNoShow
+                    End If
+                Else
+                    currentNode.ForeColor = colorNoShow
+                End If
 
+            ElseIf aktionskennung = PTTvActions.loadPV Then
+                ' alle  markieren, die noch nicht geladen sind, ob im Show oder NoShow  
+                Dim tmpKey As String = calcProjektKey(pName, vName)
+                If AlleProjekte.Containskey(tmpKey) Then
+                    Dim hproj As clsProjekt = AlleProjekte.getProject(tmpKey)
+                    If Not IsNothing(hproj) Then
+                        currentNode.ForeColor = colorNoShow
+                    Else
+                        currentNode.ForeColor = colorNormal
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
+                End If
+
+            Else
+                currentNode.ForeColor = colorNormal
+            End If
 
         ElseIf nodeTyp = PTTreeNodeTyp.pVariant Then
 
@@ -11917,29 +12040,63 @@ Public Module awinGeneralModules
                 Dim pvName As String = calcProjektKey(pName, vName)
                 If writeProtections.isProtected(pvName) Then
 
-                    If dbUsername = writeProtections.wasProtectedBy(pvName) Then
+                    If dbUsername = writeProtections.lastModifiedBy(pvName) Then
                         ' den Haken setzen
                         currentNode.Checked = True
                         ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyMe
+                        currentNode.ForeColor = colorProtectedByMe
+
+                        'currentNode.NodeFont = fontProtectedbyMe
                     Else
                         ' den Haken setzen
                         currentNode.Checked = True
                         ' entsprechend kennzeichnen 
-                        currentNode.NodeFont = fontProtectedbyOther
-                        currentNode.ForeColor = Color.Gray
-                    End If
+                        currentNode.ForeColor = colorProtectedByOther
 
+                        'currentNode.NodeFont = fontProtectedbyOther
+                        'currentNode.ForeColor = Color.Gray
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
                 End If
 
             ElseIf aktionskennung = PTTvActions.delFromDB And Not noDB Then
                 If notReferencedByAnyPortfolio(pName, vName) Then
                     ' alles ok 
-                    currentNode.ForeColor = Color.Black
+                    currentNode.ForeColor = colorNormal
                 Else
-                    currentNode.ForeColor = Color.Gray
+                    currentNode.ForeColor = colorNoShow
                 End If
 
+            ElseIf aktionskennung = PTTvActions.delFromSession Then
+                ' alle  markieren, die im NoShow sind 
+                If ShowProjekte.contains(pName) Then
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    If hproj.variantName = vName Then
+                        currentNode.ForeColor = colorNormal
+                    Else
+                        currentNode.ForeColor = colorNoShow
+                    End If
+                Else
+                    currentNode.ForeColor = colorNoShow
+                End If
+
+            ElseIf aktionskennung = PTTvActions.loadPV Then
+                ' alle  markieren, die noch nicht geladen sind, ob im Show oder NoShow  
+                Dim tmpKey As String = calcProjektKey(pName, vName)
+                If AlleProjekte.Containskey(tmpKey) Then
+                    Dim hproj As clsProjekt = AlleProjekte.getProject(tmpKey)
+                    If Not IsNothing(hproj) Then
+                        currentNode.ForeColor = colorNoShow
+                    Else
+                        currentNode.ForeColor = colorNormal
+                    End If
+                Else
+                    currentNode.ForeColor = colorNormal
+                End If
+
+            Else
+                currentNode.ForeColor = Color.Black
             End If
 
         End If
@@ -19784,27 +19941,5 @@ Public Module awinGeneralModules
         isMissingDefinitionOK = checkResult
 
     End Function
-
-
-    ''' <summary>
-    ''' zeigt die in der OutputCollection gesammelten Rückmeldungen in einem Fenster mit Scrollbar 
-    ''' </summary>
-    ''' <param name="outPutCollection"></param>
-    ''' <param name="header"></param>
-    ''' <param name="explanation"></param>
-    ''' <remarks></remarks>
-    Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String)
-        If outPutCollection.Count > 0 Then
-
-            Dim outputFormular As New frmOutputWindow
-            With outputFormular
-                .Text = header
-                .lblOutput.Text = explanation
-                .textCollection = outPutCollection
-                .ShowDialog()
-            End With
-
-        End If
-    End Sub
 
 End Module

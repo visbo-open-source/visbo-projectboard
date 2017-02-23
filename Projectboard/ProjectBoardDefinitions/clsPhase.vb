@@ -35,6 +35,70 @@ Public Class clsPhase
 
 
     ''' <summary>
+    ''' summiert die tValues ab dem Start-Element in die Phasen-Xvalues 
+    ''' </summary>
+    ''' <param name="tValues">der Werte Array</param>
+    ''' <param name="start">1 ... dauer: soll ab dem ersten oder x. Element addiert werden </param>
+    ''' <remarks></remarks>
+    Public Sub addTaskEfforts(ByVal tValues() As Double, _
+                              ByVal rcID As Integer, ByVal rcType As Integer, _
+                              ByVal start As Integer)
+
+        If tValues.Length + start - 1 > _relEnde - relStart + 1 Then
+            Throw New ArgumentException("dimensions of values do not fit")
+        Else
+            If rcType = PThcc.persbedarf Then
+
+                Dim rcName As String = RoleDefinitions.getRoledef(rcID).name
+                Dim role As clsRolle = Me.getRole(rcName)
+                If Not IsNothing(role) Then
+                    For i As Integer = 1 To tValues.Length
+                        role.Xwerte(start - 1) = role.Xwerte(start - 1) + tValues(i - 1)
+                    Next
+                Else
+                    Dim dimension As Integer = _relEnde - _relStart
+                    role = New clsRolle(dimension)
+                    With role
+                        .RollenTyp = rcID
+                        For i As Integer = 1 To tValues.Length
+                            role.Xwerte(start - 1) = role.Xwerte(start - 1) + tValues(i - 1)
+                        Next
+                    End With
+                        ' Rolle hinzufügen
+                    With Me
+                        .addRole(role)
+                    End With
+                End If
+
+            ElseIf rcType = PThcc.othercost Then
+
+                Dim rcName As String = CostDefinitions.getCostdef(rcID).name
+                Dim ccost As clsKostenart = Me.getCost(rcName)
+                If Not IsNothing(ccost) Then
+                    For i As Integer = 1 To tValues.Length
+                        ccost.Xwerte(start - 1) = ccost.Xwerte(start - 1) + tValues(i - 1)
+                    Next
+                Else
+                    Dim dimension As Integer = _relEnde - _relStart
+                    ccost = New clsKostenart(dimension)
+                    With ccost
+                        .KostenTyp = rcID
+                        For i As Integer = 1 To tValues.Length
+                            ccost.Xwerte(start - 1) = ccost.Xwerte(start - 1) + tValues(i - 1)
+                        Next
+                    End With
+                    ' Rolle hinzufügen
+                    With Me
+                        .AddCost(ccost)
+                    End With
+                End If
+
+            End If
+
+        End If
+    End Sub
+
+    ''' <summary>
     ''' gibt zurück, ob die Phase identisch mit der übergebenen Phase ist  
     ''' </summary>
     ''' <param name="vPhase"></param>

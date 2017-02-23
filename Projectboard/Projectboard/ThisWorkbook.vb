@@ -205,12 +205,20 @@ Public Class ThisWorkbook
                         End If
 
                     Else
-                        Call MsgBox("keine Projekte zu speichern ...")
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("no projects to store ...")
+                        Else
+                            Call MsgBox("keine Projekte zu speichern ...")
+                        End If
+
 
                     End If
 
                     If request.cancelWriteProtections(dbUsername) Then
-                        Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                        End If
+
                     End If
 
                 End If
@@ -232,7 +240,12 @@ Public Class ThisWorkbook
                 'Call awinWritePhaseDefinitions()
                 Call awinWritePhaseMilestoneDefinitions()
             Catch ex As Exception
-                Call MsgBox("Fehler bei Schreiben Customization File")
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Error when writing Projectboard Customization File")
+                Else
+                    Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
+                End If
+
             End Try
 
             '' ''    Try
