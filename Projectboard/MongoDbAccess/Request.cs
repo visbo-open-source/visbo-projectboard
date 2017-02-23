@@ -555,19 +555,17 @@ namespace MongoDbAccess
                             {
                                 return false;
                             };
-                            break;
 
                         case false:
 
                             wpItemDB.copyFrom(wpItem);
                             var r2Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
                             return r2Result.IsAcknowledged;
-                            break;
 
                         default:
 
                             return false;
-                            break;
+
                       }
                 }
                 else
@@ -588,7 +586,56 @@ namespace MongoDbAccess
                 
             }
         }
+        /// <summary>
+        /// überprüft, ob das Projekt pvname vom Typ type vom User userName die Erlaubnis hat etwas zu verändern
+        /// </summary>
+        /// <param name="pvName"></param>
+        /// <param name="userName"></param>
+        /// <param name="type"></param>
+        /// <returns>true -  es darf geändert werden
+        ///          false - es darf nicht geändert werden</returns>
+        public bool checkChgPermission(string pvName, string userName, int type = 0)
+        {
+            try
+            {
+                clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
 
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", pvName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("type", type);
+                //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+
+                bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                               .Any(wp => wp.pvName == pvName && wp.type == type);
+
+                if (alreadyExisting)
+                {
+
+                    wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
+                    //var fresult = CollectionWriteProtections.Find(filter).ToList();
+                    if (wpItemDB.isProtected)
+                    {
+                        return (wpItemDB.userName == userName);   
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                 
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            catch (Exception)
+            {
+
+                return false;
+
+            }
+        }
+  
 
         /// <summary>
         /// löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
@@ -641,19 +688,30 @@ namespace MongoDbAccess
         {
             try
             {
-                var projektDB = new clsProjektDB();
-                //bool ergebnis;
-                //string xx = "";
-                projektDB.copyfrom(projekt);
-                projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
+                string pvName = Projekte.calcProjektKey(projekt);
 
-                CollectionProjects.InsertOne(projektDB);
-                // alt 2.x
-                //ergebnis = !CollectionProjects.Save(projektDB).HasLastErrorMessage;
-                //return ergebnis
-                //xx = CollectionProjects.Save(projektDB).LastErrorMessage;
-                //return !CollectionProjects.Save(projektDB).HasLastErrorMessage;    
-                return true;
+                if (checkChgPermission(pvName, "urk"))
+                {
+
+                    var projektDB = new clsProjektDB();
+                    //bool ergebnis;
+                    //string xx = "";
+                    projektDB.copyfrom(projekt);
+                    projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
+
+                    CollectionProjects.InsertOne(projektDB);
+                    // alt 2.x
+                    //ergebnis = !CollectionProjects.Save(projektDB).HasLastErrorMessage;
+                    //return ergebnis
+                    //xx = CollectionProjects.Save(projektDB).LastErrorMessage;
+                    //return !CollectionProjects.Save(projektDB).HasLastErrorMessage;    
+                    return true;
+
+                }
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception)
             {
@@ -694,54 +752,61 @@ namespace MongoDbAccess
         {
             try
             {
-                stored = stored.ToUniversalTime();
-                string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
-
-
-                var query = Query<clsProjektDB>
-                            .Where(p => (p.name == searchstr && p.timestamp == stored));
-
+               
+                string pvName = Projekte.calcProjektKey(projectname, variantName);   /* Vorsicht:  in der CollectionWriteProtection wird der Name des Projektes mit # am Ende gespeichert, sofern keine
+                                                                                        Variante vorhanden also variantName = "" */
                 
-                var sResult = CollectionProjects.Find<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
-                
-                if (sResult == null)
+                if (checkChgPermission(pvName, "urk"))
                 {
-                    return false;
-                }
-                else
-                {
-                    try
+                    
+                    stored = stored.ToUniversalTime();
+                    string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);   /* in der CollectionsProjects in der DB wird der Name des Projektes (wenn variantName = "") am Ende ohne # gespeichert */
+
+                    var sResult = CollectionProjects.Find<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+
+                    if (sResult == null)
                     {
-                        clsProjektDB projektDB = sResult.Single();
-                        if (storeProjectToTrash(projektDB))
+                        return false;
+                    }
+                    else
+                    {
+                        try
                         {
-                            // jetzt wird erst gelöscht 
-                            var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+                            clsProjektDB projektDB = sResult.Single();
+                            if (storeProjectToTrash(projektDB))
+                            {
+                                // jetzt wird erst gelöscht 
+                                var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
 
-                            if (dResult.DeletedCount > 0)
-                            { return true; }
+                                if (dResult.DeletedCount > 0)
+                                { return true; }
+                                else
+                                { return false; }
+                            }
                             else
-                            { return false; }
+                            {
+                                return false;
+                            }
+
+
                         }
-                        else
+                        catch (Exception)
                         {
                             return false;
                         }
 
-                        
                     }
-                    catch (Exception)
-                    {
-                        return false; 
-                    }
-                                      
+
+
                 }
-                
-               
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception)
             {
-                
+
                 return false;
             }
             

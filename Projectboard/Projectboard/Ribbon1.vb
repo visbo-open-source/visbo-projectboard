@@ -10290,13 +10290,14 @@ Imports System.Windows
     Public Sub PTTestWriteProtect(control As IRibbonControl)
 
         Call projektTafelInit()
-
         enableOnUpdate = False
         appInstance.EnableEvents = True
-        Dim wpItem As clsWriteProtectionItem
+
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim ok2 As Boolean = request.cancelWriteProtections(dbUsername)
+
+        ' ''Dim wpItem As clsWriteProtectionItem
 
         ' ''For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
