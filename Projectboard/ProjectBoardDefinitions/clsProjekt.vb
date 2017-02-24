@@ -4188,7 +4188,7 @@ Public Class clsProjekt
         _shpUID = ""
         _timeStamp = Date.Now
 
-        _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing ist
+        _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing istshow 
         _variantDescription = ""
 
         '_ampelErlaeuterung = ""

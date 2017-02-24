@@ -517,65 +517,87 @@ namespace MongoDbAccess
         {
             try
             {
-                clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
-            
-                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName)  &
-                             Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
-                //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+                string[] separator = new string[] {"#"};
 
+                string[] tmpstr = wpItem.pvName.Split(separator,StringSplitOptions.None);
+                string searchstr = Projekte.calcProjektKeyDB(tmpstr[0],tmpstr[1]);
 
-                // jetzt soll ein Update / Insert gemacht werden; 
-                // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
-                // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
-                // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
-                // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
-                          
+                //var projectsfilter = Builders<clsProjekt>.Filter.Eq("name", searchstr);
 
-                bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
-                               .Any(wp => wp.pvName == wpItem.pvName && wp.type == wpItem.type);
+                bool projAlreadyExisting = CollectionProjects.AsQueryable<clsProjektDB>()
+                         .Any(p => p.name == searchstr);
 
-                if (alreadyExisting )
+                if (projAlreadyExisting)
                 {
+                    // Projekt ist in der DB in CollectionProjects enthalten
+                    // Schutz kann evt. durchgeführt werden
 
-                    wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
-                   //var fresult = CollectionWriteProtections.Find(filter).ToList();
+                    clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
 
-                      switch (wpItemDB.isProtected)
-                      {
-                          case true:
+                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
+                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
 
-                            if (wpItemDB.userName == wpItem.userName)
-                            {
+
+                    // jetzt soll ein Update / Insert gemacht werden; 
+                    // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
+                    // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
+                    // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
+                    // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
+
+
+                    bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                                   .Any(wp => wp.pvName == wpItem.pvName && wp.type == wpItem.type);
+
+                    if (alreadyExisting)
+                    {
+
+                        wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
+                        //var fresult = CollectionWriteProtections.Find(filter).ToList();
+
+                        switch (wpItemDB.isProtected)
+                        {
+                            case true:
+
+                                if (wpItemDB.userName == wpItem.userName)
+                                {
+                                    wpItemDB.copyFrom(wpItem);
+                                    var r1Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
+                                    return r1Result.IsAcknowledged;
+
+                                }
+                                else
+                                {
+                                    return false;
+                                };
+
+                            case false:
+
                                 wpItemDB.copyFrom(wpItem);
-                                var r1Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
-                                return r1Result.IsAcknowledged;
+                                var r2Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
+                                return r2Result.IsAcknowledged;
 
-                            }
-                            else
-                            {
+
+                            default:
+
                                 return false;
-                            };
 
-                        case false:
+                        }
+                    }
+                    else
+                    {
+                        wpItemDB.copyFrom(wpItem);
+                        CollectionWriteProtections.InsertOne(wpItemDB);
+                        return true;
+                    }
 
-                            wpItemDB.copyFrom(wpItem);
-                            var r2Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
-                            return r2Result.IsAcknowledged;
-
-
-                        default:
-
-                            return false;
-
-                      }
                 }
                 else
                 {
-                    wpItemDB.copyFrom(wpItem);
-                    CollectionWriteProtections.InsertOne(wpItemDB);
-                    return true;
+                    //   Es existiert dieses Projekt/Variante noch gar nicht in der Datenbank in CollectionProjects 
+                    //   kann also auch nicht geschützt werden 
+                    return false;
                 }
-          
 
             }
             catch (Exception)
