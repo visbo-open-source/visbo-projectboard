@@ -685,13 +685,13 @@ namespace MongoDbAccess
         /// </summary>
         /// <param name="projekt"></param>
         /// <returns></returns>
-        public bool storeProjectToDB(clsProjekt projekt)
+        public bool storeProjectToDB(clsProjekt projekt, string userName)
         {
             try
             {
                 string pvName = Projekte.calcProjektKey(projekt);
 
-                if (checkChgPermission(pvName, "urk"))
+                if (checkChgPermission(pvName, userName))
                 {
 
                     var projektDB = new clsProjektDB();
@@ -749,7 +749,7 @@ namespace MongoDbAccess
         /// <param name="variantName"></param>
         /// <param name="stored"></param>
         /// <returns></returns>
-        public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored)
+        public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored, string userName)
         {
             try
             {
@@ -757,7 +757,7 @@ namespace MongoDbAccess
                 string pvName = Projekte.calcProjektKey(projectname, variantName);   /* Vorsicht:  in der CollectionWriteProtection wird der Name des Projektes mit # am Ende gespeichert, sofern keine
                                                                                         Variante vorhanden also variantName = "" */
                 
-                if (checkChgPermission(pvName, "urk"))
+                if (checkChgPermission(pvName, userName))
                 {
                     
                     stored = stored.ToUniversalTime();
