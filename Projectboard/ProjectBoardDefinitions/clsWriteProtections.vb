@@ -94,6 +94,16 @@
         End Get
     End Property
 
+    Public Sub upsert(ByVal wpItem As clsWriteProtectionItem)
+        If _allWriteProtections.ContainsKey(wpItem.pvName) Then
+            ' update 
+            _allWriteProtections.Item(wpItem.pvName) = wpItem
+        Else
+            ' insert 
+            _allWriteProtections.Add(wpItem.pvName, wpItem)
+        End If
+    End Sub
+
     Public Sub New()
         _allWriteProtections = New SortedList(Of String, clsWriteProtectionItem)
     End Sub

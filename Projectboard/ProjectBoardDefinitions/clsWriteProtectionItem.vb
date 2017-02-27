@@ -127,11 +127,11 @@
     End Property
     Sub New()
         _pvName = ""
-        _type = 0
+        _type = ptWriteProtectionType.project
         _userName = ""
         _isProtected = True
         _permanent = False
-        _lastDateSet = Date.MinValue
+        _lastDateSet = Date.Now
         _lastDateReleased = Date.MinValue
     End Sub
 
@@ -140,14 +140,25 @@
     ''' </summary>
     ''' <remarks></remarks>
     Sub New(ByVal pvN As String, _
+            ByVal type As Integer, _
             ByVal userN As String, _
-            ByVal prmnnt As Boolean)
+            ByVal prmnnt As Boolean, _
+            ByVal protectIT As Boolean)
+
         _pvName = pvN
-        _type = 0
+        _type = type
         _userName = userN
-        _isProtected = True
-        _permanent = prmnnt
-        _lastDateSet = Date.Now
-        _lastDateReleased = Date.MinValue
+        _isProtected = protectIT
+
+        If Not protectIT Then
+            _permanent = False
+            _lastDateSet = Date.MinValue
+            _lastDateReleased = Date.Now
+        Else
+            _permanent = prmnnt
+            _lastDateSet = Date.Now
+            _lastDateReleased = Date.MinValue
+        End If
+
     End Sub
 End Class

@@ -123,10 +123,7 @@
 
     ''' <summary>
     ''' gibt die Anzahl Varianten für den übergebenen pName an 
-    ''' Das Projekt mit variantName = "" zählt dabei nicht als Variante 
-    ''' es gibt nur das Projekt mit Variante "": 0
-    ''' es gibt nicht einmal das Projekt mit Namen pName: -1
-    ''' Anzahl Varianten mit variantName ungleich "": sonst
+    ''' Das Projekt mit variantName = "" zählt dabei auch als Variante 
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <value></value>
@@ -135,25 +132,16 @@
     Public ReadOnly Property getVariantZahl(ByVal pName As String) As Integer
         Get
             Dim tmpResult As Integer = 0
-            Dim atLeastOne As Boolean = False
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
 
                 If pName = kvp.Value.projectName Then
-                    If kvp.Value.variantName = "" Then
-                        atLeastOne = True
-                    Else
-                        tmpResult = tmpResult + 1
-                    End If
+                    tmpResult = tmpResult + 1
                 End If
 
             Next
 
-            ' falls es gar nix gibt ... 
-            If tmpResult = 0 And Not atLeastOne Then
-                tmpResult = -1
-            End If
-
             getVariantZahl = tmpResult
+
         End Get
     End Property
 
