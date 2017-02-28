@@ -95,13 +95,17 @@
     End Property
 
     Public Sub upsert(ByVal wpItem As clsWriteProtectionItem)
-        If _allWriteProtections.ContainsKey(wpItem.pvName) Then
-            ' update 
-            _allWriteProtections.Item(wpItem.pvName) = wpItem
-        Else
-            ' insert 
-            _allWriteProtections.Add(wpItem.pvName, wpItem)
+
+        If Not IsNothing(wpItem) Then
+            If _allWriteProtections.ContainsKey(wpItem.pvName) Then
+                ' update 
+                _allWriteProtections.Item(wpItem.pvName) = wpItem
+            Else
+                ' insert 
+                _allWriteProtections.Add(wpItem.pvName, wpItem)
+            End If
         End If
+        
     End Sub
 
     Public Sub New()

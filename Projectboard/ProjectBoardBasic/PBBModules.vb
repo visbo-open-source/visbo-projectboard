@@ -648,7 +648,8 @@ Public Module PBBModules
                             .timeStamp = Date.Now
                             .shpUID = hproj.shpUID
                             .tfZeile = hproj.tfZeile
-                            .Status = ProjektStatus(0)
+                            ' war vorher immer ProjektStatus(0)
+                            .Status = ProjektStatus(1)
 
                         End With
 

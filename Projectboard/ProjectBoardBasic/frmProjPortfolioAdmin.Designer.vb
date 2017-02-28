@@ -61,7 +61,7 @@ Partial Class frmProjPortfolioAdmin
         '
         'TreeViewProjekte
         '
-        Me.TreeViewProjekte.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.TreeViewProjekte.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.TreeViewProjekte.Location = New System.Drawing.Point(22, 52)
         Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"

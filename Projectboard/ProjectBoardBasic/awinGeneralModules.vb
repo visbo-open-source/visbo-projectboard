@@ -11783,7 +11783,7 @@ Public Module awinGeneralModules
                     Next
 
                 Else
-                    projektliste = constellation.getProjectNames()
+                    projektliste = constellation.getProjectNames(sortCriteria:=1)
                 End If
 
                 Dim showPname As Boolean
@@ -14396,7 +14396,8 @@ Public Module awinGeneralModules
     Public Sub putProjectInShow(ByVal pName As String, ByVal vName As String, _
                                     ByVal considerDependencies As Boolean, _
                                     ByVal upDateDiagrams As Boolean, _
-                                    Optional ByVal parentChoice As Boolean = False)
+                                    Optional ByVal parentChoice As Boolean = False, _
+                                    Optional pZeile As Integer = -1)
 
         Dim key As String = calcProjektKey(pName, vName)
         Dim hproj As clsProjekt = AlleProjekte.getProject(key)
@@ -14418,7 +14419,10 @@ Public Module awinGeneralModules
 
         If Not ShowProjekte.contains(pName) Then
             ShowProjekte.Add(hproj)
-            Dim pZeile As Integer = ShowProjekte.getPTZeile(pName)
+            If pZeile < 2 Then
+                pZeile = ShowProjekte.getPTZeile(pName)
+            End If
+
             Dim tmpCollection As New Collection
 
             If hproj.extendedView Then
