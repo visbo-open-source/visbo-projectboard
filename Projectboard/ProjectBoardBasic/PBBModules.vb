@@ -1032,35 +1032,45 @@ Public Module PBBModules
         Dim returnValue As DialogResult
 
         Dim writeProtectProjects As New frmProjPortfolioAdmin
+        If AlleProjekte.Count > 0 Then
 
-        Try
+            Try
 
-            With writeProtectProjects
+                With writeProtectProjects
 
-                If control.Id = "PT5G4B1" Then
-                    .aKtionskennung = PTTvActions.setWriteProtection
-                ElseIf control.Id = "PT5G4B2" Then
-                    '.aKtionskennung = PTTvActions.unSetWriteProtection
+                    If control.Id = "PT5G4B1" Then
+                        .aKtionskennung = PTTvActions.setWriteProtection
+                    ElseIf control.Id = "PT5G4B2" Then
+                        '.aKtionskennung = PTTvActions.unSetWriteProtection
+                    End If
+
+                End With
+
+                returnValue = writeProtectProjects.ShowDialog
+
+                ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
+
+                If returnValue = DialogResult.OK Then
+                    ' everything is done ... 
+
+                Else
+                    ' everything is done ... 
+
                 End If
 
-            End With
+            Catch ex As Exception
 
-            returnValue = writeProtectProjects.ShowDialog
+                Call MsgBox(ex.Message)
+            End Try
 
-            ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
-
-            If returnValue = DialogResult.OK Then
-                ' everything is done ... 
-
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/variants first ...")
             Else
-                ' everything is done ... 
-
+                Call MsgBox("bitte erst Projekte / Varianten laden ...")
             End If
-
-        Catch ex As Exception
-
-            Call MsgBox(ex.Message)
-        End Try
+        End If
+        
 
     End Sub
     ''' <summary>
