@@ -854,110 +854,141 @@ Imports System.Windows
 
                     If ShowProjekte.contains(pName) Then
 
+                        ' hier jetzt prüfen, ob es sich um ein geschütztes Projekt handelt ... 
+                        hproj = ShowProjekte.getProject(pName)
+                        Dim pvName As String = calcProjektKeyDB(pName, hproj.variantName)
+                        If request.checkChgPermission(pvName, dbUsername, ptWriteProtectionType.project) Then
+                            ' hier das Fomular zur Eingabe des neuen Namens aufrufen ... 
+                            Dim renameForm As New frmRenameProject
+                            With renameForm
+                                .oldName.Text = pName
+                                .newName.Text = pName
+                            End With
 
-                        ' hier das Fomular zur Eingabe des neuen Namens aufrufen ... 
-                        Dim renameForm As New frmRenameProject
-                        With renameForm
-                            .oldName.Text = pName
-                            .newName.Text = pName
-                        End With
+                            Dim result As DialogResult = renameForm.ShowDialog
 
-                        Dim result As DialogResult = renameForm.ShowDialog
+                            If result = DialogResult.OK Then
 
-                        If result = DialogResult.OK Then
+                                Dim newName As String = renameForm.newName.Text
 
-                            Dim newName As String = renameForm.newName.Text
+                                Dim variantNamesCollection As Collection = AlleProjekte.getVariantNames(pName, False)
+                                hproj = ShowProjekte.getProject(pName)
 
-                            Dim variantNamesCollection As Collection = AlleProjekte.getVariantNames(pName, False)
-                            hproj = ShowProjekte.getProject(pName)
+                                ' jetzt werden alle Vorkommen in den Session Constellations umbenannt 
+                                For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                                    Dim anzahl As Integer = kvp.Value.renameProject(pName, newName)
+                                Next
 
-                            ' jetzt werden alle Vorkommen in den Session Constellations umbenannt 
-                            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-                                Dim anzahl As Integer = kvp.Value.renameProject(pName, newName)
-                            Next
+                                ' jetzt werden alle Vorkommen in Dependencies umbenannt 
 
-                            ' jetzt werden alle Vorkommen in Dependencies umbenannt 
+                                ' jetzt wird in der Datenbank umbenannt 
+                                Try
+                                    If request.projectNameAlreadyExists(pName, "", Date.Now) Or _
+                                        request.projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
 
-                            ' jetzt wird in der Datenbank umbenannt 
-                            Try
-                                If request.projectNameAlreadyExists(pName, "", Date.Now) Or _
-                                    request.projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
-
-                                    ok = request.renameProjectsInDB(pName, newName)
-                                    If Not ok Then
-                                        Call MsgBox("Fehler bei Umbenennen: " & vbLf & _
-                                                     pName & " -> " & newName)
+                                        ok = request.renameProjectsInDB(pName, newName)
+                                        If Not ok Then
+                                            Call MsgBox("Fehler bei Umbenennen: " & vbLf & _
+                                                         pName & " -> " & newName)
+                                        End If
                                     End If
-                                End If
-                            Catch ex As Exception
-                                Call MsgBox("Fehlende Berechtigung?" & vbLf & ex.Message)
-                            End Try
+                                Catch ex As Exception
+                                    Call MsgBox("Fehlende Berechtigung?" & vbLf & ex.Message)
+                                End Try
 
 
-                            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                            Try
-                                If ok Then
+                                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                                Try
+                                    If ok Then
 
-                                    ' merken , welche Phasen, Meilensteine aktuell gezeigt werden 
-                                    phaseList = projectboardShapes.getPhaseList(pName)
-                                    milestoneList = projectboardShapes.getMilestoneList(pName)
-                                    Dim key As String = calcProjektKey(hproj)
-                                    ShowProjekte.Remove(pName)
-                                    Call clearProjektinPlantafel(pName)
+                                        ' merken , welche Phasen, Meilensteine aktuell gezeigt werden 
+                                        phaseList = projectboardShapes.getPhaseList(pName)
+                                        milestoneList = projectboardShapes.getMilestoneList(pName)
+                                        Dim key As String = calcProjektKey(hproj)
+                                        ShowProjekte.Remove(pName)
+                                        Call clearProjektinPlantafel(pName)
 
 
-                                    ' jetzt müssen auch alle in der Session / AlleProjekte vorhandenen Varianten umbenannt werden 
-                                    For Each vName As String In variantNamesCollection
-                                        key = calcProjektKey(pName, vName)
-                                        Dim tmpProj As clsProjekt = AlleProjekte.getProject(key)
-                                        If Not IsNothing(tmpProj) Then
+                                        ' jetzt müssen auch alle in der Session / AlleProjekte vorhandenen Varianten umbenannt werden 
+                                        For Each vName As String In variantNamesCollection
+                                            key = calcProjektKey(pName, vName)
+                                            Dim tmpProj As clsProjekt = AlleProjekte.getProject(key)
+                                            If Not IsNothing(tmpProj) Then
+                                                AlleProjekte.Remove(key)
+                                                tmpProj.name = newName
+                                                key = calcProjektKey(newName, vName)
+                                                AlleProjekte.Add(key, tmpProj)
+                                            End If
+                                        Next
+
+                                        ' gibt es die Standard-Variante ? 
+                                        key = calcProjektKey(pName, "")
+                                        If AlleProjekte.Containskey(key) Then
+                                            Dim tmpProj As clsProjekt = AlleProjekte.getProject(key)
                                             AlleProjekte.Remove(key)
                                             tmpProj.name = newName
-                                            key = calcProjektKey(newName, vName)
+                                            key = calcProjektKey(newName, "")
                                             AlleProjekte.Add(key, tmpProj)
                                         End If
-                                    Next
 
-                                    ' gibt es die Standard-Variante ? 
-                                    key = calcProjektKey(pName, "")
-                                    If AlleProjekte.Containskey(key) Then
-                                        Dim tmpProj As clsProjekt = AlleProjekte.getProject(key)
-                                        AlleProjekte.Remove(key)
-                                        tmpProj.name = newName
-                                        key = calcProjektKey(newName, "")
-                                        AlleProjekte.Add(key, tmpProj)
+
+                                        hproj.name = newName
+                                        ShowProjekte.Add(hproj)
+
+                                        Dim tmpCollection As New Collection
+
+                                        Call ZeichneProjektinPlanTafel(tmpCollection, newName, hproj.tfZeile, phaseList, milestoneList)
+
+                                    End If
+
+                                Catch ex As Exception
+
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox("Error when renaming project: " & ex.Message)
+                                    Else
+                                        Call MsgBox("Fehler bei Rename Projekt: " & ex.Message)
                                     End If
 
 
-                                    hproj.name = newName
-                                    ShowProjekte.Add(hproj)
-
-                                    Dim tmpCollection As New Collection
-
-                                    Call ZeichneProjektinPlanTafel(tmpCollection, newName, hproj.tfZeile, phaseList, milestoneList)
-
-                                End If
-
-                            Catch ex As Exception
-
-                                Call MsgBox("Fehler bei Rename Projekt: " & ex.Message)
-
-                            End Try
+                                End Try
+                            End If
+                        Else
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("Project " & pName & " is write-protected and cannot be renamed!")
+                            Else
+                                Call MsgBox("Projekt " & pName & " ist schreibgeschützt und kann nicht umbenannt werden!")
+                            End If
                         End If
+
+                        
                         
 
                     Else
-                        Call MsgBox("bitte Projekt selektieren ...")
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please select a project first ...")
+                        Else
+                            Call MsgBox("bitte Projekt selektieren ...")
+                        End If
+
                     End If
 
                 Else
-                    Call MsgBox("bitte nur ein Projekt selektieren ...")
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please select just 1 project only ...")
+                    Else
+                        Call MsgBox("bitte nur ein Projekt selektieren ...")
+                    End If
+
                 End If
 
 
             Else
-                Call MsgBox("vorher Projekt selektieren ...")
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("please select a project first ...")
+                Else
+                    Call MsgBox("bitte Projekt selektieren ...")
+                End If
             End If
 
             enableOnUpdate = True

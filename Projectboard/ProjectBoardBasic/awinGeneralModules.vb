@@ -11808,6 +11808,7 @@ Public Module awinGeneralModules
                         hproj = ShowProjekte.getProject(pname)
                         'shownVariant = "(" & hproj.variantName & ")"
                         'projectIsShown = True
+
                     ElseIf AlleProjekte.Count > 0 Then
                         Dim tmpList As Collection = AlleProjekte.getVariantNames(pname, False)
 
@@ -11831,6 +11832,7 @@ Public Module awinGeneralModules
 
                         
                         projectNode = .Nodes.Add(pname)
+                        'projectNode.Text = pname
                         ' das wird jetzt über bestimmeCheckStatus gemacht bzw. über bestimmeNodeAppearance
                         ''If aKtionskennung = PTTvActions.chgInSession Or _
                         ''    aKtionskennung = PTTvActions.activateV Then
@@ -11847,6 +11849,7 @@ Public Module awinGeneralModules
 
                         ' damit kann evtl direkt auf den Node zugegriffen werden ...
                         projectNode.Name = pname
+
 
 
                         If Not IsNothing(hproj) Then
@@ -11871,6 +11874,7 @@ Public Module awinGeneralModules
                                 End If
 
                                 Dim variantNode As TreeNode = projectNode.Nodes.Add(vName)
+                                'variantNode.Text = vName
 
                                 If aKtionskennung = PTTvActions.delFromDB Then
                                     variantNode.Tag = "P"
@@ -12028,6 +12032,11 @@ Public Module awinGeneralModules
         Dim colorProtectedByOther As System.Drawing.Color = Color.OrangeRed
         Dim colorNormal As System.Drawing.Color = Color.Black
         Dim colorNoShow As System.Drawing.Color = Color.DimGray
+
+        ' hier auf Normal Font setzen ; in den TreeView Eigenschaften ist die Schriftgröße auf 12 gesetzt, 
+        ' um sicherzustellen, dass der Text immer vollständig angezeigt wird 
+        currentNode.NodeFont = fontNormal
+
 
         If nodeTyp = PTTreeNodeTyp.project Then
 
