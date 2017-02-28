@@ -5129,7 +5129,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If request.storeProjectToDB(kvp.Value) Then
+                                If request.storeProjectToDB(kvp.Value, dbUsername) Then
                                     anzahlStores = anzahlStores + 1
                                 Else
                                     If awinSettings.englishLanguage Then
@@ -5461,7 +5461,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If request.storeProjectToDB(hproj) Then
+                                If request.storeProjectToDB(hproj, dbUsername) Then
 
                                     anzStoredProj = anzStoredProj + 1
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)

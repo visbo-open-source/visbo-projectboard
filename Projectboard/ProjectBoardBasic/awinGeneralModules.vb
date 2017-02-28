@@ -9837,7 +9837,7 @@ Public Module awinGeneralModules
                 If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
                     ' speichern des Projektes 
                     hproj.timeStamp = DBtimeStamp
-                    If request.storeProjectToDB(hproj) Then
+                    If request.storeProjectToDB(hproj, dbUsername) Then
                         anzahlNeue = anzahlNeue + 1
                     Else
                         ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
@@ -9854,7 +9854,7 @@ Public Module awinGeneralModules
                     ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
                     If Not hproj.isIdenticalTo(oldProj) Then
                         hproj.timeStamp = DBtimeStamp
-                        If request.storeProjectToDB(hproj) Then
+                        If request.storeProjectToDB(hproj, dbUsername) Then
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
                         Else
@@ -10098,9 +10098,9 @@ Public Module awinGeneralModules
                             If writeProtections.isProtected(keyV, dbUsername) Then
                                 ' kann nichts machen ...
                             Else
-                                If request.deleteProjectTimestampFromDB(pname, variantName, zeitStempel) Then
+                                If request.deleteProjectTimestampFromDB(pname, variantName, zeitStempel, dbUsername) Then
                                     ' all ok 
-                                    If request.storeProjectToDB(variantProject) Then
+                                    If request.storeProjectToDB(variantProject, dbUsername) Then
                                         ' alles ok; jetzt  
                                     Else
 
@@ -10137,7 +10137,7 @@ Public Module awinGeneralModules
                     For Each singleTimeStamp As Date In timeStampsToDelete
 
 
-                        If request.deleteProjectTimestampFromDB(pname, variantName, singleTimeStamp) Then
+                        If request.deleteProjectTimestampFromDB(pname, variantName, singleTimeStamp, dbUsername) Then
                             ' all ok 
                             anzDeleted = anzDeleted + 1
                         Else
@@ -10191,7 +10191,7 @@ Public Module awinGeneralModules
                         ' jetzt über alle Elemente der Projekthistorie ..
                         For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
 
-                            If request.deleteProjectTimestampFromDB(pname, variantName, kvp.Key) Then
+                            If request.deleteProjectTimestampFromDB(pname, variantName, kvp.Key, dbUsername) Then
                                 ' all ok 
                                 anzDeleted = anzDeleted + 1
                             Else
@@ -10519,7 +10519,7 @@ Public Module awinGeneralModules
             ' Speichern im Papierkorb, dann löschen
             'If requestTrash.storeProjectToDB(hproj) Then
             If request.deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName, _
-                                  stored:=timeStamp) Then
+                                  stored:=timeStamp, userName:=dbUsername) Then
                 'Call MsgBox("ok, gelöscht")
             Else
                 outputLine = "Fehler beim Löschen von " & pname & ", " & variantName & ", " & _
