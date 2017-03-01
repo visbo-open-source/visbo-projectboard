@@ -1,7 +1,106 @@
 ﻿Public Class clsConstellation
 
+    ' sortierte liste von pvName und clsConstellationItems
     Private _allItems As SortedList(Of String, clsConstellationItem)
+
+    ' sortierte Liste eines beliebig zu erstellenden Keys und dem pvName  
+    Private _sortList As New SortedList(Of String, String)
+
+    ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
+    ' 0: alphabetisch nach Name
+    ' 1: custom tfzeile 
+    ' 2: custom Liste
+    ' 3: BU, ProjektStart, Name
+    ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
+    Private _sortType As Integer
+
     Private _constellationName As String = "Last"
+
+    ''' <summary>
+    ''' baut eine sortierte Liste der Projekt-Namen auf !
+    ''' die Position auf der Projekt-Tafel bzw. im Portfolio Browser ergibt sich dann 
+    ''' aus dem Index in der sortierten Liste  
+    ''' </summary>
+    ''' <param name="sortType"></param>
+    ''' <param name="liste"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property sortCriteria(ByVal sortType As Integer, _
+                                     Optional liste As SortedList(Of String, String) = Nothing) As Integer
+
+        Get
+            sortCriteria = _sortType
+        End Get
+        Set(value As Integer)
+
+            Dim pName As String = ""
+
+            If Not IsNothing(value) Then
+
+
+                Select Case value
+                    Case ptSortCriteria.alphabet ' alphabetisch nach Name
+                        _sortList.Clear()
+                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                            pName = kvp.Value.projectName
+                            If Not _sortList.ContainsKey(pName) Then
+                                _sortList.Add(pName, pName)
+                            End If
+                        Next
+
+                    Case ptSortCriteria.customTF  ' nach tfzeile 
+                        _sortList.Clear()
+                        Dim doneList As New SortedList(Of String, Boolean)
+                        Dim korrFaktor As Double = 0.0001
+                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+
+                            pName = kvp.Value.projectName
+                            If Not doneList.ContainsKey(pName) Then
+                                Dim key As Double
+                                Dim tKey As String
+
+                                If kvp.Value.show Then
+                                    key = kvp.Value.zeile
+                                Else
+                                    key = 100000
+                                End If
+
+                                tKey = key.ToString("######.####")
+                                Do While _sortList.ContainsKey(tKey)
+                                    key = key + korrFaktor
+                                    tKey = key.ToString("######.####")
+                                Loop
+                                If Not _sortList.ContainsKey(tKey) Then
+                                    _sortList.Add(tKey, pName)
+                                    doneList.Add(pName, True)
+                                End If
+                            End If
+                            
+                        Next
+
+                    Case ptSortCriteria.customListe
+                        ' erstmal checken , ob die Liste auch alle Elemente aus kvp enthält 
+                        If Not IsNothing(liste) Then
+                            If liste.Count = Me.getProjectNames.Count Then
+
+                            End If
+                        End If
+                        _sortList.Clear()
+
+                    Case ptSortCriteria.buStartName
+
+                    Case ptSortCriteria.formel
+
+                    Case Else
+                        ' nichts machen
+                End Select
+            End If
+
+
+        End Set
+    End Property
+
 
     ''' <summary>
     ''' setzt den Namen; wenn Nothing ode rleer , dann wird als Name Last gesetzt 
@@ -95,6 +194,7 @@
 
     End Sub
 
+
     ''' <summary>
     ''' gibt eine komplette Liste an Projekt-Namen zurück, die in der Constellation auftreten;
     ''' by default unabhängig, ob mit Show Attribute oder ohne 
@@ -113,7 +213,7 @@
             Dim korrFaktor1 As Double = 0.000001
             Dim korrfaktor2 As Double = 0.000000001
             Dim tmpResult As Double = 0.0
-            
+
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                 pName = kvp.Value.projectName
 
@@ -143,7 +243,7 @@
                     Case 2
                 End Select
 
-                
+
             Next
 
             getProjectNames = tmpCollection
