@@ -11783,7 +11783,7 @@ Public Module awinGeneralModules
                     Next
 
                 Else
-                    projektliste = constellation.getProjectNames(sortCriteria:=1)
+                    projektliste = constellation.getProjectNames
                 End If
 
                 Dim showPname As Boolean

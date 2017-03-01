@@ -205,6 +205,22 @@ Public Module Module1
    
     Public Const maxProjektdauer As Integer = 60
 
+
+    ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
+    ' 0: alphabetisch nach Name
+    ' 1: custom tfzeile 
+    ' 2: custom Liste
+    ' 3: BU, ProjektStart, Name
+    ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
+    Public Enum ptSortCriteria
+        alphabet = 0
+        customTF = 1
+        customListe = 2
+        buStartName = 3
+        formel = 4
+    End Enum
+
+    
     Public Enum ptWriteProtectionType
         project = 0
         scenario = 1
