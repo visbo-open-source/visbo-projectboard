@@ -506,19 +506,41 @@ namespace MongoDbAccess
       
             return result;
         }
+
         /// <summary>
         /// liefert für den pvName das clsWriteProtectiomItem zurück
         /// wenn es das nch nicht gibt, dann Null 
         /// </summary>
         /// <param name="pvName"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public clsWriteProtectionItem getWriteProtection(string pvName)
+        public clsWriteProtectionItem getWriteProtection(string pvName, int type = 0)
         {
-            clsWriteProtectionItem tmpresult = null;
+          
+            clsWriteProtectionItemDB wpItemDB = null;
+            clsWriteProtectionItem wpItem = new clsWriteProtectionItem();
+              
+            try
+            {
+               
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", pvName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("type", type);
+                wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
+                //var fresult = CollectionWriteProtections.Find(filter).ToList();
+                
+                wpItemDB.copyTo(ref wpItem);
 
-            /// Abfrage ...
+                return wpItem;
 
-            return tmpresult;
+
+            }
+            catch (Exception)
+            {
+
+                return null;
+
+            }
+           
         }
 
         /// <summary>
@@ -529,6 +551,9 @@ namespace MongoDbAccess
         /// <returns></returns>
         public bool setWriteProtection(clsWriteProtectionItem wpItem)
         {
+
+            clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+
             try
             {
                 string[] separator = new string[] {"#"};
@@ -546,7 +571,7 @@ namespace MongoDbAccess
                     // Projekt ist in der DB in CollectionProjects enthalten
                     // Schutz kann evt. durchgeführt werden
 
-                    clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+           
 
                     var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName) &
                                  Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
@@ -563,6 +588,7 @@ namespace MongoDbAccess
                     bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
                                    .Any(wp => wp.pvName == wpItem.pvName && wp.type == wpItem.type);
 
+               
                     if (alreadyExisting)
                     {
 
@@ -616,9 +642,9 @@ namespace MongoDbAccess
             }
             catch (Exception)
             {
-                
-                //wpItemDB.copyFrom(wpItem);
-                //CollectionWriteProtections.InsertOne(wpItemDB);
+
+                wpItemDB.copyFrom(wpItem);
+                CollectionWriteProtections.InsertOne(wpItemDB);
                 return false;
                 
             }
