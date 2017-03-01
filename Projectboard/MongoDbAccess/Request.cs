@@ -506,6 +506,20 @@ namespace MongoDbAccess
       
             return result;
         }
+        /// <summary>
+        /// liefert für den pvName das clsWriteProtectiomItem zurück
+        /// wenn es das nch nicht gibt, dann Null 
+        /// </summary>
+        /// <param name="pvName"></param>
+        /// <returns></returns>
+        public clsWriteProtectionItem getWriteProtection(string pvName)
+        {
+            clsWriteProtectionItem tmpresult = null;
+
+            /// Abfrage ...
+
+            return tmpresult;
+        }
 
         /// <summary>
         /// setzt für das entsprechende Item das Flag, dass es geschützt ist 

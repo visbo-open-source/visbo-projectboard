@@ -104,16 +104,46 @@
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getProjectNames(Optional ByVal considerShow As Boolean = False, _
-                                             Optional ByVal showValue As Boolean = True) As Collection
+                                             Optional ByVal showValue As Boolean = True, _
+                                             Optional ByVal sortCriteria As Integer = 0) As Collection
         Get
             Dim tmpCollection As New Collection
             Dim pName As String
-
+            Dim key As String = ""
+            Dim korrFaktor1 As Double = 0.000001
+            Dim korrfaktor2 As Double = 0.000000001
+            Dim tmpResult As Double = 0.0
+            
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                 pName = kvp.Value.projectName
-                If Not tmpCollection.Contains(pName) Then
-                    tmpCollection.Add(pName, pName)
-                End If
+
+                Select Case sortCriteria
+                    Case 0
+                        ' sortiert nach Name
+                        key = pName
+                        If Not tmpCollection.Contains(key) Then
+                            tmpCollection.Add(Item:=pName, Key:=key)
+                        End If
+                    Case 1
+                        ' sortiert nach relativer Position in der Konstellation
+                        ' wenn sie in der gleichen Zeile vorkommen, dann ist das Startdatum entscheidend
+                        key = kvp.Value.zeile.ToString
+                        If Not tmpCollection.Contains(key) Then
+                            tmpCollection.Add(Item:=pName, Key:=key)
+                        Else
+                            Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Value.projectName, kvp.Value.variantName)
+                            tmpResult = kvp.Value.zeile + korrFaktor1 * hproj.Start + korrfaktor2 * hproj.dauerInDays
+                            key = tmpResult.ToString
+                            Do While tmpCollection.Contains(key)
+                                tmpResult = tmpResult + korrfaktor2
+                                key = tmpResult.ToString
+                            Loop
+                            tmpCollection.Add(Item:=pName, Key:=key)
+                        End If
+                    Case 2
+                End Select
+
+                
             Next
 
             getProjectNames = tmpCollection
