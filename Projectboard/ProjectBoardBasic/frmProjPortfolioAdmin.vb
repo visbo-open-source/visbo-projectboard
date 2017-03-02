@@ -631,6 +631,9 @@ Public Class frmProjPortfolioAdmin
 
         ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
 
+            Me.filterIcon.Enabled = False
+            Me.filterIcon.Visible = False
+
             If AlleProjekte.Count > 0 Then
                 pvNamesList.Clear()
             Else
