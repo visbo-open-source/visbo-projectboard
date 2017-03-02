@@ -459,8 +459,8 @@ Public Class frmProjPortfolioAdmin
                 .collapseCompletely.Visible = True
                 .expandCompletely.Visible = True
 
-                .filterIcon.Visible = True
-                .deleteFilterIcon.Visible = True
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -630,9 +630,6 @@ Public Class frmProjPortfolioAdmin
             End If
 
         ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
-
-            Me.filterIcon.Enabled = False
-            Me.filterIcon.Visible = False
 
             If AlleProjekte.Count > 0 Then
                 pvNamesList.Clear()
