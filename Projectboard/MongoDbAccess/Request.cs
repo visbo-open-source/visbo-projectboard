@@ -74,7 +74,7 @@ namespace MongoDbAccess
                 
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
-                
+                                                
             }
             
             //alt 2.x

@@ -2590,68 +2590,83 @@ Public Class frmProjPortfolioAdmin
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
 
-                    ' das darf hier nicht abgefragt werden, weil ein ProjectNode mit 5 Varianten, wo nicht alle geschützt sind auch unchecked ist 
-                    'If Not projectNode.Checked Then
-                    '    ' nichts machen, ist ja schon aufgehoben 
-                    'Else
-                    ' noch nicht aufgehoben
-                    ' jetzt prüfen, ob man es überhaupt aufheben darf 
-                    Dim pName As String = getProjectNameOfTreeNode(projectNode.Text)
-                    Dim vName As String = ""
-                    ' holt die Varianten-Namen ohne Klammer ... 
-                    Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
-                    If variantNames.Count > 0 Then
-                        vName = CStr(variantNames.Item(1))
-                    End If
+                    ' es muss nur betrachtet werden, wenn der Knoten gesetzt ist 
+                    ' oder der Knoten Kinder hat , die ihrerseits geschützt sein können 
+                    If projectNode.Checked Or projectNode.Nodes.Count > 0 Then
 
-                    Dim atLeastOneFailed As Boolean = False
+                        Dim pName As String = getProjectNameOfTreeNode(projectNode.Text)
+                        Dim vName As String = ""
+                        ' holt die Varianten-Namen ohne Klammer ... 
+                        Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+                        If variantNames.Count > 0 Then
+                            vName = CStr(variantNames.Item(1))
+                        End If
 
-                    ' hier prüfen, ob alle Childs aufgehoben werden können ... 
-                    If projectNode.Nodes.Count > 0 Then
-                        ' alle Varianten aufheben, die man aufheben kann 
-                        For iv As Integer = 1 To projectNode.Nodes.Count
-                            Dim variantNode As TreeNode = projectNode.Nodes.Item(iv - 1)
-                            vName = getVariantNameOfTreeNode(variantNode.Text)
+                        Dim atLeastOneFailed As Boolean = False
 
-                            If setNodeWriteProtections(variantNode, PTTreeNodeTyp.pVariant, pName, vName, False) Then
-                                ' erfolgreich aufgehoben ..
-                                ' es wurde bereits Node Apperance inkl Check-Status geklärt
-                            Else
-                                ' Aufheben nicht zugelassen , also nichts machen  
-                                Dim pvName As String = calcProjektKey(pName, vName)
-                                writeProtections.upsert(request.getWriteProtection(pvName))
-                                Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
+                        ' hier prüfen, ob alle Childs aufgehoben werden können ... 
+                        If projectNode.Nodes.Count > 0 Then
+                            ' alle Varianten aufheben, die man aufheben kann 
+                            For iv As Integer = 1 To projectNode.Nodes.Count
 
-                                atLeastOneFailed = True
+                                Dim variantNode As TreeNode = projectNode.Nodes.Item(iv - 1)
+
+                                If variantNode.Checked Then
+                                    ' nur dann kann ein Schutz aufgehoben werden ...
+                                    vName = getVariantNameOfTreeNode(variantNode.Text)
+                                    If setNodeWriteProtections(variantNode, PTTreeNodeTyp.pVariant, pName, vName, False) Then
+                                        ' erfolgreich aufgehoben ..
+                                        ' es wurde bereits Node Apperance inkl Check-Status geklärt
+                                    Else
+                                        ' Aufheben nicht zugelassen , also nichts machen  
+                                        Dim pvName As String = calcProjektKey(pName, vName)
+                                        writeProtections.upsert(request.getWriteProtection(pvName))
+                                        Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
+
+                                        atLeastOneFailed = True
+                                    End If
+
+                                End If
+                                
+
+                            Next
+
+                            ' jetzt muss noch die Behandlung für das Projekt selber kommen 
+                            ' dazu reicht aber, die NodeAppearance zu setzen ..
+                            If projectNode.Checked Then
+
+                                Dim allChildsAreProtected As Boolean = (projectNode.Nodes.Count > 0)
+                                For ti = 1 To projectNode.Nodes.Count
+                                    allChildsAreProtected = allChildsAreProtected And projectNode.Nodes.Item(ti - 1).Checked
+                                Next
+                                If Not allChildsAreProtected Then
+                                    projectNode.Checked = False
+                                End If
                             End If
 
-                        Next
+                            ' vname ist hier nicht wichtig ... 
+                            Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, "")
 
-                        ' jetzt muss noch die Behandlung für das Projekt selber kommen 
-                        ' dazu reicht aber, die NodeAppearance zu setzen ..
-                        If atLeastOneFailed Then
-                            projectNode.Checked = False
                         Else
-                            projectNode.Checked = False
+                            ' es gibt keine Childs 
+                            ' keine Varianten im Baum , aber in variantNames muss mindestens ein Element sein 
+                            If setNodeWriteProtections(projectNode, PTTreeNodeTyp.project, pName, vName, False) Then
+                                ' erfolgreich ..
+                            Else
+                                ' nicht zugelassen , also nichts machen  
+                                Dim pvName As String = calcProjektKey(pName, vName)
+                                writeProtections.upsert(request.getWriteProtection(pvName))
+                                Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
+                            End If
+
+
                         End If
-                        ' vname ist hier nicht wichtig ... 
-                        Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, "")
+                        'End If
 
                     Else
-                        ' es gibt keine Childs 
-                        ' keine Varianten im Baum , aber in variantNames muss mindestens ein Element sein 
-                        If setNodeWriteProtections(projectNode, PTTreeNodeTyp.project, pName, vName, False) Then
-                            ' erfolgreich ..
-                        Else
-                            ' nicht zugelassen , also nichts machen  
-                            Dim pvName As String = calcProjektKey(pName, vName)
-                            writeProtections.upsert(request.getWriteProtection(pvName))
-                            Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
-                        End If
-
-
+                        ' es muss nichts gemacht werden ... 
                     End If
-                    'End If
+                    
 
 
 
