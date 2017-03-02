@@ -12025,7 +12025,7 @@ Public Module awinGeneralModules
 
 
         'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Italic)
-        Dim fontPermanentProtected As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Bold)
+        Dim fontPermanentProtected As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
         Dim fontNormal As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
 
         Dim colorProtectedByMe As System.Drawing.Color = Color.Green
@@ -12121,7 +12121,9 @@ Public Module awinGeneralModules
 
             ElseIf aktionskennung = PTTvActions.delFromDB And Not noDB Then
                 If (currentNode.Nodes.Count = 0) Then
-                    If notReferencedByAnyPortfolio(pName, vName) Then
+
+                    If notReferencedByAnyPortfolio(pName, vName) And _
+                        Not writeProtections.isProtected(calcProjektKey(pName, vName)) Then
                         ' kann gelöscht werden  
                         currentNode.ForeColor = colorNormal
                     Else
