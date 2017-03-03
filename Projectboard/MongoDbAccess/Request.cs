@@ -768,6 +768,25 @@ namespace MongoDbAccess
                     //return ergebnis
                     //xx = CollectionProjects.Save(projektDB).LastErrorMessage;
                     //return !CollectionProjects.Save(projektDB).HasLastErrorMessage;    
+
+                    // Projekt in der CollectionWriteProtections anlegen
+                    
+                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", pvName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("type",0);
+                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+
+                    bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                                   .Any(wp => wp.pvName == pvName && wp.type == 0);
+
+                    if (!alreadyExisting)
+                    {
+
+                        clsWriteProtectionItem wpItem = new clsWriteProtectionItem(pvName, 0, userName, false, false);
+                        clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+                        wpItemDB.copyFrom(wpItem);
+                        CollectionWriteProtections.InsertOne(wpItemDB);
+                    }
+
                     return true;
 
                 }
@@ -1505,106 +1524,182 @@ namespace MongoDbAccess
         /// <param name="oldName"></param>
         /// <param name="newName"></param>
         /// <returns></returns>
-        public bool renameProjectsInDB(string oldName, String newName)
+        public bool renameProjectsInDB(string oldName, String newName, string userName)
         {
             if (projectNameAlreadyExists(newName, "", DateTime.Now))
             {
                 return false;
             }
-            
+            else
             {
 
                 try
                 {
-                    string oldFullName;
-                    string newFullName;
-                    bool ok = true;
-                    // erstmal das Projekt selber umbenennen , falls es in der () Variante überhaupt existiert ..
-                    if (projectNameAlreadyExists(oldName, "", DateTime.Now))
-                    {
-                        oldFullName = Projekte.calcProjektKeyDB(oldName, "");
-                        newFullName = Projekte.calcProjektKeyDB(newName, "");
-
-                        // neu 3.0 
-                        var filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
-                        var update = Builders<clsProjektDB>.Update
-                                            .Set("name", newFullName);
-
-                        var uResult = CollectionProjects.UpdateMany(filter, update);
-                        ok = (uResult.ModifiedCount > 0); 
-                        
-                    }
+                    string oldpvName;
+                    string newpvName;
+                    bool chkOk = true;
                     
+                    // hier wird überprüft, ob das Projekt selbst
+                    // und auch keine der Varianten von einem anderen User schreibgeschützt ist
 
-                    // jetzt 
-                    // alle Varianten des Projektes umbenennen , wenn immer noch ok 
+                    chkOk = checkChgPermission(Projekte.calcProjektKey(oldName, ""), userName);
+                                 
+                    Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
 
-                    if (ok)
+                    foreach (string vName in listOfVariants)
                     {
-                        Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
+                        if (!chkOk)
+                        { break; }
 
+                        oldpvName = Projekte.calcProjektKey(oldName, vName);
+                        chkOk = chkOk && checkChgPermission(oldpvName, userName);
+                       
+                    }                  
+            
 
-                        foreach (string vName in listOfVariants)
+                    // Projekt und seine Varianten können umbenannt werden
+
+                    if (chkOk)
+                    {
+                        string oldFullName;
+                        string newFullName;
+                        bool ok = false;
+
+                        // erstmal das Projekt selber umbenennen , falls es in der () Variante überhaupt existiert ..
+                        if (projectNameAlreadyExists(oldName, "", DateTime.Now))
                         {
-                            oldFullName = Projekte.calcProjektKeyDB(oldName, vName);
-                            newFullName = Projekte.calcProjektKeyDB(newName, vName);
+                            oldFullName = Projekte.calcProjektKeyDB(oldName, "");
+                            newFullName = Projekte.calcProjektKeyDB(newName, "");
 
                             // neu 3.0 
                             var filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
                             var update = Builders<clsProjektDB>.Update
-                                            .Set("name", newFullName);
+                                                .Set("name", newFullName);
 
                             var uResult = CollectionProjects.UpdateMany(filter, update);
-                            ok = ok & (uResult.ModifiedCount > 0); 
-                            
-                        }
-
-                       // jetzt müssen die Constellations aktualisiert werden ...
-
-                       var constellationsDB = CollectionConstellations.AsQueryable<clsConstellationDB>()
-                                 .Select(cDB => cDB);
-
-                       int zaehler = 0;
-                       int gesamt = 0; 
-
-                       foreach (clsConstellationDB cDB in constellationsDB)
-                        {
-                            var c = new clsConstellation();
-                            cDB.copyto(ref c);
-                            int a = c.renameProject(oldName, newName);
-
-                           if (a>0)
-                           {
-                               clsConstellationDB chgcDB = new clsConstellationDB();
-                               chgcDB.copyfrom(c);
-                               // mit Id=null kann kein Replace gemacht werden  
-                               chgcDB.Id = cDB.Id;
-
-                               var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", chgcDB.constellationName);
-                               var rResult = CollectionConstellations.ReplaceOne(filter, chgcDB);
-                               //ok = ok & (rResult.ModifiedCount > 0);
-                               ok = ok & rResult.IsAcknowledged;
-
-                               zaehler = zaehler + 1;
-                               gesamt = gesamt + a; 
-                           }
-                            
+                            ok = (uResult.ModifiedCount > 0);
 
                         }
-                       // Énde Aktualisierung Constellations ...
 
 
-                       // dann müssen noch die Dependencies aktualisiert werden ...
+                        // jetzt 
+                        // alle Varianten des Projektes umbenennen , wenn immer noch ok 
 
                         if (ok)
-                        { return true; }
+                        {
+                            //Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
+
+
+                            foreach (string vName in listOfVariants)
+                            {
+                                oldFullName = Projekte.calcProjektKeyDB(oldName, vName);
+                                newFullName = Projekte.calcProjektKeyDB(newName, vName);
+
+                                // neu 3.0 
+                                var filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
+                                var update = Builders<clsProjektDB>.Update
+                                                .Set("name", newFullName);
+
+                                var uResult = CollectionProjects.UpdateMany(filter, update);
+                                ok = ok & (uResult.ModifiedCount > 0);
+
+                            }
+
+                            // jetzt müssen die Constellations aktualisiert werden ...
+
+                            var constellationsDB = CollectionConstellations.AsQueryable<clsConstellationDB>()
+                                      .Select(cDB => cDB);
+
+                            int zaehler = 0;
+                            int gesamt = 0;
+
+                            foreach (clsConstellationDB cDB in constellationsDB)
+                            {
+                                var c = new clsConstellation();
+                                cDB.copyto(ref c);
+                                int a = c.renameProject(oldName, newName);
+
+                                if (a > 0)
+                                {
+                                    clsConstellationDB chgcDB = new clsConstellationDB();
+                                    chgcDB.copyfrom(c);
+                                    // mit Id=null kann kein Replace gemacht werden  
+                                    chgcDB.Id = cDB.Id;
+
+                                    var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", chgcDB.constellationName);
+                                    var rResult = CollectionConstellations.ReplaceOne(filter, chgcDB);
+                                    //ok = ok & (rResult.ModifiedCount > 0);
+                                    ok = ok & rResult.IsAcknowledged;
+
+                                    zaehler = zaehler + 1;
+                                    gesamt = gesamt + a;
+                                }
+
+
+                            }
+                            // Énde Aktualisierung Constellations ...
+
+
+                            // dann müssen noch die Dependencies aktualisiert werden ...
+
+                            // CollectionWriteProtection muss aktualisiert werden
+                            try
+                            {
+
+                                if (ok)
+                                {
+                                   
+
+                                    oldpvName = Projekte.calcProjektKey(oldName, "");
+                                    newpvName = Projekte.calcProjektKey(newName, "");
+                                    // neu 3.0 
+                                    var wpfilter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", oldpvName);
+                                    var wpupdate = Builders<clsWriteProtectionItemDB>.Update
+                                                    .Set("pvName", newpvName);
+
+                                    var wpResult = CollectionWriteProtections.UpdateMany(wpfilter, wpupdate);
+                                    ok = (wpResult.ModifiedCount > 0);
+
+
+                                    foreach (string vName in listOfVariants)
+                                    {
+                              
+                                        oldFullName = Projekte.calcProjektKey(oldName, vName);
+                                        newFullName = Projekte.calcProjektKey(newName, vName);
+
+                                        // neu 3.0 
+                                        var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", oldFullName);                                   
+                                        var update = Builders<clsWriteProtectionItemDB>.Update
+                                                        .Set("pvName", newFullName);
+
+                                        var uResult = CollectionWriteProtections.UpdateMany(filter, update);
+                                        ok = ok & (uResult.ModifiedCount > 0);
+
+                                    }
+                                }
+                                else 
+                                { return false; }                                                               
+                            }
+
+                            catch (Exception)
+                            {
+                                return false;
+                            }
+
+                            if (ok)
+                            { return true; }
+                            else
+                            { return false; }
+
+                        }
                         else
                         { return false; }
-                        
-                    }
+
+                    }   // hier ist if(chkOK) zu Ende
+
                     else
-                    { return false;  }
-                    
+                    { return false; }  
+              
                 }
                 catch (Exception)
                 {
