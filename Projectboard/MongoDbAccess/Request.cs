@@ -122,7 +122,7 @@ namespace MongoDbAccess
                 keys = Builders<clsProjektDB>.IndexKeys.Ascending("endDate");
                 ergebnis = CollectionProjects.Indexes.CreateOne(keys);
 
-                var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pvName").Ascending("type");
+                var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pName").Ascending("vName").Ascending("type");
                 var options = new CreateIndexOptions() { Unique = true };
                 ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2,options);
              
@@ -495,7 +495,8 @@ namespace MongoDbAccess
 
             foreach (clsWriteProtectionItemDB cDB in writeProtectDB)
             {
-                if (AlleProjekte.get_Containskey(cDB.pvName))
+                string pvName = Projekte.calcProjektKey(cDB.pName, cDB.vName);
+                if (AlleProjekte.get_Containskey(pvName))
                 {
                     var wpi = new clsWriteProtectionItem();
                     cDB.copyTo(ref wpi);
@@ -514,7 +515,7 @@ namespace MongoDbAccess
         /// <param name="pvName"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public clsWriteProtectionItem getWriteProtection(string pvName, int type = 0)
+        public clsWriteProtectionItem getWriteProtection(string pName, string vName, int type = 0)
         {
           
             clsWriteProtectionItemDB wpItemDB = null;
@@ -523,7 +524,8 @@ namespace MongoDbAccess
             try
             {
                
-                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", pvName) &
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
                              Builders<clsWriteProtectionItemDB>.Filter.Eq("type", type);
                 wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
                 //var fresult = CollectionWriteProtections.Find(filter).ToList();
@@ -556,12 +558,15 @@ namespace MongoDbAccess
 
             try
             {
-                string[] separator = new string[] {"#"};
 
-                string[] tmpstr = wpItem.pvName.Split(separator,StringSplitOptions.None);
-                string searchstr = Projekte.calcProjektKeyDB(tmpstr[0],tmpstr[1]);
+                //string[] separator = new string[] {"#"};
+                //string[] tmpstr = wpItem.pvName.Split(separator,StringSplitOptions.None);
+                //string searchstr = Projekte.calcProjektKeyDB(tmpstr[0], tmpstr[1]);
 
-                //var projectsfilter = Builders<clsProjekt>.Filter.Eq("name", searchstr);
+                string pName = Projekte.getPnameFromKey(wpItem.pvName);
+                string vName = Projekte.getVariantnameFromKey(wpItem.pvName);
+
+                string searchstr = Projekte.calcProjektKeyDB(pName,vName);
 
                 bool projAlreadyExisting = CollectionProjects.AsQueryable<clsProjektDB>()
                          .Any(p => p.name == searchstr);
@@ -573,9 +578,10 @@ namespace MongoDbAccess
 
            
 
-                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", wpItem.pvName) &
+                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
                                  Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
-                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pName");
 
 
                     // jetzt soll ein Update / Insert gemacht werden; 
@@ -586,7 +592,7 @@ namespace MongoDbAccess
 
 
                     bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
-                                   .Any(wp => wp.pvName == wpItem.pvName && wp.type == wpItem.type);
+                                 .Any(wp => wp.pName == pName && wp.vName == vName && wp.type == wpItem.type);
 
                
                     if (alreadyExisting)
@@ -652,23 +658,26 @@ namespace MongoDbAccess
         /// <summary>
         /// überprüft, ob das Projekt pvname vom Typ type vom User userName die Erlaubnis hat etwas zu verändern
         /// </summary>
-        /// <param name="pvName"></param>
+        /// </summary>
+        /// <param name="pName"></param>
+        /// <param name="vName"></param>
         /// <param name="userName"></param>
         /// <param name="type"></param>
         /// <returns>true -  es darf geändert werden
         ///          false - es darf nicht geändert werden</returns>
-        public bool checkChgPermission(string pvName, string userName, int type = 0)
+        public bool checkChgPermission(string pName, string vName, string userName, int type = 0)
         {
             try
             {
                 clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
 
-                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", pvName) &
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
                              Builders<clsWriteProtectionItemDB>.Filter.Eq("type", type);
                 //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
 
                 bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
-                               .Any(wp => wp.pvName == pvName && wp.type == type);
+                               .Any(wp => wp.pName == pName && wp.vName == vName && wp.type == type);
 
                 if (alreadyExisting)
                 {
@@ -751,9 +760,8 @@ namespace MongoDbAccess
         {
             try
             {
-                string pvName = Projekte.calcProjektKey(projekt);
-
-                if (checkChgPermission(pvName, userName))
+           
+                if (checkChgPermission(projekt.name, projekt.variantName, userName))
                 {
 
                     var projektDB = new clsProjektDB();
@@ -771,16 +779,17 @@ namespace MongoDbAccess
 
                     // Projekt in der CollectionWriteProtections anlegen
                     
-                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", pvName) &
+                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", projekt.name) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", projekt.variantName) &
                                  Builders<clsWriteProtectionItemDB>.Filter.Eq("type",0);
-                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pName");
 
                     bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
-                                   .Any(wp => wp.pvName == pvName && wp.type == 0);
+                                   .Any(wp => wp.pName == projekt.name && wp.vName == projekt.variantName && wp.type == 0);
 
                     if (!alreadyExisting)
                     {
-
+                        string pvName = Projekte.calcProjektKey(projekt);
                         clsWriteProtectionItem wpItem = new clsWriteProtectionItem(pvName, 0, userName, false, false);
                         clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
                         wpItemDB.copyFrom(wpItem);
@@ -834,11 +843,8 @@ namespace MongoDbAccess
         {
             try
             {
-               
-                string pvName = Projekte.calcProjektKey(projectname, variantName);   /* Vorsicht:  in der CollectionWriteProtection wird der Name des Projektes mit # am Ende gespeichert, sofern keine
-                                                                                        Variante vorhanden also variantName = "" */
-                
-                if (checkChgPermission(pvName, userName))
+        
+                if (checkChgPermission(projectname, variantName, userName))
                 {
                     
                     stored = stored.ToUniversalTime();
@@ -1535,14 +1541,14 @@ namespace MongoDbAccess
 
                 try
                 {
-                    string oldpvName;
-                    string newpvName;
+                    //string oldpvName;
+                    //string newpvName;
                     bool chkOk = true;
                     
                     // hier wird überprüft, ob das Projekt selbst
                     // und auch keine der Varianten von einem anderen User schreibgeschützt ist
 
-                    chkOk = checkChgPermission(Projekte.calcProjektKey(oldName, ""), userName);
+                    chkOk = checkChgPermission(oldName, "", userName);
                                  
                     Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
 
@@ -1550,9 +1556,8 @@ namespace MongoDbAccess
                     {
                         if (!chkOk)
                         { break; }
-
-                        oldpvName = Projekte.calcProjektKey(oldName, vName);
-                        chkOk = chkOk && checkChgPermission(oldpvName, userName);
+                       
+                        chkOk = chkOk && checkChgPermission(oldName, vName, userName);
                        
                     }                  
             
@@ -1648,37 +1653,58 @@ namespace MongoDbAccess
 
                                 if (ok)
                                 {
-                                   
-
-                                    oldpvName = Projekte.calcProjektKey(oldName, "");
-                                    newpvName = Projekte.calcProjektKey(newName, "");
-                                    // neu 3.0 
-                                    var wpfilter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", oldpvName);
-                                    var wpupdate = Builders<clsWriteProtectionItemDB>.Update
-                                                    .Set("pvName", newpvName);
-
-                                    var wpResult = CollectionWriteProtections.UpdateMany(wpfilter, wpupdate);
-                                    ok = (wpResult.ModifiedCount > 0);
+                                    bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                                        .Any(wp => wp.pName == oldName && wp.vName == "" && wp.type == 0);
 
 
-                                    foreach (string vName in listOfVariants)
+                                    if (alreadyExisting)
                                     {
-                              
-                                        oldFullName = Projekte.calcProjektKey(oldName, vName);
-                                        newFullName = Projekte.calcProjektKey(newName, vName);
 
                                         // neu 3.0 
-                                        var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pvName", oldFullName);                                   
-                                        var update = Builders<clsWriteProtectionItemDB>.Update
-                                                        .Set("pvName", newFullName);
+                                        var wpfilter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", oldName) &
+                                                                    Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", "") &
+                                                                    Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0);
+                                        var wpUpdate = Builders<clsWriteProtectionItemDB>.Update.Set("pName", newName);
 
-                                        var uResult = CollectionWriteProtections.UpdateMany(filter, update);
-                                        ok = ok & (uResult.ModifiedCount > 0);
 
+                                        var result = CollectionWriteProtections.UpdateOne(wpfilter, wpUpdate);
+                                        ok = ok & (result.ModifiedCount > 0);
+
+                                        foreach (string vName in listOfVariants)
+                                        {
+                                            //oldFullName = Projekte.calcProjektKey(oldName, vName);
+                                            //newFullName = Projekte.calcProjektKey(newName, vName);
+
+                                            // neu 3.0 
+                                            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", oldName) &
+                                                Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
+                                                Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0);
+                                            var update = Builders<clsWriteProtectionItemDB>.Update.Set("pName", newName);
+
+                                            var vresult = CollectionWriteProtections.UpdateOne(wpfilter, wpUpdate);
+                                            ok = ok & (result.ModifiedCount > 0);
+
+                                        }
                                     }
-                                }
-                                else 
-                                { return false; }                                                               
+                                    else
+                                    {
+                                        clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+                                        clsWriteProtectionItem wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(newName, ""), 0, userName, false, false);
+                                        wpItemDB.copyFrom(wpItem);
+                                        CollectionWriteProtections.InsertOne(wpItemDB);
+
+                                        foreach (string vName in listOfVariants)
+                                        {
+                                              // neu 3.0 
+
+                                            wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(newName, vName), 0, userName, false, false);
+                                            wpItemDB.copyFrom(wpItem);
+                                            CollectionWriteProtections.InsertOne(wpItemDB);
+                                           
+                                        }
+                                    }
+                                }               
+                        
                             }
 
                             catch (Exception)

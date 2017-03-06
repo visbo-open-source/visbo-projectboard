@@ -5,7 +5,8 @@
 ''' <remarks></remarks>
 Public Class clsWriteProtectionItemDB
     Public Id As ObjectId
-    Public pvName As String
+    Public pName As String
+    Public vName As String
     Public type As Integer
     Public userName As String
     Public isProtected As Boolean
@@ -17,7 +18,8 @@ Public Class clsWriteProtectionItemDB
 
         With wpItem
 
-            Me.pvName = .pvName
+            Me.pName = getPnameFromKey(.pvName)
+            Me.vName = getVariantnameFromKey(.pvName)
             Me.type = .type
             Me.userName = .userName
             Me.isProtected = .isProtected
@@ -32,7 +34,7 @@ Public Class clsWriteProtectionItemDB
 
         With wpItem
 
-            .pvName = Me.pvName
+            .pvName = calcProjektKey(Me.pName, Me.vName)
             .type = Me.type
             .userName = Me.userName
             .isProtected = Me.isProtected

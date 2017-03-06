@@ -870,8 +870,7 @@ Public Class frmProjPortfolioAdmin
                             Else
                                 ' nicht zugelassen , also wieder zurücknehmen 
                                 node.Checked = Not node.Checked
-                                Dim pvName As String = calcProjektKey(pName, vName)
-                                writeProtections.upsert(request.getWriteProtection(pvName))
+                                writeProtections.upsert(request.getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
 
@@ -892,8 +891,7 @@ Public Class frmProjPortfolioAdmin
                                 Else
                                     ' nicht zugelassen , also alles unverändert lassen  
                                     atleastOneError = True
-                                    Dim pvName As String = calcProjektKey(pName, vName)
-                                    writeProtections.upsert(request.getWriteProtection(pvName))
+                                    writeProtections.upsert(request.getWriteProtection(pName, vName))
                                     Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                                 End If
 
@@ -926,8 +924,7 @@ Public Class frmProjPortfolioAdmin
                         Else
                             ' nicht zugelassen , also alles unverändert lassen  
                             node.Checked = Not node.Checked
-                            Dim pvName As String = calcProjektKey(pName, vName)
-                            writeProtections.upsert(request.getWriteProtection(pvName))
+                            writeProtections.upsert(request.getWriteProtection(pName, vName))
                             Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                         End If
 
@@ -2305,8 +2302,7 @@ Public Class frmProjPortfolioAdmin
                                     ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                 Else
                                     ' nicht zugelassen , also nichts machen  
-                                    Dim pvName As String = calcProjektKey(pName, vName)
-                                    writeProtections.upsert(request.getWriteProtection(pvName))
+                                    writeProtections.upsert(request.getWriteProtection(pName, vName))
                                     Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
 
                                     atleastOneFailed = True
@@ -2332,8 +2328,7 @@ Public Class frmProjPortfolioAdmin
                                 projectNode.Checked = True
                             Else
                                 ' nicht zugelassen , also nichts machen  
-                                Dim pvName As String = calcProjektKey(pName, vName)
-                                writeProtections.upsert(request.getWriteProtection(pvName))
+                                writeProtections.upsert(request.getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
 
                             End If
@@ -2619,8 +2614,7 @@ Public Class frmProjPortfolioAdmin
                                         ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                     Else
                                         ' Aufheben nicht zugelassen , also nichts machen  
-                                        Dim pvName As String = calcProjektKey(pName, vName)
-                                        writeProtections.upsert(request.getWriteProtection(pvName))
+                                        writeProtections.upsert(request.getWriteProtection(pName, vName))
                                         Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
 
                                         atLeastOneFailed = True
@@ -2654,8 +2648,7 @@ Public Class frmProjPortfolioAdmin
                                 ' erfolgreich ..
                             Else
                                 ' nicht zugelassen , also nichts machen  
-                                Dim pvName As String = calcProjektKey(pName, vName)
-                                writeProtections.upsert(request.getWriteProtection(pvName))
+                                writeProtections.upsert(request.getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
 
