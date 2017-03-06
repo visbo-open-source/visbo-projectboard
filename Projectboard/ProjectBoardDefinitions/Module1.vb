@@ -75,6 +75,11 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
 
+    ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
+    ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
+    ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
+    Public dbCacheProjekte As New clsProjekteAlle
+
     ' die globale Variable für die Write Protections
     Public writeProtections As New clsWriteProtections
 
@@ -134,7 +139,7 @@ Public Module Module1
     Public formMilestone As New frmMilestoneInformation
     Public formStatus As New frmStatusInformation
     Public formPhase As New frmPhaseInformation
-
+    Public formProjectInfo1 As frmProjectInfo1 = Nothing
 
 
     ' variable gibt an, zu welchem Objekt-Rolle (Rolle, Kostenart, Ergebnis, ..)  der Röntgen Blick gezeigt wird 
@@ -457,7 +462,7 @@ Public Module Module1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(21, 3) As Double
+    Public frmCoord(22, 3) As Double
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
     Public Enum PTfrm
@@ -483,6 +488,7 @@ Public Module Module1
         phaseInfo = 19
         createVariant = 20
         listInfo = 21
+        projInfoPL = 22
     End Enum
 
     Public Enum PTpinfo
@@ -1779,34 +1785,6 @@ Public Module Module1
             End If
 
         End If
-
-
-
-        '
-        ' das folgende selektiert die Zelle in der Mitte des aktuell gezeigten Fensters
-        ' das verhindert, daß sich plötzlich der Fenster Ausschnitt verändert
-        '
-        'Try
-        '    With appInstance.ActiveWindow
-        '        hziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
-        '        vziel = CInt((.VisibleRange.Top + .VisibleRange.Height / 2) / boxHeight)
-        '        If vziel < 2 Then
-        '            vziel = 2
-        '        End If
-        '    End With
-
-        '    With appInstance.ActiveSheet
-        '        '.Cells(2, hziel).Select()
-        '        .Cells(vziel, hziel).Select()
-        '    End With
-        'Catch ex As Exception
-
-        '    With appInstance.ActiveSheet
-        '        .Cells(2, 20).Select()
-        '    End With
-
-        'End Try
-
 
 
         appInstance.EnableEvents = formerEE

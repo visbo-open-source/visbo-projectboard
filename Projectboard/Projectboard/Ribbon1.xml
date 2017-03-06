@@ -31,6 +31,8 @@
           <button id="PTMEC1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>
           <!--label="Budget/Kosten"-->
           <button id="PTMEC2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>
+        <!--label="Budget/Kosten"-->
+          <button id="PTMEC3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
         </group>
       </tab>
       <!--label="Multiprojekt-Info"-->

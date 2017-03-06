@@ -51,6 +51,25 @@ Public Class clsProjekteAlle
 
     End Sub
 
+    ''' <summary>
+    ''' macht einen Update, wenn das Element mit Schlüssel key bereits existiert 
+    ''' macht einen Insert, wenn das Element mit Schlüssel key noch nicht existiert 
+    ''' der key wird bestimmt aus project.name und .variantname
+    ''' </summary>
+    ''' <param name="project"></param>
+    ''' <remarks>wenn project Nothing ist, dann bleibt die Liste unverändert </remarks>
+    Public Sub upsert(ByVal project As clsProjekt)
+
+        If Not IsNothing(project) Then
+            Dim key As String = calcProjektKey(project.name, project.variantName)
+            If _allProjects.ContainsKey(key) Then
+                _allProjects.Remove(key)
+            End If
+            _allProjects.Add(key, project)
+        End If
+
+    End Sub
+
 
     ''' <summary>
     ''' gets or sets the sortedlist of (string, clsprojekt)

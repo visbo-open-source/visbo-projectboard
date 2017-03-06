@@ -12,4 +12,8 @@ Public Class frmProjekteSpeichern
     Private Sub NEINButton_Click(sender As Object, e As EventArgs) Handles NEINButton.Click
 
     End Sub
+
+    Private Sub frmProjekteSpeichern_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+    End Sub
 End Class
