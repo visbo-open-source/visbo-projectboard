@@ -884,22 +884,12 @@ Imports System.Windows
 
                                 Dim newName As String = renameForm.newName.Text
 
-                                Dim variantNamesCollection As Collection = AlleProjekte.getVariantNames(pName, False)
-                                hproj = ShowProjekte.getProject(pName)
-
-                                ' jetzt werden alle Vorkommen in den Session Constellations umbenannt 
-                                For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-                                    Dim anzahl As Integer = kvp.Value.renameProject(pName, newName)
-                                Next
-
-                                ' jetzt werden alle Vorkommen in Dependencies umbenannt 
-
                                 ' jetzt wird in der Datenbank umbenannt 
                                 Try
                                     If request.projectNameAlreadyExists(pName, "", Date.Now) Or _
                                         request.projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
 
-                                        ok = request.renameProjectsInDB(pName, newName)
+                                        ok = request.renameProjectsInDB(pName, newName, dbUsername)
                                         If Not ok Then
                                             Call MsgBox("Fehler bei Umbenennen: " & vbLf & _
                                                          pName & " -> " & newName)
@@ -914,6 +904,17 @@ Imports System.Windows
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                                 Try
                                     If ok Then
+
+                                        Dim variantNamesCollection As Collection = AlleProjekte.getVariantNames(pName, False)
+                                        hproj = ShowProjekte.getProject(pName)
+
+                                        ' jetzt werden alle Vorkommen in den Session Constellations umbenannt 
+                                        For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                                            Dim anzahl As Integer = kvp.Value.renameProject(pName, newName)
+                                        Next
+
+                                        ' jetzt werden alle Vorkommen in Dependencies umbenannt 
+                                        '  ....
 
                                         ' merken , welche Phasen, Meilensteine aktuell gezeigt werden 
                                         phaseList = projectboardShapes.getPhaseList(pName)
