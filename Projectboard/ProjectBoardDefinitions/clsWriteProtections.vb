@@ -1,6 +1,31 @@
 ﻿Public Class clsWriteProtections
     Private _allWriteProtections As SortedList(Of String, clsWriteProtectionItem)
 
+    Public ReadOnly Property getProtectionText(ByVal pvname As String) As String
+        Get
+            Dim tmpText As String = ""
+            If Me.isProtected(pvname) Then
+                Dim permanent As String = ""
+                If Me.isPermanentProtected(pvname) Then
+                    permanent = "permanent "
+                End If
+                If awinSettings.englishLanguage Then
+                    tmpText = permanent & "protected by: " & Me.lastModifiedBy(pvname) & ", at: " & Me.changeDate(pvname).ToString
+                Else
+                    tmpText = permanent & "geschützt von: " & Me.lastModifiedBy(pvname) & ", am: " & Me.changeDate(pvname).ToString
+                End If
+
+            Else
+                If awinSettings.englishLanguage Then
+                    tmpText = "no protection"
+                Else
+                    tmpText = "nicht geschützt"
+                End If
+            End If
+            getProtectionText = tmpText
+        End Get
+    End Property
+
     Public Property liste As SortedList(Of String, clsWriteProtectionItem)
         Get
             liste = _allWriteProtections

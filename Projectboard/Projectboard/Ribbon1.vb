@@ -2868,36 +2868,19 @@ Imports System.Windows
             If IsNothing(awinSelection) Then
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    todoListe.Add(kvp.Key, kvp.Key)
+
                     If Not noDB Then
 
                         ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
                         If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
-
-                            If request.checkChgPermission(calcProjektKey(kvp.Value.name, kvp.Value.variantName), dbUsername) Then
-                                ' für den Datenbank Cache aufbauen 
-                                Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
-                                dbCacheProjekte.upsert(dbProj)
-                                todoListe.Add(kvp.Key, kvp.Key)
-                            Else
-
-                                If awinSettings.englishLanguage Then
-                                    outPutLine = "protected Project: " & kvp.Value.name & " (" & _
-                                                  kvp.Value.variantName & ")"
-                                Else
-                                    outPutLine = "geschütztes Projekt: " & kvp.Value.name & " (" & _
-                                                  kvp.Value.variantName & ")"
-                                End If
-                                outputCollection.Add(outPutLine)
-
-                            End If
-                        Else
-                            ' es existiert noch gar nicht in der Datenbank 
-                            todoListe.Add(kvp.Key, kvp.Key)
+                            Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
+                            dbCacheProjekte.upsert(dbProj)
                         End If
 
-                    Else
-                        todoListe.Add(kvp.Key, kvp.Key)
                     End If
+
                 Next
 
             Else
@@ -2907,55 +2890,21 @@ Imports System.Windows
                     Dim hproj As clsProjekt
                     Try
                         hproj = ShowProjekte.getProject(singleShp.Name, True)
+                        todoListe.Add(hproj.name, hproj.name)
+
                         If Not noDB Then
-                            ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
+                            ' wenn es in der DB existiert, dann im Cache aufbauen 
                             If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-
-                                If request.checkChgPermission(calcProjektKey(hproj.name, hproj.variantName), dbUsername) Then
-                                    ' für den Datenbank Cache aufbauen 
-                                    Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
-                                    dbCacheProjekte.upsert(dbProj)
-                                    todoListe.Add(hproj.name, hproj.name)
-                                Else
-
-                                    If awinSettings.englishLanguage Then
-                                        outPutLine = "protected Project: " & hproj.name & " (" & _
-                                                      hproj.variantName & ")"
-                                    Else
-                                        outPutLine = "geschütztes Projekt: " & hproj.name & " (" & _
-                                                      hproj.variantName & ")"
-                                    End If
-                                    outputCollection.Add(outPutLine)
-
-                                End If
-                            Else
-                                ' es existiert noch gar nicht in der Datenbank 
-                                todoListe.Add(hproj.name, hproj.name)
+                                ' für den Datenbank Cache aufbauen 
+                                Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                                dbCacheProjekte.upsert(dbProj)
                             End If
-                            
-                        Else
-                            todoListe.Add(hproj.name, hproj.name)
                         End If
 
                     Catch ex As Exception
 
                     End Try
                 Next
-            End If
-
-            If outputCollection.Count > 0 Then
-                ' es sind geschützte Projekte darunter ...
-                Dim msgH As String, msgE As String
-                If awinSettings.englishLanguage Then
-                    msgH = "Protected projects"
-                    msgE = "please create variants for these projects before editing"
-                Else
-                    msgH = "Geschützte Projekte"
-                    msgE = "bitte erstellen Sie eine Variante, bevor Sie das Projekt editieren"
-                End If
-
-                Call showOutPut(outputCollection, msgH, msgE)
-
             End If
 
             ' wenn es jetzt etwas zu tun gibt ... 

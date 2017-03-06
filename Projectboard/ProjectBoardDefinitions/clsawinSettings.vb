@@ -164,6 +164,9 @@ Public Class clsawinSettings
     ' Default = no 
     Public Property meAuslastungIsInclExt As Boolean = True
 
+    ' die Farbe des Schutzes 
+    Public Property meSchutzColor As System.Drawing.Color
+
     Public Property englishLanguage As Boolean = False
 
     Public Property allowSumEditing As Boolean
@@ -308,6 +311,7 @@ Public Class clsawinSettings
         _meAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
+        _meSchutzColor = System.Drawing.Color.OrangeRed
         _englishLanguage = False
         _allowSumEditing = True
 

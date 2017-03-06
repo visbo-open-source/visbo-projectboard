@@ -1334,30 +1334,7 @@ Public Class frmProjPortfolioAdmin
 
                     If anzahlVariants = 1 Then
                         Dim pvName As String = calcProjektKey(pName, vName)
-                        Dim lastUser As String = ""
-                        Dim zeitpunkt As Date
-                        lastUser = writeProtections.lastModifiedBy(pvName)
-                        zeitpunkt = writeProtections.changeDate(pvName)
-
-                        If writeProtections.isProtected(pvName) Then
-                            Dim permanent As String = ""
-                            If writeProtections.isPermanentProtected(pvName) Then
-                                permanent = "permanent "
-                            End If
-                            If awinSettings.englishLanguage Then
-                                tmpText = permanent & "protected by: " & lastUser & ", at: " & zeitpunkt.ToString
-                            Else
-                                tmpText = permanent & "geschützt von: " & lastUser & ", am: " & zeitpunkt.ToString
-                            End If
-
-                        Else
-                            If awinSettings.englishLanguage Then
-                                tmpText = "no protection"
-                            Else
-                                tmpText = "nicht geschützt"
-                            End If
-                        End If
-
+                        tmpText = writeProtections.getProtectionText(pvName)
                     Else
                         tmpText = ""
                     End If
