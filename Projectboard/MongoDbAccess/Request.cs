@@ -787,6 +787,8 @@ namespace MongoDbAccess
                     bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
                                    .Any(wp => wp.pName == projekt.name && wp.vName == projekt.variantName && wp.type == 0);
 
+
+   
                     if (!alreadyExisting)
                     {
                         string pvName = Projekte.calcProjektKey(projekt);
@@ -794,6 +796,20 @@ namespace MongoDbAccess
                         clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
                         wpItemDB.copyFrom(wpItem);
                         CollectionWriteProtections.InsertOne(wpItemDB);
+                    }
+                    else
+                    {
+                        var updateFilter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", projekt.name) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", projekt.variantName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("type",0) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("userName", userName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("permanent", false) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("isProtected", true);
+
+                        var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected", false).Set("lastDateReleased", DateTime.UtcNow);
+
+                        var uresult = CollectionWriteProtections.UpdateOne(updateFilter, updatedef);
+                        return uresult.IsAcknowledged;
                     }
 
                     return true;
@@ -1681,8 +1697,8 @@ namespace MongoDbAccess
                                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0);
                                             var update = Builders<clsWriteProtectionItemDB>.Update.Set("pName", newName);
 
-                                            var vresult = CollectionWriteProtections.UpdateOne(wpfilter, wpUpdate);
-                                            ok = ok & (result.ModifiedCount > 0);
+                                            var vresult = CollectionWriteProtections.UpdateOne(filter, update);
+                                            ok = ok & (vresult.ModifiedCount > 0);
 
                                         }
                                     }

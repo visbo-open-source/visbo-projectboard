@@ -2874,7 +2874,7 @@ Imports System.Windows
                         ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
                         If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
 
-                            If request.checkChgPermission(calcProjektKey(kvp.Value.name, kvp.Value.variantName), dbUsername) Then
+                            If request.checkChgPermission(kvp.Value.name, kvp.Value.variantName, dbUsername) Then
                                 ' für den Datenbank Cache aufbauen 
                                 Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
                                 dbCacheProjekte.upsert(dbProj)
@@ -2912,7 +2912,7 @@ Imports System.Windows
                             ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
                             If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
 
-                                If request.checkChgPermission(calcProjektKey(hproj.name, hproj.variantName), dbUsername) Then
+                                If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
                                     ' für den Datenbank Cache aufbauen 
                                     Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
                                     dbCacheProjekte.upsert(dbProj)
