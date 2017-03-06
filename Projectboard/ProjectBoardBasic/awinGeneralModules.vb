@@ -18545,18 +18545,34 @@ Public Module awinGeneralModules
 
             ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
 
-            CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
-            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
-            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
-            CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
-            CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
-            CType(.Cells(1, 6), Excel.Range).Value = "Summe"
+            If awinSettings.englishLanguage Then
+                CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
+                CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
+                CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
+                CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
+                CType(.Cells(1, 6), Excel.Range).Value = "Sum"
 
-            If awinSettings.mePrzAuslastung Then
-                CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+                If awinSettings.mePrzAuslastung Then
+                    CType(.Cells(1, 7), Excel.Range).Value = "Percent."
+                Else
+                    CType(.Cells(1, 7), Excel.Range).Value = "Avail."
+                End If
             Else
-                CType(.Cells(1, 7), Excel.Range).Value = "Frei"
+                CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+                CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+                CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
+                CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+                CType(.Cells(1, 6), Excel.Range).Value = "Summe"
+
+                If awinSettings.mePrzAuslastung Then
+                    CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+                Else
+                    CType(.Cells(1, 7), Excel.Range).Value = "Frei"
+                End If
             End If
+            
 
 
             ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden

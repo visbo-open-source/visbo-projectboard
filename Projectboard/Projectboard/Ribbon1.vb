@@ -808,7 +808,20 @@ Imports System.Windows
 
     End Sub
 
+    Sub PT0ShowProjektInfo1(control As IRibbonControl)
 
+        With visboZustaende
+            If IsNothing(formProjectInfo1) And .projectBoardMode = ptModus.massEditRessCost Then
+
+                formProjectInfo1 = New frmProjectInfo1
+                Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
+
+                formProjectInfo1.Show()
+            End If
+
+        End With
+        
+    End Sub
 
 
     ''' <summary>
@@ -1746,6 +1759,12 @@ Imports System.Windows
                     tmpLabel = "Budget/Cost"
                 End If
 
+            Case "PTMEC3" ' Formular Forecast Gegenüberstellung 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt Gewinn/Verlust"
+                Else
+                    tmpLabel = "Project Profit/Loss"
+                End If
             Case "PTX" ' Multiprojekt-Info
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Multiprojekt-Info"
@@ -2814,6 +2833,11 @@ Imports System.Windows
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
         Dim todoListe As New Collection
+        Dim outputFenster As New frmOutputWindow
+        Dim outputCollection As New Collection
+        Dim outPutLine As String = ""
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
         Call projektTafelInit()
 
@@ -2844,7 +2868,36 @@ Imports System.Windows
             If IsNothing(awinSelection) Then
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                    todoListe.Add(kvp.Key, kvp.Key)
+                    If Not noDB Then
+
+                        ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
+                        If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
+
+                            If request.checkChgPermission(calcProjektKey(kvp.Value.name, kvp.Value.variantName), dbUsername) Then
+                                ' für den Datenbank Cache aufbauen 
+                                Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
+                                dbCacheProjekte.upsert(dbProj)
+                                todoListe.Add(kvp.Key, kvp.Key)
+                            Else
+
+                                If awinSettings.englishLanguage Then
+                                    outPutLine = "protected Project: " & kvp.Value.name & " (" & _
+                                                  kvp.Value.variantName & ")"
+                                Else
+                                    outPutLine = "geschütztes Projekt: " & kvp.Value.name & " (" & _
+                                                  kvp.Value.variantName & ")"
+                                End If
+                                outputCollection.Add(outPutLine)
+
+                            End If
+                        Else
+                            ' es existiert noch gar nicht in der Datenbank 
+                            todoListe.Add(kvp.Key, kvp.Key)
+                        End If
+
+                    Else
+                        todoListe.Add(kvp.Key, kvp.Key)
+                    End If
                 Next
 
             Else
@@ -2854,38 +2907,97 @@ Imports System.Windows
                     Dim hproj As clsProjekt
                     Try
                         hproj = ShowProjekte.getProject(singleShp.Name, True)
-                        todoListe.Add(hproj.name, hproj.name)
+                        If Not noDB Then
+                            ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
+                            If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+
+                                If request.checkChgPermission(calcProjektKey(hproj.name, hproj.variantName), dbUsername) Then
+                                    ' für den Datenbank Cache aufbauen 
+                                    Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                                    dbCacheProjekte.upsert(dbProj)
+                                    todoListe.Add(hproj.name, hproj.name)
+                                Else
+
+                                    If awinSettings.englishLanguage Then
+                                        outPutLine = "protected Project: " & hproj.name & " (" & _
+                                                      hproj.variantName & ")"
+                                    Else
+                                        outPutLine = "geschütztes Projekt: " & hproj.name & " (" & _
+                                                      hproj.variantName & ")"
+                                    End If
+                                    outputCollection.Add(outPutLine)
+
+                                End If
+                            Else
+                                ' es existiert noch gar nicht in der Datenbank 
+                                todoListe.Add(hproj.name, hproj.name)
+                            End If
+                            
+                        Else
+                            todoListe.Add(hproj.name, hproj.name)
+                        End If
+
                     Catch ex As Exception
 
                     End Try
                 Next
             End If
 
+            If outputCollection.Count > 0 Then
+                ' es sind geschützte Projekte darunter ...
+                Dim msgH As String, msgE As String
+                If awinSettings.englishLanguage Then
+                    msgH = "Protected projects"
+                    msgE = "please create variants for these projects before editing"
+                Else
+                    msgH = "Geschützte Projekte"
+                    msgE = "bitte erstellen Sie eine Variante, bevor Sie das Projekt editieren"
+                End If
 
-            Call deleteChartsInSheet(arrWsNames(3))
-            Call enableControls(ptModus.massEditRessCost)
+                Call showOutPut(outputCollection, msgH, msgE)
 
-            ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
-            ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
-            'Call saveProjectsToBackup(todoListe)
+            End If
 
-            Try
-                Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
-                appInstance.EnableEvents = True
+            ' wenn es jetzt etwas zu tun gibt ... 
+            If todoListe.Count > 0 Then
+                ' alles ok ...
+                Call deleteChartsInSheet(arrWsNames(3))
+                Call enableControls(ptModus.massEditRessCost)
 
-                With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
-                    .Activate()
-                End With
+                ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
+                ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
+                'Call saveProjectsToBackup(todoListe)
 
-            Catch ex As Exception
-                Call MsgBox("Fehler: " & ex.Message)
+                Try
+                    Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+                    appInstance.EnableEvents = True
+
+                    With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+                        .Activate()
+                    End With
+
+                Catch ex As Exception
+                    Call MsgBox("Fehler: " & ex.Message)
+                    If appInstance.EnableEvents = False Then
+                        appInstance.EnableEvents = True
+                    End If
+                End Try
+            Else
+                enableOnUpdate = True
                 If appInstance.EnableEvents = False Then
                     appInstance.EnableEvents = True
                 End If
-            End Try
+            End If
+
+
 
         Else
-            Call MsgBox("Es sind keine Projekte geladen!")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no projects in session!")
+            Else
+                Call MsgBox("Es sind keine Projekte geladen!")
+            End If
+
         End If
 
 
@@ -2894,7 +3006,7 @@ Imports System.Windows
         ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
         'enableOnUpdate = True
         'appInstance.EnableEvents = True
-        
+
     End Sub
 
     Sub PTbackToProjectBoard(control As IRibbonControl)

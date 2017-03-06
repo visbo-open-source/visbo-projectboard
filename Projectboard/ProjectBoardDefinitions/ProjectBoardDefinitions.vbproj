@@ -179,6 +179,12 @@
     <Compile Include="frmPhaseInformation.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmProjectInfo1.Designer.vb">
+      <DependentUpon>frmProjectInfo1.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProjectInfo1.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmRemConst+DBFilter.Designer.vb">
       <DependentUpon>frmRemConst+DBFilter.vb</DependentUpon>
     </Compile>
@@ -297,6 +303,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmPhaseInformation.resx">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmProjectInfo1.resx">
+      <DependentUpon>frmProjectInfo1.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmRemConst+DBFilter.resx">
       <DependentUpon>frmRemConst+DBFilter.vb</DependentUpon>

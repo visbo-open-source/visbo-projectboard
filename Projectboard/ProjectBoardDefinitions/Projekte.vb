@@ -19602,6 +19602,45 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' aktualisiert das ProjektInfo1 Fenster mit Profit/Loss Anzeige 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="dbProj"></param>
+    ''' <remarks></remarks>
+    Public Sub updateProjectInfo1(ByVal hproj As clsProjekt, ByVal dbProj As clsProjekt)
+
+
+        If Not IsNothing(formProjectInfo1) Then
+
+            Dim lblDBVersion As String = ""
+            Dim currentV As String = ""
+            Dim currentDB As String = ""
+            Dim pname As String = ""
+            Dim budget As Double, pk As Double, sk As Double, rk As Double, erg As Double
+            If Not IsNothing(dbProj) Then
+                lblDBVersion = "DB (" & dbProj.timeStamp.ToShortDateString & ")"
+                Call dbProj.calculateRoundedKPI(budget, pk, sk, rk, erg, True)
+                currentDB = erg.ToString & " T€"
+            End If
+
+            If Not IsNothing(hproj) Then
+                Call hproj.calculateRoundedKPI(budget, pk, sk, rk, erg, True)
+                currentV = erg.ToString & " T€"
+                pname = hproj.name
+            End If
+
+            With formProjectInfo1
+                .lblProjectName.Text = pname
+                .lblDBVersion.Text = lblDBVersion
+                .currentForecast.Text = currentV
+                .dbForecast.Text = currentDB
+            End With
+
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' aktualisiert bzw. zeigt das Status Fenster zur Ampel-Erläuterung eines Projektes 
     ''' </summary>
     ''' <param name="hproj">übergeben wird das betreffende Projekt</param>

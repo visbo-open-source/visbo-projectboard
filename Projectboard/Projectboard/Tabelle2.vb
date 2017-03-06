@@ -14,6 +14,7 @@ Public Class Tabelle2
     Private columnRC As Integer = 5
     Private oldColumn As Integer = 5
     Private oldRow As Integer = 2
+    Private columnName As Integer = 2
 
 
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
@@ -41,7 +42,7 @@ Public Class Tabelle2
                 .meColRC = CType(appInstance.ActiveSheet.Range("RoleCost"), Excel.Range).Column
                 .meColSD = CType(appInstance.ActiveSheet.Range("StartData"), Excel.Range).Column
                 .meColED = CType(appInstance.ActiveSheet.Range("EndData"), Excel.Range).Column
-
+                .meColpName = 2
                 columnRC = .meColRC
                 columnStartData = .meColSD
                 columnEndData = .meColED
@@ -53,13 +54,14 @@ Public Class Tabelle2
 
         ' jetzt den AutoFilter setzen 
         Try
-            ' einen Select machen ...
-            Try
-                'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-                CType(CType(meWS, Excel.Worksheet).Cells(2, columnRC), Excel.Range).Select()
-            Catch ex As Exception
+            ' der wird jetzt erst am Ende  gemacht 
+            '' einen Select machen ...
+            ''Try
+            ''    'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+            ''    CType(CType(meWS, Excel.Worksheet).Cells(2, columnRC), Excel.Range).Select()
+            ''Catch ex As Exception
 
-            End Try
+            ''End Try
 
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
@@ -121,6 +123,26 @@ Public Class Tabelle2
         End If
 
         Application.EnableEvents = formerEE
+
+        ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
+        Try
+            'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+            CType(CType(meWS, Excel.Worksheet).Cells(2, columnRC), Excel.Range).Select()
+
+            Dim pName As String = ""
+
+            With visboZustaende
+
+                pName = CStr(CType(appInstance.ActiveSheet.Cells(2, visboZustaende.meColpName), Excel.Range).Value)
+                If ShowProjekte.contains(pName) Then
+                    .lastProject = ShowProjekte.getProject(pName)
+                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
+                End If
+
+            End With
+        Catch ex As Exception
+
+        End Try
         'Application.ScreenUpdating = True
 
     End Sub
@@ -141,6 +163,8 @@ Public Class Tabelle2
         Try
             Dim auslastungChanged As Boolean = False
             Dim summenChanged As Boolean = False
+            ' muss extra überwacht werden, um das ProjectInfo1 Fenster auch immer zu aktualisieren
+            Dim kostenChanged As Boolean = False
             Dim newStrValue As String = ""
 
             Dim meWB As Excel.Workbook = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
@@ -308,8 +332,9 @@ Public Class Tabelle2
                                             hproj.rcLists.removeCP(cCost.KostenTyp, cPhase.nameID)
                                             cCost.KostenTyp = newCostID
                                             hproj.rcLists.addCP(newCostID, cPhase.nameID)
+                                            kostenChanged = True
                                         Else
-                                            ' es kam eine neue Rolle hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
+                                            ' es kam eine neue Kostenart hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
                                             ' muss an dieser Stelle noch gar nichts gemacht werden ..
                                         End If
                                     End If
@@ -465,7 +490,7 @@ Public Class Tabelle2
                                             Next
                                         End If
 
-
+                                        kostenChanged = True
                                         ' jetzt muss die Excel Zeile geschreiben werden 
                                         Call aktualisiereRoleCostInSheet(Target.Row, rcName, isRole, _
                                                                      visboZustaende.meColSD, showRangeLeft, showRangeRight, _
@@ -601,13 +626,14 @@ Public Class Tabelle2
                                     Dim tmpCost As clsKostenart = cphase.getCost(rcName)
 
                                     If IsNothing(tmpCost) Then
-                                        ' die Rolle muss neu angelegt und der Phase hinzugefügt werden  
+                                        ' die Kostenart muss neu angelegt und der Phase hinzugefügt werden  
 
                                         tmpCost = New clsKostenart(cphase.relEnde - cphase.relStart)
                                         tmpCost.KostenTyp = CostDefinitions.getCostdef(rcName).UID
 
                                         Call cphase.AddCost(tmpCost)
 
+                                        kostenChanged = True
                                     End If
 
                                     ' der Monatswert muss geändert werden 
@@ -664,7 +690,10 @@ Public Class Tabelle2
                 ' aktualisieren der Charts 
                 Try
 
-                    If auslastungChanged Or summenChanged Then
+                    If auslastungChanged Or summenChanged Or kostenChanged Then
+                        If Not IsNothing(formProjectInfo1) Then
+                            Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
+                        End If
                         Call awinNeuZeichnenDiagramme(6)
                     End If
 
@@ -921,6 +950,11 @@ Public Class Tabelle2
     End Sub
     Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
 
+        ' das ProjInfo Formular löschen, sofern es angezeigt wird 
+        If Not IsNothing(formProjectInfo1) Then
+            formProjectInfo1.Close()
+        End If
+
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(5)), Excel.Worksheet)
@@ -965,7 +999,7 @@ Public Class Tabelle2
     Private Sub Tabelle2_SelectionChange(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.SelectionChange
 
         appInstance.EnableEvents = False
-
+        Dim pname As String
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
             If Target.Cells.Count > 1 Then
@@ -1027,6 +1061,39 @@ Public Class Tabelle2
             Call MsgBox("Fehler bei Selection Change, Massen-Edit" & vbLf & ex.Message)
         End Try
 
+        ' in oldRow muss jetzt der entsprechende Projekt-Name ausgelsen werden .. 
+        ' folgende Bedingung muss gesichert sein: alle Projekte, die in MassEdit aufgeführt sind , 
+        ' sind sowohl in Showprojekte als auch in dbCacheProjekte
+        Dim pNameChanged As Boolean = False
+
+        With visboZustaende
+            pname = CStr(CType(appInstance.ActiveSheet.Cells(Target.Row, visboZustaende.meColpName), Excel.Range).Value)
+            If IsNothing(.lastProject) Then
+                ' es wurde bisher kein lastProject geladen 
+                If ShowProjekte.contains(pname) Then
+                    .lastProject = ShowProjekte.getProject(pname)
+                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    pNameChanged = True
+                End If
+            ElseIf pname <> .lastProject.name Then
+                ' muss neu geholt werden 
+                If ShowProjekte.contains(pname) Then
+                    .lastProject = ShowProjekte.getProject(pname)
+                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    pNameChanged = True
+                End If
+            End If
+
+            ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
+            If pNameChanged And Not IsNothing(formProjectInfo1) Then
+
+                Call updateProjectInfo1(.lastProject, .lastProjectDB)
+
+            End If
+
+        End With
+
+        
 
         appInstance.EnableEvents = True
 
