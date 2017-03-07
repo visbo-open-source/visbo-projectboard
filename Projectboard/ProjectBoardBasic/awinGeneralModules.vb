@@ -3765,6 +3765,8 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
     ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der ImportProjekte aufgeführt sind
+    ''' wenn ein importiertes Projekt bereits in der Datenbank existiert und verändert ist, dann wird es markiert und gleichzeitig temporär geschützt 
+    ''' wenn ein importiertes Projekt bereits in der Datenbank existiert, verändert wurde und von anderen geschützt ist, dann wird eine Variante angelegt 
     ''' </summary>
     ''' <param name="importDate"></param>
     ''' <remarks></remarks>
@@ -3779,6 +3781,7 @@ Public Module awinGeneralModules
         'Dim pname As String
 
 
+
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
         'Dim shpElement As Excel.Shape
@@ -3787,6 +3790,13 @@ Public Module awinGeneralModules
         Dim wasNotEmpty As Boolean
 
         Dim existsInSession As Boolean = False
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        ' aus der Datenbank alle WriteProtections holen ...
+        If Not noDB And AlleProjekte.Count > 0 Then
+            writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+        End If
 
         If AlleProjekte.Count > 0 Then
             wasNotEmpty = True
@@ -3939,23 +3949,59 @@ Public Module awinGeneralModules
                             If hproj.Status = ProjektStatus(1) Then
                                 hproj.Status = ProjektStatus(2)
                             End If
+
+                            ' wenn das Projekt bereits von anderen geschützt ist, soll es als Variante angelegt werden 
+                            ' andernfalls soll es von mir geschützt werden 
+                            If Not noDB Then
+
+                                Dim wpItem As New clsWriteProtectionItem(calcProjektKey(hproj.name, hproj.variantName), _
+                                                                          ptWriteProtectionType.project, _
+                                                                          dbUsername, _
+                                                                          False, _
+                                                                          True)
+                                If request.setWriteProtection(wpItem) Then
+                                    ' erfolgreich ...
+                                    writeProtections.upsert(wpItem)
+                                Else
+                                    ' nicht erfolgreich, weil durch anderen geschützt 
+                                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    writeProtections.upsert(wpItem)
+
+                                    ' jetzt Variante anlegen 
+                                    Dim teilName As String = dbUsername
+                                    If dbUsername.Length > 4 Then
+                                        teilName = dbUsername.Substring(0, 4)
+                                    End If
+                                    Dim altVname As String = "I" & teilName
+                                    hproj.variantName = altVname
+
+                                    Dim altKey As String = calcProjektKey(hproj.name, altVname)
+                                    If AlleProjekte.Containskey(altKey) Then
+                                        existsInSession = True
+                                    End If
+
+                                End If
+
+                            End If
+                            
+
                         Else
                             hproj.diffToPrev = False
-                        End If
+                    End If
 
 
-                        anzAktualisierungen = anzAktualisierungen + 1
+                    anzAktualisierungen = anzAktualisierungen + 1
 
-                        Try
-                            If existsInSession Then
-                                AlleProjekte.Remove(vglName)
-                                If ShowProjekte.contains(hproj.name) Then
-                                    ShowProjekte.Remove(hproj.name)
-                                End If
+                    Try
+                        If existsInSession Then
+                            AlleProjekte.Remove(vglName)
+                            If ShowProjekte.contains(hproj.name) Then
+                                ShowProjekte.Remove(hproj.name)
                             End If
-                        Catch ex1 As Exception
-                            Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
-                        End Try
+                        End If
+                    Catch ex1 As Exception
+                        Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
+                    End Try
 
                     End If
 
@@ -4082,7 +4128,8 @@ Public Module awinGeneralModules
                 .StartOffset = 0
 
                 ' Änderung 28.1.14: bei einem bereits existierenden Projekt muss der Status mitübernommen werden 
-                .Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
+                ' tk 7.3.17 das soll jetzt nicht mehr gemacht werden 
+                '.Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
 
                 If existsInSession Then
                     .shpUID = cproj.shpUID
@@ -4096,6 +4143,8 @@ Public Module awinGeneralModules
 
                 .timeStamp = importDate
                 .UID = cproj.UID
+
+                ' tk 7.3.17 das soll jetzt nicht mehr gemacht werden  
                 .VorlagenName = cproj.VorlagenName
 
                 If .Erloes > 0 Then
@@ -4106,49 +4155,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                ' tk 28.12.16 das Folgende wird gar nicht mehr gemacht, weil es die aktuellen Werte eines Steckbriefes mit den alten Werten überschreiben würde ... 
-                ' 
-                ' 
-                'If .leadPerson = "" Then
-                '    .leadPerson = cproj.leadPerson
-                'End If
-
-                'If .StrategicFit = 0 Then
-                '    .StrategicFit = cproj.StrategicFit
-                'End If
-
-                'If .Risiko = 0 Then
-                '    .Risiko = cproj.Risiko
-                'End If
-
-                'If .businessUnit = "" Then
-                '    .businessUnit = cproj.businessUnit
-                'End If
-
-                'If .description = "" Then
-                '    .description = cproj.description
-                'End If
-
-                'If .complexity = 0 Then
-                '    .complexity = cproj.complexity
-                'End If
-
-                'If .volume = 0 Then
-                '    .volume = cproj.volume
-                'End If
-
-                '' 
-                'If cproj.Erloes > 0 Then
-                '    ' dann soll der alte Wert beibehalten werden 
-                '    .Erloes = cproj.Erloes
-                '    If .anzahlRasterElemente = cproj.anzahlRasterElemente And Not IsNothing(cproj.budgetWerte) Then
-                '        .budgetWerte = cproj.budgetWerte
-                '    Else
-                '        ' Workaround: 
-                '        Dim tmpValue As Integer = hproj.dauerInDays
-                '        Call awinCreateBudgetWerte(hproj)
-                '    End If
-                'End If
+                
 
             End With
 
@@ -4175,20 +4182,25 @@ Public Module awinGeneralModules
         '
         ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
         Try
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If request.pingMongoDb() Then
 
-                If request.projectNameAlreadyExists(pName, vName, datum) Then
+            If Not noDB Then
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If request.pingMongoDb() Then
 
-                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                    tmpResult = request.retrieveOneProjectfromDB(pName, vName, datum)
+                    If request.projectNameAlreadyExists(pName, vName, datum) Then
 
+                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                        tmpResult = request.retrieveOneProjectfromDB(pName, vName, datum)
+
+                    Else
+                        ' nichts tun, tmpResult ist bereits Nothing 
+                    End If
                 Else
                     ' nichts tun, tmpResult ist bereits Nothing 
                 End If
-            Else
-                ' nichts tun, tmpResult ist bereits Nothing 
             End If
+
+            
         Catch ex As Exception
 
         End Try
@@ -10016,6 +10028,10 @@ Public Module awinGeneralModules
 
             AlleProjekte.Add(key, hproj)
 
+            ' jetzt die writeProtections aktualisieren 
+            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+            writeProtections.upsert(wpItem)
+
             If show Then
                 ' prüfen, ob es bereits in der Showprojekt enthalten ist
                 ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
@@ -12025,13 +12041,14 @@ Public Module awinGeneralModules
 
 
         'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Italic)
-        Dim fontPermanentProtected As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
-        Dim fontNormal As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
+        
+        Dim fontPermanentProtected As System.Drawing.Font = awinSettings.protectedPermanentFont
+        Dim fontNormal As System.Drawing.Font = awinSettings.normalFont
 
-        Dim colorProtectedByMe As System.Drawing.Color = Color.Green
-        Dim colorProtectedByOther As System.Drawing.Color = Color.OrangeRed
-        Dim colorNormal As System.Drawing.Color = Color.Black
-        Dim colorNoShow As System.Drawing.Color = Color.DimGray
+        Dim colorProtectedByMe As System.Drawing.Color = awinSettings.protectedByMeColor
+        Dim colorProtectedByOther As System.Drawing.Color = awinSettings.protectedByOtherColor
+        Dim colorNormal As System.Drawing.Color = awinSettings.normalColor
+        Dim colorNoShow As System.Drawing.Color = awinSettings.noShowColor
 
         ' hier auf Normal Font setzen ; in den TreeView Eigenschaften ist die Schriftgröße auf 12 gesetzt, 
         ' um sicherzustellen, dass der Text immer vollständig angezeigt wird 
@@ -18687,20 +18704,41 @@ Public Module awinGeneralModules
                 Dim isProtected As Boolean
                 Dim protectionText As String = ""
                 Dim wpItem As clsWriteProtectionItem
-                Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
-                If request.checkChgPermission(pvName, dbUsername) Then
 
-                    ' jetzt diese Projekt-Variante temporär schützen 
-                    wpItem = New clsWriteProtectionItem(pvN:=pvName, _
-                                                             type:=ptWriteProtectionType.project, _
-                                                             userN:=dbUsername, _
-                                                             prmnnt:=False, _
-                                                             protectIT:=True)
-                    isProtected = Not request.setWriteProtection(wpItem)
+                Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
+                If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
+
+                    ' jetzt fragen, ob diese Projekt-Variante bereits geschützt ist, dann nichts machen , 
+                    ' andernfalls würde ggf ein permanenter Schutz in einen temporären umgewandelt 
+
+                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+
+                    If wpItem.isProtected Then
+                        ' nichts machen 
+                    Else
+                        ' jetzt diese Projekt-Variante temporär schützen 
+                        wpItem = New clsWriteProtectionItem(pvN:=pvName, _
+                                                                 type:=ptWriteProtectionType.project, _
+                                                                 userN:=dbUsername, _
+                                                                 prmnnt:=False, _
+                                                                 protectIT:=True)
+
+                        If request.setWriteProtection(wpItem) Then
+                            ' es hat geklappt 
+                            isProtected = False
+                            writeProtections.upsert(wpItem)
+                        Else
+                            isProtected = True
+                            wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            writeProtections.upsert(wpItem)
+                            protectionText = writeProtections.getProtectionText(pvName)
+                        End If
+                    End If
+                    
 
                 Else
                     isProtected = True
-                    wpItem = request.getWriteProtection(pvName:=pvName)
+                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
                     writeProtections.upsert(wpItem)
                     protectionText = writeProtections.getProtectionText(pvName)
                 End If
@@ -18758,7 +18796,8 @@ Public Module awinGeneralModules
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
                                 ' wenn es protected ist, entsprechend markieren 
                                 If isProtected Then
-                                    CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.meSchutzColor
+                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
                                     cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
@@ -18889,7 +18928,7 @@ Public Module awinGeneralModules
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                         End If
-                                        
+
 
                                         'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                     Else
@@ -18921,7 +18960,8 @@ Public Module awinGeneralModules
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
                                 If isProtected Then
-                                    CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.meSchutzColor
+                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
                                     cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
@@ -19032,7 +19072,7 @@ Public Module awinGeneralModules
                                                                 Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                 Formula1:="0")
                                             End If
-                                            
+
                                         End With
 
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
@@ -19043,7 +19083,7 @@ Public Module awinGeneralModules
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                         End If
-                                        
+
                                     Else
                                         CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
@@ -19078,7 +19118,8 @@ Public Module awinGeneralModules
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
                                 If isProtected Then
-                                    CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.meSchutzColor
+                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
                                     cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
@@ -19122,7 +19163,7 @@ Public Module awinGeneralModules
 
                                         End Try
                                     End If
-                                    
+
 
                                 End With
 
@@ -19146,7 +19187,7 @@ Public Module awinGeneralModules
 
                                             End Try
                                         End If
-                                        
+
 
                                     End With
 
@@ -19180,7 +19221,7 @@ Public Module awinGeneralModules
                                                                 Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                 Formula1:="0")
                                             End If
-                                            
+
                                         End With
 
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
@@ -19190,7 +19231,7 @@ Public Module awinGeneralModules
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                         End If
-                                        
+
                                     Else
                                         CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""

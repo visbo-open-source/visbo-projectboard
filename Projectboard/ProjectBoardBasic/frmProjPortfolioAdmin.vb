@@ -213,7 +213,7 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    .Text = "aus Session Löschen"
+                    OKButton.Text = "aus Session Löschen"
                 Else
                     .OKButton.Text = "Delete from Session"
                 End If
@@ -869,10 +869,23 @@ Public Class frmProjPortfolioAdmin
                                 ' es wurde bereits Node Apperance inkl Check-Status geklärt
                             Else
                                 ' nicht zugelassen , also wieder zurücknehmen 
+
+                                ' wenn node gecheckt wurde, aber das Projekt gar nicht existiert ...
+                                If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                                    "please store at database before protecting ...")
+                                    Else
+                                        Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                    "dann schützen ...")
+                                    End If
+                                End If
+
                                 node.Checked = Not node.Checked
                                 writeProtections.upsert(request.getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
+
 
                         Else
                             ' es gibt mehrere Projekt-Varianten 
@@ -889,12 +902,24 @@ Public Class frmProjPortfolioAdmin
                                     ' erfolgreich ..
                                     ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                 Else
+
+                                    If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                        If awinSettings.englishLanguage Then
+                                            Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf & _
+                                                        "please store at database before protecting ...")
+                                        Else
+                                            Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                        "dann schützen ...")
+                                        End If
+                                    End If
+
                                     ' nicht zugelassen , also alles unverändert lassen  
                                     atleastOneError = True
                                     writeProtections.upsert(request.getWriteProtection(pName, vName))
                                     Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                                 End If
 
+                                
                             Next
 
                             ' jetzt korrigieren, wenn eines der Kinder nicht auf den gleichen Check-Status gesetzt werden konnte
@@ -922,6 +947,16 @@ Public Class frmProjPortfolioAdmin
                             ' erfolgreich ..
                             ' es wurde bereits Node Apperance inkl Check-Status geklärt
                         Else
+                            If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                                "please store at database before protecting ...")
+                                Else
+                                    Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                "dann schützen ...")
+                                End If
+                            End If
+
                             ' nicht zugelassen , also alles unverändert lassen  
                             node.Checked = Not node.Checked
                             writeProtections.upsert(request.getWriteProtection(pName, vName))
