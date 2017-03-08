@@ -38,6 +38,7 @@ Partial Class frmOutputWindow
         'ListBoxOutput
         '
         Me.ListBoxOutput.FormattingEnabled = True
+        Me.ListBoxOutput.HorizontalExtent = 1024
         Me.ListBoxOutput.HorizontalScrollbar = True
         Me.ListBoxOutput.Location = New System.Drawing.Point(12, 44)
         Me.ListBoxOutput.Name = "ListBoxOutput"
