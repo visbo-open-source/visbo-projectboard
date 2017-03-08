@@ -1314,6 +1314,16 @@ Public Module awinGeneralModules
         projectboardShapes.clear()
 
         currentConstellationName = ""
+
+        ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
+                                   dbUsername, dbPasswort)
+        If Request.cancelWriteProtections(dbUsername) Then
+            If awinSettings.visboDebug Then
+                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+            End If
+        End If
+
         
         ' tk, 10.11.16 allDependencies darf nicht gelöscht werden, weil das sonst nicht mehr vorhanden ist
         ' allDependencies wird aktull nur beim Start geladen - und das reicht ja auch ... 
@@ -3930,48 +3940,8 @@ Public Module awinGeneralModules
                         ' wenn es nicht schon von mir permanent geschützt ist 
                         If Not noDB Then
                             Dim wpItem As clsWriteProtectionItem
-                            Dim isProtectedbyOthers As Boolean
 
-                            If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
-
-                                isProtectedbyOthers = False
-                                ' jetzt prüfen, ob es Null ist, von mir permanent/nicht permanent geschützt wurde .. 
-                                wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-
-                                Dim notYetDone As Boolean = False
-                                If IsNothing(wpItem) Then
-                                    notYetDone = True
-
-                                ElseIf wpItem.permanent Then
-                                    notYetDone = False
-                                    ' meinen permanenten Schutz einbauen 
-                                    writeProtections.upsert(wpItem)
-
-                                Else
-                                    notYetDone = True
-                                    
-                                End If
-
-                                If notYetDone Then
-                                    wpItem = New clsWriteProtectionItem(calcProjektKey(hproj.name, hproj.variantName), _
-                                                                              ptWriteProtectionType.project, _
-                                                                              dbUsername, _
-                                                                              False, _
-                                                                              True)
-
-                                    If request.setWriteProtection(wpItem) Then
-                                        ' erfolgreich ...
-                                        writeProtections.upsert(wpItem)
-                                    Else
-                                        ' in diesem Fall wurde es in der Zwischenzeit von jdn anders geschützt  
-                                        isProtectedbyOthers = True
-                                    End If
-
-                                End If
-                                
-                            Else
-                                isProtectedbyOthers = True
-                            End If
+                            Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
                             If isProtectedbyOthers Then
 
@@ -9866,6 +9836,15 @@ Public Module awinGeneralModules
                     ' speichern des Projektes 
                     hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj, dbUsername) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputLine = "stored: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputLine)
+                        Else
+                            outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputLine)
+                        End If
+
                         anzahlNeue = anzahlNeue + 1
 
                         Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
@@ -9879,6 +9858,10 @@ Public Module awinGeneralModules
                             outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
                         End If
                         outPutCollection.Add(outputLine)
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem)
+
                     End If
                 Else
                     ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
@@ -9887,6 +9870,15 @@ Public Module awinGeneralModules
                     If Not hproj.isIdenticalTo(oldProj) Then
                         hproj.timeStamp = DBtimeStamp
                         If request.storeProjectToDB(hproj, dbUsername) Then
+
+                            If awinSettings.englishLanguage Then
+                                outputLine = "stored: " & hproj.name & ", " & hproj.variantName
+                                outPutCollection.Add(outputLine)
+                            Else
+                                outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                                outPutCollection.Add(outputLine)
+                            End If
+
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
 
@@ -9899,6 +9891,10 @@ Public Module awinGeneralModules
                                 outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
                             End If
                             outPutCollection.Add(outputLine)
+
+                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            writeProtections.upsert(wpItem)
+
                         End If
                     End If
                 End If
@@ -9910,6 +9906,7 @@ Public Module awinGeneralModules
         ' jetzt wird die 
         Try
             If request.storeConstellationToDB(currentConstellation) Then
+                
             Else
                 If awinSettings.englishLanguage Then
                     outputLine = "Error when writing scenario: " & currentConstellation.constellationName
@@ -18724,47 +18721,21 @@ Public Module awinGeneralModules
 
                 ' ist das Projekt geschützt ? 
                 ' wenn nein, dann temporär schützen 
-                Dim isProtected As Boolean
                 Dim protectionText As String = ""
                 Dim wpItem As clsWriteProtectionItem
+                Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
-                Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
-                If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
+                If isProtectedbyOthers Then
 
-                    ' jetzt fragen, ob diese Projekt-Variante bereits geschützt ist, dann nichts machen , 
-                    ' andernfalls würde ggf ein permanenter Schutz in einen temporären umgewandelt 
-
-                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-
-                    If wpItem.isProtected Then
-                        ' nichts machen 
-                    Else
-                        ' jetzt diese Projekt-Variante temporär schützen 
-                        wpItem = New clsWriteProtectionItem(pvN:=pvName, _
-                                                                 type:=ptWriteProtectionType.project, _
-                                                                 userN:=dbUsername, _
-                                                                 prmnnt:=False, _
-                                                                 protectIT:=True)
-
-                        If request.setWriteProtection(wpItem) Then
-                            ' es hat geklappt 
-                            isProtected = False
-                            writeProtections.upsert(wpItem)
-                        Else
-                            isProtected = True
-                            wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-                            writeProtections.upsert(wpItem)
-                            protectionText = writeProtections.getProtectionText(pvName)
-                        End If
-                    End If
-                    
-
-                Else
-                    isProtected = True
+                    ' nicht erfolgreich, weil durch anderen geschützt ... 
+                    ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
                     wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
                     writeProtections.upsert(wpItem)
-                    protectionText = writeProtections.getProtectionText(pvName)
+
+                    protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+
                 End If
+
 
                 pStart = getColumnOfDate(hproj.startDate)
                 pEnde = getColumnOfDate(hproj.endeDate)
@@ -18818,7 +18789,7 @@ Public Module awinGeneralModules
                                 ' Name schreiben
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
                                 ' wenn es protected ist, entsprechend markieren 
-                                If isProtected Then
+                                If isProtectedbyOthers Then
                                     'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
                                     CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
@@ -18848,7 +18819,7 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = roleName
-                                    If isProtected Then
+                                    If isProtectedbyOthers Then
                                     Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -18872,7 +18843,7 @@ Public Module awinGeneralModules
                                 If awinSettings.allowSumEditing Then
                                     With CType(.Cells(zeile, 6), Excel.Range)
 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -18922,7 +18893,7 @@ Public Module awinGeneralModules
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
 
-                                            If isProtected Then
+                                            If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
                                                 Try
@@ -18946,7 +18917,7 @@ Public Module awinGeneralModules
 
                                         End With
                                         ' erlaubter Eingabebereich grau markieren, aber nur wenn nicht protected 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -18982,7 +18953,7 @@ Public Module awinGeneralModules
 
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                If isProtected Then
+                                If isProtectedbyOthers Then
                                     'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
                                     CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
@@ -19013,7 +18984,7 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = costName
-                                    If isProtected Then
+                                    If isProtectedbyOthers Then
                                     Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19037,7 +19008,7 @@ Public Module awinGeneralModules
                                 If awinSettings.allowSumEditing Then
 
                                     With CType(.Cells(zeile, 6), Excel.Range)
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19082,7 +19053,7 @@ Public Module awinGeneralModules
                                     If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                            If isProtected Then
+                                            If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
                                                 Try
@@ -19101,7 +19072,7 @@ Public Module awinGeneralModules
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
                                         ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19140,7 +19111,7 @@ Public Module awinGeneralModules
 
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                If isProtected Then
+                                If isProtectedbyOthers Then
                                     'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
                                     CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
@@ -19171,7 +19142,7 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = ""
-                                    If isProtected Then
+                                    If isProtectedbyOthers Then
                                     Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19193,7 +19164,7 @@ Public Module awinGeneralModules
                                 If awinSettings.allowSumEditing Then
                                     With CType(.Cells(zeile, 6), Excel.Range)
                                         .Value = ""
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19231,7 +19202,7 @@ Public Module awinGeneralModules
                                     If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                            If isProtected Then
+                                            If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
                                                 Try
@@ -19249,7 +19220,7 @@ Public Module awinGeneralModules
 
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19339,6 +19310,74 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' versucht das Projekt für mich zu schützen 
+    ''' gibt false zurück , wenn das Projekt durch andere geschützt ist 
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="vName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function tryToprotectProjectforMe(ByVal pName As String, ByVal vName As String) As Boolean
+
+        Dim wpItem As clsWriteProtectionItem
+        Dim isProtectedbyOthers As Boolean
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        If request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+
+            ' es existiert in der Datenbank ...
+            If request.checkChgPermission(pName, vName, dbUsername) Then
+
+                isProtectedbyOthers = False
+                ' jetzt prüfen, ob es Null ist, von mir permanent/nicht permanent geschützt wurde .. 
+                wpItem = request.getWriteProtection(pName, vName)
+
+                Dim notYetDone As Boolean = False
+
+                If IsNothing(wpItem) Then
+                    ' wpitem kann NULL sein
+                    notYetDone = True
+
+                ElseIf wpItem.permanent Then
+                    notYetDone = False
+                    ' meinen permanenten Schutz einbauen 
+                    writeProtections.upsert(wpItem)
+
+                Else
+                    notYetDone = True
+                End If
+
+                If notYetDone Then
+                    wpItem = New clsWriteProtectionItem(calcProjektKey(pName, vName), _
+                                                              ptWriteProtectionType.project, _
+                                                              dbUsername, _
+                                                              False, _
+                                                              True)
+
+                    If request.setWriteProtection(wpItem) Then
+                        ' erfolgreich ...
+                        writeProtections.upsert(wpItem)
+                    Else
+                        ' in diesem Fall wurde es in der Zwischenzeit von jdn anders geschützt  
+                        isProtectedbyOthers = True
+                    End If
+
+                End If
+
+            Else
+                isProtectedbyOthers = True
+            End If
+        Else
+            ' das Projekt existiert bisher nur in der Session des Nutzers 
+            isProtectedbyOthers = False
+        End If
+
+
+        tryToprotectProjectforMe = Not isProtectedbyOthers
+
+    End Function
 
     ''' <summary>
     ''' aktualisiert in Tabelle2 die Auslastungs-Values 

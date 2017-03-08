@@ -135,19 +135,6 @@ Imports System.Windows
 
                 Call storeSingleConstellationToDB(outPutCollection, currentConstellation)
 
-                If outPutCollection.Count > 0 Then
-                    Dim msgH As String, msgE As String
-                    If awinSettings.englishLanguage Then
-                        msgH = "Store Scenario " & currentConstellation.constellationName
-                        msgE = "following problems:"
-                    Else
-                        msgH = "Speichern Szenario " & currentConstellation.constellationName
-                        msgE = "folgende Probleme sind aufgetreten:"
-                    End If
-
-                    Call showOutPut(outPutCollection, msgH, msgE)
-
-                End If
             Next
 
         End If
@@ -887,8 +874,10 @@ Imports System.Windows
 
                         ' hier jetzt prüfen, ob es sich um ein geschütztes Projekt handelt ... 
                         hproj = ShowProjekte.getProject(pName)
-                        Dim pvName As String = calcProjektKeyDB(pName, hproj.variantName)
-                        If request.checkChgPermission(pName, hproj.variantName, dbUsername, ptWriteProtectionType.project) Then
+
+                        Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+
+                        If Not isProtectedbyOthers Then
                             ' hier das Fomular zur Eingabe des neuen Namens aufrufen ... 
                             Dim renameForm As New frmRenameProject
                             With renameForm
@@ -985,6 +974,9 @@ Imports System.Windows
 
                                 End Try
                             End If
+
+                            ' jetzt kann der Schutz wieder freigegeben werden ...
+
                         Else
                             If awinSettings.englishLanguage Then
                                 Call MsgBox("Project " & pName & " is write-protected and cannot be renamed!")
@@ -993,8 +985,6 @@ Imports System.Windows
                             End If
                         End If
 
-                        
-                        
 
                     Else
                         If awinSettings.englishLanguage Then
@@ -1478,39 +1468,9 @@ Imports System.Windows
                 ' jetzt prüfen : die Variante kann nur dann zur Standard-Variante gemacht werden, 
                 ' wenn die Standard-Variante nicht geschützt ist ..
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
-                                           dbUsername, dbPasswort)
-                If request.checkChgPermission(hproj.name, "", dbUsername) And hproj.variantName <> "" Then
+
+                If tryToprotectProjectforMe(hproj.name, "") Then
                     ' ist erlaubt ...
-
-                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, "")
-                    Dim notYetDone As Boolean = False
-
-                    If IsNothing(wpItem) Then
-                        notYetDone = True
-                    ElseIf Not wpItem.isProtected Then
-                        ' jetzt schützen 
-                        notYetDone = True
-                    Else
-                        ' es ist schon geschützt, deswegen muss nix weiter gemacht werden 
-                    End If
-                    If notYetDone Then
-                        wpItem = New clsWriteProtectionItem(calcProjektKey(hproj.name, ""), _
-                                                             ptWriteProtectionType.project, _
-                                                             dbUsername, _
-                                                             False, _
-                                                             True)
-                        If request.setWriteProtection(wpItem) Then
-                            ' alles in Ordnung 
-                        Else
-                            ' in der Zwischenzewit geändert , also holen ...
-                            wpItem = request.getWriteProtection(hproj.name, "")
-                        End If
-                    End If
-
-                    ' jetzt in writeProtections aktualisieren ...
-                    writeProtections.upsert(wpItem)
-
                     ' das Projekt zur Standard Variante machen 
 
 
@@ -1562,7 +1522,7 @@ Imports System.Windows
                                         "und kann daher nicht von einer anderen Variante überschrieben werden")
                         End If
                     End If
-                    
+
                 End If
 
             Next i
@@ -3346,54 +3306,8 @@ Imports System.Windows
                     ' hier prüfen, ob das Projekt bereits in der DB existiert ...
                     ' und ob es von anderen geschützt ist 
                     ' wenn ja, dann soll es temporär geschützt werden 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
-                                               dbUsername, dbPasswort)
 
-                    Dim notYetDone As Boolean = False
-                    If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-
-                        If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
-                            ' Nutzer darf es bearbeiten 
-                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
-                            If wpItem.isProtected Then
-                                ' alles gut, es ist nichts weiter zu tun 
-
-                            Else
-                                wpItem = New clsWriteProtectionItem(calcProjektKey(hproj.name, hproj.variantName), _
-                                                                     ptWriteProtectionType.project, _
-                                                                     dbUsername, _
-                                                                     False, _
-                                                                     True)
-
-                                If request.setWriteProtection(wpItem) Then
-                                    ' erfolgreich 
-                                Else
-                                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-                                End If
-                            End If
-
-                            writeProtections.upsert(wpItem)
-                            notYetDone = True
-                        Else
-                            ' das Projekt darf vom Nutzer nicht verändert werden , weil von anderem Nutzer geschützt 
-                            If awinSettings.englishLanguage Then
-                                Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
-                                            "and cannot be modified. You could instead create a variant.")
-                            Else
-                                Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
-                                            "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
-                            End If
-
-                            notYetDone = False
-
-                        End If
-                    Else
-                        ' alles Gut, dann existiert es eben bisher nur in der Session 
-                        notYetDone = True
-                    End If
-
-
-                    If notYetDone Then
+                    If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
 
                         With ProjektAendern
                             .projectName.Text = hproj.name
@@ -3447,7 +3361,15 @@ Imports System.Windows
 
                             Call awinNeuZeichnenDiagramme(5)
                         End If
-
+                    Else
+                        ' das Projekt darf vom Nutzer nicht verändert werden , weil von anderem Nutzer geschützt 
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                        "and cannot be modified. You could instead create a variant.")
+                        Else
+                            Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                        "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                        End If
                     End If
 
                     
@@ -3824,7 +3746,24 @@ Imports System.Windows
 
                 With singleShp
                     If isProjectType(shapeArt) Then
-                        Call awinBeauftragung(pname:=.Name, type:=1)
+
+                        If ShowProjekte.contains(.Name) Then
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+
+                            If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+                                Call awinBeauftragung(pname:=hproj.name, type:=1)
+
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                                "and cannot be modified. You could instead create a variant.")
+                                Else
+                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                                "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                End If
+                            End If
+                        End If
+
                     End If
                 End With
             Next
@@ -3872,7 +3811,35 @@ Imports System.Windows
 
                 With singleShp
                     If isProjectType(shapeArt) Then
-                        Call awinCancelBeauftragung(pname:=.Name)
+
+                        If ShowProjekte.contains(.Name) Then
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+
+                            ' darf nur gemacht werden, wenn Varianten-NAme <> ""
+                            If hproj.variantName <> "" Then
+                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+                                    Call awinCancelBeauftragung(hproj.name)
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                                    "and cannot be modified. You could instead create a variant.")
+                                    Else
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                                    "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                    End If
+                                End If
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("Base-Variant must not be de-freezed ..." & vbLf & _
+                                                "please create a variant first ...")
+                                Else
+                                    Call MsgBox("die Fixierung der Standard Variante kann nicht aufgehoben werden ..." & vbLf & _
+                                                "bitte erstellen Sie zu diesem Zweck eine Variante ...")
+                                End If
+                            End If
+                            
+                        End If
+
                     End If
                 End With
             Next
