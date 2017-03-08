@@ -26,22 +26,43 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' setzt die WriteProtections zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub Clear()
+        _allWriteProtections.Clear()
+    End Sub
 
-    Public Property liste As SortedList(Of String, clsWriteProtectionItem)
-        Get
-            liste = _allWriteProtections
-        End Get
+    ''' <summary>
+    ''' aktualisiert die bestehende Liste durch die neue Liste; alle Einträge, die nur Session-Projekte sind, bleiben unverändert 
+    ''' </summary>
+    ''' <value></value>
+    ''' <remarks></remarks>
+    Public WriteOnly Property adjustListe As SortedList(Of String, clsWriteProtectionItem)
+
         Set(value As SortedList(Of String, clsWriteProtectionItem))
             If Not IsNothing(value) Then
-                ' sicherstellen, dass die Projekt-Bezeichner in de rrichtigen Farbe / Font dargestellt werden 
+                ' sicherstellen, dass die Projekt-Bezeichner in der richtigen Farbe / Font dargestellt werden 
                 For Each kvp As KeyValuePair(Of String, clsWriteProtectionItem) In value
                     ' das aktualisiert jetzt ggf auch die Namen der Projekte auf der Multiprojekt-Tafel 
                     Call Me.upsert(kvp.Value)
                 Next
+                ' dieser Befehl darf nicht ausgeführt werden, weil sonst alle nur in der Session vorhandenen 
+                ' Projekte in der Liste verloren gehen 
                 ' jetzt einfach die komplette Liste umhängen ... 
-                _allWriteProtections = value
+                '_allWriteProtections = value
             Else
-                _allWriteProtections = New SortedList(Of String, clsWriteProtectionItem)
+                ' Alle Einträge löschen bis auf die , die nur in der Session sind 
+                For Each kvp As KeyValuePair(Of String, clsWriteProtectionItem) In _allWriteProtections
+                    If kvp.Value.isSessionOnly Then
+                        ' nichts tun 
+                    Else
+                        _allWriteProtections.Remove(kvp.Key)
+                    End If
+                Next
+                ' tk, wurde durch das obige ersetzt ... 
+                '_allWriteProtections = New SortedList(Of String, clsWriteProtectionItem)
             End If
         End Set
     End Property

@@ -1306,6 +1306,7 @@ Public Module awinGeneralModules
 
         ShowProjekte.Clear()
         AlleProjekte.Clear()
+        writeProtections.Clear()
         selectedProjekte.Clear()
         ImportProjekte.Clear()
         DiagramList.Clear()
@@ -3795,7 +3796,7 @@ Public Module awinGeneralModules
 
         ' aus der Datenbank alle WriteProtections holen ...
         If Not noDB And AlleProjekte.Count > 0 Then
-            writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         If AlleProjekte.Count > 0 Then
@@ -3963,7 +3964,7 @@ Public Module awinGeneralModules
                                     ' erfolgreich ...
                                     writeProtections.upsert(wpItem)
                                 Else
-                                    ' nicht erfolgreich, weil durch anderen geschützt 
+                                    ' nicht erfolgreich, weil durch anderen geschützt ... oder aber noch gar nicht in Datenbank 
                                     wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
                                     writeProtections.upsert(wpItem)
 
@@ -3983,25 +3984,25 @@ Public Module awinGeneralModules
                                 End If
 
                             End If
-                            
+
 
                         Else
                             hproj.diffToPrev = False
-                    End If
-
-
-                    anzAktualisierungen = anzAktualisierungen + 1
-
-                    Try
-                        If existsInSession Then
-                            AlleProjekte.Remove(vglName)
-                            If ShowProjekte.contains(hproj.name) Then
-                                ShowProjekte.Remove(hproj.name)
-                            End If
                         End If
-                    Catch ex1 As Exception
-                        Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
-                    End Try
+
+
+                        anzAktualisierungen = anzAktualisierungen + 1
+
+                        Try
+                            If existsInSession Then
+                                AlleProjekte.Remove(vglName)
+                                If ShowProjekte.contains(hproj.name) Then
+                                    ShowProjekte.Remove(hproj.name)
+                                End If
+                            End If
+                        Catch ex1 As Exception
+                            Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
+                        End Try
 
                     End If
 
@@ -4155,7 +4156,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                
+
 
             End With
 
@@ -4200,7 +4201,7 @@ Public Module awinGeneralModules
                 End If
             End If
 
-            
+
         Catch ex As Exception
 
         End Try
@@ -4447,7 +4448,7 @@ Public Module awinGeneralModules
                                             AlleProjekte.Add(calcProjektKey(hproj), hproj)
                                             ok = True
                                         End If
-                                        
+
                                     Else
                                         ' nicht in Session, nicht in Datenbank: nicht ok !
                                         ok = False
@@ -4617,7 +4618,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                    
+
 
                     If valuesDidChange Then
                         hproj.diffToPrev = True
@@ -4658,7 +4659,7 @@ Public Module awinGeneralModules
         Dim sfit As Double, risk As Double
         Dim capacityNeeded As String = ""
         Dim externCostInput As String = ""
-        
+
         Dim description As String = ""
         Dim businessUnit As String = ""
         Dim createdProjects As Integer = 0
@@ -4774,7 +4775,7 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                         End Try
-                       
+
 
                     Else
                         variantName = ""
@@ -4857,7 +4858,7 @@ Public Module awinGeneralModules
                                     Else
                                         Throw New ArgumentException("mit dieser Angabe konnte nichts angefangen werden ...")
                                     End If
-                                    
+
 
                                     lastSpaltenValue = spalte + 9
                                     capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -4907,7 +4908,7 @@ Public Module awinGeneralModules
                                             Throw New ArgumentException("Business Unit unbekannt ..")
                                         End If
                                     End If
-                                    
+
 
                                     lastSpaltenValue = spalte + 14
                                     description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -5144,9 +5145,9 @@ Public Module awinGeneralModules
                             End If
                         End If
 
-                        
+
                     End If
-                    
+
 
                     geleseneProjekte = geleseneProjekte + 1
                     zeile = zeile + 1
@@ -5160,7 +5161,7 @@ Public Module awinGeneralModules
             Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
         End Try
 
-        
+
         Call MsgBox("gelesen: " & geleseneProjekte & vbLf & _
                     "erzeugt: " & createdProjects & vbLf & _
                     "importiert: " & ImportProjekte.Count)
@@ -5352,7 +5353,7 @@ Public Module awinGeneralModules
 
             End If
 
-            
+
 
             ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
             If Not IsNothing(vglProj) And Not noComparison Then
@@ -9663,7 +9664,7 @@ Public Module awinGeneralModules
                     outPutCollection.Add(outputLine)
                     outputLine = "bitte löschen Sie die Session und laden Sie dann die Szenarien mit dem gewünschten Versions-Datum"
                     outPutCollection.Add(outputLine)
-                    
+
                     Exit For
                 Else
                     If showIT Then
@@ -9697,7 +9698,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                
+
 
 
             Else
@@ -9851,6 +9852,10 @@ Public Module awinGeneralModules
                     hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj, dbUsername) Then
                         anzahlNeue = anzahlNeue + 1
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem)
+
                     Else
                         ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
                         If awinSettings.englishLanguage Then
@@ -9869,6 +9874,9 @@ Public Module awinGeneralModules
                         If request.storeProjectToDB(hproj, dbUsername) Then
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
+
+                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            writeProtections.upsert(wpItem)
                         Else
                             If awinSettings.englishLanguage Then
                                 outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
@@ -9915,7 +9923,7 @@ Public Module awinGeneralModules
             End If
 
         End If
-        
+
         If awinSettings.englishLanguage Then
             outputLine = "Stored ... " & vbLf & _
                 "Scenario: " & currentConstellation.constellationName & vbLf & vbLf & _
@@ -10123,7 +10131,7 @@ Public Module awinGeneralModules
                                     End If
                                 End If
                             End If
-                            
+
 
                         End If
 
@@ -10275,7 +10283,7 @@ Public Module awinGeneralModules
 
             Else
                 ' es wird in Showprojekte und in AlleProjekte gelöscht, ausserdem auch auf der Projekt-Tafel 
-                
+
                 Dim key As String = calcProjektKey(pname, variantName)
 
                 Try
@@ -10297,7 +10305,7 @@ Public Module awinGeneralModules
                     outputCollection.Add(outputLine)
                 End Try
 
-                
+
             End If
 
 
@@ -10452,7 +10460,7 @@ Public Module awinGeneralModules
 
         End If
 
-            identifyTimeStampsToDelete = tsToDelete
+        identifyTimeStampsToDelete = tsToDelete
 
     End Function
 
@@ -11436,7 +11444,7 @@ Public Module awinGeneralModules
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         buildPvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
-        
+
     End Function
 
     ' wird nicht mehr verwendet - jetzt mit upDateTreeView gelöst 
@@ -11773,7 +11781,7 @@ Public Module awinGeneralModules
 
             If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             With TreeviewProjekte
@@ -11832,7 +11840,7 @@ Public Module awinGeneralModules
                             variantName = CStr(tmpList.Item(1))
                             hproj = AlleProjekte.getProject(pname, variantName)
                         End If
-                        
+
                     End If
 
 
@@ -11846,7 +11854,7 @@ Public Module awinGeneralModules
 
                     If showPname Then
 
-                        
+
                         projectNode = .Nodes.Add(pname)
                         'projectNode.Text = pname
                         ' das wird jetzt über bestimmeCheckStatus gemacht bzw. über bestimmeNodeAppearance

@@ -256,7 +256,7 @@ Imports System.Windows
 
             ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
             If Not noDB Then
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             appInstance.ScreenUpdating = True

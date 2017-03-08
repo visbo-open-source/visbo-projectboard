@@ -848,7 +848,7 @@ Public Class frmProjPortfolioAdmin
             If Not noDB Then
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 Select Case treeLevel
 
@@ -919,7 +919,7 @@ Public Class frmProjPortfolioAdmin
                                     Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                                 End If
 
-                                
+
                             Next
 
                             ' jetzt korrigieren, wenn eines der Kinder nicht auf den gleichen Check-Status gesetzt werden konnte
@@ -1417,7 +1417,7 @@ Public Class frmProjPortfolioAdmin
             End If
 
         End If
-        
+
         getToolTippText = tmpText
 
     End Function
@@ -1454,7 +1454,7 @@ Public Class frmProjPortfolioAdmin
         If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
             ' jetzt die writeProtections neu bestimmen 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         selectedNode = e.Node
@@ -2155,7 +2155,7 @@ Public Class frmProjPortfolioAdmin
             ' die Behandlung von chgInSession ist etwas anders, weil sofort eine Aktion erfolgen muss ... 
             If aKtionskennung = PTTvActions.chgInSession Then
 
-                
+
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2282,7 +2282,7 @@ Public Class frmProjPortfolioAdmin
                 ' wenn ja, dann schützen 
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2347,7 +2347,7 @@ Public Class frmProjPortfolioAdmin
 
                         End If
                     End If
-                    
+
 
 
                 Next
@@ -2580,7 +2580,7 @@ Public Class frmProjPortfolioAdmin
                     Dim a As Integer = 0
                     Call MsgBox("Fehler: " & ex.Message)
                 End Try
-                
+
 
             ElseIf aKtionskennung = PTTvActions.activateV Then
                 ' nichts tun, Alle Resetten macht bei diesen keinen Sinn 
@@ -2592,7 +2592,7 @@ Public Class frmProjPortfolioAdmin
                 ' wenn ja, dann aufheben 
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2633,7 +2633,7 @@ Public Class frmProjPortfolioAdmin
                                     End If
 
                                 End If
-                                
+
 
                             Next
 
@@ -2671,7 +2671,7 @@ Public Class frmProjPortfolioAdmin
                     Else
                         ' es muss nichts gemacht werden ... 
                     End If
-                    
+
 
 
 

@@ -9,6 +9,9 @@
     Private _isProtected As Boolean
     ' wenn true, bleibt die Sperre über die Session hinaus bestehen, solnage bis sie explizit aufgehoben wird 
     Private _permanent As Boolean
+    ' wenn true, dann ist es nur in der Sesison vorhanden 
+    Private _isSessionOnly As Boolean
+
     Private _lastDateSet As Date
     Private _lastDateReleased As Date
 
@@ -94,6 +97,27 @@
     End Property
 
     ''' <summary>
+    ''' markiert ein Projekt, das quasi geschützt ist:
+    ''' nur in der Session des Nutzers vorhanden 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property isSessionOnly As Boolean
+        Get
+            isSessionOnly = _isSessionOnly And Not _isProtected
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _isSessionOnly = value
+            Else
+                _isSessionOnly = False
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
     ''' liest / setzt, ob permanent geschützt werden soll 
     ''' </summary>
     ''' <value></value>
@@ -130,6 +154,7 @@
         _type = ptWriteProtectionType.project
         _userName = ""
         _isProtected = True
+        _isSessionOnly = False
         _permanent = False
         _lastDateSet = Date.Now
         _lastDateReleased = Date.MinValue
@@ -149,6 +174,7 @@
         _type = type
         _userName = userN
         _isProtected = protectIT
+        _isSessionOnly = False
 
         If Not protectIT Then
             _permanent = False
