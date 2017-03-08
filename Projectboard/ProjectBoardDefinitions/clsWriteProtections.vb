@@ -1,15 +1,68 @@
 ﻿Public Class clsWriteProtections
     Private _allWriteProtections As SortedList(Of String, clsWriteProtectionItem)
 
-    Public Property liste As SortedList(Of String, clsWriteProtectionItem)
+    Public ReadOnly Property getProtectionText(ByVal pvname As String) As String
         Get
-            liste = _allWriteProtections
+            Dim tmpText As String = ""
+            If Me.isProtected(pvname) Then
+                Dim permanent As String = ""
+                If Me.isPermanentProtected(pvname) Then
+                    permanent = "permanent "
+                End If
+                If awinSettings.englishLanguage Then
+                    tmpText = permanent & "protected by: " & Me.lastModifiedBy(pvname) & ", at: " & Me.changeDate(pvname).ToString
+                Else
+                    tmpText = permanent & "geschützt von: " & Me.lastModifiedBy(pvname) & ", am: " & Me.changeDate(pvname).ToString
+                End If
+
+            Else
+                If awinSettings.englishLanguage Then
+                    tmpText = "no protection"
+                Else
+                    tmpText = "nicht geschützt"
+                End If
+            End If
+            getProtectionText = tmpText
         End Get
+    End Property
+
+    ''' <summary>
+    ''' setzt die WriteProtections zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub Clear()
+        _allWriteProtections.Clear()
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert die bestehende Liste durch die neue Liste; alle Einträge, die nur Session-Projekte sind, bleiben unverändert 
+    ''' </summary>
+    ''' <value></value>
+    ''' <remarks></remarks>
+    Public WriteOnly Property adjustListe As SortedList(Of String, clsWriteProtectionItem)
+
         Set(value As SortedList(Of String, clsWriteProtectionItem))
             If Not IsNothing(value) Then
-                _allWriteProtections = value
+                ' sicherstellen, dass die Projekt-Bezeichner in der richtigen Farbe / Font dargestellt werden 
+                For Each kvp As KeyValuePair(Of String, clsWriteProtectionItem) In value
+                    ' das aktualisiert jetzt ggf auch die Namen der Projekte auf der Multiprojekt-Tafel 
+                    Call Me.upsert(kvp.Value)
+                Next
+                ' dieser Befehl darf nicht ausgeführt werden, weil sonst alle nur in der Session vorhandenen 
+                ' Projekte in der Liste verloren gehen 
+                ' jetzt einfach die komplette Liste umhängen ... 
+                '_allWriteProtections = value
             Else
-                _allWriteProtections = New SortedList(Of String, clsWriteProtectionItem)
+                ' Alle Einträge löschen bis auf die , die nur in der Session sind 
+                For Each kvp As KeyValuePair(Of String, clsWriteProtectionItem) In _allWriteProtections
+                    If kvp.Value.isSessionOnly Then
+                        ' nichts tun 
+                    Else
+                        _allWriteProtections.Remove(kvp.Key)
+                    End If
+                Next
+                ' tk, wurde durch das obige ersetzt ... 
+                '_allWriteProtections = New SortedList(Of String, clsWriteProtectionItem)
             End If
         End Set
     End Property
@@ -54,6 +107,7 @@
         End Get
     End Property
 
+
     Public ReadOnly Property lastModifiedBy(ByVal pvName As String) As String
         Get
             Dim tmpResult As String = ""
@@ -94,18 +148,49 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' aktualisiert die Hauptspeicher-Struktur der Schreibberechtgungen und aktualisiert das Erscheinungsbild auf der Multiprojekt-Tafel 
+    ''' </summary>
+    ''' <param name="wpItem"></param>
+    ''' <remarks></remarks>
     Public Sub upsert(ByVal wpItem As clsWriteProtectionItem)
 
         If Not IsNothing(wpItem) Then
+            ' prüfen, ob sich der Protect status ändert , wenn ja, soll auch gleich die Projekt-Namen Änderung angestossen werden 
+
             If _allWriteProtections.ContainsKey(wpItem.pvName) Then
-                ' update 
+
+                Dim chkItem As clsWriteProtectionItem = _allWriteProtections.Item(wpItem.pvName)
+                ' jetzt updaten 
                 _allWriteProtections.Item(wpItem.pvName) = wpItem
+
+                ' muss die Darstellung auf der Multiprojekt-Tafel upgedated werden ? 
+                If chkItem.isProtected <> wpItem.isProtected Or _
+                    ((chkItem.isProtected = wpItem.isProtected) And (chkItem.permanent <> wpItem.permanent)) Or
+                    ((chkItem.isProtected = wpItem.isProtected) And (chkItem.userName <> wpItem.userName)) Then
+                    ' auf der Multiprojekt-Tafel muss der Name aktualisiert werden  
+                    Dim pName As String = getPnameFromKey(wpItem.pvName)
+                    Dim vName As String = getVariantnameFromKey(wpItem.pvName)
+                    If ShowProjekte.contains(pName) Then
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        Call zeichneNameInProjekt(hproj)
+                    End If
+                End If
+
             Else
                 ' insert 
                 _allWriteProtections.Add(wpItem.pvName, wpItem)
+
+                ' muss die Darstellung auf der Multiprojekt-Tafel upgedated werden ? 
+                Dim pName As String = getPnameFromKey(wpItem.pvName)
+                Dim vName As String = getVariantnameFromKey(wpItem.pvName)
+                If ShowProjekte.contains(pName) Then
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    Call zeichneNameInProjekt(hproj)
+                End If
             End If
         End If
-        
+
     End Sub
 
     Public Sub New()

@@ -164,6 +164,16 @@ Public Class clsawinSettings
     ' Default = no 
     Public Property meAuslastungIsInclExt As Boolean = True
 
+    ' die Farben und Fonts des Schutzes 
+    Public Property protectedPermanentFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
+    Public Property normalFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
+
+    Public Property protectedByMeColor As System.Drawing.Color = System.Drawing.Color.Green
+    Public Property protectedByOtherColor As System.Drawing.Color = System.Drawing.Color.OrangeRed
+    Public Property normalColor As System.Drawing.Color = System.Drawing.Color.Black
+    Public Property noShowColor As System.Drawing.Color = System.Drawing.Color.DimGray
+
+
     Public Property englishLanguage As Boolean = False
 
     Public Property allowSumEditing As Boolean
@@ -308,6 +318,15 @@ Public Class clsawinSettings
         _meAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
+
+        ' Settings für den Schutz von Projekten 
+        _protectedPermanentFont = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
+        _normalFont = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
+        _protectedByMeColor = System.Drawing.Color.Green
+        _protectedByOtherColor = System.Drawing.Color.OrangeRed
+        _normalColor = System.Drawing.Color.Black
+        _noShowColor = System.Drawing.Color.DimGray
+
         _englishLanguage = False
         _allowSumEditing = True
 

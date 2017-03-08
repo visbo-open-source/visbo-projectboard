@@ -213,7 +213,7 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    .Text = "aus Session Löschen"
+                    OKButton.Text = "aus Session Löschen"
                 Else
                     .OKButton.Text = "Delete from Session"
                 End If
@@ -848,7 +848,7 @@ Public Class frmProjPortfolioAdmin
             If Not noDB Then
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 Select Case treeLevel
 
@@ -869,10 +869,23 @@ Public Class frmProjPortfolioAdmin
                                 ' es wurde bereits Node Apperance inkl Check-Status geklärt
                             Else
                                 ' nicht zugelassen , also wieder zurücknehmen 
+
+                                ' wenn node gecheckt wurde, aber das Projekt gar nicht existiert ...
+                                If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                                    "please store at database before protecting ...")
+                                    Else
+                                        Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                    "dann schützen ...")
+                                    End If
+                                End If
+
                                 node.Checked = Not node.Checked
                                 writeProtections.upsert(request.getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
+
 
                         Else
                             ' es gibt mehrere Projekt-Varianten 
@@ -889,11 +902,23 @@ Public Class frmProjPortfolioAdmin
                                     ' erfolgreich ..
                                     ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                 Else
+
+                                    If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                        If awinSettings.englishLanguage Then
+                                            Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf & _
+                                                        "please store at database before protecting ...")
+                                        Else
+                                            Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                        "dann schützen ...")
+                                        End If
+                                    End If
+
                                     ' nicht zugelassen , also alles unverändert lassen  
                                     atleastOneError = True
                                     writeProtections.upsert(request.getWriteProtection(pName, vName))
                                     Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                                 End If
+
 
                             Next
 
@@ -922,6 +947,16 @@ Public Class frmProjPortfolioAdmin
                             ' erfolgreich ..
                             ' es wurde bereits Node Apperance inkl Check-Status geklärt
                         Else
+                            If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                                "please store at database before protecting ...")
+                                Else
+                                    Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                "dann schützen ...")
+                                End If
+                            End If
+
                             ' nicht zugelassen , also alles unverändert lassen  
                             node.Checked = Not node.Checked
                             writeProtections.upsert(request.getWriteProtection(pName, vName))
@@ -1328,30 +1363,7 @@ Public Class frmProjPortfolioAdmin
 
                     If anzahlVariants = 1 Then
                         Dim pvName As String = calcProjektKey(pName, vName)
-                        Dim lastUser As String = ""
-                        Dim zeitpunkt As Date
-                        lastUser = writeProtections.lastModifiedBy(pvName)
-                        zeitpunkt = writeProtections.changeDate(pvName)
-
-                        If writeProtections.isProtected(pvName) Then
-                            Dim permanent As String = ""
-                            If writeProtections.isPermanentProtected(pvName) Then
-                                permanent = "permanent "
-                            End If
-                            If awinSettings.englishLanguage Then
-                                tmpText = permanent & "protected by: " & lastUser & ", at: " & zeitpunkt.ToString
-                            Else
-                                tmpText = permanent & "geschützt von: " & lastUser & ", am: " & zeitpunkt.ToString
-                            End If
-
-                        Else
-                            If awinSettings.englishLanguage Then
-                                tmpText = "no protection"
-                            Else
-                                tmpText = "nicht geschützt"
-                            End If
-                        End If
-
+                        tmpText = writeProtections.getProtectionText(pvName)
                     Else
                         tmpText = ""
                     End If
@@ -1405,7 +1417,7 @@ Public Class frmProjPortfolioAdmin
             End If
 
         End If
-        
+
         getToolTippText = tmpText
 
     End Function
@@ -1442,7 +1454,7 @@ Public Class frmProjPortfolioAdmin
         If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
             ' jetzt die writeProtections neu bestimmen 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         selectedNode = e.Node
@@ -2143,7 +2155,7 @@ Public Class frmProjPortfolioAdmin
             ' die Behandlung von chgInSession ist etwas anders, weil sofort eine Aktion erfolgen muss ... 
             If aKtionskennung = PTTvActions.chgInSession Then
 
-                
+
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2270,7 +2282,7 @@ Public Class frmProjPortfolioAdmin
                 ' wenn ja, dann schützen 
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2335,7 +2347,7 @@ Public Class frmProjPortfolioAdmin
 
                         End If
                     End If
-                    
+
 
 
                 Next
@@ -2568,7 +2580,7 @@ Public Class frmProjPortfolioAdmin
                     Dim a As Integer = 0
                     Call MsgBox("Fehler: " & ex.Message)
                 End Try
-                
+
 
             ElseIf aKtionskennung = PTTvActions.activateV Then
                 ' nichts tun, Alle Resetten macht bei diesen keinen Sinn 
@@ -2580,7 +2592,7 @@ Public Class frmProjPortfolioAdmin
                 ' wenn ja, dann aufheben 
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2621,7 +2633,7 @@ Public Class frmProjPortfolioAdmin
                                     End If
 
                                 End If
-                                
+
 
                             Next
 
@@ -2659,7 +2671,7 @@ Public Class frmProjPortfolioAdmin
                     Else
                         ' es muss nichts gemacht werden ... 
                     End If
-                    
+
 
 
 

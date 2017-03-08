@@ -1306,6 +1306,7 @@ Public Module awinGeneralModules
 
         ShowProjekte.Clear()
         AlleProjekte.Clear()
+        writeProtections.Clear()
         selectedProjekte.Clear()
         ImportProjekte.Clear()
         DiagramList.Clear()
@@ -3765,6 +3766,8 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
     ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der ImportProjekte aufgeführt sind
+    ''' wenn ein importiertes Projekt bereits in der Datenbank existiert und verändert ist, dann wird es markiert und gleichzeitig temporär geschützt 
+    ''' wenn ein importiertes Projekt bereits in der Datenbank existiert, verändert wurde und von anderen geschützt ist, dann wird eine Variante angelegt 
     ''' </summary>
     ''' <param name="importDate"></param>
     ''' <remarks></remarks>
@@ -3779,6 +3782,7 @@ Public Module awinGeneralModules
         'Dim pname As String
 
 
+
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
         'Dim shpElement As Excel.Shape
@@ -3787,6 +3791,13 @@ Public Module awinGeneralModules
         Dim wasNotEmpty As Boolean
 
         Dim existsInSession As Boolean = False
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        ' aus der Datenbank alle WriteProtections holen ...
+        If Not noDB And AlleProjekte.Count > 0 Then
+            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+        End If
 
         If AlleProjekte.Count > 0 Then
             wasNotEmpty = True
@@ -3939,6 +3950,42 @@ Public Module awinGeneralModules
                             If hproj.Status = ProjektStatus(1) Then
                                 hproj.Status = ProjektStatus(2)
                             End If
+
+                            ' wenn das Projekt bereits von anderen geschützt ist, soll es als Variante angelegt werden 
+                            ' andernfalls soll es von mir geschützt werden 
+                            If Not noDB Then
+
+                                Dim wpItem As New clsWriteProtectionItem(calcProjektKey(hproj.name, hproj.variantName), _
+                                                                          ptWriteProtectionType.project, _
+                                                                          dbUsername, _
+                                                                          False, _
+                                                                          True)
+                                If request.setWriteProtection(wpItem) Then
+                                    ' erfolgreich ...
+                                    writeProtections.upsert(wpItem)
+                                Else
+                                    ' nicht erfolgreich, weil durch anderen geschützt ... oder aber noch gar nicht in Datenbank 
+                                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    writeProtections.upsert(wpItem)
+
+                                    ' jetzt Variante anlegen 
+                                    Dim teilName As String = dbUsername
+                                    If dbUsername.Length > 4 Then
+                                        teilName = dbUsername.Substring(0, 4)
+                                    End If
+                                    Dim altVname As String = "I" & teilName
+                                    hproj.variantName = altVname
+
+                                    Dim altKey As String = calcProjektKey(hproj.name, altVname)
+                                    If AlleProjekte.Containskey(altKey) Then
+                                        existsInSession = True
+                                    End If
+
+                                End If
+
+                            End If
+
+
                         Else
                             hproj.diffToPrev = False
                         End If
@@ -4082,7 +4129,8 @@ Public Module awinGeneralModules
                 .StartOffset = 0
 
                 ' Änderung 28.1.14: bei einem bereits existierenden Projekt muss der Status mitübernommen werden 
-                .Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
+                ' tk 7.3.17 das soll jetzt nicht mehr gemacht werden 
+                '.Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
 
                 If existsInSession Then
                     .shpUID = cproj.shpUID
@@ -4096,6 +4144,8 @@ Public Module awinGeneralModules
 
                 .timeStamp = importDate
                 .UID = cproj.UID
+
+                ' tk 7.3.17 das soll jetzt nicht mehr gemacht werden  
                 .VorlagenName = cproj.VorlagenName
 
                 If .Erloes > 0 Then
@@ -4106,49 +4156,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                ' tk 28.12.16 das Folgende wird gar nicht mehr gemacht, weil es die aktuellen Werte eines Steckbriefes mit den alten Werten überschreiben würde ... 
-                ' 
-                ' 
-                'If .leadPerson = "" Then
-                '    .leadPerson = cproj.leadPerson
-                'End If
 
-                'If .StrategicFit = 0 Then
-                '    .StrategicFit = cproj.StrategicFit
-                'End If
-
-                'If .Risiko = 0 Then
-                '    .Risiko = cproj.Risiko
-                'End If
-
-                'If .businessUnit = "" Then
-                '    .businessUnit = cproj.businessUnit
-                'End If
-
-                'If .description = "" Then
-                '    .description = cproj.description
-                'End If
-
-                'If .complexity = 0 Then
-                '    .complexity = cproj.complexity
-                'End If
-
-                'If .volume = 0 Then
-                '    .volume = cproj.volume
-                'End If
-
-                '' 
-                'If cproj.Erloes > 0 Then
-                '    ' dann soll der alte Wert beibehalten werden 
-                '    .Erloes = cproj.Erloes
-                '    If .anzahlRasterElemente = cproj.anzahlRasterElemente And Not IsNothing(cproj.budgetWerte) Then
-                '        .budgetWerte = cproj.budgetWerte
-                '    Else
-                '        ' Workaround: 
-                '        Dim tmpValue As Integer = hproj.dauerInDays
-                '        Call awinCreateBudgetWerte(hproj)
-                '    End If
-                'End If
 
             End With
 
@@ -4175,20 +4183,25 @@ Public Module awinGeneralModules
         '
         ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
         Try
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If request.pingMongoDb() Then
 
-                If request.projectNameAlreadyExists(pName, vName, datum) Then
+            If Not noDB Then
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If request.pingMongoDb() Then
 
-                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                    tmpResult = request.retrieveOneProjectfromDB(pName, vName, datum)
+                    If request.projectNameAlreadyExists(pName, vName, datum) Then
 
+                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                        tmpResult = request.retrieveOneProjectfromDB(pName, vName, datum)
+
+                    Else
+                        ' nichts tun, tmpResult ist bereits Nothing 
+                    End If
                 Else
                     ' nichts tun, tmpResult ist bereits Nothing 
                 End If
-            Else
-                ' nichts tun, tmpResult ist bereits Nothing 
             End If
+
+
         Catch ex As Exception
 
         End Try
@@ -4435,7 +4448,7 @@ Public Module awinGeneralModules
                                             AlleProjekte.Add(calcProjektKey(hproj), hproj)
                                             ok = True
                                         End If
-                                        
+
                                     Else
                                         ' nicht in Session, nicht in Datenbank: nicht ok !
                                         ok = False
@@ -4605,7 +4618,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                    
+
 
                     If valuesDidChange Then
                         hproj.diffToPrev = True
@@ -4646,7 +4659,7 @@ Public Module awinGeneralModules
         Dim sfit As Double, risk As Double
         Dim capacityNeeded As String = ""
         Dim externCostInput As String = ""
-        
+
         Dim description As String = ""
         Dim businessUnit As String = ""
         Dim createdProjects As Integer = 0
@@ -4762,7 +4775,7 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                         End Try
-                       
+
 
                     Else
                         variantName = ""
@@ -4845,7 +4858,7 @@ Public Module awinGeneralModules
                                     Else
                                         Throw New ArgumentException("mit dieser Angabe konnte nichts angefangen werden ...")
                                     End If
-                                    
+
 
                                     lastSpaltenValue = spalte + 9
                                     capacityNeeded = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -4895,7 +4908,7 @@ Public Module awinGeneralModules
                                             Throw New ArgumentException("Business Unit unbekannt ..")
                                         End If
                                     End If
-                                    
+
 
                                     lastSpaltenValue = spalte + 14
                                     description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -5132,9 +5145,9 @@ Public Module awinGeneralModules
                             End If
                         End If
 
-                        
+
                     End If
-                    
+
 
                     geleseneProjekte = geleseneProjekte + 1
                     zeile = zeile + 1
@@ -5148,7 +5161,7 @@ Public Module awinGeneralModules
             Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
         End Try
 
-        
+
         Call MsgBox("gelesen: " & geleseneProjekte & vbLf & _
                     "erzeugt: " & createdProjects & vbLf & _
                     "importiert: " & ImportProjekte.Count)
@@ -5340,7 +5353,7 @@ Public Module awinGeneralModules
 
             End If
 
-            
+
 
             ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
             If Not IsNothing(vglProj) And Not noComparison Then
@@ -9651,7 +9664,7 @@ Public Module awinGeneralModules
                     outPutCollection.Add(outputLine)
                     outputLine = "bitte löschen Sie die Session und laden Sie dann die Szenarien mit dem gewünschten Versions-Datum"
                     outPutCollection.Add(outputLine)
-                    
+
                     Exit For
                 Else
                     If showIT Then
@@ -9685,7 +9698,7 @@ Public Module awinGeneralModules
 
                 End If
 
-                
+
 
 
             Else
@@ -9839,6 +9852,10 @@ Public Module awinGeneralModules
                     hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj, dbUsername) Then
                         anzahlNeue = anzahlNeue + 1
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem)
+
                     Else
                         ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
                         If awinSettings.englishLanguage Then
@@ -9857,6 +9874,9 @@ Public Module awinGeneralModules
                         If request.storeProjectToDB(hproj, dbUsername) Then
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
+
+                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            writeProtections.upsert(wpItem)
                         Else
                             If awinSettings.englishLanguage Then
                                 outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
@@ -9903,7 +9923,7 @@ Public Module awinGeneralModules
             End If
 
         End If
-        
+
         If awinSettings.englishLanguage Then
             outputLine = "Stored ... " & vbLf & _
                 "Scenario: " & currentConstellation.constellationName & vbLf & vbLf & _
@@ -10016,6 +10036,10 @@ Public Module awinGeneralModules
 
             AlleProjekte.Add(key, hproj)
 
+            ' jetzt die writeProtections aktualisieren 
+            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+            writeProtections.upsert(wpItem)
+
             If show Then
                 ' prüfen, ob es bereits in der Showprojekt enthalten ist
                 ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
@@ -10107,7 +10131,7 @@ Public Module awinGeneralModules
                                     End If
                                 End If
                             End If
-                            
+
 
                         End If
 
@@ -10259,7 +10283,7 @@ Public Module awinGeneralModules
 
             Else
                 ' es wird in Showprojekte und in AlleProjekte gelöscht, ausserdem auch auf der Projekt-Tafel 
-                
+
                 Dim key As String = calcProjektKey(pname, variantName)
 
                 Try
@@ -10281,7 +10305,7 @@ Public Module awinGeneralModules
                     outputCollection.Add(outputLine)
                 End Try
 
-                
+
             End If
 
 
@@ -10436,7 +10460,7 @@ Public Module awinGeneralModules
 
         End If
 
-            identifyTimeStampsToDelete = tsToDelete
+        identifyTimeStampsToDelete = tsToDelete
 
     End Function
 
@@ -11420,7 +11444,7 @@ Public Module awinGeneralModules
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         buildPvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
-        
+
     End Function
 
     ' wird nicht mehr verwendet - jetzt mit upDateTreeView gelöst 
@@ -11757,7 +11781,7 @@ Public Module awinGeneralModules
 
             If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             With TreeviewProjekte
@@ -11816,7 +11840,7 @@ Public Module awinGeneralModules
                             variantName = CStr(tmpList.Item(1))
                             hproj = AlleProjekte.getProject(pname, variantName)
                         End If
-                        
+
                     End If
 
 
@@ -11830,7 +11854,7 @@ Public Module awinGeneralModules
 
                     If showPname Then
 
-                        
+
                         projectNode = .Nodes.Add(pname)
                         'projectNode.Text = pname
                         ' das wird jetzt über bestimmeCheckStatus gemacht bzw. über bestimmeNodeAppearance
@@ -12025,13 +12049,14 @@ Public Module awinGeneralModules
 
 
         'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Italic)
-        Dim fontPermanentProtected As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
-        Dim fontNormal As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
+        
+        Dim fontPermanentProtected As System.Drawing.Font = awinSettings.protectedPermanentFont
+        Dim fontNormal As System.Drawing.Font = awinSettings.normalFont
 
-        Dim colorProtectedByMe As System.Drawing.Color = Color.Green
-        Dim colorProtectedByOther As System.Drawing.Color = Color.OrangeRed
-        Dim colorNormal As System.Drawing.Color = Color.Black
-        Dim colorNoShow As System.Drawing.Color = Color.DimGray
+        Dim colorProtectedByMe As System.Drawing.Color = awinSettings.protectedByMeColor
+        Dim colorProtectedByOther As System.Drawing.Color = awinSettings.protectedByOtherColor
+        Dim colorNormal As System.Drawing.Color = awinSettings.normalColor
+        Dim colorNoShow As System.Drawing.Color = awinSettings.noShowColor
 
         ' hier auf Normal Font setzen ; in den TreeView Eigenschaften ist die Schriftgröße auf 12 gesetzt, 
         ' um sicherzustellen, dass der Text immer vollständig angezeigt wird 
@@ -18458,7 +18483,12 @@ Public Module awinGeneralModules
                                            ByVal von As Integer, ByVal bis As Integer)
 
         If todoListe.Count = 0 Then
-            Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no projects for mass-edit available ..")
+            Else
+                Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
+            End If
+
             Exit Sub
         End If
 
@@ -18668,7 +18698,7 @@ Public Module awinGeneralModules
             ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
         End Try
 
-
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
         For Each projektName As String In todoListe
@@ -18676,6 +18706,50 @@ Public Module awinGeneralModules
             Dim hproj As clsProjekt = ShowProjekte.getProject(projektName)
 
             If Not IsNothing(hproj) Then
+
+                ' ist das Projekt geschützt ? 
+                ' wenn nein, dann temporär schützen 
+                Dim isProtected As Boolean
+                Dim protectionText As String = ""
+                Dim wpItem As clsWriteProtectionItem
+
+                Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
+                If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
+
+                    ' jetzt fragen, ob diese Projekt-Variante bereits geschützt ist, dann nichts machen , 
+                    ' andernfalls würde ggf ein permanenter Schutz in einen temporären umgewandelt 
+
+                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+
+                    If wpItem.isProtected Then
+                        ' nichts machen 
+                    Else
+                        ' jetzt diese Projekt-Variante temporär schützen 
+                        wpItem = New clsWriteProtectionItem(pvN:=pvName, _
+                                                                 type:=ptWriteProtectionType.project, _
+                                                                 userN:=dbUsername, _
+                                                                 prmnnt:=False, _
+                                                                 protectIT:=True)
+
+                        If request.setWriteProtection(wpItem) Then
+                            ' es hat geklappt 
+                            isProtected = False
+                            writeProtections.upsert(wpItem)
+                        Else
+                            isProtected = True
+                            wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            writeProtections.upsert(wpItem)
+                            protectionText = writeProtections.getProtectionText(pvName)
+                        End If
+                    End If
+                    
+
+                Else
+                    isProtected = True
+                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                    writeProtections.upsert(wpItem)
+                    protectionText = writeProtections.getProtectionText(pvName)
+                End If
 
                 pStart = getColumnOfDate(hproj.startDate)
                 pEnde = getColumnOfDate(hproj.endeDate)
@@ -18702,9 +18776,6 @@ Public Module awinGeneralModules
 
                         For r = 1 To cphase.countRoles
 
-
-
-
                             Dim role As clsRolle = cphase.getRole(r)
                             Dim roleName As String = role.name
                             Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
@@ -18724,12 +18795,30 @@ Public Module awinGeneralModules
 
                             ' Schreiben der Projekt-Informationen 
                             With CType(currentWS, Excel.Worksheet)
+                                Dim cellComment As Excel.Comment
+
+                                ' Business Unit schreiben 
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+
+                                ' Name schreiben
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                ' wenn es protected ist, entsprechend markieren 
+                                If isProtected Then
+                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                    ' Kommentar einfügen 
+                                    cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                    If Not IsNothing(cellComment) Then
+                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                    End If
+                                    CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                                End If
+
                                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                 CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
 
-                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                 If Not IsNothing(cellComment) Then
                                     CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
                                 End If
@@ -18744,26 +18833,8 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = roleName
-                                    .Locked = False
-                                    .Interior.Color = awinSettings.AmpelNichtBewertet
-                                    Try
-                                        If Not IsNothing(.Validation) Then
-                                            .Validation.Delete()
-                                        End If
-                                        ' jetzt wird die ValidationList aufgebaut 
-
-                                        'Dim tmpVal As String = validationStrings.Item(rcValidation(roleUID))
-                                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                       Formula1:=validationStrings.Item(rcValidation(roleUID)))
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                End With
-
-                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                                If awinSettings.allowSumEditing Then
-                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                    If isProtected Then
+                                    Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
                                         Try
@@ -18771,13 +18842,38 @@ Public Module awinGeneralModules
                                                 .Validation.Delete()
                                             End If
                                             ' jetzt wird die ValidationList aufgebaut 
-                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                            Formula1:="0")
+
+                                            'Dim tmpVal As String = validationStrings.Item(rcValidation(roleUID))
+                                            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                           Formula1:=validationStrings.Item(rcValidation(roleUID)))
                                         Catch ex As Exception
 
                                         End Try
+                                    End If
+
+                                End With
+
+                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+
+                                        If isProtected Then
+                                        Else
+                                            .Locked = False
+                                            .Interior.Color = awinSettings.AmpelNichtBewertet
+                                            Try
+                                                If Not IsNothing(.Validation) Then
+                                                    .Validation.Delete()
+                                                End If
+                                                ' jetzt wird die ValidationList aufgebaut 
+                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                Formula1:="0")
+                                            Catch ex As Exception
+
+                                            End Try
+                                        End If
 
                                     End With
                                 End If
@@ -18810,29 +18906,37 @@ Public Module awinGeneralModules
                                     If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                            .Locked = False
-                                            Try
-                                                .Validation.Delete()
-                                            Catch ex As Exception
 
-                                            End Try
-                                            Try
-                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                            Formula1:="0")
-                                            Catch ex As Exception
-                                                .Validation.Modify(Type:=XlDVType.xlValidateDecimal, _
-                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                            Formula1:="0")
-                                            End Try
+                                            If isProtected Then
+                                            Else
+                                                .Locked = False
+                                                Try
+                                                    .Validation.Delete()
+                                                Catch ex As Exception
+
+                                                End Try
+                                                Try
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                Formula1:="0")
+                                                Catch ex As Exception
+                                                    .Validation.Modify(Type:=XlDVType.xlValidateDecimal, _
+                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                Formula1:="0")
+                                                End Try
+                                            End If
 
 
                                         End With
-                                        ' erlaubter Eingabebereich grau markieren  
-                                        CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                        ' erlaubter Eingabebereich grau markieren, aber nur wenn nicht protected 
+                                        If isProtected Then
+                                        Else
+                                            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                        End If
+
 
                                         'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                     Else
@@ -18859,12 +18963,27 @@ Public Module awinGeneralModules
 
                             ' Schreiben der Projekt-Informationen 
                             With CType(currentWS, Excel.Worksheet)
+                                Dim cellComment As Excel.Comment
+
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                If isProtected Then
+                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                    ' Kommentar einfügen 
+                                    cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                    If Not IsNothing(cellComment) Then
+                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                    End If
+                                    CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                                End If
+
+
                                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                 CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
 
-                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                 If Not IsNothing(cellComment) Then
                                     CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
                                 End If
@@ -18879,25 +18998,8 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = costName
-                                    .Locked = False
-                                    .Interior.Color = awinSettings.AmpelNichtBewertet
-                                    Try
-                                        If Not IsNothing(.Validation) Then
-                                            .Validation.Delete()
-                                        End If
-                                        ' jetzt wird die ValidationList aufgebaut 
-                                        'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
-                                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                       Formula1:=validationStrings.Item(rcValidation(0)))
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                End With
-
-                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                                If awinSettings.allowSumEditing Then
-                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                    If isProtected Then
+                                    Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
                                         Try
@@ -18905,13 +19007,39 @@ Public Module awinGeneralModules
                                                 .Validation.Delete()
                                             End If
                                             ' jetzt wird die ValidationList aufgebaut 
-                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                            Formula1:="0")
+                                            'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
+                                            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                           Formula1:=validationStrings.Item(rcValidation(0)))
                                         Catch ex As Exception
 
                                         End Try
+                                    End If
+
+
+                                End With
+
+                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                If awinSettings.allowSumEditing Then
+
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        If isProtected Then
+                                        Else
+                                            .Locked = False
+                                            .Interior.Color = awinSettings.AmpelNichtBewertet
+                                            Try
+                                                If Not IsNothing(.Validation) Then
+                                                    .Validation.Delete()
+                                                End If
+                                                ' jetzt wird die ValidationList aufgebaut 
+                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                Formula1:="0")
+                                            Catch ex As Exception
+
+                                            End Try
+                                        End If
+
 
                                     End With
                                 End If
@@ -18929,7 +19057,6 @@ Public Module awinGeneralModules
                             'editRange.Value = schnittmenge
                             editRange.Value = zeilenWerte
                             atLeastOne = True
-                            ' die Zellen entsperren, die editiert werden dürfen ...
 
                             ' die Zellen entsperren, die editiert werden dürfen ...
 
@@ -18940,23 +19067,31 @@ Public Module awinGeneralModules
                                     If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                            .Locked = False
-                                            Try
-                                                .Validation.Delete()
-                                            Catch ex As Exception
+                                            If isProtected Then
+                                            Else
+                                                .Locked = False
+                                                Try
+                                                    .Validation.Delete()
+                                                Catch ex As Exception
 
-                                            End Try
-                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                            Formula1:="0")
+                                                End Try
+                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                Formula1:="0")
+                                            End If
+
                                         End With
 
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
                                         ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
-                                        CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                        If isProtected Then
+                                        Else
+                                            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                        End If
+
                                     Else
                                         CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
@@ -18971,7 +19106,7 @@ Public Module awinGeneralModules
                         Next c
 
                         If Not atLeastOne Then
-                            ' jetzt sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
+                            ' in diesem Fall sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
                             ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
                             ' Schreiben der Projekt-Informationen 
                             Dim currentValidation As String = rcValidation(anzahlRollen + 1)
@@ -18986,12 +19121,27 @@ Public Module awinGeneralModules
                             End Try
 
                             With CType(currentWS, Excel.Worksheet)
+                                Dim cellComment As Excel.Comment
+
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                If isProtected Then
+                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                    ' Kommentar einfügen 
+                                    cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                    If Not IsNothing(cellComment) Then
+                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                    End If
+                                    CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                                End If
+
                                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                 CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
 
-                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
+
                                 If Not IsNothing(cellComment) Then
                                     CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
                                 End If
@@ -19006,24 +19156,8 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = ""
-                                    .Locked = False
-                                    .Interior.Color = awinSettings.AmpelNichtBewertet
-                                    Try
-                                        If Not IsNothing(.Validation) Then
-                                            .Validation.Delete()
-                                        End If
-                                        ' jetzt wird die ValidationList aufgebaut 
-                                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                       Formula1:=defaultEmptyValidation)
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                End With
-
-                                If awinSettings.allowSumEditing Then
-                                    With CType(.Cells(zeile, 6), Excel.Range)
-                                        .Value = ""
+                                    If isProtected Then
+                                    Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
                                         Try
@@ -19031,13 +19165,37 @@ Public Module awinGeneralModules
                                                 .Validation.Delete()
                                             End If
                                             ' jetzt wird die ValidationList aufgebaut 
-                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                            Formula1:="0")
+                                            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                           Formula1:=defaultEmptyValidation)
                                         Catch ex As Exception
 
                                         End Try
+                                    End If
+
+
+                                End With
+
+                                If awinSettings.allowSumEditing Then
+                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                        .Value = ""
+                                        If isProtected Then
+                                        Else
+                                            .Locked = False
+                                            .Interior.Color = awinSettings.AmpelNichtBewertet
+                                            Try
+                                                If Not IsNothing(.Validation) Then
+                                                    .Validation.Delete()
+                                                End If
+                                                ' jetzt wird die ValidationList aufgebaut 
+                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                Formula1:="0")
+                                            Catch ex As Exception
+
+                                            End Try
+                                        End If
+
 
                                     End With
 
@@ -19058,22 +19216,30 @@ Public Module awinGeneralModules
                                     If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                            .Locked = False
-                                            Try
-                                                .Validation.Delete()
-                                            Catch ex As Exception
+                                            If isProtected Then
+                                            Else
+                                                .Locked = False
+                                                Try
+                                                    .Validation.Delete()
+                                                Catch ex As Exception
 
-                                            End Try
-                                            .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                            AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                            Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                            Formula1:="0")
+                                                End Try
+                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                Formula1:="0")
+                                            End If
+
                                         End With
 
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
-                                        CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                        If isProtected Then
+                                        Else
+                                            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                        End If
+
                                     Else
                                         CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""

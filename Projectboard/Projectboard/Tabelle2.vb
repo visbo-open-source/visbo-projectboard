@@ -122,27 +122,46 @@ Public Class Tabelle2
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
         End If
 
-        Application.EnableEvents = formerEE
 
         ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
         Try
             'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-            CType(CType(meWS, Excel.Worksheet).Cells(2, columnRC), Excel.Range).Select()
+            ' jetzt auf die erste selektierbare Zeile gehen ... 
+            Dim cz As Integer = 2
+            Dim eof As Boolean = (cz > visboZustaende.meMaxZeile)
 
-            Dim pName As String = ""
+            Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof 
 
-            With visboZustaende
+            Do While bedingung
+                cz = cz + 1
+                eof = (cz > visboZustaende.meMaxZeile)
+                bedingung = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
+            Loop
 
-                pName = CStr(CType(appInstance.ActiveSheet.Cells(2, visboZustaende.meColpName), Excel.Range).Value)
-                If ShowProjekte.contains(pName) Then
-                    .lastProject = ShowProjekte.getProject(pName)
-                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
-                End If
+            If Not eof Then
+                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
 
-            End With
+                Dim pName As String = ""
+
+                With visboZustaende
+
+                    pName = CStr(CType(appInstance.ActiveSheet.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
+                    If ShowProjekte.contains(pName) Then
+                        .lastProject = ShowProjekte.getProject(pName)
+                        .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
+                    End If
+
+                End With
+            Else
+                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
+                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
+            End If
+            
         Catch ex As Exception
 
         End Try
+
+        Application.EnableEvents = formerEE
         'Application.ScreenUpdating = True
 
     End Sub
@@ -1059,6 +1078,7 @@ Public Class Tabelle2
             End If
         Catch ex As Exception
             Call MsgBox("Fehler bei Selection Change, Massen-Edit" & vbLf & ex.Message)
+            appInstance.EnableEvents = True
         End Try
 
         ' in oldRow muss jetzt der entsprechende Projekt-Name ausgelsen werden .. 
@@ -1129,6 +1149,7 @@ Public Class Tabelle2
     ''' prüft, ob eine gültige Zelle selektiert wurde ... 
     ''' gültig ist eine Zelle, wenn sie entweder in der RoleCost Spalte ist oder in einer Datenspalte 
     ''' und ausserdem die Zeilennummer zwischen 2 und maxzeilen liegt 
+    ''' und ausserdem das Projekt nicht geschützt ist ... 
     ''' </summary>
     ''' <param name="rng"></param>
     ''' <returns></returns>
@@ -1141,20 +1162,29 @@ Public Class Tabelle2
             If rng.Cells.Count > 1 Then
                 result = False
             Else
-                If rng.Row >= 2 And rng.Row <= visboZustaende.meMaxZeile Then
-                    If rng.Column = columnRC Or (rng.Column = columnRC + 1 And awinSettings.allowSumEditing) Then
-                        result = True
+                ' wenn es sich um ein geschütztes Projekt handelt, dann ist Spalte 2 = FarbeProtected, also ungleich dem 
+                Dim chckCell As Excel.Range = CType(appInstance.ActiveSheet.Cells(rng.Row, visboZustaende.meColpName), Excel.Range)
 
-                    ElseIf rng.Column >= columnStartData And rng.Column <= columnEndData Then
-                        Dim diff As Integer = rng.Column - columnStartData
-                        Dim rest As Integer
-                        Dim tmpValue As Integer = System.Math.DivRem(diff, 2, rest)
+                If CInt(chckCell.Interior.ColorIndex) <> XlColorIndex.xlColorIndexNone Then
+                    result = False
+                Else
+                    If rng.Row >= 2 And rng.Row <= visboZustaende.meMaxZeile Then
+                        If rng.Column = columnRC Or (rng.Column = columnRC + 1 And awinSettings.allowSumEditing) Then
+                            result = True
 
-                        If rest = 0 Then
-                            If rng.Interior.ColorIndex = XlColorIndex.xlColorIndexNone Then
-                                result = False
+                        ElseIf rng.Column >= columnStartData And rng.Column <= columnEndData Then
+                            Dim diff As Integer = rng.Column - columnStartData
+                            Dim rest As Integer
+                            Dim tmpValue As Integer = System.Math.DivRem(diff, 2, rest)
+
+                            If rest = 0 Then
+                                If rng.Interior.ColorIndex = XlColorIndex.xlColorIndexNone Then
+                                    result = False
+                                Else
+                                    result = True
+                                End If
                             Else
-                                result = True
+                                result = False
                             End If
                         Else
                             result = False
@@ -1162,9 +1192,8 @@ Public Class Tabelle2
                     Else
                         result = False
                     End If
-                Else
-                    result = False
                 End If
+                
             End If
         Catch ex As Exception
 

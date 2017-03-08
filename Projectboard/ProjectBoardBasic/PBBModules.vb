@@ -1030,8 +1030,7 @@ Public Module PBBModules
     Sub PBBWriteProtections(ByVal control As IRibbonControl, ByVal setFlag As Boolean)
 
 
-        Dim returnValue As DialogResult
-
+        
         Dim writeProtectProjects As New frmProjPortfolioAdmin
         If AlleProjekte.Count > 0 Then
 
@@ -1047,17 +1046,22 @@ Public Module PBBModules
 
                 End With
 
-                returnValue = writeProtectProjects.ShowDialog
+                ' in dem showDialog Modus werden die ScreenUpdates zurückgehalten , es sei den man forciert sie
+                ' was aber zu einem sehr unangenehmen Flackern führt ... 
+                ''Dim returnValue As DialogResult
+                ''returnValue = writeProtectProjects.ShowDialog
+                ' '' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
+                ''If returnValue = DialogResult.OK Then
+                ''    ' everything is done ... 
+                ''Else
+                ''    ' everything is done ... 
+                ''End If
 
-                ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
 
-                If returnValue = DialogResult.OK Then
-                    ' everything is done ... 
+                ' wenn es in diesem Modus ausgeführt wird, 
+                ' dann werden alle Änderungen in der Multiprojekt-Tafel sofort sichtbar ...
+                writeProtectProjects.Show()
 
-                Else
-                    ' everything is done ... 
-
-                End If
 
             Catch ex As Exception
 

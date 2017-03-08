@@ -5089,7 +5089,7 @@ Public Module testModule
         Dim outputline As String = ""
 
         ' die aktuelle WriteProtection holen 
-        writeProtections.liste = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+        writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         Call storeSessionConstellation("Last")
@@ -5130,7 +5130,14 @@ Public Module testModule
 
                             If storeNeeded Then
                                 If request.storeProjectToDB(kvp.Value, dbUsername) Then
+
                                     anzahlStores = anzahlStores + 1
+                                    ' jetzt die writeProtections aktualisieren 
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    writeProtections.upsert(wpItem)
+                                    
+
                                 Else
                                     If awinSettings.englishLanguage Then
                                         outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
@@ -5464,6 +5471,9 @@ Public Module testModule
                                 If request.storeProjectToDB(hproj, dbUsername) Then
 
                                     anzStoredProj = anzStoredProj + 1
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    writeProtections.upsert(wpItem)
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                                 Else
                                     If awinSettings.englishLanguage Then

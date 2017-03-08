@@ -167,14 +167,13 @@ Imports System.Windows
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
         ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
         If ControlID = loadFromDatenbank And Not noDB Then
-
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
             If request.pingMongoDb() Then
                 Dim dbConstellations As clsConstellations = request.retrieveConstellationsFromDB()
@@ -255,6 +254,10 @@ Imports System.Windows
                 Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore)
             End If
 
+            ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
+            If Not noDB Then
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            End If
 
             appInstance.ScreenUpdating = True
 
@@ -382,16 +385,32 @@ Imports System.Windows
 
         Dim storedProj As Integer = 0
         Dim msgresult As Integer
+        Dim awinSelection As Excel.ShapeRange
+        Dim emptySelection As Boolean = True
 
         Call projektTafelInit()
 
         Try
             If AlleProjekte.Count > 0 Then
 
-                storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte einschl. der geladenen Varianten 
+                Try
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
+
+                If IsNothing(awinSelection) Then
+                    emptySelection = True
+                ElseIf awinSelection.Count > 0 Then
+                    emptySelection = False
+                    storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte einschl. der geladenen Varianten 
+                Else
+                    emptySelection = True
+                End If
+
                 ' in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-                If storedProj = 0 Then
+                If emptySelection Then
                     msgresult = MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte und Varianten speichern?", MsgBoxStyle.OkCancel)
 
                     If msgresult = MsgBoxResult.Ok Then
@@ -415,6 +434,9 @@ Imports System.Windows
         End Try
 
         Call awinDeSelect()
+
+        ' jetzt werden die Protection-Darstellung der Projekt-Namen auf der Multiprojekt-Tafel wieder aktualisiert 
+
 
     End Sub
 
@@ -870,7 +892,7 @@ Imports System.Windows
                         ' hier jetzt prüfen, ob es sich um ein geschütztes Projekt handelt ... 
                         hproj = ShowProjekte.getProject(pName)
                         Dim pvName As String = calcProjektKeyDB(pName, hproj.variantName)
-                        If request.checkChgPermission(pvName, dbUsername, ptWriteProtectionType.project) Then
+                        If request.checkChgPermission(pName, hproj.variantName, dbUsername, ptWriteProtectionType.project) Then
                             ' hier das Fomular zur Eingabe des neuen Namens aufrufen ... 
                             Dim renameForm As New frmRenameProject
                             With renameForm
@@ -1457,8 +1479,44 @@ Imports System.Windows
                 singleShp = awinSelection.Item(i)
                 hproj = ShowProjekte.getProject(singleShp.Name, True)
 
-                ' das Projekt zur Standard Variante machen 
-                If hproj.variantName <> "" Then
+                ' jetzt prüfen : die Variante kann nur dann zur Standard-Variante gemacht werden, 
+                ' wenn die Standard-Variante nicht geschützt ist ..
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
+                                           dbUsername, dbPasswort)
+                If request.checkChgPermission(hproj.name, "", dbUsername) And hproj.variantName <> "" Then
+                    ' ist erlaubt ...
+
+                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, "")
+                    Dim notYetDone As Boolean = False
+
+                    If IsNothing(wpItem) Then
+                        notYetDone = True
+                    ElseIf Not wpItem.isProtected Then
+                        ' jetzt schützen 
+                        notYetDone = True
+                    Else
+                        ' es ist schon geschützt, deswegen muss nix weiter gemacht werden 
+                    End If
+                    If notYetDone Then
+                        wpItem = New clsWriteProtectionItem(calcProjektKey(hproj.name, ""), _
+                                                             ptWriteProtectionType.project, _
+                                                             dbUsername, _
+                                                             False, _
+                                                             True)
+                        If request.setWriteProtection(wpItem) Then
+                            ' alles in Ordnung 
+                        Else
+                            ' in der Zwischenzewit geändert , also holen ...
+                            wpItem = request.getWriteProtection(hproj.name, "")
+                        End If
+                    End If
+
+                    ' jetzt in writeProtections aktualisieren ...
+                    writeProtections.upsert(wpItem)
+
+                    ' das Projekt zur Standard Variante machen 
+
 
                     Dim oldvName As String = hproj.variantName
                     Dim newvName As String = ""
@@ -1489,9 +1547,27 @@ Imports System.Windows
                     ' jetzt müssen noch alle Projekt-Constellationen aktualisiert werden 
                     Call projectConstellations.updateVariantName(hproj.name, oldvName, newvName)
 
+                Else
+                    If hproj.variantName = "" Then
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("The project " & hproj.name & " is already the base-variant")
+
+                        Else
+                            Call MsgBox("Projekt " & hproj.name & " ist bereits die Standard-Variante")
+                        End If
+                    Else
+                        ' ist nicht erlaubt ... 
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("The base variant of project " & hproj.name & " is protected" & vbLf & _
+                                        "and cannot be replaced by another variant")
+
+                        Else
+                            Call MsgBox("Projekt " & hproj.name & " ist in der Standard-Variante geschützt" & vbLf & _
+                                        "und kann daher nicht von einer anderen Variante überschrieben werden")
+                        End If
+                    End If
+                    
                 End If
-
-
 
             Next i
 
@@ -2839,6 +2915,8 @@ Imports System.Windows
         Dim outPutLine As String = ""
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
+        ' zurücksetzen der dbCache-Projekte
+        dbCacheProjekte.Clear()
 
         Call projektTafelInit()
 
@@ -2869,36 +2947,19 @@ Imports System.Windows
             If IsNothing(awinSelection) Then
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    todoListe.Add(kvp.Key, kvp.Key)
+
                     If Not noDB Then
 
                         ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
                         If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
-
-                            If request.checkChgPermission(kvp.Value.name, kvp.Value.variantName, dbUsername) Then
-                                ' für den Datenbank Cache aufbauen 
-                                Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
-                                dbCacheProjekte.upsert(dbProj)
-                                todoListe.Add(kvp.Key, kvp.Key)
-                            Else
-
-                                If awinSettings.englishLanguage Then
-                                    outPutLine = "protected Project: " & kvp.Value.name & " (" & _
-                                                  kvp.Value.variantName & ")"
-                                Else
-                                    outPutLine = "geschütztes Projekt: " & kvp.Value.name & " (" & _
-                                                  kvp.Value.variantName & ")"
-                                End If
-                                outputCollection.Add(outPutLine)
-
-                            End If
-                        Else
-                            ' es existiert noch gar nicht in der Datenbank 
-                            todoListe.Add(kvp.Key, kvp.Key)
+                            Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
+                            dbCacheProjekte.upsert(dbProj)
                         End If
 
-                    Else
-                        todoListe.Add(kvp.Key, kvp.Key)
                     End If
+
                 Next
 
             Else
@@ -2908,55 +2969,21 @@ Imports System.Windows
                     Dim hproj As clsProjekt
                     Try
                         hproj = ShowProjekte.getProject(singleShp.Name, True)
+                        todoListe.Add(hproj.name, hproj.name)
+
                         If Not noDB Then
-                            ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
+                            ' wenn es in der DB existiert, dann im Cache aufbauen 
                             If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-
-                                If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
-                                    ' für den Datenbank Cache aufbauen 
-                                    Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
-                                    dbCacheProjekte.upsert(dbProj)
-                                    todoListe.Add(hproj.name, hproj.name)
-                                Else
-
-                                    If awinSettings.englishLanguage Then
-                                        outPutLine = "protected Project: " & hproj.name & " (" & _
-                                                      hproj.variantName & ")"
-                                    Else
-                                        outPutLine = "geschütztes Projekt: " & hproj.name & " (" & _
-                                                      hproj.variantName & ")"
-                                    End If
-                                    outputCollection.Add(outPutLine)
-
-                                End If
-                            Else
-                                ' es existiert noch gar nicht in der Datenbank 
-                                todoListe.Add(hproj.name, hproj.name)
+                                ' für den Datenbank Cache aufbauen 
+                                Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                                dbCacheProjekte.upsert(dbProj)
                             End If
-                            
-                        Else
-                            todoListe.Add(hproj.name, hproj.name)
                         End If
 
                     Catch ex As Exception
 
                     End Try
                 Next
-            End If
-
-            If outputCollection.Count > 0 Then
-                ' es sind geschützte Projekte darunter ...
-                Dim msgH As String, msgE As String
-                If awinSettings.englishLanguage Then
-                    msgH = "Protected projects"
-                    msgE = "please create variants for these projects before editing"
-                Else
-                    msgH = "Geschützte Projekte"
-                    msgE = "bitte erstellen Sie eine Variante, bevor Sie das Projekt editieren"
-                End If
-
-                Call showOutPut(outputCollection, msgH, msgE)
-
             End If
 
             ' wenn es jetzt etwas zu tun gibt ... 
@@ -3012,6 +3039,46 @@ Imports System.Windows
 
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
+
+        ' jetzt muss gecheckt werden, welche dbCache Projekte immer noch identisch zum ShowProjekte Pendant sind
+        ' deren temp Schutz muss dann wieder aufgehoben werden ... 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In dbCacheProjekte.liste
+
+            If ShowProjekte.contains(kvp.Value.name) Then
+                Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.name)
+                Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                If hproj.isIdenticalTo(kvp.Value) Then
+                    ' temp Schutz aufheben 
+                    If writeProtections.isProtected(pvName, dbUsername) Then
+                        ' nichts tun , es ist von jdn anderem geschützt 
+                        '
+                    ElseIf writeProtections.isPermanentProtected(pvName) Then
+                        ' nichts tun, es ist permanent protected 
+                        '
+                    Else
+                        ' den temporären Schutz von mir zurücknehmen 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
+                                                   dbUsername, dbPasswort)
+                        Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project, _
+                                                                  dbUsername, False, False)
+                        If request.setWriteProtection(wpItem) Then
+                            ' erfolgreich
+                            writeProtections.upsert(wpItem)
+                        Else
+                            ' nicht erfolgreich
+                            wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            writeProtections.upsert(wpItem)
+                        End If
+                    End If
+                Else
+                    ' temporär geschützt lassen ...
+                End If
+            End If
+        Next
+
+        ' zurücksetzen 
+        dbCacheProjekte.Clear()
 
         Call projektTafelInit()
 
@@ -3292,15 +3359,65 @@ Imports System.Windows
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
 
-                    If hproj.Status = ProjektStatus(0) Then
+                    ' hier prüfen, ob das Projekt bereits in der DB existiert ...
+                    ' und ob es von anderen geschützt ist 
+                    ' wenn ja, dann soll es temporär geschützt werden 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
+                                               dbUsername, dbPasswort)
 
-                        ' jetzt werden die Werte im Fenster vorbesetzt ...
+                    Dim notYetDone As Boolean = False
+                    If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+
+                        If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
+                            ' Nutzer darf es bearbeiten 
+                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            If wpItem.isProtected Then
+                                ' alles gut, es ist nichts weiter zu tun 
+
+                            Else
+                                wpItem = New clsWriteProtectionItem(calcProjektKey(hproj.name, hproj.variantName), _
+                                                                     ptWriteProtectionType.project, _
+                                                                     dbUsername, _
+                                                                     False, _
+                                                                     True)
+
+                                If request.setWriteProtection(wpItem) Then
+                                    ' erfolgreich 
+                                Else
+                                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                End If
+                            End If
+
+                            writeProtections.upsert(wpItem)
+                            notYetDone = True
+                        Else
+                            ' das Projekt darf vom Nutzer nicht verändert werden , weil von anderem Nutzer geschützt 
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                            "and cannot be modified. You could instead create a variant.")
+                            Else
+                                Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                            "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                            End If
+
+                            notYetDone = False
+
+                        End If
+                    Else
+                        ' alles Gut, dann existiert es eben bisher nur in der Session 
+                        notYetDone = True
+                    End If
+
+
+                    If notYetDone Then
+
                         With ProjektAendern
                             .projectName.Text = hproj.name
                             .vorlagenName.Text = hproj.VorlagenName
                             For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
                                 .businessUnit.Items.Add(kvp.Value.name)
                             Next
+                            ' jetzt werden die Werte im Fenster vorbesetzt ...
                             .businessUnit.Text = hproj.businessUnit
                             .Erloes.Text = hproj.Erloes.ToString
                             .risiko.Text = hproj.Risiko.ToString("0.0")
@@ -3347,11 +3464,9 @@ Imports System.Windows
                             Call awinNeuZeichnenDiagramme(5)
                         End If
 
-                    Else
-                        Call MsgBox("bitte erst eine Variante anlegen")
                     End If
 
-
+                    
                 Catch ex As Exception
                     Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Attribute")
                     Exit Sub

@@ -14078,6 +14078,7 @@ Public Module Projekte
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
 
+        Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
 
         With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
@@ -14094,8 +14095,6 @@ Public Module Projekte
 
             ' found=true bedeutet, dass das Shape bereits angezeigt wird  
             If found Then
-
-
 
                 ' Merken der Koordinaten 
                 ' bestimmen der Text Koordinaten 
@@ -14159,6 +14158,35 @@ Public Module Projekte
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
                     .TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                    ' braucht man für die Update Routine 
+                    .Name = calcProjectTextShapeName(hproj.name)
+
+                    ' hier werden die Farben und Fonts gemäß dem Protection Status bestimmt 
+                    If writeProtections.isProtected(pvName) Then
+                        If writeProtections.isPermanentProtected(pvName) Then
+                            ' use permanent Font
+                            .TextFrame.Characters.Font.FontStyle = awinSettings.protectedPermanentFont
+
+                            If writeProtections.isProtected(pvName, dbUsername) Then
+                                ' use byOtherProtectedColor 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByOtherColor
+                            Else
+                                ' use byMeProtected Color 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByMeColor
+                            End If
+                        Else
+                            ' use normal font
+                            If writeProtections.isProtected(pvName, dbUsername) Then
+                                ' use byOtherProtectedColor 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByOtherColor
+                            Else
+                                ' use byMeProtected Color 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByMeColor
+                            End If
+                        End If
+                    Else
+                        ' es ist nicht protected, also muss nichts verändert werden 
+                    End If
 
                     .Fill.Visible = MsoTriState.msoTrue
                     .Fill.ForeColor.RGB = RGB(255, 255, 255)
@@ -14180,7 +14208,7 @@ Public Module Projekte
                     If pNameShape.Width > projectWidth Then
                         Dim newName As String = pNameShape.TextFrame2.TextRange.Text
                         Dim anzZeichen As Integer = newName.Length
-                        Do Until pNameShape.Width < projectWidth And anzZeichen > 3
+                        Do Until pNameShape.Width < projectWidth Or anzZeichen < 3
                             pNameShape.TextFrame2.TextRange.Text = newName.Substring(0, anzZeichen - 2)
                             anzZeichen = anzZeichen - 1
                         Loop
@@ -14214,6 +14242,7 @@ Public Module Projekte
 
 
     End Sub
+
 
     ''' <summary>
     ''' zeichnet die Abhängigkeiten zu dem übergebenen Projekt 
@@ -15128,7 +15157,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung, _
                                           ByVal isMissingDefinition As Boolean, ByVal farbe As Long)
-       
+
 
 
         With resultShape
@@ -15188,8 +15217,9 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="myproject"></param>
     ''' <param name="projectShape"></param>
-    ''' <remarks></remarks>
-    Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape)
+    ''' <remarks>
+    ''' am 7.3.17 Änderung: parameter myProject wird als byval nicht als byref übergeben</remarks>
+    Public Sub defineShapeAppearance(ByVal myproject As clsProjekt, ByRef projectShape As Excel.Shape)
 
         Dim pcolor As Object = XlRgbColor.rgbAqua
         Dim schriftFarbe As Long
@@ -15202,7 +15232,6 @@ Public Module Projekte
         Dim showAmpel As Boolean = False
         Dim showResults As Boolean = True
         Dim myshape As Excel.Shape
-        
 
 
         Try
@@ -15257,8 +15286,6 @@ Public Module Projekte
 
             End Try
 
-
-
             ' hier muss jetzt unterschieden werden, ob die Projektlinie gezeichnet wurde oder der Balken 
 
             If awinSettings.drawProjectLine Then
@@ -15274,7 +15301,7 @@ Public Module Projekte
 
                 End Try
 
-                ' Darstellung, fixiert oder nicht fixiert 
+                ' Darstellung an den Linien-Enden, fixiert oder nicht fixiert 
                 Try
 
                     With .Line
@@ -15287,8 +15314,6 @@ Public Module Projekte
                         End If
 
                     End With
-
-
 
                 Catch ex As Exception
 
@@ -17597,7 +17622,7 @@ Public Module Projekte
                     Catch ex As Exception
 
                     End Try
-                   
+
                 End With
 
 
@@ -18909,7 +18934,7 @@ Public Module Projekte
 
     End Function
 
- 
+
 
     ''' <summary>
     ''' gibt das  Datum zurück, das der Rasterspalte in der Projekt-Tafel entspricht
@@ -19203,6 +19228,20 @@ Public Module Projekte
         calcProjektKey = pName & trennzeichen & variantName
 
 
+    End Function
+
+    ''' <summary>
+    ''' errechnet den Namen, den das Text Shape eines Projektes hat; Input ist der Projekt-Name
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcProjectTextShapeName(ByVal pName As String) As String
+        Dim tmpResult As String = "DummyName"
+        If Not IsNothing(pName) Then
+            tmpResult = "t0a1" & pName
+        End If
+        calcProjectTextShapeName = tmpResult
     End Function
 
     ''' <summary>
@@ -20496,7 +20535,7 @@ Public Module Projekte
 
         End If
 
-        
+
 
 
 
@@ -20970,7 +21009,7 @@ Public Module Projekte
                 End If
             End If
         End If
-        
+
 
 
         phaseWithinTimeFrame = within
@@ -21590,7 +21629,7 @@ Public Module Projekte
                                 ' oder aber eine graue Bewertung hat 
                                 Dim b As clsBewertung
                                 Dim tmpDescription As String
-                                
+
 
 
                                 Dim notYetDone As Boolean = False
@@ -21912,7 +21951,7 @@ Public Module Projekte
             Else
                 endIX = startIX + pEnde - von
             End If
-            
+
         End If
 
         If noOverlap Then
