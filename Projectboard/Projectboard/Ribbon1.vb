@@ -498,15 +498,6 @@ Imports System.Windows
         Call PBBWriteProtections(control, True)
     End Sub
 
-    ''' <summary>
-    ''' ruft den Portfolio Browser auf, um den Schreibschutz von Projekten aus der Datenbank bzw aus der Session 
-    ''' aufzuheben  
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub PT5unSetWriteProtection(control As IRibbonControl)
-        Call PBBWriteProtections(control, False)
-    End Sub
 
     ''' <summary>
     ''' löscht alles, was aktuell in der Session ist 
@@ -522,7 +513,12 @@ Imports System.Windows
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim returnValue As DialogResult
 
-        bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen der kompletten Session"
+        If awinSettings.englishLanguage Then
+            bestaetigeLoeschen.botschaft = "Please confirm the reset of the complete session"
+        Else
+            bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen der kompletten Session"
+        End If
+
         returnValue = bestaetigeLoeschen.ShowDialog
 
         If returnValue = DialogResult.Cancel Then
@@ -1817,9 +1813,9 @@ Imports System.Windows
         Select Case control.Id
             Case "PTMEC" ' Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Charts"
+                    tmpLabel = "Charts & Info"
                 Else
-                    tmpLabel = "Charts"
+                    tmpLabel = "Charts & Info"
                 End If
 
             Case "PTMEC1" ' Rollen und Kosten
@@ -2719,26 +2715,14 @@ Imports System.Windows
                     tmpLabel = "Keep X Versions"
                 End If
 
-            Case "PT5G4" ' Schreibsperren
+
+            Case "PT2G2B5" ' Sperre setzen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Schreibsperre"
+                    tmpLabel = "Schreibschutz setzen/aufheben"
                 Else
-                    tmpLabel = "Write-Protection"
+                    tmpLabel = "Set/un-Set Write-Protection"
                 End If
 
-            Case "PT5G4B1" ' Sperre setzen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Sperre setzen"
-                Else
-                    tmpLabel = "Set Write-Protection"
-                End If
-
-            Case "PT5G4B2" ' Sperre aufheben
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Sperre aufheben"
-                Else
-                    tmpLabel = "Delete Write-Protection"
-                End If
 
             Case "PT6" ' Einstellungen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3913,114 +3897,6 @@ Imports System.Windows
 
         Call PBBLoeschen(control)
 
-        ' ''Dim bestaetigeLoeschen As New frmconfirmDeletePrj
-        ' ''Dim singleShp As Excel.Shape
-        ' ''Dim awinSelection As Excel.ShapeRange
-        ' ''Dim returnValue As DialogResult
-
-        ' ''Call projektTafelInit()
-
-        ' ''appInstance.EnableEvents = False
-        ' ''enableOnUpdate = False
-
-        ' ''Try
-        ' ''    'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-        ' ''    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        ' ''Catch ex As Exception
-        ' ''    awinSelection = Nothing
-        ' ''End Try
-
-        ' ''If Not awinSelection Is Nothing Then
-
-        ' ''    bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
-        ' ''                                    "Vorsicht: alle Varianten werden mitgelöscht ..."
-        ' ''    returnValue = bestaetigeLoeschen.ShowDialog
-
-        ' ''    If returnValue = DialogResult.Cancel Then
-
-        ' ''        appInstance.EnableEvents = True
-        ' ''        enableOnUpdate = True
-        ' ''        Exit Sub
-
-        ' ''    End If
-
-
-
-        ' ''    ' jetzt die Aktion durchführen ...
-
-
-        ' ''    For Each singleShp In awinSelection
-
-
-        ' ''        Dim shapeArt As Integer
-        ' ''        shapeArt = kindOfShape(singleShp)
-
-        ' ''        With singleShp
-        ' ''            If isProjectType(shapeArt) Then
-
-        ' ''                Try
-        ' ''                    Call awinDeleteProjectInSession(pName:=.Name)
-
-        ' ''                Catch ex As Exception
-        ' ''                    Exit For
-        ' ''                End Try
-
-        ' ''            End If
-        ' ''        End With
-
-
-        ' ''    Next
-
-        ' ''    ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
-        ' ''    Call awinNeuZeichnenDiagramme(3)
-
-        ' ''Else
-
-        ' ''    Dim deletedProj As Integer = 0
-
-        ' ''    If AlleProjekte.Count = 0 Then
-        ' ''        Call MsgBox("es sind keine Projekte geladen !")
-        ' ''    Else
-
-        ' ''        'Dim deleteProjects As New frmDeleteProjects
-        ' ''        Dim deleteProjects As New frmProjPortfolioAdmin
-        ' ''        Try
-
-        ' ''            With deleteProjects
-        ' ''                .Text = "Projekte, Varianten aus der Session löschen"
-        ' ''                .aKtionskennung = PTTvActions.delFromSession
-        ' ''                .OKButton.Text = "Löschen"
-        ' ''                '' '' ''.portfolioName.Visible = False
-        ' ''                '' '' ''.Label1.Visible = False
-        ' ''            End With
-
-        ' ''            returnValue = deleteProjects.ShowDialog
-
-        ' ''            If returnValue = DialogResult.OK Then
-
-        ' ''                'Call MsgBox("ok, aus Session gelöscht  !")
-
-        ' ''            Else
-        ' ''                ' returnValue = DialogResult.Cancel
-
-        ' ''            End If
-
-        ' ''        Catch ex As Exception
-
-        ' ''            Call MsgBox(ex.Message)
-        ' ''        End Try
-
-        ' ''    End If
-
-
-
-        ' ''End If
-
-        ' ''Call awinDeSelect()
-
-        ' ''enableOnUpdate = True
-        ' ''appInstance.EnableEvents = True
-
     End Sub
 
     ''' <summary>
@@ -4225,83 +4101,92 @@ Imports System.Windows
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        'dateiName = awinPath & projektInventurFile
+        ' wenn noch etwas in der session ist , warnen ! 
+        If AlleProjekte.Count > 0 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("this function is only available with an empty session" & vbLf & _
+                            "please store and clear your session first")
+            Else
+                Call MsgBox("diese Funktionalität ist nur möglich mit einer leeren Session" & vbLf & _
+                            "bitte speichern Sie ggf. ihre Projekte und setzen die Session zurück.")
+            End If
+        Else
+            ' Aktion durchführen ...
+            getInventurImport.menueAswhl = PTImpExp.simpleScen
+            returnValue = getInventurImport.ShowDialog
 
-        getInventurImport.menueAswhl = PTImpExp.simpleScen
-        returnValue = getInventurImport.ShowDialog
+            If returnValue = DialogResult.OK Then
+                dateiName = getInventurImport.selectedDateiName
 
-        If returnValue = DialogResult.OK Then
-            dateiName = getInventurImport.selectedDateiName
+                Try
 
-            Try
+                    If My.Computer.FileSystem.FileExists(dateiName) Then
 
-                If My.Computer.FileSystem.FileExists(dateiName) Then
-
-                    If ShowProjekte.Count > 0 Then
-                        wasNotEmpty = True
-                        Call storeSessionConstellation("Last")
-                        ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
-                        Call awinClearPlanTafel()
-                    End If
-
-                    appInstance.Workbooks.Open(dateiName)
-                    Dim scenarioName As String = appInstance.ActiveWorkbook.Name
-                    Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
-                    Dim tmpName As String = ""
-                    For ih As Integer = 0 To positionIX
-                        tmpName = tmpName & scenarioName.Chars(ih)
-                    Next
-                    scenarioName = tmpName.Trim
-
-                    ' alle Import Projekte erstmal löschen
-                    ImportProjekte.Clear()
-
-                    Call awinImportProjektInventur()
-                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-
-                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
-
-                    ' ''If wasNotEmpty Then
-                    ' ''    Call awinClearPlanTafel()
-                    ' ''End If
-
-                    '' ''Call awinZeichnePlanTafel(True)
-                    ' ''Call awinZeichnePlanTafel(False)
-                    ' ''Call awinNeuZeichnenDiagramme(2)
-
-                    If sessionConstellation.count > 0 Then
-
-                        If projectConstellations.Contains(scenarioName) Then
-                            projectConstellations.Remove(scenarioName)
+                        If ShowProjekte.Count > 0 Then
+                            wasNotEmpty = True
+                            Call storeSessionConstellation("Last")
+                            ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
+                            Call awinClearPlanTafel()
                         End If
 
-                        projectConstellations.Add(sessionConstellation)
-                        Call loadSessionConstellation(scenarioName, False, False, True)
-                    Else
-                        Call MsgBox("keine PRojekte importiert ...")
-                    End If
+                        appInstance.Workbooks.Open(dateiName)
+                        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+                        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+                        Dim tmpName As String = ""
+                        For ih As Integer = 0 To positionIX
+                            tmpName = tmpName & scenarioName.Chars(ih)
+                        Next
+                        scenarioName = tmpName.Trim
 
-                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
-
-                    If ImportProjekte.Count > 0 Then
+                        ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear()
+
+                        Call awinImportProjektInventur()
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                        Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
+
+                        ' ''If wasNotEmpty Then
+                        ' ''    Call awinClearPlanTafel()
+                        ' ''End If
+
+                        '' ''Call awinZeichnePlanTafel(True)
+                        ' ''Call awinZeichnePlanTafel(False)
+                        ' ''Call awinNeuZeichnenDiagramme(2)
+
+                        If sessionConstellation.count > 0 Then
+
+                            If projectConstellations.Contains(scenarioName) Then
+                                projectConstellations.Remove(scenarioName)
+                            End If
+
+                            projectConstellations.Add(sessionConstellation)
+                            Call loadSessionConstellation(scenarioName, False, False, True)
+                        Else
+                            Call MsgBox("keine PRojekte importiert ...")
+                        End If
+
+                        'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                        'Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                        If ImportProjekte.Count > 0 Then
+                            ImportProjekte.Clear()
+                        End If
+                    Else
+
+                        Call MsgBox("bitte Datei auswählen ...")
                     End If
-                Else
-
-                    Call MsgBox("bitte Datei auswählen ...")
-                End If
 
 
-            Catch ex As Exception
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-            End Try
-        Else
-            Call MsgBox(" Import Scenario wurde abgebrochen")
+                Catch ex As Exception
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                    Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+                End Try
+            Else
+                'Call MsgBox(" Import Scenario wurde abgebrochen")
+            End If
+
         End If
-
-
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -4553,8 +4438,8 @@ Imports System.Windows
             ' ''appInstance.ScreenUpdating = True
             ' ''Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Else
-            Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
-            Call logfileSchreiben(" Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
+            'Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
+            'Call logfileSchreiben(" Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
 
 
@@ -4686,8 +4571,8 @@ Imports System.Windows
             End Try
 
         Else
-            Call MsgBox(" RXF-Import RPLAN-Projekte wurde abgebrochen")
-            Call logfileSchreiben(" RXF-Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
+            'Call MsgBox(" RXF-Import RPLAN-Projekte wurde abgebrochen")
+            'Call logfileSchreiben(" RXF-Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
 
 
@@ -4699,123 +4584,6 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
     End Sub
-    ' ''Public Sub Tom2G4M1ImportOLD(control As IRibbonControl)
-
-    ' ''    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-    ' ''    Dim hproj As New clsProjekt
-    ' ''    Dim cproj As New clsProjekt
-    ' ''    Dim vglName As String = " "
-    ' ''    Dim outputString As String = ""
-    ' ''    Dim dirName As String
-    ' ''    Dim dateiName As String
-    ' ''    Dim pname As String
-    ' ''    Dim importDate As Date = Date.Now
-    ' ''    'Dim importDate As Date = "31.10.2013"
-    ' ''    Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
-    ' ''    Dim projektInventurFile As String = "ProjektInventur.xlsm"
-
-    ' ''    ' öffnen des LogFiles
-    ' ''    Call logfileOpen()
-
-    ' ''    ' '' '' ProjektTafel wieder Aktiv setzen
-    ' ''    '' ''appInstance.Workbooks(myProjektTafel).Activate()
-
-
-    ' ''    Call projektTafelInit()
-
-    ' ''    appInstance.EnableEvents = False
-    ' ''    appInstance.ScreenUpdating = False
-    ' ''    enableOnUpdate = False
-
-    ' ''    Dim myCollection As New Collection
-
-
-
-
-    ' ''    'dirName = awinPath & projektFilesOrdner
-    ' ''    dirName = importOrdnerNames(PTImpExp.visbo)
-    ' ''    listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
-
-    ' ''    ' alle Import Projekte erstmal löschen
-    ' ''    ImportProjekte.Clear()
-
-
-    ' ''    ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-    ' ''    Dim i As Integer
-    ' ''    For i = 1 To listOfVorlagen.Count
-    ' ''        dateiName = listOfVorlagen.Item(i - 1)
-
-    ' ''        If dateiName = projektInventurFile Then
-
-    ' ''            ' nichts machen 
-
-    ' ''        Else
-    ' ''            Dim skip As Boolean = False
-
-
-    ' ''            Try
-    ' ''                appInstance.Workbooks.Open(dateiName)
-    ' ''                Call logfileSchreiben("Beginn Import ", dateiName, -1)
-
-    ' ''            Catch ex1 As Exception
-    ' ''                Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
-    ' ''                skip = True
-    ' ''            End Try
-
-    ' ''            If Not skip Then
-    ' ''                pname = ""
-    ' ''                hproj = New clsProjekt
-    ' ''                Try
-    ' ''                    Call awinImportProjectmitHrchy_beforePT113(hproj, Nothing, False, importDate)
-
-    ' ''                    Try
-    ' ''                        Dim keyStr As String = calcProjektKey(hproj)
-    ' ''                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
-    ' ''                        myCollection.Add(calcProjektKey(hproj))
-    ' ''                    Catch ex2 As Exception
-    ' ''                        Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
-    ' ''                    End Try
-
-    ' ''                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-
-    ' ''                Catch ex1 As Exception
-    ' ''                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-    ' ''                    Call logfileSchreiben(ex1.Message, "", anzFehler)
-    ' ''                    Call MsgBox(ex1.Message)
-    ' ''                    'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
-    ' ''                End Try
-
-
-
-    ' ''            End If
-
-
-
-    ' ''        End If
-
-
-    ' ''    Next i
-
-
-
-    ' ''    Try
-    ' ''        Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-    ' ''    Catch ex As Exception
-    ' ''        Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-    ' ''    End Try
-
-
-
-
-    ' ''    enableOnUpdate = True
-    ' ''    appInstance.EnableEvents = True
-    ' ''    appInstance.ScreenUpdating = True
-
-
-    ' ''    ' Schließen des LogFiles
-    ' ''    Call logfileSchliessen()
-
-    ' ''End Sub
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
@@ -4932,7 +4700,7 @@ Imports System.Windows
 
         Else
 
-            Call logfileSchreiben("Import wurde abgebrochen", "", -1)
+            'Call logfileSchreiben("Import wurde abgebrochen", "", -1)
 
         End If
 

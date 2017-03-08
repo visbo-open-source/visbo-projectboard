@@ -24,14 +24,14 @@
     </contextualTabs>
     <!---->
     <tabs>
-      <!--label="Charts"-->
+      <!--label="Charts & Info-Fenster"-->
       <tab id="PTMEC" getVisible ="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PTMECG1" label=" ">
           <!--label="Rollen und Kosten"-->
           <button id="PTMEC1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>
           <!--label="Budget/Kosten"-->
           <button id="PTMEC2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>
-        <!--label="Budget/Kosten"-->
+        <!--label="Info Gewinn/Verlust"-->
           <button id="PTMEC3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
         </group>
       </tab>
@@ -289,7 +289,8 @@
           <separator id="PT2G2s2"/>
           <!--label="Ändern/Speichern"-->
           <button id="PT2G2B4" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="in der Session bereits geladene Projekte können ausgeblendet / eingeblendet werden "/>
-          <!--<separator id="PT2G2s3"/>-->
+          <separator id="PT2G2s3"/>
+          <button id="PT2G2B5" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
         </group>
         <!--label="Session"-->
         <group id="PT2G3" getVisible="chckVisibility" getLabel ="bestimmeLabel">
@@ -313,11 +314,11 @@
             <button id="PT2G3M4B2" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
         </group>
-        <group id="PT2G4" label="Abhängigkeiten">
+        <!--<group id="PT2G4" label="Abhängigkeiten">
           <button id="PT2G4B1" label="Definieren"  enabled ="true" onAction="PTDefineDependencies" supertip="hier können schwache und starke Abhängigkeiten zwischen Projekten definiert werden"/>
           <separator id="PT2G4s1"/>
           <button id="PT2G4B2" label="Löschen"  enabled ="true" onAction="PTDeleteDependencies" supertip="hier können Projekt-Abhängigkeiten gelöscht werden"/>
-        </group>
+        </group>-->
       </tab>
       <!---->
       <!--<tab id ="PT3" label="Vergleichen">
@@ -435,13 +436,6 @@
               <button id="Pt5G3B4" getLabel ="bestimmeLabel"  onAction="PT5DeleteProjectsInDBExceptF1" supertip ="es werden immer der erste und der letzte sowie X-2 weitere Versionen behalten; alle anderen werden gelöscht "/>
             </menu>
           </menu>
-          <!--label="Schreibsperren"-->
-          <menu id="PT5G4" getLabel="bestimmeLabel">
-            <!--label="Sperre setzen"-->
-            <button id="PT5G4B1" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
-            <!--label="Sperre aufheben"-->
-            <button id="PT5G4B2" getLabel ="bestimmeLabel"  onAction="PT5unSetWriteProtection" supertip ="Schreibschutz für Projekte aufheben"/>                       
-          </menu>
         </group>
       </tab>
       <!---->
@@ -489,7 +483,7 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <group id ="pt6g5" label ="testfunktionen">
+        <!--<group id ="pt6g5" label ="testfunktionen">
           <button id="pt6g5b0" label="enable event aktiv?" onAction="pttestfunktion1" />
           <button id="pt6g5b1" label="aktuelle test funktion"  onAction="pttestfunktion2" />
           <button id="pt6g5b2" label="check hierarchien korrekt ? "  onAction ="pttestfunktion3" />
@@ -502,7 +496,7 @@
         <group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
-        </group>
+        </group>-->
       </tab>
     </tabs>
   </ribbon>

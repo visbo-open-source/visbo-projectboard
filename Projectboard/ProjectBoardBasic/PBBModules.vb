@@ -765,8 +765,14 @@ Public Module PBBModules
 
         If Not IsNothing(awinSelection) Then
 
-            bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
+            If awinSettings.englishLanguage Then
+                bestaetigeLoeschen.botschaft = "please confirm deleting in session ..." & vbLf & _
+                                            "Attention: all variants will get deleted as well ..."
+            Else
+                bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
                                             "Vorsicht: alle Varianten werden mitgelöscht ..."
+            End If
+            
             returnValue = bestaetigeLoeschen.ShowDialog
 
             If returnValue = DialogResult.Cancel Then
@@ -794,13 +800,17 @@ Public Module PBBModules
                         Try
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
                             If Not IsNothing(hproj) Then
-                                If notReferencedByAnyPortfolio(hproj.name, hproj.variantName) Then
-                                    Call awinDeleteProjectInSession(pName:=.Name)
-                                Else
-                                    Dim outputline As String = "Löschen verweigert " & hproj.name & " wird in Szenarien referenziert: "
-                                    outputline = outputline & projectConstellations.getSzenarioNamesWith(hproj.name, hproj.variantName)
-                                    outputCollection.Add(outputline)
-                                End If
+
+                                Call awinDeleteProjectInSession(pName:=.Name)
+                                ' Änderung tk: bei dem Löschen in der Session soll keine Restriktion gelten;
+                                ' ausserdem soll es konsistent zu Löschen aus Session über Portfolio Browser sein 
+                                'If notReferencedByAnyPortfolio(hproj.name, hproj.variantName) Then
+                                '    Call awinDeleteProjectInSession(pName:=.Name)
+                                'Else
+                                '    Dim outputline As String = "Löschen verweigert " & hproj.name & " wird in Szenarien referenziert: "
+                                '    outputline = outputline & projectConstellations.getSzenarioNamesWith(hproj.name, hproj.variantName)
+                                '    outputCollection.Add(outputline)
+                                'End If
                             End If
 
 
@@ -830,7 +840,12 @@ Public Module PBBModules
             Dim deletedProj As Integer = 0
 
             If AlleProjekte.Count = 0 Then
-                Call MsgBox("es sind keine Projekte geladen !")
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects in session ...")
+                Else
+                    Call MsgBox("es sind keine Projekte in der Session geladen ...")
+                End If
+
             Else
 
                 'Dim deleteProjects As New frmDeleteProjects
@@ -1037,31 +1052,10 @@ Public Module PBBModules
             Try
 
                 With writeProtectProjects
-
-                    If control.Id = "PT5G4B1" Then
-                        .aKtionskennung = PTTvActions.setWriteProtection
-                    ElseIf control.Id = "PT5G4B2" Then
-                        '.aKtionskennung = PTTvActions.unSetWriteProtection
-                    End If
-
+                    .aKtionskennung = PTTvActions.setWriteProtection
                 End With
 
-                ' in dem showDialog Modus werden die ScreenUpdates zurückgehalten , es sei den man forciert sie
-                ' was aber zu einem sehr unangenehmen Flackern führt ... 
-                ''Dim returnValue As DialogResult
-                ''returnValue = writeProtectProjects.ShowDialog
-                ' '' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
-                ''If returnValue = DialogResult.OK Then
-                ''    ' everything is done ... 
-                ''Else
-                ''    ' everything is done ... 
-                ''End If
-
-
-                ' wenn es in diesem Modus ausgeführt wird, 
-                ' dann werden alle Änderungen in der Multiprojekt-Tafel sofort sichtbar ...
                 writeProtectProjects.Show()
-
 
             Catch ex As Exception
 
