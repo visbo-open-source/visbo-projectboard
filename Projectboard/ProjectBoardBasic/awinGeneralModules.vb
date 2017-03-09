@@ -1314,6 +1314,16 @@ Public Module awinGeneralModules
         projectboardShapes.clear()
 
         currentConstellationName = ""
+
+        ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
+                                   dbUsername, dbPasswort)
+        If Request.cancelWriteProtections(dbUsername) Then
+            If awinSettings.visboDebug Then
+                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+            End If
+        End If
+
         
         ' tk, 10.11.16 allDependencies darf nicht gelöscht werden, weil das sonst nicht mehr vorhanden ist
         ' allDependencies wird aktull nur beim Start geladen - und das reicht ja auch ... 
@@ -3821,255 +3831,230 @@ Public Module awinGeneralModules
         anzAktualisierungen = 0
         anzNeuProjekte = 0
 
-        Dim ok As Boolean = True
         ' jetzt werden alle importierten Projekte bearbeitet 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
 
+            ' wenn ein Projekt importiert wird, das durch andere geschützt ist , so wird eine neue Variante angelegt
+            ' dann soll das ursprüngliche Projekt , sofern es in de rSession existiert, nicht aus der Session gelöscht werden 
+            Dim newVariantGenerated As Boolean = False
             fullName = kvp.Key
             hproj = kvp.Value
 
-            ok = True
 
-            ' Änderung tk: beim Import soll nicht mehr gefiltert werden. das kann nachher gemacht werden im Szenario Browser 
-            ''Try
-            ''    'hproj = ImportProjekte.getProject(fullName)
-            ''    pname = hproj.name
+            ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
+            ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
+            ' wenn nein, wird es im Show-Modus ergänzt 
 
-            ''    ' Änderung tk: ist Filter aktiv ? wenn ja, muss der überprüft werden 
-            ''    ' 18.1.15
-            ''    If awinSettings.applyFilter Then
+            vglName = calcProjektKey(hproj)
+            Try
+                cproj = AlleProjekte.getProject(vglName)
 
-            ''        Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
-            ''        If IsNothing(filter) Then
-            ''            ok = True
-            ''        Else
-            ''            ok = filter.doesNotBlock(hproj)
-            ''        End If
-            ''    Else
-            ''        ok = True
-            ''    End If
+                If IsNothing(cproj) Then
+                    ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
+                    existsInSession = False
+                    If Not noDB Then
+                        cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
+                    End If
+                Else
+                    existsInSession = True
+                End If
 
-            ''Catch ex As Exception
-            ''    Call MsgBox("Projekt " & fullName & " ist kein gültiges Projekt ... es wird ignoriert ...")
-            ''    pname = ""
-            ''    ok = False
-            ''End Try
+                ' ist es immer noch Nothing ? 
+                If IsNothing(cproj) Then
+                    ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
+                    If hproj.VorlagenName = "" Then
+                        Try
+                            Dim anzVorlagen = Projektvorlagen.Count
+                            Dim vproj As clsProjektvorlage
+                            hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
 
-            If ok Then
+                            For i = 1 To anzVorlagen
+                                vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
+                                If vproj.farbe = hproj.farbe Then
+                                    hproj.VorlagenName = vproj.VorlagenName
+                                End If
+                            Next
 
-                ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
-                ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
-                ' wenn nein, wird es im Show-Modus ergänzt 
+                        Catch ex1 As Exception
 
-                vglName = calcProjektKey(hproj)
-                Try
-                    cproj = AlleProjekte.getProject(vglName)
+                        End Try
+                    End If
 
-                    If IsNothing(cproj) Then
-                        ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
-                        existsInSession = False
+                    Try
+                        With hproj
+                            ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                            '.earliestStart = 0
+                            .earliestStartDate = .startDate
+                            .latestStartDate = .startDate
+                            .Id = vglName & "#" & importDate.ToString
+                            ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                            '.latestStart = 0
+
+                            ' Änderung tk 12.12.15: LeadPerson darf doch nicht auf leer gesetzt werden ...
+                            '.leadPerson = " "
+                            .shpUID = ""
+                            .StartOffset = 0
+
+                            ' ein importiertes Projekt soll normalerweise immer gleich  auf "beauftragt" gesetzt werden; 
+                            ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
+                            ' Inventur: erst mal auf geplant, sonst beauftragt 
+                            .Status = pStatus
+                            .tfZeile = tafelZeile
+                            .timeStamp = importDate
+                            .UID = cproj.UID
+
+                        End With
+
+                        ' Workaround: 
+                        Dim tmpValue As Integer = hproj.dauerInDays
+                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                        'Call awinCreateBudgetWerte(hproj)
+                        tafelZeile = tafelZeile + 1
+
+                        anzNeuProjekte = anzNeuProjekte + 1
+                    Catch ex1 As Exception
+                        Throw New ArgumentException("Fehler bei Übernahme der Attribute des alten Projektes" & vbLf & ex1.Message)
+                    End Try
+                Else
+
+                    ' jetzt sollen bestimmte Werte aus dem cproj übernommen werden 
+                    ' das ist dann wichtig, wenn z.Bsp nur Rplan Excel Werte eingelesen werden, die enthalten ja nix ausser Termine ...
+                    ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
+
+                    Try
+                        Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile)
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+
+                    If Not hproj.isIdenticalTo(vProj:=cproj) Then
+                        ' das heisst, das Projekt hat sich verändert 
+                        hproj.diffToPrev = True
+                        If hproj.Status = ProjektStatus(1) Then
+                            hproj.Status = ProjektStatus(2)
+                        End If
+
+                        ' wenn das Projekt bereits von anderen geschützt ist, soll es als Variante angelegt werden 
+                        ' andernfalls soll es von mir geschützt werden ; allerdings soll es nur dann einen temporärewn Schutz bekommen, 
+                        ' wenn es nicht schon von mir permanent geschützt ist 
                         If Not noDB Then
-                            cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
-                        End If
-                    Else
-                        existsInSession = True
-                    End If
+                            Dim wpItem As clsWriteProtectionItem
 
-                    ' ist es immer noch Nothing ? 
-                    If IsNothing(cproj) Then
-                        ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
-                        If hproj.VorlagenName = "" Then
-                            Try
-                                Dim anzVorlagen = Projektvorlagen.Count
-                                Dim vproj As clsProjektvorlage
-                                hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
+                            Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
-                                For i = 1 To anzVorlagen
-                                    vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
-                                    If vproj.farbe = hproj.farbe Then
-                                        hproj.VorlagenName = vproj.VorlagenName
-                                    End If
-                                Next
+                            If isProtectedbyOthers Then
 
-                            Catch ex1 As Exception
+                                ' nicht erfolgreich, weil durch anderen geschützt ... 
+                                ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
+                                wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                writeProtections.upsert(wpItem)
 
-                            End Try
-                        End If
-
-                        Try
-                            With hproj
-                                ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
-                                '.earliestStart = 0
-                                .earliestStartDate = .startDate
-                                .latestStartDate = .startDate
-                                .Id = vglName & "#" & importDate.ToString
-                                ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
-                                '.latestStart = 0
-
-                                ' Änderung tk 12.12.15: LeadPerson darf doch nicht auf leer gesetzt werden ...
-                                '.leadPerson = " "
-                                .shpUID = ""
-                                .StartOffset = 0
-
-                                ' ein importiertes Projekt soll normalerweise immer gleich  auf "beauftragt" gesetzt werden; 
-                                ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
-                                ' Inventur: erst mal auf geplant, sonst beauftragt 
-                                .Status = pStatus
-                                .tfZeile = tafelZeile
-                                .timeStamp = importDate
-                                .UID = cproj.UID
-
-                            End With
-
-                            ' Workaround: 
-                            Dim tmpValue As Integer = hproj.dauerInDays
-                            ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                            'Call awinCreateBudgetWerte(hproj)
-                            tafelZeile = tafelZeile + 1
-
-                            anzNeuProjekte = anzNeuProjekte + 1
-                        Catch ex1 As Exception
-                            Throw New ArgumentException("Fehler bei Übernahme der Attribute des alten Projektes" & vbLf & ex1.Message)
-                        End Try
-                    Else
-
-                        ' jetzt sollen bestimmte Werte aus dem cproj übernommen werden 
-                        ' das ist dann wichtig, wenn z.Bsp nur Rplan Excel Werte eingelesen werden, die enthalten ja nix ausser Termine ...
-                        ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
-
-                        Try
-                            Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile)
-                        Catch ex As Exception
-                            Call MsgBox(ex.Message)
-                        End Try
-
-
-                        If Not hproj.isIdenticalTo(vProj:=cproj) Then
-                            ' das heisst, das Projekt hat sich verändert 
-                            hproj.diffToPrev = True
-                            If hproj.Status = ProjektStatus(1) Then
-                                hproj.Status = ProjektStatus(2)
-                            End If
-
-                            ' wenn das Projekt bereits von anderen geschützt ist, soll es als Variante angelegt werden 
-                            ' andernfalls soll es von mir geschützt werden 
-                            If Not noDB Then
-
-                                Dim wpItem As New clsWriteProtectionItem(calcProjektKey(hproj.name, hproj.variantName), _
-                                                                          ptWriteProtectionType.project, _
-                                                                          dbUsername, _
-                                                                          False, _
-                                                                          True)
-                                If request.setWriteProtection(wpItem) Then
-                                    ' erfolgreich ...
-                                    writeProtections.upsert(wpItem)
-                                Else
-                                    ' nicht erfolgreich, weil durch anderen geschützt ... oder aber noch gar nicht in Datenbank 
-                                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-                                    writeProtections.upsert(wpItem)
-
-                                    ' jetzt Variante anlegen 
-                                    Dim teilName As String = dbUsername
-                                    If dbUsername.Length > 4 Then
-                                        teilName = dbUsername.Substring(0, 4)
-                                    End If
-                                    Dim altVname As String = "I" & teilName
-                                    hproj.variantName = altVname
-
-                                    Dim altKey As String = calcProjektKey(hproj.name, altVname)
-                                    If AlleProjekte.Containskey(altKey) Then
-                                        existsInSession = True
-                                    End If
-
+                                ' jetzt Variante anlegen 
+                                Dim teilName As String = dbUsername
+                                If dbUsername.Length > 4 Then
+                                    teilName = dbUsername.Substring(0, 4)
                                 End If
+                                Dim newVname As String = "I" & teilName
+                                hproj.variantName = newVname
 
+                                ' jetzt das Flag setzen 
+                                newVariantGenerated = True
                             End If
 
-
-                        Else
-                            hproj.diffToPrev = False
                         End If
 
 
-                        anzAktualisierungen = anzAktualisierungen + 1
-
-                        Try
-                            If existsInSession Then
-                                AlleProjekte.Remove(vglName)
-                                If ShowProjekte.contains(hproj.name) Then
-                                    ShowProjekte.Remove(hproj.name)
-                                End If
-                            End If
-                        Catch ex1 As Exception
-                            Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
-                        End Try
-
+                    Else
+                        hproj.diffToPrev = False
                     End If
 
 
-                Catch ex As Exception
+                    anzAktualisierungen = anzAktualisierungen + 1
+
+                    Try
+                        If newVariantGenerated Then
+                            ' das alte in AlleProjekte lassen 
+                            ' das alte in ShowProjekte rausnehmen  
+                            If ShowProjekte.contains(hproj.name) Then
+                                ShowProjekte.Remove(hproj.name)
+                            End If
+
+                        ElseIf existsInSession Then
+                            AlleProjekte.Remove(vglName)
+                            If ShowProjekte.contains(hproj.name) Then
+                                ShowProjekte.Remove(hproj.name)
+                            End If
+                        End If
+
+
+                    Catch ex1 As Exception
+                        Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
+                    End Try
+
+                End If
+
+
+            Catch ex As Exception
 
 
 
-                End Try
+            End Try
 
                 ' in beiden Fällen - sowohl bei neu wie auch Aktualisierung muss jetzt das Projekt 
                 ' sowohl auf der Plantafel eingetragen werden als auch in ShowProjekte und in alleProjekte eingetragen 
 
                 ' bringe das neue Projekt in Showprojekte und in AlleProjekte
 
-                If ok Then
-
-                    Try
-
-                        AlleProjekte.Add(vglName, hproj)
-                        ShowProjekte.Add(hproj)
-
-                        ' ggf Bedarfe anzeigen 
-                        If roentgenBlick.isOn Then
-                            With roentgenBlick
-                                Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=hproj.name)
-                            End With
-
-                        End If
-
-                        ' Änderung tk 18.1.15
-                        ' kein Zeichnen - das wird am Schluss komplett gemacht 
-                        '' zeichne das neue Shape in der Plan-Tafel 
-                        '' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                        '' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                        'Dim tmpCollection As New Collection
-                        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
-
-                        '' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
-                        'Call awinNeuZeichnenDiagramme(2)
-                        ' Ende Änderung tk 18.1.15
 
 
-                    Catch ex As Exception
-                        'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
-                        'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
-                    End Try
+            Try
+                vglName = calcProjektKey(hproj.name, hproj.variantName)
+                AlleProjekte.Add(vglName, hproj)
+                ShowProjekte.Add(hproj)
+
+                ' ggf Bedarfe anzeigen 
+                If roentgenBlick.isOn Then
+                    With roentgenBlick
+                        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=hproj.name)
+                    End With
 
                 End If
 
 
-            End If
+            Catch ex As Exception
+                'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
+                'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
+            End Try
+
+
+
+
 
         Next
 
         If ImportProjekte.Count < 1 Then
-            Call MsgBox(" es wurden keine Projekte importiert ...")
-        Else
-            Dim filterText As String
-            If awinSettings.applyFilter Then
-                filterText = " (Filter aktiviert)"
+            If awinSettings.englishLanguage Then
+                Call MsgBox(" no projects imported ...")
             Else
-                filterText = " (Filter nicht aktiviert)"
+                Call MsgBox(" es wurden keine Projekte importiert ...")
             End If
-            Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & filterText & vbLf & vbLf & _
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                
+                Call MsgBox(ImportProjekte.Count & " projects were read " & vbLf & vbLf & _
+                        anzNeuProjekte.ToString & " new projects" & vbLf & _
+                        anzAktualisierungen.ToString & " project updates")
+            Else
+                
+                Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & vbLf & vbLf & _
                         anzNeuProjekte.ToString & " neue Projekte" & vbLf & _
                         anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
+            End If
+            
+            
 
             ' Änderung tk: jetzt wird das neu gezeichnet 
             ' wenn anzNeuProjekte > 0, dann hat sich die Konstellataion verändert 
@@ -9851,6 +9836,15 @@ Public Module awinGeneralModules
                     ' speichern des Projektes 
                     hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj, dbUsername) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputLine = "stored: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputLine)
+                        Else
+                            outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputLine)
+                        End If
+
                         anzahlNeue = anzahlNeue + 1
 
                         Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
@@ -9864,6 +9858,10 @@ Public Module awinGeneralModules
                             outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
                         End If
                         outPutCollection.Add(outputLine)
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem)
+
                     End If
                 Else
                     ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
@@ -9872,6 +9870,15 @@ Public Module awinGeneralModules
                     If Not hproj.isIdenticalTo(oldProj) Then
                         hproj.timeStamp = DBtimeStamp
                         If request.storeProjectToDB(hproj, dbUsername) Then
+
+                            If awinSettings.englishLanguage Then
+                                outputLine = "stored: " & hproj.name & ", " & hproj.variantName
+                                outPutCollection.Add(outputLine)
+                            Else
+                                outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                                outPutCollection.Add(outputLine)
+                            End If
+
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
 
@@ -9884,6 +9891,10 @@ Public Module awinGeneralModules
                                 outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
                             End If
                             outPutCollection.Add(outputLine)
+
+                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            writeProtections.upsert(wpItem)
+
                         End If
                     End If
                 End If
@@ -9895,6 +9906,7 @@ Public Module awinGeneralModules
         ' jetzt wird die 
         Try
             If request.storeConstellationToDB(currentConstellation) Then
+                
             Else
                 If awinSettings.englishLanguage Then
                     outputLine = "Error when writing scenario: " & currentConstellation.constellationName
@@ -18709,47 +18721,21 @@ Public Module awinGeneralModules
 
                 ' ist das Projekt geschützt ? 
                 ' wenn nein, dann temporär schützen 
-                Dim isProtected As Boolean
                 Dim protectionText As String = ""
                 Dim wpItem As clsWriteProtectionItem
+                Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
-                Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
-                If request.checkChgPermission(hproj.name, hproj.variantName, dbUsername) Then
+                If isProtectedbyOthers Then
 
-                    ' jetzt fragen, ob diese Projekt-Variante bereits geschützt ist, dann nichts machen , 
-                    ' andernfalls würde ggf ein permanenter Schutz in einen temporären umgewandelt 
-
-                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-
-                    If wpItem.isProtected Then
-                        ' nichts machen 
-                    Else
-                        ' jetzt diese Projekt-Variante temporär schützen 
-                        wpItem = New clsWriteProtectionItem(pvN:=pvName, _
-                                                                 type:=ptWriteProtectionType.project, _
-                                                                 userN:=dbUsername, _
-                                                                 prmnnt:=False, _
-                                                                 protectIT:=True)
-
-                        If request.setWriteProtection(wpItem) Then
-                            ' es hat geklappt 
-                            isProtected = False
-                            writeProtections.upsert(wpItem)
-                        Else
-                            isProtected = True
-                            wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-                            writeProtections.upsert(wpItem)
-                            protectionText = writeProtections.getProtectionText(pvName)
-                        End If
-                    End If
-                    
-
-                Else
-                    isProtected = True
+                    ' nicht erfolgreich, weil durch anderen geschützt ... 
+                    ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
                     wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
                     writeProtections.upsert(wpItem)
-                    protectionText = writeProtections.getProtectionText(pvName)
+
+                    protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+
                 End If
+
 
                 pStart = getColumnOfDate(hproj.startDate)
                 pEnde = getColumnOfDate(hproj.endeDate)
@@ -18803,7 +18789,7 @@ Public Module awinGeneralModules
                                 ' Name schreiben
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
                                 ' wenn es protected ist, entsprechend markieren 
-                                If isProtected Then
+                                If isProtectedbyOthers Then
                                     'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
                                     CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
@@ -18833,7 +18819,7 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = roleName
-                                    If isProtected Then
+                                    If isProtectedbyOthers Then
                                     Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -18857,7 +18843,7 @@ Public Module awinGeneralModules
                                 If awinSettings.allowSumEditing Then
                                     With CType(.Cells(zeile, 6), Excel.Range)
 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -18907,7 +18893,7 @@ Public Module awinGeneralModules
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
 
-                                            If isProtected Then
+                                            If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
                                                 Try
@@ -18931,7 +18917,7 @@ Public Module awinGeneralModules
 
                                         End With
                                         ' erlaubter Eingabebereich grau markieren, aber nur wenn nicht protected 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -18967,7 +18953,7 @@ Public Module awinGeneralModules
 
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                If isProtected Then
+                                If isProtectedbyOthers Then
                                     'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
                                     CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
@@ -18998,7 +18984,7 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = costName
-                                    If isProtected Then
+                                    If isProtectedbyOthers Then
                                     Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19022,7 +19008,7 @@ Public Module awinGeneralModules
                                 If awinSettings.allowSumEditing Then
 
                                     With CType(.Cells(zeile, 6), Excel.Range)
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19067,7 +19053,7 @@ Public Module awinGeneralModules
                                     If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                            If isProtected Then
+                                            If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
                                                 Try
@@ -19086,7 +19072,7 @@ Public Module awinGeneralModules
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
                                         ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19125,7 +19111,7 @@ Public Module awinGeneralModules
 
                                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                If isProtected Then
+                                If isProtectedbyOthers Then
                                     'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
                                     CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
                                     ' Kommentar einfügen 
@@ -19156,7 +19142,7 @@ Public Module awinGeneralModules
 
                                 With CType(.Cells(zeile, 5), Excel.Range)
                                     .Value = ""
-                                    If isProtected Then
+                                    If isProtectedbyOthers Then
                                     Else
                                         .Locked = False
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19178,7 +19164,7 @@ Public Module awinGeneralModules
                                 If awinSettings.allowSumEditing Then
                                     With CType(.Cells(zeile, 6), Excel.Range)
                                         .Value = ""
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19216,7 +19202,7 @@ Public Module awinGeneralModules
                                     If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                         With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                            If isProtected Then
+                                            If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
                                                 Try
@@ -19234,7 +19220,7 @@ Public Module awinGeneralModules
 
                                         CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
-                                        If isProtected Then
+                                        If isProtectedbyOthers Then
                                         Else
                                             CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                      .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -19324,6 +19310,74 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' versucht das Projekt für mich zu schützen 
+    ''' gibt false zurück , wenn das Projekt durch andere geschützt ist 
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="vName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function tryToprotectProjectforMe(ByVal pName As String, ByVal vName As String) As Boolean
+
+        Dim wpItem As clsWriteProtectionItem
+        Dim isProtectedbyOthers As Boolean
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        If request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+
+            ' es existiert in der Datenbank ...
+            If request.checkChgPermission(pName, vName, dbUsername) Then
+
+                isProtectedbyOthers = False
+                ' jetzt prüfen, ob es Null ist, von mir permanent/nicht permanent geschützt wurde .. 
+                wpItem = request.getWriteProtection(pName, vName)
+
+                Dim notYetDone As Boolean = False
+
+                If IsNothing(wpItem) Then
+                    ' wpitem kann NULL sein
+                    notYetDone = True
+
+                ElseIf wpItem.permanent Then
+                    notYetDone = False
+                    ' meinen permanenten Schutz einbauen 
+                    writeProtections.upsert(wpItem)
+
+                Else
+                    notYetDone = True
+                End If
+
+                If notYetDone Then
+                    wpItem = New clsWriteProtectionItem(calcProjektKey(pName, vName), _
+                                                              ptWriteProtectionType.project, _
+                                                              dbUsername, _
+                                                              False, _
+                                                              True)
+
+                    If request.setWriteProtection(wpItem) Then
+                        ' erfolgreich ...
+                        writeProtections.upsert(wpItem)
+                    Else
+                        ' in diesem Fall wurde es in der Zwischenzeit von jdn anders geschützt  
+                        isProtectedbyOthers = True
+                    End If
+
+                End If
+
+            Else
+                isProtectedbyOthers = True
+            End If
+        Else
+            ' das Projekt existiert bisher nur in der Session des Nutzers 
+            isProtectedbyOthers = False
+        End If
+
+
+        tryToprotectProjectforMe = Not isProtectedbyOthers
+
+    End Function
 
     ''' <summary>
     ''' aktualisiert in Tabelle2 die Auslastungs-Values 

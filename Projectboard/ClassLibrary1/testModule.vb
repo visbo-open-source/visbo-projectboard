@@ -5131,6 +5131,14 @@ Public Module testModule
                             If storeNeeded Then
                                 If request.storeProjectToDB(kvp.Value, dbUsername) Then
 
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "stored: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "gespeichert: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    End If
+
                                     anzahlStores = anzahlStores + 1
                                     ' jetzt die writeProtections aktualisieren 
 
@@ -5140,22 +5148,27 @@ Public Module testModule
 
                                 Else
                                     If awinSettings.englishLanguage Then
-                                        outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
-                                        outPutCollection.Add(outputline)
-                                    Else
                                         outputline = "protected project: " & kvp.Value.name & ", " & kvp.Value.variantName
                                         outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
                                     End If
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    writeProtections.upsert(wpItem)
+
                                 End If
                             End If
                         Else
-                            If awinSettings.englishLanguage Then
-                                outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
-                                outPutCollection.Add(outputline)
-                            Else
-                                outputline = "protected project: " & kvp.Value.name & ", " & kvp.Value.variantName
-                                outPutCollection.Add(outputline)
-                            End If
+                            ' nicht mehr rausschreiben - das ist ohnehin erwartet ... 
+                            'If awinSettings.englishLanguage Then
+                            '    outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
+                            '    outPutCollection.Add(outputline)
+                            'Else
+                            '    outputline = "protected project: " & kvp.Value.name & ", " & kvp.Value.variantName
+                            '    outPutCollection.Add(outputline)
+                            'End If
                         End If
 
 
@@ -5190,6 +5203,13 @@ Public Module testModule
 
                         Try
                             If request.storeConstellationToDB(kvp.Value) Then
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Scenario stored: " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                Else
+                                    outputline = "Szenario gespeichert: " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                End If
                             Else
                                 If awinSettings.englishLanguage Then
                                     outputline = "Error when writing Scenario " & kvp.Key
@@ -5220,6 +5240,7 @@ Public Module testModule
 
                         Try
                             If request.storeDependencyofPToDB(kvp.Value) Then
+                                ' nichts schreiben ...
                             Else
                                 If awinSettings.englishLanguage Then
                                     outputline = "Error when writing dependency " & kvp.Key
@@ -5324,7 +5345,7 @@ Public Module testModule
                         End If
                     Else
                         If awinSettings.englishLanguage Then
-                            outputline = "no changes in projects / project-variants, because of no changes;"
+                            outputline = "no projects / project-variants stored, because of no changes;"
                         Else
                             outputline = "keine Projekte gespeichert, da es keine Änderungen gab"
                         End If
@@ -5470,6 +5491,14 @@ Public Module testModule
                             If storeNeeded Then
                                 If request.storeProjectToDB(hproj, dbUsername) Then
 
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "stored: " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    Else
+                                        outputline = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    End If
+
                                     anzStoredProj = anzStoredProj + 1
 
                                     Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
@@ -5483,6 +5512,9 @@ Public Module testModule
                                     End If
 
                                     outputCollection.Add(outputline)
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    writeProtections.upsert(wpItem)
 
                                 End If
                             End If
