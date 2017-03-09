@@ -89,7 +89,7 @@ namespace MongoDbAccess
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
             CollectionCosts = Database.GetCollection<clsKostenartDefinitionDB>("costdefinitions");
-            CollectionWriteProtections = Database.GetCollection<clsWriteProtectionItemDB>("WriteProtections");
+            CollectionWriteProtections = Database.GetCollection<clsWriteProtectionItemDB>("writeProtections");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
@@ -164,7 +164,7 @@ namespace MongoDbAccess
                 case "costdefinitions":
                     result = CollectionCosts.AsQueryable<clsKostenartDefinitionDB>().Count();
                     break;
-                case "WriteProtections":
+                case "writeProtections":
                     result = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>().Count();
                     break;
                 default:
@@ -174,6 +174,54 @@ namespace MongoDbAccess
             
             return result == 0; 
         }
+
+      /// <summary>
+      /// hier werden einmalig alle in der Datenbank vorhandenen Projekte/Variante in die CollectionWriteProtections eingetragen
+      /// </summary>
+      /// <param name="user"></param>
+      /// <returns></returns>
+      public int initWriteProtectionsOnce(string user)
+        {
+            int i = 0;
+            int result = 0;
+
+            try
+            {
+                if (collectionEmpty("writeProtections"))
+                {
+                   clsWriteProtectionItem wpItem = null;
+                   clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+
+                   var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                        .Where(c => c.name != null)
+                        .Select(c => c.name)
+                        .Distinct()
+                        .ToList();
+
+                   foreach (string dbKey in prequery )
+                   {
+                         string pname = Projekte.getPnameFromKey(dbKey);
+                         string vname = Projekte.getVariantnameFromKey(dbKey);
+
+                         wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(pname, vname), 0, user, false, false);
+                         wpItemDB = new clsWriteProtectionItemDB();
+                         wpItemDB.copyFrom(wpItem);
+                         CollectionWriteProtections.InsertOne(wpItemDB);
+                         i = i + 1;
+                   }
+                } 
+                
+                result = i;
+                      
+            }
+            catch
+            {
+                return result;
+            }
+
+            return result;
+        }
+
 
         /// <summary>
         /// prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
@@ -509,10 +557,11 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// liefert für den pvName das clsWriteProtectiomItem zurück
+        /// liefert für den pName und vName das clsWriteProtectiomItem zurück
         /// wenn es das nch nicht gibt, dann Null 
         /// </summary>
-        /// <param name="pvName"></param>
+        /// <param name="pName"></param>
+        /// <param name="vName"></param>
         /// <param name="type"></param>
         /// <returns></returns>
         public clsWriteProtectionItem getWriteProtection(string pName, string vName, int type = 0)
@@ -656,7 +705,8 @@ namespace MongoDbAccess
             }
         }
         /// <summary>
-        /// überprüft, ob das Projekt pvname vom Typ type vom User userName die Erlaubnis hat etwas zu verändern
+        /// überprüft, ob der User userName für das Projekt pvname vom Typ type 
+        /// die Erlaubnis hat etwas zu verändern
         /// </summary>
         /// </summary>
         /// <param name="pName"></param>
@@ -726,6 +776,27 @@ namespace MongoDbAccess
            
             var uresult = CollectionWriteProtections.UpdateMany(filter,updatedef);
             return uresult.IsAcknowledged;
+        }
+
+
+        /// <summary>
+        /// setzt für alle Projekt-Varianten des Users user die temporär die writeProtections
+        /// </summary>
+        /// <param name="pName"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public bool protectAllVariants(string pName, string user, bool set = true)
+        {
+            // löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
+
+            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("userName", user);
+
+            var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected", set).Set("lastDateSet", DateTime.UtcNow);
+
+            var uresult = CollectionWriteProtections.UpdateMany(filter, updatedef);
+            return (uresult.IsAcknowledged && uresult.ModifiedCount > 0);
         }
       
         /// <summary>
@@ -1582,6 +1653,10 @@ namespace MongoDbAccess
 
                     if (chkOk)
                     {
+                        if (protectAllVariants(oldName, userName))
+                        {
+
+
                         string oldFullName;
                         string newFullName;
                         bool ok = false;
@@ -1714,6 +1789,7 @@ namespace MongoDbAccess
                                               // neu 3.0 
 
                                             wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(newName, vName), 0, userName, false, false);
+                                            wpItemDB = new clsWriteProtectionItemDB();
                                             wpItemDB.copyFrom(wpItem);
                                             CollectionWriteProtections.InsertOne(wpItemDB);
                                            
@@ -1725,7 +1801,7 @@ namespace MongoDbAccess
 
                             catch (Exception)
                             {
-                                return false;
+                                ok = false;
                             }
 
                             if (ok)
@@ -1737,8 +1813,11 @@ namespace MongoDbAccess
                         else
                         { return false; }
 
-                    }   // hier ist if(chkOK) zu Ende
+                        }   // hier ist if (protectAllVariants) zu Ende
+                        else
+                        { return false; }
 
+                    }   // hier ist if(chkOK) zu Ende
                     else
                     { return false; }  
               

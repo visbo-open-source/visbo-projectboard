@@ -130,11 +130,13 @@ Public Class frmAuthentication
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
-
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
                 messageBox.Text = ""
                 DialogResult = System.Windows.Forms.DialogResult.OK
+                ' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
+                Dim initOK As Integer = request.initWriteProtectionsOnce(dbUsername)
+
             End If
             
         Catch ex As Exception
