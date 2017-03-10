@@ -63,7 +63,7 @@
             <button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
           </menu>
           <!--label="größter Engpass"-->
-          <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" />
+          <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/>
           <!--label="Auslastung"-->
           <button id="PTXG1B3" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
           <separator id="PTXG1s4"/>
@@ -94,17 +94,17 @@
         <!--label="Analysen"-->
         <group id="PT0G1" getLabel ="bestimmeLabel">
           <!--label="Projekt-Ampel"-->
-          <button id="PT0G1B0" getLabel ="bestimmeLabel" onAction="PT0ShowProjektStatus" />
+          <button id="PT0G1B0" getLabel ="bestimmeLabel" onAction="PT0ShowProjektStatus" supertip="es wird die Ampel des Projektes angezeigt"/>
           <separator id="PT0G1s1"/>
           <!--label="Meilenstein-Ampel"-->
-          <button id="PT0G1B2" getLabel ="bestimmeLabel" onAction="PT0ShowZieleUebersicht" />
+          <button id="PT0G1B2" getLabel ="bestimmeLabel" onAction="PT0ShowZieleUebersicht" supertip="es wird ein Chart angezeigt, das die Summe der roten, gelben, grünen, nicht bewerteten Ampeln des Projektes zeigt"/>
           <separator id="PT0G1s2"/>
           <!--label="Phasen / Meilensteine visualisieren"-->
-          <menu id="PT0G1M0" getLabel ="bestimmeLabel" supertip="Meilensteine und Vorgänge visualisieren">
+          <menu id="PT0G1M0" getLabel ="bestimmeLabel" supertip="Meilensteine und Vorgänge auf der Multiprojekt-Tafel visualisieren">
             <!--label="Auswahl über Namen"-->
-            <button id="PT0G1B8" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
+            <button id="PT0G1B8" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
             <!--label="Auswahl über Hierarchie"-->
-            <button id="PT0G1B9" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>
+            <button id="PT0G1B9" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Hierarchie"/>
           </menu>
           <separator id="PT0G1s3"/>
           <!--label="Zeit-Maschine"-->
@@ -153,11 +153,11 @@
       <tab id="PT7" getVisible="chckVisibility" label ="Cockpit">
         <group id="PT7G1" label=" ">
           <!--label="Cockpit visualisieren"-->
-          <button id="PT0G1M3B1" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="eine zuvor gespeicherte Menge von Cockpits wird wieder abgerufen und auf dem Bildschirm dargestellt"/>
+          <button id="PT0G1M3B1" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
           <!--label="Cockpit speichern"-->
           <button id="PT0G1M3B2" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
           <!--label="Cockpit-Charts löschen"-->
-          <button id="PT0G1M3B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
+          <button id="PT0G1M3B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts in der Session werden gelöscht"/>
         </group>
       </tab>
       <!--
@@ -168,7 +168,7 @@
         <!--label="Powerpoint Report Profile"-->
         <group id="PT1G1" getLabel ="bestimmeLabel">
           <!--label="Report-Profil definieren"-->
-          <menu id="PT1G1M0"  getLabel ="bestimmeLabel">
+          <menu id="PT1G1M0"  getLabel ="bestimmeLabel" supertip="ein Bericht wird von Grund auf konfiguriert; damit wird das Report-Profil definiert">
             <!--label="Einzelprojekt-Berichte"-->
             <menu id ="PT1G1M01" getLabel ="bestimmeLabel">
               <!--label="Typ I"-->
@@ -216,14 +216,14 @@
           <!--label="Neues Projekt anlegen"-->
           <menu id="PT2G1M0" getVisible="chckVisibility"  getLabel ="bestimmeLabel">
             <!--label="Neu auf Basis Vorlage"-->
-            <button id="PT2G1M0B0" getLabel ="bestimmeLabel" onAction="PT2ProjektNeu" supertip="auf Basis einer sogenannten Projekt-Generik ein neues Projekt anlegen; wenn eine von der Generik abweichende Dauer gewählt wird, werden die Termine so gelegt, daß die relativen Abstände der Plan-Elemente voneinander erhalten bleiben"/>
+            <button id="PT2G1M0B0" getLabel ="bestimmeLabel" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
             <!--<button id="PT2G1M0B1" label="Neu auf Basis Projekt" onAction="PT2ProjektNeuBasisProjekt" />-->
           </menu>
           <separator id="PT2G1s0"/>
           <!--label="Variante"-->
-          <menu id ="PT2G1M1" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+          <menu id ="PT2G1M1" getVisible="chckVisibility" getLabel ="bestimmeLabel" supertip ="auf Basis von Varianten können was-wäre-wenn Simulationen durchgeführt werden. Zu einem Projekt können belibig viele Varainten erstellt werden.">
             <!--label="neue Variante anlegen"-->
-            <button id="PT2G1M1B0" getLabel ="bestimmeLabel" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden. So können zunächst mehrere Varianten für ein oder mehrere Projekte erstellt werden, die dann in Folge in Optimierungs- und Leistbarkeitsanalysen verwendet werden können"/>
+            <button id="PT2G1M1B0" getLabel ="bestimmeLabel" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden."/>
             <!--label="Variante aktivieren"-->
             <button id="PT2G1M1B1" getLabel ="bestimmeLabel" onAction="PT2VarianteAktiv" supertip ="eine Variante eines Projektes zur aktiven Variante machen bedeutet, diese Projektvariante auf der Projekttafel zu visualisieren und in den Analysen zu verwenden"/>
             <!--label="Variante löschen"-->
@@ -242,7 +242,7 @@
             <!--label="Ressourcen und Kosten"-->
             <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
             <!--label="Strategie/Risiko/Budget"-->
-            <button id="PT2G1M2B2" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="die Attribute eines Projektes wie Budget Zuordnung, strateg. Fit und Risiko Einschätzung können hier verändert werden. Dieses Formular kann kundenspezifisch um weitere Attribute ergänzt werden"/>
+            <button id="PT2G1M2B2" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Business Unit, Budget, strateg. Fit und Risiko Einschätzung."/>
             <!--label="Zeitspanne f. Projektstart"-->
             <button id="PT2G1M2B3" getLabel ="bestimmeLabel" enabled ="false" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
           </menu>
@@ -255,29 +255,29 @@
           <checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
           <!--label="Fixieren"-->
-          <button id="PT2G1B2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Beauftragen" supertip ="mit dem Fixieren können Termine von Phasen oder Meilensteinen und zugehörige Rollen- und Kostenbedarfe des Projektes nicht mehr verändert werden. Visuell ist ein fixiertes Projekt durch die eckigere Projektbalken Darstellung zu erkennen"/>
+          <button id="PT2G1B2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Beauftragen" supertip ="ein fixiertes Projekt kann nicht mehr durch Drag und Drop verschoben, verkürzt, verlängert werden."/>
           <!--label="Fixierung aufheben"-->
-          <button id="PT2G1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2GXBeauftragen" supertip ="mit dem Aufheben der Fixierung können Projekte bzw. Varianten in ihren Terminen und zugehörigen Rollen- und Kostenbedarfe verändert werden. Visuell ist ein nicht fixiertes Projekt durch die rundere Projektbalken Darstellung zu erkennen"/>
+          <button id="PT2G1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2GXBeauftragen" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
           <separator id="PT2G1s3"/>
           <!--label="zurück zur Multiprojekt-Tafel"-->
           <button id="PT2G1M2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTbackToProjectBoard" supertip ="zurück zur grafischen Multiprojekt-Tafel"/>
           <!--label="Änderungen verwerfen"-->
           <checkBox id="PT2G1M2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>
           <!--label="Phasen / Meilensteine beschriften"-->
-          <button id="PT2G1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTBeschriften" />
+          <button id="PT2G1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTBeschriften" supertip ="alle angezeigten Meilensteine und Phasen werden auf der Multiprojekt-Tafel beschriftet."/>
           <!--label="Alle Beschriftungen löschen"-->
-          <button id="PT2G1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT6DeleteBeschriftung" />
+          <button id="PT2G1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT6DeleteBeschriftung" supertip ="alle Beschriftungen von Meilensteinen und Phasen werden auf der Multiprojekt-Tafel werden gelöscht."/>
           <separator id="PT2G1s4"/>
           <!--label="Extended View"-->
           <button id="PT2G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTExtendedView" supertip ="Die selektierten Projekte werden mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. "/>
           <!--label="Rollup View"-->
-          <button id="PT2G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet. "/>
+          <button id="PT2G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet."/>
           <separator id="PT2G1s5"/>
           <!--label="Umbenennen"-->
-          <button id="PT2G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" />
+          <button id="PT2G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
           <separator id="PT2G2s3" getVisible="chckVisibility"/>
           <!--label="Schutz setzen / aufheben"-->
-          <button id="PT2G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
+          <button id="PT2G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
         </group>
         <!---->
         <!--label="Multiprojekt-Szenario"-->
@@ -285,10 +285,10 @@
           <!--<button id="PT2G2B1" label="Neu/Aktualisieren" onAction="PTNeueKonstellation" supertip ="die aktuelle Session wird als Szenario in der Session gespeichert. Wenn ein Szenario-Name eingegeben wird, der noch nicht existiert, so wird das Szenario unter diesem neuen Namen erstellt. Wird ein existierender Name angegeben, so wird die alte Szenario Definition hiermit überschrieben"/>
           <separator id="PT2G2s1"/>-->
           <!--label="Laden"-->
-          <button id="PT2G2B2" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
+          <button id="PT2G2B2" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt oder es wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: im letzteren Fall gehen in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes verloren"/>
           <separator id="PT2G2s2"/>
           <!--label="Ändern/Speichern"-->
-          <button id="PT2G2B4" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="in der Session bereits geladene Projekte können ausgeblendet / eingeblendet werden "/> 
+          <button id="PT2G2B4" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="im Szenario dargestellte / nicht dargestellt Projekte der Session können ausgeblendet / eingeblendet werden und ein neues Szenario kann definiert werden."/> 
         </group>
         <!--label="Session"-->
         <group id="PT2G3" getVisible="chckVisibility" getLabel ="bestimmeLabel">
@@ -299,7 +299,7 @@
             <!--label="Szenario"-->
             <button id="PT2G3M1B3" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Session gelöscht; damit wird lediglich die Definition des Szenarios in der Session gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
             <!--label="einzelne Projekte und Varianten"-->
-            <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="ausgewählte Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
+            <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
           <separator id="PT2G3s1"/>
           <!--label="Zeichen-Elemente löschen"-->
@@ -307,7 +307,7 @@
             <!--label="Meilensteine, Phasen, Stati"-->
             <button id="PT2G3M4B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten (gilt nicht für Extended Mode)"/>
             <!--label="Beschriftungen"-->
-            <button id="PT2G3M4B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteBeschriftung" supertip ="alle aktuell angezeigten Beschriftungen werden gelöscht"/>
+            <button id="PT2G3M4B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteBeschriftung" supertip ="alle aktuell angezeigten Beschriftungen von Phasen und Meilensteinen werden gelöscht"/>
             <!--label="Charts"-->
             <button id="PT2G3M4B2" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
@@ -350,14 +350,14 @@
           <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
           <separator id="PT4G1s1"/>
           <!--label="Import Excel"-->
-          <button id="PT4G1B2" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es kann eine ausgewählte RPLAN Excel Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+          <button id="PT4G1B2" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <!--label="Import RPLAN RXF"-->
-          <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="true" onAction ="Tom2G4B3RPLANRxfImport" supertip =" es kann eine ausgewählte RXF-Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
+          <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
           <!--label="Import MS Project"-->
-          <button id="PT4G1B4" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es kann eine Microsoft Project Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus."/>
+          <button id="PT4G1B4" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
           <separator id="PT4G1s2"/>
           <!--label="Import VISBO-Steckbriefe"-->
-          <button id="PT4G1M1B1" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+          <button id="PT4G1M1B1" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <!--<separator id="PT4G1s3"/>-->
           <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
             <button id="PT4G1M3B1" label="Importieren" onAction="awinImportMassenEdit" supertip ="alle Werte aus der Massen-Edit Datei importieren"/>
@@ -407,7 +407,7 @@
             <button id="PT5G1B1" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
             <!--<button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>-->
             <!--label="Projekte/Varianten"-->
-            <button id="PT5G1B3" getLabel ="bestimmeLabel" onAction="PT5DatenbankLoadProjekte" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten und Varianten in der Datenbank; durch Selektieren können eine oder mehrere Projekte geladen werden; Selektieren eines Projektes lädt auch alle zugehörigen Varianten des Projektes aus der Datenbank; Achtung: wenn ein Filter definiert und aktiviert ist, so zeigt das Auswahlfenster auch nur diese Projekte an"/>
+            <button id="PT5G1B3" getLabel ="bestimmeLabel" onAction="PT5DatenbankLoadProjekte" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten und Varianten in der Datenbank; Achtung: Wenn in der Kalenderleiste ein Zeitraum markiert ist, so zeigt das Auswahlfenster auch nur diese Projekte an"/>
           </menu>
           <separator id="PT5G1s1"/>
           <!--label="Speichern"-->
@@ -416,7 +416,7 @@
             <button id="Pt5G2B1" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Szenarien werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
             <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
             <!--label="Projekte/Varianten"-->
-            <button id="Pt5G2B3" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="die ausgewählten Projekte werden mit dem aktuellen Zeitstempel in der Datenbank gespeichert. Ein explizit ausgewähltes Projekt wird immer gespeichert, unabhängig davon, ob es sich verändert hat oder nicht; wenn zu diesen Projekten Varianten definiert sind, so werden diese ebenfalls mitgespeichert; wenn keine Projekte selektiert wurden, so werden alle Projekte und Projekt-Varianten, die sich geändert haben gespeichert"/>
+            <button id="Pt5G2B3" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
             <!--label="Alles Speichern"-->
             <button id="Pt5G2B4" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Szenarios und Filter werden gespeichert"/>
           </menu>
