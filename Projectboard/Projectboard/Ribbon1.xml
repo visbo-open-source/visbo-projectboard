@@ -263,21 +263,21 @@
           <button id="PT2G1M2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTbackToProjectBoard" supertip ="zurück zur grafischen Multiprojekt-Tafel"/>
           <!--label="Änderungen verwerfen"-->
           <checkBox id="PT2G1M2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>
-          <!--label="Beschriften"-->
+          <!--label="Phasen / Meilensteine beschriften"-->
           <button id="PT2G1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTBeschriften" />
-          <!--label=""-->
+          <!--label="Alle Beschriftungen löschen"-->
           <button id="PT2G1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT6DeleteBeschriftung" />
           <separator id="PT2G1s4"/>
           <!--label="Extended View"-->
           <button id="PT2G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTExtendedView" supertip ="Die selektierten Projekte werden mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. "/>
           <!--label="Rollup View"-->
           <button id="PT2G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet. "/>
-
-          <!--<button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
-          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />-->
           <separator id="PT2G1s5"/>
           <!--label="Umbenennen"-->
           <button id="PT2G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" />
+          <separator id="PT2G2s3" getVisible="chckVisibility"/>
+          <!--label="Schutz setzen / aufheben"-->
+          <button id="PT2G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
         </group>
         <!---->
         <!--label="Multiprojekt-Szenario"-->
@@ -288,9 +288,7 @@
           <button id="PT2G2B2" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
           <separator id="PT2G2s2"/>
           <!--label="Ändern/Speichern"-->
-          <button id="PT2G2B4" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="in der Session bereits geladene Projekte können ausgeblendet / eingeblendet werden "/>
-          <separator id="PT2G2s3"/>
-          <button id="PT2G2B5" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="Schreibschutz für Projekte setzen"/>
+          <button id="PT2G2B4" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="in der Session bereits geladene Projekte können ausgeblendet / eingeblendet werden "/> 
         </group>
         <!--label="Session"-->
         <group id="PT2G3" getVisible="chckVisibility" getLabel ="bestimmeLabel">

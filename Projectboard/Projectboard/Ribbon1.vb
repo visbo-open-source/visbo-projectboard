@@ -2381,9 +2381,9 @@ Imports System.Windows
 
             Case "PT2G1B4" ' Beschriften
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Beschriften"
+                    tmpLabel = "Phasen/Meilensteine beschriften"
                 Else
-                    tmpLabel = "Annotate"
+                    tmpLabel = "Annotate Phases/Milestones"
                 End If
 
             Case "PT2G1B5" ' alle Beschriftungen löschen
@@ -2828,6 +2828,12 @@ Imports System.Windows
                 Case "PT2G1B7" ' Extended View aufheben
                     chckVisibility = False
                 Case "PT2G2" ' Bearbeiten - Multiprojekt-Szenario
+                    chckVisibility = False
+                Case "PT2G2B5" ' Schutz setzen / aufheben 
+                    chckVisibility = False
+                Case "PT2G2s3" ' Separator vor Schutz 
+                    chckVisibility = False
+                Case "PT2G1s4" ' Separator vor Extended View
                     chckVisibility = False
                 Case "PT2G3" ' Bearbeiten - Session
                     chckVisibility = False
