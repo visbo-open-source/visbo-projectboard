@@ -1,5 +1,6 @@
 ﻿Imports ClassLibrary1
 Imports ProjectBoardDefinitions
+
 Imports MongoDbAccess
 Imports Microsoft.Office.Core
 Imports pptNS = Microsoft.Office.Interop.PowerPoint
@@ -12,11 +13,9 @@ Imports System.IO
 Public Module testModule
 
 
-
-
     ' '' ''' <summary>
     ' '' ''' erzeugt den Report aller selektieren Projekte auf Grundlage des Templates templatedossier.pptx
-    ' '' ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten Projekte steht 
+    ' '' ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten ProFjekte steht 
     ' '' ''' </summary>
     ' '' ''' <param name="pptTemplate"></param>
     ' '' ''' <remarks></remarks>
@@ -262,6 +261,7 @@ Public Module testModule
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
         Dim tatsErstellt As Integer = 0
+        Dim msgTxt As String
 
         Dim todoListe As New Collection
 
@@ -283,7 +283,11 @@ Public Module testModule
                         hproj = kvp.Value
                         todoListe.Add(hproj.name)
                     Catch ex As Exception
-                        Call MsgBox(kvp.Value.name & " nicht gefunden ...")
+                        msgTxt = kvp.Value.name & " nicht gefunden ..."
+                        If awinSettings.englishLanguage Then
+                            msgTxt = kvp.Value.name & " not found ..."
+                        End If
+                        Call MsgBox(msgTxt)
                         Exit Sub
                     End Try
                     If hproj.calcNeededLines() > maxZeilen Then
@@ -337,7 +341,11 @@ Public Module testModule
 
             End If
 
-            e.Result = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+            msgTxt = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+            If awinSettings.englishLanguage Then
+                msgTxt = " creating Report for project '" & maxProj.getShapeText
+            End If
+            e.Result = msgTxt
             worker.ReportProgress(0, e)
 
 
@@ -402,8 +410,12 @@ Public Module testModule
 
                     End If
 
+                    msgTxt = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+                    If awinSettings.englishLanguage Then
+                        msgTxt = " creating Report for project '" & maxProj.getShapeText
+                    End If
+                    e.Result = msgTxt
 
-                    e.Result = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
                     worker.ReportProgress(0, e)
 
                     If tatsErstellt = 0 Then
@@ -450,12 +462,22 @@ Public Module testModule
 
         End If
 
+
         If tatsErstellt = 1 Then
-            e.Result = " Report für " & tatsErstellt & " Projekt erstellt !"
+            msgTxt = " Report für " & tatsErstellt & " Projekt erstellt !"
         Else
-            e.Result = " Report für " & tatsErstellt & " Projekte erstellt !"
+            msgTxt = " Report für " & tatsErstellt & " Projekte erstellt !"
         End If
 
+        If awinSettings.englishLanguage Then
+            If tatsErstellt = 1 Then
+                msgTxt = " Report for " & tatsErstellt & " project created !"
+            Else
+                msgTxt = " Report for " & tatsErstellt & " projects created !"
+            End If
+        End If
+
+        e.Result = msgTxt
         worker.ReportProgress(0, e)
         'frmSelectPPTTempl.statusNotification.Text = " Report mit " & tatsErstellt & " Seite erstellt !"
 
@@ -516,10 +538,48 @@ Public Module testModule
         Dim ampelShape As pptNS.Shape = Nothing
         Dim sternShape As pptNS.Shape = Nothing
 
+        Dim msgTxt As String = ""
 
         ' Änderung tk 1.2.16
         ' wird benötigt, um in Ergänzung zu pptLasttime im Falle von nur einem Projekt / vielen Swimlanes die bereits erstellte Folie zu löschen 
         'Dim swimlaneMode As Boolean = False
+
+        Try   ' Projekthistorie aufbauen, sofern sie für das aktuelle hproj nicht schon aufgebaut ist
+
+            Dim aktprojekthist As Boolean = False
+
+            If projekthistorie.Count > 0 Then
+
+                aktprojekthist = (hproj.getShapeText = projekthistorie.First.getShapeText)
+            End If
+
+            If Not aktprojekthist Then
+
+                If Not noDB Then
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                    If request.pingMongoDb() Then
+                        Try
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+
+                        Catch ex As Exception
+                            projekthistorie.clear()
+                        End Try
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+                Else
+                    Call logfileSchreiben("Datenbank-Anbindung ist nicht akiviert. Historie enthält nur das aktuelle Projekt " & hproj.name, "createPPTSlidesFromProject", anzFehler)
+                    projekthistorie.Add(Date.Now, hproj)
+                End If
+
+            ElseIf hproj.getShapeText <> projekthistorie.First.getShapeText Then
+
+            End If
+        Catch ex As Exception
+
+        End Try
 
         Try
             lastElem = projekthistorie.Count - 1
@@ -621,9 +681,19 @@ Public Module testModule
                             pptTemplatePresentation.Saved = True
                             pptTemplatePresentation.Close()
 
-                            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-                            If worker.WorkerReportsProgress Then
-                                worker.ReportProgress(0, e)
+                            If Not IsNothing(worker) Then
+
+                                msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                                If awinSettings.englishLanguage Then
+                                    msgTxt = "Cancelled ... please close/store all open presentations ..."
+                                End If
+                                e.Result = msgTxt
+                                If worker.WorkerReportsProgress Then
+                                    worker.ReportProgress(0, e)
+                                End If
+                            Else
+                                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+
                             End If
 
                             Exit Sub
@@ -637,9 +707,20 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+
+            msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            If awinSettings.englishLanguage Then
+                msgTxt = "Cancelled ... please close/store all open presentations ..."
+            End If
+
+            If Not IsNothing(worker) Then
+                e.Result = msgTxt
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+
             End If
 
             Exit Sub
@@ -674,10 +755,21 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
+            msgTxt = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
+            If awinSettings.englishLanguage Then
+                msgTxt = "please close the file 'Report.pptx' or store it with another name"
+            End If
 
-            e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+            If Not IsNothing(worker) Then
+                e.Result = msgtxt
+
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+
+
             End If
 
             Exit Sub
@@ -697,15 +789,21 @@ Public Module testModule
         While folieIX <= anzSlidesToAdd
             'For j = 1 To anzSlidesToAdd
 
-            If worker.WorkerSupportsCancellation Then
+            If Not IsNothing(worker) Then
 
                 If worker.CancellationPending Then
                     e.Cancel = True
-                    e.Result = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
+                    msgTxt = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Report Creation abandoned after " & folieIX - 1 & " pages ..."
+                    End If
+                    e.Result = msgTxt
                     Exit While
+
                 End If
 
             End If
+
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
 
@@ -762,12 +860,22 @@ Public Module testModule
             '' ''                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
 
 
+            If Not IsNothing(worker) Then
 
-            'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & folieIX & " wird aufgebaut ...."
+                'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                msgTxt = "Bericht Seite " & folieIX & " wird aufgebaut ...."
+                If awinSettings.englishLanguage Then
+                    msgTxt = "Drawing Report Page Nr " & folieIX & " ...."
+                End If
 
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                e.Result = msgTxt
+
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+
+            Else
+                Call logfileSchreiben("Bericht Seite " & folieIX & " wird aufgebaut ....", "createPPTSlidesFromProject", 0)
             End If
 
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
@@ -1308,7 +1416,7 @@ Public Module testModule
                                     End If
 
                                 Catch ex As Exception
-
+                                    Throw New ArgumentException("Fehler in MeilensteinTrendAnalyse in CreatePPTSlidesFromProject")
                                 End Try
 
                             Case "Projektphasen"
@@ -1632,6 +1740,11 @@ Public Module testModule
                                 ' jetzt die Aktion durchführen ...
 
                                 If lastproj Is Nothing Then
+                                    Try
+                                        .TextFrame2.TextRange.Text = "Fehler: ... " & repMessages.getmsg(27)
+                                    Catch ex As Exception
+                                        pptSize = 12
+                                    End Try
                                     'Throw New Exception("es gibt keinen letzten Stand")
                                     Throw New Exception(repMessages.getmsg(27))
                                 End If
@@ -1770,8 +1883,6 @@ Public Module testModule
 
 
                                 Try
-
-
 
                                     ' Für englische Version muss Template auf Englisch sein
                                     Call zeichneProjektTerminAenderungen(pptShape, hproj, bproj, lproj)
@@ -2886,6 +2997,8 @@ Public Module testModule
         Dim notYetDone As Boolean = False
         Dim listofShapes As New Collection
 
+        Dim msgtxt As String = ""
+
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
@@ -2894,17 +3007,30 @@ Public Module testModule
             Try
                 pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
             Catch ex1 As Exception
-                Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
+                msgtxt = "Powerpoint konnte nicht gestartet werden ..." & ex1.Message
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Powerpoint could not be started ..." & ex1.Message
+                End If
+                Call MsgBox(msgtxt)
                 Exit Sub
             End Try
 
         End Try
 
+        If Not IsNothing(worker) Then
 
-        'frmSelectPPTTempl.statusNotification.Text = "PowerPoint nun geöffnet ...."
-        e.Result = "PowerPoint ist nun geöffnet ...."
-        If worker.WorkerReportsProgress Then
-            worker.ReportProgress(0, e)
+            'frmSelectPPTTempl.statusNotification.Text = "PowerPoint nun geöffnet ...."
+            msgtxt = "PowerPoint ist nun geöffnet ...."
+            If awinSettings.englishLanguage Then
+                msgtxt = "Powerpoint now open ..."
+            End If
+            e.Result = msgtxt
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+        Else
+            Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+
         End If
 
         ' jetzt wird das template geöffnet , um festzustellen , welches Format Quer oder Hoch die Vorlage hat 
@@ -2944,10 +3070,23 @@ Public Module testModule
                         pptTemplatePresentation.Saved = True
                         pptTemplatePresentation.Close()
 
-                        e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-                        If worker.WorkerReportsProgress Then
-                            worker.ReportProgress(0, e)
+
+                        msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..."
                         End If
+
+                        If Not IsNothing(worker) Then
+
+                            e.Result = msgtxt
+                            If worker.WorkerReportsProgress Then
+                                worker.ReportProgress(0, e)
+                            End If
+
+                        Else
+                            Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+                        End If
+
 
                         Exit Sub
 
@@ -2958,11 +3097,20 @@ Public Module testModule
 
 
         Catch ex As Exception
-            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+
+            msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            If awinSettings.englishLanguage Then
+                msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..."
             End If
 
+            If Not IsNothing(worker) Then
+                e.Result = msgtxt
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+            End If
             Exit Sub
         End Try
 
@@ -3021,16 +3169,23 @@ Public Module testModule
         While folieIX <= anzSlidesToAdd
 
             tatsErstellt = tatsErstellt + 1
-            If worker.WorkerSupportsCancellation Then
 
-                If worker.CancellationPending Then
-                    e.Cancel = True
-                    e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+            If Not IsNothing(worker) Then
+                If worker.WorkerSupportsCancellation Then
+                    msgtxt = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "Report Creation cancelled after " & tatsErstellt & " pages ..."
+                    End If
 
-                    Exit While
+                    If worker.CancellationPending Then
+                        e.Cancel = True
+                        e.Result = msgtxt
+                        Exit While
+                    End If
+
                 End If
-
             End If
+
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
             Dim tmpIX As Integer
@@ -3052,18 +3207,24 @@ Public Module testModule
                                                                               SlideStart:=folieIX, SlideEnd:=folieIX)
             End If
 
+            If Not IsNothing(worker) Then
+                msgtxt = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Page " & tatsErstellt & " now creating ...."
+                End If
 
-            'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
+                'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                e.Result = msgtxt
 
-            If worker.WorkerReportsProgress Then
-                worker.ReportProgress(0, e)
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+            Else
+                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
             End If
-
 
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
-
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -3216,15 +3377,23 @@ Public Module testModule
                         boxName = ""
                     End If
 
+                    If Not IsNothing(worker) Then
 
-                    ' Fortschrittsmeldung im Formular SelectPPTTempl
+                        ' Fortschrittsmeldung im Formular SelectPPTTempl
 
-                    'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-                    e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
-                    If worker.WorkerReportsProgress Then
-                        worker.ReportProgress(0, e)
+                        msgtxt = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Chart '" & kennzeichnung & "' creating ...."
+                        End If
+
+                        'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
+                        e.Result = msgtxt
+                        If worker.WorkerReportsProgress Then
+                            worker.ReportProgress(0, e)
+                        End If
+                    Else
+                        Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
                     End If
-
 
 
                     reportObj = Nothing
@@ -3362,7 +3531,7 @@ Public Module testModule
                                     .GridlineColor = RGB(255, 255, 255)
                                 End With
 
-                                With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
 
 
@@ -3506,7 +3675,7 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                    With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
                                         rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
                                         colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
@@ -4868,14 +5037,34 @@ Public Module testModule
 
         ' pptTemplate muss noch geschlossen werden
 
-        If tatsErstellt = 1 Then
-            e.Result = " Report mit " & tatsErstellt & " Seite erstellt !"
-        Else
-            e.Result = " Report mit " & tatsErstellt & " Seiten erstellt !"
-        End If
 
-        If worker.WorkerReportsProgress Then
-            worker.ReportProgress(0, e)
+        If Not IsNothing(worker) Then
+
+            If awinSettings.englishLanguage Then
+                If tatsErstellt = 1 Then
+                    msgtxt = " Report with " & tatsErstellt & " page created !"
+                Else
+                    msgtxt = " Report with " & tatsErstellt & " page created !"
+                End If
+            Else
+                If tatsErstellt = 1 Then
+                    msgtxt = " Report mit " & tatsErstellt & " Seite erstellt !"
+                Else
+                    msgtxt = " Report mit " & tatsErstellt & " Seiten erstellt !"
+                End If
+            End If
+                e.Result = msgtxt
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+        Else
+
+            If tatsErstellt = 1 Then
+                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+            Else
+                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+            End If
+
         End If
 
         ' Vorlage in passender Größe wird nun nicht mehr benötigt
@@ -4896,53 +5085,105 @@ Public Module testModule
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         enableOnUpdate = False
 
+        Dim outPutCollection As New Collection
+        Dim outputline As String = ""
+
+        ' die aktuelle WriteProtection holen 
+        writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         Call storeSessionConstellation("Last")
 
-        If request.pingMongoDb() Then
+        If request.pingMongoDb() And Not noDB Then
 
             Try
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
                 Dim anzahlStores As Integer = 0
+
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                     Try
-                        ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                        Dim pvName As String = calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        If Not writeProtections.isProtected(pvName, dbUsername) Then
+                            ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
-                        If demoModusHistory Then
-                            kvp.Value.timeStamp = historicDate
-                        Else
-                            kvp.Value.timeStamp = jetzt
-                        End If
-
-                        Dim storeNeeded As Boolean
-                        If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
-                            ' prüfen, ob es Unterschied gibt 
-                            Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
-                            If Not IsNothing(standInDB) Then
-                                ' prüfe, ob es Unterschiede gibt
-                                storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
+                            If demoModusHistory Then
+                                kvp.Value.timeStamp = historicDate
                             Else
-                                ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                                kvp.Value.timeStamp = jetzt
+                            End If
+
+                            Dim storeNeeded As Boolean
+                            If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
+                                ' prüfen, ob es Unterschied gibt 
+                                Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
+                                If Not IsNothing(standInDB) Then
+                                    ' prüfe, ob es Unterschiede gibt
+                                    storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
+                                Else
+                                    ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                                    storeNeeded = True
+                                End If
+                            Else
                                 storeNeeded = True
                             End If
+
+                            If storeNeeded Then
+                                If request.storeProjectToDB(kvp.Value, dbUsername) Then
+
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "stored: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "gespeichert: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    End If
+
+                                    anzahlStores = anzahlStores + 1
+                                    ' jetzt die writeProtections aktualisieren 
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    writeProtections.upsert(wpItem)
+                                    
+
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "protected project: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputline)
+                                    End If
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    writeProtections.upsert(wpItem)
+
+                                End If
+                            End If
                         Else
-                            storeNeeded = True
+                            ' nicht mehr rausschreiben - das ist ohnehin erwartet ... 
+                            'If awinSettings.englishLanguage Then
+                            '    outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
+                            '    outPutCollection.Add(outputline)
+                            'Else
+                            '    outputline = "protected project: " & kvp.Value.name & ", " & kvp.Value.variantName
+                            '    outPutCollection.Add(outputline)
+                            'End If
                         End If
 
-                        If storeNeeded Then
-                            If request.storeProjectToDB(kvp.Value) Then
-                                anzahlStores = anzahlStores + 1
-                            Else
-                                Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
-                            End If
-                        End If
+
 
                     Catch ex As Exception
 
+                        If awinSettings.englishLanguage Then
+                            outputline = "Error when writing to database ..." & vbLf & "Datenbase not up and running?"
+                            outPutCollection.Add(outputline)
+                        Else
+                            outputline = "Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?"
+                            outPutCollection.Add(outputline)
+                        End If
                         ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
-                        Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                        Throw New ArgumentException(outputline)
                         'Exit Sub
                     End Try
 
@@ -4962,11 +5203,30 @@ Public Module testModule
 
                         Try
                             If request.storeConstellationToDB(kvp.Value) Then
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Scenario stored: " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                Else
+                                    outputline = "Szenario gespeichert: " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                End If
                             Else
-                                Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Error when writing Scenario " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                Else
+                                    outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                End If
+
                             End If
                         Catch ex As Exception
-                            Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            If awinSettings.englishLanguage Then
+                                outputline = "Error when writing Scenario " & kvp.Key
+                            Else
+                                outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                            End If
+                            Throw New ArgumentException(outputline)
                             'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
                             'Exit Sub
                         End Try
@@ -4980,16 +5240,43 @@ Public Module testModule
 
                         Try
                             If request.storeDependencyofPToDB(kvp.Value) Then
+                                ' nichts schreiben ...
                             Else
-                                Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Error when writing dependency " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                Else
+                                    outputline = "Fehler in Schreiben Dependency " & kvp.Key
+                                    outPutCollection.Add(outputline)
+                                End If
+
                             End If
                         Catch ex As Exception
-                            Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                            'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
-                            'Exit Sub
+                            If awinSettings.englishLanguage Then
+                                outputline = "Error when writing dependency " & kvp.Key
+                            Else
+                                outputline = "Fehler in Schreiben Dependency " & kvp.Key
+                            End If
+                            Throw New ArgumentException(outputline)
                         End Try
 
 
+                    Next
+
+                    ' jetzt werden die Rollen weggeschrieben 
+                    Dim storedRoles As Integer = 0
+                    For i As Integer = 1 To RoleDefinitions.Count
+                        Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+                        If request.storeRoleDefinitionToDB(role, False, Date.Now) Then
+                            Dim success As String = role.name
+                        End If
+                    Next
+
+                    For i As Integer = 1 To CostDefinitions.Count
+                        Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
+                        If request.storeCostDefinitionToDB(cost, False, Date.Now) Then
+                            Dim success As String = cost.name
+                        End If
                     Next
 
                 End If
@@ -5001,36 +5288,96 @@ Public Module testModule
 
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
-                            Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                            If awinSettings.englishLanguage Then
+                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                        "1 project/project-variant stored " & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
                                         "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         Else
-                            Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                            If awinSettings.englishLanguage Then
+                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                        anzahlStores & " projects/project-variants stored" & vbLf & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
                                         "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         End If
                     Else
-                        Call MsgBox("ok, Szenarien gespeichert!" & vbLf & vbLf & _
-                                    "keine Änderungen in Projekten bzw. Projekt-Varianten;" & vbLf & _
-                                    "daher wurden keine Projekte in der Datenbank gespeichert")
+                        If awinSettings.englishLanguage Then
+                            outputline = "ok, scenarios stored!" & vbLf & _
+                                "no projects stored, because of no changes"
+                        Else
+                            outputline = "ok, Szenarien gespeichert!" & vbLf & _
+                                "keine Projekte gespeichert, da es keine Änderungen gab"
+                        End If
+
                     End If
 
 
                 Else
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
-                            Call MsgBox("es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                            If awinSettings.englishLanguage Then
+                                outputline = "1 project/project-variant stored: " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = "1 Projekt/Projekt-Variante gespeichert " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         Else
-                            Call MsgBox("es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+                            If awinSettings.englishLanguage Then
+                                outputline = anzahlStores & " projects/project-variants stored: " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            Else
+                                outputline = anzahlStores & " Projekte/Projekt-Varianten gespeichert: " & _
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                            End If
+
                         End If
                     Else
-                        Call MsgBox("keine Änderungen in Projekten bzw. Projekt-Varianten;" & vbLf & _
-                                    "daher wurden keine Projekte in der Datenbank gespeichert")
+                        If awinSettings.englishLanguage Then
+                            outputline = "no projects / project-variants stored, because of no changes;"
+                        Else
+                            outputline = "keine Projekte gespeichert, da es keine Änderungen gab"
+                        End If
+
                     End If
                 End If
 
+                outPutCollection.Add(outputline)
+
+                If outPutCollection.Count > 0 Then
+                    Dim msgH As String, msgE As String
+                    If awinSettings.englishLanguage Then
+                        If everythingElse Then
+                            msgH = "Store Everything (Projects, Scenarios, Dependencies, ..)"
+                        Else
+                            msgH = "Store Projects"
+                        End If
+
+                        msgE = "following results:"
+                    Else
+                        If everythingElse Then
+                            msgH = "Alles speichern (Projekte, Szenarien, Abhängigkeiten, ..)"
+                        Else
+                            msgH = "Projekte speichern"
+                        End If
+
+                        msgE = "Rückmeldungen"
+                    End If
+
+                    Call showOutPut(outPutCollection, msgH, msgE)
+
+                End If
 
                 ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
                 Try
@@ -5066,6 +5413,8 @@ Public Module testModule
         Dim anzStoredProj As Integer = 0
         Dim variantCollection As Collection
 
+        Dim outputCollection As New Collection
+        Dim outputline As String = ""
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim awinSelection As Excel.ShapeRange
@@ -5140,12 +5489,33 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If request.storeProjectToDB(hproj) Then
+                                If request.storeProjectToDB(hproj, dbUsername) Then
+
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "stored: " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    Else
+                                        outputline = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    End If
 
                                     anzStoredProj = anzStoredProj + 1
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    writeProtections.upsert(wpItem)
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                                 Else
-                                    Call MsgBox("Fehler in Schreiben Projekt " & hproj.name)
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "project protected: " & hproj.name
+                                    Else
+                                        outputline = "geschütztes Projekt: " & hproj.name
+                                    End If
+
+                                    outputCollection.Add(outputline)
+
+                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    writeProtections.upsert(wpItem)
+
                                 End If
                             End If
                             
@@ -5498,7 +5868,7 @@ Public Module testModule
 
 
 
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 '
@@ -5674,7 +6044,7 @@ Public Module testModule
                         Try
                             'Call Sleep(100)
                             .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                                  Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                  Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -7050,7 +7420,7 @@ Public Module testModule
 
         Call awinDeleteProjectChildShapes(0)
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
             allShapes = .Shapes
             projektShape = allShapes.Item(hproj.name)
@@ -7426,6 +7796,7 @@ Public Module testModule
         Dim unterschiede As New Collection
         Dim TimeCostColor(2) As Double
         Dim TimeTimeColor(2) As Double
+        Dim notavailable As String = "n.a."
 
 
         Try
@@ -7440,7 +7811,10 @@ Public Module testModule
 
         ' jetzt wird festgestellt, wo es über all Unterschiede gibt 
         ' wird für Bewertung Termine und Meilensteine benötigt 
+
         unterschiede = hproj.listOfDifferences(vglproj, True, 0)
+       
+
 
         ' jetzt werden die aktuellen bzw Vergleichswerte der finanziellen KPIs bestimmt 
         Try
@@ -7448,6 +7822,8 @@ Public Module testModule
 
             If Not IsNothing(vglproj) Then
                 vglproj.calculateRoundedKPI(vglBudget, vglPersCost, vglSonstCost, vglRiskCost, vglErgebnis)
+            Else
+
             End If
 
         Catch ex As Exception
@@ -7468,7 +7844,12 @@ Public Module testModule
 
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
-                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                    If Not IsNothing(vglproj) Then
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                    Else
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & repMessages.getmsg(32)
+                    End If
+
 
 
                     ' jetzt werden die Zeilen abgearbeitet, beginnend mit 2
@@ -7489,7 +7870,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(212)
 
                                 aktvalue = aktErgebnis
-                                vglValue = vglErgebnis
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7497,6 +7877,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglErgebnis
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7519,7 +7902,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(173)
 
                                 aktvalue = aktBudget
-                                vglValue = vglBudget
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7527,6 +7909,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglBudget
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7542,14 +7927,11 @@ Public Module testModule
                                 End If
 
 
-
-
                             Case "Personalkosten"
 
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(164)
 
                                 aktvalue = aktPersCost
-                                vglValue = vglPersCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7557,6 +7939,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglPersCost
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7579,7 +7964,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(165)
 
                                 aktvalue = aktSonstCost
-                                vglValue = vglSonstCost
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7587,6 +7971,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglSonstCost
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7735,7 +8122,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(243)
 
                                 aktvalue = hproj.StrategicFit
-                                vglValue = vglproj.StrategicFit
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7743,6 +8129,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.StrategicFit
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7765,7 +8154,6 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(244)
 
                                 aktvalue = hproj.Risiko
-                                vglValue = vglproj.Risiko
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7773,6 +8161,9 @@ Public Module testModule
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.Risiko
+
                                     If aktvalue = vglValue Then
                                         Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
 
@@ -7789,13 +8180,12 @@ Public Module testModule
 
 
 
-
                             Case "Projekt-Ampel"
 
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(245)
 
                                 aktvalue = hproj.ampelStatus
-                                vglValue = vglproj.ampelStatus
+
                                 Dim tmpFarbe As Long
 
                                 If IsNothing(vglproj) Then
@@ -7811,10 +8201,12 @@ Public Module testModule
                                         tmpFarbe = farbeNeutral
                                     End If
 
-                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, tmpFarbe)
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 4, ampelShape, tmpFarbe)
                                     'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)
                                 Else
+
+                                    vglValue = vglproj.ampelStatus
 
                                     Dim aktFarbe As Long, vglFarbe As Long
                                     If aktvalue = PTfarbe.red Then
@@ -7870,7 +8262,13 @@ Public Module testModule
                                 CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(246)
 
                                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
-                                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+
+                                If Not IsNothing(vglproj) Then
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+                                Else
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(32)  ' nicht verfügbar
+                                End If
+
 
                             Case Else
 
@@ -8517,7 +8915,9 @@ Public Module testModule
             vproj = Nothing
 
             ' Ermitteln der Kennzahlen 
-            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
+            'hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
+            ' sollte hier genauso aufgerufen, wie im CreateProjektErgebnisCharakteristik 
+            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
 
             If showPersonalBedarf Then
                 hpersonalBedarf = hproj.getAlleRessourcen.Sum
@@ -8635,7 +9035,9 @@ Public Module testModule
 
 
             Else
-                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis, False)
+                ' sollte genauso aufgerufen werden, wie sonst auch immer 
+                'vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis, False)
+                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
 
                 If showPersonalBedarf Then
                     vPersonalBedarf = vproj.getAlleRessourcen.Sum
@@ -9505,7 +9907,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -9590,7 +9992,7 @@ Public Module testModule
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10212,7 +10614,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -10576,7 +10978,7 @@ Public Module testModule
                     Try
                         'Call Sleep(100)
                         .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                          Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message
@@ -10676,7 +11078,7 @@ Public Module testModule
         Dim tmpDate As Date
         Dim currentFilter As clsFilter
 
-        Dim hproj As clsProjekt
+        Dim hproj As clsProjekt = Nothing
         Dim cphase As clsPhase
         Dim projektstart As Integer
         'Dim found As Boolean
@@ -10793,42 +11195,29 @@ Public Module testModule
 
         For Each kvp As KeyValuePair(Of Double, String) In projektListe
 
-            'hproj = ShowProjekte.getProject(kvp.Value)
-            ' in Projektliste sind jetzt die Keys die zusammengesetzten Schlüssel aus pname und variantName
-            hproj = AlleProjekte.getProject(kvp.Value)
-            projektstart = hproj.Start + hproj.StartOffset
+            Try
+                'hproj = ShowProjekte.getProject(kvp.Value)
+                ' in Projektliste sind jetzt die Keys die zusammengesetzten Schlüssel aus pname und variantName
+                hproj = AlleProjekte.getProject(kvp.Value)
+                projektstart = hproj.Start + hproj.StartOffset
 
-            ' Phasen checken 
-            For Each fullPhaseName As String In selectedPhases
+                ' Phasen checken 
+                For Each fullPhaseName As String In selectedPhases
 
-                Dim breadcrumb As String = ""
-                Dim phaseName As String = ""
+                    Try
 
-                Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
-                Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                        Dim breadcrumb As String = ""
+                        Dim phaseName As String = ""
 
-                For px As Integer = 0 To phaseIndices.Length - 1
-                    If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
-                        cphase = hproj.getPhase(phaseIndices(px))
-                        If Not IsNothing(cphase) Then
-                            If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
-                                ' das umschliesst jetzt bereits fullyContained 
+                        Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
+                        Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
-                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
-                                    tmpMinimum = cphase.getStartDate
-                                End If
-
-                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
-                                    tmpMaximum = cphase.getEndDate
-                                End If
-
-
-                            Else
-                                ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
-                                ' andernfalls muss nichts gemacht werden 
-
-                                If awinSettings.mppFullyContained Then
-                                    If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+                        For px As Integer = 0 To phaseIndices.Length - 1
+                            If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                                cphase = hproj.getPhase(phaseIndices(px))
+                                If Not IsNothing(cphase) Then
+                                    If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
+                                        ' das umschliesst jetzt bereits fullyContained 
 
                                         If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
                                             tmpMinimum = cphase.getStartDate
@@ -10838,13 +11227,41 @@ Public Module testModule
                                             tmpMaximum = cphase.getEndDate
                                         End If
 
+
+                                    Else
+                                        ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
+                                        ' andernfalls muss nichts gemacht werden 
+
+                                        If awinSettings.mppFullyContained Then
+                                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+
+                                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                                    tmpMinimum = cphase.getStartDate
+                                                End If
+
+                                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                                    tmpMaximum = cphase.getEndDate
+                                                End If
+
+                                            End If
+                                        End If
                                     End If
                                 End If
                             End If
-                        End If
-                    End If
-                Next ' ix
-            Next ' phaseName
+                        Next ' ix
+                    Catch ex As Exception
+
+                        Call MsgBox(" in catch von for each phase")
+                    End Try
+
+
+                Next ' phaseName
+
+            Catch ex As Exception
+
+                Call MsgBox("in catch ex ")
+            End Try
+ 
 
             ' Meilensteine 
             ' das muss nur gemacht werden, wenn showAllIfOne=true 
@@ -13898,6 +14315,7 @@ Public Module testModule
                                 ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
 
         Dim addOn As Double = 0.0
+        Dim msgTxt As String = ""
 
         If Not IsNothing(rds.durationArrowShape) And Not IsNothing(rds.durationTextShape) Then
 
@@ -14041,28 +14459,39 @@ Public Module testModule
                     End If
                 End If
 
-                If worker.WorkerSupportsCancellation Then
+                If Not IsNothing(worker) Then
+                    If worker.WorkerSupportsCancellation Then
 
-                    If worker.CancellationPending Then
-                        e.Cancel = True
-                        e.Result = "Berichterstellung abgebrochen ..."
-                        Exit For
+                        If worker.CancellationPending Then
+                            e.Cancel = True
+                            msgTxt = "Berichterstellung abgebrochen ..."
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "Report Creation cancelled ..."
+                            End If
+                            e.Result = msgTxt
+                            Exit For
+                        End If
+
+                        ' Zwischenbericht abgeben ...
+                        msgTxt = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "drawing Project '" & hproj.getShapeText & "'"
+                        End If
+                        e.Result = msgtxt
+                        If worker.WorkerReportsProgress Then
+                            worker.ReportProgress(0, e)
+                        End If
+                    Else
+                        Call logfileSchreiben(msgtxt, "zeichnePPTprojects", 0)
+
                     End If
-
                 End If
-
-                ' Zwischenbericht abgeben ...
-                e.Result = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
-                If worker.WorkerReportsProgress Then
-                    worker.ReportProgress(0, e)
-                End If
-
 
                 '
                 ' zeichne den Projekt-Namen
                 ''projectNameVorlagenShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                
+
 
                 Dim severalProjectsInOneLine As Boolean = False
                 If currentProjektIndex > 1 Then
@@ -14167,7 +14596,7 @@ Public Module testModule
                 End If
 
                 Dim projectNameShape As pptNS.Shape = copiedShape(1)
-                
+
 
                 ' zeichne jetzt ggf die Projekt-Ampel 
                 If awinSettings.mppShowAmpel And Not IsNothing(rds.ampelVorlagenShape) Then
@@ -16862,11 +17291,14 @@ Public Module testModule
                 '                                        .projectNameVorlagenShape, _
                 '                                        .durationArrowShape, .durationTextShape)
                 'End With
-            ElseIf zeilenhoehe_sav <> 0 And rds.zeilenHoehe = 0.0 Then
+
+                ' ur: 1.12.2016
+            ElseIf zeilenhoehe_sav <> 0.0 And rds.zeilenHoehe = 0.0 Then
+
                 Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
                 zeilenhoehe_sav = rds.zeilenHoehe
             Else
-                Call MsgBox("pptfirsttime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
+                Call MsgBox("pptfirstime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
 
             End If
 
@@ -17234,6 +17666,7 @@ Public Module testModule
         Dim anzZeilen As Integer = 0
         Dim gesamtAnzZeilen As Integer = 0
 
+        Dim msgTxt As String
 
 
         dinFormatA(0, 0) = 3120.0
@@ -17767,23 +18200,35 @@ Public Module testModule
                 Do While (curSwimlaneIndex <= swimLanesToDo) And _
                         (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
 
+                    If Not IsNothing(worker) Then
+                        ' Zwischen-Meldung ausgeben ...
+                        If worker.WorkerSupportsCancellation Then
+                            If worker.CancellationPending Then
+                                e.Cancel = True
+                                msgTxt = "Berichterstellung abgebrochen ..."
+                                If awinSettings.englishLanguage Then
+                                    msgTxt = "Report Creation cancelled ..."
+                                End If
+                                e.Result = msgTxt
+                                Exit Sub
+                            End If
 
-                    ' Zwischen-Meldung ausgeben ...
-                    If worker.WorkerSupportsCancellation Then
-
-                        If worker.CancellationPending Then
-                            e.Cancel = True
-                            e.Result = "Berichterstellung abgebrochen ..."
-                            Exit Sub
                         End If
 
-                    End If
 
                     ' Zwischenbericht abgeben ...
-                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
-                    If worker.WorkerReportsProgress Then
-                        worker.ReportProgress(0, e)
+                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "Drawing Swimlane '" & elemNameOfElemID(curSwl.nameID) & "'  ...."
+                        End If
+                        e.Result = msgTxt
+                        If worker.WorkerReportsProgress Then
+                            worker.ReportProgress(0, e)
+                        Else
+                            Call logfileSchreiben("Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
+                        End If
                     End If
+
 
                     ' jetzt die Swimlane zeichnen
                     ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
@@ -17835,12 +18280,15 @@ Public Module testModule
                     ' es wurde in der Schleife keine Swimmlane gezeichnet, da sie zu groß ist für eine Seite
                     ' Abbruch provoziere
                     ' Zwischenbericht abgeben ...
-                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
+                    msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' could not be drawn: not enough space ...."
+                    End If
+                    e.Result = msgTxt
                     If worker.WorkerReportsProgress Then
                         worker.ReportProgress(0, e)
                     End If
-                    Throw New ArgumentException("Das Zeichnen der Swimlanes für Projekt '" & hproj.name & "' wird abgebrochen." & vbLf & _
-                                                "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ....")
+                    Throw New ArgumentException(msgTxt)
                     swimLanesDone = 0
                     swimLanesToDo = 0
 
@@ -18318,8 +18766,6 @@ Public Module testModule
         ' Ende neu 
 
     End Sub
-
-
 
 
 End Module

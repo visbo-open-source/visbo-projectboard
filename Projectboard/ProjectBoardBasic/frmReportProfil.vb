@@ -40,9 +40,24 @@ Public Class frmReportProfil
         End If
 
     End Sub
-     
+
+    Private Sub languageSettings()
+
+        If awinSettings.englishLanguage Then
+            ' auf Englisch darstellen 
+            Me.Text = "Select a Report Profile to create a report"
+            rdbEPreports.Text = "Singleproject Reports"
+            rdbMPreports.Text = "Multiproject Reports"
+            ReportErstellen.Text = "Create Report"
+            changeProfil.Text = "Modify Report Profile"
+            zeitLabel.Text = "Timespan:"
+        End If
+
+    End Sub
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call languageSettings()
 
         If Me.calledFrom = "MS Project" Then
 
@@ -148,7 +163,11 @@ Public Class frmReportProfil
 
 
                 Else
-                    Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+                    Dim msgTxt As String = "Fehler: es existiert kein ReportProfil"
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Error: no Report Profile existing!"
+                    End If
+                    Throw New ArgumentException(msgTxt)
 
                 End If
 
@@ -191,7 +210,11 @@ Public Class frmReportProfil
 
                     If listOfFiles.Count < 1 Then
 
-                        Call MsgBox(" Es existiert noch kein Report-Profil! ")
+                        Dim msgTxt As String = " Es existiert noch kein Report-Profil! "
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "no Report Profile existing!"
+                        End If
+                        Call MsgBox(msgTxt)
 
                     Else
 
@@ -218,7 +241,11 @@ Public Class frmReportProfil
 
                                 Catch ex As Exception
                                     'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
-                                    Call MsgBox("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
+                                    Dim msgTxt As String = "ReportProfil '" & profilName & "' konnte nicht eingelesen werden!"
+                                    If awinSettings.englishLanguage Then
+                                        msgTxt = "Report Profile '" & profilName & "' could not be read!"
+                                    End If
+                                    Call MsgBox(msgTxt)
                                 End Try
 
                             End If
@@ -267,7 +294,11 @@ Public Class frmReportProfil
 
 
                 Else
-                    Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+                    Dim errTxt As String = " Es existiert noch kein Report-Profil! "
+                    If awinSettings.englishLanguage Then
+                        errTxt = "no Report Profile existing!"
+                    End If
+                    Throw New ArgumentException(errTxt)
 
                 End If
 
@@ -384,7 +415,13 @@ Public Class frmReportProfil
 
 
                     If noPhExist And noMSExist Then
-                        Call MsgBox("Achtung: Projekt '" & hproj.name & "' enthält die ausgewählten Phasen und Meilensteine nicht!")
+                        Dim msgTxt As String = "Achtung: Projekt '" & hproj.name & _
+                            "' enthält die ausgewählten Phasen und Meilensteine nicht!"
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "Warning: Project '" & hproj.name & _
+                            "' does not contain the selected phases nor selected milestones!"
+                        End If
+                        Call MsgBox(msgTxt)
                     Else
 
                         If Not IsNothing(reportProfil) Then
@@ -435,11 +472,20 @@ Public Class frmReportProfil
                             BGworkerReportBHTC.RunWorkerAsync(reportProfil)
 
                         Else
-                            Call MsgBox("ausgewähltes Report-Profil enthält Fehler !")
+                            Dim msgTxt As String = "ausgewähltes Report-Profil enthält Fehler !"
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "errors when reading the selected Report Profile !"
+                            End If
+                            Call MsgBox(msgTxt)
                         End If
                     End If
                 Else
-                    Call MsgBox("Es wurde noch kein Report-Profil ausgewählt !")
+                    Dim msgTxt As String = "Es wurde noch kein Report-Profil ausgewählt !"
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "please select a Report Profile!"
+                    End If
+
+                    Call MsgBox(msgTxt)
 
                 End If
 
@@ -471,9 +517,13 @@ Public Class frmReportProfil
 
                                 ' Es muss ein Zeitraum ausgewählt sein
                                 Me.statusLabel.Visible = True
-                                Me.statusLabel.Text = "bitte zuerst einen Zeitraum auswählen!"
+                                Dim msgTxt As String = "bitte zuerst einen Zeitraum auswählen!"
+                                If awinSettings.englishLanguage Then
+                                    msgTxt = "please select a timespan!"
+                                End If
+                                Me.statusLabel.Text = msgTxt
 
-                                Call MsgBox("bitte zuerst einen Zeitraum auswählen!")
+                                Call MsgBox(msgTxt)
                                 MyBase.Close()
 
                             Else
@@ -495,9 +545,15 @@ Public Class frmReportProfil
                             If selectedProjekte.Count < 1 Then
 
                                 Me.statusLabel.Visible = True
-                                Me.statusLabel.Text = "bitte zuerst Projekte selektieren!"
 
-                                Call MsgBox("bitte zuerst Projekte selektieren!")
+                                Dim msgTxt As String = "bitte zuerst Projekte selektieren!"
+                                If awinSettings.englishLanguage Then
+                                    msgTxt = "please select one or more projects!"
+                                End If
+
+                                Me.statusLabel.Text = msgTxt
+
+                                Call MsgBox(msgTxt)
                                 MyBase.Close()
                             Else
                                 Me.statusLabel.Visible = True
@@ -511,10 +567,15 @@ Public Class frmReportProfil
                         End If
                         End If
 
-                    Else
-                        Call MsgBox("Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf & "Es sind keine Projekte geladen !")
-
+                Else
+                    Dim msgTxt As String = "Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf & _
+                        "Es sind keine Projekte geladen !"
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "no Report Profile or no projects selected!"
                     End If
+                    Call MsgBox(msgTxt)
+
+                End If
 
 
             Catch ex As Exception

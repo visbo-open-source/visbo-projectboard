@@ -22,7 +22,7 @@ Partial Class frmCreateNewVariant
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.Label1 = New System.Windows.Forms.Label()
+        Me.lblNeueVariante = New System.Windows.Forms.Label()
         Me.infoText = New System.Windows.Forms.Label()
         Me.newVariant = New System.Windows.Forms.TextBox()
         Me.projektName = New System.Windows.Forms.TextBox()
@@ -34,14 +34,14 @@ Partial Class frmCreateNewVariant
         Me.txtDescription = New System.Windows.Forms.TextBox()
         Me.SuspendLayout()
         '
-        'Label1
+        'lblNeueVariante
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(12, 25)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(78, 13)
-        Me.Label1.TabIndex = 0
-        Me.Label1.Text = "Neue Variante:"
+        Me.lblNeueVariante.AutoSize = True
+        Me.lblNeueVariante.Location = New System.Drawing.Point(12, 25)
+        Me.lblNeueVariante.Name = "lblNeueVariante"
+        Me.lblNeueVariante.Size = New System.Drawing.Size(78, 13)
+        Me.lblNeueVariante.TabIndex = 0
+        Me.lblNeueVariante.Text = "Neue Variante:"
         '
         'infoText
         '
@@ -134,7 +134,7 @@ Partial Class frmCreateNewVariant
         Me.Controls.Add(Me.projektName)
         Me.Controls.Add(Me.newVariant)
         Me.Controls.Add(Me.infoText)
-        Me.Controls.Add(Me.Label1)
+        Me.Controls.Add(Me.lblNeueVariante)
         Me.Name = "frmCreateNewVariant"
         Me.Text = "Neue Variante anlegen"
         Me.TopMost = True
@@ -142,7 +142,7 @@ Partial Class frmCreateNewVariant
         Me.PerformLayout()
 
     End Sub
-    Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents lblNeueVariante As System.Windows.Forms.Label
     Friend WithEvents infoText As System.Windows.Forms.Label
     Friend WithEvents projektName As System.Windows.Forms.TextBox
     Friend WithEvents variantenName As System.Windows.Forms.TextBox

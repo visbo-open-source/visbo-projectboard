@@ -223,7 +223,7 @@
     ''' <param name="hproj"></param>
     ''' <value></value>
     ''' <returns></returns>
-    ''' <remarks></remarks>
+    ''' <remarks>wenn ein Zeitraum markiert ist, wir der auch berücksichtigt ... </remarks>
     Public ReadOnly Property doesNotBlock(ByVal hproj As clsProjekt) As Boolean
         Get
             Dim containsBU As Boolean
@@ -232,13 +232,41 @@
             Dim containsPH As Boolean
             Dim containsRole As Boolean
             Dim containsCost As Boolean
-            Dim stillOK As Boolean
+            Dim stillOK As Boolean = True
             Dim tmpMilestone As clsMeilenstein
             Dim tmpPhase As clsPhase
             Dim ix As Integer
             Dim fullName As String
+            Dim considerTimeFrame As Boolean = False
 
-            If Not IsNothing(Me) Then
+            Dim arrayIX As Integer, ixZeitraum As Integer
+            Dim anzLoops As Integer
+
+            ' checken, ob ein Zeitraum festgelegt ist ... 
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                considerTimeFrame = True
+                stillOK = projectWithinTimeFrame(hproj)
+                If stillOK Then
+
+                    Dim prAnfang As Integer
+                    Dim prEnde As Integer
+
+                    With hproj
+                        prAnfang = .Start + .StartOffset
+                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                    End With
+
+                    anzLoops = 0
+
+                    ' nachher wird bei Rollen und Kostenarten einfach überprüft, 
+                    ' ob die Summe der Werte im Array(arrayix ...anzloops) größer ist als Null ...
+                    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, arrayIX, anzLoops)
+
+                End If
+            End If
+
+
+            If Not IsNothing(Me) And stillOK Then
 
                 ' Überprüfe BU 
                 If filterBU.Count = 0 Then
@@ -444,93 +472,116 @@
 
                 End If
 
-            Else
-                ' wenn der Filter = Nothing
-                stillOK = True
-            End If
+                ' Prüfen ob bestimmte Rollen vorkommen 
+                If stillOK Then
 
-            ' Prüfen ob bestimmte Rollen vorkommen 
-            If stillOK Then
+                    If filterRolle.Count > 0 Then
 
-                If filterRolle.Count > 0 Then
+                        Dim roleName As String
+                        Dim rollenBedarfe() As Double
+                        Dim summeRollenBedarfe As Double
+                        Dim myCollection As New Collection
+                        ' DiagrammTypen(1) = Rollen 
+                        Dim type As String = DiagrammTypen(1)
+                        ix = 1
+                        containsRole = False
 
-                    Dim roleName As String
-                    Dim rollenBedarfe As Double = 0.0
-                    Dim myCollection As New Collection
-                    ' DiagrammTypen(1) = Rollen 
-                    Dim type As String = DiagrammTypen(1)
-                    ix = 1
-                    containsRole = False
+                        While ix <= filterRolle.Count And Not containsRole
 
-                    While ix <= filterRolle.Count And Not containsRole
+                            roleName = CStr(filterRolle.Item(ix))
 
-                        roleName = CStr(filterRolle.Item(ix))
+                            ' zurücksetzen
+                            myCollection.Clear()
+                            summeRollenBedarfe = 0.0
 
-                        ' zurücksetzen
-                        myCollection.Clear()
-                        rollenBedarfe = 0.0
+                            ' berechnen
+                            myCollection.Add(roleName, roleName)
+                            rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type)
 
-                        ' berechnen
-                        myCollection.Add(roleName, roleName)
-                        rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+                            If considerTimeFrame Then
+                                For tmpIX As Integer = arrayIX To arrayIX + anzLoops - 1
+                                    If tmpIX = arrayIX Then
+                                        summeRollenBedarfe = rollenBedarfe(tmpIX)
+                                    Else
+                                        summeRollenBedarfe = summeRollenBedarfe + rollenBedarfe(tmpIX)
+                                    End If
+                                Next
+                            Else
+                                summeRollenBedarfe = rollenBedarfe.Sum
+                            End If
 
-                        ' entscheiden
-                        If rollenBedarfe > 0 Then
-                            containsRole = True
-                        Else
-                            ix = ix + 1
-                        End If
+                            ' entscheiden
+                            If summeRollenBedarfe > 0 Then
+                                containsRole = True
+                            Else
+                                ix = ix + 1
+                            End If
 
 
-                    End While
+                        End While
 
-                Else
-                    containsRole = True
+                    Else
+                        containsRole = True
+                    End If
+                    stillOK = containsRole
                 End If
-                stillOK = containsRole
-            End If
 
-            ' Prüfen ob bestimmte Kostenarten vorkommen 
-            If stillOK Then
+                ' Prüfen ob bestimmte Kostenarten vorkommen 
+                If stillOK Then
 
-                If filterCost.Count > 0 Then
+                    If filterCost.Count > 0 Then
 
-                    Dim costName As String
-                    Dim costBedarfe As Double = 0.0
-                    Dim myCollection As New Collection
-                    ' DiagrammTypen(1) = Rollen 
-                    Dim type As String = DiagrammTypen(2)
-                    ix = 1
-                    containsCost = False
+                        Dim costName As String
+                        Dim costNeeds() As Double
+                        Dim sumCostBedarfe As Double = 0.0
+                        Dim myCollection As New Collection
+                        ' DiagrammTypen(1) = Rollen 
+                        Dim type As String = DiagrammTypen(2)
+                        ix = 1
+                        containsCost = False
 
-                    While ix <= filterCost.Count And Not containsCost
+                        While ix <= filterCost.Count And Not containsCost
 
-                        costName = CStr(filterCost.Item(ix))
+                            costName = CStr(filterCost.Item(ix))
 
-                        ' zurücksetzen
-                        myCollection.Clear()
-                        costBedarfe = 0.0
+                            ' zurücksetzen
+                            myCollection.Clear()
+                            sumCostBedarfe = 0.0
 
-                        ' berechnen
-                        myCollection.Add(costName, costName)
-                        costBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+                            ' berechnen
+                            myCollection.Add(costName, costName)
+                            costNeeds = hproj.getBedarfeInMonths(myCollection, type)
 
-                        ' entscheiden
-                        If costBedarfe > 0 Then
-                            containsCost = True
-                        Else
-                            ix = ix + 1
-                        End If
+                            If considerTimeFrame Then
+                                For tmpIX As Integer = arrayIX To arrayIX + anzLoops - 1
+                                    If tmpIX = arrayIX Then
+                                        sumCostBedarfe = costNeeds(tmpIX)
+                                    Else
+                                        sumCostBedarfe = sumCostBedarfe + costNeeds(tmpIX)
+                                    End If
+                                Next
+                            Else
+                                sumCostBedarfe = costNeeds.Sum
+                            End If
 
 
-                    End While
+                            ' entscheiden
+                            If sumCostBedarfe > 0 Then
+                                containsCost = True
+                            Else
+                                ix = ix + 1
+                            End If
 
-                Else
-                    containsCost = True
+
+                        End While
+
+                    Else
+                        containsCost = True
+                    End If
+                    stillOK = containsCost
                 End If
-                stillOK = containsCost
-            End If
 
+            End If
 
             doesNotBlock = stillOK
 

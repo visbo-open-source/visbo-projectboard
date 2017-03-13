@@ -14,10 +14,16 @@ Public Class clsVisboZustaende
 
     ' nimmt im Massen-Edit Ressourcen die Spalten-Nummer für Ressource-/Kostenauf 
     Public Property meColRC As Integer
+    ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für den Projekt-Namen auf  
+    Public Property meColpName As Integer = 2
     ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für StartData auf  
     Public Property meColSD As Integer
     ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für EndData  
     Public Property meColED As Integer
+    ' nimmt das letzte Projekt auf, zu dem zuletzt Informationen angezeigt/aktualisiert wurden ...
+    Public Property lastProject As clsProjekt
+    ' hat den letzten Stand in der Datenbank zu dem Projekt, das zuletzt angezeigt wurde 
+    Public Property lastProjectDB As clsProjekt
 
     Public Property oldValue As String
         Get
@@ -139,6 +145,8 @@ Public Class clsVisboZustaende
         _projectBoardMode = ptModus.graficboard
         _meMaxZeile = 0
         _oldValue = ""
+        _lastProject = Nothing
+        _lastProjectDB = Nothing
         _auslastungsArray = Nothing
     End Sub
 End Class

@@ -59,6 +59,8 @@ Partial Class frmInfo
         Me.PictureMarker = New System.Windows.Forms.PictureBox()
         Me.searchIcon = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.rdbResources = New System.Windows.Forms.RadioButton()
+        Me.rdbCosts = New System.Windows.Forms.RadioButton()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -313,7 +315,7 @@ Partial Class frmInfo
         'rdbBreadcrumb
         '
         Me.rdbBreadcrumb.AutoSize = True
-        Me.rdbBreadcrumb.Location = New System.Drawing.Point(468, 408)
+        Me.rdbBreadcrumb.Location = New System.Drawing.Point(339, 428)
         Me.rdbBreadcrumb.Name = "rdbBreadcrumb"
         Me.rdbBreadcrumb.Size = New System.Drawing.Size(81, 17)
         Me.rdbBreadcrumb.TabIndex = 42
@@ -324,7 +326,7 @@ Partial Class frmInfo
         'rdbAbbrev
         '
         Me.rdbAbbrev.AutoSize = True
-        Me.rdbAbbrev.Location = New System.Drawing.Point(387, 408)
+        Me.rdbAbbrev.Location = New System.Drawing.Point(224, 428)
         Me.rdbAbbrev.Name = "rdbAbbrev"
         Me.rdbAbbrev.Size = New System.Drawing.Size(76, 17)
         Me.rdbAbbrev.TabIndex = 41
@@ -335,7 +337,7 @@ Partial Class frmInfo
         'rdbOriginalName
         '
         Me.rdbOriginalName.AutoSize = True
-        Me.rdbOriginalName.Location = New System.Drawing.Point(291, 408)
+        Me.rdbOriginalName.Location = New System.Drawing.Point(13, 428)
         Me.rdbOriginalName.Name = "rdbOriginalName"
         Me.rdbOriginalName.Size = New System.Drawing.Size(91, 17)
         Me.rdbOriginalName.TabIndex = 40
@@ -357,7 +359,7 @@ Partial Class frmInfo
         'CheckBxMarker
         '
         Me.CheckBxMarker.AutoSize = True
-        Me.CheckBxMarker.Location = New System.Drawing.Point(402, 12)
+        Me.CheckBxMarker.Location = New System.Drawing.Point(376, 12)
         Me.CheckBxMarker.Name = "CheckBxMarker"
         Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
         Me.CheckBxMarker.TabIndex = 43
@@ -366,7 +368,7 @@ Partial Class frmInfo
         'rdbLU
         '
         Me.rdbLU.AutoSize = True
-        Me.rdbLU.Location = New System.Drawing.Point(71, 408)
+        Me.rdbLU.Location = New System.Drawing.Point(99, 408)
         Me.rdbLU.Name = "rdbLU"
         Me.rdbLU.Size = New System.Drawing.Size(92, 17)
         Me.rdbLU.TabIndex = 44
@@ -376,7 +378,7 @@ Partial Class frmInfo
         'rdbMV
         '
         Me.rdbMV.AutoSize = True
-        Me.rdbMV.Location = New System.Drawing.Point(168, 408)
+        Me.rdbMV.Location = New System.Drawing.Point(430, 408)
         Me.rdbMV.Name = "rdbMV"
         Me.rdbMV.Size = New System.Drawing.Size(118, 17)
         Me.rdbMV.TabIndex = 45
@@ -404,7 +406,7 @@ Partial Class frmInfo
         'PictureMarker
         '
         Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(388, 11)
+        Me.PictureMarker.Location = New System.Drawing.Point(362, 11)
         Me.PictureMarker.Name = "PictureMarker"
         Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
         Me.PictureMarker.TabIndex = 32
@@ -419,11 +421,33 @@ Partial Class frmInfo
         Me.searchIcon.TabIndex = 29
         Me.searchIcon.UseVisualStyleBackColor = True
         '
+        'rdbResources
+        '
+        Me.rdbResources.AutoSize = True
+        Me.rdbResources.Location = New System.Drawing.Point(224, 408)
+        Me.rdbResources.Name = "rdbResources"
+        Me.rdbResources.Size = New System.Drawing.Size(82, 17)
+        Me.rdbResources.TabIndex = 46
+        Me.rdbResources.Text = "Ressourcen"
+        Me.rdbResources.UseVisualStyleBackColor = True
+        '
+        'rdbCosts
+        '
+        Me.rdbCosts.AutoSize = True
+        Me.rdbCosts.Location = New System.Drawing.Point(339, 408)
+        Me.rdbCosts.Name = "rdbCosts"
+        Me.rdbCosts.Size = New System.Drawing.Size(58, 17)
+        Me.rdbCosts.TabIndex = 47
+        Me.rdbCosts.Text = "Kosten"
+        Me.rdbCosts.UseVisualStyleBackColor = True
+        '
         'frmInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(566, 432)
+        Me.ClientSize = New System.Drawing.Size(566, 446)
+        Me.Controls.Add(Me.rdbCosts)
+        Me.Controls.Add(Me.rdbResources)
         Me.Controls.Add(Me.CheckBxMarker)
         Me.Controls.Add(Me.btnSentToChange)
         Me.Controls.Add(Me.btnSendToHome)
@@ -490,4 +514,6 @@ Partial Class frmInfo
     Friend WithEvents btnSendToHome As System.Windows.Forms.Button
     Friend WithEvents btnSentToChange As System.Windows.Forms.Button
     Friend WithEvents ToolTip1 As System.Windows.Forms.ToolTip
+    Friend WithEvents rdbResources As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbCosts As System.Windows.Forms.RadioButton
 End Class

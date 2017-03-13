@@ -32,7 +32,7 @@
     </StartupObject>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\tom\Documents\Publish Folder SMART-PPT\</PublishUrl>
+    <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
     <ApplicationVersion>1.0.0.4</ApplicationVersion>
@@ -146,9 +146,15 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
-    <Reference Include="MongoDbAccess, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="ProjectBoardBasic, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="ProjectBoardDefinitions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="MongoDbAccess">
+      <HintPath>..\..\Projectboard\MongoDbAccess\bin\Debug\MongoDbAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="ProjectBoardBasic">
+      <HintPath>..\..\Projectboard\ProjectBoardBasic\bin\Debug\ProjectBoardBasic.dll</HintPath>
+    </Reference>
+    <Reference Include="ProjectBoardDefinitions">
+      <HintPath>..\..\Projectboard\ProjectBoardDefinitions\bin\Debug\ProjectBoardDefinitions.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
@@ -385,6 +391,15 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\first Version.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Calendar-icon 128x128 First.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Calendar-icon 128x128 Last.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

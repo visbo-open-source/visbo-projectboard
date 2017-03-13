@@ -53,17 +53,42 @@ Public Class frmNameSelection
 
     ' bestimmt, ob und wie die einzelnen Formular Elemente in Abhängigkeit von menuoption angezeigt werden sollen 
     Private Sub defineFrmButtonVisibility()
+
+        If awinSettings.englishLanguage Then
+            chkbxOneChart.Text = "all in one chart"
+            Label1.Text = ""
+            einstellungen.Text = "Settings"
+            labelPPTVorlage.Text = "Powerpoint Template"
+            AbbrButton.Text = "Reset Selection"
+        End If
+
+
         With Me
             If .menuOption = PTmenue.filterdefinieren Then
-                .Text = "Datenbank Filter definieren"
+                If awinSettings.englishLanguage Then
+                    .Text = "define Database Filter"
+                Else
+                    .Text = "Datenbank Filter definieren"
+                End If
+
 
                 If .actionCode = PTTvActions.loadPV Or _
                     .actionCode = PTTvActions.loadPVS Or _
                     .actionCode = PTTvActions.delAllExceptFromDB Or _
                     .actionCode = PTTvActions.delFromDB Then
-                    .OKButton.Text = "Anwenden"
+                    If awinSettings.englishLanguage Then
+                        .OKButton.Text = "Apply"
+                    Else
+                        .OKButton.Text = "Anwenden"
+                    End If
+
                 Else
-                    .OKButton.Text = "Speichern"
+                    If awinSettings.englishLanguage Then
+                        .OKButton.Text = "Store"
+                    Else
+                        .OKButton.Text = "Speichern"
+                    End If
+
                 End If
 
                 .statusLabel.Text = ""
@@ -91,7 +116,12 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Name des Filters"
+                If awinSettings.englishLanguage Then
+                    .filterLabel.Text = "Name of Filter"
+                Else
+                    .filterLabel.Text = "Name des Filters"
+                End If
+
 
                 ' Auswahl Speichern
                 .auswSpeichern.Visible = False
@@ -99,8 +129,17 @@ Public Class frmNameSelection
 
             ElseIf menuOption = PTmenue.sessionFilterDefinieren Then
 
-                .Text = "Session Filter definieren"
-                .OKButton.Text = "Anwenden"
+                If awinSettings.englishLanguage Then
+                    .Text = "Define Session Filter"
+                    .OKButton.Text = "Apply"
+                    .filterLabel.Text = "Name of Filter"
+                Else
+                    .Text = "Session Filter definieren"
+                    .OKButton.Text = "Anwenden"
+                    .filterLabel.Text = "Name des Filters"
+                End If
+
+
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
 
@@ -126,7 +165,7 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = False
                 .filterLabel.Visible = False
-                .filterLabel.Text = "Name des Filters"
+
 
                 ' Auswahl Speichern
                 .auswSpeichern.Visible = False
@@ -134,8 +173,17 @@ Public Class frmNameSelection
 
 
             ElseIf menuOption = PTmenue.visualisieren Then
-                .Text = "Phasen- und Meilensteine visualisieren"
-                .OKButton.Text = "Anzeigen"
+
+                If awinSettings.englishLanguage Then
+                    .Text = "Visualize Phases and Milestones"
+                    .OKButton.Text = "Visualize"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "Phasen- und Meilensteine visualisieren"
+                    .OKButton.Text = "Anzeigen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -162,17 +210,30 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf menuOption = PTmenue.leistbarkeitsAnalyse Then
 
-                If ribbonButtonID = "PTMEC1" Then
-                    .Text = "Rollen-/Kosten-Charts erstellen"
+                If awinSettings.englishLanguage Then
+                    If ribbonButtonID = "PTMEC1" Then
+                        .Text = "Create Role-/Cost-Charts"
+                    Else
+                        .Text = "Create Feasibility Charts"
+                    End If
+                    .filterLabel.Text = "Selection"
+                    .OKButton.Text = "Create Charts"
                 Else
-                    .Text = "Leistbarkeits-Charts erstellen"
+                    If ribbonButtonID = "PTMEC1" Then
+                        .Text = "Rollen-/Kosten-Charts erstellen"
+                    Else
+                        .Text = "Leistbarkeits-Charts erstellen"
+                    End If
+                    .filterLabel.Text = "Auswahl"
+                    .OKButton.Text = "Charts erstellen"
                 End If
 
-                .OKButton.Text = "Charts erstellen"
+
+
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
 
@@ -204,12 +265,20 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf menuOption = PTmenue.einzelprojektReport Then
 
-                .Text = "Projekt-Varianten Report erzeugen"
-                .OKButton.Text = "Bericht erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Project-/Variant Report"
+                    .OKButton.Text = "Create Report"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "Projekt-Varianten Report erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -237,13 +306,21 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
 
             ElseIf menuOption = PTmenue.multiprojektReport Then
 
-                .Text = "Multiprojekt Reports erzeugen"
-                .OKButton.Text = "Bericht erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Multiproject Reports"
+                    .OKButton.Text = "Create Report"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "Multiprojekt Reports erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -271,12 +348,21 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf menuOption = PTmenue.excelExport Then
 
-                .Text = "Excel Report erzeugen"
-                .OKButton.Text = "Report erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Excel Report"
+                    .OKButton.Text = "Create Report"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "Excel Report erzeugen"
+                    .OKButton.Text = "Report erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
+
                 .statusLabel.Text = ""
 
                 .rdbRoles.Enabled = False
@@ -299,12 +385,21 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf menuOption = PTmenue.vorlageErstellen Then
 
-                .Text = "modulare Vorlagen erzeugen"
-                .OKButton.Text = "Vorlage erstellen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create modular templates"
+                    .OKButton.Text = "Create Template"
+                    .filterLabel.Text = "Selection"
+                Else
+                    .Text = "modulare Vorlagen erzeugen"
+                    .OKButton.Text = "Vorlage erstellen"
+                    .filterLabel.Text = "Auswahl"
+                End If
+
+
                 .statusLabel.Text = ""
 
                 .rdbRoles.Enabled = False
@@ -327,17 +422,25 @@ Public Class frmNameSelection
                 ' Filter
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
-                .filterLabel.Text = "Auswahl"
+
 
             ElseIf menuOption = PTmenue.meilensteinTrendanalyse Then
 
-                .Text = "Meilenstein Trendanalyse erzeugen"
-                .OKButton.Text = "Anzeigen"
+                If awinSettings.englishLanguage Then
+                    .Text = "Create Milestone Trendanalysis"
+                    .OKButton.Text = "Show"
+                    .headerLine.Text = "Milestones"
+                Else
+                    .Text = "Meilenstein Trendanalyse erzeugen"
+                    .OKButton.Text = "Anzeigen"
+                    .headerLine.Text = "Meilensteine"
+                End If
+
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
 
-                .headerLine.Text = "Meilensteine"
+
 
                 .picturePhasen.Visible = False
                 .rdbPhases.Visible = False
@@ -727,7 +830,12 @@ Public Class frmNameSelection
 
         If Me.rdbPhases.Checked Then
             ' clear Listbox1 
-            headerLine.Text = "Phasen"
+            If awinSettings.englishLanguage Then
+                headerLine.Text = "Phases"
+            Else
+                headerLine.Text = "Phasen"
+            End If
+
             nameListBox.Items.Clear()
             selNameListBox.Items.Clear()
             filterBox.Text = ""
@@ -800,7 +908,12 @@ Public Class frmNameSelection
 
         If Me.rdbMilestones.Checked Then
             ' clear Listbox1 
-            headerLine.Text = "Meilensteine"
+            If awinSettings.englishLanguage Then
+                headerLine.Text = "Milestones"
+            Else
+                headerLine.Text = "Meilensteine"
+            End If
+
             nameListBox.Items.Clear()
             selNameListBox.Items.Clear()
 
@@ -877,11 +990,21 @@ Public Class frmNameSelection
         filterBox.Enabled = True
 
         If RoleDefinitions.Count = 0 Then
-            Call MsgBox("es sind keine Kostenarten definiert !")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no roles types defined! ")
+            Else
+                Call MsgBox("es sind keine Rollen definiert !")
+            End If
+
         Else
             If Me.rdbRoles.Checked Then
                 ' clear Listbox1 
-                headerLine.Text = "Rollen"
+                If awinSettings.englishLanguage Then
+                    headerLine.Text = "Roles/Names"
+                Else
+                    headerLine.Text = "Rollen/Namen"
+                End If
+
                 nameListBox.Items.Clear()
                 selNameListBox.Items.Clear()
                 filterBox.Text = ""
@@ -962,11 +1085,21 @@ Public Class frmNameSelection
         filterBox.Enabled = True
 
         If CostDefinitions.Count = 0 Then
-            Call MsgBox("es sind keine Kostenarten definiert !")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no cost types defined!")
+            Else
+                Call MsgBox("es sind keine Kostenarten definiert !")
+            End If
+
         Else
             If Me.rdbCosts.Checked Then
                 ' clear Listbox1 
-                headerLine.Text = "Kostenarten"
+                If awinSettings.englishLanguage Then
+                    headerLine.Text = "Cost Types"
+                Else
+                    headerLine.Text = "Kostenarten"
+                End If
+
                 nameListBox.Items.Clear()
                 selNameListBox.Items.Clear()
                 filterBox.Text = ""
@@ -1045,7 +1178,12 @@ Public Class frmNameSelection
         filterBox.Enabled = True
 
         If businessUnitDefinitions.Count = 0 Then
-            Call MsgBox("es sind keine Business Units definiert !")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no Business Units defined!")
+            Else
+                Call MsgBox("es sind keine Business Units definiert !")
+            End If
+
         Else
             If Me.rdbBU.Checked Then
                 ' clear Listbox1 
@@ -1121,11 +1259,21 @@ Public Class frmNameSelection
         filterBox.Enabled = True
 
         If Projektvorlagen.Count = 0 Then
-            Call MsgBox("es sind keine Projektvorlagen definiert !")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no project templates defined!")
+            Else
+                Call MsgBox("es sind keine Projektvorlagen definiert !")
+            End If
+
         Else
             If Me.rdbTyp.Checked Then
                 ' clear Listbox1 
-                headerLine.Text = "Generik"
+                If awinSettings.englishLanguage Then
+                    headerLine.Text = "Project-Templates"
+                Else
+                    headerLine.Text = "Projektvorlagen"
+                End If
+
                 nameListBox.Items.Clear()
                 selNameListBox.Items.Clear()
 
@@ -1206,9 +1354,16 @@ Public Class frmNameSelection
             filterBox.Enabled = True
             nameListBox.Enabled = True
             OKButton.Enabled = True
-            AbbrButton.Text = "Zurücksetzen"
+            If awinSettings.englishLanguage Then
+                AbbrButton.Text = "Reset Selection"
+                statusLabel.Text = "Report creation cancelled"
+            Else
+                AbbrButton.Text = "Zurücksetzen"
+                statusLabel.Text = "Berichterstellung wurde beendet"
+            End If
+
             repVorlagenDropbox.Enabled = True
-            statusLabel.Text = "Berichterstellung wurde beendet"
+
 
             Me.Cursor = Cursors.Arrow
             backgroundRunning = False

@@ -35,13 +35,23 @@ namespace MongoDbAccess
         protected  IMongoClient Client;
         protected  IMongoDatabase Database;
         protected MongoServer Server;
-        protected  IMongoCollection<clsProjektDB> CollectionProjects;
-        protected  IMongoCollection<clsProjektDB> CollectionTrashProjects;
-        protected  IMongoCollection<clsConstellationDB> CollectionConstellations;
+        protected IMongoCollection<clsProjektDB> CollectionProjects;
+        protected IMongoCollection<clsRollenDefinitionDB> CollectionRoles;
+        protected IMongoCollection<clsKostenartDefinitionDB> CollectionCosts;
+        protected IMongoCollection<clsWriteProtectionItemDB> CollectionWriteProtections;
+        protected IMongoCollection<clsProjektDB> CollectionTrashProjects;
+        protected IMongoCollection<clsConstellationDB> CollectionConstellations;
         protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
-        protected  IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
-        protected  IMongoCollection<clsFilterDB> CollectionFilter;
+        protected IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
+        protected IMongoCollection<clsFilterDB> CollectionFilter;
         
+        /// <summary>
+        /// Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort
+        /// </summary>
+        /// <param name="databaseURL"></param>
+        /// <param name="databaseName"></param>
+        /// <param name="username"></param>
+        /// <param name="dbPasswort"></param>
         public Request(string databaseURL, string databaseName, string username, string dbPasswort)
         {
             //var databaseURL = "localhost";
@@ -64,7 +74,7 @@ namespace MongoDbAccess
                 
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
-                
+                                                
             }
             
             //alt 2.x
@@ -77,13 +87,20 @@ namespace MongoDbAccess
                       
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
+            CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
+            CollectionCosts = Database.GetCollection<clsKostenartDefinitionDB>("costdefinitions");
+            CollectionWriteProtections = Database.GetCollection<clsWriteProtectionItemDB>("writeProtections");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
 
         }
-
+        
+        /// <summary>
+        /// wichtige Indices für CollectionProjects und CollectionWriteProtections setzen
+        /// </summary>
+        /// <returns></returns>
         public  bool createIndicesOnce()
         {
             try
@@ -104,6 +121,11 @@ namespace MongoDbAccess
                 
                 keys = Builders<clsProjektDB>.IndexKeys.Ascending("endDate");
                 ergebnis = CollectionProjects.Indexes.CreateOne(keys);
+
+                var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pName").Ascending("vName").Ascending("type");
+                var options = new CreateIndexOptions() { Unique = true };
+                ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2,options);
+             
                 return true;
             }
             catch
@@ -113,6 +135,11 @@ namespace MongoDbAccess
            
         }
 
+        /// <summary>
+        /// Abfrage, ob die Collection 'name' Inhalte hat
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public bool collectionEmpty(string name)
         {
             //return Database.GetCollection<clsProjektDB>(name).Count() == 0;
@@ -131,6 +158,15 @@ namespace MongoDbAccess
                 case "filters":
                     result = CollectionFilter.AsQueryable<clsFilterDB>().Count();
                     break;
+                case "roledefinitions":
+                    result = CollectionRoles.AsQueryable<clsRollenDefinitionDB>().Count();
+                    break;
+                case "costdefinitions":
+                    result = CollectionCosts.AsQueryable<clsKostenartDefinitionDB>().Count();
+                    break;
+                case "writeProtections":
+                    result = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>().Count();
+                    break;
                 default:
                     result = 0;
                     break;
@@ -139,9 +175,62 @@ namespace MongoDbAccess
             return result == 0; 
         }
 
-        /** prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
-         *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
-         */
+      /// <summary>
+      /// hier werden einmalig alle in der Datenbank vorhandenen Projekte/Variante in die CollectionWriteProtections eingetragen
+      /// </summary>
+      /// <param name="user"></param>
+      /// <returns></returns>
+      public int initWriteProtectionsOnce(string user)
+        {
+            int i = 0;
+            int result = 0;
+
+            try
+            {
+                if (collectionEmpty("writeProtections"))
+                {
+                   clsWriteProtectionItem wpItem = null;
+                   clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+
+                   var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                        .Where(c => c.name != null)
+                        .Select(c => c.name)
+                        .Distinct()
+                        .ToList();
+
+                   foreach (string dbKey in prequery )
+                   {
+                         string pname = Projekte.getPnameFromKey(dbKey);
+                         string vname = Projekte.getVariantnameFromKey(dbKey);
+
+                         wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(pname, vname), 0, user, false, false);
+                         wpItemDB = new clsWriteProtectionItemDB();
+                         wpItemDB.copyFrom(wpItem);
+                         CollectionWriteProtections.InsertOne(wpItemDB);
+                         i = i + 1;
+                   }
+                } 
+                
+                result = i;
+                      
+            }
+            catch
+            {
+                return result;
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
+        /// falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantname"></param>
+        /// <param name="storedAtorBefore"></param>
+        /// <returns></returns>
         public bool projectNameAlreadyExists(string projectname, string variantname, DateTime storedAtorBefore)
         {
             bool result;
@@ -178,11 +267,18 @@ namespace MongoDbAccess
                                    
         }
 
-        /** liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
-         *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
-         */
+    
+        /// <summary>
+        /// liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
+        /// falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantname"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
         public clsProjekt retrieveOneProjectfromDB(string projectname, string variantname, DateTime storedAtOrBefore)
         {
+           
             var result = new clsProjektDB();
             string searchstr = Projekte.calcProjektKeyDB(projectname, variantname);
 
@@ -210,7 +306,13 @@ namespace MongoDbAccess
             //        .Last();
 
             var builder = Builders<clsProjektDB>.Filter;
+                        
             var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedAtOrBefore);
+            // das folgende könnte auch gemacht werden 
+            // var filter = builder.Eq(c => c.name, searchstr) & builder.Lte(c => c.timestamp, storedAtOrBefore);
+
+            
+
             var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
 
             try
@@ -237,10 +339,471 @@ namespace MongoDbAccess
             
         }
 
-        /**
-         * prüft die Verfügbarkeit der MongoDB
-         */
-        public bool pingMongoDb()
+
+
+        /// <summary>
+        /// liest die angegebene Rollen Definition aus der Datenbank
+        /// </summary>
+        /// <param name="roleID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsRollenDefinition retrieveOneRoleFromDB(int roleID,  DateTime storedAtOrBefore)
+        {
+            var result = new clsRollenDefinitionDB();
+            
+            if (storedAtOrBefore == null)
+            {
+
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+                
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            
+            var builder = Builders<clsRollenDefinitionDB>.Filter;
+
+            var filter = builder.Eq("uid", roleID) & builder.Lte("timestamp", storedAtOrBefore);
+
+            var sort = Builders<clsRollenDefinitionDB>.Sort.Ascending("timestamp");
+
+            try
+            {
+                result = CollectionRoles.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch
+            {
+                result = null;
+            }
+
+            //TODO: rückumwandeln
+            if (result == null)
+            {
+
+                return null;
+            }
+            else
+            {
+                var currentrole = new clsRollenDefinition();
+                result.copyTo(ref currentrole);
+                return currentrole;
+            }
+
+        }
+        /// <summary>
+        /// liest die Rollendefinitionen aus der Datenbank 
+        /// </summary>
+        /// <param name="roleID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsRollen retrieveRolesFromDB(DateTime storedAtOrBefore)
+        {
+            var result = new clsRollen();
+
+            if (storedAtOrBefore == null)
+            {
+
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var prequery = CollectionRoles.AsQueryable<clsRollenDefinitionDB>()
+                            .Where(c => c.timestamp <= storedAtOrBefore)
+                            .Select(c => c.uid)
+                            .Distinct()
+                            .ToList();
+
+            foreach (int tmpUid in prequery)
+            {
+
+                clsRollenDefinition tmpRole = retrieveOneRoleFromDB(tmpUid, storedAtOrBefore);
+                if (!result.get_containsUid(tmpRole.UID))
+                {
+                    result.Add(tmpRole);
+                }
+
+                
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// liest die Kostenartdefinitionen aus der Datenbank 
+        /// </summary>
+        /// <param name="roleID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsKostenarten retrieveCostsFromDB(DateTime storedAtOrBefore)
+        {
+            var result = new clsKostenarten();
+
+            if (storedAtOrBefore == null)
+            {
+
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var prequery = CollectionCosts.AsQueryable<clsKostenartDefinitionDB>()
+                            .Where(c => c.timestamp <= storedAtOrBefore)
+                            .Select(c => c.uid)
+                            .Distinct()
+                            .ToList();
+
+            foreach (int tmpUid in prequery)
+            {
+
+                clsKostenartDefinition tmpCost = retrieveOneCostFromDB(tmpUid, storedAtOrBefore);
+                if (!result.get_containsUid(tmpCost.UID))
+                {
+                    result.Add(tmpCost);
+                }
+
+
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// liest die angegebene Kostenart aus der Datenbank 
+        /// </summary>
+        /// <param name="costID"></param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsKostenartDefinition retrieveOneCostFromDB(int costID, DateTime storedAtOrBefore)
+        {
+            var result = new clsKostenartDefinitionDB();
+
+            if (storedAtOrBefore == null)
+            {
+
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+
+            var builder = Builders<clsKostenartDefinitionDB>.Filter;
+
+            var filter = builder.Eq("uid", costID) & builder.Lte("timestamp", storedAtOrBefore);
+
+            var sort = Builders<clsKostenartDefinitionDB>.Sort.Ascending("timestamp");
+
+            try
+            {
+                result = CollectionCosts.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch
+            {
+                result = null;
+            }
+
+            //TODO: rückumwandeln
+            if (result == null)
+            {
+
+                return null;
+            }
+            else
+            {
+                var currentcost = new clsKostenartDefinition();
+                result.copyTo(ref currentcost);
+                return currentcost;
+            }
+
+        }
+
+
+        /// <summary>
+        /// holt von allen Projekt-Varianten in AlleProjekte die Write-Protections
+        /// </summary>
+        /// <param name="AlleProjekte"></param>
+        /// <returns></returns>
+        public SortedList<string, clsWriteProtectionItem> retrieveWriteProtectionsFromDB(clsProjekteAlle AlleProjekte)
+        {
+            // holt von allen Projekt-Varianten in AlleProjekte die Write-Protections
+
+            var result = new SortedList<string, clsWriteProtectionItem>();
+            var writeProtectDB = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>().Select(cDB => cDB);
+
+            foreach (clsWriteProtectionItemDB cDB in writeProtectDB)
+            {
+                string pvName = Projekte.calcProjektKey(cDB.pName, cDB.vName);
+                if (AlleProjekte.get_Containskey(pvName))
+                {
+                    var wpi = new clsWriteProtectionItem();
+                    cDB.copyTo(ref wpi);
+                    result.Add(wpi.pvName, wpi);
+                }
+            }
+            
+      
+            return result;
+        }
+
+        /// <summary>
+        /// liefert für den pName und vName das clsWriteProtectiomItem zurück
+        /// wenn es das nch nicht gibt, dann Null 
+        /// </summary>
+        /// <param name="pName"></param>
+        /// <param name="vName"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public clsWriteProtectionItem getWriteProtection(string pName, string vName, int type = 0)
+        {
+          
+            clsWriteProtectionItemDB wpItemDB = null;
+            clsWriteProtectionItem wpItem = new clsWriteProtectionItem();
+              
+            try
+            {
+               
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("type", type);
+                wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
+                //var fresult = CollectionWriteProtections.Find(filter).ToList();
+                
+                wpItemDB.copyTo(ref wpItem);
+
+                return wpItem;
+
+
+            }
+            catch (Exception)
+            {
+
+                return null;
+
+            }
+           
+        }
+
+        /// <summary>
+        /// setzt für das entsprechende Item das Flag, dass es geschützt ist 
+        /// gibt true zurück, wenn die Aktion erfolgreich war, false andernfalls
+        /// </summary>
+        /// <param name="wpItem"></param>
+        /// <returns></returns>
+        public bool setWriteProtection(clsWriteProtectionItem wpItem)
+        {
+
+            clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+
+            try
+            {
+
+                //string[] separator = new string[] {"#"};
+                //string[] tmpstr = wpItem.pvName.Split(separator,StringSplitOptions.None);
+                //string searchstr = Projekte.calcProjektKeyDB(tmpstr[0], tmpstr[1]);
+
+                string pName = Projekte.getPnameFromKey(wpItem.pvName);
+                string vName = Projekte.getVariantnameFromKey(wpItem.pvName);
+
+                string searchstr = Projekte.calcProjektKeyDB(pName,vName);
+
+                bool projAlreadyExisting = CollectionProjects.AsQueryable<clsProjektDB>()
+                         .Any(p => p.name == searchstr);
+
+                if (projAlreadyExisting)
+                {
+                    // Projekt ist in der DB in CollectionProjects enthalten
+                    // Schutz kann evt. durchgeführt werden
+
+           
+
+                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("type", wpItem.type);
+                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pName");
+
+
+                    // jetzt soll ein Update / Insert gemacht werden; 
+                    // es muss aber vorher sichergestellt sein, dass das Element verändert werden darf 
+                    // gesucht werden muss das Element mit pvName=pvname und kennung = kennung 
+                    // geschützt werden darf nur, wenn isProtected = false oder (isProtected = true und gleicher User) 
+                    // Schutz aufheben nur, wenn isProtected = true und user = <user> oder user=<admin>
+
+
+                    bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                                 .Any(wp => wp.pName == pName && wp.vName == vName && wp.type == wpItem.type);
+
+               
+                    if (alreadyExisting)
+                    {
+
+                        wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
+                        //var fresult = CollectionWriteProtections.Find(filter).ToList();
+
+                        switch (wpItemDB.isProtected)
+                        {
+                            case true:
+
+                                if (wpItemDB.userName == wpItem.userName)
+                                {
+                                    wpItemDB.copyFrom(wpItem);
+                                    var r1Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
+                                    return r1Result.IsAcknowledged;
+
+                                }
+                                else
+                                {
+                                    return false;
+                                };
+
+                            case false:
+
+                                wpItemDB.copyFrom(wpItem);
+                                var r2Result = CollectionWriteProtections.ReplaceOne(filter, wpItemDB);
+                                return r2Result.IsAcknowledged;
+
+
+                            default:
+
+                                return false;
+
+                        }
+                    }
+                    else
+                    {
+                        wpItemDB.copyFrom(wpItem);
+                        CollectionWriteProtections.InsertOne(wpItemDB);
+                        return true;
+                    }
+
+                }
+                else
+                {
+                    //   Es existiert dieses Projekt/Variante noch gar nicht in der Datenbank in CollectionProjects 
+                    //   kann also auch nicht geschützt werden 
+                    return false;
+                }
+
+            }
+            catch (Exception)
+            {
+
+                wpItemDB.copyFrom(wpItem);
+                CollectionWriteProtections.InsertOne(wpItemDB);
+                return false;
+                
+            }
+        }
+        /// <summary>
+        /// überprüft, ob der User userName für das Projekt pvname vom Typ type 
+        /// die Erlaubnis hat etwas zu verändern
+        /// </summary>
+        /// </summary>
+        /// <param name="pName"></param>
+        /// <param name="vName"></param>
+        /// <param name="userName"></param>
+        /// <param name="type"></param>
+        /// <returns>true -  es darf geändert werden
+        ///          false - es darf nicht geändert werden</returns>
+        public bool checkChgPermission(string pName, string vName, string userName, int type = 0)
+        {
+            try
+            {
+                clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+
+                var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
+                             Builders<clsWriteProtectionItemDB>.Filter.Eq("type", type);
+                //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
+
+                bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                               .Any(wp => wp.pName == pName && wp.vName == vName && wp.type == type);
+
+                if (alreadyExisting)
+                {
+
+                    wpItemDB = CollectionWriteProtections.Find(filter).ToList().Last();
+                    //var fresult = CollectionWriteProtections.Find(filter).ToList();
+                    if (wpItemDB.isProtected)
+                    {
+                        return (wpItemDB.userName == userName);   
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                 
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            catch (Exception)
+            {
+
+                return false;
+
+            }
+        }
+  
+
+        /// <summary>
+        /// löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public bool cancelWriteProtections(string user)
+        {  
+            // löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
+
+            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("userName", user) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("permanent", false) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("isProtected", true);
+
+            var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected", false).Set("lastDateReleased", DateTime.UtcNow);
+           
+            var uresult = CollectionWriteProtections.UpdateMany(filter,updatedef);
+            return uresult.IsAcknowledged;
+        }
+
+
+        /// <summary>
+        /// setzt für alle Projekt-Varianten des Users user die temporär die writeProtections
+        /// </summary>
+        /// <param name="pName"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public bool protectAllVariants(string pName, string user, bool set = true)
+        {
+            // löst von allen Projekt-Varianten des Users user die nonpermanent writeProtections
+
+            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", pName) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0) &
+                         Builders<clsWriteProtectionItemDB>.Filter.Eq("userName", user);
+
+            var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected", set).Set("lastDateSet", DateTime.UtcNow);
+
+            var uresult = CollectionWriteProtections.UpdateMany(filter, updatedef);
+            return (uresult.IsAcknowledged && uresult.ModifiedCount > 0);
+        }
+      
+        /// <summary>
+        ///  prüft die Verfügbarkeit der MongoDB
+        /// </summary>
+        /// <returns></returns>
+         public bool pingMongoDb()
         {
             bool ping;
             try
@@ -258,23 +821,75 @@ namespace MongoDbAccess
             return ping;
         }
 
-        public bool storeProjectToDB(clsProjekt projekt)
+
+        /// <summary>
+        /// speichert ein einzelnes Projekt in der Datenbank
+        /// </summary>
+        /// <param name="projekt"></param>
+        /// <returns></returns>
+        public bool storeProjectToDB(clsProjekt projekt, string userName)
         {
             try
             {
-                var projektDB = new clsProjektDB();
-                //bool ergebnis;
-                //string xx = "";
-                projektDB.copyfrom(projekt);
-                projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
+           
+                if (checkChgPermission(projekt.name, projekt.variantName, userName))
+                {
 
-                CollectionProjects.InsertOne(projektDB);
-                // alt 2.x
-                //ergebnis = !CollectionProjects.Save(projektDB).HasLastErrorMessage;
-                //return ergebnis
-                //xx = CollectionProjects.Save(projektDB).LastErrorMessage;
-                //return !CollectionProjects.Save(projektDB).HasLastErrorMessage;    
-                return true;
+                    var projektDB = new clsProjektDB();
+                    //bool ergebnis;
+                    //string xx = "";
+                    projektDB.copyfrom(projekt);
+                    projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
+
+                    CollectionProjects.InsertOne(projektDB);
+                    // alt 2.x
+                    //ergebnis = !CollectionProjects.Save(projektDB).HasLastErrorMessage;
+                    //return ergebnis
+                    //xx = CollectionProjects.Save(projektDB).LastErrorMessage;
+                    //return !CollectionProjects.Save(projektDB).HasLastErrorMessage;    
+
+                    // Projekt in der CollectionWriteProtections anlegen
+                    
+                    var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", projekt.name) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", projekt.variantName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("type",0);
+                    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pName");
+
+                    bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                                   .Any(wp => wp.pName == projekt.name && wp.vName == projekt.variantName && wp.type == 0);
+
+
+   
+                    if (!alreadyExisting)
+                    {
+                        string pvName = Projekte.calcProjektKey(projekt);
+                        clsWriteProtectionItem wpItem = new clsWriteProtectionItem(pvName, 0, userName, false, false);
+                        clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+                        wpItemDB.copyFrom(wpItem);
+                        CollectionWriteProtections.InsertOne(wpItemDB);
+                    }
+                    else
+                    {
+                        var updateFilter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", projekt.name) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", projekt.variantName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("type",0) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("userName", userName) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("permanent", false) &
+                                 Builders<clsWriteProtectionItemDB>.Filter.Eq("isProtected", true);
+
+                        var updatedef = Builders<clsWriteProtectionItemDB>.Update.Set("isProtected", false).Set("lastDateReleased", DateTime.UtcNow);
+
+                        var uresult = CollectionWriteProtections.UpdateOne(updateFilter, updatedef);
+                        return uresult.IsAcknowledged;
+                    }
+
+                    return true;
+
+                }
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception)
             {
@@ -283,7 +898,11 @@ namespace MongoDbAccess
               
                                        
         }
-
+        /// <summary>
+        /// speichert ein Projekt in der Trash-Datenbank
+        /// </summary>
+        /// <param name="projektDB"></param>
+        /// <returns></returns>
         public bool storeProjectToTrash(clsProjektDB projektDB)
         {
             try
@@ -298,95 +917,71 @@ namespace MongoDbAccess
                 return false;
             }
         }
-        //************************************/
-        // darf nicht mehr verwendet werden, weil damit keine Speicherung der TimeStamps im Papierkorb verbunden ist ... 
-        ////public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
-        ////{
 
-        ////    try
-        ////    {
-        ////        storedLatest = storedLatest.ToUniversalTime();
-        ////        storedEarliest = storedEarliest.ToUniversalTime();
-        ////        string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
-                               
-
-        ////        var dResult = CollectionProjects.DeleteMany<clsProjektDB>(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-        ////        if (dResult.DeletedCount > 0 )
-        ////            { return true; }
-        ////        else
-        ////            { return false; }
-                
-        ////    }
-        ////    catch (Exception)
-        ////    {
-                
-        ////        return false;
-        ////    }
-            
-        ////    // das folgende geht noch nicht , wer weiss warum ? 
-        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-        ////    ////CollectionProjects.DeleteMany<clsProjektDB>(query);
-            
-            
-        ////    // alt 2.x 
-        ////    //var query = Query<clsProjektDB>
-        ////    //         .Where(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
-        ////    //return !CollectionProjects.Remove(query).HasLastErrorMessage;
-        ////}
-
-        //************************************/
-        public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored)
+        
+        /// <summary>
+        /// löscht den angegebenen TimeStamp der Projekt-Variante aus der Datenbank 
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantName"></param>
+        /// <param name="stored"></param>
+        /// <returns></returns>
+        public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored, string userName)
         {
             try
             {
-                stored = stored.ToUniversalTime();
-                string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
-
-
-                var query = Query<clsProjektDB>
-                            .Where(p => (p.name == searchstr && p.timestamp == stored));
-
-                
-                var sResult = CollectionProjects.Find<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
-                
-                if (sResult == null)
+        
+                if (checkChgPermission(projectname, variantName, userName))
                 {
-                    return false;
-                }
-                else
-                {
-                    try
+                    
+                    stored = stored.ToUniversalTime();
+                    string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);   /* in der CollectionsProjects in der DB wird der Name des Projektes (wenn variantName = "") am Ende ohne # gespeichert */
+
+                    var sResult = CollectionProjects.Find<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+
+                    if (sResult == null)
                     {
-                        clsProjektDB projektDB = sResult.Single();
-                        if (storeProjectToTrash(projektDB))
+                        return false;
+                    }
+                    else
+                    {
+                        try
                         {
-                            // jetzt wird erst gelöscht 
-                            var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
+                            clsProjektDB projektDB = sResult.Single();
+                            if (storeProjectToTrash(projektDB))
+                            {
+                                // jetzt wird erst gelöscht 
+                                var dResult = CollectionProjects.DeleteOne<clsProjektDB>(p => (p.name == searchstr && p.timestamp == stored));
 
-                            if (dResult.DeletedCount > 0)
-                            { return true; }
+                                if (dResult.DeletedCount > 0)
+                                { return true; }
+                                else
+                                { return false; }
+                            }
                             else
-                            { return false; }
+                            {
+                                return false;
+                            }
+
+
                         }
-                        else
+                        catch (Exception)
                         {
                             return false;
                         }
 
-                        
                     }
-                    catch (Exception)
-                    {
-                        return false; 
-                    }
-                                      
+
+
                 }
-                
-               
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception)
             {
-                
+
                 return false;
             }
             
@@ -394,6 +989,7 @@ namespace MongoDbAccess
             // alt: 2.x 
             //return !CollectionProjects.Remove(query).HasLastErrorMessage;
         }
+
         /// <summary>
         /// liest alle vorkommenden Namen ProjektName#VariantenName aus der Datenbank , die zum Zeitpunkt storedLatest auch in der Datenbank existiert haben 
         /// dabei wird ein übergebener Zeitraum berücksichtigt ... also nur Projekte, die auch im Zeitraum liegen ...
@@ -450,7 +1046,18 @@ namespace MongoDbAccess
             return result;
         }
 
-
+        /// <summary>
+        /// entweder alle Projekte im angegebenen Zeitraum 
+        /// oder aber alle Timestamps der übergebenen Projektvariante im angegeben Zeitfenster
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantName"></param>
+        /// <param name="zeitraumStart"></param>
+        /// <param name="zeitraumEnde"></param>
+        /// <param name="storedEarliest"></param>
+        /// <param name="storedLatest"></param>
+        /// <param name="onlyLatest"></param>
+        /// <returns></returns>
         public SortedList<string, clsProjekt> retrieveProjectsFromDB(string projectname, string variantName, DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedEarliest, DateTime storedLatest, bool onlyLatest)
         {
             var result = new SortedList<string, clsProjekt>();
@@ -544,7 +1151,11 @@ namespace MongoDbAccess
             return result;
         }
 
-
+        /// <summary>
+        /// liefert alle Varianten Namen eines bestimmten Projektes zurück 
+        /// </summary>
+        /// <param name="projectName"></param>
+        /// <returns></returns>
         public Collection retrieveVariantNamesFromDB(string projectName)
         {
             var result = new Collection();
@@ -574,7 +1185,10 @@ namespace MongoDbAccess
             return result;
         }
 
-        // bringt alle vorkommenden TimeStamps zurück , in absteigender Sortierung
+        /// <summary>
+        /// bringt alle in der Datenbank vorkommenden TimeStamps zurück , in absteigender Sortierung
+        /// </summary>
+        /// <returns></returns>
         public Collection retrieveZeitstempelFromDB()
         {
             var result = new Collection();
@@ -597,7 +1211,11 @@ namespace MongoDbAccess
 
 
         
-        // bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+        /// <summary>
+        /// bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+        /// </summary>
+        /// <param name="pvName"></param>
+        /// <returns></returns>
         public Collection retrieveZeitstempelFromDB(string pvName)
         {
             var result = new Collection();
@@ -619,9 +1237,14 @@ namespace MongoDbAccess
             return result;
         }   
 
-        //
-        // gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
-        //
+        /// <summary>
+        /// gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <param name="variantName"></param>
+        /// <param name="storedEarliest"></param>
+        /// <param name="storedLatest"></param>
+        /// <returns></returns>
         public SortedList<DateTime, clsProjekt> retrieveProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
         {
             var result = new SortedList<DateTime, clsProjekt>();
@@ -641,6 +1264,7 @@ namespace MongoDbAccess
             //    searchstr = projectname;
 
             var builder = Builders<clsProjektDB>.Filter;
+            
             var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedLatest);
             var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
             //var result = await collection.Find(filter).Sort(sort).ToListAsync();
@@ -667,6 +1291,205 @@ namespace MongoDbAccess
             return result;
         }
 
+        /// <summary>
+        /// speichert eine Rolle in der Datenbank; 
+        /// wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
+        /// andernfalls wird die Rolle Replaced 
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="insertNewDate"></param>
+        /// <param name="ts"></param>
+        /// <returns></returns>
+        public bool storeRoleDefinitionToDB(clsRollenDefinition role, bool insertNewDate, DateTime ts)
+        {
+            bool tmpResult = true;
+            try
+            {
+                var roleDB = new clsRollenDefinitionDB();
+                roleDB.copyFrom(role);
+
+                if (insertNewDate)
+                {
+                    roleDB.timestamp = ts;
+                    CollectionRoles.InsertOne(roleDB);
+                }
+                else
+                {
+
+                    var filter = Builders<clsRollenDefinitionDB>.Filter.Eq("uid", role.UID);
+                    var sort = Builders<clsRollenDefinitionDB>.Sort.Ascending("timestamp");
+
+                    try
+                    {
+
+                        if (CollectionRoles == null) 
+                        {
+                            CollectionRoles.InsertOne(roleDB);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                clsRollenDefinitionDB tmpRole = CollectionRoles.Find(filter).Sort(sort).ToList().Last();
+                                if (tmpRole == null)
+                                {
+                                    // existiert noch nicht 
+                                    CollectionRoles.InsertOne(roleDB);
+                                }
+                                else
+                                {
+                                    // existiert bereits , soll also ersetzt werden , aber mit dem bisherigen TimeStamp 
+                                    // und das nur, wenn es nicht identisch ist mit der bereits existierenden 
+                                    if (!tmpRole.get_isIdenticalTo(roleDB))
+                                    {
+                                        roleDB.timestamp = tmpRole.timestamp;
+
+                                        var builder = Builders<clsRollenDefinitionDB>.Filter;
+                                        filter = builder.Eq("uid", role.UID) & builder.Eq("timestamp", tmpRole.timestamp);
+
+                                        var rResult = CollectionRoles.ReplaceOne(filter, roleDB);
+                                        tmpResult = rResult.IsAcknowledged;
+
+                                    }
+                                    else
+                                    {
+                                        // nichts tun
+                                    }
+
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                
+                                 // es gibt noch überhaupt keine Elemente in der Collection 
+                                CollectionRoles.InsertOne(roleDB);
+                            }
+
+
+
+                        }
+
+
+
+                    }
+                    catch (Exception)
+                    {
+
+                        tmpResult = false;
+                    }
+                 }       
+                                
+                                
+            }
+            catch (Exception)
+            {
+                tmpResult =  false;
+            }
+
+            return tmpResult;
+        }
+
+        /// <summary>
+        /// speichert eine Kostenart in der Datenbank; 
+        /// wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
+        /// andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="insertNewDate"></param>
+        /// <param name="ts"></param>
+        /// <returns></returns>
+        public bool storeCostDefinitionToDB(clsKostenartDefinition cost, bool insertNewDate, DateTime ts)
+        {
+            bool tmpResult = true;
+            try
+            {
+                var costDefDB = new clsKostenartDefinitionDB();
+                costDefDB.copyFrom(cost);
+
+                if (insertNewDate)
+                {
+                    costDefDB.timestamp = ts;
+                    CollectionCosts.InsertOne(costDefDB);
+                }
+                else
+                {
+
+                    var filter = Builders<clsKostenartDefinitionDB>.Filter.Eq("uid", cost.UID);
+                    var sort = Builders<clsKostenartDefinitionDB>.Sort.Ascending("timestamp");
+
+                    try
+                    {
+
+                        if (CollectionCosts == null)
+                        {
+                            // existiert noch nicht 
+                            CollectionCosts.InsertOne(costDefDB);
+                        }
+                        else
+                        {
+
+                            try
+                            {
+                                clsKostenartDefinitionDB tmpCost = CollectionCosts.Find(filter).Sort(sort).ToList().Last();
+                                if (tmpCost == null)
+                                {
+                                    // existiert noch nicht 
+                                    CollectionCosts.InsertOne(costDefDB);
+                                }
+                                else
+                                {
+                                    // existiert bereits , soll also ersetzt werden , dann mit dem bisherigen TimeStamp 
+                                    // aber nur, wenn es nicht identisch ist mit der bereits existierenden 
+                                    if (!tmpCost.get_isIdenticalTo(costDefDB))
+                                    {
+                                        costDefDB.timestamp = tmpCost.timestamp;
+
+                                        var builder = Builders<clsKostenartDefinitionDB>.Filter;
+                                        filter = builder.Eq("uid", cost.UID) & builder.Eq("timestamp", tmpCost.timestamp);
+
+                                        var rResult = CollectionCosts.ReplaceOne(filter, costDefDB);
+                                        tmpResult = rResult.IsAcknowledged;
+
+                                    }
+                                    else
+                                    {
+                                        // nichts tun
+                                    }
+
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                // existiert noch nicht 
+                                CollectionCosts.InsertOne(costDefDB);
+                            }
+
+                        }
+                                                
+                    }
+                    catch (Exception)
+                    {
+
+                        tmpResult = false;
+                    }
+                }
+
+
+            }
+            catch (Exception)
+            {
+                tmpResult = false;
+            }
+
+            return tmpResult;
+        }
+
+
+        /// <summary>
+        /// Speichern einen Multiprojekt-Szenarios in der Datenbank
+        /// </summary>
+        /// <param name="c"> - Constellation</param>
+        /// <returns></returns>
         public bool storeConstellationToDB(clsConstellation c)
         {
 
@@ -708,6 +1531,11 @@ namespace MongoDbAccess
            
         }
 
+        /// <summary>
+        /// Speichern einen Multiprojekt-Szenarios in der Trash-Datenbank
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
         public bool storeConstellationToTrash(clsConstellation c)
         {
             try
@@ -742,6 +1570,12 @@ namespace MongoDbAccess
                 return false;
             }
         }
+
+        /// <summary>
+        /// Löschen der übergebenen Constellation aus der Datenbank
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
         public bool removeConstellationFromDB(clsConstellation c)
         {
             
@@ -775,109 +1609,218 @@ namespace MongoDbAccess
            
         }
 
-        //
-        // benennt alle Projekte mit Namen oldName um
-        // aber nur, wenn der neue Name nicht schon in der Datenbank existiert 
-        public bool renameProjectsInDB(string oldName, String newName)
+      
+        /// <summary>
+        /// nennt alle Projekte mit Namen oldName um
+        /// aber nur, wenn der neue Name nicht schon in der Datenbank existiert 
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        /// <returns></returns>
+        public bool renameProjectsInDB(string oldName, String newName, string userName)
         {
             if (projectNameAlreadyExists(newName, "", DateTime.Now))
             {
                 return false;
             }
-            
+            else
             {
 
                 try
                 {
-                    string oldFullName;
-                    string newFullName;
-                    bool ok = true;
-                    // erstmal das Projekt selber umbenennen , falls es in der () Variante überhaupt existiert ..
-                    if (projectNameAlreadyExists(oldName, "", DateTime.Now))
-                    {
-                        oldFullName = Projekte.calcProjektKeyDB(oldName, "");
-                        newFullName = Projekte.calcProjektKeyDB(newName, "");
-
-                        // neu 3.0 
-                        var filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
-                        var update = Builders<clsProjektDB>.Update
-                                            .Set("name", newFullName);
-
-                        var uResult = CollectionProjects.UpdateMany(filter, update);
-                        ok = (uResult.ModifiedCount > 0); 
-                        
-                    }
+                    //string oldpvName;
+                    //string newpvName;
+                    bool chkOk = true;
                     
+                    // hier wird überprüft, ob das Projekt selbst
+                    // und auch keine der Varianten von einem anderen User schreibgeschützt ist
 
-                    // jetzt 
-                    // alle Varianten des Projektes umbenennen , wenn immer noch ok 
+                    chkOk = checkChgPermission(oldName, "", userName);
+                                 
+                    Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
 
-                    if (ok)
+                    foreach (string vName in listOfVariants)
                     {
-                        Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
+                        if (!chkOk)
+                        { break; }
+                       
+                        chkOk = chkOk && checkChgPermission(oldName, vName, userName);
+                       
+                    }                  
+            
 
+                    // Projekt und seine Varianten können umbenannt werden
 
-                        foreach (string vName in listOfVariants)
+                    if (chkOk)
+                    {
+                        if (protectAllVariants(oldName, userName))
                         {
-                            oldFullName = Projekte.calcProjektKeyDB(oldName, vName);
-                            newFullName = Projekte.calcProjektKeyDB(newName, vName);
+
+
+                        string oldFullName;
+                        string newFullName;
+                        bool ok = false;
+
+                        // erstmal das Projekt selber umbenennen , falls es in der () Variante überhaupt existiert ..
+                        if (projectNameAlreadyExists(oldName, "", DateTime.Now))
+                        {
+                            oldFullName = Projekte.calcProjektKeyDB(oldName, "");
+                            newFullName = Projekte.calcProjektKeyDB(newName, "");
 
                             // neu 3.0 
                             var filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
                             var update = Builders<clsProjektDB>.Update
-                                            .Set("name", newFullName);
+                                                .Set("name", newFullName);
 
                             var uResult = CollectionProjects.UpdateMany(filter, update);
-                            ok = ok & (uResult.ModifiedCount > 0); 
-                            
-                        }
-
-                       // jetzt müssen die Constellations aktualisiert werden ...
-
-                       var constellationsDB = CollectionConstellations.AsQueryable<clsConstellationDB>()
-                                 .Select(cDB => cDB);
-
-                       int zaehler = 0;
-                       int gesamt = 0; 
-
-                       foreach (clsConstellationDB cDB in constellationsDB)
-                        {
-                            var c = new clsConstellation();
-                            cDB.copyto(ref c);
-                            int a = c.renameProject(oldName, newName);
-
-                           if (a>0)
-                           {
-                               clsConstellationDB chgcDB = new clsConstellationDB();
-                               chgcDB.copyfrom(c);
-                               // mit Id=null kann kein Replace gemacht werden  
-                               chgcDB.Id = cDB.Id;
-
-                               var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", chgcDB.constellationName);
-                               var rResult = CollectionConstellations.ReplaceOne(filter, chgcDB);
-                               //ok = ok & (rResult.ModifiedCount > 0);
-                               ok = ok & rResult.IsAcknowledged;
-
-                               zaehler = zaehler + 1;
-                               gesamt = gesamt + a; 
-                           }
-                            
+                            ok = (uResult.ModifiedCount > 0);
 
                         }
-                       // Énde Aktualisierung Constellations ...
 
 
-                       // dann müssen noch die Dependencies aktualisiert werden ...
+                        // jetzt 
+                        // alle Varianten des Projektes umbenennen , wenn immer noch ok 
 
                         if (ok)
-                        { return true; }
+                        {
+                            //Collection listOfVariants = retrieveVariantNamesFromDB(oldName);
+
+
+                            foreach (string vName in listOfVariants)
+                            {
+                                oldFullName = Projekte.calcProjektKeyDB(oldName, vName);
+                                newFullName = Projekte.calcProjektKeyDB(newName, vName);
+
+                                // neu 3.0 
+                                var filter = Builders<clsProjektDB>.Filter.Eq("name", oldFullName);
+                                var update = Builders<clsProjektDB>.Update
+                                                .Set("name", newFullName);
+
+                                var uResult = CollectionProjects.UpdateMany(filter, update);
+                                ok = ok & (uResult.ModifiedCount > 0);
+
+                            }
+
+                            // jetzt müssen die Constellations aktualisiert werden ...
+
+                            var constellationsDB = CollectionConstellations.AsQueryable<clsConstellationDB>()
+                                      .Select(cDB => cDB);
+
+                            int zaehler = 0;
+                            int gesamt = 0;
+
+                            foreach (clsConstellationDB cDB in constellationsDB)
+                            {
+                                var c = new clsConstellation();
+                                cDB.copyto(ref c);
+                                int a = c.renameProject(oldName, newName);
+
+                                if (a > 0)
+                                {
+                                    clsConstellationDB chgcDB = new clsConstellationDB();
+                                    chgcDB.copyfrom(c);
+                                    // mit Id=null kann kein Replace gemacht werden  
+                                    chgcDB.Id = cDB.Id;
+
+                                    var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", chgcDB.constellationName);
+                                    var rResult = CollectionConstellations.ReplaceOne(filter, chgcDB);
+                                    //ok = ok & (rResult.ModifiedCount > 0);
+                                    ok = ok & rResult.IsAcknowledged;
+
+                                    zaehler = zaehler + 1;
+                                    gesamt = gesamt + a;
+                                }
+
+
+                            }
+                            // Énde Aktualisierung Constellations ...
+
+
+                            // dann müssen noch die Dependencies aktualisiert werden ...
+
+                            // CollectionWriteProtection muss aktualisiert werden
+                            try
+                            {
+
+                                if (ok)
+                                {
+                                    bool alreadyExisting = CollectionWriteProtections.AsQueryable<clsWriteProtectionItemDB>()
+                                        .Any(wp => wp.pName == oldName && wp.vName == "" && wp.type == 0);
+
+
+                                    if (alreadyExisting)
+                                    {
+
+                                        // neu 3.0 
+                                        var wpfilter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", oldName) &
+                                                                    Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", "") &
+                                                                    Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0);
+                                        var wpUpdate = Builders<clsWriteProtectionItemDB>.Update.Set("pName", newName);
+
+
+                                        var result = CollectionWriteProtections.UpdateOne(wpfilter, wpUpdate);
+                                        ok = ok & (result.ModifiedCount > 0);
+
+                                        foreach (string vName in listOfVariants)
+                                        {
+                                            //oldFullName = Projekte.calcProjektKey(oldName, vName);
+                                            //newFullName = Projekte.calcProjektKey(newName, vName);
+
+                                            // neu 3.0 
+                                            var filter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", oldName) &
+                                                Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", vName) &
+                                                Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0);
+                                            var update = Builders<clsWriteProtectionItemDB>.Update.Set("pName", newName);
+
+                                            var vresult = CollectionWriteProtections.UpdateOne(filter, update);
+                                            ok = ok & (vresult.ModifiedCount > 0);
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
+                                        clsWriteProtectionItem wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(newName, ""), 0, userName, false, false);
+                                        wpItemDB.copyFrom(wpItem);
+                                        CollectionWriteProtections.InsertOne(wpItemDB);
+
+                                        foreach (string vName in listOfVariants)
+                                        {
+                                              // neu 3.0 
+
+                                            wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(newName, vName), 0, userName, false, false);
+                                            wpItemDB = new clsWriteProtectionItemDB();
+                                            wpItemDB.copyFrom(wpItem);
+                                            CollectionWriteProtections.InsertOne(wpItemDB);
+                                           
+                                        }
+                                    }
+                                }               
+                        
+                            }
+
+                            catch (Exception)
+                            {
+                                ok = false;
+                            }
+
+                            if (ok)
+                            { return true; }
+                            else
+                            { return false; }
+
+                        }
                         else
                         { return false; }
-                        
-                    }
+
+                        }   // hier ist if (protectAllVariants) zu Ende
+                        else
+                        { return false; }
+
+                    }   // hier ist if(chkOK) zu Ende
                     else
-                    { return false;  }
-                    
+                    { return false; }  
+              
                 }
                 catch (Exception)
                 {
@@ -889,6 +1832,11 @@ namespace MongoDbAccess
             // return true;
         }
 
+        /// <summary>
+        /// Alle MultiprojektSzenarios (Constellations) aus der Datenbank holen 
+        /// Das Ergebnis dieser Funktion ist eine Liste (string, clsConstellation) 
+        /// </summary>
+        /// <returns></returns>
         public clsConstellations retrieveConstellationsFromDB()
         {
             var result = new clsConstellations();
@@ -908,7 +1856,11 @@ namespace MongoDbAccess
         }
 
 
-        // * speichert Dependencies in DB 
+        /// <summary>
+        /// speichert Dependencies in DB 
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
         public bool storeDependencyofPToDB(clsDependenciesOfP d)
         {
 
@@ -957,6 +1909,11 @@ namespace MongoDbAccess
             //return !CollectionDependencies.Save(depDB).HasLastErrorMessage;
         }
 
+        /// <summary>
+        /// Alle Abhängigkeiten aus der Datenbank lesen
+        /// und als Ergebnis ein Liste von Abhängigkeiten zurückgeben
+        /// </summary>
+        /// <returns></returns>
         public clsDependencies  retrieveDependenciesFromDB()
         {
             var result = new clsDependencies();
@@ -976,8 +1933,12 @@ namespace MongoDbAccess
             return result;
         }
 
-        /** liest einen bestimmten Filter aus der DB               */
-
+       
+        /// <summary>
+        /// liest einen bestimmten Filter aus der DB  
+        /// </summary>
+        /// <param name="filtername"></param>
+        /// <returns></returns>
         public clsFilter retrieveOneFilterfromDB(string filtername)
         {
             var result = new clsFilterDB();
@@ -1005,8 +1966,12 @@ namespace MongoDbAccess
             return filter;
         }
 
-        /** speichert einen Filter mit Namen 'name' in der Datenbank*/
-
+       /// <summary>
+        /// speichert einen Filter mit Namen 'name' in der Datenbank
+       /// </summary>
+       /// <param name="ptFilter"></param>
+       /// <param name="selfilter"></param>
+       /// <returns></returns>
         public bool storeFilterToDB(clsFilter ptFilter, Boolean selfilter)
         {
 
@@ -1051,8 +2016,12 @@ namespace MongoDbAccess
             //filterDB.Id = ptFilter.name;
             //return !CollectionFilter.Save(filterDB).HasLastErrorMessage;
         }
-        /** löscht einen bestimmten Filter aus der Datenbank */
-
+        
+        /// <summary>
+        /// löscht einen bestimmten Filter aus der Datenbank
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         public bool removeFilterFromDB(clsFilter filter)
         {
 
@@ -1082,7 +2051,11 @@ namespace MongoDbAccess
             //return !CollectionFilter.Remove(query).HasLastErrorMessage;
         }
 
-        /** liest alle Filter aus der Datenbank */
+        /// <summary>
+        /// liest alle Filter aus der Datenbank 
+        /// </summary>
+        /// <param name="selfilter"></param>
+        /// <returns></returns>
         public SortedList<String, clsFilter> retrieveAllFilterFromDB(Boolean selfilter)
         {
             var result = new SortedList<String, clsFilter>();

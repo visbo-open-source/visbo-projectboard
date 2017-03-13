@@ -37,6 +37,7 @@ Partial Class frmSettings
         Me.lbl_schrift = New System.Windows.Forms.Label()
         Me.txtboxAbstandsEinheit = New System.Windows.Forms.ComboBox()
         Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.rdbDBLogin = New System.Windows.Forms.RadioButton()
         Me.btnProtect = New System.Windows.Forms.Button()
         Me.frmProtectField2 = New System.Windows.Forms.TextBox()
         Me.frmProtectField1 = New System.Windows.Forms.TextBox()
@@ -45,7 +46,6 @@ Partial Class frmSettings
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnLanguageExp = New System.Windows.Forms.Button()
         Me.btnLanguageImp = New System.Windows.Forms.Button()
-        Me.rdbDBLogin = New System.Windows.Forms.RadioButton()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
@@ -149,7 +149,7 @@ Partial Class frmSettings
         Me.txtboxLanguage.Name = "txtboxLanguage"
         Me.txtboxLanguage.Size = New System.Drawing.Size(83, 21)
         Me.txtboxLanguage.TabIndex = 38
-        Me.txtboxLanguage.Text = "deutsch"
+        Me.txtboxLanguage.Text = "Original"
         '
         'lblLanguage
         '
@@ -190,12 +190,12 @@ Partial Class frmSettings
         'txtboxAbstandsEinheit
         '
         Me.txtboxAbstandsEinheit.FormattingEnabled = True
-        Me.txtboxAbstandsEinheit.Items.AddRange(New Object() {"Tagen", "Wochen", "Monaten"})
+        Me.txtboxAbstandsEinheit.Items.AddRange(New Object() {"Days", "Weeks", "Months"})
         Me.txtboxAbstandsEinheit.Location = New System.Drawing.Point(183, 28)
         Me.txtboxAbstandsEinheit.Name = "txtboxAbstandsEinheit"
         Me.txtboxAbstandsEinheit.Size = New System.Drawing.Size(83, 21)
         Me.txtboxAbstandsEinheit.TabIndex = 25
-        Me.txtboxAbstandsEinheit.Text = "Tagen"
+        Me.txtboxAbstandsEinheit.Text = "Days"
         '
         'TabPage2
         '
@@ -214,6 +214,16 @@ Partial Class frmSettings
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "Schutz"
         Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'rdbDBLogin
+        '
+        Me.rdbDBLogin.AutoSize = True
+        Me.rdbDBLogin.Location = New System.Drawing.Point(82, 6)
+        Me.rdbDBLogin.Name = "rdbDBLogin"
+        Me.rdbDBLogin.Size = New System.Drawing.Size(69, 17)
+        Me.rdbDBLogin.TabIndex = 39
+        Me.rdbDBLogin.Text = "DB Login"
+        Me.rdbDBLogin.UseVisualStyleBackColor = True
         '
         'btnProtect
         '
@@ -287,16 +297,6 @@ Partial Class frmSettings
         Me.btnLanguageImp.Text = "Importieren"
         Me.btnLanguageImp.UseVisualStyleBackColor = True
         '
-        'rdbDBLogin
-        '
-        Me.rdbDBLogin.AutoSize = True
-        Me.rdbDBLogin.Location = New System.Drawing.Point(82, 6)
-        Me.rdbDBLogin.Name = "rdbDBLogin"
-        Me.rdbDBLogin.Size = New System.Drawing.Size(69, 17)
-        Me.rdbDBLogin.TabIndex = 39
-        Me.rdbDBLogin.Text = "DB Login"
-        Me.rdbDBLogin.UseVisualStyleBackColor = True
-        '
         'frmSettings
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -331,7 +331,6 @@ Partial Class frmSettings
     Friend WithEvents frmProtectField2 As System.Windows.Forms.TextBox
     Friend WithEvents frmProtectField1 As System.Windows.Forms.TextBox
     Friend WithEvents lblProtectField2 As System.Windows.Forms.Label
-    Friend WithEvents txtboxLanguage As System.Windows.Forms.ComboBox
     Friend WithEvents lblLanguage As System.Windows.Forms.Label
     Friend WithEvents TabPage4 As System.Windows.Forms.TabPage
     Friend WithEvents Label1 As System.Windows.Forms.Label
@@ -339,4 +338,5 @@ Partial Class frmSettings
     Friend WithEvents btnLanguageImp As System.Windows.Forms.Button
     Friend WithEvents btnChangeLanguage As System.Windows.Forms.Button
     Friend WithEvents rdbDBLogin As System.Windows.Forms.RadioButton
+    Public WithEvents txtboxLanguage As System.Windows.Forms.ComboBox
 End Class

@@ -2,7 +2,34 @@
 
     Public calledfrom As String
 
+    Private Sub languageSettings()
+
+        If awinSettings.englishLanguage Then
+            shwProjectLine.Text = "Projectline"
+            notStrictly.Text = "one element in Timespan: show all other as well"
+            useOriginalNames.Text = "use Original Names"
+            shwAmpeln.Text = "Traffic-Lights"
+            filterEmptyProjects.Text = "filter empty Projects"
+            shwPhaseText.Text = "annotate Phase-Name"
+            shwPhaseDate.Text = "annotate Phase-Date"
+            useAbbrev.Text = "use Abbreviation"
+            ShwMilestoneText.Text = "annotate Milestone-Name"
+            ShwMilestoneDate.Text = "annotate Milestone-Name"
+            KwInMilestone.Text = "annotate CW in Milestone"
+            shwVerticals.Text = "draw vertical Lines"
+            shwHorizontals.Text = "draw horizontal Lines"
+            shwLegend.Text = "create Legend"
+            allOnOnePage.Text = "all-on-1-Page"
+            sortiertNachDauer.Text = "sorted by Duration"
+            shwExtendedMode.Text = "Extended Mode"
+            Me.Text = "Settings"
+        End If
+
+    End Sub
+
     Private Sub frmMppSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Call languageSettings()
 
         With awinSettings
             shwProjectLine.Checked = .mppShowProjectLine

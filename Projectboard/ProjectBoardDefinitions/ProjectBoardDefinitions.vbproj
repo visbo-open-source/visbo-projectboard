@@ -47,6 +47,9 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MongoDB.Bson">
+      <HintPath>..\MongoDbAccess\CSharpDriver\MongoDB.Bson.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -67,21 +70,32 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsBewertungDB.vb" />
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
+    <Compile Include="clsHierarchyDB.vb" />
+    <Compile Include="clsHierarchyNodeDB.vb" />
+    <Compile Include="clsKostenartDB.vb" />
+    <Compile Include="clsKostenartDefinitionDB.vb" />
     <Compile Include="clsLicences.vb" />
     <Compile Include="clsListOfCostAndRoles.vb" />
     <Compile Include="clsOpenXML.vb" />
+    <Compile Include="clsPhaseDB.vb" />
     <Compile Include="clsPPTShapes.vb" />
     <Compile Include="clsAddElementRules.vb" />
     <Compile Include="clsAddElementRuleItem.vb" />
     <Compile Include="clsAddElements.vb" />
     <Compile Include="clsFilterDB.vb" />
+    <Compile Include="clsWriteProtectionItem.vb" />
+    <Compile Include="clsWriteProtectionItemDB.vb" />
     <Compile Include="clsReport.vb" />
     <Compile Include="clsReportAll.vb" />
     <Compile Include="clsReportMessages.vb" />
+    <Compile Include="clsResultDB.vb" />
     <Compile Include="clsRiskChance.vb" />
+    <Compile Include="clsRolleDB.vb" />
+    <Compile Include="clsRollenDefinitionDB.vb" />
     <Compile Include="clsVisboZustaende.vb" />
     <Compile Include="clsHierarchy.vb" />
     <Compile Include="clsHierarchyNode.vb" />
@@ -134,6 +148,7 @@
     <Compile Include="clsRollen.vb" />
     <Compile Include="clsRollenDefinition.vb" />
     <Compile Include="clsVerknuepfung.vb" />
+    <Compile Include="clsWriteProtections.vb" />
     <Compile Include="frmMppSettings.Designer.vb">
       <DependentUpon>frmMppSettings.vb</DependentUpon>
     </Compile>
@@ -152,10 +167,22 @@
     <Compile Include="frmOptimizeKPI.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmOutputWindow.Designer.vb">
+      <DependentUpon>frmOutputWindow.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmOutputWindow.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmPhaseInformation.Designer.vb">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
     </Compile>
     <Compile Include="frmPhaseInformation.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmProjectInfo1.Designer.vb">
+      <DependentUpon>frmProjectInfo1.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProjectInfo1.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmRemConst+DBFilter.Designer.vb">
@@ -271,8 +298,14 @@
     <EmbeddedResource Include="frmOptimizeKPI.resx">
       <DependentUpon>frmOptimizeKPI.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmOutputWindow.resx">
+      <DependentUpon>frmOutputWindow.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmPhaseInformation.resx">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmProjectInfo1.resx">
+      <DependentUpon>frmProjectInfo1.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmRemConst+DBFilter.resx">
       <DependentUpon>frmRemConst+DBFilter.vb</DependentUpon>

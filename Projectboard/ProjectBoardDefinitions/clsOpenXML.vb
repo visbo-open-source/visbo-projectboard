@@ -462,7 +462,7 @@ Public Class clsOpenXML
                         Dim newRoleDef As New clsRollenDefinition
                         newRoleDef.name = roleXML.resourceName
                         newRoleDef.farbe = RGB(120, 120, 120)
-                        newRoleDef.Startkapa = 20
+                        newRoleDef.defaultKapa = 20
 
                         ' OvertimeRate in Tagessatz umrechnen
                         newRoleDef.tagessatzExtern = 780

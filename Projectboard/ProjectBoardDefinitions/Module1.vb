@@ -43,7 +43,10 @@ Public Module Module1
 
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
     Public repMessages As clsReportMessages
-   
+
+    'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
+    Public menuMessages As clsReportMessages
+
     
     'Definitionen zum Schreiben eines Logfiles
     Public xlsLogfile As Excel.Workbook = Nothing
@@ -71,6 +74,14 @@ Public Module Module1
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
+
+    ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
+    ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
+    ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
+    Public dbCacheProjekte As New clsProjekteAlle
+
+    ' die globale Variable für die Write Protections
+    Public writeProtections As New clsWriteProtections
 
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
@@ -128,7 +139,7 @@ Public Module Module1
     Public formMilestone As New frmMilestoneInformation
     Public formStatus As New frmStatusInformation
     Public formPhase As New frmPhaseInformation
-
+    Public formProjectInfo1 As frmProjectInfo1 = Nothing
 
 
     ' variable gibt an, zu welchem Objekt-Rolle (Rolle, Kostenart, Ergebnis, ..)  der Röntgen Blick gezeigt wird 
@@ -198,6 +209,27 @@ Public Module Module1
 
    
     Public Const maxProjektdauer As Integer = 60
+
+
+    ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
+    ' 0: alphabetisch nach Name
+    ' 1: custom tfzeile 
+    ' 2: custom Liste
+    ' 3: BU, ProjektStart, Name
+    ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
+    Public Enum ptSortCriteria
+        alphabet = 0
+        customTF = 1
+        customListe = 2
+        buStartName = 3
+        formel = 4
+    End Enum
+
+    
+    Public Enum ptWriteProtectionType
+        project = 0
+        scenario = 1
+    End Enum
 
     Public Enum ptSzenarioConsider
         all = 0
@@ -378,6 +410,26 @@ Public Module Module1
         filterAuswahl = 9
         reportBHTC = 10
         sessionFilterDefinieren = 11
+        setWriteProtection = 12
+        unsetWriteProtection = 13
+    End Enum
+
+    Public Enum PTProtectedMode
+        noProtection = 0
+        byOther = 1
+        byMe = 2
+    End Enum
+
+    Public Enum PTLeadOrDependency
+        none = 0
+        lead = 1
+        dependent = 2
+    End Enum
+
+    Public Enum PTTreeNodeTyp
+        project = 0
+        pVariant = 1
+        timestamp = 2
     End Enum
     Public Enum PTlicense
         swimlanes = 0
@@ -410,7 +462,7 @@ Public Module Module1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(21, 3) As Double
+    Public frmCoord(22, 3) As Double
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
     Public Enum PTfrm
@@ -436,6 +488,7 @@ Public Module Module1
         phaseInfo = 19
         createVariant = 20
         listInfo = 21
+        projInfoPL = 22
     End Enum
 
     Public Enum PTpinfo
@@ -463,6 +516,7 @@ Public Module Module1
         deleteV = 7
         chgInSession = 8
         delAllExceptFromDB = 9
+        setWriteProtection = 10
     End Enum
 
     ''' <summary>
@@ -529,10 +583,12 @@ Public Module Module1
                                          New CultureInfo("en-US"), _
                                          New CultureInfo("fr-FR"), _
                                          New CultureInfo("es-ES")}
-    ' aktuell verwendete Sprache
+    ' aktuell verwendete Sprache für reports
     '
     Public repCult As CultureInfo
 
+    ' aktuell verwendete Sprache für Menu Strukturen 
+    Public menuCult As CultureInfo
     '
     '
     ' Diagramm-Typ kann sein:
@@ -1493,7 +1549,7 @@ Public Module Module1
         Dim i As Integer
         Dim chtobj As Excel.ChartObject
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
@@ -1528,7 +1584,7 @@ Public Module Module1
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
-        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
             Dim found As Boolean
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
@@ -1570,7 +1626,7 @@ Public Module Module1
 
 
 
-        With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
@@ -1681,7 +1737,7 @@ Public Module Module1
         ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
 
         If selectedProjekte.Count > 0 Then
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             ReDim shpArray(selectedProjekte.Count - 1)
 
             For Each kvp In selectedProjekte.Liste
@@ -1689,7 +1745,7 @@ Public Module Module1
                 hproj = kvp.Value
                 i = i + 1
                 Try
-                    shpElement = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpElement = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
                     shpArray(i - 1) = shpElement.Name
 
                 Catch ex As Exception
@@ -1713,8 +1769,8 @@ Public Module Module1
     ''' <remarks></remarks>
     Sub awinDeSelect()
         Dim srow As Integer = 1
-        Dim hziel As Integer
-        Dim vziel As Integer
+        'Dim hziel As Integer
+        'Dim vziel As Integer
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -1729,34 +1785,6 @@ Public Module Module1
             End If
 
         End If
-
-
-
-        '
-        ' das folgende selektiert die Zelle in der Mitte des aktuell gezeigten Fensters
-        ' das verhindert, daß sich plötzlich der Fenster Ausschnitt verändert
-        '
-        Try
-            With appInstance.ActiveWindow
-                hziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
-                vziel = CInt((.VisibleRange.Top + .VisibleRange.Height / 2) / boxHeight)
-                If vziel < 2 Then
-                    vziel = 2
-                End If
-            End With
-
-            With appInstance.ActiveSheet
-                '.Cells(2, hziel).Select()
-                .Cells(vziel, hziel).Select()
-            End With
-        Catch ex As Exception
-
-            With appInstance.ActiveSheet
-                .Cells(2, 20).Select()
-            End With
-
-        End Try
-
 
 
         appInstance.EnableEvents = formerEE
@@ -1935,7 +1963,7 @@ Public Module Module1
         End Select
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
 
 
@@ -1980,7 +2008,7 @@ Public Module Module1
 
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             If pName = "" Then
                 For Each shpElement In worksheetShapes
@@ -2585,86 +2613,89 @@ Public Module Module1
 
     End Function
 
-    ''' <summary>
-    ''' erzeugt die monatlichen Budget Werte für ein Projekt
-    ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <remarks></remarks>
 
-    Public Sub awinCreateBudgetWerte(ByRef hproj As clsProjekt)
+    ' '' Änderung tk - das wird nicht mehr benötigt - budgetwerte wird jetzt immer berechnet
+    '' ''' <summary>
+    '' ''' erzeugt die monatlichen Budget Werte für ein Projekt
+    '' ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
+    '' ''' </summary>
+    '' ''' <param name="hproj"></param>
+    '' ''' <remarks></remarks>
 
-
-        Dim costValues() As Double, budgetValues() As Double
-        Dim curBudget As Double, avgbudget As Double
-
-        ' Ergänzung am 26.5.14: wenn hproj in den Längen der Bedarfe Arrays nicht konsistent ist: 
-        ' anpassen 
-        If Not hproj.isConsistent Then
-            Call hproj.syncXWertePhases()
-        End If
-
-        costValues = hproj.getGesamtKostenBedarf
-        ReDim budgetValues(costValues.Length - 1)
-
-        curBudget = hproj.Erloes
-        avgbudget = curBudget / costValues.Length
-
-        If curBudget > 0 Then
-            If costValues.Sum > 0 Then
-                Dim pMarge As Double = hproj.ProjectMarge
-                For i = 0 To costValues.Length - 1
-                    budgetValues(i) = costValues(i) * (1 + pMarge)
-                Next
-            Else
-                For i = 0 To costValues.Length - 1
-                    budgetValues(i) = avgbudget
-                Next
-            End If
-        End If
+    'Public Sub awinCreateBudgetWerte(ByRef hproj As clsProjekt)
 
 
-        hproj.budgetWerte = budgetValues
+    '    Dim costValues() As Double, budgetValues() As Double
+    '    Dim curBudget As Double, avgbudget As Double
+
+    '    ' Ergänzung am 26.5.14: wenn hproj in den Längen der Bedarfe Arrays nicht konsistent ist: 
+    '    ' anpassen 
+    '    If Not hproj.isConsistent Then
+    '        Call hproj.syncXWertePhases()
+    '    End If
+
+    '    costValues = hproj.getGesamtKostenBedarf
+    '    ReDim budgetValues(costValues.Length - 1)
+
+    '    curBudget = hproj.Erloes
+    '    avgbudget = curBudget / costValues.Length
+
+    '    If curBudget > 0 Then
+    '        If costValues.Sum > 0 Then
+    '            Dim pMarge As Double = hproj.ProjectMarge
+    '            For i = 0 To costValues.Length - 1
+    '                budgetValues(i) = costValues(i) * (1 + pMarge)
+    '            Next
+    '        Else
+    '            For i = 0 To costValues.Length - 1
+    '                budgetValues(i) = avgbudget
+    '            Next
+    '        End If
+    '    End If
 
 
-    End Sub
-
-    ''' <summary>
-    ''' aktualisiert die Budget werte , wobei die Charakteristik erhalten bleibt 
-    ''' Vorbedingung ist, daß das bisherige Budget > 0 Null ist 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <param name="newBudget">Gesamt Wert des neuen Budgets</param>
-    ''' <remarks></remarks>
-    Public Sub awinUpdateBudgetWerte(ByRef hproj As clsProjekt, ByVal newBudget As Double)
+    '    hproj.budgetWerte = budgetValues
 
 
+    'End Sub
 
-        Dim curValues() As Double, budgetValues() As Double
-        Dim oldBudget As Double
-        Dim faktor As Double
+    ' nicht mehr notwendig, budgetWerte ist jetzt readonly Eigenschaft ... 
+    '' ''' <summary>
+    '' ''' aktualisiert die Budget werte , wobei die Charakteristik erhalten bleibt 
+    '' ''' Vorbedingung ist, daß das bisherige Budget > 0 Null ist 
+    '' ''' </summary>
+    '' ''' <param name="hproj"></param>
+    '' ''' <param name="newBudget">Gesamt Wert des neuen Budgets</param>
+    '' ''' <remarks></remarks>
+    ''Public Sub awinUpdateBudgetWerte(ByRef hproj As clsProjekt, ByVal newBudget As Double)
 
-        curValues = hproj.budgetWerte
-        ReDim budgetValues(curValues.Length - 1)
-        oldBudget = curValues.Sum
 
-        If oldBudget = 0 Then
-            Throw New Exception("altes Budget darf beim Update nicht Null sein")
-        Else
-            If newBudget <= 0 Then
-                ' budgetvalues ist bereits auf Null gesetzt  
-            Else
-                faktor = newBudget / oldBudget
-                For i = 0 To curValues.Length - 1
-                    budgetValues(i) = curValues(i) * faktor
-                Next
-            End If
 
-        End If
+    ''    Dim curValues() As Double, budgetValues() As Double
+    ''    Dim oldBudget As Double
+    ''    Dim faktor As Double
 
-        hproj.budgetWerte = budgetValues
+    ''    curValues = hproj.budgetWerte
+    ''    ReDim budgetValues(curValues.Length - 1)
+    ''    oldBudget = curValues.Sum
 
-    End Sub
+    ''    If oldBudget = 0 Then
+    ''        Throw New Exception("altes Budget darf beim Update nicht Null sein")
+    ''    Else
+    ''        If newBudget <= 0 Then
+    ''            ' budgetvalues ist bereits auf Null gesetzt  
+    ''        Else
+    ''            faktor = newBudget / oldBudget
+    ''            For i = 0 To curValues.Length - 1
+    ''                budgetValues(i) = curValues(i) * faktor
+    ''            Next
+    ''        End If
+
+    ''    End If
+
+    ''    hproj.budgetWerte = budgetValues
+
+    ''End Sub
 
     ''' <summary>
     ''' bereichnet zu einer gegebenen Y-Koordinate (Top) die dazugehörige Zeile in der Projekt-Tafel
@@ -3120,5 +3151,132 @@ Public Module Module1
             End Try
 
         End Try
+    End Sub
+
+
+
+    ''' <summary>
+    ''' initialisert das Logfile
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub logfileInit()
+
+        Try
+
+            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+                .Name = "logBuch"
+                CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
+                CType(.Columns(1), Excel.Range).ColumnWidth = 100
+                CType(.Columns(2), Excel.Range).ColumnWidth = 50
+                CType(.Columns(3), Excel.Range).ColumnWidth = 20
+            End With
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+    ''' <summary>
+    ''' schreibt in das logfile 
+    ''' </summary>
+    ''' <param name="text"></param>
+    ''' <param name="addOn"></param>
+    ''' <remarks></remarks>
+    Public Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+
+        Dim obj As Object
+
+        Try
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                CType(.Cells(1, 1), Excel.Range).Value = text
+                CType(.Cells(1, 2), Excel.Range).Value = addOn
+                CType(.Cells(1, 3), Excel.Range).Value = Date.Now
+            End With
+            anzFehler = anzFehler + 1
+
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+    ''' <summary>
+    ''' öffnet das LogFile
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub logfileOpen()
+
+        appInstance.ScreenUpdating = False
+
+        ' aktives Workbook merken im Variable actualWB
+        Dim actualWB As String = appInstance.ActiveWorkbook.Name
+
+        If My.Computer.FileSystem.FileExists(awinPath & logFileName) Then
+            Try
+                xlsLogfile = appInstance.Workbooks.Open(awinPath & logFileName)
+                myLogfile = appInstance.ActiveWorkbook.Name
+            Catch ex As Exception
+
+                logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf & _
+                                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+                'Call logfileSchreiben(logMessage, " ")
+                Throw New ArgumentException(logmessage)
+
+            End Try
+
+        Else
+            ' Logfile neu anlegen 
+            xlsLogfile = appInstance.Workbooks.Add
+            Call logfileInit()
+            xlsLogfile.SaveAs(awinPath & logFileName)
+            myLogfile = xlsLogfile.Name
+
+        End If
+
+        ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+        appInstance.Workbooks(actualWB).Activate()
+
+    End Sub
+
+
+
+    ''' <summary>
+    ''' schliesst  das logfile 
+    ''' </summary>  
+    ''' <remarks></remarks>
+    Public Sub logfileSchliessen()
+
+        appInstance.EnableEvents = False
+        Try
+
+            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Schließen des Logfiles")
+        End Try
+        appInstance.EnableEvents = True
+    End Sub
+
+    ''' <summary>
+    ''' zeigt die in der OutputCollection gesammelten Rückmeldungen in einem Fenster mit Scrollbar 
+    ''' </summary>
+    ''' <param name="outPutCollection"></param>
+    ''' <param name="header"></param>
+    ''' <param name="explanation"></param>
+    ''' <remarks></remarks>
+    Public Sub showOutPut(ByVal outPutCollection As Collection, ByVal header As String, ByVal explanation As String)
+        If outPutCollection.Count > 0 Then
+
+            Dim outputFormular As New frmOutputWindow
+            With outputFormular
+                .Text = header
+                .lblOutput.Text = explanation
+                .textCollection = outPutCollection
+                .ShowDialog()
+            End With
+
+        End If
     End Sub
 End Module

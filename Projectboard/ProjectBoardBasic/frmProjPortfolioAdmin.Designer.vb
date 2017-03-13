@@ -44,6 +44,8 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.storeToDBasWell = New System.Windows.Forms.CheckBox()
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
+        Me.chkbxPermanent = New System.Windows.Forms.CheckBox()
+        Me.portfolioBrowserHelp = New System.Windows.Forms.HelpProvider()
         CType(Me.versionsToKeep, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.settingsBtn, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.backToInit, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -59,6 +61,7 @@ Partial Class frmProjPortfolioAdmin
         '
         'TreeViewProjekte
         '
+        Me.TreeViewProjekte.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.TreeViewProjekte.Location = New System.Drawing.Point(22, 52)
         Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
@@ -203,6 +206,7 @@ Partial Class frmProjPortfolioAdmin
         'collapseCompletely
         '
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.collapseCompletely.Cursor = System.Windows.Forms.Cursors.Default
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
         Me.collapseCompletely.Location = New System.Drawing.Point(68, 348)
         Me.collapseCompletely.Name = "collapseCompletely"
@@ -249,11 +253,22 @@ Partial Class frmProjPortfolioAdmin
         Me.requiredDate.Size = New System.Drawing.Size(200, 20)
         Me.requiredDate.TabIndex = 71
         '
+        'chkbxPermanent
+        '
+        Me.chkbxPermanent.AutoSize = True
+        Me.chkbxPermanent.Location = New System.Drawing.Point(334, 348)
+        Me.chkbxPermanent.Name = "chkbxPermanent"
+        Me.chkbxPermanent.Size = New System.Drawing.Size(76, 17)
+        Me.chkbxPermanent.TabIndex = 72
+        Me.chkbxPermanent.Text = "permanent"
+        Me.chkbxPermanent.UseVisualStyleBackColor = True
+        '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(467, 473)
+        Me.Controls.Add(Me.chkbxPermanent)
         Me.Controls.Add(Me.requiredDate)
         Me.Controls.Add(Me.storeToDBasWell)
         Me.Controls.Add(Me.settingsBtn)
@@ -273,7 +288,9 @@ Partial Class frmProjPortfolioAdmin
         Me.Controls.Add(Me.lblStandvom)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.TreeViewProjekte)
+        Me.portfolioBrowserHelp.SetHelpString(Me, """das ist die Hilfe""")
         Me.Name = "frmProjPortfolioAdmin"
+        Me.portfolioBrowserHelp.SetShowHelp(Me, True)
         Me.Text = "Multiprojekt-Szenario"
         Me.TopMost = True
         CType(Me.versionsToKeep, System.ComponentModel.ISupportInitialize).EndInit()
@@ -311,4 +328,6 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents settingsBtn As System.Windows.Forms.PictureBox
     Friend WithEvents storeToDBasWell As System.Windows.Forms.CheckBox
     Friend WithEvents requiredDate As System.Windows.Forms.DateTimePicker
+    Friend WithEvents chkbxPermanent As System.Windows.Forms.CheckBox
+    Friend WithEvents portfolioBrowserHelp As System.Windows.Forms.HelpProvider
 End Class

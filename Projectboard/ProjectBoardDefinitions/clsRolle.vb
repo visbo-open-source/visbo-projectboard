@@ -120,7 +120,7 @@ Public Class clsRolle
 
         Get
 
-            Startkapa = RoleDefinitions.getRoledef(_typus).Startkapa
+            Startkapa = RoleDefinitions.getRoledef(_typus).defaultKapa
 
         End Get
 
@@ -180,18 +180,20 @@ Public Class clsRolle
     Public ReadOnly Property summe() As Double
 
         Get
-            Dim isum As Double
-            Dim i As Integer
-            Dim ende As Integer
+            'Dim isum As Double
+            'Dim i As Integer
+            'Dim ende As Integer
 
-            ende = UBound(_bedarf)
-            isum = 0
+            'ende = UBound(_bedarf)
+            'isum = 0
 
-            For i = 0 To ende
-                isum = isum + _bedarf(i)
-            Next i
+            'For i = 0 To ende
+            '    isum = isum + _bedarf(i)
+            'Next i
 
-            summe = isum
+            summe = _bedarf.Sum
+            'summe = isum
+
 
         End Get
 

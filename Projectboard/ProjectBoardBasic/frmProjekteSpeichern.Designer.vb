@@ -31,18 +31,20 @@ Partial Class frmProjekteSpeichern
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(12, 24)
+        Me.Label1.Location = New System.Drawing.Point(10, 19)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(265, 18)
+        Me.Label1.Size = New System.Drawing.Size(221, 15)
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "Möchten Sie diese Projekte speichern?"
         '
         'JAButton
         '
         Me.JAButton.DialogResult = System.Windows.Forms.DialogResult.Yes
-        Me.JAButton.Location = New System.Drawing.Point(12, 70)
+        Me.JAButton.Location = New System.Drawing.Point(10, 56)
+        Me.JAButton.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.JAButton.Name = "JAButton"
-        Me.JAButton.Size = New System.Drawing.Size(104, 33)
+        Me.JAButton.Size = New System.Drawing.Size(83, 26)
         Me.JAButton.TabIndex = 1
         Me.JAButton.Text = "JA"
         Me.JAButton.UseVisualStyleBackColor = True
@@ -50,24 +52,27 @@ Partial Class frmProjekteSpeichern
         'NEINButton
         '
         Me.NEINButton.DialogResult = System.Windows.Forms.DialogResult.No
-        Me.NEINButton.Location = New System.Drawing.Point(168, 70)
+        Me.NEINButton.Location = New System.Drawing.Point(134, 56)
+        Me.NEINButton.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.NEINButton.Name = "NEINButton"
-        Me.NEINButton.Size = New System.Drawing.Size(109, 33)
+        Me.NEINButton.Size = New System.Drawing.Size(87, 26)
         Me.NEINButton.TabIndex = 2
         Me.NEINButton.Text = "NEIN"
         Me.NEINButton.UseVisualStyleBackColor = True
         '
         'frmProjekteSpeichern
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.ClientSize = New System.Drawing.Size(294, 115)
+        Me.ClientSize = New System.Drawing.Size(235, 92)
         Me.Controls.Add(Me.NEINButton)
         Me.Controls.Add(Me.JAButton)
         Me.Controls.Add(Me.Label1)
+        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Name = "frmProjekteSpeichern"
         Me.Text = "Projekte speichern"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

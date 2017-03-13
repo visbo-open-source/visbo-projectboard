@@ -41,13 +41,34 @@ Public Class clsProjekteAlle
 
     ''' <summary>
     ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
+    ''' später soll die Aufrufleiste bereinigt werden ... 
     ''' </summary>
     ''' <param name="key"></param>
     ''' <param name="project"></param>
     ''' <remarks></remarks>
     Public Sub Add(ByVal key As String, ByVal project As clsProjekt)
 
-        _allProjects.Add(key, project)
+        Dim keyReal As String = calcProjektKey(project.name, project.variantName)
+        _allProjects.Add(keyReal, project)
+
+    End Sub
+
+    ''' <summary>
+    ''' macht einen Update, wenn das Element mit Schlüssel key bereits existiert 
+    ''' macht einen Insert, wenn das Element mit Schlüssel key noch nicht existiert 
+    ''' der key wird bestimmt aus project.name und .variantname
+    ''' </summary>
+    ''' <param name="project"></param>
+    ''' <remarks>wenn project Nothing ist, dann bleibt die Liste unverändert </remarks>
+    Public Sub upsert(ByVal project As clsProjekt)
+
+        If Not IsNothing(project) Then
+            Dim key As String = calcProjektKey(project.name, project.variantName)
+            If _allProjects.ContainsKey(key) Then
+                _allProjects.Remove(key)
+            End If
+            _allProjects.Add(key, project)
+        End If
 
     End Sub
 

@@ -97,7 +97,7 @@ Public Class ThisWorkbook
 
             End If
 
-            Call awinsetTypen()
+            Call awinsetTypen("ProjectBoard")
 
         Catch ex As Exception
 
@@ -179,15 +179,14 @@ Public Class ThisWorkbook
 
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
-
-        appInstance.ScreenUpdating = False
+        Dim cancelAbbruch As Boolean = False
 
         If loginErfolgreich Then
 
 
 
 
-            Call awinKontextReset()
+
 
             ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
             Try
@@ -202,12 +201,31 @@ Public Class ThisWorkbook
 
                             Call StoreAllProjectsinDB()
 
+                        ElseIf returnValue = DialogResult.Cancel Then
+
+                            cancelAbbruch = True
                         End If
 
                     Else
-                        Call MsgBox("keine Projekte zu speichern ...")
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("no projects to store ...")
+                        Else
+                            Call MsgBox("keine Projekte zu speichern ...")
+                        End If
+
 
                     End If
+
+                    If Not cancelAbbruch Then
+                        ' die temporären Schutz
+                        If request.cancelWriteProtections(dbUsername) Then
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                            End If
+                        End If
+                    End If
+                    
+
                 End If
 
 
@@ -215,67 +233,53 @@ Public Class ThisWorkbook
 
             End Try
 
-            ' wozu wird das denn hier benötigt ? 
-            'Application.Worksheets(arrWsNames(3)).Activate()
+            
 
+            If cancelAbbruch Then
+                Cancel = True
+            Else
+                appInstance.ScreenUpdating = False
+                ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+                Try
+                    'Call awinWritePhaseDefinitions()
+                    Call awinWritePhaseMilestoneDefinitions()
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error when writing Projectboard Customization File")
+                    Else
+                        Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
+                    End If
 
-            appInstance.EnableEvents = False
-
-
-            ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-            Try
-                'Call awinWritePhaseDefinitions()
-                Call awinWritePhaseMilestoneDefinitions()
-            Catch ex As Exception
-                Call MsgBox("Fehler bei Schreiben Customization File")
-            End Try
-
-            '' ''    Try
-            '' ''        Call logfileSchreiben("Ende von ProjektBoard", "", anzFehler)
-            '' ''        Call logfileSchliessen()
-            '' ''        'CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
-
-            '' ''    Catch ex As Exception
-            '' ''        Call MsgBox("Fehler beim Schliessen des Logfiles")
-            '' ''    End Try
-
+                End Try
+                appInstance.ScreenUpdating = True
+            End If
 
         End If
 
-        '' ''Application.Worksheets(arrWsNames(3)).Activate()
-        '' ''appInstance.EnableEvents = False
-        '' ''appInstance.ActiveWorkbook.Saved = True
-        ' '' ''appInstance.Workbooks(myProjektTafel).Close(SaveChanges:=False)
+        If Not cancelAbbruch Then
+            Call awinKontextReset()
+            ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+            'appInstance.EnableEvents = False
 
-        '' ''appInstance.ScreenUpdating = True
-        '' ''appInstance.EnableEvents = True
+            Dim WB As Workbook
+            For Each WB In Application.Workbooks
+                If WB.Name = myProjektTafel Then
+                    Try
+                        WB.Saved = True
+                    Catch ex As Exception
 
+                    End Try
 
-        ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+                End If
 
-        Dim WB As Workbook
-        For Each WB In Application.Workbooks
-            If WB.Name = myProjektTafel Then
-                Try
-                    WB.Saved = True
-                Catch ex As Exception
-
-                End Try
-
-            End If
-
-        Next
+            Next
 
 
-        '' ''Dim newHour As Integer = Hour(Now())
-        '' ''Dim newMinute As Integer = Minute(Now())
-        '' ''Dim newSecond As Integer = Second(Now()) + 100
-        '' ''Dim waitTime As Date = TimeSerial(newHour, newMinute, newSecond)
+            Application.DisplayAlerts = False
+            'Application.Quit()
 
-        '' ''Application.Wait(waitTime)
 
-        Application.DisplayAlerts = False
-        'Application.Quit()
+        End If
 
 
 

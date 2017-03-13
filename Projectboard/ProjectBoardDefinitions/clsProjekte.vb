@@ -629,8 +629,8 @@ Public Class clsProjekte
             Dim projectShape As xlNS.ShapeRange
 
 
-            'With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), xlNS.Worksheet)
+            'With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
                 shapes = .Shapes
                 Try
                     projectShape = shapes.Range(pName)
@@ -1867,7 +1867,7 @@ Public Class clsProjekte
 
             For r = 1 To realCollection.Count
                 rname = CStr(realCollection.Item(r))
-                hkapa = RoleDefinitions.getRoledef(rname).Startkapa
+                hkapa = RoleDefinitions.getRoledef(rname).defaultKapa
 
                 For i = showRangeLeft To showRangeRight
                     If includingExterns Then
@@ -2018,16 +2018,19 @@ Public Class clsProjekte
 
 
     ''' <summary>
-    ''' gibt über alle betrachteten Projekte die anteiligen Budget Werte zurück  
+    ''' gibt über alle betrachteten Projekte die anteiligen Budget Werte zurück 
+    ''' das Budget wird jetzt nicht mehr über die budgetvalues berechnet, sondern über costvalue * marge 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
-    ''' <remarks></remarks>
+    ''' <remarks>Mit diesem neuen Ansatz wird sichergestellt, dass nur soviel vom Gesamtbudget aufgebraucht wird wie tatsächlich aufgrund der 
+    ''' angefallenen Kosten in dem Monat auch benötigt wird </remarks>
     Public ReadOnly Property getBudgetValuesInMonth() As Double()
         Get
 
             Dim projektBudget As Double
             Dim budgetValues() As Double
+
             Dim Dauer As Integer
             Dim zeitraum As Integer
             Dim i As Integer
@@ -2099,6 +2102,88 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ''' <summary>
+    ''' aletr aNsatz , der noch auf die budgetWerte abhob ... 
+    ''' 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBudgetValuesInMonth_deprecated() As Double()
+        Get
+
+            Dim projektBudget As Double
+            Dim budgetValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
+
+            Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+
+
+            Dim avgBudget As Double
+
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim budgetValues(zeitraum)
+
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                Dauer = hproj.anzahlRasterElemente
+                projektBudget = hproj.Erloes
+                avgBudget = projektBudget / hproj.anzahlRasterElemente
+
+
+                'ReDim tempArray(Dauer - 1)
+                tempArray = kvp.Value.budgetWerte
+
+                If IsNothing(tempArray) Then
+                    ReDim tempArray(Dauer - 1)
+                    For i = 0 To Dauer - 1
+                        tempArray(i) = avgBudget
+                    Next
+                Else
+                    If tempArray.Sum = 0 Then
+                        ReDim tempArray(Dauer - 1)
+                        For i = 0 To Dauer - 1
+                            tempArray(i) = avgBudget
+                        Next
+                    End If
+                End If
+
+
+                With hproj
+
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+
+                End With
+
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                If anzLoops > 0 Then
+
+
+                    For i = 0 To anzLoops - 1
+                        budgetValues(ixZeitraum + i) = budgetValues(ixZeitraum + i) + tempArray(ix + i)
+                    Next i
+
+
+                End If
+
+            Next kvp
+
+            getBudgetValuesInMonth_deprecated = budgetValues
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt über alle betrachteten Projekte die Earned Values zurück; 
@@ -2247,14 +2332,15 @@ Public Class clsProjekte
 
                     End With
 
-
-                    For i = 0 To anzLoops - 1
-                        ' Änderung 2.5.14 : es sollen nur die in der Zukunft liegenden Monate mit einem Risiko Aufschlag bedacht werden 
-                        If ix + i >= heuteIndex Then
+                    If heuteColumn > showRangeRight Then
+                        ' nichts mehr tun, es existieren keine Risiken mehr 
+                    Else
+                        ' die 
+                        For i = 0 To anzLoops - 1
                             riskValues(ixZeitraum + i) = riskValues(ixZeitraum + i) + tempArray(ix + i) * riskweightedMarge
-                        End If
-
-                    Next i
+                        Next i
+                    End If
+                    
 
 
                 End If
@@ -2918,13 +3004,13 @@ Public Class clsProjekte
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
-            Dim faktor As Double = nrOfDaysMonth
+            Dim faktor As Double = 1
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3053,13 +3139,13 @@ Public Class clsProjekte
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
-            Dim faktor As Double = nrOfDaysMonth
+            Dim faktor As Double = 1
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3188,13 +3274,13 @@ Public Class clsProjekte
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
-            Dim faktor As Double = nrOfDaysMonth
+            Dim faktor As Double = 1
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3448,13 +3534,13 @@ Public Class clsProjekte
             Dim tagessatzExtern As Double, tagessatzIntern As Double, diff As Double
             Dim roleName As String
             Dim i As Integer
-            Dim faktor As Double = nrOfDaysMonth
+            Dim faktor As Double = 1
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3651,13 +3737,13 @@ Public Class clsProjekte
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
-            Dim faktor As Double = nrOfDaysMonth
+            Dim faktor As Double = 1
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1

@@ -109,7 +109,7 @@ Public Module Projekte
             appInstance.ScreenUpdating = False
         End If
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -246,7 +246,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -403,7 +403,7 @@ Public Module Projekte
             appInstance.ScreenUpdating = False
         End If
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -534,7 +534,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -686,7 +686,7 @@ Public Module Projekte
             appInstance.ScreenUpdating = False
         End If
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -783,7 +783,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -977,7 +977,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -1149,7 +1149,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -2466,7 +2466,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -2551,7 +2551,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3168,7 +3168,7 @@ Public Module Projekte
 
         ' jetzt wird das Diagramm gezeichnet 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -3244,7 +3244,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3476,7 +3476,7 @@ Public Module Projekte
         Next i
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -3524,7 +3524,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3962,7 +3962,7 @@ Public Module Projekte
         Next i
 
         gesamt_summe = 0
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -4037,7 +4037,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4470,7 +4470,7 @@ Public Module Projekte
 
         Dim ik As Integer = 1 ' wird für die Unterscheidung benötigt, ob mit Personal-Kosten oder ohne 
         gesamt_summe = 0
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -4545,7 +4545,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -4558,7 +4558,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -4783,7 +4783,7 @@ Public Module Projekte
 
 
 
-        'With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+        'With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
 
 
         Dim tmpValues(1) As Double
@@ -5345,7 +5345,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                 End With
 
 
@@ -5498,10 +5498,11 @@ Public Module Projekte
         For r = 0 To anzRollen - 1
             roleName = CStr(ErgebnisListeR.Item(r + 1))
             Xdatenreihe(r) = roleName
+
             If auswahl = 1 Then
-                tdatenreihe(r) = Math.Round(hproj.getRessourcenBedarf(roleName).Sum)
+                tdatenreihe(r) = System.Math.Round(hproj.getRessourcenBedarf(roleName).Sum, mode:=MidpointRounding.ToEven)
             Else
-                tdatenreihe(r) = Math.Round(hproj.getPersonalKosten(roleName).Sum)
+                tdatenreihe(r) = System.Math.Round(hproj.getPersonalKosten(roleName).Sum, mode:=MidpointRounding.ToEven)
             End If
 
         Next r
@@ -5528,7 +5529,7 @@ Public Module Projekte
         End If
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -5599,7 +5600,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -5612,7 +5613,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                 End With
 
                 With .ChartObjects(anzDiagrams + 1)
@@ -5713,9 +5714,9 @@ Public Module Projekte
             Xdatenreihe(r) = roleName
 
             If auswahl = 1 Then
-                tdatenreihe(r) = Math.Round(hproj.getRessourcenBedarf(roleName).Sum)
+                tdatenreihe(r) = System.Math.Round(hproj.getRessourcenBedarf(roleName).Sum, mode:=MidpointRounding.ToEven)
             Else
-                tdatenreihe(r) = Math.Round(hproj.getPersonalKosten(roleName).Sum)
+                tdatenreihe(r) = System.Math.Round(hproj.getPersonalKosten(roleName).Sum, mode:=MidpointRounding.ToEven)
             End If
 
         Next r
@@ -5891,13 +5892,13 @@ Public Module Projekte
         For k = 0 To anzKostenarten - 1
             costname = CStr(ErgebnisListeK.Item(k + 1))
             Xdatenreihe(k) = costname
-            tdatenreihe(k) = Math.Round(hproj.getKostenBedarf(costname).Sum)
+            tdatenreihe(k) = System.Math.Round(hproj.getKostenBedarf(costname).Sum, mode:=MidpointRounding.ToEven)
         Next k
 
         If auswahl = 2 Then
             'Xdatenreihe(anzKostenarten) = "Personal-Kosten"
             Xdatenreihe(anzKostenarten) = repMessages.getmsg(164)
-            tdatenreihe(anzKostenarten) = Math.Round(hproj.getAllPersonalKosten.Sum)
+            tdatenreihe(anzKostenarten) = System.Math.Round(hproj.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
         End If
 
         If auswahl = 1 Then
@@ -5925,7 +5926,7 @@ Public Module Projekte
             'Throw New Exception("Summe sonstige Kosten ist Null")
             Throw New Exception(repMessages.getmsg(167))
         Else
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
                 '
@@ -6007,7 +6008,7 @@ Public Module Projekte
                         Do While Not achieved And anzahlVersuche < 10
                             Try
                                 'Call Sleep(100)
-                                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                                 achieved = True
                             Catch ex As Exception
                                 errmsg = ex.Message
@@ -6021,7 +6022,7 @@ Public Module Projekte
                         End If
 
 
-                        '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                        '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                     End With
 
                     With .ChartObjects(anzDiagrams + 1)
@@ -6144,13 +6145,13 @@ Public Module Projekte
         For k = 0 To anzKostenarten - 1
             costname = CStr(ErgebnisListeK.Item(k + 1))
             Xdatenreihe(k) = costname
-            tdatenreihe(k) = hproj.getKostenBedarf(costname).Sum
+            tdatenreihe(k) = System.Math.Round(hproj.getKostenBedarf(costname).Sum, mode:=MidpointRounding.ToEven)
         Next k
 
         If auswahl = 2 Then
             'Xdatenreihe(anzKostenarten) = "Personal-Kosten"
             Xdatenreihe(anzKostenarten) = repMessages.getmsg(164)
-            tdatenreihe(anzKostenarten) = hproj.getAllPersonalKosten.Sum
+            tdatenreihe(anzKostenarten) = System.Math.Round(hproj.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
         End If
 
         If auswahl = 1 Then
@@ -6335,7 +6336,7 @@ Public Module Projekte
         End With
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -6412,7 +6413,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6426,7 +6427,7 @@ Public Module Projekte
                     End If
 
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -6638,7 +6639,7 @@ Public Module Projekte
         End With
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -6721,7 +6722,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6734,7 +6735,7 @@ Public Module Projekte
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
 
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
 
                 End With
 
@@ -6888,7 +6889,7 @@ Public Module Projekte
 
         gesamtSumme = 0
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -7040,7 +7041,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -7052,7 +7053,7 @@ Public Module Projekte
                     If Not achieved Then
                         Throw New ArgumentException("Chart-Fehler:" & errmsg)
                     End If
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                 End With
 
                 ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
@@ -7097,6 +7098,8 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
+    ''' hier würde Risiko-Kosten noch berücksichtigt werden 
+    ''' kann später mal wieder aktiviert werden ... 
     ''' diese Sub zeigt das vorauss. Projektergebnis in einem Chart an - Erloes, Risiko Kosten, Personalkosten, Sonstige Kosten und 
     ''' dann den vermutl. Projekt-Ertrag
     ''' auswahl: 0=beauftragung; 1: letzter Stand; 2: aktueller Stand   
@@ -7107,7 +7110,7 @@ Public Module Projekte
     ''' wird für das Reporting benötigt 
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer)
+    Public Sub createProjektErgebnisCharakteristik2_deprecated(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer)
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
@@ -7215,7 +7218,7 @@ Public Module Projekte
         width = 450
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -7457,7 +7460,717 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' diese Sub zeigt das vorauss. Projektergebnis in einem Chart an - Erloes, Risiko Kosten, Personalkosten, Sonstige Kosten und 
+    ''' dann den vermutl. Projekt-Ertrag
+    ''' auswahl: 0=beauftragung; 1: letzter Stand; 2: aktueller Stand   
+    ''' </summary>
+    ''' <param name="hproj">das Projekt</param>
+    ''' <param name="reportObj">
+    ''' nimmt den Verweis auf das generierte Chart auf; 
+    ''' wird für das Reporting benötigt 
+    ''' </param>
+    ''' <remarks></remarks>
+    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer)
+
+        Dim diagramTitle As String
+        Dim anzDiagrams As Integer
+        Dim found As Boolean
+        Dim plen As Integer
+        Dim i As Integer
+        Dim minScale As Double
+        Dim Xdatenreihe(3) As String
+        Dim valueDatenreihe1(3) As Double
+        Dim valueDatenreihe2(3) As Double
+        Dim itemColor(3) As Object
+        Dim itemValue(3) As Double
+        Dim projektErloes As Double, projektPersKosten As Double, projektSonstKosten As Double, projektRisikoKosten As Double
+        Dim projektErgebnis As Double
+        'Dim earnedValueWeighted As Double
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim pstart As Integer
+        Dim mycollection As New Collection
+        'Dim catName As String
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+        Dim kennung As String
+        Dim tmpcollection As New Collection
+
+
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
+        kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
+
+
+        '
+        ' hole die Projektdauer
+        '
+        With hproj
+            plen = .anzahlRasterElemente
+            pstart = .Start
+        End With
+
+
+        'Xdatenreihe(0) = "Budget"
+        'Xdatenreihe(1) = "Risiko-Abschlag"
+        'Xdatenreihe(2) = "Personalkosten"
+        'Xdatenreihe(3) = "Sonstige Kosten"
+        'Xdatenreihe(4) = "Ergebnis-Prognose"
+        Xdatenreihe(0) = repMessages.getmsg(49)
+        'Xdatenreihe(1) = repMessages.getmsg(50)
+        Xdatenreihe(1) = repMessages.getmsg(51)
+        Xdatenreihe(2) = repMessages.getmsg(52)
+        Xdatenreihe(3) = repMessages.getmsg(53)
+
+
+
+
+        With hproj
+
+            .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
+
+            itemValue(0) = projektErloes
+            itemColor(0) = ergebnisfarbe1
+
+            'itemValue(1) = projektRisikoKosten
+            'itemColor(1) = iProjektFarbe
+
+            itemValue(1) = projektPersKosten
+            itemColor(1) = farbeExterne
+
+            itemValue(2) = projektSonstKosten
+            itemColor(2) = farbeExterne
+
+            itemValue(3) = projektErgebnis
+            If projektErgebnis > 0 Then
+                itemColor(3) = ergebnisfarbe2
+            Else
+                itemColor(3) = farbeExterne
+            End If
+        End With
+
+
+        If auswahl = PThis.beauftragung Then
+            'titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            titelTeile(0) = hproj.getShapeText & repMessages.getmsg(47) & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        ElseIf auswahl = PThis.letzterStand Then
+            'titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            titelTeile(0) = hproj.getShapeText & repMessages.getmsg(48) & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        Else
+            titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        End If
+
+        titelTeilLaengen(0) = titelTeile(0).Length
+        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+        titelTeilLaengen(1) = titelTeile(1).Length
+
+        diagramTitle = titelTeile(0) & titelTeile(1)
+        'kennung = pname & "#Ergebnis#1"
+
+
+        ' neu 
+        '
+        ' die Position des Diagramms wird ausgerechnet ...
+        '
+        top = topOfMagicBoard + hproj.tfZeile * boxHeight
+        left = hproj.tfspalte * boxWidth - 10
+        If left < 0 Then
+            left = 1
+        End If
+        height = awinSettings.ChartHoehe2
+        width = 450
+
+
+        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+
+            '
+            ' um welches Diagramm handelt es sich ...
+            '
+            i = 1
+            found = False
+            While i <= anzDiagrams And Not found
+
+
+                If kennung = .ChartObjects(i).name Then
+                    found = True
+                Else
+                    i = i + 1
+                End If
+
+            End While
+
+
+            Dim currentWert As Double
+            If found Then
+                reportObj = CType(.ChartObjects(i), Excel.ChartObject)
+            Else
+
+                If projektErgebnis < 0 Then
+                    minScale = System.Math.Round(projektErgebnis, mode:=MidpointRounding.ToEven)
+                Else
+                    minScale = 0
+                End If
+
+
+                Dim valueCrossesNull As Boolean = False
+
+
+                Dim newChart As Microsoft.Office.Interop.Excel.Chart = Nothing
+
+                Dim achieved As Boolean = False
+                Dim anzahlVersuche As Integer = 0
+
+                Do While Not achieved And anzahlVersuche < 10
+                    Try
+                        newChart = CType(appInstance.Charts.Add, Microsoft.Office.Interop.Excel.Chart)
+                        achieved = True
+                    Catch ex As Exception
+                        'Call Sleep(100)
+                        anzahlVersuche = anzahlVersuche + 1
+                    End Try
+                Loop
+
+                If Not achieved Then
+                    Throw New ArgumentException("Chart konnte nicht erzeugt werden ...")
+                End If
+
+                With newChart
+                    ' remove extra series
+                    Do Until .SeriesCollection.Count = 0
+                        .SeriesCollection(1).Delete()
+                    Loop
+                    Dim crossindex As Integer = -1
+
+                    ' bestimmen des Anfangs  
+                    Dim iv = 0
+                    valueDatenreihe1(iv) = 0
+                    valueDatenreihe2(iv) = itemValue(iv)
+                    currentWert = itemValue(iv)
+
+                    ' alle nächsten Zwischen-Werte 
+                    Dim negativeFromNull As Boolean = False
+                    Dim formerValue As Double = currentWert
+                    For iv = 1 To 2
+                        If formerValue <= 0 Then
+                            negativeFromNull = True
+                        Else
+                            negativeFromNull = False
+                        End If
+
+                        currentWert = currentWert - itemValue(iv)
+                        valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
+
+                        If currentWert >= 0 Then
+                            valueDatenreihe1(iv) = currentWert
+                            valueDatenreihe2(iv) = itemValue(iv)
+                        ElseIf valueCrossesNull Then
+                            valueDatenreihe1(iv) = currentWert
+                            valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
+                            crossindex = iv + 1
+                        ElseIf negativeFromNull Then
+                            valueDatenreihe1(iv) = formerValue
+                            valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                        Else
+                            valueDatenreihe1(iv) = currentWert
+                            valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                        End If
+
+                        formerValue = currentWert
+                    Next
+
+                    ' bestimmen des Ende 
+                    iv = 3
+                    valueDatenreihe1(iv) = 0
+                    valueDatenreihe2(iv) = itemValue(iv)
+
+
+
+                    'series
+                    With .SeriesCollection.NewSeries
+                        .name = "Bottom"
+                        .HasDataLabels = False
+                        .Interior.colorindex = -4142
+                        .Values = valueDatenreihe1
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlColumnStacked
+                        If crossindex > 0 Then
+                            ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
+                            With .Points(crossindex)
+                                .Interior.color = itemColor(crossindex - 1)
+                            End With
+                        End If
+
+                    End With
+
+                    With .SeriesCollection.NewSeries
+                        .name = "Top"
+                        .HasDataLabels = True
+                        .Values = valueDatenreihe2
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlColumnStacked
+
+                        For iv = 0 To 3
+
+                            With .Points(iv + 1)
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
+                                .Interior.color = itemColor(iv)
+                                .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
+                                'Try
+                                '    .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                                'Catch ex As Exception
+
+                                'End Try
+                            End With
+
+                        Next
+
+                    End With
+
+                    .HasAxis(Excel.XlAxisType.xlCategory) = True
+                    .HasAxis(Excel.XlAxisType.xlValue) = False
+
+
+
+                    With .Axes(Excel.XlAxisType.xlCategory)
+                        .HasTitle = False
+                        If minScale < 0 Then
+                            .TickLabelPosition = Excel.Constants.xlLow
+                        End If
+                        '.MinimumScale = 0
+
+                    End With
+
+                    'Dim hax As Excel.Axis
+                    'With hax
+                    '    .HasMajorGridlines
+                    '    .hasminor()
+                    'End With
+
+                    Try
+                        With .Axes(Excel.XlAxisType.xlValue)
+                            .HasTitle = False
+                            .HasMajorGridlines = False
+                            .hasminorgridlines = False
+                            If minScale < 0 Then
+                                .MinimumScale = System.Math.Round((minScale - 1), mode:=MidpointRounding.ToEven)
+                            Else
+                                .MinimumScale = 0
+                            End If
+                        End With
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    .HasLegend = False
+                    'With .Legend
+                    '    .Position = XlConstants.xlTop
+                    '    .Font.Size = 8
+                    'End With
+                    .HasTitle = True
+
+                    .ChartTitle.Text = diagramTitle
+                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+
+                    achieved = False
+                    anzahlVersuche = 0
+                    Dim errmsg As String = ""
+                    Do While Not achieved And anzahlVersuche < 10
+                        Try
+                            'Call Sleep(100)
+                            newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            achieved = True
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            'Call Sleep(100)
+                            anzahlVersuche = anzahlVersuche + 1
+                        End Try
+                    Loop
+
+                    If Not achieved Then
+                        Throw New ArgumentException(errmsg)
+                    End If
+
+
+                End With
+
+
+
+                With .ChartObjects(anzDiagrams + 1)
+                    .top = top
+                    .left = left
+                    .width = width
+                    .height = height
+                    .name = kennung
+
+                End With
+
+                reportObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+
+
+            End If
+
+
+        End With
+
+
+
+
+
+    End Sub
+
+    
+
     Public Sub updateProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+                                                    ByVal auswahl As Integer, ByVal changeScale As Boolean)
+
+
+        Dim diagramTitle As String
+
+        Dim plen As Integer
+        Dim Xdatenreihe(3) As String
+        Dim valueDatenreihe1(3) As Double
+        Dim valueDatenreihe2(3) As Double
+        Dim itemColor(3) As Object
+        Dim itemValue(3) As Double
+        Dim projektErloes As Double, projektPersKosten As Double, projektSonstKosten As Double, projektRisikoKosten As Double
+        Dim projektErgebnis As Double
+        'Dim earnedValueWeighted As Double
+
+        Dim pstart As Integer
+        Dim mycollection As New Collection
+        
+        Dim minscale As Double
+
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+        Dim kennung As String
+        Dim tmpcollection As New Collection
+
+        Dim fontSize1 As Double = awinSettings.fontsizeTitle, fontSize2 As Double = awinSettings.fontsizeLegend
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
+        kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
+
+
+        '
+        ' hole die Projektdauer
+        '
+        With hproj
+            plen = .anzahlRasterElemente
+            pstart = .Start
+        End With
+
+
+        'Xdatenreihe(0) = "Budget"
+        'Xdatenreihe(1) = "Risiko-Abschlag"
+        'Xdatenreihe(2) = "Personalkosten"
+        'Xdatenreihe(3) = "Sonstige Kosten"
+        'Xdatenreihe(4) = "Ergebnis-Prognose"
+        Xdatenreihe(0) = repMessages.getmsg(49)
+        'Xdatenreihe(1) = repMessages.getmsg(50)
+        Xdatenreihe(1) = repMessages.getmsg(51)
+        Xdatenreihe(2) = repMessages.getmsg(52)
+        Xdatenreihe(3) = repMessages.getmsg(53)
+        'Xdatenreihe(4) = repMessages.getmsg(53)
+
+
+
+        With hproj
+            Dim gk As Double = .getSummeKosten
+
+            .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
+
+            itemValue(0) = projektErloes
+            itemColor(0) = ergebnisfarbe1
+
+            'itemValue(1) = projektRisikoKosten
+            'itemColor(1) = iProjektFarbe
+
+            itemValue(1) = projektPersKosten
+            itemColor(1) = farbeExterne
+
+            itemValue(2) = projektSonstKosten
+            itemColor(2) = farbeExterne
+
+            itemValue(3) = projektErgebnis
+            If projektErgebnis > 0 Then
+                itemColor(3) = ergebnisfarbe2
+            Else
+                itemColor(3) = farbeExterne
+            End If
+        End With
+
+
+
+        titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        titelTeilLaengen(0) = titelTeile(0).Length
+        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+        titelTeilLaengen(1) = titelTeile(1).Length
+        diagramTitle = titelTeile(0) & titelTeile(1)
+        'kennung = pname & "#Ergebnis#1"
+
+
+        If changeScale Then
+            If projektErgebnis < 0 Then
+                minscale = System.Math.Round(projektErgebnis - 5, mode:=MidpointRounding.ToEven)
+
+                If projektErgebnis < -300 Then
+                    minscale = Math.Round(projektErgebnis / 50 - 0.6) * 50
+                ElseIf projektErgebnis < -80 Then
+                    minscale = Math.Round(projektErgebnis / 10 - 0.6) * 10
+                Else
+                    minscale = Math.Round(projektErgebnis / 5 - 0.6) * 5
+                End If
+
+
+            Else
+                minscale = 0
+            End If
+        End If
+
+
+
+        Dim currentWert As Double
+
+
+
+        Dim valueCrossesNull As Boolean = False
+
+        With chtobj.Chart
+
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            'ur:22.07.2014: bereits in Charts enthalten und soll nur mit neuen Daten bestückt werden
+            '' remove extra series
+
+            'Do Until .SeriesCollection.Count = 0
+            '    .SeriesCollection(1).Delete()
+            'Loop
+
+            Dim crossindex As Integer = -1
+
+            ' bestimmen des Anfangs  
+            Dim iv = 0
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
+            currentWert = itemValue(iv)
+
+            ' alle nächsten Zwischen-Werte 
+            Dim negativeFromNull As Boolean = False
+            Dim formerValue As Double = currentWert
+            For iv = 1 To 2
+                If formerValue <= 0 Then
+                    negativeFromNull = True
+                Else
+                    negativeFromNull = False
+                End If
+
+                currentWert = currentWert - itemValue(iv)
+                valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
+
+                If currentWert >= 0 Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv)
+                ElseIf valueCrossesNull Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
+                    crossindex = iv + 1
+                ElseIf negativeFromNull Then
+                    valueDatenreihe1(iv) = formerValue
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                Else
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                End If
+
+                formerValue = currentWert
+            Next
+
+            ' bestimmen des Ende 
+            iv = 3
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
+
+
+
+            'series
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(1)
+                .name = "Bottom"
+                .HasDataLabels = False
+                .Interior.colorindex = -4142
+                .Values = valueDatenreihe1
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+                If crossindex > 0 Then
+                    ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
+                    With .Points(crossindex)
+                        .Interior.color = itemColor(crossindex - 1)
+                    End With
+                End If
+
+            End With
+
+
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(2)
+                .name = "Top"
+                .HasDataLabels = True
+                .Values = valueDatenreihe2
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+
+                For iv = 0 To 3
+
+                    With .Points(iv + 1)
+                        .HasDataLabel = True
+                        .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
+                        .Interior.color = itemColor(iv)
+                        '.DataLabel.Font.Size = awinSettings.fontsizeItems + 2
+                        'Try
+                        '    .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                        'Catch ex As Exception
+
+                        'End Try
+                    End With
+
+                Next
+
+            End With
+
+            With .Axes(Excel.XlAxisType.xlCategory)
+                .HasTitle = False
+                If minscale < 0 Then
+                    .TickLabelPosition = Excel.Constants.xlLow
+                End If
+
+
+            End With
+
+
+            Try
+                With .Axes(Excel.XlAxisType.xlValue)
+                    .HasTitle = False
+                    .HasMajorGridlines = False
+                    .hasminorgridlines = False
+                End With
+            Catch ex As Exception
+
+            End Try
+
+
+            With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                ' hinausgehende Werte hat 
+                'If Not (.MaximumScaleIsAuto) Then
+
+
+                If changeScale Then
+
+
+                    .MinimumScaleIsAuto = False
+                    If (minscale < .MinimumScale) And (minscale < 0) Then
+                        .MinimumScale = minscale
+                    End If
+
+                    ' das hat hier nichts zu suchen, in einem Update darf kein kein Chart eingefügt werden 
+                    ''achieved = False
+                    ''anzahlVersuche = 0
+                    ''Dim errmsg As String = ""
+                    ''Do While Not achieved And anzahlVersuche < 10
+                    ''    Try
+                    ''        'Call Sleep(100)
+                    ''        newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
+                    ''        achieved = True
+                    ''    Catch ex As Exception
+                    ''        errmsg = ex.Message
+                    ''        'Call Sleep(100)
+                    ''        anzahlVersuche = anzahlVersuche + 1
+                    ''    End Try
+                    ''Loop
+
+                    .MaximumScaleIsAuto = False
+                    If itemValue(0) > .MaximumScale - 3 Then
+                        .MaximumScale = itemValue(0) + 3
+                    End If
+
+
+                    'If Not (.MinimumScaleIsAuto) Then
+                    '    If (minscale < .MinimumScale) And (minscale < 0) Then
+                    '        .MinimumScale = minscale
+                    '    End If
+                    '    .MinimumScaleIsAuto = True
+                    'End If
+
+
+                    'If Not (.MaximumScaleIsAuto) Then
+
+                    '    'If itemValue(0) > .MaximumScale - 3 Then
+                    '    '    .MaximumScale = itemValue(0) + 3
+                    '    'End If
+
+                    '    If itemValue(0) > .MaximumScale Then
+                    '        If itemValue(0) < 80 Then
+                    '            .MaximumScale = Math.Round(itemValue(0) / 5 + 0.6) * 5
+                    '        ElseIf itemValue(0) < 300 Then
+                    '            .MaximumScale = Math.Round(itemValue(0) / 10 + 0.6) * 10
+                    '        Else
+                    '            .MaximumScale = Math.Round(itemValue(0) / 50 + 0.6) * 50
+                    '        End If
+                    '    End If
+
+
+                    '    .MaximumScaleIsAuto = True
+                    'End If
+                End If
+
+            End With
+
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+                ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                .ChartTitle.Font.Size = CSng(fontSize1)
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+            End If
+
+        End With
+
+        chtobj.Name = kennung
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    ''' <summary>
+    ''' wenn das mal wieder mit Risiko Kosten  verwendet werden soll ... 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="chtobj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="changeScale"></param>
+    ''' <remarks></remarks>
+    Public Sub updateProjektErgebnisCharakteristik2_deprecated(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
                                                     ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
@@ -7475,7 +8188,7 @@ Public Module Projekte
 
         Dim pstart As Integer
         Dim mycollection As New Collection
-        
+
         Dim minscale As Double
 
         Dim titelTeile(1) As String
@@ -7516,23 +8229,21 @@ Public Module Projekte
 
         With hproj
             Dim gk As Double = .getSummeKosten
-            projektErloes = System.Math.Round(.Erloes, mode:=MidpointRounding.ToEven)
+
+            .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
+
             itemValue(0) = projektErloes
             itemColor(0) = ergebnisfarbe1
 
-            projektRisikoKosten = System.Math.Round(.risikoKostenfaktor * gk, mode:=MidpointRounding.ToEven)
             itemValue(1) = projektRisikoKosten
             itemColor(1) = iProjektFarbe
 
-            projektPersKosten = System.Math.Round(.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
             itemValue(2) = projektPersKosten
             itemColor(2) = farbeExterne
 
-            projektSonstKosten = System.Math.Round(.getGesamtAndereKosten.Sum, mode:=MidpointRounding.ToEven)
             itemValue(3) = projektSonstKosten
             itemColor(3) = farbeInternOP
 
-            projektErgebnis = projektErloes - (projektRisikoKosten + projektPersKosten + projektSonstKosten)
             itemValue(4) = projektErgebnis
             If projektErgebnis > 0 Then
                 itemColor(4) = ergebnisfarbe2
@@ -7780,7 +8491,6 @@ Public Module Projekte
     End Sub
 
 
-
     '
     ' Sub trägt ein individuelles Projekt ein
     '
@@ -7859,7 +8569,7 @@ Public Module Projekte
             ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
             ' workaround
             Dim tmpdata As Integer = hproj.dauerInDays
-            Call awinCreateBudgetWerte(hproj)
+            'Call awinCreateBudgetWerte(hproj)
 
         Catch ex As Exception
             Call MsgBox(ex.Message)
@@ -7930,12 +8640,33 @@ Public Module Projekte
     '
     ' Sub trägt ein individuelles Projekt ein
     '
+    ''' <summary>
+    ''' trägt ein entsprechendes Projekt ein
+    ''' wenn budget = -999 dann soll es aus den Ressourcen und Kostenbedarfen sowie dem Risiko ermittelt werden  
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="vorlagenName"></param>
+    ''' <param name="variantName"></param>
+    ''' <param name="startdate"></param>
+    ''' <param name="endedate"></param>
+    ''' <param name="erloes"></param>
+    ''' <param name="tafelZeile"></param>
+    ''' <param name="sfit"></param>
+    ''' <param name="risk"></param>
+    ''' <param name="capacityNeeded"></param>
+    ''' <param name="externCostInput"></param>
+    ''' <param name="businessUnit"></param>
+    ''' <param name="description"></param>
+    ''' <param name="listOfCustomFields"></param>
+    ''' <param name="responsiblePerson"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Function erstelleInventurProjekt(ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
-                                       ByVal startdate As Date, ByVal endedate As Date, _
-                                       ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
-                                       ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
-                                       Optional ByVal listOfCustomFields As Collection = Nothing, _
-                                       Optional responsiblePerson As String = "") As clsProjekt
+                                           ByVal startdate As Date, ByVal endedate As Date, _
+                                           ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
+                                           ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
+                                           Optional ByVal listOfCustomFields As Collection = Nothing, _
+                                           Optional responsiblePerson As String = "") As clsProjekt
 
         Dim newprojekt As New clsProjekt
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
@@ -7944,7 +8675,16 @@ Public Module Projekte
         Dim heute As Date = Now
         Dim key As String = pname & "#"
 
-        Const extCost As String = "Kosten Externe"
+        'Const extCost As String = "Kosten Externe"
+        Dim extCost As String
+        If CostDefinitions.Count > 1 Then
+            extCost = CostDefinitions.getCostdef(1).name
+        ElseIf CostDefinitions.Count = 1 And CostDefinitions.getCostdef(1).name = "Kosten Externe" Then
+            ' Mahle ...
+            extCost = "Kosten Externe"
+        Else
+            extCost = "undefined"
+        End If
 
 
         '
@@ -7982,7 +8722,13 @@ Public Module Projekte
                 .businessUnit = businessUnit
                 .description = description
                 .tfZeile = tafelZeile
-                .Erloes = erloes
+                If erloes > 0 Then
+                    .Erloes = erloes
+                    ' andernfalls wird es ganz am Schluss berechnet ...
+                Else
+                    .Erloes = 0
+                End If
+
 
             End With
         Catch ex As Exception
@@ -8007,35 +8753,48 @@ Public Module Projekte
                 Dim completeStr() As String = capacityNeeded.Split(New Char() {CType("#", Char)}, 100)
 
 
-                ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
+                ' jetzt die angegebenen Rollenabarbeiten 
                 For i As Integer = 1 To completeStr.Length
 
-                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim roleStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
                     Dim isRole As Boolean = False
-                    Dim isCost As Boolean = False
                     Dim tagessatz As Double = 0.0
 
-                    If roleCostStr.Length > 1 Then
+                    If roleStr.Length > 0 Then
 
                         Try
-                            Dim roleCostName As String = roleCostStr(0).Trim
-                            If RoleDefinitions.containsName(roleCostName) Then
-                                isRole = True
-                                rk = CInt(RoleDefinitions.getRoledef(roleCostName).UID)
-                                tagessatz = RoleDefinitions.getRoledef(roleCostName).tagessatzIntern
+                            Dim summeBedarfe As Double
 
-                            ElseIf CostDefinitions.containsName(roleCostName) Then
-                                isCost = True
-                                rk = CInt(CostDefinitions.getCostdef(roleCostName).UID)
-
+                            If roleStr.Length = 1 Then
+                                ' Vereinbarung: 
+                                ' wenn nur eine Zahl angegeben ist, soll einfach die erste Rolle genommen werden ... 
+                                If IsNumeric(roleStr(0)) Then
+                                    If CDbl(roleStr(0)) > 0 Then
+                                        isRole = True
+                                        summeBedarfe = CDbl(roleStr(0))
+                                        rk = 1
+                                        tagessatz = RoleDefinitions.getRoledef(rk).tagessatzIntern
+                                    End If
+                                End If
                             Else
-                                rk = -1
+                                Dim roleName As String = roleStr(0).Trim
 
+                                If RoleDefinitions.containsName(roleName) Then
+                                    isRole = True
+                                    summeBedarfe = CDbl(roleStr(1))
+                                    rk = CInt(RoleDefinitions.getRoledef(roleName).UID)
+                                    tagessatz = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+
+                                Else
+
+                                    rk = -1
+
+                                End If
                             End If
 
-                            If rk > -1 Then
+                            If rk > -1 And isRole Then
 
-                                Dim summeBedarfe As Double = CDbl(roleCostStr(1))
+
 
                                 If summeBedarfe > 0.0 Then
 
@@ -8054,40 +8813,19 @@ Public Module Projekte
 
                                     End With
 
-                                    ' dabei jetzt auch die Kosten schon mal berechnen  
+                                    'Dim crole As New clsRolle(ende - anfang + 1)
+                                    ' tk: Änderung 26.7.16
+                                    Dim crole As New clsRolle(ende - anfang)
+                                    With crole
+                                        .RollenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
 
+                                    With cphase
+                                        .addRole(crole)
+                                    End With
 
-                                    If isRole Then
-                                        'Dim crole As New clsRolle(ende - anfang + 1)
-                                        ' tk: Änderung 26.7.16
-                                        Dim crole As New clsRolle(ende - anfang)
-                                        With crole
-                                            .RollenTyp = rk
-                                            .Xwerte = Xwerte
-                                        End With
-
-                                        With cphase
-                                            .addRole(crole)
-                                        End With
-
-                                        summeCost = summeCost + crole.Xwerte.Sum * tagessatz
-
-
-                                    ElseIf isCost Then
-                                        'Dim ccost As New clsKostenart(ende - anfang + 1)
-                                        Dim ccost As New clsKostenart(ende - anfang)
-                                        With ccost
-                                            .KostenTyp = rk
-                                            .Xwerte = Xwerte
-                                        End With
-
-                                        With cphase
-                                            .AddCost(ccost)
-                                        End With
-
-                                        summeCost = summeCost + ccost.Xwerte.Sum
-
-                                    End If
+                                    summeCost = summeCost + crole.Xwerte.Sum * tagessatz
 
                                 End If
 
@@ -8103,64 +8841,102 @@ Public Module Projekte
             End If
         End If
 
-        If Not IsNothing(externCostInput) And CostDefinitions.containsName(extCost) Then
+        ' Anfang neu 
 
-            Dim summeExtCost As Double = 0.0
+        If Not IsNothing(externCostInput) Then
+            If externCostInput.Trim.Length > 0 Then
 
-            If externCostInput.Trim = "filltobudget" Then
-                summeExtCost = Math.Truncate(100 * (newprojekt.Erloes * (1 - newprojekt.risikoKostenfaktor) - newprojekt.getGesamtKostenBedarf.Sum)) / 100
+                Dim completeStr() As String = externCostInput.Split(New Char() {CType("#", Char)}, 100)
+                Dim summeExtCost As Double = 0.0
 
-            ElseIf IsNumeric(externCostInput) Then
-                If CDbl(externCostInput) > 0 Then
-                    summeExtCost = CDbl(externCostInput)
-                End If
+                ' jetzt die angegebenen Rollenabarbeiten 
+                For i As Integer = 1 To completeStr.Length
 
-            End If
+                    Dim costStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim isCost As Boolean = False
 
-            ' es soll ausgerechnet werden, was denn an externen Kosten anfällt 
-            ' getriggert durch Mahle ...
-            'Dim summeExtCost As Double = Math.Truncate(hproj.Erloes * (1 - hproj.risikoKostenfaktor) - hproj.getGesamtKostenBedarf.Sum)
+                    If costStr.Length > 0 Then
 
+                        Try
+                            If costStr.Length = 1 Then
+                                ' Vereinbarung: 
+                                ' wenn nur eine Zahl angegeben ist, soll einfach die erste Rolle genommen werden ... 
+                                If costStr(0) = "filltobudget" Then
+                                    summeExtCost = Math.Truncate(100 * (newprojekt.Erloes * (1 - newprojekt.risikoKostenfaktor) - newprojekt.getGesamtKostenBedarf.Sum)) / 100
+                                    isCost = True
+                                    rk = 1
 
-            ' wenn jetzt noch ein Restbetrag übrig ist .... 
-            If summeExtCost > 0 Then
-                rk = CInt(CostDefinitions.getCostdef(extCost).UID)
+                                ElseIf IsNumeric(costStr(0)) Then
 
+                                    If CDbl(costStr(0)) > 0 Then
+                                        isCost = True
+                                        rk = 1
+                                        summeExtCost = CDbl(costStr(0))
+                                    End If
+                                End If
 
-                Try
-                    ReDim oldXwerte(0)
-                    oldXwerte(0) = summeExtCost
+                            Else
+                                Dim costName As String = costStr(0).Trim
 
-                    Dim anfang As Integer, ende As Integer
+                                If CostDefinitions.containsName(costName) Then
+                                    isCost = True
+                                    rk = CInt(CostDefinitions.getCostdef(costName).UID)
+                                    summeExtCost = CDbl(costStr(1))
+                                Else
 
-                    With cphase
+                                    rk = -1
 
-                        anfang = .relStart
-                        ende = .relEnde
-                        ReDim Xwerte(ende - anfang)
+                                End If
+                            End If
 
-                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-
-                    End With
-
-                    'Dim ccost As New clsKostenart(ende - anfang + 1)
-                    Dim ccost As New clsKostenart(ende - anfang)
-                    With ccost
-                        .KostenTyp = rk
-                        .Xwerte = Xwerte
-                    End With
-
-                    With cphase
-                        .AddCost(ccost)
-                    End With
+                            If rk > -1 And isCost Then
 
 
-                Catch ex As Exception
+                                If summeExtCost > 0.0 Then
 
-                End Try
+                                    ReDim oldXwerte(0)
+                                    oldXwerte(0) = summeExtCost
+
+                                    Dim anfang As Integer, ende As Integer
+
+                                    With cphase
+
+                                        anfang = .relStart
+                                        ende = .relEnde
+                                        ReDim Xwerte(ende - anfang)
+
+                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+
+                                    End With
+
+                                    Dim ccost As New clsKostenart(ende - anfang)
+                                    With ccost
+                                        .KostenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
+
+                                    With cphase
+                                        .AddCost(ccost)
+                                    End With
+
+                                    summeCost = summeCost + Xwerte.Sum
+
+                                End If
+
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
+                Next
 
             End If
         End If
+
+        ' Ende neu 
+
 
         ' jetzt ggf die Custom Fields eintragen 
         If Not IsNothing(listOfCustomFields) Then
@@ -8194,6 +8970,20 @@ Public Module Projekte
 
         End If
 
+        ' jetzt muss ggf das benötigte Budget errechnet werden 
+        If erloes = -999 Then
+            Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
+            Call newprojekt.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
+            If tmpERG < 0 Then
+                neededBudget = -1 * tmpERG
+            End If
+            newprojekt.Erloes = neededBudget
+        End If
+
+        ' Workaround: 
+        Dim tmpValue As Integer = newprojekt.dauerInDays
+        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+        ' Call awinCreateBudgetWerte(newprojekt)
 
         erstelleInventurProjekt = newprojekt
         '
@@ -8314,7 +9104,7 @@ Public Module Projekte
                 sichtbarerBereich = .VisibleRange
             End With
 
-            wsPT = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            wsPT = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             With wsPT
                 ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
                 maxRows = .Rows.Count
@@ -8538,7 +9328,7 @@ Public Module Projekte
                 sichtbarerBereich = .VisibleRange
             End With
 
-            currentWS = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             fileName = awinPath & cockpitsFile
 
@@ -8781,6 +9571,7 @@ Public Module Projekte
 
             Try
                 hproj = ShowProjekte.getProject(pname)
+
                 With hproj
                     zeile = .tfZeile
                     If type = 1 Then
@@ -8808,6 +9599,11 @@ Public Module Projekte
     End Sub
 
 
+    ''' <summary>
+    ''' es ist sichergestellt, dass variantename nicht gleich dem leeren Stirng ist 
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <remarks></remarks>
     Public Sub awinCancelBeauftragung(ByVal pname As String)
         Dim hproj As clsProjekt
         Dim zeile As Integer
@@ -8816,27 +9612,20 @@ Public Module Projekte
         ' prüfen, ob es in der ShowProjektListe ist ...
         If ShowProjekte.contains(pname) Then
 
-
             Try
                 hproj = ShowProjekte.getProject(pname)
 
-                If hproj.variantName = "" Then
-                    Call MsgBox("die Fixierung der Standard Variante kann nicht aufgehoben werden ..." & vbLf & _
-                                "bitte erstellen Sie zu diesem Zweck eine Variante ...")
-                Else
-                    With hproj
-                        zeile = .tfZeile
-                        .Status = ProjektStatus(0)
-                        .timeStamp = Date.Now
-                    End With
+                With hproj
+                    zeile = .tfZeile
+                    .Status = ProjektStatus(0)
+                    .timeStamp = Date.Now
+                End With
 
+                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
-
-                End If
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Fixierung aufheben " & pname & " , Modul: awinCancelBeauftragung")
@@ -9363,7 +10152,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -9493,7 +10282,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10131,7 +10920,7 @@ Public Module Projekte
 
         gesamt_summe = 0
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -10229,7 +11018,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10335,7 +11124,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).name)
+                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10403,8 +11192,10 @@ Public Module Projekte
 
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
         If roentgenBlick.isOn Then
-            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
-                .range(.cells(2, 1), .cells(1000, 1000)).clearcontents()
+
+            With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+                .range(.cells(2, 1), .cells(1000, 200)).clearcontents()
+
             End With
         End If
 
@@ -11879,14 +12670,14 @@ Public Module Projekte
 
         Try
 
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in bringChartstoFront : keine Shapes Zuordnung möglich ")
         End Try
 
 
-        For Each chtobj In CType(CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
+        For Each chtobj In CType(CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
             Try
                 With chtobj
@@ -12176,7 +12967,7 @@ Public Module Projekte
 
         Try
 
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in ZeichneProjektinPlanTafel : keine Shapes Zuordnung möglich ")
@@ -12740,7 +13531,7 @@ Public Module Projekte
 
         Try
 
-            worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Throw New Exception("in moveShapesDown : keine Shapes Zuordnung möglich ")
@@ -12822,7 +13613,7 @@ Public Module Projekte
 
             Try
 
-                worksheetShapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+                worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             Catch ex As Exception
                 Throw New Exception("in moveShapesUp : keine Shapes Zuordnung möglich ")
@@ -12899,7 +13690,7 @@ Public Module Projekte
         Dim timeAtStatus As Date = hproj.timeStamp
         Dim heuteColumn As Integer = getColumnOfDate(timeAtStatus)
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             worksheetShapes = .Shapes
 
             shpName = projectboardShapes.calcStatusShapeName(hproj.name, heuteColumn)
@@ -13068,7 +13859,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             worksheetShapes = .Shapes
             ' Änderung 12.7.14 Alle Milestone Shapes in ein gruppiertes Shape
@@ -13255,7 +14046,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             If currentValue > 0 Then
                 .Cells(currentRow, currentColumn).value = CInt(currentValue)
 
@@ -13286,8 +14077,9 @@ Public Module Projekte
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
 
+        Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             worksheetShapes = .Shapes
             ' Änderung 12.7.14 Alle Milestone Shapes in ein gruppiertes Shape
@@ -13302,8 +14094,6 @@ Public Module Projekte
 
             ' found=true bedeutet, dass das Shape bereits angezeigt wird  
             If found Then
-
-
 
                 ' Merken der Koordinaten 
                 ' bestimmen der Text Koordinaten 
@@ -13367,6 +14157,35 @@ Public Module Projekte
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
                     .TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                    ' braucht man für die Update Routine 
+                    .Name = calcProjectTextShapeName(hproj.name)
+
+                    ' hier werden die Farben und Fonts gemäß dem Protection Status bestimmt 
+                    If writeProtections.isProtected(pvName) Then
+                        If writeProtections.isPermanentProtected(pvName) Then
+                            ' use permanent Font
+                            .TextFrame.Characters.Font.FontStyle = awinSettings.protectedPermanentFont
+
+                            If writeProtections.isProtected(pvName, dbUsername) Then
+                                ' use byOtherProtectedColor 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByOtherColor
+                            Else
+                                ' use byMeProtected Color 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByMeColor
+                            End If
+                        Else
+                            ' use normal font
+                            If writeProtections.isProtected(pvName, dbUsername) Then
+                                ' use byOtherProtectedColor 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByOtherColor
+                            Else
+                                ' use byMeProtected Color 
+                                .TextFrame.Characters.Font.Color = awinSettings.protectedByMeColor
+                            End If
+                        End If
+                    Else
+                        ' es ist nicht protected, also muss nichts verändert werden 
+                    End If
 
                     .Fill.Visible = MsoTriState.msoTrue
                     .Fill.ForeColor.RGB = RGB(255, 255, 255)
@@ -13388,7 +14207,7 @@ Public Module Projekte
                     If pNameShape.Width > projectWidth Then
                         Dim newName As String = pNameShape.TextFrame2.TextRange.Text
                         Dim anzZeichen As Integer = newName.Length
-                        Do Until pNameShape.Width < projectWidth And anzZeichen > 3
+                        Do Until pNameShape.Width < projectWidth Or anzZeichen < 3
                             pNameShape.TextFrame2.TextRange.Text = newName.Substring(0, anzZeichen - 2)
                             anzZeichen = anzZeichen - 1
                         Loop
@@ -13422,6 +14241,7 @@ Public Module Projekte
 
 
     End Sub
+
 
     ''' <summary>
     ''' zeichnet die Abhängigkeiten zu dem übergebenen Projekt 
@@ -13465,7 +14285,7 @@ Public Module Projekte
             enableOnUpdate = False
             appInstance.EnableEvents = False
 
-            tmpshapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            tmpshapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
             pShape = tmpshapes.Item(pName)
 
             ' outgoing dependencies
@@ -13699,7 +14519,7 @@ Public Module Projekte
     '    End Try
 
 
-    '    With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+    '    With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
     '        worksheetShapes = .Shapes
 
@@ -14074,7 +14894,7 @@ Public Module Projekte
 
         End Try
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
 
             worksheetShapes = .Shapes
 
@@ -14336,7 +15156,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung, _
                                           ByVal isMissingDefinition As Boolean, ByVal farbe As Long)
-       
+
 
 
         With resultShape
@@ -14396,8 +15216,9 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="myproject"></param>
     ''' <param name="projectShape"></param>
-    ''' <remarks></remarks>
-    Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape)
+    ''' <remarks>
+    ''' am 7.3.17 Änderung: parameter myProject wird als byval nicht als byref übergeben</remarks>
+    Public Sub defineShapeAppearance(ByVal myproject As clsProjekt, ByRef projectShape As Excel.Shape)
 
         Dim pcolor As Object = XlRgbColor.rgbAqua
         Dim schriftFarbe As Long
@@ -14410,7 +15231,6 @@ Public Module Projekte
         Dim showAmpel As Boolean = False
         Dim showResults As Boolean = True
         Dim myshape As Excel.Shape
-        
 
 
         Try
@@ -14465,8 +15285,6 @@ Public Module Projekte
 
             End Try
 
-
-
             ' hier muss jetzt unterschieden werden, ob die Projektlinie gezeichnet wurde oder der Balken 
 
             If awinSettings.drawProjectLine Then
@@ -14482,7 +15300,7 @@ Public Module Projekte
 
                 End Try
 
-                ' Darstellung, fixiert oder nicht fixiert 
+                ' Darstellung an den Linien-Enden, fixiert oder nicht fixiert 
                 Try
 
                     With .Line
@@ -14495,8 +15313,6 @@ Public Module Projekte
                         End If
 
                     End With
-
-
 
                 Catch ex As Exception
 
@@ -14766,7 +15582,7 @@ Public Module Projekte
     '    Dim laenge As Integer
     '    Dim status As String
     '    Dim top As Double, left As Double, width As Double, height As Double
-    '    Dim magicBoardShapes As Excel.Shapes = appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)).shapes
+    '    Dim magicBoardShapes As Excel.Shapes = appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).shapes
     '    Dim shpelement As Excel.Shape
 
 
@@ -14796,7 +15612,7 @@ Public Module Projekte
     '    appInstance.EnableEvents = False
     '    appInstance.ScreenUpdating = False
 
-    '    With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+    '    With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
     '        Try
     '            shpelement = magicBoardShapes.Item(pname)
     '            Dim myCollection As New Collection
@@ -14842,7 +15658,7 @@ Public Module Projekte
         'Dim XPos As Integer, YPos As Integer
         'Dim laenge As Integer
         'Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
-        Dim tmpshapes As Excel.Shapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+        Dim tmpshapes As Excel.Shapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
         Dim shpelement As Excel.Shape
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -14937,7 +15753,7 @@ Public Module Projekte
             End If
 
             Dim shp As Excel.Shape
-            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
+            With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
 
 
                 fillColor = RGB(255, 255, 255)
@@ -15119,7 +15935,7 @@ Public Module Projekte
         End Try
 
         If anzPts >= 0 Then
-            With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
                 For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                     If chtobj.Chart.ChartTitle.Text = diagramTitle Then
                         found = True
@@ -16805,7 +17621,7 @@ Public Module Projekte
                     Catch ex As Exception
 
                     End Try
-                   
+
                 End With
 
 
@@ -18052,17 +18868,30 @@ Public Module Projekte
         End If
 
         Try
-            With appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3))
-                von = CDate(.cells(1, start).value)
-                bis = CDate(.cells(1, ende).value)
-                If start < ende Then
-                    htxt = von.ToString("MMM yy", repCult) & " - " & bis.ToString("MMM yy", repCult)
-                ElseIf start = ende Then
-                    htxt = von.ToString("MMM yy", repCult)
-                Else
-                    htxt = bis.ToString("MMM yy", repCult) & " - " & von.ToString("MMM yy", repCult)
-                End If
-            End With
+            ' ur: 13.12.2016: für ReportGen, darf nicht aus der ProjektTafel das Raster abgelesen werden
+            von = getDateofColumn(start, False)
+            bis = getDateofColumn(ende, True)
+
+            If start < ende Then
+                htxt = von.ToString("MMM yy", repCult) & " - " & bis.ToString("MMM yy", repCult)
+            ElseIf start = ende Then
+                htxt = von.ToString("MMM yy", repCult)
+            Else
+                htxt = bis.ToString("MMM yy", repCult) & " - " & von.ToString("MMM yy", repCult)
+            End If
+
+
+            ' ''With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+            ' ''    von = CDate(.cells(1, start).value)
+            ' ''    bis = CDate(.cells(1, ende).value)
+            ' ''    If start < ende Then
+            ' ''        htxt = von.ToString("MMM yy", repCult) & " - " & bis.ToString("MMM yy", repCult)
+            ' ''    ElseIf start = ende Then
+            ' ''        htxt = von.ToString("MMM yy", repCult)
+            ' ''    Else
+            ' ''        htxt = bis.ToString("MMM yy", repCult) & " - " & von.ToString("MMM yy", repCult)
+            ' ''    End If
+            ' ''End With
         Catch ex As Exception
 
         End Try
@@ -18104,7 +18933,7 @@ Public Module Projekte
 
     End Function
 
- 
+
 
     ''' <summary>
     ''' gibt das  Datum zurück, das der Rasterspalte in der Projekt-Tafel entspricht
@@ -18114,6 +18943,7 @@ Public Module Projekte
     ''' <param name="raster"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
+
     Public Function getDateofColumn(ByVal raster As Integer, ByVal isBisDate As Boolean) As Date
         Dim datum As Date = StartofCalendar
 
@@ -18400,6 +19230,20 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' errechnet den Namen, den das Text Shape eines Projektes hat; Input ist der Projekt-Name
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcProjectTextShapeName(ByVal pName As String) As String
+        Dim tmpResult As String = "DummyName"
+        If Not IsNothing(pName) Then
+            tmpResult = "t0a1" & pName
+        End If
+        calcProjectTextShapeName = tmpResult
+    End Function
+
+    ''' <summary>
     ''' errechnet den für Showprojekte und AlleProjekte benötigten Schlüssel
     ''' verwendet dazu die in hproj vorhandenen Attribute Name und variantName
     ''' </summary>
@@ -18578,7 +19422,7 @@ Public Module Projekte
 
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
             worksheetShapes = .Shapes
         End With
 
@@ -18794,6 +19638,45 @@ Public Module Projekte
         End With
 
     End Function
+
+    ''' <summary>
+    ''' aktualisiert das ProjektInfo1 Fenster mit Profit/Loss Anzeige 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="dbProj"></param>
+    ''' <remarks></remarks>
+    Public Sub updateProjectInfo1(ByVal hproj As clsProjekt, ByVal dbProj As clsProjekt)
+
+
+        If Not IsNothing(formProjectInfo1) Then
+
+            Dim lblDBVersion As String = ""
+            Dim currentV As String = ""
+            Dim currentDB As String = ""
+            Dim pname As String = ""
+            Dim budget As Double, pk As Double, sk As Double, rk As Double, erg As Double
+            If Not IsNothing(dbProj) Then
+                lblDBVersion = "DB (" & dbProj.timeStamp.ToShortDateString & ")"
+                Call dbProj.calculateRoundedKPI(budget, pk, sk, rk, erg, True)
+                currentDB = erg.ToString & " T€"
+            End If
+
+            If Not IsNothing(hproj) Then
+                Call hproj.calculateRoundedKPI(budget, pk, sk, rk, erg, True)
+                currentV = erg.ToString & " T€"
+                pname = hproj.name
+            End If
+
+            With formProjectInfo1
+                .lblProjectName.Text = pname
+                .lblDBVersion.Text = lblDBVersion
+                .currentForecast.Text = currentV
+                .dbForecast.Text = currentDB
+            End With
+
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' aktualisiert bzw. zeigt das Status Fenster zur Ampel-Erläuterung eines Projektes 
@@ -19113,7 +19996,7 @@ Public Module Projekte
         Dim sollLeft As Double, sollWidth As Double, sollTop As Double, sollHeight As Double
         Dim istLeft As Double, istWidth As Double
 
-        Dim projectShapes As Excel.Shapes = CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+        Dim projectShapes As Excel.Shapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
         Dim suchstring = phaseShape.Name
 
         Dim projectShape As Excel.ShapeRange, shapeSammlung As Excel.ShapeRange
@@ -19651,7 +20534,7 @@ Public Module Projekte
 
         End If
 
-        
+
 
 
 
@@ -19736,7 +20619,7 @@ Public Module Projekte
             If selectIT Then
 
                 Try
-                    CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
+                    CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
                 Catch ex As Exception
 
                 End Try
@@ -20060,6 +20943,28 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' gibt für das Projekt zurück, ob es in dem angegebenen Zeitraum liegt oder nicht 
+    ''' wenn kein Zeitraum angegeben ist, wird true zurürkgegeben 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function projectWithinTimeFrame(ByVal hproj As clsProjekt) As Boolean
+        Dim within As Boolean = False
+
+        Dim startM As Integer = getColumnOfDate(hproj.startDate)
+        Dim endM As Integer = getColumnOfDate(hproj.endeDate)
+
+        Dim relStart As Integer = 1
+        Dim relEnde As Integer = relStart + (endM - startM)
+
+        within = phaseWithinTimeFrame(hproj.Start, relStart, relEnde, _
+                                       showRangeLeft, showRangeRight)
+
+        projectWithinTimeFrame = within
+    End Function
+
+    ''' <summary>
     ''' gibt für die Phase zurück, ob Sie in dem angegebenen Zeitraum liegt oder nicht
     ''' wenn kein Timeframe definiert ist, dann wird true zurückgegeben  
     ''' wenn completeWithin angegeben ist, dann wird nur true zurückgegeben, wenn die Phase vollständig im Zeitraum liegt 
@@ -20103,7 +21008,7 @@ Public Module Projekte
                 End If
             End If
         End If
-        
+
 
 
         phaseWithinTimeFrame = within
@@ -20588,6 +21493,12 @@ Public Module Projekte
         Dim currentValue As Double
         Dim heuteColumn As Integer = getColumnOfDate(heute)
 
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            expl = "Erläuterung ..."
+        Else
+            expl = "Explanation ..."
+        End If
+
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
             allMilestones = 0
@@ -20622,18 +21533,24 @@ Public Module Projekte
                                         currentValue <= redBaseValue + redPercentage Then
 
                                         Dim b As clsBewertung
+                                        Dim tmpDescription As String
+                                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                            tmpDescription = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
+                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
+                                        Else
+                                            tmpDescription = "Date and Deliverables will most probably not be achieved; " & vbLf & _
+                                                "Reasons:  ... " & vbLf & "Measures: ...."
+                                        End If
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
-                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelRot
                                             b.colorIndex = PTfarbe.red
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
-                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelRot
                                             b.colorIndex = PTfarbe.red
                                         End If
@@ -20647,18 +21564,25 @@ Public Module Projekte
                                     ElseIf currentValue >= yellowBaseValue And _
                                         currentValue <= yellowBaseValue + yellowPercentage Then
                                         Dim b As clsBewertung
+                                        Dim tmpDescription As String
+                                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                            tmpDescription = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
+                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
+                                        Else
+                                            tmpDescription = "there are risks to achieve date and deliverables;" & vbLf & _
+                                                "Risks: ... " & vbLf & "Measures: ..."
+                                        End If
+
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
-                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGelb
                                             b.colorIndex = PTfarbe.yellow
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
-                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGelb
                                             b.colorIndex = PTfarbe.yellow
                                         End If
@@ -20670,16 +21594,23 @@ Public Module Projekte
 
                                     Else
                                         Dim b As clsBewertung
+                                        Dim tmpDescription As String
+                                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                            tmpDescription = "Forecast für Termin / Qualität aktuell grün"
+                                        Else
+                                            tmpDescription = "positive Forecast for date and deliverables"
+                                        End If
+
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Forecast für Termin / Qualität aktuell grün"
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGruen
                                             b.colorIndex = PTfarbe.green
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Forecast für Termin / Qualität aktuell grün"
+                                            b.description = tmpDescription
                                             'b.color = awinSettings.AmpelGruen
                                             b.colorIndex = PTfarbe.green
                                         End If
@@ -20696,6 +21627,10 @@ Public Module Projekte
                                 ' hier sind wir in der Vergangenheit : nur dann etwas tun, wenn der Meilenstein noch keine Bewertung hat 
                                 ' oder aber eine graue Bewertung hat 
                                 Dim b As clsBewertung
+                                Dim tmpDescription As String
+
+
+
                                 Dim notYetDone As Boolean = False
                                 If milestone.bewertungsCount = 0 Then
                                     b = New clsBewertung
@@ -20715,13 +21650,19 @@ Public Module Projekte
                                         If currentValue >= redBaseValue And _
                                             currentValue <= redBaseValue + redPercentage Then
 
+                                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                                tmpDescription = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                            Else
+                                                tmpDescription = "finished: deliverables were reduced considerably, due to ..."
+                                            End If
+
                                             If .bewertungsCount = 0 Then
-                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelRot
                                                 b.colorIndex = PTfarbe.red
                                                 .addBewertung(b)
                                             Else
-                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelRot
                                                 b.colorIndex = PTfarbe.red
                                             End If
@@ -20730,14 +21671,20 @@ Public Module Projekte
                                         ElseIf currentValue >= yellowBaseValue And _
                                             currentValue <= yellowBaseValue + yellowPercentage Then
 
+                                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                                tmpDescription = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                            Else
+                                                tmpDescription = "finished: deliverables were not achieved completely, due to ..."
+                                            End If
+
                                             If .bewertungsCount = 0 Then
-                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGelb
                                                 b.colorIndex = PTfarbe.yellow
                                                 .addBewertung(b)
                                             Else
                                                 b = .getBewertung(1)
-                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGelb
                                                 b.colorIndex = PTfarbe.yellow
                                             End If
@@ -20746,14 +21693,20 @@ Public Module Projekte
 
                                         Else
 
+                                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                                tmpDescription = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                            Else
+                                                tmpDescription = "finished: all deliverables achieved"
+                                            End If
+
                                             If .bewertungsCount = 0 Then
-                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGruen
                                                 b.colorIndex = PTfarbe.green
                                                 .addBewertung(b)
                                             Else
                                                 b = .getBewertung(1)
-                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.description = tmpDescription
                                                 'b.color = awinSettings.AmpelGruen
                                                 b.colorIndex = PTfarbe.green
                                             End If
@@ -20780,26 +21733,42 @@ Public Module Projekte
 
                 End If
 
+                Dim tmpDescription1 As String
+                Dim tmpDescription2 As String
+                Dim tmpDescription3 As String
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpDescription3 = "aktuell sehr kritische Lage des Projektes" & vbLf & _
+                            "Gründe: ...." & _
+                            "Massnahmen: ...."
+                    tmpDescription2 = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                            "Risiken: ...." & _
+                            "Massnahmen: ...."
+                    tmpDescription1 = "aktuell alles plangemäß"
+                Else
+                    tmpDescription3 = "currently very critical project situation" & vbLf & _
+                            "Reasons: ...." & _
+                            "Measures: ...."
+                    tmpDescription2 = "existing risks in project" & vbLf & _
+                            "Risks: ...." & _
+                            "Measures: ...."
+                    tmpDescription1 = "currently positiv forecast for project"
+                End If
+
                 ' jetzt noch die Ampel-Farbe setzen 
                 If redMilestones > 0 Then
 
                     If greenMilestones > 0 Then
                         If redMilestones / greenMilestones > 0.02 Then
-                            .ampelErlaeuterung = "aktuell sehr kritische Lage des Projektes" & vbLf & _
-                                "Gründe: ...." & _
-                                "Massnahmen: ...."
+                            .ampelErlaeuterung = tmpDescription3
                             .ampelStatus = 3
                         Else
-                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                                "Risiken: ...." & _
-                                "Massnahmen: ...."
+                            .ampelErlaeuterung = tmpDescription2
                             .ampelStatus = 2
                         End If
                     Else
                         ' in diesem Fall wird es unmittelbar vor Projekt-Abschluss sein ... 
-                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                                "Risiken: ...." & _
-                                "Massnahmen: ...."
+                        .ampelErlaeuterung = tmpDescription2
                         .ampelStatus = 2
                     End If
 
@@ -20808,22 +21777,18 @@ Public Module Projekte
                     If greenMilestones > 0 Then
 
                         If yellowMilestones / greenMilestones > 0.05 Then
-                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                            "Risiken: ...." & _
-                            "Massnahmen: ...."
+                            .ampelErlaeuterung = tmpDescription2
                             .ampelStatus = 2
                         Else
-                            .ampelErlaeuterung = "aktuell alles plangemäß"
+                            .ampelErlaeuterung = tmpDescription1
                             .ampelStatus = 1
                         End If
                     Else
-                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
-                            "Risiken: ...." & _
-                            "Massnahmen: ...."
+                        .ampelErlaeuterung = tmpDescription2
                         .ampelStatus = 2
                     End If
                 Else
-                    .ampelErlaeuterung = "aktuell alles plangemäß"
+                    .ampelErlaeuterung = tmpDescription1
                     .ampelStatus = 1
                 End If
 
@@ -20985,7 +21950,7 @@ Public Module Projekte
             Else
                 endIX = startIX + pEnde - von
             End If
-            
+
         End If
 
         If noOverlap Then

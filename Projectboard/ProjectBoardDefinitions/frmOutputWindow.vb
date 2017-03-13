@@ -5,10 +5,13 @@
 
         For i As Integer = 1 To textCollection.Count
 
-            ListBoxOutput.Items.Add(CStr(textCollection.Item(i)))
+            ' hier muss es jetzt zerhackt werden ... 
+            Dim tmpstr() As String = CStr(textCollection.Item(i)).Split(New Char() {CChar(vbLf), CChar(vbCr)})
+            For ii As Integer = 0 To tmpstr.Length - 1
+                ListBoxOutput.Items.Add(tmpstr(ii))
+            Next
 
         Next
-
 
     End Sub
 

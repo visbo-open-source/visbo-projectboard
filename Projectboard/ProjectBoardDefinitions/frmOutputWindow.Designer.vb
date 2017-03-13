@@ -29,7 +29,7 @@ Partial Class frmOutputWindow
         'lblOutput
         '
         Me.lblOutput.AutoSize = True
-        Me.lblOutput.Location = New System.Drawing.Point(12, 16)
+        Me.lblOutput.Location = New System.Drawing.Point(12, 10)
         Me.lblOutput.Name = "lblOutput"
         Me.lblOutput.Size = New System.Drawing.Size(39, 13)
         Me.lblOutput.TabIndex = 0
@@ -38,6 +38,7 @@ Partial Class frmOutputWindow
         'ListBoxOutput
         '
         Me.ListBoxOutput.FormattingEnabled = True
+        Me.ListBoxOutput.HorizontalExtent = 1024
         Me.ListBoxOutput.HorizontalScrollbar = True
         Me.ListBoxOutput.Location = New System.Drawing.Point(12, 44)
         Me.ListBoxOutput.Name = "ListBoxOutput"

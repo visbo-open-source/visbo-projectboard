@@ -37,6 +37,33 @@
 
     ''End Sub
 
+
+    ''' <summary>
+    ''' liefert true zurück, wenn alle Kostendefinitionen der einen Liste identisch mit der anderen sind
+    ''' </summary>
+    ''' <param name="vglDefinitionen"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isIdenticalTo(ByVal vglDefinitionen As clsKostenarten)
+        Get
+            Dim stillIdentical = True
+
+            If Me.Count = vglDefinitionen.Count Then
+                Dim i As Integer = 0
+                Do While i < _allKostenarten.Count And stillIdentical
+                    stillIdentical = _allKostenarten.ElementAt(i).Value.isIdenticalTo(vglDefinitionen.getCostdef(i + 1))
+                    i = i + 1
+                Loop
+
+            Else
+                stillIdentical = False
+            End If
+
+            isIdenticalTo = stillIdentical
+        End Get
+    End Property
+
     Public ReadOnly Property Count() As Integer
         Get
             Count = _allKostenarten.Count
@@ -71,6 +98,22 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zurück, ob der Key bereits enthalten ist 
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsUid(uid As Integer) As Boolean
+        Get
+
+            containsUid = _allKostenarten.ContainsKey(uid)
+
+        End Get
+    End Property
+
 
     Public ReadOnly Property getCostdef(ByVal myitem As String) As clsKostenartDefinition
         Get

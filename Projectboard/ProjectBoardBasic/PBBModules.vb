@@ -3,9 +3,7 @@ Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports MongoDbAccess
 Imports ClassLibrary1
-'' '' ''ur: 13.09.2016
-'' '' ''Imports WpfWindow
-Imports WPFPieChart
+'Imports WPFPieChart ' wird nicht verwendet 
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
@@ -650,10 +648,8 @@ Public Module PBBModules
                             .timeStamp = Date.Now
                             .shpUID = hproj.shpUID
                             .tfZeile = hproj.tfZeile
-                            .Status = ProjektStatus(0)
-                            If Not IsNothing(hproj.budgetWerte) Then
-                                .budgetWerte = hproj.budgetWerte
-                            End If
+                            ' war vorher immer ProjektStatus(0)
+                            .Status = ProjektStatus(1)
 
                         End With
 
@@ -769,8 +765,14 @@ Public Module PBBModules
 
         If Not IsNothing(awinSelection) Then
 
-            bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
+            If awinSettings.englishLanguage Then
+                bestaetigeLoeschen.botschaft = "please confirm deleting in session ..." & vbLf & _
+                                            "Attention: all variants will get deleted as well ..."
+            Else
+                bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
                                             "Vorsicht: alle Varianten werden mitgelöscht ..."
+            End If
+            
             returnValue = bestaetigeLoeschen.ShowDialog
 
             If returnValue = DialogResult.Cancel Then
@@ -798,13 +800,17 @@ Public Module PBBModules
                         Try
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
                             If Not IsNothing(hproj) Then
-                                If notReferencedByAnyPortfolio(hproj.name, hproj.variantName) Then
-                                    Call awinDeleteProjectInSession(pName:=.Name)
-                                Else
-                                    Dim outputline As String = "Löschen verweigert " & hproj.name & " wird in Szenarien referenziert: "
-                                    outputline = outputline & projectConstellations.getSzenarioNamesWith(hproj.name, hproj.variantName)
-                                    outputCollection.Add(outputline)
-                                End If
+
+                                Call awinDeleteProjectInSession(pName:=.Name)
+                                ' Änderung tk: bei dem Löschen in der Session soll keine Restriktion gelten;
+                                ' ausserdem soll es konsistent zu Löschen aus Session über Portfolio Browser sein 
+                                'If notReferencedByAnyPortfolio(hproj.name, hproj.variantName) Then
+                                '    Call awinDeleteProjectInSession(pName:=.Name)
+                                'Else
+                                '    Dim outputline As String = "Löschen verweigert " & hproj.name & " wird in Szenarien referenziert: "
+                                '    outputline = outputline & projectConstellations.getSzenarioNamesWith(hproj.name, hproj.variantName)
+                                '    outputCollection.Add(outputline)
+                                'End If
                             End If
 
 
@@ -834,7 +840,12 @@ Public Module PBBModules
             Dim deletedProj As Integer = 0
 
             If AlleProjekte.Count = 0 Then
-                Call MsgBox("es sind keine Projekte geladen !")
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects in session ...")
+                Else
+                    Call MsgBox("es sind keine Projekte in der Session geladen ...")
+                End If
+
             Else
 
                 'Dim deleteProjects As New frmDeleteProjects
@@ -1030,12 +1041,43 @@ Public Module PBBModules
 
 
     End Sub
+
+    Sub PBBWriteProtections(ByVal control As IRibbonControl, ByVal setFlag As Boolean)
+
+
+        
+        Dim writeProtectProjects As New frmProjPortfolioAdmin
+        If AlleProjekte.Count > 0 Then
+
+            Try
+
+                With writeProtectProjects
+                    .aKtionskennung = PTTvActions.setWriteProtection
+                End With
+
+                writeProtectProjects.Show()
+
+            Catch ex As Exception
+
+                Call MsgBox(ex.Message)
+            End Try
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/variants first ...")
+            Else
+                Call MsgBox("bitte erst Projekte / Varianten laden ...")
+            End If
+        End If
+        
+
+    End Sub
     ''' <summary>
     ''' aktiviert die selektierte Variante 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub PBBVarianteAktiv(control As IRibbonControl)
+    Sub PBBVarianteAktiv(ByVal control As IRibbonControl)
 
         Dim deletedProj As Integer = 0
         'Dim returnValue As DialogResult

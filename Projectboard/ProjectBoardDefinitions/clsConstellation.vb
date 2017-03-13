@@ -1,7 +1,106 @@
 ﻿Public Class clsConstellation
 
+    ' sortierte liste von pvName und clsConstellationItems
     Private _allItems As SortedList(Of String, clsConstellationItem)
+
+    ' sortierte Liste eines beliebig zu erstellenden Keys und dem pvName  
+    Private _sortList As New SortedList(Of String, String)
+
+    ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
+    ' 0: alphabetisch nach Name
+    ' 1: custom tfzeile 
+    ' 2: custom Liste
+    ' 3: BU, ProjektStart, Name
+    ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
+    Private _sortType As Integer
+
     Private _constellationName As String = "Last"
+
+    ''' <summary>
+    ''' baut eine sortierte Liste der Projekt-Namen auf !
+    ''' die Position auf der Projekt-Tafel bzw. im Portfolio Browser ergibt sich dann 
+    ''' aus dem Index in der sortierten Liste  
+    ''' </summary>
+    ''' <param name="sortType"></param>
+    ''' <param name="liste"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property sortCriteria(ByVal sortType As Integer, _
+                                     Optional liste As SortedList(Of String, String) = Nothing) As Integer
+
+        Get
+            sortCriteria = _sortType
+        End Get
+        Set(value As Integer)
+
+            Dim pName As String = ""
+
+            If Not IsNothing(value) Then
+
+
+                Select Case value
+                    Case ptSortCriteria.alphabet ' alphabetisch nach Name
+                        _sortList.Clear()
+                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                            pName = kvp.Value.projectName
+                            If Not _sortList.ContainsKey(pName) Then
+                                _sortList.Add(pName, pName)
+                            End If
+                        Next
+
+                    Case ptSortCriteria.customTF  ' nach tfzeile 
+                        _sortList.Clear()
+                        Dim doneList As New SortedList(Of String, Boolean)
+                        Dim korrFaktor As Double = 0.0001
+                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+
+                            pName = kvp.Value.projectName
+                            If Not doneList.ContainsKey(pName) Then
+                                Dim key As Double
+                                Dim tKey As String
+
+                                If kvp.Value.show Then
+                                    key = kvp.Value.zeile
+                                Else
+                                    key = 100000
+                                End If
+
+                                tKey = key.ToString("######.####")
+                                Do While _sortList.ContainsKey(tKey)
+                                    key = key + korrFaktor
+                                    tKey = key.ToString("######.####")
+                                Loop
+                                If Not _sortList.ContainsKey(tKey) Then
+                                    _sortList.Add(tKey, pName)
+                                    doneList.Add(pName, True)
+                                End If
+                            End If
+                            
+                        Next
+
+                    Case ptSortCriteria.customListe
+                        ' erstmal checken , ob die Liste auch alle Elemente aus kvp enthält 
+                        If Not IsNothing(liste) Then
+                            If liste.Count = Me.getProjectNames.Count Then
+
+                            End If
+                        End If
+                        _sortList.Clear()
+
+                    Case ptSortCriteria.buStartName
+
+                    Case ptSortCriteria.formel
+
+                    Case Else
+                        ' nichts machen
+                End Select
+            End If
+
+
+        End Set
+    End Property
+
 
     ''' <summary>
     ''' setzt den Namen; wenn Nothing ode rleer , dann wird als Name Last gesetzt 
@@ -95,6 +194,7 @@
 
     End Sub
 
+
     ''' <summary>
     ''' gibt eine komplette Liste an Projekt-Namen zurück, die in der Constellation auftreten;
     ''' by default unabhängig, ob mit Show Attribute oder ohne 
@@ -104,16 +204,46 @@
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getProjectNames(Optional ByVal considerShow As Boolean = False, _
-                                             Optional ByVal showValue As Boolean = True) As Collection
+                                             Optional ByVal showValue As Boolean = True, _
+                                             Optional ByVal sortCriteria As Integer = 0) As Collection
         Get
             Dim tmpCollection As New Collection
             Dim pName As String
+            Dim key As String = ""
+            Dim korrFaktor1 As Double = 0.000001
+            Dim korrfaktor2 As Double = 0.000000001
+            Dim tmpResult As Double = 0.0
 
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                 pName = kvp.Value.projectName
-                If Not tmpCollection.Contains(pName) Then
-                    tmpCollection.Add(pName, pName)
-                End If
+
+                Select Case sortCriteria
+                    Case 0
+                        ' sortiert nach Name
+                        key = pName
+                        If Not tmpCollection.Contains(key) Then
+                            tmpCollection.Add(Item:=pName, Key:=key)
+                        End If
+                    Case 1
+                        ' sortiert nach relativer Position in der Konstellation
+                        ' wenn sie in der gleichen Zeile vorkommen, dann ist das Startdatum entscheidend
+                        key = kvp.Value.zeile.ToString
+                        If Not tmpCollection.Contains(key) Then
+                            tmpCollection.Add(Item:=pName, Key:=key)
+                        Else
+                            Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Value.projectName, kvp.Value.variantName)
+                            tmpResult = kvp.Value.zeile + korrFaktor1 * hproj.Start + korrfaktor2 * hproj.dauerInDays
+                            key = tmpResult.ToString
+                            Do While tmpCollection.Contains(key)
+                                tmpResult = tmpResult + korrfaktor2
+                                key = tmpResult.ToString
+                            Loop
+                            tmpCollection.Add(Item:=pName, Key:=key)
+                        End If
+                    Case 2
+                End Select
+
+
             Next
 
             getProjectNames = tmpCollection
@@ -123,10 +253,7 @@
 
     ''' <summary>
     ''' gibt die Anzahl Varianten für den übergebenen pName an 
-    ''' Das Projekt mit variantName = "" zählt dabei nicht als Variante 
-    ''' es gibt nur das Projekt mit Variante "": 0
-    ''' es gibt nicht einmal das Projekt mit Namen pName: -1
-    ''' Anzahl Varianten mit variantName ungleich "": sonst
+    ''' Das Projekt mit variantName = "" zählt dabei auch als Variante 
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <value></value>
@@ -135,25 +262,16 @@
     Public ReadOnly Property getVariantZahl(ByVal pName As String) As Integer
         Get
             Dim tmpResult As Integer = 0
-            Dim atLeastOne As Boolean = False
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
 
                 If pName = kvp.Value.projectName Then
-                    If kvp.Value.variantName = "" Then
-                        atLeastOne = True
-                    Else
-                        tmpResult = tmpResult + 1
-                    End If
+                    tmpResult = tmpResult + 1
                 End If
 
             Next
 
-            ' falls es gar nix gibt ... 
-            If tmpResult = 0 And Not atLeastOne Then
-                tmpResult = -1
-            End If
-
             getVariantZahl = tmpResult
+
         End Get
     End Property
 

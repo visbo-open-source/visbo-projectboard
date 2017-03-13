@@ -41,6 +41,7 @@ Public Class frmProjPortfolioAdmin
         description = 0
         dependencies = 1
         scenarioReferences = 2
+        protectedBy = 3
     End Enum
 
     ''' <summary>
@@ -80,7 +81,7 @@ Public Class frmProjPortfolioAdmin
         
 
         ' Maus auf Normalmodus zurücksetzen
-        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+        'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
 
     End Sub
 
@@ -94,9 +95,18 @@ Public Class frmProjPortfolioAdmin
             ' bei Beginn immer disabled
             .deleteFilterIcon.Enabled = False
 
+            ' Text des Versions-Feldes
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                .lblStandvom.Text = "Version at:"
+            End If
+
             If aKtionskennung = PTTvActions.activateV Then
 
-                .Text = "Variante aktivieren"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Variante aktivieren"
+                Else
+                    .Text = "Activate Variant"
+                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -123,10 +133,16 @@ Public Class frmProjPortfolioAdmin
 
                 storeToDBasWell.Visible = False
 
+                chkbxPermanent.Visible = False
+
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
-                '.Text = "Zusammenstellung im Szenario ändern"
-                .Text = "Scenario "
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Szenario "
+                Else
+                    .Text = "Scenario "
+                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -145,11 +161,20 @@ Public Class frmProjPortfolioAdmin
                 .OKButton.Visible = True
                 '.OKButton.Text = "Szenario speichern"
 
-                If storeToDBasWell.Checked Then
-                    .OKButton.Text = "Store to Session and DB"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    If storeToDBasWell.Checked Then
+                        .OKButton.Text = "in Session und DB speichern"
+                    Else
+                        .OKButton.Text = "in Session speichern"
+                    End If
                 Else
-                    .OKButton.Text = "Store to Session"
+                    If storeToDBasWell.Checked Then
+                        .OKButton.Text = "Store to Session and DB"
+                    Else
+                        .OKButton.Text = "Store to Session"
+                    End If
                 End If
+
 
                 Dim testName As String = .OKButton.Name
 
@@ -163,9 +188,15 @@ Public Class frmProjPortfolioAdmin
 
                 storeToDBasWell.Visible = True
 
+                chkbxPermanent.Visible = False
+
             ElseIf aKtionskennung = PTTvActions.deleteV Then
 
-                .Text = "Variante löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Variante löschen"
+                Else
+                    .Text = "Delete Variant"
+                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -181,8 +212,14 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    OKButton.Text = "aus Session Löschen"
+                Else
+                    .OKButton.Text = "Delete from Session"
+                End If
+
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+
 
                 .lblVersionen1.Visible = False
                 .lblVersionen2.Visible = False
@@ -193,10 +230,16 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
-                .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+                Else
+                    .Text = "Delete projects, variants, timestamps from DB"
+                End If
+
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -213,7 +256,12 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "in DB Löschen"
+                Else
+                    .OKButton.Text = "Delete from DB"
+                End If
+
 
                 .lblVersionen1.Visible = False
                 .lblVersionen2.Visible = False
@@ -224,10 +272,16 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
-                .Text = "alle Projekte, Varianten löschen ausser den letzten Ständen ..."
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Alle Zeitstempel löschen ausser ... "
+                Else
+                    .Text = "Delete all timestamps except ..."
+                End If
+
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -244,10 +298,21 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "in DB Löschen"
+                Else
+                    .OKButton.Text = "Delete from DB"
+                End If
+
 
                 .lblVersionen1.Visible = True
                 .lblVersionen2.Visible = True
+
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    lblVersionen1.Text = "delete all except"
+                    lblVersionen2.Text = "different versions"
+                End If
+
                 .versionsToKeep.Visible = True
                 .versionsToKeep.Value = 3
                 .lblVersionen1.Top = .lblVersionen1.Top + versionenOffset
@@ -260,9 +325,16 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.delFromSession Then
-                .Text = "Projekte, Varianten aus der Session löschen"
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte, Varianten aus der Session löschen"
+                Else
+                    .Text = "Delete projects, variants from Session"
+                End If
+
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -279,17 +351,28 @@ Public Class frmProjPortfolioAdmin
                 .dropboxScenarioNames.Visible = False
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Löschen"
+                Else
+                    .OKButton.Text = "Delete"
+                End If
+
 
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.loadPV Then
 
-                .Text = "Projekte und Varianten in die Session laden "
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte und Varianten in die Session laden "
+                Else
+                    .Text = "Load projects and variants to the session "
+                End If
+
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -307,18 +390,28 @@ Public Class frmProjPortfolioAdmin
 
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Laden"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Laden"
+                Else
+                    .OKButton.Text = "Load"
+                End If
+
 
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
 
             ElseIf aKtionskennung = PTTvActions.loadPVS Then
 
-                .Text = "Projekte und Varianten in die Session laden "
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekte und Varianten in die Session laden "
+                Else
+                    .Text = "Load projects and variants to the session "
+                End If
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -336,13 +429,57 @@ Public Class frmProjPortfolioAdmin
 
 
                 .OKButton.Visible = True
-                .OKButton.Text = "Laden"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Laden"
+                Else
+                    .OKButton.Text = "Load"
+                End If
 
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
+
+            ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Schreibschutz für Projekt-Varianten"
+                Else
+                    .Text = "Write Protections for Project Variants"
+                End If
+
+                .requiredDate.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = True
+                .SelectionReset.Visible = True
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .dropboxScenarioNames.Visible = False
+
+
+                .OKButton.Visible = False
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = ""
+                Else
+                    .OKButton.Text = ""
+                End If
+
+                onlyActive.Visible = False
+                onlyInactive.Visible = False
+                backToInit.Visible = False
+
+                storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = True
+
+
             End If
 
         End With
@@ -353,7 +490,16 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub frmDefineEditPortfolio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        'Dim browserAlleProjekte As New clsProjekteAlle
+        ' erstmal den WaitCursor zeigen ... 
+        Me.Cursor = Cursors.Default
+
+        ' den hilfetext setzen ...
+        If awinSettings.englishLanguage Then
+            Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf & _
+                                                  "das ist die 1.Zeile " & vbLf & _
+                                                  "das ist die zweite Zeile")
+            Me.portfolioBrowserHelp.SetShowHelp(TreeViewProjekte, True)
+        End If
 
         If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
@@ -363,10 +509,13 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
-
-
         ' was sollen die ToolTipps zeigen ? 
-        toolTippsAreShowing = ptPPAtooltipps.description
+        If aKtionskennung = PTTvActions.setWriteProtection Then
+            toolTippsAreShowing = ptPPAtooltipps.protectedBy
+        Else
+            toolTippsAreShowing = ptPPAtooltipps.description
+        End If
+
 
         ' bestimmen, ob es sich um quicklist handelt ...
         If aKtionskennung = PTTvActions.loadPV Or _
@@ -442,7 +591,7 @@ Public Class frmProjPortfolioAdmin
 
 
         ' Maus auf Wartemodus setzen
-        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
+        'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
         If aKtionskennung = PTTvActions.chgInSession Then
 
@@ -471,7 +620,33 @@ Public Class frmProjPortfolioAdmin
             quickList = True
 
             If pvNamesList.Count = 0 Then
-                Call MsgBox("keine Projekte in der Datenbank vorhanden ...")
+                Dim txtmsg As String
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    txtmsg = "keine Projekte in der Datenbank vorhanden ..."
+                Else
+                    txtmsg = "there are no projects in database ..."
+                End If
+                Call MsgBox(txtmsg)
+            End If
+
+        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+            If AlleProjekte.Count > 0 Then
+                pvNamesList.Clear()
+            Else
+
+                pvNamesList = buildPvNamesList(storedAtOrBefore)
+                quickList = True
+
+                If pvNamesList.Count = 0 Then
+                    Dim txtmsg As String
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        txtmsg = "keine Projekte in der Datenbank vorhanden ..."
+                    Else
+                        txtmsg = "there are no projects in database ..."
+                    End If
+                    Call MsgBox(txtmsg)
+                End If
             End If
         End If
 
@@ -492,7 +667,8 @@ Public Class frmProjPortfolioAdmin
         End If
 
         ' Maus auf Normalmodus zurücksetzen
-        appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+        'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+        Me.Cursor = Cursors.Arrow
 
         ' Fokus auf was unverdächtiges setzen 
         dropboxScenarioNames.Focus()
@@ -534,7 +710,14 @@ Public Class frmProjPortfolioAdmin
                 currentConstellationName = currentConstellationName & " (*)"
             End If
 
-            Me.Text = "Scenario " & currentConstellationName
+            Dim preText As String
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                preText = "Szenario "
+            Else
+                preText = "Scenario "
+            End If
+
+            Me.Text = preText & currentConstellationName
         End If
 
 
@@ -658,6 +841,154 @@ Public Class frmProjPortfolioAdmin
 
             stopRecursion = False
 
+        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+            stopRecursion = True
+
+            If Not noDB Then
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+
+                Select Case treeLevel
+
+                    Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                        If node.Nodes.Count = 0 Then
+                            ' es gibt nur die eine Projekt-Variante 
+                            Dim pName As String = getProjectNameOfTreeNode(node.Text)
+                            Dim vName As String = ""
+                            Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+                            If variantNames.Count > 0 Then
+                                vName = CStr(variantNames.Item(1))
+                            End If
+
+
+                            If setNodeWriteProtections(node, PTTreeNodeTyp.project, pName, vName, node.Checked) Then
+                                ' erfolgreich ..
+                                ' es wurde bereits Node Apperance inkl Check-Status geklärt
+                            Else
+                                ' nicht zugelassen , also wieder zurücknehmen 
+
+                                ' wenn node gecheckt wurde, aber das Projekt gar nicht existiert ...
+                                If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                                    "please store at database before protecting ...")
+                                    Else
+                                        Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                    "dann schützen ...")
+                                    End If
+                                End If
+
+                                node.Checked = Not node.Checked
+                                writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
+                            End If
+
+
+                        Else
+                            ' es gibt mehrere Projekt-Varianten 
+                            Dim atleastOneError As Boolean = False
+                            Dim pName As String = getProjectNameOfTreeNode(node.Text)
+                            Dim vName As String = ""
+
+                            For i = 1 To node.Nodes.Count
+                                childNode = node.Nodes.Item(i - 1)
+                                ' darf es ge- bzw. entcheckt werden ? 
+                                vName = getVariantNameOfTreeNode(childNode.Text)
+
+                                If setNodeWriteProtections(childNode, PTTreeNodeTyp.pVariant, pName, vName, node.Checked) Then
+                                    ' erfolgreich ..
+                                    ' es wurde bereits Node Apperance inkl Check-Status geklärt
+                                Else
+
+                                    If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                        If awinSettings.englishLanguage Then
+                                            Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf & _
+                                                        "please store at database before protecting ...")
+                                        Else
+                                            Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                        "dann schützen ...")
+                                        End If
+                                    End If
+
+                                    ' nicht zugelassen , also alles unverändert lassen  
+                                    atleastOneError = True
+                                    writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                    Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
+                                End If
+
+
+                            Next
+
+                            ' jetzt korrigieren, wenn eines der Kinder nicht auf den gleichen Check-Status gesetzt werden konnte
+                            If atleastOneError And node.Checked Then
+                                node.Checked = Not node.Checked
+                            End If
+
+                            ' jetzt für den Sammel-Knoten die Appearance bestimmen , der Name der Variante ist in diesem Fall egal, weil sich 
+                            ' die Appearance ohnehin daran orientiert, was der Status der Kinder ist 
+                            Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, "")
+
+                        End If
+
+
+                    Case 1 ' Variante ist selektiert / nicht selektiert
+
+                        ' ANfang 
+
+                        parentNode = node.Parent
+                        ' darf es ge- bzw. entcheckt werden ? 
+                        Dim pName As String = getProjectNameOfTreeNode(parentNode.Text)
+                        Dim vName As String = getVariantNameOfTreeNode(node.Text)
+
+                        If setNodeWriteProtections(node, PTTreeNodeTyp.pVariant, pName, vName, node.Checked) Then
+                            ' erfolgreich ..
+                            ' es wurde bereits Node Apperance inkl Check-Status geklärt
+                        Else
+                            If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                                "please store at database before protecting ...")
+                                Else
+                                    Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                                "dann schützen ...")
+                                End If
+                            End If
+
+                            ' nicht zugelassen , also alles unverändert lassen  
+                            node.Checked = Not node.Checked
+                            writeProtections.upsert(request.getWriteProtection(pName, vName))
+                            Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
+                        End If
+
+                        ' nach oben checken, ob jetzt das Projekt entsprechend gesetzt weren muss 
+                        parentNode = node.Parent
+                        If node.Checked = False Then
+                            parentNode.Checked = False
+                            Call bestimmeNodeAppearance(parentNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
+
+                        ElseIf node.Checked = True Then
+                            Dim allchecked As Boolean = True
+                            For i = 1 To parentNode.Nodes.Count
+                                allchecked = allchecked And parentNode.Nodes.Item(i - 1).Checked
+                            Next
+                            If allchecked Then
+                                parentNode.Checked = True
+                                Call bestimmeNodeAppearance(parentNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
+                            End If
+                        End If
+
+
+                End Select
+
+            Else
+                ' zurücknehmen
+                node.Checked = Not node.Checked
+            End If
+
+            stopRecursion = False
 
         ElseIf aKtionskennung = PTTvActions.activateV Then
 
@@ -675,7 +1006,7 @@ Public Class frmProjPortfolioAdmin
 
                     Dim projektNode As TreeNode = node.Parent
                     Dim selectedVariantName As String = node.Text
-                    Dim pName As String = projektNode.Text
+                    Dim pName As String = getProjectNameOfTreeNode(projektNode.Text)
 
                     ' es kann immer nur eine Variante selektiert sein; wenn die bisher aktive de-selektiert wird, 
                     ' wird Standard auf checked gesetzt 
@@ -690,7 +1021,7 @@ Public Class frmProjPortfolioAdmin
                         Next
 
                         ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
-                        selectedVariantName = getVariantNameOf(node.Text)
+                        selectedVariantName = getVariantNameOfTreeNode(node.Text)
 
 
 
@@ -701,7 +1032,7 @@ Public Class frmProjPortfolioAdmin
                         ' das funktioniert nämlich auch dann, wenn keine Variante mit Name "" existiert 
                         If projektNode.Nodes.Count > 0 Then
                             projektNode.Nodes.Item(0).Checked = True
-                            selectedVariantName = getVariantNameOf(projektNode.Nodes.Item(0).Text)
+                            selectedVariantName = getVariantNameOfTreeNode(projektNode.Nodes.Item(0).Text)
                         Else
                             ' darf eigentlich gar nicht vorkommen 
                             selectedVariantName = ""
@@ -710,9 +1041,6 @@ Public Class frmProjPortfolioAdmin
 
 
                     End If
-
-                    ' jetzt das CurrentBrowser Szenario aktualisieren 
-
 
                     ' jetzt die Variante aktivieren 
                     Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
@@ -725,8 +1053,8 @@ Public Class frmProjPortfolioAdmin
                     Call aktualisiereCharts(hproj, True)
                     Call awinNeuZeichnenDiagramme(2)
 
-
-
+                    ' jetzt den Text des ParentNodes aktualisieren  
+                    Call bestimmeNodeAppearance(projektNode, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)
 
             End Select
 
@@ -740,7 +1068,7 @@ Public Class frmProjPortfolioAdmin
 
                 Case 0 ' Projekt ist selektiert / nicht selektiert 
 
-                    Dim pName As String = node.Text
+                    Dim pName As String = getProjectNameOfTreeNode(node.Text)
                     Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
                     Dim selectedVariantName As String = ""
 
@@ -756,16 +1084,15 @@ Public Class frmProjPortfolioAdmin
                             childNode = node.Nodes.Item(j - 1)
                             If childNode.Checked Then
                                 selectionExisted = True
-                                selectedVariantName = getVariantNameOf(childNode.Text)
+                                selectedVariantName = getVariantNameOfTreeNode(childNode.Text)
                             End If
                         Next
 
                         If Not selectionExisted And node.Nodes.Count > 0 Then
                             childNode = node.Nodes.Item(0)
                             childNode.Checked = True
-                            selectedVariantName = getVariantNameOf(childNode.Text)
+                            selectedVariantName = getVariantNameOfTreeNode(childNode.Text)
                         End If
-
 
                         Call putProjectInShow(pName, selectedVariantName, considerDependencies, False)
                         ' jetzt muss das Projekt aus AlleProjekte auch in ShowProjekte transferiert werden 
@@ -799,18 +1126,23 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-                    ' jetzt das Browser Szenario aktualsieren 
+
+                    ' jetzt das Browser Szenario aktualisieren 
                     currentBrowserConstellation.updateShowAttributes()
 
                     ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
+
+                    ' jetzt den Text des Projekt-Knotens aktualisieren  
+                    Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)
+
 
                 Case 1 ' Variante ist selektiert / nicht selektiert
 
 
                     Dim projektNode As TreeNode = node.Parent
                     Dim selectedVariantName As String = node.Text
-                    Dim pName As String = projektNode.Text
+                    Dim pName As String = getProjectNameOfTreeNode(projektNode.Text)
 
                     ' es kann immer nur eine Variante selektiert sein; wenn die bisher aktive de-selektiert wird, 
                     ' wird Standard auf checked gesetzt 
@@ -825,7 +1157,7 @@ Public Class frmProjPortfolioAdmin
                         Next
 
                         ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
-                        selectedVariantName = getVariantNameOf(node.Text)
+                        selectedVariantName = getVariantNameOfTreeNode(node.Text)
 
 
 
@@ -836,7 +1168,7 @@ Public Class frmProjPortfolioAdmin
                         ' das funktioniert nämlich auch dann, wenn keine Variante mit Name "" existiert 
                         If projektNode.Nodes.Count > 0 Then
                             projektNode.Nodes.Item(0).Checked = True
-                            selectedVariantName = getVariantNameOf(projektNode.Nodes.Item(0).Text)
+                            selectedVariantName = getVariantNameOfTreeNode(projektNode.Nodes.Item(0).Text)
                         Else
                             ' darf eigentlich gar nicht vorkommen 
                             selectedVariantName = ""
@@ -869,7 +1201,8 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-
+                    ' jetzt den Text des ParentNodes aktualisieren  
+                    Call bestimmeNodeAppearance(projektNode, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)
 
             End Select
 
@@ -891,7 +1224,7 @@ Public Class frmProjPortfolioAdmin
             Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
             Dim curItemA As TreeNode = TreeViewProjekte.Nodes.Item(mprojectName)
 
-            If curItem.Text = mprojectName Then
+            If getProjectNameOfTreeNode(curItem.Text) = mprojectName Then
                 If curItem.Checked Then
                     ' nichts tun 
                 Else
@@ -918,7 +1251,7 @@ Public Class frmProjPortfolioAdmin
         For i As Integer = 1 To TreeViewProjekte.GetNodeCount(False)
             Dim curItem As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
 
-            If curItem.Text = dprojectName Then
+            If getProjectNameOfTreeNode(curItem.Text) = dprojectName Then
                 If curItem.Checked Then
                     stopRecursion = False
                     curItem.Checked = False
@@ -931,6 +1264,12 @@ Public Class frmProjPortfolioAdmin
         Next
 
     End Sub
+    ''' <summary>
+    ''' wird aufgerufen, wenn ein TreeItem (eine Zeile) selektiert wird 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
 
         Dim node As TreeNode = e.Node
@@ -942,7 +1281,7 @@ Public Class frmProjPortfolioAdmin
 
 
         If treeLevel = 0 Then
-            projectName = node.Text
+            projectName = getProjectNameOfTreeNode(node.Text)
 
             'Dim variantNames As Collection = AlleProjekte.getVariantNames(projectName, False)
             Dim variantNames As Collection = currentBrowserConstellation.getVariantNames(projectName, False)
@@ -961,24 +1300,10 @@ Public Class frmProjPortfolioAdmin
 
             hproj = AlleProjekte.getProject(projectName, variantName)
 
-            'If IsNothing(hproj) And variantNames.Count > 0 Then
-            '    variantName = CStr(variantNames.Item(1))
-            '    hproj = AlleProjekte.getProject(projectName, variantName)
-            'End If
-
-            ' jetzt muss bestimmt werden, was als ToolTipp Text angezeigt werden soll 
-            If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
-                toolTippText = allDependencies.getDependencyInfos(projectName)
-            Else
-                If Not IsNothing(hproj) Then
-                    If hproj.description.Length > 0 Then
-                        toolTippText = hproj.description
-                    End If
-                End If
-            End If
-
-            ' tk, 2.1.17 Anzeige der Info zu diesem Projekt ... 
             If Not IsNothing(hproj) Then
+                toolTippText = getToolTippText(hproj, treeLevel, variantNames.Count)
+
+                ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
                 Call aktualisierePMSForms(hproj)
                 Call aktualisiereCharts(hproj, True)
             End If
@@ -988,15 +1313,13 @@ Public Class frmProjPortfolioAdmin
             Dim projectNode As TreeNode = node.Parent
             If Not IsNothing(projectNode) Then
 
-                projectName = projectNode.Text
-                variantName = getVariantNameOf(node.Text)
+                projectName = getProjectNameOfTreeNode(projectNode.Text)
+                variantName = getVariantNameOfTreeNode(node.Text)
                 hproj = AlleProjekte.getProject(projectName, variantName)
 
                 If Not IsNothing(hproj) Then
 
-                    If hproj.variantDescription.Length > 0 Then
-                        toolTippText = hproj.variantDescription
-                    End If
+                    toolTippText = getToolTippText(hproj, treeLevel, 0)
 
                     ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
                     Call aktualisierePMSForms(hproj)
@@ -1011,6 +1334,95 @@ Public Class frmProjPortfolioAdmin
 
 
     End Sub
+
+    ''' <summary>
+    ''' liefert für die übergebenen Parameter den TooltippText
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="level"></param>
+    ''' <param name="anzahlVariants"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getToolTippText(ByVal hproj As clsProjekt, _
+                                     ByVal level As Integer, ByVal anzahlVariants As Integer) As String
+
+        Dim tmpText As String = ""
+
+        If Not IsNothing(hproj) Then
+
+            Dim pName As String = hproj.name
+            Dim vName As String = hproj.variantName
+
+            ' Projekt-Stufe
+            If level = 0 Then
+
+                If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
+                    tmpText = allDependencies.getDependencyInfos(pName)
+
+                ElseIf toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
+
+                    If anzahlVariants = 1 Then
+                        Dim pvName As String = calcProjektKey(pName, vName)
+                        tmpText = writeProtections.getProtectionText(pvName)
+                    Else
+                        tmpText = ""
+                    End If
+
+
+                Else
+                    If hproj.description.Length > 0 Then
+                        tmpText = hproj.description
+                    End If
+                End If
+
+            ElseIf level = 1 Then
+
+                If toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
+
+                    Dim pvName As String = calcProjektKey(pName, vName)
+
+                    Dim lastUser As String = ""
+                    Dim zeitpunkt As Date
+                    lastUser = writeProtections.lastModifiedBy(pvName)
+                    zeitpunkt = writeProtections.changeDate(pvName)
+
+                    If writeProtections.isProtected(pvName) Then
+                        Dim permanent As String = ""
+                        If writeProtections.isPermanentProtected(pvName) Then
+                            permanent = "permanent "
+                        End If
+                        If awinSettings.englishLanguage Then
+                            tmpText = permanent & "protected by: " & lastUser & ", at: " & zeitpunkt.ToString
+                        Else
+                            tmpText = permanent & "geschützt von: " & lastUser & ", am: " & zeitpunkt.ToString
+                        End If
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            tmpText = "no protection"
+                        Else
+                            tmpText = "nicht geschützt"
+                        End If
+                    End If
+
+
+                Else
+                    If hproj.variantDescription.Length > 0 Then
+                        tmpText = hproj.variantDescription
+                    End If
+                End If
+
+            ElseIf level = 2 Then
+                ' noch kein ToolTippText verfügbar
+            End If
+
+        End If
+
+        getToolTippText = tmpText
+
+    End Function
+
+
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
@@ -1039,14 +1451,20 @@ Public Class frmProjPortfolioAdmin
         ''End If
         ' Platzhalter Ende ... 
 
+        If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
+            ' jetzt die writeProtections neu bestimmen 
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+        End If
 
         selectedNode = e.Node
         nodeLevel = e.Node.Level
 
+        ' Projekt-Ebene
         If nodeLevel = 0 Then
 
 
-            projName = selectedNode.Text
+            projName = getProjectNameOfTreeNode(selectedNode.Text)
 
             ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
             If selectedNode.Tag = "P" Then
@@ -1070,7 +1488,7 @@ Public Class frmProjPortfolioAdmin
                     If aKtionskennung = PTTvActions.activateV Or _
                         aKtionskennung = PTTvActions.chgInSession Then
                         stopRecursion = True
-                        If getVariantNameOf(variantName) = hproj.variantName Then
+                        If getVariantNameOfTreeNode(variantName) = hproj.variantName Then
                             variantNode.Checked = True
                         Else
                             variantNode.Checked = False
@@ -1096,6 +1514,18 @@ Public Class frmProjPortfolioAdmin
                         stopRecursion = True
                         variantNode.Checked = selectedNode.Checked
                         stopRecursion = False
+
+                    ElseIf aKtionskennung = PTTvActions.setWriteProtection And Not noDB Then
+                        ' dieser Zweig wird nie mehr betreten ... 
+
+                        variantName = getVariantNameOfTreeNode(variantName)
+
+                        Dim pvName As String = calcProjektKey(projName, variantName)
+                        stopRecursion = True
+                        variantNode.Checked = writeProtections.isProtected(pvName)
+                        Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, projName, variantName)
+                        stopRecursion = False
+
                     Else
                         stopRecursion = True
                         variantNode.Checked = selectedNode.Checked
@@ -1136,6 +1566,17 @@ Public Class frmProjPortfolioAdmin
                         stopRecursion = False
                     End If
 
+                ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+                    stopRecursion = True
+
+                    For Each tmpNode As TreeNode In selectedNode.Nodes
+                        variantName = getVariantNameOfTreeNode(tmpNode.Text)
+                        Dim pvName As String = calcProjektKey(projName, variantName)
+                        tmpNode.Checked = writeProtections.isProtected(pvName)
+                        Call bestimmeNodeAppearance(tmpNode, aKtionskennung, PTTreeNodeTyp.pVariant, projName, variantName)
+                    Next
+
+                    stopRecursion = False
                 End If
             End If
 
@@ -1149,8 +1590,8 @@ Public Class frmProjPortfolioAdmin
             If selectedNode.Tag = "P" Then
 
                 selectedNode.Tag = "X"
-                projName = selectedNode.Parent.Text
-                variantName = getVariantNameOf(selectedNode.Text)
+                projName = getProjectNameOfTreeNode(selectedNode.Parent.Text)
+                variantName = getVariantNameOfTreeNode(selectedNode.Text)
 
                 hliste = projektHistorien.getTimeStamps(calcProjektKey(projName, variantName))
 
@@ -1161,7 +1602,13 @@ Public Class frmProjPortfolioAdmin
                         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         If request.pingMongoDb() Then
                         Else
-                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                            Dim msgText As String
+                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                msgText = "Datenbank-Verbindung ist unterbrochen!"
+                            Else
+                                msgText = "no connection to Database!"
+                            End If
+                            Call MsgBox(msgText)
                         End If
 
                         ' Lesen der TimeStamp Snapshots für ProjNAme, variantName 
@@ -1228,16 +1675,51 @@ Public Class frmProjPortfolioAdmin
     ''' <param name="nodeText"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function getVariantNameOf(ByVal nodeText As String) As String
+    Private Function getVariantNameOfTreeNode(ByVal nodeText As String) As String
         Dim tmpstr() As String
         Dim vName As String = ""
 
-        tmpstr = nodeText.Split(New Char() {CChar("("), CChar(")")}, 3)
-        If tmpstr.Length = 3 Then
-            vName = tmpstr(1)
-        End If
+        Try
+            tmpstr = nodeText.Split(New Char() {CChar("("), CChar(")")}, 3)
+            If tmpstr.Length = 3 Then
+                vName = tmpstr(1).Trim
+            End If
+        Catch ex As Exception
 
-        getVariantNameOf = vName
+        End Try
+
+        getVariantNameOfTreeNode = vName
+
+    End Function
+
+    ''' <summary>
+    ''' liefert den Namen des Projektes zurück, kann folgendermaßen aussehen project (variantname) L
+    ''' </summary>
+    ''' <param name="nodeText"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getProjectNameOfTreeNode(ByVal nodeText As String) As String
+        Dim tmpstr() As String
+        Dim pName As String = ""
+
+        Try
+            If nodeText.EndsWith(" /D") Then
+                nodeText = nodeText.Substring(0, nodeText.Length - 3)
+            ElseIf nodeText.EndsWith(" /L") Then
+                nodeText = nodeText.Substring(0, nodeText.Length - 3)
+            ElseIf nodeText.EndsWith(" /LD") Then
+                nodeText = nodeText.Substring(0, nodeText.Length - 4)
+            End If
+
+            tmpstr = nodeText.Split(New Char() {CChar("("), CChar(")")}, 3)
+            If tmpstr.Length >= 1 Then
+                pName = tmpstr(0).Trim
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        getProjectNameOfTreeNode = pName
 
     End Function
 
@@ -1265,6 +1747,9 @@ Public Class frmProjPortfolioAdmin
         Dim outPutHeader As String = ""
         Dim outPutExplanation As String = ""
 
+        ' Cursor auf Wait-Cursor setzen ... 
+        Me.Cursor = Cursors.WaitCursor
+
 
         If allDependencies.projectCount > 0 Then
             considerDependencies = True
@@ -1284,12 +1769,41 @@ Public Class frmProjPortfolioAdmin
         End If
 
         ' Bestimmen der Überschrift des Output Headers, falls es irgendwelche Meldungen gibt
-        If aKtionskennung = PTTvActions.delFromDB Then
-            outPutHeader = "Projekt-Varianten können nicht gelöscht werden !"
-            outPutExplanation = "folgende Projekt-Varianten werden aktuell in Szenarien referenziert und können daher nicht gelöscht werden:"
+        If aKtionskennung = PTTvActions.delFromDB Or _
+            aKtionskennung = PTTvActions.delAllExceptFromDB Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Löschen von Projekt-Varianten in der Datenbank "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Delete Project-Variants in Database"
+                outPutExplanation = "Messages"
+            End If
+
+        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+            aKtionskennung = PTTvActions.deleteV Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Löschen von Projekt-Varianten in der Session "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Delete Project-Variants in Session"
+                outPutExplanation = "Messages"
+            End If
+
+        ElseIf aKtionskennung = PTTvActions.loadPV Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Laden von Projekt-Varianten aus der Datenbank "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Load Project-Variants from Database"
+                outPutExplanation = "Messages"
+            End If
+
         End If
 
-        
+
 
 
         Dim p As Integer, v As Integer, t As Integer
@@ -1307,7 +1821,7 @@ Public Class frmProjPortfolioAdmin
                 For p = 1 To anzahlProjekte
 
                     projektNode = .Nodes.Item(p - 1)
-                    pname = projektNode.Text
+                    pname = getProjectNameOfTreeNode(projektNode.Text)
 
                     If projektNode.Checked Then
                         ' Aktion auf allen Varianten und Timestamps 
@@ -1344,7 +1858,7 @@ Public Class frmProjPortfolioAdmin
 
                             For v = 1 To anzahlVarianten
 
-                                variantName = getVariantNameOf(CStr(variantListe.Item(v)))
+                                variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
                                 Call deleteCompleteProjectVariant(outPutCollection, _
                                                                   pname, variantName, aKtionskennung, versionsToKeep.Value)
 
@@ -1356,11 +1870,11 @@ Public Class frmProjPortfolioAdmin
 
                             For v = 1 To anzahlVarianten
 
-                                variantName = getVariantNameOf(CStr(variantListe.Item(v)))
+                                variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
                                 ' Fehler-Behandlung, d.h auch Abfrage ob PName#vName referenziert in Szenario ist, passiert dort drin ... 
                                 Call deleteCompleteProjectVariant(outPutCollection, _
                                                                   pname, variantName, aKtionskennung)
-                                
+
 
                             Next
 
@@ -1378,7 +1892,7 @@ Public Class frmProjPortfolioAdmin
 
                                 'variantNode = projektNode.Nodes.Item(v - 1)
                                 'variantName = getVariantNameOf(variantNode.Text)
-                                variantName = getVariantNameOf(CStr(variantListe.Item(v)))
+                                variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
 
                                 Dim showAttribute As Boolean
                                 If IsNothing(hproj) Then
@@ -1394,7 +1908,7 @@ Public Class frmProjPortfolioAdmin
                                         showAttribute = False
                                     End If
                                 End If
-                                
+
                                 Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
 
                                 If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
@@ -1427,7 +1941,7 @@ Public Class frmProjPortfolioAdmin
 
                         For v = 1 To anzahlVarianten
                             variantNode = projektNode.Nodes.Item(v - 1)
-                            variantName = getVariantNameOf(variantNode.Text)
+                            variantName = getVariantNameOfTreeNode(variantNode.Text)
 
 
                             If variantNode.Checked Then
@@ -1439,44 +1953,44 @@ Public Class frmProjPortfolioAdmin
                                     ' Fehler Check, ob in Szenario refernziert , passiert in der Routine 
                                     Call deleteCompleteProjectVariant(outPutCollection, _
                                                                       pname, variantName, aKtionskennung)
-                                
 
 
-                            ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
+
+                                ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
                                     ' hier muss ja gar kein Check auf Szenario referenz erfolgen, da ohnehin immer min 2 Stände behalten werdne  
-                                Call deleteCompleteProjectVariant(outPutCollection, _
-                                                                  pname, variantName, aKtionskennung, versionsToKeep.Value)
+                                    Call deleteCompleteProjectVariant(outPutCollection, _
+                                                                      pname, variantName, aKtionskennung, versionsToKeep.Value)
 
-                            ElseIf aKtionskennung = PTTvActions.delFromSession Or _
-                                    aKtionskennung = PTTvActions.deleteV Then
+                                ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+                                        aKtionskennung = PTTvActions.deleteV Then
 
-                                Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies, vName:=variantName)
+                                    Call awinDeleteProjectInSession(pName:=pname, considerDependencies:=considerDependencies, vName:=variantName)
 
-                                ' jetzt in der currentBrowserConstellation ändern 
-                                Dim tmpKey As String = calcProjektKey(pname, variantName)
-                                currentBrowserConstellation.remove(tmpKey)
+                                    ' jetzt in der currentBrowserConstellation ändern 
+                                    Dim tmpKey As String = calcProjektKey(pname, variantName)
+                                    currentBrowserConstellation.remove(tmpKey)
 
 
-                            ElseIf aKtionskennung = PTTvActions.loadPV Then
+                                ElseIf aKtionskennung = PTTvActions.loadPV Then
 
-                                Call loadProjectfromDB(outPutCollection, pname, variantName, first, storedAtOrBefore)
-                                first = False
+                                    Call loadProjectfromDB(outPutCollection, pname, variantName, first, storedAtOrBefore)
+                                    first = False
 
-                                If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
-                                    ' nichts tun , ist schon drin 
-                                Else
-                                    Dim cItem As New clsConstellationItem
-                                    With cItem
-                                        .projectName = pname
-                                        .variantName = variantName
-                                        .show = (v = 1)
-                                    End With
-                                    currentBrowserConstellation.add(cItem)
+                                    If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
+                                        ' nichts tun , ist schon drin 
+                                    Else
+                                        Dim cItem As New clsConstellationItem
+                                        With cItem
+                                            .projectName = pname
+                                            .variantName = variantName
+                                            .show = (v = 1)
+                                        End With
+                                        currentBrowserConstellation.add(cItem)
+                                    End If
+
+
                                 End If
-
-
-                            End If
 
 
                             ElseIf aKtionskennung = PTTvActions.delFromDB Or _
@@ -1533,6 +2047,9 @@ Public Class frmProjPortfolioAdmin
                                 outPutExplanation)
             End If
 
+            ' Cursor auf Normal-Cursor setzen ... 
+            Me.Cursor = Cursors.Arrow
+
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
 
@@ -1540,7 +2057,7 @@ Public Class frmProjPortfolioAdmin
 
             If dropboxScenarioNames.Text <> "" Then
 
-                
+
                 currentConstellationName = dropboxScenarioNames.Text
                 'currentBrowserConstellation.constellationName = currentConstellationName
 
@@ -1554,19 +2071,39 @@ Public Class frmProjPortfolioAdmin
 
                 projectConstellations.update(toStoreConstellation)
 
+                Dim txtMsg1 As String = ""
+                Dim txtMsg2 As String = ""
                 If storeToDBasWell.Checked Then
                     Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation)
 
                     ' jetzt ggf die Outputs anzeigen 
+
                     If outPutCollection.Count > 0 Then
-                        Call showOutPut(outPutCollection, _
-                                        "Speichern Szenario " & toStoreConstellation.constellationName, _
-                                        "folgende Probleme sind aufgetreten:")
+
+                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                            txtMsg1 = "Speichern Szenario " & toStoreConstellation.constellationName
+                            txtMsg2 = "folgende Probleme sind aufgetreten:"
+                        Else
+                            txtMsg1 = "Store Scenario " & toStoreConstellation.constellationName
+                            txtMsg2 = "following problems occurred:"
+                        End If
+                        Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
+
                     Else
-                        Call MsgBox("ok, " & currentConstellationName & " in Datenbank und Session gespeichert")
+                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                            txtMsg1 = "ok, " & currentConstellationName & " in Datenbank und Session gespeichert"
+                        Else
+                            txtMsg1 = "ok, " & currentConstellationName & " stored in Session and database"
+                        End If
+                        Call MsgBox(txtMsg1)
                     End If
                 Else
-                    Call MsgBox("ok, " & currentConstellationName & " in Session gespeichert")
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        txtMsg1 = "ok, " & currentConstellationName & " in Session gespeichert"
+                    Else
+                        txtMsg1 = "ok, " & currentConstellationName & " stored in Session"
+                    End If
+                    Call MsgBox(txtMsg1)
                 End If
 
                 ' jetzt das EIngabe Feld wieder zurücksetzen 
@@ -1574,14 +2111,24 @@ Public Class frmProjPortfolioAdmin
 
             End If
 
-            
+
             ' im Fesnter bleiben ... 
             'DialogResult = Windows.Forms.DialogResult.OK
             'MyBase.Close()
         Else
-            Call MsgBox("nicht unterstützte Option in ProjPortfolio Admin Formular ...")
+            Dim txtMsg As String = ""
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                txtMsg = "nicht unterstützte Option in ProjPortfolioAdmin Formular ..."
+            Else
+                txtMsg = "not supported option in form ProjPortfolioAdmin ..."
+            End If
+
+            Call MsgBox(txtMsg)
+
         End If
 
+        ' Cursor auf Normal-Cursor setzen ... 
+        Me.Cursor = Cursors.Arrow
 
 
     End Sub
@@ -1597,21 +2144,22 @@ Public Class frmProjPortfolioAdmin
 
 
         Dim projectNode As TreeNode
-        
+
         stopRecursion = True
+
+        ' jetzt im formular den Mauszeiger auf Warten ... setzen 
+        Me.Cursor = Cursors.WaitCursor
 
         With TreeViewProjekte
 
             ' die Behandlung von chgInSession ist etwas anders, weil sofort eine Aktion erfolgen muss ... 
-
             If aKtionskennung = PTTvActions.chgInSession Then
 
-                ' jetzt im formular den Mauszeiger auf Warten ... setzen 
-                Me.Cursor = Cursors.WaitCursor
+
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
-                    Dim pName As String = projectNode.Text
+                    Dim pName As String = getProjectNameOfTreeNode(projectNode.Text)
 
                     ' jetzt muss die Behandlung kommen, was denn gemacht werden soll 
                     ' ############ ChgInSession ####################################
@@ -1628,19 +2176,19 @@ Public Class frmProjPortfolioAdmin
                             ' dann muss der Varianten-Name entsprechend gesetzt werden  
                             Dim tmpCollection As Collection = AlleProjekte.getVariantNames(pName, True)
                             If tmpCollection.Count > 0 Then
-                                variantName = getVariantNameOf(CStr(tmpCollection.Item(1)))
+                                variantName = getVariantNameOfTreeNode(CStr(tmpCollection.Item(1)))
                             Else
                                 variantName = ""
                             End If
 
 
                         ElseIf checkedVariants.Count = 1 Then
-                            variantName = getVariantNameOf(CStr(checkedVariants.Item(1)))
+                            variantName = getVariantNameOfTreeNode(CStr(checkedVariants.Item(1)))
 
                         ElseIf checkedVariants.Count > 1 Then
-                            variantName = getVariantNameOf(CStr(checkedVariants.Item(1)))
+                            variantName = getVariantNameOfTreeNode(CStr(checkedVariants.Item(1)))
                             For k As Integer = 1 To projectNode.Nodes.Count
-                                If getVariantNameOf(projectNode.Nodes.Item(k - 1).Text) = variantName Then
+                                If getVariantNameOfTreeNode(projectNode.Nodes.Item(k - 1).Text) = variantName Then
                                     projectNode.Nodes.Item(k - 1).Checked = True
                                 Else
                                     projectNode.Nodes.Item(k - 1).Checked = False
@@ -1676,7 +2224,6 @@ Public Class frmProjPortfolioAdmin
                 ' jetzt müssen die Diagramme neu gezeichnet werden 
                 Call awinNeuZeichnenDiagramme(2)
 
-                Me.Cursor = Cursors.Default
 
             ElseIf aKtionskennung = PTTvActions.deleteV Or _
                 aKtionskennung = PTTvActions.activateV Then
@@ -1720,8 +2267,91 @@ Public Class frmProjPortfolioAdmin
 
                 '    Next
                 'Else
-                Call MsgBox("beim Löschen nicht zulässig ...")
-                'End If
+                Dim txtMsg As String = ""
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    txtMsg = "beim Löschen kann nicht alles selektiert werden ..."
+                Else
+                    txtMsg = "not allowed to select all when deleting ..."
+                End If
+                Call MsgBox(txtMsg)
+
+            ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+                ' für jeden Knoten prüfen, ob er bereits geschützt ist
+                ' dann nichts machen 
+                ' andernfalls prüfen, ob er von mir geschützt werden kann 
+                ' wenn ja, dann schützen 
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+
+                    If projectNode.Checked Then
+                        ' nichts machen, ist ja schon gecheckt / geschützt 
+                    Else
+                        ' noch nicht geschützt
+                        ' jetzt prüfen, ob man es überhaupt schützen darf 
+                        Dim pName As String = getProjectNameOfTreeNode(projectNode.Text)
+                        Dim vName As String = ""
+                        ' holt die Varianten-Namen ohne Klammer ... 
+                        Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+                        If variantNames.Count > 0 Then
+                            vName = CStr(variantNames.Item(1))
+                        End If
+
+                        Dim atLeastOneFailed As Boolean = False
+
+                        ' hier prüfen, ob alle Childs geschützt werden können ... 
+                        If projectNode.Nodes.Count > 0 Then
+                            ' alle Varianten schützen, die man schützen kann 
+                            For iv As Integer = 1 To projectNode.Nodes.Count
+                                Dim variantNode As TreeNode = projectNode.Nodes.Item(iv - 1)
+                                vName = getVariantNameOfTreeNode(variantNode.Text)
+
+                                If setNodeWriteProtections(variantNode, PTTreeNodeTyp.pVariant, pName, vName, True) Then
+                                    ' erfolgreich ..
+                                    ' es wurde bereits Node Apperance inkl Check-Status geklärt
+                                Else
+                                    ' nicht zugelassen , also nichts machen  
+                                    writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                    Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
+
+                                    atleastOneFailed = True
+                                End If
+
+                            Next
+
+                            ' jetzt muss noch die Behandlung für das Projekt selber kommen 
+                            ' dazu reicht aber, die NodeAppearance zu setzen ..
+                            If atLeastOneFailed Then
+                                projectNode.Checked = False
+                            Else
+                                projectNode.Checked = True
+                            End If
+                            ' vname ist hier nicht wichtig ... 
+                            Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, "")
+
+                        Else
+                            ' es gibt keine Childs 
+                            ' keine Varianten im Baum , aber in variantNames muss mindestens ein Element sein 
+                            If setNodeWriteProtections(projectNode, PTTreeNodeTyp.project, pName, vName, True) Then
+                                ' erfolgreich ..
+                                projectNode.Checked = True
+                            Else
+                                ' nicht zugelassen , also nichts machen  
+                                writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
+
+                            End If
+
+                        End If
+                    End If
+
+
+
+                Next
+
 
             Else
                 ' in allen anderen Fällen: loadPV, loadPVS, delAllExceptFromDB, delFromSession
@@ -1744,15 +2374,53 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Then
             If Not currentConstellationName.EndsWith("(*)") Then
                 currentConstellationName = currentConstellationName & " (*)"
-                Me.Text = "Scenario " & currentConstellationName
+                Dim preText As String = "Szenario "
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    preText = "Scenario "
+                End If
+
+                Me.Text = preText & currentConstellationName
             End If
 
 
         End If
 
+        Me.Cursor = Cursors.Default
         stopRecursion = False
 
     End Sub
+
+    ''' <summary>
+    ''' setzt oder released den Schreibschutz - aber nur wenn der Nutzer das überhaupt darf 
+    ''' </summary>
+    ''' <param name="tmpNode">der betroffene Knoten</param>
+    ''' <param name="pName">der Projekt-Name</param>
+    ''' <param name="vName">der Varianten-NAme</param>
+    ''' <param name="writeProtect">true, wenn geschützt werden soll
+    ''' false, wenn der Schutz aufgehoben werden soll</param>
+    ''' <remarks></remarks>
+    Private Function setNodeWriteProtections(ByRef tmpNode As TreeNode, ByVal treeNodeType As Integer, _
+                                             ByVal pName As String, ByVal vName As String, _
+                                             ByVal writeProtect As Boolean) As Boolean
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim pvName As String = calcProjektKey(pName, vName)
+
+        Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project, _
+                                                dbUsername, Me.chkbxPermanent.Checked, writeProtect)
+
+        If request.setWriteProtection(wpItem) Then
+            ' alles in Ordnung : es ist jetzt geschützt bzw. released
+            ' dann checken, dann in WriteProtections aktualisieren, dann Appearance setzen ...
+            tmpNode.Checked = writeProtect
+            Call writeProtections.upsert(wpItem)
+            Call bestimmeNodeAppearance(tmpNode, aKtionskennung, treeNodeType, pName, vName)
+            setNodeWriteProtections = True
+        Else
+            ' der Schutz/die Veränderung ist schiefgegangen, also nichts machen ...
+            setNodeWriteProtections = False
+        End If
+    End Function
 
     ''' <summary>
     ''' gibt die Namen der Kind-Knoten wieder, 
@@ -1875,40 +2543,139 @@ Public Class frmProjPortfolioAdmin
 
             If aKtionskennung = PTTvActions.chgInSession Then
 
-                For i As Integer = 1 To .Nodes.Count
-                    projectNode = .Nodes.Item(i - 1)
-                    Dim pName As String = projectNode.Text
+                Try
+                    For i As Integer = 1 To .Nodes.Count
+                        projectNode = .Nodes.Item(i - 1)
+                        Dim pName As String = getProjectNameOfTreeNode(projectNode.Text)
 
-                    ' jetzt muss die Behandlung kommen, was denn gemacht werden soll 
-                    ' ############ ChgInSession ####################################
+                        ' jetzt muss die Behandlung kommen, was denn gemacht werden soll 
+                        ' ############ ChgInSession ####################################
 
-                    ' das Projekt muss in Showprojekte, aber nur wenn es nicht bereits gecheckt war 
-                    Dim variantName As String = ""
+                        ' das Projekt muss in Showprojekte, aber nur wenn es nicht bereits gecheckt war 
+                        Dim variantName As String = ""
 
-                    If projectNode.Checked Then
+                        If projectNode.Checked Then
 
-                        projectNode.Checked = False
+                            projectNode.Checked = False
 
-                    Else
-                        ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
-                    End If
+                        Else
+                            ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
+                        End If
 
-                Next
+                    Next
 
-                ' jetzt muss die Plan-Tafel gelöscht werden 
-                Call awinClearPlanTafel()
+                    ' jetzt muss die Plan-Tafel gelöscht werden 
+                    Call awinClearPlanTafel()
 
-                ' jetzt muss Showprojekte gelöscht werden 
-                ShowProjekte.Clear()
+                    ' jetzt muss Showprojekte gelöscht werden 
+                    ShowProjekte.Clear()
 
-                ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
-                currentBrowserConstellation.updateShowAttributes()
+                    ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
+                    currentBrowserConstellation.updateShowAttributes()
 
-                ' jetzt müssen die Diagramme neu gezeichnet werden 
-                Call awinNeuZeichnenDiagramme(2)
+                    ' jetzt müssen die Diagramme neu gezeichnet werden 
+                    Call awinNeuZeichnenDiagramme(2)
+
+                Catch ex As Exception
+                    Dim a As Integer = 0
+                    Call MsgBox("Fehler: " & ex.Message)
+                End Try
+
 
             ElseIf aKtionskennung = PTTvActions.activateV Then
                 ' nichts tun, Alle Resetten macht bei diesen keinen Sinn 
+
+            ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+                ' für jeden Knoten prüfen, ob der Schutz aufgehoben ist 
+                ' dann nichts machen 
+                ' andernfalls prüfen, ob der Schutz von mir aufgehoben werden kann 
+                ' wenn ja, dann aufheben 
+
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+
+                    ' es muss nur betrachtet werden, wenn der Knoten gesetzt ist 
+                    ' oder der Knoten Kinder hat , die ihrerseits geschützt sein können 
+                    If projectNode.Checked Or projectNode.Nodes.Count > 0 Then
+
+                        Dim pName As String = getProjectNameOfTreeNode(projectNode.Text)
+                        Dim vName As String = ""
+                        ' holt die Varianten-Namen ohne Klammer ... 
+                        Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+                        If variantNames.Count > 0 Then
+                            vName = CStr(variantNames.Item(1))
+                        End If
+
+                        Dim atLeastOneFailed As Boolean = False
+
+                        ' hier prüfen, ob alle Childs aufgehoben werden können ... 
+                        If projectNode.Nodes.Count > 0 Then
+                            ' alle Varianten aufheben, die man aufheben kann 
+                            For iv As Integer = 1 To projectNode.Nodes.Count
+
+                                Dim variantNode As TreeNode = projectNode.Nodes.Item(iv - 1)
+
+                                If variantNode.Checked Then
+                                    ' nur dann kann ein Schutz aufgehoben werden ...
+                                    vName = getVariantNameOfTreeNode(variantNode.Text)
+                                    If setNodeWriteProtections(variantNode, PTTreeNodeTyp.pVariant, pName, vName, False) Then
+                                        ' erfolgreich aufgehoben ..
+                                        ' es wurde bereits Node Apperance inkl Check-Status geklärt
+                                    Else
+                                        ' Aufheben nicht zugelassen , also nichts machen  
+                                        writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                        Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
+
+                                        atLeastOneFailed = True
+                                    End If
+
+                                End If
+
+
+                            Next
+
+                            ' jetzt muss noch die Behandlung für das Projekt selber kommen 
+                            ' dazu reicht aber, die NodeAppearance zu setzen ..
+                            If projectNode.Checked Then
+
+                                Dim allChildsAreProtected As Boolean = (projectNode.Nodes.Count > 0)
+                                For ti = 1 To projectNode.Nodes.Count
+                                    allChildsAreProtected = allChildsAreProtected And projectNode.Nodes.Item(ti - 1).Checked
+                                Next
+                                If Not allChildsAreProtected Then
+                                    projectNode.Checked = False
+                                End If
+                            End If
+
+                            ' vname ist hier nicht wichtig ... 
+                            Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, "")
+
+                        Else
+                            ' es gibt keine Childs 
+                            ' keine Varianten im Baum , aber in variantNames muss mindestens ein Element sein 
+                            If setNodeWriteProtections(projectNode, PTTreeNodeTyp.project, pName, vName, False) Then
+                                ' erfolgreich ..
+                            Else
+                                ' nicht zugelassen , also nichts machen  
+                                writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
+                            End If
+
+
+                        End If
+                        'End If
+
+                    Else
+                        ' es muss nichts gemacht werden ... 
+                    End If
+
+
+
+
+                Next
 
             Else
                 ' auch in den Fällen deleteV
@@ -1933,7 +2700,12 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Then
             If Not currentConstellationName.EndsWith("(*)") Then
                 currentConstellationName = currentConstellationName & " (*)"
-                Me.Text = "Scenario " & currentConstellationName
+
+                Dim preText As String = "Szenario "
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    preText = "Scenario "
+                End If
+                Me.Text = preText & currentConstellationName
             End If
 
 
@@ -1971,7 +2743,11 @@ Public Class frmProjPortfolioAdmin
         If Not currentConstellationName.EndsWith("(*)") Then
             currentConstellationName = currentConstellationName & " (*)"
 
-            Me.Text = "Scenario " & currentConstellationName
+            Dim preText As String = "Szenario "
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                preText = "Scenario "
+            End If
+            Me.Text = preText & currentConstellationName
         End If
 
 
@@ -2042,7 +2818,7 @@ Public Class frmProjPortfolioAdmin
 
                 stopRecursion = True
 
-                Me.Cursor = Cursors.WaitCursor
+                'Me.Cursor = Cursors.WaitCursor
                 Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
                 Dim ok As Boolean
 
@@ -2189,6 +2965,8 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
 
+        Me.Cursor = Cursors.WaitCursor
+
         currentBrowserConstellation = browserConstellationSav.copy
         'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
         browserConstellationSav = Nothing
@@ -2211,11 +2989,6 @@ Public Class frmProjPortfolioAdmin
         ' neu Zeichnen der Diagramme
         Call awinNeuZeichnenDiagramme(2)
 
-
-
-        Me.Cursor = Cursors.WaitCursor
-
-        
 
         ' jetzt muss der Last-Filter zurückgesetzt werden 
         Dim emptyCollection As New Collection
@@ -2245,58 +3018,132 @@ Public Class frmProjPortfolioAdmin
     'End Sub
 
     Private Sub requiredDate_MouseHover(sender As Object, e As EventArgs) Handles requiredDate.MouseHover
-        ToolTipStand.Show("Angabe des Referenzdatums, zu dem die Projekte geladen werden; Default ist immer der aktuelle Stand", requiredDate, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Angabe des Referenzdatums, zu dem die Projekte geladen werden; Default ist immer der aktuelle Stand"
+        Else
+            ttText = "Reference-Date: all projects are selected with timestamp at or before that date; Default is current date & time"
+        End If
+        ToolTipStand.Show(ttText, requiredDate, 2000)
     End Sub
 
     Private Sub SelectionSet_MouseHover(sender As Object, e As EventArgs) Handles SelectionSet.MouseHover
+        Dim ttText As String = ""
 
-        If aKtionskennung = PTTvActions.chgInSession Then
-            ToolTipStand.Show("alle Projekte anzeigen", SelectionSet, 2000)
-        ElseIf aKtionskennung = PTTvActions.delFromDB Then
-            ToolTipStand.Show("alle Projekte und Projekt-Varianten auswählen, die den oben ausgewählten Zeitstempel haben", SelectionSet, 2000)
-        ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVS Then
-            ToolTipStand.Show("alle Projekte auswählen", SelectionSet, 2000)
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            If aKtionskennung = PTTvActions.chgInSession Then
+                ttText = "alle Projekte auswählen"
+            ElseIf aKtionskennung = PTTvActions.delFromDB Then
+                ttText = "alle Projekte und Projekt-Varianten auswählen, die den oben ausgewählten Zeitstempel haben"
+            ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVS Then
+                ttText = "alle Projekte auswählen"
+            End If
+        Else
+            If aKtionskennung = PTTvActions.chgInSession Then
+                ttText = "select all projects"
+            ElseIf aKtionskennung = PTTvActions.delFromDB Then
+                ttText = "select all projects and variants with timestamps at above mentioned date"
+            ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVS Then
+                ttText = "select all projects"
+            End If
         End If
+
+
+        ToolTipStand.Show(ttText, SelectionSet, 2000)
 
     End Sub
 
     Private Sub SelectionReset_MouseHover(sender As Object, e As EventArgs) Handles SelectionReset.MouseHover
-        ToolTipStand.Show("alle Elemente de-selektieren", SelectionReset, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "alle Elemente de-selektieren"
+        Else
+            ttText = "de-select all elements"
+        End If
+        ToolTipStand.Show(ttText, SelectionReset, 2000)
     End Sub
 
     Private Sub collapseCompletely_MouseHover(sender As Object, e As EventArgs) Handles collapseCompletely.MouseHover
-        ToolTipStand.Show("Struktur ganz zusammenklappen", collapseCompletely, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Struktur ganz zusammenklappen"
+        Else
+            ttText = "collapse structure completely"
+        End If
+        ToolTipStand.Show(ttText, SelectionReset, 2000)
     End Sub
 
     Private Sub expandCompletely_MouseHover(sender As Object, e As EventArgs) Handles expandCompletely.MouseHover
-        ToolTipStand.Show("Struktur ganz öffnen", expandCompletely, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Struktur ganz öffnen"
+        Else
+            ttText = "expand structure completely"
+        End If
+        ToolTipStand.Show(ttText, expandCompletely, 2000)
     End Sub
 
     Private Sub filterIcon_MouseHover(sender As Object, e As EventArgs) Handles filterIcon.MouseHover
-        ToolTipStand.Show("Filter definieren und anwenden", filterIcon, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter definieren und anwenden"
+        Else
+            ttText = "Define and apply filter"
+        End If
+        ToolTipStand.Show(ttText, filterIcon, 2000)
     End Sub
 
     Private Sub deleteFilterIcon_MouseHover(sender As Object, e As EventArgs) Handles deleteFilterIcon.MouseHover
-        ToolTipStand.Show("Filter löschen und zurücksetzen", deleteFilterIcon, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter löschen und zurücksetzen"
+        Else
+            ttText = "Reset Filter"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
 
     Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
-        ToolTipStand.Show("Szenario-Name auswählen oder neuen Namen eingeben", dropboxScenarioNames, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Szenario-Name auswählen oder neuen Namen eingeben"
+        Else
+            ttText = "Select scenario Name and/or edit new name"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
     Private Sub onlyActive_MouseHover(sender As Object, e As EventArgs) Handles onlyActive.MouseHover
-        ToolTipStand.Show("Filter auf angezeigte Projekte und Projekt-Varianten", onlyActive, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter auf angezeigte Projekte und Projekt-Varianten"
+        Else
+            ttText = "Filter: only selected projects and variants"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
     Private Sub onlyInactive_MouseHover(sender As Object, e As EventArgs) Handles onlyInactive.MouseHover
-        ToolTipStand.Show("Filter auf nicht angezeigte Projekte und Projekt-Varianten", onlyInactive, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter auf nicht angezeigte Projekte und Projekt-Varianten"
+        Else
+            ttText = "Filter: only un-selected projects and variants"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
     Private Sub backToInit_MouseHover(sender As Object, e As EventArgs) Handles backToInit.MouseHover
-        ToolTipStand.Show("Filter auf angezeigte / nicht angezeigte Projekte und Projekt-Varianten aufheben", backToInit, 2000)
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Filter auf angezeigte / nicht angezeigte Projekte und Projekt-Varianten aufheben"
+        Else
+            ttText = "Reset Filter selected/un-selected projects"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
-    
+
     Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
 
     End Sub
@@ -2313,7 +3160,11 @@ Public Class frmProjPortfolioAdmin
         If Not currentConstellationName.EndsWith("(*)") Then
             currentConstellationName = currentConstellationName & " (*)"
 
-            Me.Text = "Scenario " & currentConstellationName
+            Dim preText As String = "Szenario "
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                preText = "Scenario "
+            End If
+            Me.Text = preText & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2329,7 +3180,12 @@ Public Class frmProjPortfolioAdmin
 
         If Not currentConstellationName.EndsWith("(*)") Then
             currentConstellationName = currentConstellationName & " (*)"
-            Me.Text = "Scenario " & currentConstellationName
+
+            Dim preText As String = "Szenario "
+            If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                preText = "Scenario "
+            End If
+            Me.Text = preText & currentConstellationName
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -2428,38 +3284,61 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    
+
     Private Sub storeToDBasWell_CheckedChanged(sender As Object, e As EventArgs) Handles storeToDBasWell.CheckedChanged
 
-        If storeToDBasWell.Checked Then
-            OKButton.Text = "in Session und DB speichern"
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            If storeToDBasWell.Checked Then
+                Me.OKButton.Text = "in Session und DB speichern"
+            Else
+                Me.OKButton.Text = "in Session speichern"
+            End If
         Else
-            OKButton.Text = "in Session speichern"
+            If storeToDBasWell.Checked Then
+                Me.OKButton.Text = "Store to Session and DB"
+            Else
+                Me.OKButton.Text = "Store to Session"
+            End If
         End If
 
     End Sub
 
-    
+
 
     Private Sub requiredDate_ValueChanged(sender As Object, e As EventArgs) Handles requiredDate.ValueChanged
 
-        stopRecursion = True
+        If stopRecursion Then
+            Exit Sub
+        End If
 
-        Me.Cursor = Cursors.WaitCursor
+        stopRecursion = True
 
         Dim storedAtOrBefore As Date
 
         If Not IsNothing(requiredDate) Then
 
-            If requiredDate.Value >= earliestDate Then
-                requiredDate.Value = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
-                storedAtOrBefore = requiredDate.Value
+            If requiredDate.Value >= earliestDate And requiredDate.Value <= Date.Now Then
+
+                storedAtOrBefore = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
+
+            ElseIf requiredDate.Value > Date.Now Then
+
+                requiredDate.Value = Date.Now
+                storedAtOrBefore = requiredDate.Value.Date.AddHours(23).AddMinutes(59)
+
             Else
-                Call MsgBox("es gibt vor dem " & earliestDate.ToShortDateString & " keine Projekte in der Datenbank ")
-                requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
-                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
+
+                Dim msgText As String = "es gibt vor dem " & earliestDate.ToShortDateString & " keine Projekte in der Datenbank "
+                If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
+                    msgText = "there are no projects at or before " & earliestDate.ToShortDateString & " in the database"
+                End If
+
+                Call MsgBox(msgText)
+
+                requiredDate.Value = earliestDate.Date.AddHours(23).AddMinutes(59)
+                storedAtOrBefore = earliestDate.Date.AddHours(23).AddMinutes(59)
             End If
-            
+
         Else
             requiredDate.Value = Date.Now.Date.AddHours(23).AddMinutes(59)
             storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
@@ -2476,11 +3355,14 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = False
 
-        Me.Cursor = Cursors.Default
 
         ' Fokus an TreeViewPRojekte geben 
         TreeViewProjekte.Focus()
     End Sub
 
-   
+
+    
+    Private Sub OKButton_MouseHover(sender As Object, e As EventArgs) Handles OKButton.MouseHover
+        Me.Cursor = Cursors.Default
+    End Sub
 End Class

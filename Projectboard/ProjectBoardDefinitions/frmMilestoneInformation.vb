@@ -37,6 +37,10 @@
 
         rdbDeliverables.Checked = True
 
+        Dim tmpstr() As String = Me.bewertungsText.Text.Split(New Char() {CChar(vbLf), CChar(vbCr)})
+        Me.bewertungsText.Lines = tmpstr
+
+
 
     End Sub
 

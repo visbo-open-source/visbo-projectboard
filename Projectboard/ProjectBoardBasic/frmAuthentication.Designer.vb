@@ -139,6 +139,7 @@ Partial Class frmAuthentication
         Me.ForeColor = System.Drawing.SystemColors.ControlText
         Me.Name = "frmAuthentication"
         Me.Text = "LOGIN"
+        Me.TopMost = True
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()

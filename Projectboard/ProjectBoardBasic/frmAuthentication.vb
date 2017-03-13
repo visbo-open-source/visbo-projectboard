@@ -56,7 +56,6 @@ Public Class frmAuthentication
 
             Dim pwd As String
             Dim user As String
-            Dim projexist As Boolean
 
             user = benutzer.Text
             pwd = maskedPwd.Text
@@ -64,19 +63,26 @@ Public Class frmAuthentication
 
             Try
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-                projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
-                dbUsername = benutzer.Text
-                dbPasswort = maskedPwd.Text
-                messageBox.Text = ""
-                DialogResult = System.Windows.Forms.DialogResult.OK
+                Dim ok As Boolean = request.createIndicesOnce()
+                If Not ok Then
+                    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                    benutzer.Text = ""
+                    maskedPwd.Text = ""
+                    dbUsername = benutzer.Text
+                    dbPasswort = maskedPwd.Text
+                    benutzer.Focus()
+                    DialogResult = System.Windows.Forms.DialogResult.Retry
+                Else
+                    '' ''projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
+
+                    dbUsername = benutzer.Text
+                    dbPasswort = maskedPwd.Text
+                    messageBox.Text = ""
+                    DialogResult = System.Windows.Forms.DialogResult.OK
+                End If
+
             Catch ex As Exception
-                messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
-                benutzer.Text = ""
-                maskedPwd.Text = ""
-                dbUsername = benutzer.Text
-                dbPasswort = maskedPwd.Text
-                benutzer.Focus()
-                DialogResult = System.Windows.Forms.DialogResult.Retry
+                
             End Try
 
         End If
@@ -124,27 +130,17 @@ Public Class frmAuthentication
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
-                '' ''projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
-
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
                 messageBox.Text = ""
                 DialogResult = System.Windows.Forms.DialogResult.OK
-            End If
-            ' ''    '' ''projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
+                ' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
+                Dim initOK As Integer = request.initWriteProtectionsOnce(dbUsername)
 
-            ' ''    dbUsername = benutzer.Text
-            ' ''    dbPasswort = maskedPwd.Text
-            ' ''    messageBox.Text = ""
-            ' ''    DialogResult = System.Windows.Forms.DialogResult.OK
+            End If
+            
         Catch ex As Exception
-            ' ''    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
-            ' ''    benutzer.Text = ""
-            ' ''    maskedPwd.Text = ""
-            ' ''    dbUsername = benutzer.Text
-            ' ''    dbPasswort = maskedPwd.Text
-            ' ''    benutzer.Focus()
-            ' ''    DialogResult = System.Windows.Forms.DialogResult.Retry
+            
         End Try
     End Sub
 

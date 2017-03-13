@@ -18,8 +18,6 @@
     Friend _Dauer As Integer
     Private _earliestStart As Integer
     Private _latestStart As Integer
-    Private _budgetWerte() As Double
-
 
     ' Hinzufügen von Custom Feldern beliebiger Anzahl 
     ' ein CustomFeld eines bestimmten Typs darf nur einmal vorkommen 
@@ -640,27 +638,6 @@
         End Get
     End Property
 
-
-    ''' <summary>
-    ''' gibt die Budgetwerte des Projekts zurück
-    ''' die werden 
-    ''' beim Laden aus der Datenbank bestimmt oder 
-    ''' beim Ändern des Erlös Werts 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Property budgetWerte As Double()
-        Get
-            budgetWerte = _budgetWerte
-        End Get
-        Set(value As Double())
-            'ReDim _budgetWerte(value.Length - 1)
-            If value.Sum > 0 Then
-                _budgetWerte = value
-            End If
-        End Set
-    End Property
 
     ''' <summary>
     ''' Bezugsdatum ist hier der StartofCalendar
@@ -3046,14 +3023,14 @@
             Dim phasenStart As Integer
             Dim tempArray() As Double
             Dim tagessatz As Double
-            Dim faktor As Double = nrOfDaysMonth
+            Dim faktor As Double = 1
             Dim dimension As Integer
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
@@ -3670,14 +3647,14 @@
             Dim phasenStart As Integer
             Dim tempArray() As Double
             Dim tagessatz As Double
-            Dim faktor As Double = nrOfDaysMonth
+            Dim faktor As Double = 1
             Dim dimension As Integer
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
                 faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Then
+            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
                 faktor = 1
             Else
                 faktor = 1
