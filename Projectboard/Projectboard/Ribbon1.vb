@@ -876,7 +876,7 @@ Imports System.Windows
                         hproj = ShowProjekte.getProject(pName)
 
                         Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-
+                        ' wenn schon das gewählte Projekt geschützt ist , dann gar nichts weiter machen ... 
                         If Not isProtectedbyOthers Then
                             ' hier das Fomular zur Eingabe des neuen Namens aufrufen ... 
                             Dim renameForm As New frmRenameProject
@@ -898,8 +898,13 @@ Imports System.Windows
 
                                         ok = request.renameProjectsInDB(pName, newName, dbUsername)
                                         If Not ok Then
-                                            Call MsgBox("Fehler bei Umbenennen: " & vbLf & _
-                                                         pName & " -> " & newName)
+                                            If awinSettings.englishLanguage Then
+                                                Call MsgBox("rename cancelled: there is at least one write-protected variant for Project " & pName)
+                                            Else
+                                                Call MsgBox("Rename nicht durchgeführt: es gibt mindestens eine schreibgeschützte Variante im Projekt " & pName)
+                                            End If
+                                        Else
+                                            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
                                         End If
                                     End If
                                 Catch ex As Exception
