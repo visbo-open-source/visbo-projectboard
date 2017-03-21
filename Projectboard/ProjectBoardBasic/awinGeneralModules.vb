@@ -1198,6 +1198,9 @@ Public Module awinGeneralModules
                     ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
                     Call readRessourcenDetails()
 
+                    ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
+                    Call readRessourcenDetails2()
+
                     ' Auslesen der Rollen aus der Datenbank ! 
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
@@ -2187,6 +2190,40 @@ Public Module awinGeneralModules
 
         RoleDefinitions = New clsRollen
         RoleDefinitions = tmpRoleDefinitions
+
+    End Sub
+    ''' <summary>
+    ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub readRessourcenDetails2()
+
+        Dim kapaFileName As String
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+        kapaFileName = awinPath & projektRessOrdner & "\" & "Urlaubsplanung*.xlsx"
+
+        listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
+                      FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
+
+        If listOfFiles.Count = 1 Then
+            Call readUrlOfRole(listOfFiles.Item(0))
+        Else
+            Call MsgBox("Es gibt mehrere Urlaubsplanungs-Dateien" & vbLf _
+                         & "Es wurde daher keine berücksichtigt")
+        End If
 
     End Sub
 
@@ -11387,6 +11424,272 @@ Public Module awinGeneralModules
         enableOnUpdate = True
 
     End Sub
+
+
+    ''' <summary>
+    ''' liest das im Diretory ../ressource manager evt. liegende File 'Urlaubsplaner*.xlsx' File  aus
+    ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub readUrlOfRole(ByVal kapaFileName As String)
+
+        Dim ok As Boolean = True
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+
+        Dim spalte As Integer = 2
+        Dim blattname1 As String = "1.Halbjahr"
+        Dim blattname2 As String = "2.Halbjahr"
+        Dim currentWS As Excel.Worksheet
+        Dim index As Integer
+        Dim tmpDate As Date
+
+        Dim year As Integer = DatePart(DateInterval.Year, Date.Now)
+        Dim anzMonthDays As Integer = 0
+        Dim colDate As Integer = 0
+        Dim anzDays As Integer = 0
+        Dim tmpKapa As Double
+        Dim extTmpKapa As Double
+
+        Dim lastZeile As Integer
+        Dim lastSpalte As Integer
+        Dim monthDays As SortedList(Of Integer, Integer) = Nothing
+        Dim hrole As New clsRollenDefinition
+        Dim rolename As String = ""
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+        ' öffnen des Files 
+        If My.Computer.FileSystem.FileExists(kapaFileName) Then
+
+            Try
+                appInstance.Workbooks.Open(kapaFileName)
+                ok = True
+
+                Try
+                    For index = 1 To appInstance.Worksheets.Count
+
+                        If Not ok Then
+                            Exit For
+                        End If
+
+                        currentWS = CType(appInstance.Worksheets(index), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        Dim hstr As String = currentWS.Name
+
+                        lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                        lastSpalte = CType(currentWS.Cells(4, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+
+                        Dim vglColor As Integer = -4142         ' keine Farbe
+                        Dim i As Integer = 5
+
+                        While ok And i <= lastSpalte
+
+                            If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
+                                ok = (anzDays = anzMonthDays)
+                                vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
+                                anzDays = 1
+                            Else
+                                If CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text <> "" Then
+                                    Dim monthName As String = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                    ' ''Dim strDate As String = "01." & monthName & " " & year
+                                    ' ''Dim hdate As DateTime = DateValue(strDate)
+
+                                    Dim isdate As Boolean = DateTime.TryParse(monthName & " " & year.ToString, tmpDate)
+                                    If isdate Then
+                                        colDate = getColumnOfDate(tmpDate)
+                                        anzMonthDays = DateTime.DaysInMonth(year, Month(tmpDate))
+                                        monthDays.Add(colDate, anzMonthDays)
+                                    End If
+                                End If
+
+                                anzDays = anzDays + 1
+                            End If
+
+                            i = i + 1
+                            ok = True
+                        End While
+
+                        For iZ = 5 To lastZeile
+
+                            rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
+                            If rolename <> "" Then
+                                hrole = RoleDefinitions.getRoledef(rolename)
+
+                                Dim iSp As Integer = 5
+                                Dim anzArbTage = 0
+
+                                While ok And iSp <= lastSpalte
+
+                                    For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
+
+                                        Dim colOfDate As Integer = kvp.Key
+                                        anzDays = kvp.Value
+                                        For sp = iSp + 0 To iSp + anzDays
+                                            If CType(currentWS.Cells(iZ, iSp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = -4142 Then
+                                                anzArbTage = anzArbTage + 1
+                                            End If
+                                            sp = sp + 1
+                                        Next
+                                        hrole.kapazitaet(colOfDate) = CType(anzArbTage, Double)
+                                    Next
+
+                                End While
+
+                            Else
+                                'Fehler, da kein Name angegeben
+                            End If
+
+                        Next iZ
+
+
+
+                    Next index
+
+
+
+                    '' ''    ' bevor jetzt die eigentliche Kapa dieser Rolle aus intern_sum ausgelesen wird, wird geschaut, ob 
+                    '' ''    ' es eine zusammengesetzte Rolle ist
+                    '' ''    ' das wird dadurch entschieden, ob bis zur summenzeile bekannte Rollen auftauchen. Das sind dann die Sub-Roles 
+
+
+                    '' ''    Dim atleastOneSubRole As Boolean = False
+                    '' ''    Dim aktzeile As Integer = 2
+                    '' ''    Do While aktzeile < summenZeile
+
+                    '' ''        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, spalte - 1), Excel.Range).Value)
+
+                    '' ''        If Not IsNothing(subRoleName) Then
+                    '' ''            subRoleName = subRoleName.Trim
+                    '' ''            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                    '' ''                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                    '' ''                Try
+                    '' ''                    atleastOneSubRole = True
+                    '' ''                    ' es ist eine Sub-Rolle
+
+                    '' ''                    hrole.addSubRole(subRole.UID, subRoleName, RoleDefinitions.Count)
+
+                    '' ''                    spalte = 2
+                    '' ''                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+
+                    '' ''                    ' erstmal dahin positionieren, wo das Datum auch mit StartOfCalendar harmoniert 
+                    '' ''                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
+                    '' ''                        spalte = spalte + 1
+                    '' ''                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                    '' ''                    Loop
+
+                    '' ''                    Do While spalte < 241 And spalte <= lastSpalte
+
+                    '' ''                        index = getColumnOfDate(tmpDate)
+                    '' ''                        If index >= 1 Then
+                    '' ''                            tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                    '' ''                            If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                    '' ''                                subRole.kapazitaet(index) = tmpKapa
+                    '' ''                            End If
+                    '' ''                        End If
+
+                    '' ''                        spalte = spalte + 1
+                    '' ''                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                    '' ''                    Loop
+
+                    '' ''                Catch ex As Exception
+
+                    '' ''                End Try
+
+
+                    '' ''            End If
+
+                    '' ''        End If
+
+                    '' ''        aktzeile = aktzeile + 1
+                    '' ''        ' jetzt spalte wieder auf 2 setzen 
+                    '' ''        spalte = 2
+                    '' ''    Loop
+
+                    '' ''    ' die internen Kapas einer Sammelrolle sind NULL 
+                    '' ''    If atleastOneSubRole Then
+                    '' ''        For i As Integer = 1 To 240
+                    '' ''            hrole.kapazitaet(i) = 0
+                    '' ''        Next
+                    '' ''    End If
+
+
+
+                    '' ''    Try
+                    '' ''        extSummenZeile = currentWS.Range("extern_sum").Row
+                    '' ''    Catch ex As Exception
+                    '' ''        extSummenZeile = 0
+                    '' ''    End Try
+
+                    '' ''    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+
+                    '' ''    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
+                    '' ''            spalte < 241 And spalte <= lastSpalte
+                    '' ''        index = getColumnOfDate(tmpDate)
+                    '' ''        tmpKapa = CDbl(CType(currentWS.Cells(summenZeile, spalte), Excel.Range).Value)
+
+
+                    '' ''        If extSummenZeile > 0 Then
+                    '' ''            extTmpKapa = CDbl(CType(currentWS.Cells(extSummenZeile, spalte), Excel.Range).Value)
+                    '' ''        Else
+                    '' ''            extTmpKapa = 0.0
+                    '' ''        End If
+
+                    '' ''        If index <= 240 And index > 0 Then
+
+                    '' ''            If atleastOneSubRole Then
+                    '' ''                ' alles ist Null , wird erst später aufgrund der Sub-Rollen berechnet 
+                    '' ''            Else
+                    '' ''                If tmpKapa >= 0 Then
+                    '' ''                    hrole.kapazitaet(index) = tmpKapa
+                    '' ''                End If
+                    '' ''            End If
+
+                    '' ''            If extTmpKapa >= 0 Then
+                    '' ''                hrole.externeKapazitaet(index) = extTmpKapa
+                    '' ''            End If
+
+
+                    '' ''        End If
+
+                    '' ''        spalte = spalte + 1
+                    '' ''        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                    '' ''    Loop
+
+                Catch ex2 As Exception
+
+                End Try
+
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+
+        If formerEE Then
+            appInstance.EnableEvents = True
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = True
+        End If
+
+        enableOnUpdate = True
+
+    End Sub
+
 
     ''' <summary>
     ''' liefert die Namen aller Projekte im Show, die nicht zum angegebenen Filter passen ...
