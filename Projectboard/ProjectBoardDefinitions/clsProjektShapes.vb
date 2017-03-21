@@ -927,7 +927,7 @@ Public Class clsProjektShapes
                     key = calcProjektKey(hproj)
                     AlleProjekte.Remove(key)
 
-                    AlleProjekte.Add(key, newProjekt)
+                    AlleProjekte.Add(newProjekt)
                     ShowProjekte.Add(newProjekt)
 
                     Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)

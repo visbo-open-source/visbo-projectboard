@@ -2029,7 +2029,7 @@ Public Module awinGeneralModules
                 If awinSettings.kapaEinheit <> "PT" And _
                     awinSettings.kapaEinheit <> "PD" Then
                     awinSettings.kapaEinheit = "PT"
-                    Call MsgBox("Kapa-Einheit: PT")
+                    Call MsgBox("Kapa-Einheit: Personen-Tage")
                 End If
                 awinSettings.offsetEinheit = CStr(.Range("offsetEinheit").Value)
                 'ur: 6.08.2015: umgestellt auf Settings in app.config ''awinSettings.databaseName = CStr(.Range("Datenbank").Value)
@@ -3005,7 +3005,7 @@ Public Module awinGeneralModules
 
 
                     ' jetzt muss das Projekt eingetragen werden 
-                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                    ImportProjekte.Add(hproj, False)
                     myCollection.Add(hproj.name)
 
 
@@ -3730,7 +3730,7 @@ Public Module awinGeneralModules
                     AlleProjekte.Remove(key)
                 End If
 
-                AlleProjekte.Add(key, hproj)
+                AlleProjekte.Add(hproj)
 
                 If modus = "BHTC" Then
                     ' Alle Projekte entfernen
@@ -4010,7 +4010,7 @@ Public Module awinGeneralModules
 
             Try
                 vglName = calcProjektKey(hproj.name, hproj.variantName)
-                AlleProjekte.Add(vglName, hproj)
+                AlleProjekte.Add(hproj)
                 ShowProjekte.Add(hproj)
 
                 ' ggf Bedarfe anzeigen 
@@ -4073,7 +4073,7 @@ Public Module awinGeneralModules
                 Call awinNeuZeichnenDiagramme(2)
             End If
 
-            Call storeSessionConstellation("Last")
+            'Call storeSessionConstellation("Last")
 
         End If
 
@@ -4430,7 +4430,7 @@ Public Module awinGeneralModules
                                         hproj = request.retrieveOneProjectfromDB(projectName, variantName, Date.Now)
                                         ' jetzt in AlleProjekte eintragen ... 
                                         If Not IsNothing(hproj) Then
-                                            AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                            AlleProjekte.Add(hproj)
                                             ok = True
                                         End If
 
@@ -4455,7 +4455,7 @@ Public Module awinGeneralModules
                         If ok Then
 
                             If Not ImportProjekte.Containskey(pKey) Then
-                                ImportProjekte.Add(pKey, hproj)
+                                ImportProjekte.Add(hproj, False)
                             End If
 
                             ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
@@ -5113,7 +5113,7 @@ Public Module awinGeneralModules
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
                                             Else
-                                                ImportProjekte.Add(pkey, hproj)
+                                                ImportProjekte.Add(hproj, False)
                                             End If
 
 
@@ -5288,7 +5288,7 @@ Public Module awinGeneralModules
                 If AlleProjekte.Containskey(importKey) Then
                     AlleProjekte.Remove(importKey)
                 End If
-                AlleProjekte.Add(importKey, impProjekt)
+                AlleProjekte.Add(impProjekt)
             Else
                 ' jetzt muss ggf verglichen werden 
                 If AlleProjekte.Containskey(importKey) Then
@@ -5315,12 +5315,12 @@ Public Module awinGeneralModules
                                     ok = False
                                 Else
                                     ' jetzt in AlleProjekte eintragen ... 
-                                    AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+                                    AlleProjekte.Add(vglProj)
 
                                 End If
                             Else
                                 ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                                AlleProjekte.Add(importKey, impProjekt)
+                                AlleProjekte.Add(impProjekt)
                             End If
                         Else
                             Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
@@ -5329,7 +5329,7 @@ Public Module awinGeneralModules
 
                     Else
                         ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                        AlleProjekte.Add(importKey, impProjekt)
+                        AlleProjekte.Add(impProjekt)
 
                     End If
 
@@ -5359,7 +5359,7 @@ Public Module awinGeneralModules
                     End If
 
                     ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
-                    AlleProjekte.Add(importKey, impProjekt)
+                    AlleProjekte.Add(impProjekt)
                 End If
 
             End If
@@ -5368,7 +5368,11 @@ Public Module awinGeneralModules
             Dim newCItem As New clsConstellationItem
             newCItem.projectName = impProjekt.name
             newCItem.variantName = impProjekt.variantName
-            newCItem.show = True
+            If newC.containsProject(impProjekt.name) Then
+                newCItem.show = False
+            Else
+                newCItem.show = True
+            End If
             newCItem.start = impProjekt.startDate
             newCItem.zeile = lfdZeilenNr
             newC.add(newCItem)
@@ -5714,7 +5718,7 @@ Public Module awinGeneralModules
                         ' jetzt die Projekt eintragen 
                         If Not hproj Is Nothing Then
                             Try
-                                ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                ImportProjekte.Add(hproj, False)
                                 myCollection.Add(calcProjektKey(hproj))
                             Catch ex As Exception
 
@@ -7804,6 +7808,7 @@ Public Module awinGeneralModules
 
                         Dim gefundenRange As Excel.Range = testrange.Find(What:="Summe")
                         If IsNothing(gefundenRange) Then
+                            ' alte Version des Steckbriefes 
                             ressOff = 1
                             ressSumOffset = -1              ' keine Summe vorhanden
                             Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
@@ -7812,6 +7817,15 @@ Public Module awinGeneralModules
                             ressSumOffset = gefundenRange.Column - rng.Column - 2
                             'Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
 
+
+                            ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
+                            Dim verbRange As Excel.Range
+                            Dim iv As Integer
+
+                            For iv = 0 To rng.Rows.Count - 1
+                                verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
+                                verbRange.Merge()
+                            Next
                         End If
 
                         Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
@@ -7838,14 +7852,7 @@ Public Module awinGeneralModules
 
                         End If
 
-                        ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
-                        Dim verbRange As Excel.Range
-                        Dim iv As Integer
-
-                        For iv = 0 To rng.Rows.Count - 1
-                            verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
-                            verbRange.Merge()
-                        Next
+                        
 
 
                         zeile = 0
@@ -9424,7 +9431,7 @@ Public Module awinGeneralModules
                         ' tk, Änderung 19.1.17 nicht mehr notwendig ..
                         ' Call awinCreateBudgetWerte(kvp.Value)
 
-                        AlleProjekte.Add(kvp.Key, kvp.Value)
+                        AlleProjekte.Add(kvp.Value)
                         If ShowProjekte.contains(kvp.Value.name) Then
                             ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
                         Else
@@ -9462,7 +9469,7 @@ Public Module awinGeneralModules
                     Dim tmpValue As Integer = kvp.Value.dauerInDays
                     ' tk, Änderung 19.1.17 nicht mehr notwendig ..
                     ' Call awinCreateBudgetWerte(kvp.Value)
-                    AlleProjekte.Add(kvp.Key, kvp.Value)
+                    AlleProjekte.Add(kvp.Value)
 
                     Try
                         ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
@@ -9534,7 +9541,7 @@ Public Module awinGeneralModules
                         hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
                         If Not IsNothing(hproj) Then
                             ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                            AlleProjekte.Add(kvp.Key, hproj)
+                            AlleProjekte.Add(hproj)
                         Else
                             outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
                             outPutCollection.Add(outputLine)
@@ -9590,7 +9597,7 @@ Public Module awinGeneralModules
         Next
 
         ' die aktuelle Konstellation in "Last" speichern 
-        Call storeSessionConstellation("Last")
+        'Call storeSessionConstellation("Last")
 
         If outPutCollection.Count > 0 Then
             Call showOutPut(outPutCollection, _
@@ -9696,7 +9703,7 @@ Public Module awinGeneralModules
 
                         If Not IsNothing(hproj) Then
                             ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                            AlleProjekte.Add(kvp.Key, hproj)
+                            AlleProjekte.Add(hproj)
                             ' jetzt die Variante aktivieren 
                             ' aber nur wenn es auch das Flag show hat 
                             If showIT Then
@@ -9800,7 +9807,7 @@ Public Module awinGeneralModules
             Call awinNeuZeichnenDiagramme(2)
 
             ' die aktuelle Konstellation in "Last" speichern 
-            Call storeSessionConstellation("Last")
+            'Call storeSessionConstellation("Last")
 
         Catch ex As Exception
             Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
@@ -10046,7 +10053,7 @@ Public Module awinGeneralModules
                 AlleProjekte.Remove(key)
             End If
 
-            AlleProjekte.Add(key, hproj)
+            AlleProjekte.Add(hproj)
 
             ' jetzt die writeProtections aktualisieren 
             Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
@@ -12669,7 +12676,7 @@ Public Module awinGeneralModules
 
                 If ok Then
                     Try
-                        newProjektliste.Add(kvp.Key, kvp.Value)
+                        newProjektliste.Add(kvp.Value, False)
                     Catch ex As Exception
                         Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
                     End Try
@@ -14459,7 +14466,8 @@ Public Module awinGeneralModules
         If Not ShowProjekte.contains(pName) Then
             ShowProjekte.Add(hproj)
             If pZeile < 2 Then
-                pZeile = ShowProjekte.getPTZeile(pName)
+                'pZeile = ShowProjekte.getPTZeile(pName)
+                pZeile = currentSessionConstellation.getBoardZeile(pName)
             End If
 
             Dim tmpCollection As New Collection
@@ -15720,7 +15728,7 @@ Public Module awinGeneralModules
 
 
                         If Not ImportProjekte.Containskey(calcProjektKey(hproj)) Then
-                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                            ImportProjekte.Add(hproj, False)
                             myCollection.Add(calcProjektKey(hproj))
 
                         End If
@@ -16049,7 +16057,7 @@ Public Module awinGeneralModules
 
 
                     ' jetzt ist sichergestellt, dass calcProjektKey nicht mehr vorkommt 
-                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                    ImportProjekte.Add(hproj, False)
                     myCollection.Add(calcProjektKey(hproj))
 
 
@@ -20071,7 +20079,7 @@ Public Module awinGeneralModules
 
                             ' diese Liste wird benötigt, damit in zeichneMultiprojektSicht die Routine bestimmeProjekteAndMinMaxDates funktioniert
                             If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
-                                AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                AlleProjekte.Add(hproj)
                             End If
 
 
@@ -20184,7 +20192,7 @@ Public Module awinGeneralModules
 
                                     ' diese Liste wird benötigt, damit in zeichneMultiprojektSicht die Routine bestimmeProjekteAndMinMaxDates funktioniert
                                     If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
-                                        AlleProjekte.Add(calcProjektKey(hproj), hproj)
+                                        AlleProjekte.Add(hproj)
                                     End If
 
                                     If kvp.Value.show Then

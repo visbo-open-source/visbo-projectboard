@@ -70,7 +70,8 @@ Public Module Module1
     Public Projektvorlagen As New clsProjektvorlagen
     Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
-    Public noShowProjekte As New clsProjekte
+    ' noShowProjekte am 21.3 rausgenommen 
+    ''Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
@@ -85,6 +86,8 @@ Public Module Module1
 
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
+    ' die currentSessionConstellation ist das Abbild der aktuellen Session 
+    Public currentSessionConstellation As New clsConstellation
     Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
@@ -221,8 +224,10 @@ Public Module Module1
         alphabet = 0
         customTF = 1
         customListe = 2
-        buStartName = 3
-        formel = 4
+        strategyProfitLossRisk = 3
+        customFields12 = 4
+        buStartName = 5
+        formel = 6
     End Enum
 
     

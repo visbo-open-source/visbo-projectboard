@@ -325,8 +325,8 @@ Imports System.Windows
                 If constFilterName = currentConstellationName Then
 
                     ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                    Call storeSessionConstellation("Last")
-                    currentConstellationName = "Last"
+                    'Call storeSessionConstellation("Last")
+                    'currentConstellationName = "Last"
                 Else
                     ' aktuelle Konstellation bleibt unverändert
                 End If
@@ -944,7 +944,7 @@ Imports System.Windows
                                                 AlleProjekte.Remove(key)
                                                 tmpProj.name = newName
                                                 key = calcProjektKey(newName, vName)
-                                                AlleProjekte.Add(key, tmpProj)
+                                                AlleProjekte.Add(tmpProj)
                                             End If
                                         Next
 
@@ -955,7 +955,7 @@ Imports System.Windows
                                             AlleProjekte.Remove(key)
                                             tmpProj.name = newName
                                             key = calcProjektKey(newName, "")
-                                            AlleProjekte.Add(key, tmpProj)
+                                            AlleProjekte.Add(tmpProj)
                                         End If
 
 
@@ -1093,7 +1093,7 @@ Imports System.Windows
             currentConstellationName = currentConstellationName & " (*)"
         End If
 
-        Call storeSessionConstellation("Last")
+        'Call storeSessionConstellation("Last")
 
         enableOnUpdate = True
 
@@ -1498,7 +1498,7 @@ Imports System.Windows
                     End If
 
                     ' die "neue" Standard Variante in AlleProjekte aufnehmen 
-                    AlleProjekte.Add(key, hproj)
+                    AlleProjekte.Add(hproj)
 
                     ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
@@ -3554,58 +3554,59 @@ Imports System.Windows
 
     End Sub
 
+    ' am 21.3.17 von tk rausgenommen 
     ''' <summary>
     ''' Projekt ins Noshow stellen  
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     ''' 
-    Sub Tom2G1NoShow(control As IRibbonControl)
+    ''Sub Tom2G1NoShow(control As IRibbonControl)
 
-        Dim singleShp As Excel.Shape
-        'Dim SID As String
+    ''    Dim singleShp As Excel.Shape
+    ''    'Dim SID As String
 
-        Dim awinSelection As Excel.ShapeRange
+    ''    Dim awinSelection As Excel.ShapeRange
 
-        Call projektTafelInit()
+    ''    Call projektTafelInit()
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
+    ''    Dim formerEE As Boolean = appInstance.EnableEvents
+    ''    appInstance.EnableEvents = False
 
-        enableOnUpdate = False
+    ''    enableOnUpdate = False
 
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+    ''    Try
+    ''        'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+    ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+    ''    Catch ex As Exception
+    ''        awinSelection = Nothing
+    ''    End Try
 
-        If Not awinSelection Is Nothing Then
+    ''    If Not awinSelection Is Nothing Then
 
-            ' jetzt die Aktion durchführen ...
+    ''        ' jetzt die Aktion durchführen ...
 
-            For Each singleShp In awinSelection
+    ''        For Each singleShp In awinSelection
 
-                Dim shapeArt As Integer
-                shapeArt = kindOfShape(singleShp)
+    ''            Dim shapeArt As Integer
+    ''            shapeArt = kindOfShape(singleShp)
 
-                With singleShp
-                    If isProjectType(shapeArt) Then
+    ''            With singleShp
+    ''                If isProjectType(shapeArt) Then
 
-                        Call awinShowNoShowProject(pname:=.Name)
+    ''                    Call awinShowNoShowProject(pname:=.Name)
 
-                    End If
-                End With
-            Next
+    ''                End If
+    ''            End With
+    ''        Next
 
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
+    ''    Else
+    ''        Call MsgBox("vorher Projekt selektieren ...")
+    ''    End If
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-    End Sub
+    ''    enableOnUpdate = True
+    ''    appInstance.EnableEvents = formerEE
+    ''End Sub
 
     ''' <summary>
     ''' neues Formular zur Auswahl Phasen/Meilensteine/Rollen/Kosten anzeigen
@@ -3636,39 +3637,39 @@ Imports System.Windows
 
     End Sub
 
-
+    ' am 21.3.17 rausgenommen 
     ''' <summary>
     ''' Projekt ins Show zurückholen 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub Tom2G1Show(control As IRibbonControl)
+    ''Sub Tom2G1Show(control As IRibbonControl)
 
-        Dim getBackToShow As New frmGetProjectbackFromNoshow
+    ''    Dim getBackToShow As New frmGetProjectbackFromNoshow
 
-        Dim returnValue As DialogResult
+    ''    Dim returnValue As DialogResult
 
-        Call projektTafelInit()
+    ''    Call projektTafelInit()
 
-        enableOnUpdate = False
-        appInstance.ScreenUpdating = False
+    ''    enableOnUpdate = False
+    ''    appInstance.ScreenUpdating = False
 
-        If AlleProjekte.Count > 0 And ShowProjekte.Count <> AlleProjekte.Count Then
+    ''    If AlleProjekte.Count > 0 And ShowProjekte.Count <> AlleProjekte.Count Then
 
-            returnValue = getBackToShow.ShowDialog
-        Else
-            If AlleProjekte.Count = 0 Then
-                Call MsgBox("Es sind keine Projekte geladen!  ")
-            Else
-                Call MsgBox("Es gibt keine Projekte in der Warteschlange !")
-            End If
-        End If
+    ''        returnValue = getBackToShow.ShowDialog
+    ''    Else
+    ''        If AlleProjekte.Count = 0 Then
+    ''            Call MsgBox("Es sind keine Projekte geladen!  ")
+    ''        Else
+    ''            Call MsgBox("Es gibt keine Projekte in der Warteschlange !")
+    ''        End If
+    ''    End If
 
 
 
-        appInstance.ScreenUpdating = True
-        enableOnUpdate = True
-    End Sub
+    ''    appInstance.ScreenUpdating = True
+    ''    enableOnUpdate = True
+    ''End Sub
     ''' <summary>
     ''' Änderungen akzeptieren 
     ''' </summary>
@@ -3988,7 +3989,7 @@ Imports System.Windows
 
                     If ShowProjekte.Count > 0 Then
                         wasNotEmpty = True
-                        Call storeSessionConstellation("Last")
+                        'Call storeSessionConstellation("Last")
                         ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
                         Call awinClearPlanTafel()
                     End If
@@ -4102,7 +4103,7 @@ Imports System.Windows
 
                         If ShowProjekte.Count > 0 Then
                             wasNotEmpty = True
-                            Call storeSessionConstellation("Last")
+                            'Call storeSessionConstellation("Last")
                             ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
                             Call awinClearPlanTafel()
                         End If
@@ -4642,7 +4643,7 @@ Imports System.Windows
 
                             Try
                                 Dim keyStr As String = calcProjektKey(hproj)
-                                ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                ImportProjekte.Add(hproj, False)
                                 myCollection.Add(calcProjektKey(hproj))
                             Catch ex2 As Exception
                                 Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
@@ -4768,7 +4769,7 @@ Imports System.Windows
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
-                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                        ImportProjekte.Add(hproj, False)
                         myCollection.Add(calcProjektKey(hproj))
                     Catch ex2 As Exception
                         Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
@@ -9865,7 +9866,7 @@ Imports System.Windows
 
                     vglProj.variantName = "OpenXML"
                     If Not AlleProjekte.Containskey(calcProjektKey(vglProj)) Then
-                        AlleProjekte.Add(calcProjektKey(vglProj), vglProj)
+                        AlleProjekte.Add(vglProj)
                     End If
 
 

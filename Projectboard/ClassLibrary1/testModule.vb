@@ -5092,7 +5092,7 @@ Public Module testModule
         writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
-        Call storeSessionConstellation("Last")
+        'Call storeSessionConstellation("Last")
 
         If request.pingMongoDb() And Not noDB Then
 

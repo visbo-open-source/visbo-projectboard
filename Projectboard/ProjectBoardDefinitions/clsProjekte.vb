@@ -14,7 +14,7 @@ Public Class clsProjekte
     ''' </summary>
     ''' <param name="project"></param>
     ''' <remarks></remarks>
-    Public Sub Add(project As clsProjekt)
+    Public Sub Add(project As clsProjekt, Optional ByVal updateCurrentConstellation As Boolean = True)
 
         Try
             Dim pname As String = project.name
@@ -25,6 +25,14 @@ Public Class clsProjekte
 
                 If shpUID <> "" Then
                     _allShapes.Add(shpUID, pname)
+                End If
+
+                If updateCurrentConstellation Then
+                    Dim key As String = calcProjektKey(project)
+                    If currentSessionConstellation.contains(key, False) Then
+                        currentSessionConstellation.getItem(key).show = True
+                    End If
+
                 End If
 
                 '' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
@@ -83,11 +91,15 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property getPTZeile(ByVal projectName As String) As Integer
         Get
-            If _allProjects.ContainsKey(projectName) Then
-                getPTZeile = _allProjects.IndexOfKey(projectName) + 2
-            Else
-                getPTZeile = 0
-            End If
+            ' wurde am 21.3.17 ersetzt durch das unten folgende 
+            ''If _allProjects.ContainsKey(projectName) Then
+            ''    getPTZeile = _allProjects.IndexOfKey(projectName) + 2
+            ''Else
+            ''    getPTZeile = 0
+            ''End If
+
+            ' seit 21.3.17
+            getPTZeile = currentSessionConstellation.getBoardZeile(projectName)
 
         End Get
     End Property
@@ -95,18 +107,27 @@ Public Class clsProjekte
     ''' <summary>
     ''' nimmt das Projekt mit dem übergebenen Namen aus der Liste heraus  
     ''' wirft eine Exception, wenn Projekt nicht ind er Liste oder ShpUID nicht ind er zugehörigen Shape-Liste
+    ''' aktualisiert die currentSessionConstellation
     ''' </summary>
     ''' <param name="projectname"></param>
     ''' <remarks></remarks>
-    Public Sub Remove(projectname As String)
+    Public Sub Remove(projectname As String, Optional ByVal updateCurrentConstellation As Boolean = True)
 
         Try
             Dim SID As String = _allProjects.Item(projectname).shpUID
+            Dim vName As String = _allProjects.Item(projectname).variantName
             _allProjects.Remove(projectname)
             If SID <> "" Then
                 _allShapes.Remove(SID)
             End If
 
+            If updateCurrentConstellation Then
+                Dim key As String = calcProjektKey(projectname, vName)
+                If currentSessionConstellation.contains(key, False) Then
+                    currentSessionConstellation.getItem(key).show = False
+                End If
+
+            End If
             '' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
             'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
             '    currentConstellationName = currentConstellationName & "(*)"
@@ -149,6 +170,11 @@ Public Class clsProjekte
 
         _allProjects.Clear()
         _allShapes.Clear()
+
+        ' jetzt die currentConstellation, alle Items auf noShow setzen 
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
+            kvp.Value.show = False
+        Next
 
     End Sub
 

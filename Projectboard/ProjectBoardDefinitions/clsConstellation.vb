@@ -1,10 +1,24 @@
 ﻿Public Class clsConstellation
 
-    ' sortierte liste von pvName und clsConstellationItems
+    ''' <summary>
+    ''' _allItems ist sorted list with key containing projectName#variantName
+    ''' </summary>
+    ''' <remarks></remarks>
     Private _allItems As SortedList(Of String, clsConstellationItem)
 
     ' sortierte Liste eines beliebig zu erstellenden Keys und dem pvName  
-    Private _sortList As New SortedList(Of String, String)
+    ''' <summary>
+    ''' _sortlist is sorted list providing the sequence, in which projects shall be shown in window / multiproject board
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private _sortList As SortedList(Of String, String)
+
+    ''' <summary>
+    ''' _lastCustomList merkt sich die letzten Custom Werte, so dass hierhin problemlos zurückgegangen werden kann
+    ''' ohne nochmal alles händisch machen zu müssen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private _lastCustomList As SortedList(Of String, String)
 
     ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
     ' 0: alphabetisch nach Name
@@ -17,93 +31,227 @@
     Private _constellationName As String = "Last"
 
     ''' <summary>
+    ''' gibt die Zeile zurück, auf der dieses Projekt gezeichnet werden soll 
+    ''' 
+    ''' </summary>
+    ''' <param name="pName">NAme des Projektes, ohne den Varianten-Namen Anteil </param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBoardZeile(ByVal pName As String) As Integer
+        Get
+            Dim found As Boolean = False
+            Dim ix As Integer = 0
+            Dim bzeile As Integer = 0
+
+            Do While ix <= _sortList.Count - 1 And Not found
+                Dim vglName As String = _sortList.ElementAt(ix).Value
+                If vglName = pName Then
+                    found = True
+                Else
+                    ix = ix + 1
+                    If ShowProjekte.contains(vglName) Then
+                        bzeile = bzeile + 1
+                    End If
+                End If
+            Loop
+
+            getBoardZeile = bzeile + 2
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liest bzw. schreibt die Sortier-Liste, die die Reihenfolge Information bereitstellt, in der die Projekte dargestellt werden sollen 
+    ''' beim Setzen muss ein Parameter mitgegeben, der angibt, um welche Sortierungs-Liste es sich hierbei handelt  
+    ''' </summary>
+    ''' <param name="sType"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property sortListe(Optional ByVal sType As Integer = ptSortCriteria.alphabet) As SortedList(Of String, String)
+        Get
+            sortListe = _sortList
+        End Get
+        Set(value As SortedList(Of String, String))
+            Dim correct As Boolean = False
+            If Not IsNothing(value) Then
+                If value.Count = Me.getProjectNames.Count Then
+                    correct = True
+                    For Each kvp As KeyValuePair(Of String, String) In value
+                        ' prüfen, ob die Gesamt-Liste irgendeine Projekt-Variante mit diesem Projekt-Namen enthält 
+                        If Me.containsProject(kvp.Key) Then
+                            ' alles in Ordnung 
+                        Else
+                            ' nicht in Ordnung 
+                            correct = False
+                        End If
+                    Next
+                End If
+            End If
+            If correct Then
+                _sortType = sType
+                _sortList = New SortedList(Of String, String)
+
+                ' kopieren der Liste 
+                For Each kvp As KeyValuePair(Of String, String) In value
+                    ' Prüfung auf Enthaltensein kann hier entfallen, da eine sortierte Liste wie value nur eindeutige keys enthalten kann  
+                    _sortList.Add(kvp.Key, kvp.Value)
+                Next
+
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liest bzw. setzt die lastCustomlist 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property lastCustomList As SortedList(Of String, String)
+        Get
+            lastCustomList = _lastCustomList
+        End Get
+        Set(value As SortedList(Of String, String))
+            Dim correct As Boolean = False
+            If Not IsNothing(value) Then
+                If value.Count = Me.getProjectNames.Count Then
+                    correct = True
+                    For Each kvp As KeyValuePair(Of String, String) In value
+                        ' prüfen, ob die Gesamt-Liste irgendeine Projekt-Variante mit diesem Projekt-Namen enthält 
+                        If Me.containsProject(kvp.Key) Then
+                            ' alles in Ordnung 
+                        Else
+                            ' nicht in Ordnung 
+                            correct = False
+                        End If
+                    Next
+                End If
+            End If
+            If correct Then
+
+                _lastCustomList = New SortedList(Of String, String)
+
+                ' kopieren der Liste 
+                For Each kvp As KeyValuePair(Of String, String) In value
+                    ' Prüfung auf Enthaltensein kann hier entfallen, da eine sortierte Liste wie value nur eindeutige keys enthalten kann  
+                    _lastCustomList.Add(kvp.Key, kvp.Value)
+                Next
+
+            End If
+        End Set
+    End Property
+   
+    ''' <summary>
     ''' baut eine sortierte Liste der Projekt-Namen auf !
     ''' die Position auf der Projekt-Tafel bzw. im Portfolio Browser ergibt sich dann 
     ''' aus dem Index in der sortierten Liste  
     ''' </summary>
-    ''' <param name="sortType"></param>
-    ''' <param name="liste"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property sortCriteria(ByVal sortType As Integer, _
-                                     Optional liste As SortedList(Of String, String) = Nothing) As Integer
+    Public Property sortCriteria As Integer
 
         Get
             sortCriteria = _sortType
         End Get
         Set(value As Integer)
 
-            Dim pName As String = ""
+            Dim key As String = ""
 
             If Not IsNothing(value) Then
 
+                Dim istNull As Boolean = IsNothing(Me._sortList)
+                Dim istLeer As Boolean
+                If Not istNull Then
+                    istLeer = (Me._sortList.Count = 0)
+                Else
+                    istLeer = True
+                End If
 
-                Select Case value
-                    Case ptSortCriteria.alphabet ' alphabetisch nach Name
-                        _sortList.Clear()
-                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                            pName = kvp.Value.projectName
-                            If Not _sortList.ContainsKey(pName) Then
-                                _sortList.Add(pName, pName)
-                            End If
-                        Next
+                If _sortType <> value Or istNull Or istLeer Then
+                    ' nur wenn es unterschiedlich oder wenn es noch gar nicht gesetzt ist, muss etwas getan werden 
 
-                    Case ptSortCriteria.customTF  ' nach tfzeile 
-                        _sortList.Clear()
-                        Dim doneList As New SortedList(Of String, Boolean)
-                        Dim korrFaktor As Double = 0.0001
-                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                    ' wenn der aktuelle _sortType = CustomTF ist, dann merken der Liste 
+                    If _sortType = ptSortCriteria.customTF Then
+                        _lastCustomList = _sortList
+                    End If
 
-                            pName = kvp.Value.projectName
-                            If Not doneList.ContainsKey(pName) Then
-                                Dim key As Double
-                                Dim tKey As String
+                    ' jetzt müssen die Sort-Keys gesetzt werden 
+                    _sortType = value
+                    _sortList = New SortedList(Of String, String)
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
 
-                                If kvp.Value.show Then
-                                    key = kvp.Value.zeile
-                                Else
-                                    key = 100000
+                        Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
+                        If Not IsNothing(hproj) Then
+
+                            ' nur wenn es nicht bereits in sortList enthalten ist 
+                            If Not _sortList.ContainsValue(hproj.name) Then
+
+                                hproj = getSortRelevantProject(hproj.name)
+
+                                If Not IsNothing(hproj) Then
+                                    key = hproj.getSortKeyForConstellation(_sortType)
+
+                                    If Not _sortList.ContainsKey(key) Then
+                                        _sortList.Add(key, hproj.name)
+                                    Else
+                                        ' es muss ein . ergänzt werden 
+                                        key = key & "."
+                                        Do While _sortList.ContainsKey(key)
+                                            key = key & "."
+                                        Loop
+                                        _sortList.Add(key, hproj.name)
+                                    End If
                                 End If
-
-                                tKey = key.ToString("######.####")
-                                Do While _sortList.ContainsKey(tKey)
-                                    key = key + korrFaktor
-                                    tKey = key.ToString("######.####")
-                                Loop
-                                If Not _sortList.ContainsKey(tKey) Then
-                                    _sortList.Add(tKey, pName)
-                                    doneList.Add(pName, True)
-                                End If
                             End If
-                            
-                        Next
 
-                    Case ptSortCriteria.customListe
-                        ' erstmal checken , ob die Liste auch alle Elemente aus kvp enthält 
-                        If Not IsNothing(liste) Then
-                            If liste.Count = Me.getProjectNames.Count Then
 
-                            End If
                         End If
-                        _sortList.Clear()
 
-                    Case ptSortCriteria.buStartName
+                            
+                    Next
 
-                    Case ptSortCriteria.formel
+                End If
 
-                    Case Else
-                        ' nichts machen
-                End Select
             End If
 
 
         End Set
     End Property
 
+    ''' <summary>
+    ''' liefert zu einem gegebenen Projekt-Namen das Projekt ab, das für die Sortier-Schlüssel-Berechnung verwendet werden soll 
+    ''' das relevante Projekt ist das, was im Show ist bzw das was als erstes in der Variant-Liste steht  
+    ''' Nothing, wenn es das Projekt gar nicht gibt 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getSortRelevantProject(ByVal pName As String) As clsProjekt
+
+        Dim hproj As clsProjekt = Nothing
+
+        If ShowProjekte.contains(pName) Then
+            hproj = ShowProjekte.getProject(pName)
+        Else
+            ' bestimme das hproj, das als erste Variante vorkommt 
+            Dim vName As String = ""
+            Dim tmpCollection As Collection = Me.getVariantNames(pName, False)
+            If Not IsNothing(tmpCollection) Then
+                vName = CStr(tmpCollection.Item(1))
+            End If
+            Dim tmpKey As String = calcProjektKey(pName, vName)
+            hproj = AlleProjekte.getProject(tmpKey)
+        End If
+
+        getSortRelevantProject = hproj
+
+    End Function
 
     ''' <summary>
-    ''' setzt den Namen; wenn Nothing ode rleer , dann wird als Name Last gesetzt 
+    ''' setzt den Namen; wenn Nothing oder leer , dann wird als Name Last gesetzt 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
@@ -115,12 +263,17 @@
         Set(value As String)
             If Not IsNothing(value) Then
                 If value.Trim.Length > 0 Then
-                    _constellationName = value.Trim
+                    If value = "Last" Then
+                        _constellationName = "Last" & dbUsername
+                    Else
+                        _constellationName = value.Trim
+                    End If
+
                 Else
-                    _constellationName = "Last"
+                    _constellationName = "Last" & dbUsername
                 End If
             Else
-                _constellationName = "Last"
+                _constellationName = "Last" & dbUsername
             End If
         End Set
     End Property
@@ -196,53 +349,27 @@
 
 
     ''' <summary>
-    ''' gibt eine komplette Liste an Projekt-Namen zurück, die in der Constellation auftreten;
-    ''' by default unabhängig, ob mit Show Attribute oder ohne 
-    ''' wenn considerShowAttr = true , dann werden nur die Elemente mit ShowValue gesucht 
+    ''' provides a complete list of project names in the current constellation 
+    ''' by default: independent of having show-Attribute or not
+    ''' when considerShowAttr = true , only names with show-attribute = showvalue are in the output list 
+    ''' which sortcriteria shall be applied; default = alphabetical order 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getProjectNames(Optional ByVal considerShow As Boolean = False, _
-                                             Optional ByVal showValue As Boolean = True, _
-                                             Optional ByVal sortCriteria As Integer = 0) As Collection
+    Public ReadOnly Property getProjectNames As Collection
         Get
             Dim tmpCollection As New Collection
             Dim pName As String
-            Dim key As String = ""
-            Dim korrFaktor1 As Double = 0.000001
-            Dim korrfaktor2 As Double = 0.000000001
-            Dim tmpResult As Double = 0.0
 
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                pName = kvp.Value.projectName
 
-                Select Case sortCriteria
-                    Case 0
-                        ' sortiert nach Name
-                        key = pName
-                        If Not tmpCollection.Contains(key) Then
-                            tmpCollection.Add(Item:=pName, Key:=key)
-                        End If
-                    Case 1
-                        ' sortiert nach relativer Position in der Konstellation
-                        ' wenn sie in der gleichen Zeile vorkommen, dann ist das Startdatum entscheidend
-                        key = kvp.Value.zeile.ToString
-                        If Not tmpCollection.Contains(key) Then
-                            tmpCollection.Add(Item:=pName, Key:=key)
-                        Else
-                            Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Value.projectName, kvp.Value.variantName)
-                            tmpResult = kvp.Value.zeile + korrFaktor1 * hproj.Start + korrfaktor2 * hproj.dauerInDays
-                            key = tmpResult.ToString
-                            Do While tmpCollection.Contains(key)
-                                tmpResult = tmpResult + korrfaktor2
-                                key = tmpResult.ToString
-                            Loop
-                            tmpCollection.Add(Item:=pName, Key:=key)
-                        End If
-                    Case 2
-                End Select
+            ' jetzt is _sortList auf alle Fälle in der richtigen Form ... 
+            For Each kvp As KeyValuePair(Of String, String) In _sortList
+                pName = kvp.Value
 
+                If Not tmpCollection.Contains(pName) Then
+                    tmpCollection.Add(Item:=pName, Key:=pName)
+                End If
 
             Next
 
@@ -276,9 +403,8 @@
     End Property
 
     ''' <summary>
-    ''' gibt die Namen der existierenden Varianten in einer Liste zurück 
-    ''' die "leere" Variante wird als () bzw "" zurückgegeben , alle anderen Varianten als (Variante-Name)
-    ''' Voraussetzung: _allprojects ist eine sortierte Liste
+    ''' provides the list of variant Names in alphabetical order 
+    ''' if mitKlammer = true then items will enclosed by ()
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <value></value>
@@ -373,9 +499,21 @@
     End Sub
 
 
+    ''' <summary>
+    ''' kopiert eine Constellation, d.h jetzt müssen auch sortType und sortList kopiert werden 
+    ''' </summary>
+    ''' <param name="cName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property copy(Optional ByVal cName As String = "Last") As clsConstellation
         Get
             Dim copyResult As New clsConstellation
+
+            ' wenn Last, soll es auf den User selber angewendet werden 
+            If cName = "Last" Then
+                cName = cName & dbUsername
+            End If
 
             With copyResult
                 .constellationName = cName
@@ -385,6 +523,16 @@
                     .add(copiedItem)
                 Next
 
+                ' jetzt sortliste und sorttype kopieren 
+                .sortListe(_sortType) = _sortList
+
+                ' jetzt ggf die lastCustomList kopieren 
+                If Not IsNothing(_lastCustomList) Then
+                    If _lastCustomList.Count > 0 Then
+                        .lastCustomList = _lastCustomList
+                    End If
+                End If
+                
             End With
 
             copy = copyResult
@@ -392,28 +540,105 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' fügt ein clsConstellationItem hinzu und aktualisiert auch die Sortlist entsprechend ... 
+    ''' Voraussetzung: in AlleProjekte ist das im Item beschriebene Objekt bereits enthalten 
+    ''' im add muss kein Update der lastCustomlist erfolgen, nur beim Remove ... 
+    ''' </summary>
+    ''' <param name="cItem"></param>
+    ''' <remarks></remarks>
     Public Sub add(cItem As clsConstellationItem)
 
         Dim key As String
+        Dim sortKey As String
         'key = cItem.projectName & "#" & cItem.variantName
         key = calcProjektKey(cItem.projectName, cItem.variantName)
-        If Not _allItems.ContainsKey(key) Then
-            _allItems.Add(key, cItem)
-        End If
 
+        If Not _allItems.ContainsKey(key) Then
+
+            _allItems.Add(key, cItem)
+
+            ' jetzt auch in sortlist aktualisieren 
+            If _sortList.ContainsValue(cItem.projectName) And cItem.show Then
+                ' Remove den bisherigen Schlüssel 
+                Dim ix As Integer = _sortList.IndexOfValue(cItem.projectName)
+                sortKey = _sortList.ElementAt(ix).Key
+                _sortList.Remove(sortKey)
+            End If
+
+            ' nur wenn es jetzt noch nicht drin ist, reintun .... 
+            If Not _sortList.ContainsValue(cItem.projectName) Then
+                ' jetzt das hproj bestimmen 
+                Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+                If Not IsNothing(hproj) Then
+                    sortKey = hproj.getSortKeyForConstellation(_sortType)
+
+                    If Not _sortList.ContainsKey(sortKey) Then
+                        _sortList.Add(sortKey, hproj.name)
+                    Else
+                        ' es muss ein . ergänzt werden 
+                        sortKey = sortKey & "."
+                        Do While _sortList.ContainsKey(sortKey)
+                            sortKey = sortKey & "."
+                        Loop
+                        _sortList.Add(sortKey, hproj.name)
+                    End If
+
+                End If
+            End If
+        End If
 
     End Sub
 
 
     ''' <summary>
-    ''' löscht den Eintrag mit Schlüssel key; wenn der nicht vorhandenist, dann passiert gar nichts 
+    ''' löscht den Eintrag mit Schlüssel key; wenn der nicht vorhanden ist, dann passiert gar nichts 
     ''' </summary>
     ''' <param name="key"></param>
     ''' <remarks></remarks>
     Public Sub remove(key As String)
 
         If _allItems.ContainsKey(key) Then
+            Dim cItem As clsConstellationItem = _allItems.Item(key)
+            Dim pName As String = cItem.projectName
+
             _allItems.Remove(key)
+
+            ' jetzt in der Sortliste entsprechend löschen und neu bestimmen , falls es in der Constellation 
+            ' noch eine Variante des Projektes gibt ... 
+            If _sortList.ContainsValue(pName) Then
+                _sortList.RemoveAt(_sortList.IndexOfValue(pName))
+            End If
+
+            If Me.containsProject(pName) Then
+                ' es gibt immer noch Varianten von pName 
+                ' also neu bestimmen 
+                Dim hproj As clsProjekt = Me.getSortRelevantProject(pName)
+                If Not IsNothing(hproj) Then
+                    Dim sortKey As String = hproj.getSortKeyForConstellation(_sortType)
+
+                    If Not _sortList.ContainsKey(sortKey) Then
+                        _sortList.Add(sortKey, hproj.name)
+                    Else
+                        ' es muss ein . ergänzt werden 
+                        sortKey = sortKey & "."
+                        Do While _sortList.ContainsKey(sortKey)
+                            sortKey = sortKey & "."
+                        Loop
+                        _sortList.Add(sortKey, hproj.name)
+                    End If
+
+                End If
+            Else
+                ' wenn es keine Einträge mehr von pName gibt, dann muss es ggf aus der customLastList raus 
+                If Not IsNothing(_lastCustomList) Then
+                    If _lastCustomList.ContainsValue(pName) Then
+                        _lastCustomList.RemoveAt(_lastCustomList.IndexOfValue(pName))
+                    End If
+                End If
+                
+            End If
+
         End If
 
 
@@ -449,6 +674,33 @@
     End Function
 
     ''' <summary>
+    ''' liefert true, wenn das Projekt in irgendeiner Form , mit oder ohne Varianten-NAme vorkommt
+    ''' false, andernfalls
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsProject(ByVal pName As String) As Boolean
+        Get
+            Dim found As Boolean = False
+            Dim index As Integer = 0
+
+            Do While Not found And index <= _allItems.Count - 1
+                Dim tmpName As String = getPnameFromKey(_allItems.ElementAt(index).Key)
+                If tmpName = pName Then
+                    found = True
+                Else
+                    index = index + 1
+                End If
+            Loop
+
+            containsProject = found
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' ähnlich wie reduceToElementsWithShow, aber hier werden nur die Projekte rausgeschmissen, die gar nicht in ShowProjekte sind bzw. die in ShowProjekte sind 
     ''' </summary>
     ''' <param name="requiredShowAttribute"></param>
@@ -472,7 +724,9 @@
         For Each tmpName As String In toDelete
 
             If Me._allItems.ContainsKey(tmpName) Then
-                Me._allItems.Remove(tmpName)
+                ' da jetzt auch sort upgedated werden muss, die MEthode me.remove aufrufen
+                'Me._allItems.Remove(tmpName)
+                Me.remove(tmpName)
             End If
 
         Next
@@ -499,7 +753,9 @@
         For Each tmpName As String In toDelete
 
             If Me._allItems.ContainsKey(tmpName) Then
-                Me._allItems.Remove(tmpName)
+                ' da jetzt auch sort upgedated werden muss, die MEthode me.remove aufrufen
+                'Me._allItems.Remove(tmpName)
+                Me.remove(tmpName)
             End If
 
         Next
@@ -520,6 +776,7 @@
         If oldvName = newvName Then
             ' nichts tun 
         Else
+            ' da der pname unverändert bleibt, muss in _sortlist nichts getan werden ... 
             Dim oldKey As String = calcProjektKey(pName, oldvName)
             Dim newKey As String = calcProjektKey(pName, newvName)
 
@@ -583,11 +840,13 @@
         End If
 
         For Each tmpName As String In toDelete
-            _allItems.Remove(tmpName)
+            '_allItems.Remove(tmpName)
+            Me.remove(tmpName)
         Next
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In toAddItems
-            _allItems.Add(kvp.Key, kvp.Value)
+            '_allItems.Add(kvp.Key, kvp.Value)
+            Me.add(kvp.Value)
         Next
 
         renameProject = toAddItems.Count
@@ -597,6 +856,10 @@
     Sub New()
 
         _allItems = New SortedList(Of String, clsConstellationItem)
+        _sortList = New SortedList(Of String, String)
+        _lastCustomList = Nothing
+        _sortType = -1
+        Me.constellationName = "" ' damit wird der Name Last<userName>
 
     End Sub
 
@@ -613,15 +876,20 @@
             Optional ByVal takeWhat As Integer = ptSzenarioConsider.all)
 
         _allItems = New SortedList(Of String, clsConstellationItem)
+        _sortList = New SortedList(Of String, String)
+        _lastCustomList = Nothing
+        _sortType = -1
+
         Me.constellationName = cName
 
         If IsNothing(projektListe) Then
-            ' bereits fertig - es ist eine leere Constelaltion mit Name cNAme
+            ' bereits fertig - es ist eine leere Constellation mit Name cNAme
         Else
 
             If Not IsNothing(fullProjectNames) Then
 
                 Dim newConstellationItem As clsConstellationItem
+                _sortType = ptSortCriteria.alphabet
 
                 For Each kvp As KeyValuePair(Of String, String) In fullProjectNames
 
@@ -656,14 +924,13 @@
                         End With
 
                         ' welche Projekte bzw Projekt-Varianten sollen ins Szenario aufgenommen werden ? 
-                        If takeWhat = ptSzenarioConsider.all Then
+                        If takeWhat = ptSzenarioConsider.all Or _
+                            (takeWhat = ptSzenarioConsider.show And newConstellationItem.show) Or _
+                            (takeWhat = ptSzenarioConsider.noshow And Not newConstellationItem.show) Then
+
                             Me.add(newConstellationItem)
 
-                        ElseIf takeWhat = ptSzenarioConsider.show And newConstellationItem.show Then
-                            Me.add(newConstellationItem)
 
-                        ElseIf takeWhat = ptSzenarioConsider.noshow And Not newConstellationItem.show Then
-                            Me.add(newConstellationItem)
                         End If
 
 
@@ -672,6 +939,7 @@
                 Next
 
             Else
+                _sortType = ptSortCriteria.alphabet
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
 
@@ -705,14 +973,12 @@
                     End With
 
                     ' welche Projekte bzw Projekt-Varianten sollen ins Szenario aufgenommen werden ? 
-                    If takeWhat = ptSzenarioConsider.all Then
+                    If takeWhat = ptSzenarioConsider.all Or _
+                        (takeWhat = ptSzenarioConsider.show And newConstellationItem.show) Or _
+                        (takeWhat = ptSzenarioConsider.noshow And Not newConstellationItem.show) Then
+
                         Me.add(newConstellationItem)
 
-                    ElseIf takeWhat = ptSzenarioConsider.show And newConstellationItem.show Then
-                        Me.add(newConstellationItem)
-
-                    ElseIf takeWhat = ptSzenarioConsider.noshow And Not newConstellationItem.show Then
-                        Me.add(newConstellationItem)
                     End If
 
                 Next

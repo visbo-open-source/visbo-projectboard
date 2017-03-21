@@ -2,6 +2,9 @@
 
     Public allItems As List(Of clsConstellationItemDB)
     Public constellationName As String
+    Public sortType As Integer
+    Public sortList As SortedList(Of String, String)
+    Public lastCustomList As SortedList(Of String, String)
     Public Id As String
 
     Sub copyfrom(ByVal c As clsConstellation)
@@ -13,6 +16,11 @@
             newItem.copyfrom(item.Value)
             Me.allItems.Add(newItem)
         Next
+
+        ' jetzt muss die Sortier-Reihenfolge und der Sortier-Typ gespeichert werden 
+        ' dabei wird auch der Me.sortType gesetzt  
+        Me.sortType = c.sortCriteria
+        Me.sortList = c.sortListe
 
     End Sub
 
@@ -33,6 +41,18 @@
             End If
 
         Next
+
+        If Not IsNothing(Me.sortList) And Not IsNothing(Me.sortType) Then
+            c.sortListe(Me.sortType) = Me.sortList
+            If Not IsNothing(Me.lastCustomList) Then
+                ' die lastCustomList kopieren 
+            End If
+            Else
+                ' sorttype auf alphabetisch sortiert setzen 
+                ' damit wird auch _sortlist gesetzt ...
+                c.sortCriteria = ptSortCriteria.alphabet
+
+            End If
 
 
     End Sub
@@ -83,6 +103,7 @@
 
     Sub New()
         allItems = New List(Of clsConstellationItemDB)
+
     End Sub
 
 End Class

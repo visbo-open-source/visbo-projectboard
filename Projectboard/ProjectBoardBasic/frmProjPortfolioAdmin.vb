@@ -74,7 +74,7 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Or _
             aKtionskennung = PTTvActions.loadPV Then
 
-            currentBrowserConstellation.constellationName = "Last"
+            currentBrowserConstellation.constellationName = "" ' wird damit jetzt auf Last & dbusername gesetzt 
             projectConstellations.update(currentBrowserConstellation)
 
         End If
@@ -2036,7 +2036,7 @@ Public Class frmProjPortfolioAdmin
                     currentConstellationName = currentConstellationName & " (*)"
                 End If
 
-                Call storeSessionConstellation("Last")
+                'Call storeSessionConstellation("Last")
             End If
 
 
@@ -2869,7 +2869,8 @@ Public Class frmProjPortfolioAdmin
 
                     ' jetzt müssen die tfZeile neu besetzt werden;
                     '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
-                    currentBrowserConstellation.setTfZeilen(0)
+                    ' tk 21.3.17: ab jetzt nicht mehr .... jetzt wird ja in der _sortlist alles mitgeführt 
+                    ''currentBrowserConstellation.setTfZeilen(0)
 
                     If removeList.Count > 0 Then
                         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
@@ -3260,7 +3261,8 @@ Public Class frmProjPortfolioAdmin
         If currentBrowserConstellation.count <> anzPVsBefore Then
 
             ' die Positionierung entsprechend Standard setzen ...
-            currentBrowserConstellation.setTfZeilen(0)
+            ' tk 21.3.17 jetzt nicht mehr 
+            ' currentBrowserConstellation.setTfZeilen(0)
 
             Dim tmpConstellation As New clsConstellations
             tmpConstellation.Add(currentBrowserConstellation)

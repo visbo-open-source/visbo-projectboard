@@ -566,7 +566,7 @@ Public Module PBBModules
         Dim resultat As DialogResult
         ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim newproj As clsProjekt
-        Dim key As String
+        'Dim key As String
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
         Dim neuerVariantenName As String = ""
@@ -661,8 +661,8 @@ Public Module PBBModules
                         ShowProjekte.Remove(hproj.name)
 
                         ' die neue Variante wird aufgenommen
-                        key = calcProjektKey(newproj)
-                        AlleProjekte.Add(key, newproj)
+                        'key = calcProjektKey(newproj)
+                        AlleProjekte.Add(newproj)
                         ShowProjekte.Add(newproj)
 
                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
@@ -694,7 +694,7 @@ Public Module PBBModules
 
         End If
 
-        Call storeSessionConstellation("Last")
+        'Call storeSessionConstellation("Last")
 
         enableOnUpdate = True
 
@@ -882,7 +882,7 @@ Public Module PBBModules
 
         Call awinDeSelect()
 
-        Call storeSessionConstellation("Last")
+        'Call storeSessionConstellation("Last")
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -952,7 +952,7 @@ Public Module PBBModules
 
         If AlleProjekte.Count > 0 Then
             ' das letzte Portfolio speichern 
-            Call storeSessionConstellation("Last")
+            'Call storeSessionConstellation("Last")
 
             Try
 

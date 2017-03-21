@@ -8593,7 +8593,7 @@ Public Module Projekte
 
 
         Try
-            AlleProjekte.Add(key, hproj)
+            AlleProjekte.Add(hproj)
         Catch ex As Exception
 
         End Try
@@ -9662,11 +9662,12 @@ Public Module Projekte
                 ' aus Showprojekte rausnehmen
                 ShowProjekte.Remove(pname)
 
+                ' tk 21.3.17 wird nicht mehr benötigt ... 
                 ' ist es bereits eine andere Variante in NoShowPRojekte?
-                If noShowProjekte.contains(pname) Then
-                    noShowProjekte.Remove(pname)
-                End If
-                noShowProjekte.Add(hproj)
+                ''If noShowProjekte.contains(pname) Then
+                ''    noShowProjekte.Remove(pname)
+                ''End If
+                ''noShowProjekte.Add(hproj, False)
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in NoShow " & pname & " , Modul: NoShowProject")
@@ -11368,9 +11369,9 @@ Public Module Projekte
 
         ' ggf die aktuelle Konstellation in "Last" speichern 
 
-        If storeLast Then
-            Call storeSessionConstellation("Last")
-        End If
+        'If storeLast Then
+        '    Call storeSessionConstellation("Last")
+        'End If
 
         If Not addProjects And updateProjektTafel Then
             ShowProjekte.Clear()

@@ -2088,6 +2088,59 @@ Public Class clsProjekt
 
     End Sub
 
+    ''' <summary>
+    ''' liefert den Sortierungs-Key für das das angegebene Sort-Kriterium 
+    ''' dient zur Verwendung in der Constellation
+    ''' </summary>
+    ''' <param name="sortType"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSortKeyForConstellation(ByVal sortType As Integer, _
+                                                              Optional ByVal lfdNr As Integer = 99999) As String
+        Get
+            Dim formatStr As String = "00000000"
+            Dim tmpResult As String = "xxx"
+            Select Case sortType
+
+                Case ptSortCriteria.alphabet
+                    ' das ist die Default-Lösung 
+                    tmpResult = Me.name
+
+                Case ptSortCriteria.buStartName
+                    tmpResult = Me.businessUnit & Me.Start.ToString(formatStr) & Me.name
+
+                Case ptSortCriteria.customFields12
+                    ' nimm aktuell die Default- Lösung 
+                    tmpResult = Me.name
+
+                Case ptSortCriteria.customListe
+                    ' in diesem Fall muss die Sortier-Kennung aus einer Excel-Liste kommen 
+                    tmpResult = lfdNr.ToString(formatStr)
+
+                Case ptSortCriteria.customTF
+                    tmpResult = CInt(Me.tfZeile).ToString(formatStr)
+
+                Case ptSortCriteria.formel
+                    ' nimm aktuell die Default- Lösung 
+                    tmpResult = Me.name
+
+                Case ptSortCriteria.strategyProfitLossRisk
+                    Dim tmp(4) As Double
+                    Call Me.calculateRoundedKPI(tmp(0), tmp(1), tmp(2), tmp(3), tmp(4))
+                    tmpResult = CInt(Me.StrategicFit * 1000 + tmp(4) * 60 - Me.Risiko * 800).ToString(formatStr)
+
+                Case Else
+                    ' nimm die Default- Lösung 
+                    tmpResult = Me.name
+
+            End Select
+
+            getSortKeyForConstellation = tmpResult
+
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt die Anzahl insgesamt definierter CustomFields zurück  

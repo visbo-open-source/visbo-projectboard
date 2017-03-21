@@ -78,7 +78,7 @@ Public Class clsCommandBarEvents
 
                     For Each tmpName As String In selCollection
                         Try
-                            selectedProjekte.Add(ShowProjekte.getProject(tmpName))
+                            selectedProjekte.Add(ShowProjekte.getProject(tmpName), False)
                         Catch ex As Exception
 
                         End Try
@@ -289,8 +289,14 @@ Public Class clsCommandBarEvents
                                     ' Änderung 14.10.14
                                     'key = pname & "#"
                                     key = calcProjektKey(pname, "")
-                                    AlleProjekte.Add(key, hproj)
-                                    successful = True
+                                    If AlleProjekte.Containskey(key) Then
+                                        zaehler = zaehler + 1
+                                        pname = oldproj.getShapeText & " - Kopie " & zaehler
+                                        hproj.name = pname
+                                    Else
+                                        successful = True
+                                    End If
+
                                 Catch ex As Exception
                                     zaehler = zaehler + 1
                                     pname = oldproj.getShapeText & " - Kopie " & zaehler
@@ -300,8 +306,9 @@ Public Class clsCommandBarEvents
 
                             Try
                                 If successful Then
+                                    AlleProjekte.Add(hproj)
                                     ShowProjekte.Add(hproj)
-                                    selectedProjekte.Add(hproj)
+                                    selectedProjekte.Add(hproj, False)
                                     ChartsNeedUpdate = True
                                 End If
                             Catch ex As Exception
