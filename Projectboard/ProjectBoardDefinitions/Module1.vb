@@ -1784,7 +1784,7 @@ Public Module Module1
         ' Selektierte Projekte auf Null setzen 
 
         If selectedProjekte.Count > 0 Then
-            selectedProjekte.Clear()
+            selectedProjekte.Clear(False)
             If awinSettings.showValuesOfSelected Then
                 Call awinNeuZeichnenDiagramme(8)
             End If

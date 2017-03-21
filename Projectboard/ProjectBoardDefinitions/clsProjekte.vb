@@ -166,15 +166,18 @@ Public Class clsProjekte
     ''' setzt die Liste der Projekte und die Liste der Shapes zurück 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub Clear()
+    Public Sub Clear(Optional ByVal updateCurrentConstellation As Boolean = True)
 
         _allProjects.Clear()
         _allShapes.Clear()
 
         ' jetzt die currentConstellation, alle Items auf noShow setzen 
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
-            kvp.Value.show = False
-        Next
+        If updateCurrentConstellation Then
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
+                kvp.Value.show = False
+            Next
+        End If
+        
 
     End Sub
 

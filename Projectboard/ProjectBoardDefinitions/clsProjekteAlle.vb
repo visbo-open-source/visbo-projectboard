@@ -702,12 +702,16 @@ Public Class clsProjekteAlle
     ''' setzt die Liste der Projekte zurück 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub Clear()
+    Public Sub Clear(Optional ByVal updateCurrentConstellation As Boolean = True)
 
         _allProjects.Clear()
         ' die currentSessionConstellation neu aufsetzen
         ' dei bekommt damit den Namen last<dbUSerName>
-        currentSessionConstellation = New clsConstellation
+
+        If updateCurrentConstellation Then
+            currentSessionConstellation = New clsConstellation
+        End If
+
 
     End Sub
 

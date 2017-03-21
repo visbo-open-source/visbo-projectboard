@@ -2871,7 +2871,7 @@ Imports System.Windows
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' zurücksetzen der dbCache-Projekte
-        dbCacheProjekte.Clear()
+        dbCacheProjekte.Clear(False)
 
         Call projektTafelInit()
 
@@ -3033,7 +3033,7 @@ Imports System.Windows
         Next
 
         ' zurücksetzen 
-        dbCacheProjekte.Clear()
+        dbCacheProjekte.Clear(False)
 
         Call projektTafelInit()
 
@@ -4005,7 +4005,7 @@ Imports System.Windows
                     Dim scenarioName As String = "ME"
 
                     ' alle Import Projekte erstmal löschen
-                    ImportProjekte.Clear()
+                    ImportProjekte.Clear(False)
 
 
                     Call importiereMassenEdit()
@@ -4037,7 +4037,7 @@ Imports System.Windows
                     'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                     If ImportProjekte.Count > 0 Then
-                        ImportProjekte.Clear()
+                        ImportProjekte.Clear(False)
                     End If
                 Else
 
@@ -4118,7 +4118,7 @@ Imports System.Windows
                         scenarioName = tmpName.Trim
 
                         ' alle Import Projekte erstmal löschen
-                        ImportProjekte.Clear()
+                        ImportProjekte.Clear(False)
 
                         Call awinImportProjektInventur()
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
@@ -4149,7 +4149,7 @@ Imports System.Windows
                         'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                         If ImportProjekte.Count > 0 Then
-                            ImportProjekte.Clear()
+                            ImportProjekte.Clear(False)
                         End If
                     Else
 
@@ -4206,7 +4206,7 @@ Imports System.Windows
                 appInstance.Workbooks.Open(dateiName)
 
                 ' alle Import Projekte erstmal löschen
-                ImportProjekte.Clear()
+                ImportProjekte.Clear(False)
                 Call awinImportModule(myCollection)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
@@ -4391,7 +4391,7 @@ Imports System.Windows
                     appInstance.Workbooks.Open(dateiName)
 
                     '' '' alle Import Projekte erstmal löschen
-                    ImportProjekte.Clear()
+                    ImportProjekte.Clear(False)
                     myCollection.Clear()
                     'Call bmwImportProjektInventur(myCollection)
                     Call rplanExcelImport(myCollection, False, dateiName)
@@ -4513,7 +4513,7 @@ Imports System.Windows
             Try
 
                 ' alle Import Projekte erstmal löschen
-                ImportProjekte.Clear()
+                ImportProjekte.Clear(False)
 
                 Call logfileSchreiben("Beginn RXFImport ", dateiName, -1)
 
@@ -4608,7 +4608,7 @@ Imports System.Windows
             ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
 
             ' alle Import Projekte erstmal löschen
-            ImportProjekte.Clear()
+            ImportProjekte.Clear(False)
 
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
@@ -4742,7 +4742,7 @@ Imports System.Windows
             ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
 
             ' alle Import Projekte erstmal löschen
-            ImportProjekte.Clear()
+            ImportProjekte.Clear(False)
 
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 

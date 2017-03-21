@@ -74,7 +74,7 @@ Public Class clsCommandBarEvents
 
                 If projectSelectionChanged(selCollection) Then
 
-                    selectedProjekte.Clear()
+                    selectedProjekte.Clear(False)
 
                     For Each tmpName As String In selCollection
                         Try

@@ -263,17 +263,12 @@
         Set(value As String)
             If Not IsNothing(value) Then
                 If value.Trim.Length > 0 Then
-                    If value = "Last" Then
-                        _constellationName = "Last" & dbUsername
-                    Else
-                        _constellationName = value.Trim
-                    End If
-
+                    _constellationName = value.Trim
                 Else
-                    _constellationName = "Last" & dbUsername
+                    _constellationName = "Last (" & dbUsername & ")"
                 End If
             Else
-                _constellationName = "Last" & dbUsername
+                _constellationName = "Last (" & dbUsername & ")"
             End If
         End Set
     End Property
@@ -500,19 +495,21 @@
 
 
     ''' <summary>
-    ''' kopiert eine Constellation, d.h jetzt müssen auch sortType und sortList kopiert werden 
+    ''' kopiert eine Constellation, d.h jetzt müssen auch sortType und sortList kopiert werden
+    ''' wird kein Name übergeben, wird der Name der zu kopierenden Constellation verwendet 
+    ''' wird Last angegeben , so wird Last (username) verwendet  
     ''' </summary>
     ''' <param name="cName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property copy(Optional ByVal cName As String = "Last") As clsConstellation
+    Public ReadOnly Property copy(Optional ByVal cName As String = "") As clsConstellation
         Get
             Dim copyResult As New clsConstellation
 
-            ' wenn Last, soll es auf den User selber angewendet werden 
-            If cName = "Last" Then
-                cName = cName & dbUsername
+            ' wenn leer, soll der Name der zu kopierenden Konstellation verwendet werden 
+            If cName = "" Then
+                cName = Me.constellationName
             End If
 
             With copyResult
@@ -532,7 +529,7 @@
                         .lastCustomList = _lastCustomList
                     End If
                 End If
-                
+
             End With
 
             copy = copyResult
@@ -859,7 +856,7 @@
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
         _sortType = -1
-        Me.constellationName = "" ' damit wird der Name Last<userName>
+        Me.constellationName = "" ' damit wird der Name Last (<userName>)
 
     End Sub
 
@@ -872,7 +869,7 @@
     ''' <remarks></remarks>
     Sub New(ByVal projektListe As clsProjekteAlle, _
             Optional ByVal fullProjectNames As SortedList(Of String, String) = Nothing, _
-            Optional ByVal cName As String = "Last", _
+            Optional ByVal cName As String = "", _
             Optional ByVal takeWhat As Integer = ptSzenarioConsider.all)
 
         _allItems = New SortedList(Of String, clsConstellationItem)

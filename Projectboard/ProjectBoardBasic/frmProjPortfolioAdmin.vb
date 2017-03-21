@@ -74,7 +74,7 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Or _
             aKtionskennung = PTTvActions.loadPV Then
 
-            currentBrowserConstellation.constellationName = "" ' wird damit jetzt auf Last & dbusername gesetzt 
+            currentBrowserConstellation.constellationName = "_Szenario-Editor" ' wird damit jetzt auf Last & dbusername gesetzt 
             projectConstellations.update(currentBrowserConstellation)
 
         End If
@@ -487,6 +487,10 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    Private Sub frmProjPortfolioAdmin_InputLanguageChanging(sender As Object, e As InputLanguageChangingEventArgs) Handles Me.InputLanguageChanging
+
+    End Sub
+
 
     Private Sub frmDefineEditPortfolio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -533,20 +537,40 @@ Public Class frmProjPortfolioAdmin
         ' wie heisst das aktuelle Szenario ? 
         Me.Text = Me.Text & ": " & currentConstellationName
 
-        ' jetzt muss bestimmt werden , was die aktuelle SessionConstellation ist 
+        ' '' jetzt muss bestimmt werden , was die aktuelle SessionConstellation ist 
+        ''If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
+        ''    currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy("Last")
+        ''    'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+
+        ''ElseIf projectConstellations.Contains("Last") And AlleProjekte.Count > 0 Then
+        ''    currentBrowserConstellation = projectConstellations.getConstellation("Last")
+        ''    'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+
+        ''ElseIf AlleProjekte.Count > 0 Then
+        ''    'browserAlleProjekte = AlleProjekte.createCopy
+        ''    'currentBrowserConstellation = New clsConstellation(browserAlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
+        ''    currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
+        ''End If
+
+        ' neuer Ansatz
+
         If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
-            currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy("Last")
+            currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy("_Szenario-Editor")
             'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
 
-        ElseIf projectConstellations.Contains("Last") And AlleProjekte.Count > 0 Then
-            currentBrowserConstellation = projectConstellations.getConstellation("Last")
+        ElseIf projectConstellations.Contains("_Szenario-Editor") And AlleProjekte.Count > 0 Then
+            currentBrowserConstellation = projectConstellations.getConstellation("_Szenario-Editor")
             'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
 
         ElseIf AlleProjekte.Count > 0 Then
             'browserAlleProjekte = AlleProjekte.createCopy
             'currentBrowserConstellation = New clsConstellation(browserAlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
-            currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
+            'currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
+            currentBrowserConstellation = currentSessionConstellation.copy("_Szenario-Editor")
         End If
+
+
+        ' Ende neuer Ansatz 
 
         ' jetzt die Korrektheitsprüfung ...
         If awinSettings.visboDebug Then
@@ -1045,7 +1069,7 @@ Public Class frmProjPortfolioAdmin
                     ' jetzt die Variante aktivieren 
                     Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
 
-                    ' jetzt das Browser Szenario aktualsieren 
+                    ' jetzt das Browser Szenario aktualisieren 
                     currentBrowserConstellation.updateShowAttributes(pName)
 
                     ' jetzt die Charts , Einzel- wie Multiprojekt-Charts aktualisieren 
@@ -2791,7 +2815,7 @@ Public Class frmProjPortfolioAdmin
             'jetzt wird die aktuelleGesamtListe aufgebaut; sobald die mal aufgebaut wurde, muss sie nicht wieder aufgebaut werden ... 
             ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
             If Not browserAlleProjekte.Count = 0 Then
-                browserAlleProjekte.Clear()
+                browserAlleProjekte.Clear(False)
             End If
             browserAlleProjekte.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
             quickList = False

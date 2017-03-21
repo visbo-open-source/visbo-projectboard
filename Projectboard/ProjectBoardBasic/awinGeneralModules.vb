@@ -1274,8 +1274,8 @@ Public Module awinGeneralModules
         ShowProjekte.Clear()
         projectboardShapes.clear()
 
-        selectedProjekte.Clear()
-        ImportProjekte.Clear()
+        selectedProjekte.Clear(False)
+        ImportProjekte.Clear(False)
 
 
     End Sub
@@ -1307,8 +1307,8 @@ Public Module awinGeneralModules
         ShowProjekte.Clear()
         AlleProjekte.Clear()
         writeProtections.Clear()
-        selectedProjekte.Clear()
-        ImportProjekte.Clear()
+        selectedProjekte.Clear(False)
+        ImportProjekte.Clear(False)
         DiagramList.Clear()
         awinButtonEvents.Clear()
         projectboardShapes.clear()
@@ -4077,7 +4077,7 @@ Public Module awinGeneralModules
 
         End If
 
-        ImportProjekte.Clear()
+        ImportProjekte.Clear(False)
 
     End Sub
 

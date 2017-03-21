@@ -132,7 +132,7 @@ Public Class Tabelle1
         ' Die Selektierten Projekte zurücksetzen 
 
         If selectedProjekte.Count > 0 Then
-            selectedProjekte.Clear()
+            selectedProjekte.Clear(False)
             Call awinNeuZeichnenDiagramme(8)
         End If
 
