@@ -7845,6 +7845,16 @@ Public Module awinGeneralModules
                             ressSumOffset = -1              ' keine Summe vorhanden
                             Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
                         Else
+
+                            ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
+                            Dim verbRange As Excel.Range
+                            Dim iv As Integer
+
+                            For iv = 0 To rng.Rows.Count - 1
+                                verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
+                                verbRange.Merge()
+                            Next
+
                             ressOff = gefundenRange.Column - rng.Column - 1
                             ressSumOffset = gefundenRange.Column - rng.Column - 2
                             'Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
@@ -7875,15 +7885,7 @@ Public Module awinGeneralModules
 
                         End If
 
-                        ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
-                        Dim verbRange As Excel.Range
-                        Dim iv As Integer
-
-                        For iv = 0 To rng.Rows.Count - 1
-                            verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
-                            verbRange.Merge()
-                        Next
-
+               
 
                         zeile = 0
 
@@ -11439,6 +11441,8 @@ Public Module awinGeneralModules
         Dim msgtxt As String = ""
 
         Dim spalte As Integer = 2
+        Dim firstUrlspalte As Integer = 5
+        Dim noColor As Integer = -4142
         Dim currentWS As Excel.Worksheet
         Dim index As Integer
         Dim tmpDate As Date
@@ -11478,17 +11482,25 @@ Public Module awinGeneralModules
                         'If Not ok Then
                         '    Exit For
                         'End If
+                 
 
                         currentWS = CType(appInstance.Worksheets(index), Global.Microsoft.Office.Interop.Excel.Worksheet)
                         Dim hstr() As String = Split(currentWS.Name, "Halbjahr", , )
                         If hstr.Length > 1 Then
 
+                            ' Auslesen der Jahreszahl, falls vorhanden
+                            If Not IsNothing(CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                year = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value
+                            End If
+
+                            monthDays.Clear()
+                            anzDays = 0
 
                             lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
                             lastSpalte = CType(currentWS.Cells(4, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                            Dim vglColor As Integer = -4142         ' keine Farbe
-                            Dim i As Integer = 5
+                            Dim vglColor As Integer = noColor         ' keine Farbe
+                            Dim i As Integer = firstUrlspalte
 
                             While ok And i <= lastSpalte
 
@@ -11524,8 +11536,7 @@ Public Module awinGeneralModules
                                     hrole = RoleDefinitions.getRoledef(rolename)
                                     If Not IsNothing(hrole) Then
 
-
-                                        Dim iSp As Integer = 5
+                                        Dim iSp As Integer = firstUrlspalte
                                         Dim anzArbTage = 0
 
                                         For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
@@ -11535,7 +11546,7 @@ Public Module awinGeneralModules
                                             For sp = iSp + 0 To iSp + anzDays
 
                                                 If iSp <= lastSpalte Then
-                                                    If CType(currentWS.Cells(iZ, iSp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = -4142 Then
+                                                    If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = noColor Then
                                                         anzArbTage = anzArbTage + 1
                                                     End If
                                                     sp = sp + 1
@@ -11549,6 +11560,7 @@ Public Module awinGeneralModules
 
                                             Next
                                             hrole.kapazitaet(colOfDate) = CType(anzArbTage, Double)
+                                            iSp = iSp + anzDays + 1
                                             anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
 
                                         Next
