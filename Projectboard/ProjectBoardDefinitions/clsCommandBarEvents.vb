@@ -336,7 +336,7 @@ Public Class clsCommandBarEvents
                                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
 
-                                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, tmpCollection, tmpCollection)
+                                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, tmpCollection, tmpCollection, False)
 
                                 enableOnUpdate = True
 

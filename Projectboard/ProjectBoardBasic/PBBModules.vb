@@ -653,8 +653,8 @@ Public Module PBBModules
 
                         End With
 
-                        If Not currentConstellationName.EndsWith("(*)") Then
-                            currentConstellationName = currentConstellationName & " (*)"
+                        If currentConstellationName <> calcLastSessionScenarioName() Then
+                            currentConstellationName = calcLastSessionScenarioName()
                         End If
 
                         ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
@@ -824,8 +824,8 @@ Public Module PBBModules
 
             Next
 
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & " (*)"
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
             End If
 
             ' ein oder mehrere Projekte wurden gelöscht  - typus = 3

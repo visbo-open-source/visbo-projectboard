@@ -952,7 +952,7 @@ Public Class clsProjektShapes
                     ' sie noch in der Select Collection sind und danach noch behandelt werden 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=newProjekt.name, tryzeile:=hproj.tfZeile, _
-                                                   drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
+                                                   drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
 
                     ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
                     ' damit die aufrufende Routine das shpelement wieder hat 
@@ -1104,7 +1104,7 @@ Public Class clsProjektShapes
                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                         Dim tmpCollection As New Collection
                         Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
-                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
+                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
                         notRegroupedAgain = False
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
@@ -1192,7 +1192,7 @@ Public Class clsProjektShapes
                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                         Dim tmpCollection As New Collection
                         Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
-                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
+                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
                         notRegroupedAgain = False
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
@@ -1278,7 +1278,7 @@ Public Class clsProjektShapes
                 ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
                 ' sie noch in der Select Collection sind und danach noch behandelt werden  
                 Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=pName, tryzeile:=newZeile, _
-                                                drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
+                                                drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
                 notRegroupedAgain = False
 
                 ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 

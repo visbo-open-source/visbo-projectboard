@@ -538,6 +538,7 @@ Public Module Module1
         massenEdit = 5
         addElements = 6
         rplanrxf = 7
+        scenariodefs = 8
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

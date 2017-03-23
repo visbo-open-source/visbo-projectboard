@@ -708,7 +708,7 @@ Public Module awinGeneralModules
             Dim i As Integer
             Dim xlsCustomization As Excel.Workbook = Nothing
 
-            ReDim importOrdnerNames(7)
+            ReDim importOrdnerNames(8)
             ReDim exportOrdnerNames(5)
 
 
@@ -820,6 +820,7 @@ Public Module awinGeneralModules
             importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
             importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
             importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\massEdit"
+            importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -1240,6 +1241,9 @@ Public Module awinGeneralModules
                     If Not noDB Then
                         ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
                         Call readInitConstellations()
+
+                        currentSessionConstellation.constellationName = calcLastSessionScenarioName()
+
                     End If
 
                     ' Logfile wird geschlossen
@@ -1313,7 +1317,7 @@ Public Module awinGeneralModules
         awinButtonEvents.Clear()
         projectboardShapes.clear()
 
-        currentConstellationName = ""
+        currentConstellationName = calcLastSessionScenarioName()
 
         ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
@@ -4058,8 +4062,8 @@ Public Module awinGeneralModules
 
             ' Änderung tk: jetzt wird das neu gezeichnet 
             ' wenn anzNeuProjekte > 0, dann hat sich die Konstellataion verändert 
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & " (*)"
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
             End If
 
 
@@ -4069,7 +4073,7 @@ Public Module awinGeneralModules
                 End If
 
                 'Call awinZeichnePlanTafel(True)
-                Call awinZeichnePlanTafel(False)
+                Call awinZeichnePlanTafel(True)
                 Call awinNeuZeichnenDiagramme(2)
             End If
 
@@ -4625,12 +4629,143 @@ Public Module awinGeneralModules
 
     End Sub
     ''' <summary>
+    ''' erzeugt eine Szenario Definition
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Function importScenarioDefinition(ByVal scenarioName As String) As clsConstellation
+
+        Dim zeile As Integer, spalte As Integer
+        
+
+        Dim tfZeile As Integer = 2
+        Dim listOfpNames As New SortedList(Of String, String)
+        Dim pName As String = ""
+        Dim variantName As String = ""
+
+        Dim lastRow As Integer
+        Dim lastColumn As Integer
+        'Dim startSpalte As Integer
+        
+        Dim geleseneProjekte As Integer
+
+
+        Dim firstZeile As Excel.Range
+
+        Dim newC As New clsConstellation
+        newC.constellationName = scenarioName
+        newC.sortCriteria = ptSortCriteria.customTF
+
+
+        zeile = 2
+        spalte = 1
+        geleseneProjekte = 0
+
+
+
+
+        Try
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Liste"), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            With activeWSListe
+
+                firstZeile = CType(.Rows(1), Excel.Range)
+                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                While zeile <= lastRow
+
+                    ' Kommentare zurücksetzen ...
+                    Try
+                        CType(.Range(.Cells(zeile, 1), .Cells(zeile, lastColumn)), Global.Microsoft.Office.Interop.Excel.Range).ClearComments()
+                    Catch ex As Exception
+
+                    End Try
+
+                    ' hier muss jetzt alles zurückgesetzt werden 
+                    ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
+                    pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                    If IsNothing(pName) Then
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
+                    ElseIf pName.Trim.Length < 2 Then
+
+                        Try
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    Else
+                        variantName = ""
+
+                        ' falls ein Varianten-Name mit angegeben wurde: pname#variantName 
+                        Try
+                            Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
+                            If tmpStr.Length > 1 Then
+                                pName = tmpStr(0)
+                                variantName = tmpStr(1).Trim
+                            End If
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            variantName = ""
+                        End Try
+
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
+                                                   dbUsername, dbPasswort)
+
+                        If request.projectNameAlreadyExists(pName, variantName, Date.Now) Then
+                            ' als Constellation Item aufnehmen 
+                            Dim cItem As New clsConstellationItem
+
+                            With cItem
+                                .projectName = pName
+                                .variantName = variantName
+                                .show = True
+                                .zeile = zeile
+                            End With
+
+                            newC.add(cItem)
+
+                        End If
+
+                    End If
+
+                    geleseneProjekte = geleseneProjekte + 1
+                    zeile = zeile + 1
+
+                End While
+
+
+            End With
+        Catch ex As Exception
+
+            Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
+        End Try
+
+
+
+        Call MsgBox("gelesen: " & geleseneProjekte & vbLf & _
+                    "Scenario erzeugt: " & scenarioName )
+
+        importScenarioDefinition = newC
+
+    End Function
+
+    ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
     ''' stellt sie in ImportProjekte 
+    ''' erstellt ein Szenario mit Namen der Batch-Datei; die Sortierung erfolgt über die Reihenfolge in der Batch-Datei 
+    ''' das wird sichergestellt über Eintrag der tfzeile in hproj ... 
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub awinImportProjektInventur()
         Dim zeile As Integer, spalte As Integer
+
+        Dim tfZeile As Integer = 2
+        Dim listOfpNames As New SortedList(Of String, String)
         Dim pName As String = ""
         Dim variantName As String = ""
         Dim vorlageName As String = ""
@@ -5077,7 +5212,7 @@ Public Module awinGeneralModules
 
 
                                 If Not IsNothing(hproj) Then
-                                    createdProjects = createdProjects + 1
+                                    
                                     ' immer als Fixiertes Projekt darstellen ..
                                     hproj.Status = ProjektStatus(1)
 
@@ -5105,7 +5240,7 @@ Public Module awinGeneralModules
 
                                 If ok Then ' wenn es nicht explizit auf false gesetzt wurde, ist es an dieser Stelle immer noch true 
                                     Dim pkey As String = ""
-                                    If Not hproj Is Nothing Then
+                                    If Not IsNothing(hproj) Then
                                         Try
                                             pkey = calcProjektKey(hproj)
 
@@ -5113,6 +5248,18 @@ Public Module awinGeneralModules
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                                 CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
                                             Else
+
+                                                createdProjects = createdProjects + 1
+                                                ' jetzt in die Liste der 
+                                                If Not listOfpNames.ContainsValue(hproj.name) Then
+                                                    hproj.tfZeile = tfZeile
+                                                    Dim tmpkey As String = tfZeile.ToString("00000000")
+                                                    listOfpNames.Add(tmpkey, hproj.name)
+                                                    tfZeile = tfZeile + 1
+                                                Else
+                                                    hproj.tfZeile = CInt(listOfpNames.ElementAt(listOfpNames.IndexOfValue(hproj.name)).Key)
+                                                End If
+
                                                 ImportProjekte.Add(hproj, False)
                                             End If
 
@@ -5266,6 +5413,10 @@ Public Module awinGeneralModules
                                              Optional ByVal noComparison As Boolean = False) As clsConstellation
         Dim newC As New clsConstellation
         newC.constellationName = cName
+        ' das Folgende soll sihcerstellen, dass die Projekte in der Reihenfolge ihres Auftretens in der Excel Datei eingelesen und dargestellt werden ..
+        newC.sortCriteria = ptSortCriteria.customTF
+        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
         Dim vglProj As clsProjekt
         Dim lfdZeilenNr As Integer = 2
         Dim ok As Boolean
@@ -9338,7 +9489,7 @@ Public Module awinGeneralModules
             Try
                 'NoShowProjekte.Clear()
                 ShowProjekte.Clear()
-                lastConstellation = projectConstellations.getConstellation("Last")
+                lastConstellation = projectConstellations.getConstellation(calcLastSessionScenarioName)
             Catch ex As Exception
                 'Call MsgBox("in awinProjekteInitialLaden Fehler ...")
             End Try
@@ -9495,117 +9646,118 @@ Public Module awinGeneralModules
 
 
     End Sub
-    ''' <summary>
-    ''' lädt ein bestimmtes Portfolio von der Datenbank und zeigt es  
-    ''' in der Projekttafel an.
-    ''' 
-    ''' </summary>
-    ''' <param name="activeConstellation">
-    ''' Konstellation, die geladen werden soll  
-    ''' </param>
-    ''' <remarks></remarks>
-    ''' 
-    Public Sub loadConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date)
+    ' wurde ersetzt durch addConstellation
+    '' ''' <summary>
+    '' ''' lädt ein bestimmtes Portfolio von der Datenbank und zeigt es  
+    '' ''' in der Projekttafel an.
+    '' ''' 
+    '' ''' </summary>
+    '' ''' <param name="activeConstellation">
+    '' ''' Konstellation, die geladen werden soll  
+    '' ''' </param>
+    '' ''' <remarks></remarks>
+    '' ''' 
+    ''Public Sub loadConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date)
 
-        Dim hproj As New clsProjekt
-        Dim nvErrorMessage As String = ""
-        Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
-        Dim outPutCollection = New Collection
-        Dim outputLine As String = ""
-
-
-        ' prüfen, ob diese Constellation bereits existiert ..
-        If IsNothing(activeConstellation) Then
-            Call MsgBox(" das Szenario darf nicht NULL sein ... ")
-            Exit Sub
-        End If
-
-        ShowProjekte.Clear()
-
-        ' jetzt werden die Start-Values entsprechend gesetzt ..
-
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
-
-            If AlleProjekte.Containskey(kvp.Key) Then
-                ' Projekt ist bereits im Hauptspeicher geladen
-                hproj = AlleProjekte.getProject(kvp.Key)
-
-            ElseIf Not noDB Then
-
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If request.pingMongoDb() Then
-
-                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
-
-                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
-                        If Not IsNothing(hproj) Then
-                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                            AlleProjekte.Add(hproj)
-                        Else
-                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
-                            outPutCollection.Add(outputLine)
-                        End If
-
-                    Else
-
-                        hproj = Nothing
-                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
-                        outPutCollection.Add(outputLine)
-                    End If
-                Else
-                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-                End If
-
-                ''Else      ' not noDB
-                ''    Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-
-            End If
-
-            If Not IsNothing(hproj) Then
-                If hproj.name = kvp.Value.projectName Then
-
-                    With hproj
-
-                        .tfZeile = kvp.Value.zeile
-
-                    End With
-
-                    If kvp.Value.show Then
-
-                        Try
-
-                            ShowProjekte.Add(hproj)
-
-                        Catch ex1 As Exception
-                            outputLine = hproj.name & "(" & hproj.variantName & ")" & " (konnte der Session nicht hinzugefügt werden)"
-                            outPutCollection.Add(outputLine)
-                        End Try
-
-                        ' jetzt zeichnen des Projektes 
-                        ' neu zeichnen des Projekts 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
-
-                    End If
+    ''    Dim hproj As New clsProjekt
+    ''    Dim nvErrorMessage As String = ""
+    ''    Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
+    ''    Dim outPutCollection = New Collection
+    ''    Dim outputLine As String = ""
 
 
-                End If
-            End If
+    ''    ' prüfen, ob diese Constellation bereits existiert ..
+    ''    If IsNothing(activeConstellation) Then
+    ''        Call MsgBox(" das Szenario darf nicht NULL sein ... ")
+    ''        Exit Sub
+    ''    End If
+
+    ''    ShowProjekte.Clear()
+
+    ''    ' jetzt werden die Start-Values entsprechend gesetzt ..
+
+    ''    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+
+    ''        If AlleProjekte.Containskey(kvp.Key) Then
+    ''            ' Projekt ist bereits im Hauptspeicher geladen
+    ''            hproj = AlleProjekte.getProject(kvp.Key)
+
+    ''        ElseIf Not noDB Then
+
+    ''            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+    ''            If request.pingMongoDb() Then
+
+    ''                If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
+
+    ''                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+    ''                    hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
+    ''                    If Not IsNothing(hproj) Then
+    ''                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+    ''                        AlleProjekte.Add(hproj)
+    ''                    Else
+    ''                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
+    ''                        outPutCollection.Add(outputLine)
+    ''                    End If
+
+    ''                Else
+
+    ''                    hproj = Nothing
+    ''                    outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
+    ''                    outPutCollection.Add(outputLine)
+    ''                End If
+    ''            Else
+    ''                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+    ''            End If
+
+    ''            ''Else      ' not noDB
+    ''            ''    Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+
+    ''        End If
+
+    ''        If Not IsNothing(hproj) Then
+    ''            If hproj.name = kvp.Value.projectName Then
+
+    ''                With hproj
+
+    ''                    .tfZeile = kvp.Value.zeile
+
+    ''                End With
+
+    ''                If kvp.Value.show Then
+
+    ''                    Try
+
+    ''                        ShowProjekte.Add(hproj)
+
+    ''                    Catch ex1 As Exception
+    ''                        outputLine = hproj.name & "(" & hproj.variantName & ")" & " (konnte der Session nicht hinzugefügt werden)"
+    ''                        outPutCollection.Add(outputLine)
+    ''                    End Try
+
+    ''                    ' jetzt zeichnen des Projektes 
+    ''                    ' neu zeichnen des Projekts 
+    ''                    Dim tmpCollection As New Collection
+    ''                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+    ''                End If
 
 
-        Next
+    ''            End If
+    ''        End If
 
-        ' die aktuelle Konstellation in "Last" speichern 
-        'Call storeSessionConstellation("Last")
 
-        If outPutCollection.Count > 0 Then
-            Call showOutPut(outPutCollection, _
-                            "Meldungen", _
-                            "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:")
-        End If
+    ''    Next
 
-    End Sub
+    ''    ' die aktuelle Konstellation in "Last" speichern 
+    ''    'Call storeSessionConstellation("Last")
+
+    ''    If outPutCollection.Count > 0 Then
+    ''        Call showOutPut(outPutCollection, _
+    ''                        "Meldungen", _
+    ''                        "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:")
+    ''    End If
+
+    ''End Sub
 
     ''' <summary>
     ''' fügt die in der Konstellation aufgeführten Projekte hinzu; 
@@ -9635,9 +9787,17 @@ Public Module awinGeneralModules
             Exit Sub
         End If
 
+        ' jetzt muss das Sort-Kriterium übernommen werden 
+        If activeConstellation.sortCriteria >= 0 Then
+            currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
+        End If
+
+
         ' jetzt werden die einzelnen Projekte dazugeholt 
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+
+           
 
             Dim showIT As Boolean = kvp.Value.show
 
@@ -9662,7 +9822,7 @@ Public Module awinGeneralModules
                     If showIT Then
 
                         If ShowProjekte.contains(hproj.name) Then
-
+                            ' dann soll das Projekt da bleiben, wo es ist 
                             Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
                             If shownProject.variantName = hproj.variantName Then
                                 ' es wird bereits gezeigt, nichts machen ...
@@ -9673,14 +9833,16 @@ Public Module awinGeneralModules
                             End If
 
                         ElseIf boardwasEmpty Then
-                            tryZeile = kvp.Value.zeile
+                            'tryZeile = kvp.Value.zeile
+                            tryZeile = activeConstellation.getBoardZeile(hproj.name)
                             Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
                         Else
 
                             'tryZeile = kvp.Value.zeile + startOfFreeRows - 1
-                            tryZeile = startOfFreeRows + zeilenOffset
+                            'tryZeile = startOfFreeRows + zeilenOffset
+                            tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
                             Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                            zeilenOffset = zeilenOffset + 1
+                            'zeilenOffset = zeilenOffset + 1
                         End If
 
 
@@ -9709,12 +9871,14 @@ Public Module awinGeneralModules
                             If showIT Then
 
                                 If boardwasEmpty Then
-                                    tryZeile = kvp.Value.zeile
+                                    'tryZeile = kvp.Value.zeile
+                                    tryZeile = activeConstellation.getBoardZeile(hproj.name)
                                     Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
                                 Else
-                                    tryZeile = startOfFreeRows + zeilenOffset
+                                    'tryZeile = startOfFreeRows + zeilenOffset
+                                    tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
                                     Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
-                                    zeilenOffset = zeilenOffset + 1
+                                    'zeilenOffset = zeilenOffset + 1
                                 End If
 
                             End If
@@ -9781,6 +9945,16 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
                 Dim activeConstellation As clsConstellation = kvp.Value
+
+                ' jetzt den Sortier-Modus anpassen 
+                If activeConstellation.sortCriteria <> currentSessionConstellation.sortCriteria Then
+
+                    If activeConstellation.sortCriteria >= 0 Then
+                        currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
+                    End If
+
+                End If
+
                 Call addConstellation(activeConstellation, storedAtOrBefore)
                 ' das Folgende ist unnötig, ggf wuden ja bereits die nötigen Resets gemacht ... 
                 ''If i = 0 And (boardWasEmpty Or Not addToSession) Then
@@ -9798,10 +9972,20 @@ Public Module awinGeneralModules
                     clearBoard Or boardWasEmpty Then
                     currentConstellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
                 Else
-                    currentConstellationName = "Last"
+                    currentConstellationName = calcLastSessionScenarioName()
+                    ' hier muss jetzt der sortType auf CustomTF gesetzt werden 
+
+                    If Not IsNothing(currentSessionConstellation) Then
+                        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                    End If
+
                 End If
             Else
-                currentConstellationName = "Last"
+                currentConstellationName = calcLastSessionScenarioName()
+                ' hier muss jetzt der sortType auf CustomTF gesetzt werden  
+                If Not IsNothing(currentSessionConstellation) Then
+                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                End If
             End If
 
             Call awinNeuZeichnenDiagramme(2)
@@ -10496,7 +10680,7 @@ Public Module awinGeneralModules
 
         For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
-            If kvp.Key = "Last" Or kvp.Key = "Session" Then
+            If kvp.Key = calcLastSessionScenarioName() Or kvp.Key = calcLastEditorScenarioName() Then
                 ' nichts tun , die zählen nicht 
             Else
                 Dim pvName As String = calcProjektKey(pname, variantName)
@@ -11807,35 +11991,37 @@ Public Module awinGeneralModules
 
                 .CheckBoxes = True
 
-                Dim projektliste As Collection
+                Dim projektliste As SortedList(Of String, String)
 
                 If quickList Then
-                    projektliste = New Collection
+                    projektliste = New SortedList(Of String, String)
                     For Each kvp As KeyValuePair(Of String, String) In pvNamesList
                         Dim tmpName As String = kvp.Key
                         If tmpName.Contains("#") Then
                             Dim tmpStr() As String = tmpName.Split(New Char() {CChar("#")})
-                            If Not projektliste.Contains(tmpStr(0)) Then
+                            If Not projektliste.ContainsKey(tmpStr(0)) Then
                                 projektliste.Add(tmpStr(0), tmpStr(0))
                             End If
                         Else
-                            If Not projektliste.Contains(tmpName) Then
+                            If Not projektliste.ContainsKey(tmpName) Then
                                 projektliste.Add(tmpName, tmpName)
                             End If
                         End If
                     Next
 
                 Else
-                    projektliste = constellation.getProjectNames
+                    ' hole die Namen aus der sortierten Liste, nicht aus der cItem-Liste 
+                    projektliste = constellation.getProjectNames(False)
                 End If
 
                 Dim showPname As Boolean
 
 
 
-                For Each pname In projektliste
+                For Each kvp As KeyValuePair(Of String, String) In projektliste
 
                     showPname = True
+                    pname = kvp.Value ' der key ist das sortier-Kriterium, kann pName sein, aber auch was ganz anderes 
 
                     Dim hproj As clsProjekt = Nothing
                     Dim variantNames As Collection
@@ -14344,8 +14530,8 @@ Public Module awinGeneralModules
         If ShowProjekte.contains(pName) Then
 
             ' Aktuelle Konstellation ändert sich dadurch
-            If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
-                currentConstellationName = currentConstellationName & " (*)"
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
             End If
 
             hproj = ShowProjekte.getProject(pName)
@@ -14442,6 +14628,7 @@ Public Module awinGeneralModules
     Public Sub putProjectInShow(ByVal pName As String, ByVal vName As String, _
                                     ByVal considerDependencies As Boolean, _
                                     ByVal upDateDiagrams As Boolean, _
+                                    ByVal myConstellation As clsConstellation, _
                                     Optional ByVal parentChoice As Boolean = False, _
                                     Optional pZeile As Integer = -1)
 
@@ -14467,7 +14654,7 @@ Public Module awinGeneralModules
             ShowProjekte.Add(hproj)
             If pZeile < 2 Then
                 'pZeile = ShowProjekte.getPTZeile(pName)
-                pZeile = currentSessionConstellation.getBoardZeile(pName)
+                pZeile = myConstellation.getBoardZeile(pName)
             End If
 
             Dim tmpCollection As New Collection
@@ -14479,7 +14666,7 @@ Public Module awinGeneralModules
 
             If pZeile > 0 Then
                 Call moveShapesDown(tmpCollection, pZeile, anzahlZeilen, 0)
-                Call ZeichneProjektinPlanTafel(tmpCollection, pName, pZeile, tmpCollection, tmpCollection, True)
+                Call ZeichneProjektinPlanTafel(tmpCollection, pName, pZeile, tmpCollection, tmpCollection)
             End If
         End If
 
@@ -14499,7 +14686,10 @@ Public Module awinGeneralModules
             Dim toDoListe As Collection = allDependencies.passiveListe(pName, PTdpndncyType.inhalt)
             If toDoListe.Count > 0 Then
                 For Each mprojectName As String In toDoListe
-                    Call putProjectInShow(mprojectName, "", considerDependencies, False, True)
+                    Call putProjectInShow(pName:=mprojectName, _
+                                          vName:="", considerDependencies:=considerDependencies, _
+                                          upDateDiagrams:=False, _
+                                          myConstellation:=myConstellation, parentChoice:=True)
                 Next
 
             End If

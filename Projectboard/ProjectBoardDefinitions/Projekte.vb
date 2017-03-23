@@ -11446,7 +11446,7 @@ Public Module Projekte
             'appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel(False)
+            Call awinZeichnePlanTafel(True)
             Call awinNeuZeichnenDiagramme(2)
             'Call diagramsVisible(True)
             'appInstance.ScreenUpdating = True
@@ -12721,7 +12721,6 @@ Public Module Projekte
         Dim notOK As Boolean = True
         Dim tryExceptionCounts As Integer = 0
 
-        'Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
 
         If fromScratch Then
             Dim zeile As Integer
@@ -12733,7 +12732,8 @@ Public Module Projekte
 
                 With kvp.Value
 
-                    positionsKennzahl = calcKennziffer(kvp.Value)
+                    'positionsKennzahl = calcKennziffer(kvp.Value)
+                    positionsKennzahl = currentSessionConstellation.getBoardZeile(kvp.Key)
 
                     Do While notOK
                         Try
@@ -12764,18 +12764,12 @@ Public Module Projekte
                 Try
                     hproj = ShowProjekte.getProject(pname)
 
-                    If i = 1 Then
-                        lastBU = hproj.businessUnit
-                    ElseIf lastBU <> hproj.businessUnit Then
-                        lastBU = hproj.businessUnit
-                        zeile = zeile + 1
-                    End If
-
                     hproj.tfZeile = zeile
 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
+                    ' zeile soviel weiterschalten, wie Platz benötigt wird ...
                     zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
                 Catch ex As Exception
@@ -12806,12 +12800,12 @@ Public Module Projekte
                     'Call MsgBox("Fehler in awinZeichnePlanTafel")
 
                 End Try
-                
+
 
             Next
 
             zeile = 2
-            lastZeile = 0
+            lastzeile = 0
 
 
             'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
@@ -12829,15 +12823,15 @@ Public Module Projekte
                     hproj = ShowProjekte.getProject(pname)
 
                     If i = 1 Then
-                        curZeile = hproj.tfZeile
+                        curzeile = hproj.tfZeile
                         lastZeileOld = hproj.tfZeile
-                        lastZeile = curZeile
-                        max = curZeile
+                        lastzeile = curzeile
+                        max = curzeile
                     Else
                         If lastZeileOld = hproj.tfZeile Then
-                            curZeile = lastZeile
+                            curzeile = lastzeile
                         Else
-                            lastZeile = max
+                            lastzeile = max
                             lastZeileOld = hproj.tfZeile
                         End If
 
@@ -12848,18 +12842,18 @@ Public Module Projekte
                     '    curZeile = curZeile + 1
                     'End If
                     ' Ende Änderung
-                    hproj.tfZeile = curZeile
-                    lastZeile = curZeile
+                    hproj.tfZeile = curzeile
+                    lastzeile = curzeile
                     'Call ZeichneProjektinPlanTafel2(pname, curZeile)
                     ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
+                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, curzeile, tmpCollection, tmpCollection)
                     curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
 
-                    If curZeile > max Then
-                        max = curZeile
+                    If curzeile > max Then
+                        max = curzeile
                     End If
                 Catch ex As Exception
                     tryExceptionCounts = tryExceptionCounts + 1
@@ -12877,6 +12871,184 @@ Public Module Projekte
         'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
 
     End Sub
+
+    ' am 22.3.17 durch obige Routine ersetzt 
+    '' ''' <summary>
+    '' ''' zeichnet die Plantafel mit den Projekten neu; 
+    '' ''' zeichnet bei fromScratch = true: zuerst in Reihenfolge der Business Units, 
+    '' ''' dann sortiert nach Anfangsdatum, dann sortiert nach Projektdauer
+    '' ''' im fall fromScratch = false: versucht dabei immer die alte Position der Projekte zu übernehmen 
+    '' ''' </summary>
+    '' ''' <remarks></remarks>
+    ''Public Sub awinZeichnePlanTafel_deprecated(ByVal fromScratch As Boolean)
+
+    ''    Dim todoListe As New SortedList(Of Double, String)
+    ''    Dim key As Double
+    ''    Dim pname As String
+
+    ''    Dim lastZeileOld As Integer
+    ''    Dim hproj As clsProjekt
+    ''    Dim positionsKennzahl As Double
+
+    ''    Dim notOK As Boolean = True
+    ''    Dim tryExceptionCounts As Integer = 0
+
+    ''    'Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
+
+    ''    If fromScratch Then
+    ''        Dim zeile As Integer
+    ''        Dim lastBU As String = ""
+
+    ''        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+    ''            notOK = True
+
+    ''            With kvp.Value
+
+    ''                positionsKennzahl = calcKennziffer(kvp.Value)
+
+    ''                Do While notOK
+    ''                    Try
+    ''                        If todoListe.ContainsKey(positionsKennzahl) Then
+    ''                            positionsKennzahl = positionsKennzahl + 0.00001
+    ''                        Else
+    ''                            todoListe.Add(positionsKennzahl, .name)
+    ''                            notOK = False
+    ''                        End If
+    ''                    Catch ex As Exception
+    ''                        positionsKennzahl = positionsKennzahl + 0.00001
+    ''                        tryExceptionCounts = tryExceptionCounts + 1
+    ''                    End Try
+    ''                Loop
+
+
+    ''            End With
+
+    ''        Next
+
+    ''        zeile = 2
+    ''        Dim i As Integer
+
+    ''        For i = 1 To todoListe.Count
+
+    ''            pname = todoListe.ElementAt(i - 1).Value
+
+    ''            Try
+    ''                hproj = ShowProjekte.getProject(pname)
+
+    ''                If i = 1 Then
+    ''                    lastBU = hproj.businessUnit
+    ''                ElseIf lastBU <> hproj.businessUnit Then
+    ''                    lastBU = hproj.businessUnit
+    ''                    zeile = zeile + 1
+    ''                End If
+
+    ''                hproj.tfZeile = zeile
+
+    ''                Dim tmpCollection As New Collection
+    ''                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
+
+    ''                zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
+
+    ''            Catch ex As Exception
+    ''                tryExceptionCounts = tryExceptionCounts + 1
+    ''            End Try
+
+    ''        Next
+
+
+    ''    Else
+
+    ''        Dim zeile As Integer, lastzeile As Integer, curzeile As Integer, max As Integer
+    ''        ' so wurde es bisher gemacht ... bis zum 17.1.15
+    ''        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
+    ''        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+    ''            Try
+    ''                With kvp.Value
+    ''                    key = 10000 * .tfZeile + kvp.Value.Start
+    ''                    Do While todoListe.ContainsKey(key)
+    ''                        key = key + 0.000001
+    ''                    Loop
+    ''                    todoListe.Add(key, .name)
+    ''                End With
+    ''            Catch ex As Exception
+
+    ''                tryExceptionCounts = tryExceptionCounts + 1
+    ''                'Call MsgBox("Fehler in awinZeichnePlanTafel")
+
+    ''            End Try
+
+
+    ''        Next
+
+    ''        zeile = 2
+    ''        lastzeile = 0
+
+
+    ''        'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+    ''        ' dann sollen die Projekte im extended mode gezeichnet werden 
+    ''        ' jetzt erst mal die Konstellation "last" speichern
+    ''        ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
+    ''        ' Call storeSessionConstellation(ShowProjekte, "Last")
+
+    ''        ' jetzt die todoListe abarbeiten
+    ''        Dim i As Integer
+    ''        For i = 1 To todoListe.Count
+    ''            pname = todoListe.ElementAt(i - 1).Value
+
+    ''            Try
+    ''                hproj = ShowProjekte.getProject(pname)
+
+    ''                If i = 1 Then
+    ''                    curzeile = hproj.tfZeile
+    ''                    lastZeileOld = hproj.tfZeile
+    ''                    lastzeile = curzeile
+    ''                    max = curzeile
+    ''                Else
+    ''                    If lastZeileOld = hproj.tfZeile Then
+    ''                        curzeile = lastzeile
+    ''                    Else
+    ''                        lastzeile = max
+    ''                        lastZeileOld = hproj.tfZeile
+    ''                    End If
+
+    ''                End If
+
+    ''                ' Änderung 9.10.14, damit die Spaces in einer 
+    ''                'If hproj.tfZeile >= curZeile + 1 Then
+    ''                '    curZeile = curZeile + 1
+    ''                'End If
+    ''                ' Ende Änderung
+    ''                hproj.tfZeile = curzeile
+    ''                lastzeile = curzeile
+    ''                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+    ''                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+    ''                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+    ''                Dim tmpCollection As New Collection
+    ''                Call ZeichneProjektinPlanTafel(tmpCollection, pname, curzeile, tmpCollection, tmpCollection)
+    ''                curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
+
+
+    ''                If curzeile > max Then
+    ''                    max = curzeile
+    ''                End If
+    ''            Catch ex As Exception
+    ''                tryExceptionCounts = tryExceptionCounts + 1
+    ''            End Try
+
+
+
+    ''        Next
+    ''    End If
+
+    ''    'If tryExceptionCounts > 0 Then
+    ''    '    Call MsgBox("Anzahl: " & tryExceptionCounts)
+    ''    'End If
+
+    ''    'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
+
+    ''End Sub
 
     ''' <summary>
     ''' schnelles Zeichnen der Projekte von Scratch bzw. Update eines Projektes 
@@ -12934,7 +13106,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub ZeichneProjektinPlanTafel(ByVal noCollection As Collection, ByVal pname As String, ByVal tryzeile As Integer, _
                                          ByVal drawPhaseList As Collection, ByVal drawMilestoneList As Collection, _
-                                         Optional useTryZeileAnyway As Boolean = False)
+                                         Optional useTryZeileAnyway As Boolean = True)
 
 
         Dim drawphases As Boolean = awinSettings.drawphases
@@ -19228,6 +19400,26 @@ Public Module Projekte
         calcProjektKey = pName & trennzeichen & variantName
 
 
+    End Function
+
+    ''' <summary>
+    ''' gibt den Standard-Last Complete Session Scenario Namen des Nutzers zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcLastSessionScenarioName() As String
+        Dim tmpResult As String = "_last Session (by " & dbUsername & ")"
+        calcLastSessionScenarioName = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' gibt den Standard last Editor Szenario Namen zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcLastEditorScenarioName() As String
+        Dim tmpResult As String = "_last Scenario-Editor (by " & dbUsername & ")"
+        calcLastEditorScenarioName = tmpResult
     End Function
 
     ''' <summary>

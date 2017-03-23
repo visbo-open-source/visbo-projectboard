@@ -9,6 +9,7 @@
 
     Sub copyfrom(ByVal c As clsConstellation)
 
+        
         Me.constellationName = c.constellationName
 
         For Each item In c.Liste
@@ -19,8 +20,27 @@
 
         ' jetzt muss die Sortier-Reihenfolge und der Sortier-Typ gespeichert werden 
         ' dabei wird auch der Me.sortType gesetzt  
-        Me.sortType = c.sortCriteria
-        Me.sortList = c.sortListe
+        
+        If c.sortCriteria >= 0 Then
+            Me.sortType = c.sortCriteria
+        Else
+            Me.sortType = ptSortCriteria.alphabet
+        End If
+
+        ' Kopieren der Sort-Liste 
+        If Not IsNothing(c.sortListe) Then
+            For Each kvp As KeyValuePair(Of String, String) In c.sortListe
+                Me.sortList.Add(kvp.Key, kvp.Value)
+            Next
+        End If
+
+        If Not IsNothing(c.lastCustomList) Then
+            ' die lastCustomList kopieren 
+            For Each kvp As KeyValuePair(Of String, String) In c.lastCustomList
+                Me.lastCustomList.Add(kvp.Key, kvp.Value)
+            Next
+
+        End If
 
     End Sub
 
@@ -43,16 +63,37 @@
         Next
 
         If Not IsNothing(Me.sortList) And Not IsNothing(Me.sortType) Then
-            c.sortListe(Me.sortType) = Me.sortList
-            If Not IsNothing(Me.lastCustomList) Then
-                ' die lastCustomList kopieren 
-            End If
+            If Me.sortList.Count = 0 And Me.allItems.Count > 0 Then
+                ' mit diesem Befehlt wird, wenn die SortListe Null ist, dieselbe auch gleich aufgebaut 
+                ' checken auf Valid ...
+                
+                If Me.sortType >= 0 Then
+                    c.sortCriteria = Me.sortType
+                Else
+                    c.sortCriteria = ptSortCriteria.alphabet
+                End If
+
             Else
-                ' sorttype auf alphabetisch sortiert setzen 
-                ' damit wird auch _sortlist gesetzt ...
-                c.sortCriteria = ptSortCriteria.alphabet
+                ' hier wird die existierende Liste übernommen 
+                If Not IsNothing(Me.sortList) Then
+                    c.sortListe(Me.sortType) = Me.sortList
+                End If
 
             End If
+
+            If Not IsNothing(Me.lastCustomList) Then
+                ' die lastCustomList kopieren 
+                For Each kvp As KeyValuePair(Of String, String) In Me.lastCustomList
+                    c.lastCustomList.Add(kvp.Key, kvp.Value)
+                Next
+
+            End If
+        Else
+            ' sorttype wird per Default auf alphabetisch sortiert setzen 
+            ' damit wird auch _sortlist gesetzt ...
+            c.sortCriteria = ptSortCriteria.alphabet
+
+        End If
 
 
     End Sub
@@ -102,8 +143,11 @@
     End Class
 
     Sub New()
-        allItems = New List(Of clsConstellationItemDB)
 
+        allItems = New List(Of clsConstellationItemDB)
+        sortType = 0
+        sortList = New SortedList(Of String, String)
+        lastCustomList = New SortedList(Of String, String)
     End Sub
 
 End Class

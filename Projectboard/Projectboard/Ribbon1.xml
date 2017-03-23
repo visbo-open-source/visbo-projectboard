@@ -346,6 +346,8 @@
         <group id="PT4G1" getLabel ="bestimmeLabel">
           <!--label="Import Projekte (Batch)"-->
           <button id="PT4G1B1" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="auf Basis einer Batch-Datei können neue Projekte unter Verwendung von Projekt-Templates schnell erzeugt werden"/>
+          <!--label="Import Szenario Definition"-->
+          <button id="PT4G1B5" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Szenario Definitionen eingelesen werden"/>
           <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
           <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
           <separator id="PT4G1s1"/>
@@ -481,7 +483,7 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <!--<group id ="pt6g5" label ="testfunktionen">
+        <group id ="pt6g5" label ="testfunktionen">
           <button id="pt6g5b0" label="enable event aktiv?" onAction="pttestfunktion1" />
           <button id="pt6g5b1" label="aktuelle test funktion"  onAction="pttestfunktion2" />
           <button id="pt6g5b2" label="check hierarchien korrekt ? "  onAction ="pttestfunktion3" />
@@ -491,7 +493,7 @@
           <button id="pt4g5b7" label="neue rollen/kosten-struktur" onAction="pttestfunktion7" supertip ="test der optimierten rollen-/kosten verweise"/>
           <button id="pt6g5b5" label="Test WriteProtection"  onAction ="pttestWriteProtect" supertip ="Test der Funktion WriteProtect"/>
         </group>
-        <group id ="PT6G6" label ="Licensierung">
+        <!--<group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
         </group>-->

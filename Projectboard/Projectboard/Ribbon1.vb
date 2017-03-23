@@ -1089,8 +1089,12 @@ Imports System.Windows
             End With
         End If
 
-        If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & " (*)"
+        ''If Not currentConstellationName.EndsWith("(*)") Then
+        ''    currentConstellationName = currentConstellationName & " (*)"
+        ''End If
+
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
         End If
 
         'Call storeSessionConstellation("Last")
@@ -1307,7 +1311,7 @@ Imports System.Windows
                 appInstance.ScreenUpdating = True
 
                 Call awinClearPlanTafel()
-                Call awinZeichnePlanTafel(False)
+                Call awinZeichnePlanTafel(True)
 
                 appInstance.ScreenUpdating = True
 
@@ -1370,7 +1374,7 @@ Imports System.Windows
                 appInstance.ScreenUpdating = False
 
                 Call awinClearPlanTafel()
-                Call awinZeichnePlanTafel(False)
+                Call awinZeichnePlanTafel(True)
 
                 appInstance.ScreenUpdating = True
 
@@ -2400,16 +2404,16 @@ Imports System.Windows
 
             Case "PT2G1B6" ' Extended View
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Extended View"
+                    tmpLabel = "Extended Modus"
                 Else
-                    tmpLabel = "Extended View"
+                    tmpLabel = "Extended Mode"
                 End If
 
             Case "PT2G1B7" ' Rollup View
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rollup View"
+                    tmpLabel = "1-Zeile Modus"
                 Else
-                    tmpLabel = "Rollup View"
+                    tmpLabel = "1-Line Mode"
                 End If
 
             Case "PT2G1B8" ' Umbenennen
@@ -2552,6 +2556,13 @@ Imports System.Windows
                     tmpLabel = "Import MS Project"
                 Else
                     tmpLabel = "Import MS Project"
+                End If
+
+            Case "PT4G1B5" ' Import Scenario Definition
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Szenario Definition"
+                Else
+                    tmpLabel = "Import Scenario Definition"
                 End If
 
             Case "PT4G1M1B1" ' Import VISBO-Steckbriefe
@@ -4120,6 +4131,7 @@ Imports System.Windows
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
 
+
                         Call awinImportProjektInventur()
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
@@ -4172,6 +4184,104 @@ Imports System.Windows
         appInstance.ScreenUpdating = True
 
 
+
+    End Sub
+
+    Public Sub Tom2G4B1ScenarioImport(control As IRibbonControl)
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+        Dim returnValue As DialogResult
+
+        Dim getScenarioImport As New frmSelectImportFiles
+        Dim wasNotEmpty As Boolean = False
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        
+            ' Aktion durchführen ...
+        getScenarioImport.menueAswhl = PTImpExp.scenariodefs
+        returnValue = getScenarioImport.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+            dateiName = getScenarioImport.selectedDateiName
+
+            Try
+
+                If My.Computer.FileSystem.FileExists(dateiName) Then
+
+                    If ShowProjekte.Count > 0 Then
+                        wasNotEmpty = True
+                        'Call storeSessionConstellation("Last")
+                        ' hier sollte jetzt auch ein ClearPlan-Tafel gemacht werden ...
+                        Call awinClearPlanTafel()
+                    End If
+
+                    appInstance.Workbooks.Open(dateiName)
+                    Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+                    Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+                    Dim tmpName As String = ""
+                    For ih As Integer = 0 To positionIX
+                        tmpName = tmpName & scenarioName.Chars(ih)
+                    Next
+                    scenarioName = tmpName.Trim
+
+
+                    Dim newConstellation As clsConstellation = importScenarioDefinition(scenarioName)
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                    ' ''If wasNotEmpty Then
+                    ' ''    Call awinClearPlanTafel()
+                    ' ''End If
+
+                    '' ''Call awinZeichnePlanTafel(True)
+                    ' ''Call awinZeichnePlanTafel(False)
+                    ' ''Call awinNeuZeichnenDiagramme(2)
+
+                    If newConstellation.count > 0 Then
+
+                        If projectConstellations.Contains(scenarioName) Then
+                            projectConstellations.Remove(scenarioName)
+                        End If
+
+                        If projectConstellations.Contains(scenarioName) Then
+                            projectConstellations.Remove(scenarioName)
+                        End If
+
+                        projectConstellations.Add(newConstellation)
+                        'Call loadSessionConstellation(scenarioName, False, False, True)
+                    Else
+                        Call MsgBox("keine Projekte für Szenario erkannt ...")
+                    End If
+
+                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                    If ImportProjekte.Count > 0 Then
+                        ImportProjekte.Clear(False)
+                    End If
+                Else
+
+                    Call MsgBox("bitte Datei auswählen ...")
+                End If
+
+
+            Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            End Try
+        Else
+            'Call MsgBox(" Import Scenario wurde abgebrochen")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
     End Sub
 
@@ -5346,7 +5456,7 @@ Imports System.Windows
             ' jetzt werden die Projekt-Symbole inkl Phasen Darstellung gezeichnet
             awinSettings.drawphases = True
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel(False)
+            Call awinZeichnePlanTafel(True)
         Else
             ' extendedView der einzelnen Projekte, sofern gesetzt, entfernen
             For i = 1 To ShowProjekte.Count
@@ -5357,7 +5467,7 @@ Imports System.Windows
             awinSettings.drawphases = False
             'Call awinLoadConstellation("Last")
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel(False)
+            Call awinZeichnePlanTafel(True)
         End If
 
         Cursor.Current = Cursors.Default
