@@ -11436,10 +11436,9 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim msgtxt As String = ""
 
         Dim spalte As Integer = 2
-        Dim blattname1 As String = "1.Halbjahr"
-        Dim blattname2 As String = "2.Halbjahr"
         Dim currentWS As Excel.Worksheet
         Dim index As Integer
         Dim tmpDate As Date
@@ -11448,12 +11447,11 @@ Public Module awinGeneralModules
         Dim anzMonthDays As Integer = 0
         Dim colDate As Integer = 0
         Dim anzDays As Integer = 0
-        Dim tmpKapa As Double
-        Dim extTmpKapa As Double
 
         Dim lastZeile As Integer
         Dim lastSpalte As Integer
-        Dim monthDays As SortedList(Of Integer, Integer) = Nothing
+        Dim monthDays As New SortedList(Of Integer, Integer)
+
         Dim hrole As New clsRollenDefinition
         Dim rolename As String = ""
 
@@ -11477,194 +11475,111 @@ Public Module awinGeneralModules
                 Try
                     For index = 1 To appInstance.Worksheets.Count
 
-                        If Not ok Then
-                            Exit For
-                        End If
+                        'If Not ok Then
+                        '    Exit For
+                        'End If
 
                         currentWS = CType(appInstance.Worksheets(index), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                        Dim hstr As String = currentWS.Name
+                        Dim hstr() As String = Split(currentWS.Name, "Halbjahr", , )
+                        If hstr.Length > 1 Then
 
-                        lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
-                        lastSpalte = CType(currentWS.Cells(4, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                        Dim vglColor As Integer = -4142         ' keine Farbe
-                        Dim i As Integer = 5
+                            lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                            lastSpalte = CType(currentWS.Cells(4, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                        While ok And i <= lastSpalte
+                            Dim vglColor As Integer = -4142         ' keine Farbe
+                            Dim i As Integer = 5
 
-                            If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
-                                ok = (anzDays = anzMonthDays)
-                                vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
-                                anzDays = 1
-                            Else
-                                If CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text <> "" Then
-                                    Dim monthName As String = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text
-                                    ' ''Dim strDate As String = "01." & monthName & " " & year
-                                    ' ''Dim hdate As DateTime = DateValue(strDate)
+                            While ok And i <= lastSpalte
 
-                                    Dim isdate As Boolean = DateTime.TryParse(monthName & " " & year.ToString, tmpDate)
-                                    If isdate Then
-                                        colDate = getColumnOfDate(tmpDate)
-                                        anzMonthDays = DateTime.DaysInMonth(year, Month(tmpDate))
-                                        monthDays.Add(colDate, anzMonthDays)
+                                If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
+                                    ok = (anzDays = anzMonthDays)
+                                    vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
+                                    anzDays = 1
+                                Else
+                                    If CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text <> "" Then
+                                        Dim monthName As String = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                        ' ''Dim strDate As String = "01." & monthName & " " & year
+                                        ' ''Dim hdate As DateTime = DateValue(strDate)
+
+                                        Dim isdate As Boolean = DateTime.TryParse(monthName & " " & year.ToString, tmpDate)
+                                        If isdate Then
+                                            colDate = getColumnOfDate(tmpDate)
+                                            anzMonthDays = DateTime.DaysInMonth(year, Month(tmpDate))
+                                            monthDays.Add(colDate, anzMonthDays)
+                                        End If
                                     End If
+
+                                    anzDays = anzDays + 1
                                 End If
 
-                                anzDays = anzDays + 1
-                            End If
+                                i = i + 1
+                                ok = True
+                            End While
 
-                            i = i + 1
-                            ok = True
-                        End While
+                            For iZ = 5 To lastZeile
 
-                        For iZ = 5 To lastZeile
+                                rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                If rolename <> "" Then
+                                    hrole = RoleDefinitions.getRoledef(rolename)
+                                    If Not IsNothing(hrole) Then
 
-                            rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
-                            If rolename <> "" Then
-                                hrole = RoleDefinitions.getRoledef(rolename)
 
-                                Dim iSp As Integer = 5
-                                Dim anzArbTage = 0
+                                        Dim iSp As Integer = 5
+                                        Dim anzArbTage = 0
 
-                                While ok And iSp <= lastSpalte
+                                        For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
 
-                                    For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
+                                            Dim colOfDate As Integer = kvp.Key
+                                            anzDays = kvp.Value
+                                            For sp = iSp + 0 To iSp + anzDays
 
-                                        Dim colOfDate As Integer = kvp.Key
-                                        anzDays = kvp.Value
-                                        For sp = iSp + 0 To iSp + anzDays
-                                            If CType(currentWS.Cells(iZ, iSp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = -4142 Then
-                                                anzArbTage = anzArbTage + 1
-                                            End If
-                                            sp = sp + 1
+                                                If iSp <= lastSpalte Then
+                                                    If CType(currentWS.Cells(iZ, iSp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = -4142 Then
+                                                        anzArbTage = anzArbTage + 1
+                                                    End If
+                                                    sp = sp + 1
+                                                Else
+                                                    msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
+                                                    If awinSettings.englishLanguage Then
+                                                        msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
+                                                    End If
+                                                    Call MsgBox(msgtxt)
+                                                End If
+
+                                            Next
+                                            hrole.kapazitaet(colOfDate) = CType(anzArbTage, Double)
+                                            anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
+
                                         Next
-                                        hrole.kapazitaet(colOfDate) = CType(anzArbTage, Double)
-                                    Next
 
-                                End While
+                                    Else
+                                        msgtxt = "Rolle " & rolename & " nicht definiert ..."
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "Role " & rolename & " not defined ..."
+                                        End If
+                                        Call MsgBox(msgtxt)
+                                    End If
+                                Else
+                                    msgtxt = "kein Rollenname angegeben ..."
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Name of role not given ..."
+                                    End If
+                                    Call MsgBox(msgtxt)
+                                End If
 
-                            Else
-                                'Fehler, da kein Name angegeben
+                            Next iZ
+
+                        Else
+                            msgtxt = "Worksheet" & hstr(0) & " gehört nicht zum Urlaubsplaner ..."
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Worksheet " & hstr(0) & "doesn't belongs to planning holidays ..."
                             End If
-
-                        Next iZ
-
-
+                            Call MsgBox(msgtxt)
+                        End If
 
                     Next index
 
-
-
-                    '' ''    ' bevor jetzt die eigentliche Kapa dieser Rolle aus intern_sum ausgelesen wird, wird geschaut, ob 
-                    '' ''    ' es eine zusammengesetzte Rolle ist
-                    '' ''    ' das wird dadurch entschieden, ob bis zur summenzeile bekannte Rollen auftauchen. Das sind dann die Sub-Roles 
-
-
-                    '' ''    Dim atleastOneSubRole As Boolean = False
-                    '' ''    Dim aktzeile As Integer = 2
-                    '' ''    Do While aktzeile < summenZeile
-
-                    '' ''        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, spalte - 1), Excel.Range).Value)
-
-                    '' ''        If Not IsNothing(subRoleName) Then
-                    '' ''            subRoleName = subRoleName.Trim
-                    '' ''            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
-
-                    '' ''                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
-
-                    '' ''                Try
-                    '' ''                    atleastOneSubRole = True
-                    '' ''                    ' es ist eine Sub-Rolle
-
-                    '' ''                    hrole.addSubRole(subRole.UID, subRoleName, RoleDefinitions.Count)
-
-                    '' ''                    spalte = 2
-                    '' ''                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-
-                    '' ''                    ' erstmal dahin positionieren, wo das Datum auch mit StartOfCalendar harmoniert 
-                    '' ''                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
-                    '' ''                        spalte = spalte + 1
-                    '' ''                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                    '' ''                    Loop
-
-                    '' ''                    Do While spalte < 241 And spalte <= lastSpalte
-
-                    '' ''                        index = getColumnOfDate(tmpDate)
-                    '' ''                        If index >= 1 Then
-                    '' ''                            tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
-
-                    '' ''                            If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                    '' ''                                subRole.kapazitaet(index) = tmpKapa
-                    '' ''                            End If
-                    '' ''                        End If
-
-                    '' ''                        spalte = spalte + 1
-                    '' ''                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                    '' ''                    Loop
-
-                    '' ''                Catch ex As Exception
-
-                    '' ''                End Try
-
-
-                    '' ''            End If
-
-                    '' ''        End If
-
-                    '' ''        aktzeile = aktzeile + 1
-                    '' ''        ' jetzt spalte wieder auf 2 setzen 
-                    '' ''        spalte = 2
-                    '' ''    Loop
-
-                    '' ''    ' die internen Kapas einer Sammelrolle sind NULL 
-                    '' ''    If atleastOneSubRole Then
-                    '' ''        For i As Integer = 1 To 240
-                    '' ''            hrole.kapazitaet(i) = 0
-                    '' ''        Next
-                    '' ''    End If
-
-
-
-                    '' ''    Try
-                    '' ''        extSummenZeile = currentWS.Range("extern_sum").Row
-                    '' ''    Catch ex As Exception
-                    '' ''        extSummenZeile = 0
-                    '' ''    End Try
-
-                    '' ''    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-
-                    '' ''    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
-                    '' ''            spalte < 241 And spalte <= lastSpalte
-                    '' ''        index = getColumnOfDate(tmpDate)
-                    '' ''        tmpKapa = CDbl(CType(currentWS.Cells(summenZeile, spalte), Excel.Range).Value)
-
-
-                    '' ''        If extSummenZeile > 0 Then
-                    '' ''            extTmpKapa = CDbl(CType(currentWS.Cells(extSummenZeile, spalte), Excel.Range).Value)
-                    '' ''        Else
-                    '' ''            extTmpKapa = 0.0
-                    '' ''        End If
-
-                    '' ''        If index <= 240 And index > 0 Then
-
-                    '' ''            If atleastOneSubRole Then
-                    '' ''                ' alles ist Null , wird erst später aufgrund der Sub-Rollen berechnet 
-                    '' ''            Else
-                    '' ''                If tmpKapa >= 0 Then
-                    '' ''                    hrole.kapazitaet(index) = tmpKapa
-                    '' ''                End If
-                    '' ''            End If
-
-                    '' ''            If extTmpKapa >= 0 Then
-                    '' ''                hrole.externeKapazitaet(index) = extTmpKapa
-                    '' ''            End If
-
-
-                    '' ''        End If
-
-                    '' ''        spalte = spalte + 1
-                    '' ''        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                    '' ''    Loop
 
                 Catch ex2 As Exception
 
