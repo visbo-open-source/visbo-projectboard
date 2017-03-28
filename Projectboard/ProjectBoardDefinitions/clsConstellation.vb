@@ -628,8 +628,6 @@
 
         If Not _allItems.ContainsKey(key) Then
 
-            _allItems.Add(key, cItem)
-
             ' jetzt auch in sortlist aktualisieren 
             If _sortList.ContainsValue(cItem.projectName) And cItem.show Then
                 ' Remove den bisherigen Schlüssel 
@@ -645,7 +643,10 @@
                     sortKey = cItem.projectName
 
                 ElseIf _sortType = ptSortCriteria.customTF Then
-                    sortKey = cItem.zeile.ToString("00000000")
+
+                    Dim position As Integer = _sortList.Count + 2
+                    sortKey = position.ToString("00000000")
+
                 Else
                     ' jetzt das hproj bestimmen 
                     Dim hproj As clsProjekt = AlleProjekte.getProject(key)
@@ -667,6 +668,9 @@
 
                 
             End If
+
+            _allItems.Add(key, cItem)
+
         End If
 
     End Sub

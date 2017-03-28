@@ -644,12 +644,12 @@ Public Class clsProjekteAlle
     ''' <remarks></remarks>
     Public Sub Remove(ByVal key As String, Optional ByVal updateCurrentConstellation As Boolean = True)
 
-        If _allProjects.ContainsKey(key) Then
-            _allProjects.Remove(key)
-        End If
-
         If updateCurrentConstellation Then
             currentSessionConstellation.remove(key)
+        End If
+
+        If _allProjects.ContainsKey(key) Then
+            _allProjects.Remove(key)
         End If
 
     End Sub
@@ -679,13 +679,13 @@ Public Class clsProjekteAlle
             If i < _allProjects.Count Then
 
                 If _allProjects.ElementAt(i).Value.name = pName Then
-                    _allProjects.RemoveAt(i)
-
                     ' jetzt die currentConstellation aktualisieren 
                     Dim key As String = _allProjects.ElementAt(i).Key
                     If updateCurrentConstellation Then
                         currentSessionConstellation.remove(key)
                     End If
+
+                    _allProjects.RemoveAt(i)
                 Else
                     found = False
                 End If

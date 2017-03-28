@@ -694,7 +694,9 @@ Public Module PBBModules
 
         End If
 
-        'Call storeSessionConstellation("Last")
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
         enableOnUpdate = True
 
@@ -737,6 +739,9 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
     End Sub
     ''' <summary>
@@ -882,7 +887,10 @@ Public Module PBBModules
 
         Call awinDeSelect()
 
-        'Call storeSessionConstellation("Last")
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -929,7 +937,9 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
-
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
 
     End Sub
@@ -1109,6 +1119,9 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
     End Sub
 

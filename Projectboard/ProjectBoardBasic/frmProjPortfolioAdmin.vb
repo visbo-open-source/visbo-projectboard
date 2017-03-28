@@ -76,8 +76,9 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Or _
             aKtionskennung = PTTvActions.loadPV Then
 
-            currentBrowserConstellation.constellationName = calcLastEditorScenarioName() ' wird damit jetzt auf Last & dbusername gesetzt 
-            projectConstellations.update(currentBrowserConstellation)
+            ' 27.3.17 die letzte Editor Zusammenstellung nicht speichern; damit aucn im load nicht abfragen ... 
+            'currentBrowserConstellation.constellationName = calcLastEditorScenarioName() ' wird damit jetzt auf Last & dbusername gesetzt 
+            'projectConstellations.update(currentBrowserConstellation)
 
         End If
         
@@ -555,23 +556,22 @@ Public Class frmProjPortfolioAdmin
         ''End If
 
         ' neuer Ansatz
+        '' das hier nicht machen, weil man damit nicht mehr an alle kommt 
         If Not quickList Then
             If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
-                currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy(calcLastEditorScenarioName)
-                'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+                currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy()
 
-            ElseIf projectConstellations.Contains(calcLastEditorScenarioName) And AlleProjekte.Count > 0 Then
-                currentBrowserConstellation = projectConstellations.getConstellation(calcLastEditorScenarioName)
-                'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+
+                'ElseIf projectConstellations.Contains(calcLastEditorScenarioName) And AlleProjekte.Count > 0 Then
+                '    currentBrowserConstellation = projectConstellations.getConstellation(calcLastEditorScenarioName)
+
 
             ElseIf AlleProjekte.Count > 0 Then
-                'browserAlleProjekte = AlleProjekte.createCopy
-                'currentBrowserConstellation = New clsConstellation(browserAlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
-                'currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
-                currentBrowserConstellation = currentSessionConstellation.copy(calcLastEditorScenarioName)
+                currentBrowserConstellation = currentSessionConstellation.copy()
             End If
         End If
-        
+
+        'currentBrowserConstellation = currentSessionConstellation.copy(calcLastEditorScenarioName)
 
 
         ' Ende neuer Ansatz 
@@ -734,8 +734,8 @@ Public Class frmProjPortfolioAdmin
         ' das muss hier vermerkt werden ...
         If aKtionskennung = PTTvActions.chgInSession Or _
             aKtionskennung = PTTvActions.activateV Then
-            If currentConstellationName <> calcLastEditorScenarioName() Then
-                currentConstellationName = calcLastEditorScenarioName()
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
             End If
 
             Dim preText As String
@@ -2072,8 +2072,8 @@ Public Class frmProjPortfolioAdmin
             If aKtionskennung = PTTvActions.delFromSession Or _
                 aKtionskennung = PTTvActions.loadPV Or _
                 aKtionskennung = PTTvActions.deleteV Then
-                If currentConstellationName <> calcLastEditorScenarioName() Then
-                    currentConstellationName = calcLastEditorScenarioName()
+                If currentConstellationName <> calcLastSessionScenarioName() Then
+                    currentConstellationName = calcLastSessionScenarioName()
                 End If
 
                 'Call storeSessionConstellation("Last")
@@ -2414,8 +2414,8 @@ Public Class frmProjPortfolioAdmin
         If aKtionskennung = PTTvActions.chgInSession Or _
             aKtionskennung = PTTvActions.activateV Then
 
-            If currentConstellationName <> calcLastEditorScenarioName() Then
-                currentConstellationName = calcLastEditorScenarioName()
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
 
                 Dim preText As String = "Szenario "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -2741,8 +2741,8 @@ Public Class frmProjPortfolioAdmin
         If aKtionskennung = PTTvActions.chgInSession Or _
             aKtionskennung = PTTvActions.activateV Then
 
-            If currentConstellationName <> calcLastEditorScenarioName() Then
-                currentConstellationName = calcLastEditorScenarioName()
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
 
                 Dim preText As String = "Szenario "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -2782,8 +2782,8 @@ Public Class frmProjPortfolioAdmin
         ' wenn auf der Datenbank gefiltert werden soll - und das geht nur , in dem etwas geladen wird ... 
         Dim browserAlleProjekte As New clsProjekteAlle
 
-        If currentConstellationName <> calcLastEditorScenarioName() Then
-            currentConstellationName = calcLastEditorScenarioName()
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
 
             Dim preText As String = "Szenario "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -3200,8 +3200,8 @@ Public Class frmProjPortfolioAdmin
     ''' <remarks></remarks>
     Private Sub onlyActive_Click(sender As Object, e As EventArgs) Handles onlyActive.Click
 
-        If currentConstellationName <> calcLastEditorScenarioName() Then
-            currentConstellationName = calcLastEditorScenarioName()
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
 
             Dim preText As String = "Szenario "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -3221,8 +3221,8 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub onlyInactive_Click(sender As Object, e As EventArgs) Handles onlyInactive.Click
 
-        If currentConstellationName <> calcLastEditorScenarioName() Then
-            currentConstellationName = calcLastEditorScenarioName()
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
 
             Dim preText As String = "Szenario "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then

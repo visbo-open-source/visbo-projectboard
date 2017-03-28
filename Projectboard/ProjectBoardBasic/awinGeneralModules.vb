@@ -1317,7 +1317,9 @@ Public Module awinGeneralModules
         awinButtonEvents.Clear()
         projectboardShapes.clear()
 
-        currentConstellationName = calcLastSessionScenarioName()
+
+        ' es gibt ja nix mehr in der Session 
+        currentConstellationName = ""
 
         ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
@@ -10680,7 +10682,8 @@ Public Module awinGeneralModules
 
         For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
-            If kvp.Key = calcLastSessionScenarioName() Or kvp.Key = calcLastEditorScenarioName() Then
+            'If kvp.Key = calcLastSessionScenarioName() Or kvp.Key = calcLastEditorScenarioName() Then
+            If kvp.Key = calcLastSessionScenarioName() Then
                 ' nichts tun , die zählen nicht 
             Else
                 Dim pvName As String = calcProjektKey(pname, variantName)

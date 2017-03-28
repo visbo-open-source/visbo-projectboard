@@ -762,7 +762,7 @@ Public Module awinDiagrams
                                 With .Format.Line
                                     .DashStyle = MsoLineDashStyle.msoLineSysDot
                                     .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                                    .Weight = 3
+                                    .Weight = 2
                                 End With
                                 nr_pts = CType(.Points, Excel.Points).Count
                             End With
@@ -792,9 +792,9 @@ Public Module awinDiagrams
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlLine
                             With .Format.Line
-                                .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
+                                .DashStyle = MsoLineDashStyle.msoLineSolid
                                 .ForeColor.RGB = XlRgbColor.rgbFireBrick
-                                .Weight = 3
+                                .Weight = 1.5
                             End With
 
                             nr_pts = CType(.Points, Excel.Points).Count
@@ -1029,7 +1029,7 @@ Public Module awinDiagrams
         Dim startdate As Date
         Dim diff As Integer
         'Dim mindone As Boolean, maxdone As Boolean
-        Dim width As Double
+        'Dim width As Double
         'Dim left As Double
         Dim myCollection As Collection
         Dim isCockpitChart As Boolean
@@ -1056,7 +1056,7 @@ Public Module awinDiagrams
 
         von = showRangeLeft
         bis = showRangeRight
-        width = chtobj.Width
+        'width = chtobj.Width
 
         Dim currentScale As Double
         Try
@@ -1086,7 +1086,7 @@ Public Module awinDiagrams
         Else
             isCockpitChart = False
 
-            width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+            'width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
 
         End If
 
@@ -1624,30 +1624,32 @@ Public Module awinDiagrams
 
             ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
             ' ansonsten werden nur die internen Kapazitäten angezeigt 
+            ' hier werden die externen mitgezeichnet ....
             If prcTyp = DiagrammTypen(1) Then
                 If kdatenreihe.Sum < kdatenreihePlus.Sum Then
-                    ' es gibt geplante externe Ressourcen ... 
+                    'es gibt geplante externe Ressourcen ... 
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
-                        '.name = "Kapazität incl. Externe"
+                        .name = "Kapazität incl. Externe"
                         .name = repMessages.getmsg(118)
 
                         .Values = kdatenreihePlus
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
 
+                        'tk 28.3.17 soll bleiben wie es urspünglich war 
                         With .Format.Line
                             .DashStyle = MsoLineDashStyle.msoLineSysDot
                             .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                            .Weight = 3
-
+                            .Weight = 2
                         End With
+
                         nr_pts = CType(.Points, Excel.Points).Count
                     End With
                 End If
             End If
 
-
+            ' hier werde nur die internen gezeichnet ...
             If prcTyp = DiagrammTypen(1) Or _
                    (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
                    (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
@@ -1666,10 +1668,12 @@ Public Module awinDiagrams
                     .Values = kdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
+
+                    ' tk: da es neu aufgebaut wird, muss es neu gezeichnet werden ..
                     With .Format.Line
-                        .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
+                        .DashStyle = MsoLineDashStyle.msoLineSolid
                         .ForeColor.RGB = XlRgbColor.rgbFireBrick
-                        .Weight = 3
+                        .Weight = 1.5
                     End With
 
                     nr_pts = CType(.Points, Excel.Points).Count
@@ -1743,11 +1747,12 @@ Public Module awinDiagrams
 
         'End With ' with worksheet ...
 
-        With chtobj
-            If Not isCockpitChart Then
-                .Width = width
-            End If
-        End With
+        ' tk, darf nicht verändert werden, weil sonst ein defniertes Cockpit völlig aus dem Rahmen läuft  
+        'With chtobj
+        '    If Not isCockpitChart Then
+        '        .Width = width
+        '    End If
+        'End With
 
         ' Skalierung nur ändern, wenn erforderlich, weil der maxwert höher ist als die bisherige Skalierung ... 
         hmxWert = Max(seriesSumDatenreihe.Max, hmxWert)

@@ -1112,111 +1112,6 @@ Imports System.Windows
 
         Call PBBVarianteNeu(control)
 
-        ' ''Dim singleShp As Excel.Shape
-        ' ''Dim hproj As clsProjekt
-        ' ''Dim awinSelection As Excel.ShapeRange
-        ' ''Dim neueVariante As New frmCreateNewVariant
-        ' ''Dim resultat As DialogResult
-        ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        ' ''Dim newproj As clsProjekt
-        ' ''Dim key As String
-        ' ''Dim phaseList As New Collection
-        ' ''Dim milestoneList As New Collection
-
-
-        ' ''Call projektTafelInit()
-
-        ' ''enableOnUpdate = False
-
-        ' ''Try
-        ' ''    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        ' ''Catch ex As Exception
-        ' ''    awinSelection = Nothing
-        ' ''End Try
-
-        ' ''If Not awinSelection Is Nothing Then
-
-        ' ''    If awinSelection.Count = 1 Then
-        ' ''        ' jetzt die Aktion durchführen ...
-        ' ''        singleShp = awinSelection.Item(1)
-
-        ' ''        Try
-        ' ''            hproj = ShowProjekte.getProject(singleShp.Name)
-        ' ''            phaseList = projectboardShapes.getPhaseList(hproj.name)
-        ' ''            milestoneList = projectboardShapes.getMilestoneList(hproj.name)
-        ' ''        Catch ex As Exception
-        ' ''            Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-        ' ''            enableOnUpdate = True
-        ' ''            Exit Sub
-        ' ''        End Try
-
-        ' ''        ' enableevents wird hier nicht false gesetzt; wenn dann wird das im Formular gemacht 
-        ' ''        ' screenupdating wird hier ebenso nicht auf false gesetzt 
-
-        ' ''        ' jetzt wird hier das Formular aufgerufen, wo eine neue Variante eingegeben werden kann 
-        ' ''        With neueVariante
-        ' ''            .projektName.Text = hproj.name
-        ' ''            .variantenName.Text = hproj.variantName
-        ' ''            .newVariant.Text = ""
-        ' ''        End With
-
-        ' ''        resultat = neueVariante.ShowDialog
-        ' ''        If resultat = DialogResult.OK Then
-
-        ' ''            newproj = New clsProjekt
-        ' ''            hproj.copyTo(newproj)
-
-        ' ''            With newproj
-        ' ''                .name = hproj.name
-        ' ''                .variantName = neueVariante.newVariant.Text
-        ' ''                .ampelErlaeuterung = hproj.ampelErlaeuterung
-        ' ''                .ampelStatus = hproj.ampelStatus
-        ' ''                .timeStamp = Date.Now
-        ' ''                .shpUID = hproj.shpUID
-        ' ''                .tfZeile = hproj.tfZeile
-        ' ''                .Status = ProjektStatus(0)
-        ' ''                If Not IsNothing(hproj.budgetWerte) Then
-        ' ''                    .budgetWerte = hproj.budgetWerte
-        ' ''                End If
-
-        ' ''            End With
-
-        ' ''            ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
-        ' ''            ShowProjekte.Remove(hproj.name)
-
-        ' ''            ' die neue Variante wird aufgenommen
-        ' ''            key = calcProjektKey(newproj)
-        ' ''            AlleProjekte.Add(key, newproj)
-        ' ''            ShowProjekte.Add(newproj)
-
-        ' ''            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-        ' ''            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-        ' ''            Try
-
-        ' ''                Dim tmpCollection As New Collection
-        ' ''                Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
-
-        ' ''            Catch ex As Exception
-
-        ' ''                Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
-
-        ' ''            End Try
-
-
-        ' ''        End If
-
-        ' ''    Else
-        ' ''        Call MsgBox("bitte nur ein Projekt selektieren")
-
-        ' ''    End If
-        ' ''Else
-        ' ''    Call MsgBox("vorher Projekt selektieren ...")
-        ' ''End If
-
-        ' ''enableOnUpdate = True
-
-
-
     End Sub
 
     ''' <summary>
@@ -1399,39 +1294,6 @@ Imports System.Windows
 
         Call PBBVarianteAktiv(control)
 
-        ' ''Dim deletedProj As Integer = 0
-        '' ''Dim returnValue As DialogResult
-
-        '' ''Dim activateVariant As New frmDeleteProjects
-        ' ''Dim activateVariant As New frmProjPortfolioAdmin
-
-        ' ''Try
-
-        ' ''    With activateVariant
-        ' ''        .Text = "Variante aktivieren"
-        ' ''        .aKtionskennung = PTTvActions.activateV
-        ' ''        .OKButton.Visible = False
-        ' ''        '.OKButton.Text = "Löschen"
-        ' ''        '' '' ''.portfolioName.Visible = False
-        ' ''        '' '' ''.Label1.Visible = False
-        ' ''    End With
-
-        ' ''    'returnValue = activateVariant.ShowDialog
-        ' ''    activateVariant.Show()
-
-        ' ''    'If returnValue = DialogResult.OK Then
-        ' ''    '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
-
-        ' ''    'Else
-        ' ''    '    ' returnValue = DialogResult.Cancel
-
-        ' ''    'End If
-
-        ' ''Catch ex As Exception
-
-        ' ''    Call MsgBox(ex.Message)
-        ' ''End Try
-
 
     End Sub
 
@@ -1536,6 +1398,9 @@ Imports System.Windows
 
             Next i
 
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
+            End If
 
         End If
 
@@ -1551,40 +1416,7 @@ Imports System.Windows
 
         Call PBBVarianteLoeschen(control)
 
-        ' ''Dim deletedProj As Integer = 0
-        '' ''Dim returnValue As DialogResult
-
-        '' ''Dim activateVariant As New frmDeleteProjects
-        ' ''Dim deleteVariant As New frmProjPortfolioAdmin
-
-        ' ''Try
-
-        ' ''    With deleteVariant
-        ' ''        .Text = "Variante löschen"
-        ' ''        .aKtionskennung = PTTvActions.deleteV
-        ' ''        .OKButton.Visible = True
-        ' ''        .OKButton.Text = "Löschen"
-        ' ''        '' '' ''.portfolioName.Visible = False
-        ' ''        '' '' ''.Label1.Visible = False
-        ' ''    End With
-
-        ' ''    'returnValue = activateVariant.ShowDialog
-        ' ''    deleteVariant.Show()
-
-        ' ''    'If returnValue = DialogResult.OK Then
-        ' ''    '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
-
-        ' ''    'Else
-        ' ''    '    ' returnValue = DialogResult.Cancel
-
-        ' ''    'End If
-
-        ' ''Catch ex As Exception
-
-        ' ''    Call MsgBox(ex.Message)
-        ' ''End Try
-
-
+       
     End Sub
 
     ''' <summary>
@@ -5667,39 +5499,6 @@ Imports System.Windows
     Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
 
         Call PBBDatenbankLoadProjekte(Control)
-
-        ' ''Dim deletedProj As Integer = 0
-        ' ''Dim returnValue As DialogResult
-
-        '' ''Dim deleteProjects As New frmDeleteProjects
-        ' ''Dim loadProjectsForm As New frmProjPortfolioAdmin
-
-        ' ''Try
-
-        ' ''    With loadProjectsForm
-        ' ''        .Text = "Projekte und Varianten in die Session laden "
-        ' ''        .aKtionskennung = PTTvActions.loadPV
-        ' ''        .OKButton.Text = "Laden"
-        ' ''        '' '' ''.portfolioName.Visible = False
-        ' ''        '' '' ''.Label1.Visible = False
-        ' ''    End With
-
-        ' ''    returnValue = loadProjectsForm.ShowDialog
-
-        ' ''    If returnValue = DialogResult.OK Then
-        ' ''        'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
-
-        ' ''    Else
-        ' ''        ' returnValue = DialogResult.Cancel
-
-        ' ''    End If
-
-        ' ''Catch ex As Exception
-
-        ' ''    Call MsgBox(ex.Message)
-        ' ''End Try
-
-
 
 
     End Sub

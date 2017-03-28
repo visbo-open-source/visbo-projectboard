@@ -11459,8 +11459,7 @@ Public Module Projekte
 
         ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
         currentConstellationName = constellationName
-
-
+        
     End Sub
 
 
@@ -19412,15 +19411,16 @@ Public Module Projekte
         calcLastSessionScenarioName = tmpResult
     End Function
 
-    ''' <summary>
-    ''' gibt den Standard last Editor Szenario Namen zurück 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function calcLastEditorScenarioName() As String
-        Dim tmpResult As String = "_last Scenario-Editor (by " & dbUsername & ")"
-        calcLastEditorScenarioName = tmpResult
-    End Function
+    ' tk geändert: es gibt nur noch die lastSession und eine gespeicherte Konstellation
+    ' ''' <summary>
+    ' ''' gibt den Standard last Editor Szenario Namen zurück 
+    ' ''' </summary>
+    ' ''' <returns></returns>
+    ' ''' <remarks></remarks>
+    'Public Function calcLastEditorScenarioName() As String
+    '    Dim tmpResult As String = "_last Scenario-Editor (by " & dbUsername & ")"
+    '    calcLastEditorScenarioName = tmpResult
+    'End Function
 
     ''' <summary>
     ''' errechnet den Namen, den das Text Shape eines Projektes hat; Input ist der Projekt-Name
