@@ -2213,16 +2213,20 @@ Public Module awinGeneralModules
 
         enableOnUpdate = False
 
-        kapaFileName = awinPath & projektRessOrdner & "\" & "Urlaubsplanung*.xlsx"
+        kapaFileName = "Urlaubsplaner*.xlsx"
 
+        ' Dateien mit WildCards lesen
         listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
-                      FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
+                     FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+
+        ''listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
+        ''              FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
 
         If listOfFiles.Count = 1 Then
             Call readUrlOfRole(listOfFiles.Item(0))
         Else
-            Call MsgBox("Es gibt mehrere Urlaubsplanungs-Dateien" & vbLf _
-                         & "Es wurde daher keine berücksichtigt")
+            Call MsgBox("Es gibt keine bzw. mehrere Dateien zur Urlaubsplanung" & vbLf _
+                         & "Es wurde daher jetzt keine berücksichtigt")
         End If
 
     End Sub
@@ -11439,10 +11443,12 @@ Public Module awinGeneralModules
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim msgtxt As String = ""
+        Dim fehler As Boolean = False
 
         Dim spalte As Integer = 2
         Dim firstUrlspalte As Integer = 5
         Dim noColor As Integer = -4142
+        Dim whiteColor As Integer = 2
         Dim currentWS As Excel.Worksheet
         Dim index As Integer
         Dim tmpDate As Date
@@ -11474,7 +11480,7 @@ Public Module awinGeneralModules
 
             Try
                 appInstance.Workbooks.Open(kapaFileName)
-                ok = True
+
 
                 Try
                     For index = 1 To appInstance.Worksheets.Count
@@ -11488,6 +11494,7 @@ Public Module awinGeneralModules
                         Dim hstr() As String = Split(currentWS.Name, "Halbjahr", , )
                         If hstr.Length > 1 Then
 
+                            ok = True
                             ' Auslesen der Jahreszahl, falls vorhanden
                             If Not IsNothing(CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
                                 year = CType(currentWS.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value
@@ -11505,7 +11512,7 @@ Public Module awinGeneralModules
                             While ok And i <= lastSpalte
 
                                 If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
-                                    ok = (anzDays = anzMonthDays)
+                                    ok = (anzDays = anzMonthDays) Or (anzDays = 0)
                                     vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
                                     anzDays = 1
                                 Else
@@ -11526,8 +11533,28 @@ Public Module awinGeneralModules
                                 End If
 
                                 i = i + 1
-                                ok = True
                             End While
+
+
+                            If Not ok Then
+                                msgtxt = "Fehler beim Lesen der Urlaubsplanung: Bitte prüfen Sie die Korrektheit des Kalenders ..."
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Error reading planning holidays: Please check die calendar in this file ..."
+                                End If
+                                Call MsgBox(msgtxt)
+                                If formerEE Then
+                                    appInstance.EnableEvents = True
+                                End If
+
+                                If formerSU Then
+                                    appInstance.ScreenUpdating = True
+                                End If
+
+                                enableOnUpdate = True
+                                Exit Sub
+                            End If
+
+
 
                             For iZ = 5 To lastZeile
 
@@ -11537,31 +11564,67 @@ Public Module awinGeneralModules
                                     If Not IsNothing(hrole) Then
 
                                         Dim iSp As Integer = firstUrlspalte
-                                        Dim anzArbTage = 0
+                                        Dim anzArbTage As Double = 0
+                                        Dim anzArbStd As Double = 0
 
                                         For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
 
                                             Dim colOfDate As Integer = kvp.Key
                                             anzDays = kvp.Value
-                                            For sp = iSp + 0 To iSp + anzDays
+                                            For sp = iSp + 0 To iSp + anzDays - 1
 
                                                 If iSp <= lastSpalte Then
-                                                    If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = noColor Then
-                                                        anzArbTage = anzArbTage + 1
+                                                    Dim hint As Integer = CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex)
+
+                                                    If CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex) = noColor _
+                                                        Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
+
+                                                        If Not IsNothing(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+
+                                                            If CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 And _
+                                                                   CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) <= 24 Then
+                                                                anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                            Else
+
+                                                                msgtxt = "Fehler beim Lesen der zu leistenden Arbeitsstunden " & hrole.name & " ..."
+                                                                If awinSettings.englishLanguage Then
+                                                                    msgtxt = "Error reading the  working hours of " & hrole.name & " ..."
+                                                                End If
+                                                                'Call MsgBox(msgtxt)
+                                                                fehler = True
+                                                                Throw New ArgumentException(msgtxt)
+                                                            End If
+
+
+                                                        Else
+                                                            ' Dim colorInddown As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalDown).ColorIndex
+                                                            Dim colorIndup As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex
+
+                                                            ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
+                                                            If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex = noColor Then
+                                                                anzArbStd = anzArbStd + 8
+                                                            Else
+                                                                ' freier Tag für Teilzeitbeschäftigte
+                                                            End If
+
+                                                        End If
                                                     End If
-                                                    sp = sp + 1
                                                 Else
                                                     msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
                                                     If awinSettings.englishLanguage Then
                                                         msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
                                                     End If
-                                                    Call MsgBox(msgtxt)
+                                                    fehler = True
+                                                    Throw New ArgumentException(msgtxt)
                                                 End If
 
                                             Next
-                                            hrole.kapazitaet(colOfDate) = CType(anzArbTage, Double)
-                                            iSp = iSp + anzDays + 1
+
+                                            anzArbTage = anzArbStd / 8
+                                            hrole.kapazitaet(colOfDate) = anzArbTage
+                                            iSp = iSp + anzDays
                                             anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
+                                            anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
 
                                         Next
 
@@ -11571,6 +11634,7 @@ Public Module awinGeneralModules
                                             msgtxt = "Role " & rolename & " not defined ..."
                                         End If
                                         Call MsgBox(msgtxt)
+                                        fehler = True
                                     End If
                                 Else
                                     msgtxt = "kein Rollenname angegeben ..."
@@ -11578,6 +11642,7 @@ Public Module awinGeneralModules
                                         msgtxt = "Name of role not given ..."
                                     End If
                                     Call MsgBox(msgtxt)
+                                    fehler = True
                                 End If
 
                             Next iZ
@@ -11587,14 +11652,24 @@ Public Module awinGeneralModules
                             If awinSettings.englishLanguage Then
                                 msgtxt = "Worksheet " & hstr(0) & "doesn't belongs to planning holidays ..."
                             End If
-                            Call MsgBox(msgtxt)
+                            'Call MsgBox(msgtxt)
                         End If
 
                     Next index
 
 
                 Catch ex2 As Exception
+                    If fehler Then
+                        Call MsgBox(msgtxt)
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        RoleDefinitions = request.retrieveRolesFromDB(DateTime.Now)
 
+                        msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Therefore read the capacity of every Role from the DB  ..."
+                        End If
+                        Call MsgBox(msgtxt)
+                    End If
                 End Try
 
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
