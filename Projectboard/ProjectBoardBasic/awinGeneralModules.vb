@@ -17347,11 +17347,18 @@ Public Module awinGeneralModules
 
     Public Sub XMLExportReportProfil(ByVal profil As clsReport)
 
-
-
-        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
+        Dim dirname As String = awinPath & ReportProfileOrdner
+        Dim xmlfilename As String = dirname & "\" & profil.name & ".xml"
 
         Try
+
+            If Not My.Computer.FileSystem.DirectoryExists(dirname) Then
+                Try
+                    My.Computer.FileSystem.CreateDirectory(dirname)
+                Catch ex As Exception
+
+                End Try
+            End If
 
             Dim serializer = New DataContractSerializer(GetType(clsReport))
 
@@ -17380,11 +17387,18 @@ Public Module awinGeneralModules
 
     Public Sub XMLExportReportProfil(ByVal profil As clsReportAll)
 
-
-
-        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
+        Dim dirname As String = awinPath & ReportProfileOrdner
+        Dim xmlfilename As String = dirname & "\" & profil.name & ".xml"
 
         Try
+
+            If Not My.Computer.FileSystem.DirectoryExists(dirname) Then
+                Try
+                    My.Computer.FileSystem.CreateDirectory(dirname)
+                Catch ex As Exception
+
+                End Try
+            End If
 
             Dim serializer = New DataContractSerializer(GetType(clsReportAll))
 
