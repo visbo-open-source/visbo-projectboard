@@ -47,7 +47,9 @@ Public Class clsProjekteAlle
     ''' <param name="project"></param>
     ''' <param name="updateCurrentConstellation">soll die currentConstellation aktualisiert werden; nur bei AlleProjekte</param>
     ''' <remarks></remarks>
-    Public Sub Add(ByVal project As clsProjekt, Optional ByVal updateCurrentConstellation As Boolean = True)
+    Public Sub Add(ByVal project As clsProjekt, _
+                   Optional ByVal updateCurrentConstellation As Boolean = True, _
+                   Optional ByVal sortkey As Integer = -1)
 
         Dim keyReal As String = calcProjektKey(project.name, project.variantName)
         ' existiert es bereits ? 
@@ -66,7 +68,7 @@ Public Class clsProjekteAlle
                 .projectName = project.name
                 .variantName = project.variantName
             End With
-            currentSessionConstellation.add(cItem)
+            currentSessionConstellation.add(cItem, sortkey)
         End If
 
     End Sub

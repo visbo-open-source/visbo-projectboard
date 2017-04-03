@@ -48,6 +48,8 @@ Public Class Tabelle1
             appInstance.ScreenUpdating = True
         End If
 
+        Call awinNeuZeichnenDiagramme(2)
+
     End Sub
 
     Private Sub Tabelle1_Startup() Handles Me.Startup

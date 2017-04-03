@@ -190,53 +190,121 @@ Public Module PBBModules
 
             ElseIf controlID = "PTXG1B4" Or controlID = "PT0G1B8" Then
                 ' Namen auswählen, Visualisieren
-                awinSettings.useHierarchy = False
-                With nameFormular
-                    
-                    .menuOption = PTmenue.visualisieren
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                Dim ok As Boolean = True
+                If controlID = "PTXG1B4" Then
+                    ' Multiprojekt Sicht erfordert Zeitraum 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                        ' alles ok 
+                    Else
+                        ok = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define timeframe first ...")
+                        Else
+                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        End If
+                    End If
+                End If
 
-                End With
+                If ok Then
+                    awinSettings.useHierarchy = False
+                    With nameFormular
+
+                        .menuOption = PTmenue.visualisieren
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+
+                    End With
+                End If
+                
 
             ElseIf controlID = "PTXG1B5" Or controlID = "PT0G1B9" Then
                 ' Hierarchie auswählen, visualisieren
-                awinSettings.useHierarchy = True
+                Dim ok As Boolean = True
+                If controlID = "PTXG1B5" Then
+                    ' Multiprojekt Sicht erfordert Zeitraum 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                        ' alles ok 
+                    Else
+                        ok = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define timeframe first ...")
+                        Else
+                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        End If
+                    End If
+                End If
 
-                With hryFormular
-                    
-                    .menuOption = PTmenue.visualisieren
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                If ok Then
+                    awinSettings.useHierarchy = True
 
-                End With
+                    With hryFormular
+
+                        .menuOption = PTmenue.visualisieren
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+
+                    End With
+                End If
+                
             ElseIf controlID = "PTXG1B6" Or controlID = "PTMEC1" Then
                 ' Namen auswählen, Leistbarkeit
+                Dim ok As Boolean = True
+                If controlID = "PTXG1B6" Then
+                    ' Multiprojekt Sicht erfordert Zeitraum 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                        ' alles ok 
+                    Else
+                        ok = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define timeframe first ...")
+                        Else
+                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        End If
+                    End If
+                End If
 
-                awinSettings.useHierarchy = False
-                With nameFormular
+                If ok Then
+                    awinSettings.useHierarchy = False
+                    With nameFormular
 
-                    .ribbonButtonID = controlID
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                        .ribbonButtonID = controlID
+                        .menuOption = PTmenue.leistbarkeitsAnalyse
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
 
-                End With
+                    End With
+                End If
+                
 
             ElseIf controlID = "PTXG1B7" Then
-                ' Hierarchie auswählen, Leistbarkeit
-                awinSettings.useHierarchy = True
-                With hryFormular
-                    
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
 
-                End With
+
+
+                ' Multiprojekt Sicht erfordert Zeitraum 
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                    ' alles ok 
+                    ' Hierarchie auswählen, Leistbarkeit
+                    awinSettings.useHierarchy = True
+                    With hryFormular
+
+                        .menuOption = PTmenue.leistbarkeitsAnalyse
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+
+                    End With
+
+                Else
+
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please define timeframe first ...")
+                    Else
+                        Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                    End If
+                End If
 
 
             ElseIf controlID = "PT1G1M1B1" Then
@@ -260,7 +328,7 @@ Public Module PBBModules
 
                     With nameFormular
 
-                        
+
                         .menuOption = PTmenue.einzelprojektReport
                         '.Show()
                         ' bei Reports mit der Background Worker Behandlung 
@@ -294,7 +362,7 @@ Public Module PBBModules
 
                     awinSettings.useHierarchy = True
                     With hryFormular
-                        
+
                         .menuOption = PTmenue.einzelprojektReport
                         ' bei Verwendung Background Worker muss Modal erfolgen 
                         '.Show()
@@ -374,7 +442,7 @@ Public Module PBBModules
 
                 With nameFormular
 
-                    
+
                     .menuOption = PTmenue.excelExport
                     returnValue = .ShowDialog
 
@@ -417,7 +485,7 @@ Public Module PBBModules
 
                 With nameFormular
 
-                    
+
                     .menuOption = PTmenue.vorlageErstellen
                     returnValue = .ShowDialog
 

@@ -571,16 +571,18 @@ Public Class frmProjPortfolioAdmin
             End If
         End If
 
-        'currentBrowserConstellation = currentSessionConstellation.copy(calcLastEditorScenarioName)
+        
 
 
         ' Ende neuer Ansatz 
-
+        ' Testen ..
+        Dim formervD As Boolean = awinSettings.visboDebug
+        awinSettings.visboDebug = True
         ' jetzt die Korrektheitsprüfung ...
-        If awinSettings.visboDebug Then
+        If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
             currentBrowserConstellation.checkAndCorrectYourself()
         End If
-
+        awinSettings.visboDebug = formervD
 
         ' jetzt die vorkommenden Timestamps auslesen 
         ' aber nicht bei allen Aktionskennungen 
@@ -1070,11 +1072,11 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
+                    ' jetzt das Browser Szenario aktualisieren 
+                    currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, node.Checked)
+
                     ' jetzt die Variante aktivieren 
                     Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
-
-                    ' jetzt das Browser Szenario aktualisieren 
-                    currentBrowserConstellation.updateShowAttributes(pName)
 
                     ' jetzt die Charts , Einzel- wie Multiprojekt-Charts aktualisieren 
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
@@ -1122,6 +1124,9 @@ Public Class frmProjPortfolioAdmin
                             selectedVariantName = getVariantNameOfTreeNode(childNode.Text)
                         End If
 
+                        ' jetzt das Browser Szenario aktualisieren 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, node.Checked)
+
                         Call putProjectInShow(pName:=pName, _
                                           vName:=selectedVariantName, considerDependencies:=considerDependencies, _
                                           upDateDiagrams:=False, _
@@ -1142,6 +1147,7 @@ Public Class frmProjPortfolioAdmin
                         End If
                     Else
                         ' wurde abgewählt 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, Nothing, False)
 
                         Call putProjectInNoShow(pName, considerDependencies, False)
 
@@ -1158,9 +1164,6 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-
-                    ' jetzt das Browser Szenario aktualisieren 
-                    currentBrowserConstellation.updateShowAttributes()
 
                     ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
@@ -1191,6 +1194,7 @@ Public Class frmProjPortfolioAdmin
                         ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
                         selectedVariantName = getVariantNameOfTreeNode(node.Text)
 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, True)
 
 
                     Else
@@ -1205,6 +1209,8 @@ Public Class frmProjPortfolioAdmin
                             ' darf eigentlich gar nicht vorkommen 
                             selectedVariantName = ""
                         End If
+
+                        Call currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, False)
 
                         ' '' die Standard Variante auf Checked setzen 
                         ''For i = 0 To projektNode.Nodes.Count - 1
@@ -1223,9 +1229,6 @@ Public Class frmProjPortfolioAdmin
                     If ShowProjekte.contains(pName) And projektNode.Checked Then
 
                         Call replaceProjectVariant(pName, selectedVariantName, False, True, 0)
-
-                        ' jetzt das Browser Szenario aktualsieren 
-                        currentBrowserConstellation.updateShowAttributes(pName)
 
                         Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                         Call aktualisiereCharts(hproj, True)
@@ -2105,9 +2108,13 @@ Public Class frmProjPortfolioAdmin
                     currentBrowserConstellation.copy(currentConstellationName)
 
                 ' Korrektheitsprüfung
+                ' testen 
+                Dim formervD As Boolean = awinSettings.visboDebug
+                awinSettings.visboDebug = True
                 If awinSettings.visboDebug Then
                     toStoreConstellation.checkAndCorrectYourself()
                 End If
+                awinSettings.visboDebug = formervD
 
                 projectConstellations.update(toStoreConstellation)
 
@@ -2122,10 +2129,10 @@ Public Class frmProjPortfolioAdmin
 
                         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                             txtMsg1 = "Speichern Szenario " & toStoreConstellation.constellationName
-                            txtMsg2 = "folgende Probleme sind aufgetreten:"
+                            txtMsg2 = "folgende Informationen:"
                         Else
                             txtMsg1 = "Store Scenario " & toStoreConstellation.constellationName
-                            txtMsg2 = "following problems occurred:"
+                            txtMsg2 = "following messages:"
                         End If
                         Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
 
@@ -2236,6 +2243,10 @@ Public Class frmProjPortfolioAdmin
                             Next
                         End If
 
+                        ' jetzt muss das Show-Attribut entsprechend gesetzt werden 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, variantName, True)
+
+
                         ' jetzt muss das Projekt in Showprojekte eingetragen werden bzw. das alte zuvor gelöscht werden 
                         If ShowProjekte.contains(pName) Then
                             ShowProjekte.Remove(pName)
@@ -2245,7 +2256,7 @@ Public Class frmProjPortfolioAdmin
                         Dim hproj As clsProjekt = AlleProjekte.getProject(key)
 
                         ShowProjekte.Add(hproj)
-
+                        
                     Else
                         ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
                     End If
@@ -2258,9 +2269,6 @@ Public Class frmProjPortfolioAdmin
                 ' jetzt muss die Plan-Tafel neu gezeichnet werden 
                 'Call awinZeichnePlanTafelNeu(True)
                 Call awinZeichnePlanTafel(True)
-
-                ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
-                currentBrowserConstellation.updateShowAttributes()
 
                 ' jetzt müssen die Diagramme neu gezeichnet werden 
                 Call awinNeuZeichnenDiagramme(2)
@@ -2600,6 +2608,9 @@ Public Class frmProjPortfolioAdmin
 
                             projectNode.Checked = False
 
+                            ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
+                            currentBrowserConstellation.updateShowAttributes(pName, Nothing, False)
+
                         Else
                             ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
                         End If
@@ -2612,9 +2623,7 @@ Public Class frmProjPortfolioAdmin
                     ' jetzt muss Showprojekte gelöscht werden 
                     ShowProjekte.Clear()
 
-                    ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
-                    'currentBrowserConstellation.updateShowAttributes()
-
+                    
                     ' jetzt müssen die Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
 

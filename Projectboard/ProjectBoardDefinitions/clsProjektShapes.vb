@@ -883,6 +883,13 @@ Public Class clsProjektShapes
                                             startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
                                             anzahlZeilen:=anzahlZeilen) Then
 
+                            ' das verändert die Constellation ..
+                            currentConstellationName = calcLastSessionScenarioName()
+                            If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                                currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                            End If
+
+
                             If curCoord(0) < oldCoord(0) Then
                                 ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
                                 ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
@@ -963,6 +970,13 @@ Public Class clsProjektShapes
                     tmpDauerIndays = hproj.dauerInDays
                     ' tk, Änderung 19.1.17 nicht mehr notwendig ..
                     'Call awinCreateBudgetWerte(hproj)
+
+
+                    ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
+                    currentConstellationName = calcLastSessionScenarioName()
+                    If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                    End If
 
 
                 ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
@@ -1225,6 +1239,13 @@ Public Class clsProjektShapes
                     If isProjectType(shapeType) Then
                         newZeile = calcYCoordToZeile(curCoord(0))
 
+                        ' das verändert die Constellation ..
+                        currentConstellationName = calcLastSessionScenarioName()
+                        If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                        End If
+
+
                         ' Platz schaffen auf der Projekt-Tafel
                         Dim tmpCollection As New Collection
                         Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
@@ -1279,12 +1300,20 @@ Public Class clsProjektShapes
                 ' sie noch in der Select Collection sind und danach noch behandelt werden  
                 Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=pName, tryzeile:=newZeile, _
                                                 drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
+
                 notRegroupedAgain = False
 
                 ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
                 ' Projekt-Shape zugewiesen werden 
                 tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                 shpElement = tmpRange.Item(1)
+
+                ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
+                currentConstellationName = calcLastSessionScenarioName()
+                If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                End If
+
 
             End If
 

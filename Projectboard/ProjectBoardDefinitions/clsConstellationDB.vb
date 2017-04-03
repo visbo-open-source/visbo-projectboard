@@ -44,6 +44,11 @@
 
     End Sub
 
+    ''' <summary>
+    ''' kopiert eine Konstellation aus der Datenbank in eine Hauptspeicher-Konstellation
+    ''' </summary>
+    ''' <param name="c"></param>
+    ''' <remarks></remarks>
     Sub copyto(ByRef c As clsConstellation)
         Dim key As String
 
@@ -52,7 +57,8 @@
         For Each item In Me.allItems
             Dim newItem As New clsConstellationItem
             item.copyto(newItem)
-            key = item.projectName & "#" & item.variantName
+            key = calcProjektKey(newItem.projectName, newItem.variantName)
+            'key = item.projectName & "#" & item.variantName
             If Not c.Liste.ContainsKey(key) Then
                 c.Liste.Add(key, newItem)
             Else
@@ -65,13 +71,10 @@
         If Not IsNothing(Me.sortList) And Not IsNothing(Me.sortType) Then
             If Me.sortList.Count = 0 And Me.allItems.Count > 0 Then
                 ' mit diesem Befehlt wird, wenn die SortListe Null ist, dieselbe auch gleich aufgebaut 
-                ' checken auf Valid ...
-                
-                If Me.sortType >= 0 Then
-                    c.sortCriteria = Me.sortType
-                Else
-                    c.sortCriteria = ptSortCriteria.alphabet
-                End If
+
+                ' in diesem Fall handelt es sich um eine "alte" Konstellation, die noch keine Sortliste enthält
+                ' deshalb soll hier die Sortier-Reihenfolge gemäß tfzeile errechnet werden  
+                Call c.buildSortlist(ptSortCriteria.customTF)
 
             Else
                 ' hier wird die existierende Liste übernommen 

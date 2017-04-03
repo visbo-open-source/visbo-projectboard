@@ -5255,7 +5255,7 @@ Public Module awinGeneralModules
                                                 ' jetzt in die Liste der 
                                                 If Not listOfpNames.ContainsValue(hproj.name) Then
                                                     hproj.tfZeile = tfZeile
-                                                    Dim tmpkey As String = tfZeile.ToString("00000000")
+                                                    Dim tmpKey As String = calcSortKeyCustomTF(tfZeile)
                                                     listOfpNames.Add(tmpkey, hproj.name)
                                                     tfZeile = tfZeile + 1
                                                 Else
@@ -9790,7 +9790,7 @@ Public Module awinGeneralModules
         End If
 
         ' jetzt muss das Sort-Kriterium übernommen werden 
-        If activeConstellation.sortCriteria >= 0 Then
+        If boardwasEmpty And activeConstellation.sortCriteria >= 0 Then
             currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
         End If
 
@@ -9867,7 +9867,16 @@ Public Module awinGeneralModules
 
                         If Not IsNothing(hproj) Then
                             ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                            AlleProjekte.Add(hproj)
+                            Dim newPosition As Integer = -1
+                            If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                                If boardwasEmpty Then
+                                    ' den gleichen key verwenden wie in der activeConstellation
+                                    newPosition = activeConstellation.getBoardZeile(hproj.name)
+                                Else
+                                    newPosition = activeConstellation.getBoardZeile(hproj.name) + startOfFreeRows
+                                End If
+                            End If
+                            AlleProjekte.Add(hproj, True, newPosition)
                             ' jetzt die Variante aktivieren 
                             ' aber nur wenn es auch das Flag show hat 
                             If showIT Then
@@ -10143,18 +10152,6 @@ Public Module awinGeneralModules
                 tsMessage
         End If
         outPutCollection.Add(outputLine)
-
-        Dim msgH As String = ""
-        Dim msgE As String = ""
-        If awinSettings.englishLanguage Then
-            msgH = "Store Scenario "
-            msgE = "Messages"
-        Else
-            msgH = "Szenario speichern "
-            msgE = "Messages"
-        End If
-
-        Call showOutPut(outPutCollection, msgH, msgE)
 
 
 

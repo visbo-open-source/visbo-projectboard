@@ -2787,7 +2787,7 @@ Imports System.Windows
             ' wenn es jetzt etwas zu tun gibt ... 
             If todoListe.Count > 0 Then
                 ' alles ok ...
-                Call deleteChartsInSheet(arrWsNames(3))
+                'Call deleteChartsInSheet(arrWsNames(3))
                 Call enableControls(ptModus.massEditRessCost)
 
                 ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
@@ -7412,59 +7412,74 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        appInstance.ScreenUpdating = False
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
+        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
 
 
-        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+            myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        If myCollection.Count > 0 Then
+            If myCollection.Count > 0 Then
 
-            top = 180
-            width = 340
-            left = showRangeRight * boxWidth + 4
-            If left < 0 Then
-                left = 4
-            End If
-            height = awinSettings.ChartHoehe2
+                top = 180
+                width = 340
+                left = showRangeRight * boxWidth + 4
+                If left < 0 Then
+                    left = 4
+                End If
+                height = awinSettings.ChartHoehe2
 
-            Try
-                Call awinCreateAuslastungsDiagramm(obj, top, left, width, height, False)
+                Try
+                    Call awinCreateAuslastungsDiagramm(obj, top, left, width, height, False)
 
-                top = top + height + 10
-                Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
+                    top = top + height + 10
+                    Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
 
-                ' jetzt Unterauslastung
-                top = top + height + 10
-                Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
+                    ' jetzt Unterauslastung
+                    top = top + height + 10
+                    Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
 
-            Catch ex As Exception
-                Call MsgBox("keine Information vorhanden")
-            End Try
-
-        Else
-
-            If ShowProjekte.Count = 0 Then
-                Call MsgBox("es sind keine Projekte angezeigt")
+                Catch ex As Exception
+                    Call MsgBox("keine Information vorhanden")
+                End Try
 
             Else
-                If showRangeRight - showRangeLeft < minColumns - 1 Then
-                    Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
+
+                If ShowProjekte.Count = 0 Then
+                    Call MsgBox("es sind keine Projekte angezeigt")
+
                 Else
-                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
-                                "gibt es keine Projekte ")
+                    If showRangeRight - showRangeLeft < minColumns - 1 Then
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define a timeframe first ...")
+                        Else
+                            Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                        End If
+                    Else
+                        Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                    "gibt es keine Projekte ")
+                    End If
                 End If
+
             End If
 
+
+
+            appInstance.ScreenUpdating = True
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please define a timeframe first ...")
+            Else
+                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+            End If
         End If
 
 
-
-        appInstance.ScreenUpdating = True
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-
+        
     End Sub
 
     Sub PTXShowEngpass(control As IRibbonControl)
@@ -7529,7 +7544,12 @@ Imports System.Windows
                 Call MsgBox("Es sind keine Projekte geladen! ")
             End If
         Else
-            Call MsgBox("Bitte wählen Sie zuerst einen Zeitraum aus, der mindestens 6 Monate lang ist!")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please define a timeframe first ...")
+            Else
+                Call MsgBox("Bitte wählen Sie zuerst einen Zeitraum aus ...")
+            End If
+
         End If
 
         'appInstance.ScreenUpdating = True
@@ -7760,55 +7780,69 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
 
-        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
 
-        If myCollection.Count > 0 Then
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
 
-            With appInstance.ActiveWindow
-                sichtbarerBereich = .VisibleRange
-                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
-                If left < CDbl(sichtbarerBereich.Left) Then
-                    left = CDbl(sichtbarerBereich.Left) + 2
-                End If
+            myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
-                If top < CDbl(sichtbarerBereich.Top) Then
-                    top = CDbl(sichtbarerBereich.Top) + 2
-                End If
+            If myCollection.Count > 0 Then
 
-            End With
+                With appInstance.ActiveWindow
+                    sichtbarerBereich = .VisibleRange
+                    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                    If left < CDbl(sichtbarerBereich.Left) Then
+                        left = CDbl(sichtbarerBereich.Left) + 2
+                    End If
 
-            width = 600
-            height = 450
+                    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                    If top < CDbl(sichtbarerBereich.Top) Then
+                        top = CDbl(sichtbarerBereich.Top) + 2
+                    End If
 
-            Dim obj As Excel.ChartObject = Nothing
+                End With
 
-            Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
-            Catch ex As Exception
+                width = 600
+                height = 450
 
-            End Try
+                Dim obj As Excel.ChartObject = Nothing
 
-        Else
+                Try
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Catch ex As Exception
 
-            If ShowProjekte.Count = 0 Then
-                Call MsgBox("es sind keine Projekte angezeigt")
+                End Try
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
-                            "gibt es keine Projekte")
+
+                If ShowProjekte.Count = 0 Then
+                    Call MsgBox("es sind keine Projekte angezeigt")
+
+                Else
+                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                "gibt es keine Projekte")
+                End If
+
+
             End If
 
 
+
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please define a timeframe first ...")
+            Else
+                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+            End If
         End If
+        
 
-
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        
 
     End Sub
 
@@ -8397,66 +8431,92 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
 
-        Dim formerES As Boolean = awinSettings.meEnableSorting
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
 
-        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+            Dim formerES As Boolean = awinSettings.meEnableSorting
 
-        If myCollection.Count > 0 Then
+            myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-            Dim sichtbarerBereich As Excel.Range
+            If myCollection.Count > 0 Then
 
-            height = awinSettings.ChartHoehe2
-            width = 450
+                Dim sichtbarerBereich As Excel.Range
 
-            With appInstance.ActiveWindow
+                height = awinSettings.ChartHoehe2
+                width = 450
 
-                sichtbarerBereich = .VisibleRange
-                If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
-                    If left < CDbl(sichtbarerBereich.Left) Then
-                        left = CDbl(sichtbarerBereich.Left) + 2
+                With appInstance.ActiveWindow
+
+                    sichtbarerBereich = .VisibleRange
+                    If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                        left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
+                        If left < CDbl(sichtbarerBereich.Left) Then
+                            left = CDbl(sichtbarerBereich.Left) + 2
+                        End If
+                    Else
+                        left = 5
                     End If
-                Else
-                    left = 5
-                End If
 
-                
 
-                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
-                If top < CDbl(sichtbarerBereich.Top) Then
-                    top = CDbl(sichtbarerBereich.Top) + 2
-                End If
 
-            End With
+                    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
+                    If top < CDbl(sichtbarerBereich.Top) Then
+                        top = CDbl(sichtbarerBereich.Top) + 2
+                    End If
 
-            Dim obj As Excel.ChartObject = Nothing
-            Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
+                End With
 
-        Else
-
-            If ShowProjekte.Count = 0 Then
-                Call MsgBox("es sind keine Projekte angezeigt")
+                Dim obj As Excel.ChartObject = Nothing
+                Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
 
             Else
-                If showRangeRight - showRangeLeft < minColumns - 1 Then
-                    Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
+
+                If ShowProjekte.Count = 0 Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("no projects visualized ...")
+                    Else
+                        Call MsgBox("es sind keine Projekte angezeigt ...")
+                    End If
+
+
                 Else
-                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
-                                "gibt es keine Projekte ")
+                    If showRangeRight - showRangeLeft < minColumns - 1 Then
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define a timeframe first ...")
+                        Else
+                            Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                        End If
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("there are no projects in Timeframe " & textZeitraum(showRangeLeft, showRangeRight))
+                        Else
+                            Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                    "gibt es keine Projekte ")
+                        End If
+
+                    End If
                 End If
+
             End If
 
+            If control.Id = "PTMEC2" And awinSettings.meEnableSorting <> formerES Then
+                Me.ribbon.Invalidate()
+            End If
+
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please define a timeframe first ...")
+            Else
+                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+            End If
         End If
 
-        If control.Id = "PTMEC2" And awinSettings.meEnableSorting <> formerES Then
-            Me.ribbon.Invalidate()
-        End If
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        
     End Sub
 
 
@@ -8467,59 +8527,65 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
 
-        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+            myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        If myCollection.Count > 0 Then
+            If myCollection.Count > 0 Then
 
-            Dim sichtbarerBereich As Excel.Range
+                Dim sichtbarerBereich As Excel.Range
 
-            height = awinSettings.ChartHoehe2
-            width = 450
+                height = awinSettings.ChartHoehe2
+                width = 450
 
-            With appInstance.ActiveWindow
-                sichtbarerBereich = .VisibleRange
-                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
-                If left < CDbl(sichtbarerBereich.Left) Then
-                    left = CDbl(sichtbarerBereich.Left) + 2
-                End If
+                With appInstance.ActiveWindow
+                    sichtbarerBereich = .VisibleRange
+                    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
+                    If left < CDbl(sichtbarerBereich.Left) Then
+                        left = CDbl(sichtbarerBereich.Left) + 2
+                    End If
 
-                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
-                If top < CDbl(sichtbarerBereich.Top) Then
-                    top = CDbl(sichtbarerBereich.Top) + 2
-                End If
+                    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
+                    If top < CDbl(sichtbarerBereich.Top) Then
+                        top = CDbl(sichtbarerBereich.Top) + 2
+                    End If
 
-            End With
-
-
-
-            Dim obj As Excel.ChartObject = Nothing
-            Call awinCreateErgebnisDiagramm(obj, top, left, width, height, False, False)
+                End With
 
 
-        Else
 
-            If ShowProjekte.Count = 0 Then
-                Call MsgBox("es sind keine Projekte angezeigt")
+                Dim obj As Excel.ChartObject = Nothing
+                Call awinCreateErgebnisDiagramm(obj, top, left, width, height, False, False)
+
 
             Else
-                If showRangeRight - showRangeLeft < minColumns - 1 Then
-                    Call MsgBox(" Bitte wählen Sie zuerst einen gültigen Zeitraum aus !")
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("there are no projects in Timeframe " & textZeitraum(showRangeLeft, showRangeRight))
                 Else
                     Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
-                                "gibt es keine Projekte ")
+                            "gibt es keine Projekte ")
                 End If
+
+
+
             End If
 
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
 
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("there are no projects in Timeframe " & textZeitraum(showRangeLeft, showRangeRight))
+            Else
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                        "gibt es keine Projekte ")
+            End If
         End If
 
-
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        
     End Sub
 
 

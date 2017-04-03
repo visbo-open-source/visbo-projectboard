@@ -28,9 +28,11 @@ Public Class clsProjekte
                 End If
 
                 If updateCurrentConstellation Then
+                    currentConstellationName = calcLastSessionScenarioName()
+
                     Dim key As String = calcProjektKey(project)
                     If currentSessionConstellation.contains(key, False) Then
-                        currentSessionConstellation.getItem(key).show = True
+                        Call currentSessionConstellation.setItemToShow(key, True)
                     End If
 
                 End If
@@ -123,8 +125,9 @@ Public Class clsProjekte
 
             If updateCurrentConstellation Then
                 Dim key As String = calcProjektKey(projectname, vName)
+
                 If currentSessionConstellation.contains(key, False) Then
-                    currentSessionConstellation.getItem(key).show = False
+                    Call currentSessionConstellation.setItemToShow(key, False)
                 End If
 
             End If

@@ -43,18 +43,43 @@
             Dim found As Boolean = False
             Dim ix As Integer = 0
             Dim bzeile As Integer = 0
+            Dim deductBecausePoint As Integer = 0
 
+            ' der wievielte Eintrag mit Attribut = Show ist es in der Liste ? 
             Do While ix <= _sortList.Count - 1 And Not found
                 Dim vglName As String = _sortList.ElementAt(ix).Value
                 If vglName = pName Then
+
+                    If _sortType = ptSortCriteria.customTF Then
+                        If _sortList.ElementAt(ix).Key.EndsWith(".") Then
+                            deductBecausePoint = deductBecausePoint + 1
+                        End If
+                    End If
+
                     found = True
                 Else
-                    ix = ix + 1
+
                     If Me.isShown(vglName) = True Then
                         bzeile = bzeile + 1
+
+                        If _sortType = ptSortCriteria.customTF Then
+                            If _sortList.ElementAt(ix).Key.EndsWith(".") Then
+                                deductBecausePoint = deductBecausePoint + 1
+                            End If
+                        End If
+
                     End If
+
+                    ix = ix + 1
+
                 End If
+
             Loop
+
+            If _sortType = ptSortCriteria.customTF Then
+                bzeile = bzeile - deductBecausePoint
+            End If
+            
 
             getBoardZeile = bzeile + 2
 
@@ -161,7 +186,7 @@
         End Set
     End Property
 
-    Private Sub buildSortlist(ByVal sCriteria As Integer)
+    Public Sub buildSortlist(ByVal sCriteria As Integer)
 
         Dim key As String = ""
 
@@ -186,24 +211,71 @@
                     ' wenn es schon drin ist, muss nichts weiter gemacht werden 
                 End If
             Next
+
         ElseIf sCriteria = ptSortCriteria.customTF Then
 
+            ' neu 
+            Dim newSortList As New SortedList(Of String, String)
+            Dim noShowList As New SortedList(Of String, clsConstellationItem)
+
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                key = kvp.Value.zeile.ToString("00000000")
-                If Not _sortList.ContainsKey(key) Then
-                    _sortList.Add(key, kvp.Value.projectName)
+                ' erstmal prüfen , ob die sortliste das Projekt nicht schon enthält ...
+                If kvp.Value.show = True Then
+                    Dim sortkey As String = calcSortKeyCustomTF(kvp.Value.zeile)
+                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+                    While newSortList.ContainsKey(sortkey)
+                        sortkey = calcSortKeyCustomTF1(sortkey)
+                    End While
+
+                    ' jetzt ist er eindeutig 
+                    newSortList.Add(sortkey, kvp.Value.projectName)
                 Else
-                    ' es muss ein . ergänzt werden 
-                    key = key & "."
-                    Do While _sortList.ContainsKey(key)
-                        key = key & "."
-                    Loop
-                    _sortList.Add(key, kvp.Value.projectName)
+                    ' erstmal in die NoShow Liste packen 
+                    noShowList.Add(calcProjektKey(kvp.Value.projectName, kvp.Value.variantName), kvp.Value)
+                End If
+
+            Next
+
+            ' jetzt müssen alle NoShow-Items behandelt werden ..
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In noShowList
+                If newSortList.ContainsValue(kvp.Value.projectName) Then
+                    ' ist schon enthalten, also cItem.zeile anpassen 
+                    Me.getItem(kvp.Key).zeile = getTFzeilefromSortKeyCustomTF _
+                        (newSortList.ElementAt(newSortList.IndexOfValue(kvp.Value.projectName)).Key)
+                Else
+                    ' ist noch nicht enthalten, also ist das Projekt in keiner Variante angezeigt
+                    ' und soll demzufolge eine Zeile-Nummer höher, also ans Ende positioniert werden 
+                    Dim noShowZeile As Integer
+                    If kvp.Value.zeile >= 2 Then
+                        noShowZeile = kvp.Value.zeile
+                    Else
+                        If newSortList.Count > 0 Then
+                            noShowZeile = getTFzeilefromSortKeyCustomTF _
+                                                   (newSortList.Last.Key) + 1
+                        Else
+                            noShowZeile = 2
+                        End If
+                    End If
+
+                    Dim tmpKey As String = calcSortKeyCustomTF(noShowZeile)
+                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+                    While newSortList.ContainsKey(tmpKey)
+                        tmpKey = calcSortKeyCustomTF1(tmpKey)
+                    End While
+
+                    ' jetzt ist er eindeutig 
+                    newSortList.Add(tmpKey, kvp.Value.projectName)
+                    Me.getItem(kvp.Key).zeile = noShowZeile
+
                 End If
             Next
 
+            ' jetzt enthält die newSortList alle Projekt-Namen mit den richtigen sortkeys ...
+            Me.sortListe(ptSortCriteria.customTF) = newSortList
+
 
         ElseIf AlleProjekte.Count > 0 Then
+            ' es handelt sich nicht um alphabet, nicht um CustomTF
 
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
 
@@ -221,10 +293,9 @@
                             If Not _sortList.ContainsKey(key) Then
                                 _sortList.Add(key, hproj.name)
                             Else
-                                ' es muss ein . ergänzt werden 
-                                key = key & "."
+                                ' es muss ein "x" ergänzt werden 
                                 Do While _sortList.ContainsKey(key)
-                                    key = key & "."
+                                    key = calcSortKeyCustomTF1(key)
                                 Loop
                                 _sortList.Add(key, hproj.name)
                             End If
@@ -322,10 +393,10 @@
                 If value.Trim.Length > 0 Then
                     _constellationName = value.Trim
                 Else
-                    _constellationName = "Last (" & dbUsername & ")"
+                    _constellationName = calcLastSessionScenarioName()
                 End If
             Else
-                _constellationName = "Last (" & dbUsername & ")"
+                _constellationName = calcLastSessionScenarioName()
             End If
         End Set
     End Property
@@ -528,38 +599,37 @@
     End Property
 
     ''' <summary>
-    ''' aktualisiert das oder die ShowAttribute gemäß dem Zustand in ShowProjekte
-    ''' es wird nur Projekt-Name oder der leere Name (dann alle) übergeben; denn es müssen immer alle Varianten betrachtet werden; 
-    ''' ShowProjekte muss vorher aktualisiert worden sein  
+    ''' setzt das oder die ShowAttribute gemäß der Variable showAttribute 
+    ''' stellt sicher, dass in einer Constellation ein Projekt in max einer Variante das Attribut show haben kann 
+    '''   
     ''' </summary>
-    ''' <param name="pName">Projektname, wenn leer - alle behandeln</param>
+    ''' <param name="pName">Projektname</param>
+    ''' <param name="vName" >Varianten-Name </param>
+    ''' <param name="showAttribute" >show: true; noShow:false</param>
     ''' <remarks></remarks>
-    Public Sub updateShowAttributes(Optional ByVal pName As String = "")
+    Public Sub updateShowAttributes(ByVal pName As String, ByVal vName As String, _
+                                    ByVal showAttribute As Boolean)
         Dim currentProjectName As String = ""
-        Dim hproj As clsProjekt
 
         ' es werden alle Einträge gemäß Status Showprojekte aktualisiert 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-            ' alle bzw. nur den einen Namen behandeln 
-            If pName = "" Or pName = kvp.Value.projectName Then
+            ' den einen Namen behandeln 
+            If pName = kvp.Value.projectName Then
 
-                If ShowProjekte.contains(kvp.Value.projectName) Then
-                    hproj = ShowProjekte.getProject(kvp.Value.projectName)
-                    ' jede Variante soll ja in der gleichen Zeile gezeichnet werden ...
-                    kvp.Value.zeile = hproj.tfZeile
-
-                    If (hproj.variantName = kvp.Value.variantName) Then
+                If showAttribute = True Then
+                    If vName = kvp.Value.variantName Then
                         kvp.Value.show = True
                     Else
                         kvp.Value.show = False
                     End If
-
-                Else
+                ElseIf IsNothing(vName) Then
                     kvp.Value.show = False
-                    kvp.Value.zeile = 0
+                ElseIf vName = kvp.Value.variantName Then
+                    kvp.Value.show = False
                 End If
 
             End If
+
         Next
 
 
@@ -588,11 +658,10 @@
 
             With copyResult
                 .constellationName = cName
-                .sortCriteria = _sortType
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                     Dim copiedItem As clsConstellationItem = kvp.Value.copy
-                    .add(copiedItem)
+                    .add(cItem:=copiedItem, noUpdateSortlist:=True)
                 Next
 
                 ' jetzt sortliste und sorttype kopieren 
@@ -611,7 +680,27 @@
 
         End Get
     End Property
+    ''' <summary>
+    ''' setzt das cItem mit dem angegebenen Key auf citem.show = true 
+    ''' stellt sicher, dass alle anderen Items auf noShow gesetzt werden 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <param name="showAttribute"></param>
+    ''' <remarks></remarks>
+    Public Sub setItemToShow(ByVal key As String, ByVal showAttribute As Boolean)
 
+        If _allItems.ContainsKey(key) Then
+
+            Dim pName As String = getPnameFromKey(key)
+            Dim vName As String = getVariantnameFromKey(key)
+            If showAttribute = True Then
+                Call Me.setToNoShowExcept(pName, vName)
+            End If
+
+            _allItems.Item(key).show = showAttribute
+        End If
+
+    End Sub
     ''' <summary>
     ''' fügt ein clsConstellationItem hinzu und aktualisiert auch die Sortlist entsprechend ... 
     ''' Voraussetzung: in AlleProjekte ist das im Item beschriebene Objekt bereits enthalten 
@@ -619,17 +708,39 @@
     ''' </summary>
     ''' <param name="cItem"></param>
     ''' <remarks></remarks>
-    Public Sub add(cItem As clsConstellationItem)
+    Public Sub add(ByVal cItem As clsConstellationItem, _
+                   Optional ByVal sKey As Integer = -1, _
+                   Optional ByVal noUpdateSortlist As Boolean = False)
 
         Dim key As String
         Dim sortKey As String = ""
         'key = cItem.projectName & "#" & cItem.variantName
         key = calcProjektKey(cItem.projectName, cItem.variantName)
 
-        If Not _allItems.ContainsKey(key) Then
+        ' wenn cItem.show = true, dann alle anderen von diesem Projekt auf noShow setzen 
+        If cItem.show = True Then
+            Call Me.setToNoShowExcept(cItem.projectName, cItem.variantName)
+        End If
 
+        ' wenn jetzt der Schlüssel bereits vorkommt, dann den Schlüssel löschen 
+        If _allItems.ContainsKey(key) Then
+            _allItems.Remove(key)
+        End If
+
+        ' jetzt wird der Schlüssel aufgenommen 
+        _allItems.Add(key, cItem)
+
+        ' soll die Sortliste upgedated werden 
+        ' gibt es bereits einen Eintrag in der _sortliste ? 
+        If Not noUpdateSortlist Then
             ' jetzt auch in sortlist aktualisieren 
-            If _sortList.ContainsValue(cItem.projectName) And cItem.show Then
+            ' der alte Schlüssel soll nur dann rausgenommen werden, 
+            ' wenn er aufgrund einer neuen Variante neu berechnet werden muss 
+            ' und nicht alphabetisch, Custom-Liste oder TF gesteuert ist 
+            If _sortList.ContainsValue(cItem.projectName) And cItem.show And _
+                Not (_sortType = ptSortCriteria.customTF Or _
+                     _sortType = ptSortCriteria.customListe Or _
+                     _sortType = ptSortCriteria.alphabet) Then
                 ' Remove den bisherigen Schlüssel 
                 Dim ix As Integer = _sortList.IndexOfValue(cItem.projectName)
                 sortKey = _sortList.ElementAt(ix).Key
@@ -643,9 +754,14 @@
                     sortKey = cItem.projectName
 
                 ElseIf _sortType = ptSortCriteria.customTF Then
+                    Dim position As Integer
+                    If sKey = -1 Then
+                        position = _sortList.Count + 2
+                    Else
+                        position = sKey
+                    End If
 
-                    Dim position As Integer = _sortList.Count + 2
-                    sortKey = position.ToString("00000000")
+                    sortKey = calcSortKeyCustomTF(position)
 
                 Else
                     ' jetzt das hproj bestimmen 
@@ -659,22 +775,64 @@
                     _sortList.Add(sortKey, cItem.projectName)
                 Else
                     ' es muss ein . ergänzt werden 
-                    sortKey = sortKey & "."
                     Do While _sortList.ContainsKey(sortKey)
-                        sortKey = sortKey & "."
+                        sortKey = calcSortKeyCustomTF1(key)
                     Loop
                     _sortList.Add(sortKey, cItem.projectName)
                 End If
 
-                
+
             End If
-
-            _allItems.Add(key, cItem)
-
         End If
+
 
     End Sub
 
+    ''' <summary>
+    ''' setzt in der angegebenen Constellation alle items to Nowshow, ausser den angegebenen Werte-Paar 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <remarks></remarks>
+    Private Sub setToNoShowExcept(ByVal pName As String, ByVal vName As String)
+        Dim found As Boolean = False
+        Dim finished As Boolean = False
+        Dim ix As Integer = 0
+        Dim anzItems As Integer = _allItems.Count
+
+        If anzItems = 0 Then
+            ' nichts zu tun 
+        Else
+            Do While Not found And ix <= anzItems - 1
+                If _allItems.ElementAt(ix).Value.projectName <> pName Then
+                    ix = ix + 1
+                Else
+                    found = True
+                End If
+
+            Loop
+
+            If ix > anzItems - 1 Then
+                ' nichts tun, fertig 
+            Else
+                finished = False
+                Do While Not finished And ix <= anzItems - 1
+                    If _allItems.ElementAt(ix).Value.projectName = pName Then
+                        If _allItems.ElementAt(ix).Value.variantName <> vName Then
+                            _allItems.ElementAt(ix).Value.show = False
+                        End If
+                        ix = ix + 1
+                    Else
+                        finished = True
+                    End If
+                Loop
+
+            End If
+        End If
+
+        
+
+    End Sub
 
     ''' <summary>
     ''' löscht den Eintrag mit Schlüssel key; wenn der nicht vorhanden ist, dann passiert gar nichts 
@@ -705,10 +863,8 @@
                     If Not _sortList.ContainsKey(sortKey) Then
                         _sortList.Add(sortKey, hproj.name)
                     Else
-                        ' es muss ein . ergänzt werden 
-                        sortKey = sortKey & "."
                         Do While _sortList.ContainsKey(sortKey)
-                            sortKey = sortKey & "."
+                            sortKey = calcSortKeyCustomTF1(sortKey)
                         Loop
                         _sortList.Add(sortKey, hproj.name)
                     End If
@@ -847,9 +1003,42 @@
 
     End Sub
 
+    Public Sub updateTFzeile(ByVal key As String, ByVal tfzeile As Integer)
+
+        If _allItems.ContainsKey(key) Then
+            _allItems.Item(key).zeile = tfzeile
+        End If
+
+        ' nur wenn der _sorttype = customTF ist, dann aktualisieren des Schlüssels 
+        If _sortType = ptSortCriteria.customTF Then
+            Dim pName As String = getPnameFromKey(key)
+            If pName <> "" Then
+                Dim ix As Integer = _sortList.IndexOfValue(pName)
+
+                If ix >= 0 Then
+                    ' den alten eintrag rausnehmen 
+                    _sortList.RemoveAt(ix)
+
+                    ' den neuen Schlüssel bestimmen  
+                    Dim sortKey As String = calcSortKeyCustomTF(tfzeile)
+                    While _sortList.ContainsKey(sortKey)
+                        sortKey = calcSortKeyCustomTF1(sortKey)
+                    End While
+
+                    ' den neuen Schlüssel eintragen 
+                    _sortList.Add(sortKey, pName)
+
+                End If
+            End If
+            
+        End If
+
+
+    End Sub
+
     ''' <summary>
     ''' ändert die Referenzen, die bisher auf oldvName gingen auf newVname 
-    ''' wenn oldkey existiert, wird einfach der newKey in der Constellation gelöscht 
+    ''' wenn oldkey existiert, wird einfach der oldkey in der Constellation gelöscht 
     ''' das ShowAttribute von pName (oldvName) muss übernommen werden ! 
     ''' </summary>
     ''' <param name="pName"></param>
