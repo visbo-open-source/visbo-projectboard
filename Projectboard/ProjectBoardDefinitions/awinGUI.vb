@@ -467,7 +467,12 @@ Public Module awinGUI
                             Catch ex As Exception
 
                             End Try
+                        ElseIf bubbleValues(i - 1) > 0 Then
+                            Try
+                                .DataLabel.Font.Color = awinSettings.AmpelGruen
+                            Catch ex As Exception
 
+                            End Try
                         End If
 
                     End With
@@ -1264,11 +1269,6 @@ Public Module awinGUI
 
                                     ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
 
-                                    If bubbleValues(i - 1) < 0 Then
-                                        .Font.Color = awinSettings.AmpelRot
-
-                                    End If
-
                                     Select Case positionValues(i - 1)
                                         Case labelPosition(0)
                                             .Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
@@ -1285,6 +1285,28 @@ Public Module awinGUI
                             Catch ex As Exception
 
                             End Try
+
+                            ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+                            If bubbleValues(i - 1) < 0 Then
+                                Try
+                                    .DataLabel.Font.Color = awinSettings.AmpelRot
+                                Catch ex As Exception
+
+                                End Try
+                            ElseIf bubbleValues(i - 1) > 0 Then
+                                Try
+                                    .DataLabel.Font.Color = awinSettings.AmpelGruen
+                                Catch ex As Exception
+
+                                End Try
+                            Else
+                                Try
+                                    .DataLabel.Font.Color = System.Drawing.Color.Black
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+
                         Else
                             .HasDataLabel = False
                         End If
@@ -1310,16 +1332,6 @@ Public Module awinGUI
                         'End If
                         ' Ende Äderung 30.12.15
 
-
-                        ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
-                        If bubbleValues(i - 1) < 0 Then
-                            Try
-                                .DataLabel.Font.Color = awinSettings.AmpelRot
-                            Catch ex As Exception
-
-                            End Try
-
-                        End If
                     End With
                 Next i
 

@@ -445,6 +445,7 @@ Partial Class frmInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(566, 446)
         Me.Controls.Add(Me.rdbCosts)
         Me.Controls.Add(Me.rdbResources)

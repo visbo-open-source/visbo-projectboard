@@ -158,7 +158,9 @@
             .leadPerson = Me.leadPerson
             ' es gibt kein Attribut tfspalte mehr - es ist ein Readonly Attribut, wo _Start ausgelesen wird 
             '.tfSpalte = Me.tfSpalte
-            .tfZeile = Me.tfZeile
+            ' tfzeile wird jetzt ausschließlich durch die Konstellation bestimmt; 
+            ' es darf hier nicht mehr gesetzt werden, weil tfzeile die currentConstellation updated ...
+            '.tfZeile = Me.tfZeile
             .startDate = Me.startDate.ToLocalTime
             .earliestStartDate = Me.earliestStartDate.ToLocalTime
             .latestStartDate = Me.latestStartDate.ToLocalTime

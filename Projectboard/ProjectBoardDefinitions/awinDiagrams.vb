@@ -762,7 +762,7 @@ Public Module awinDiagrams
                                 With .Format.Line
                                     .DashStyle = MsoLineDashStyle.msoLineSysDot
                                     .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                                    .Weight = 3
+                                    .Weight = 2
                                 End With
                                 nr_pts = CType(.Points, Excel.Points).Count
                             End With
@@ -792,9 +792,9 @@ Public Module awinDiagrams
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlLine
                             With .Format.Line
-                                .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
+                                .DashStyle = MsoLineDashStyle.msoLineSolid
                                 .ForeColor.RGB = XlRgbColor.rgbFireBrick
-                                .Weight = 3
+                                .Weight = 1.5
                             End With
 
                             nr_pts = CType(.Points, Excel.Points).Count
@@ -1029,7 +1029,7 @@ Public Module awinDiagrams
         Dim startdate As Date
         Dim diff As Integer
         'Dim mindone As Boolean, maxdone As Boolean
-        Dim width As Double
+        'Dim width As Double
         'Dim left As Double
         Dim myCollection As Collection
         Dim isCockpitChart As Boolean
@@ -1056,7 +1056,7 @@ Public Module awinDiagrams
 
         von = showRangeLeft
         bis = showRangeRight
-        width = chtobj.Width
+        'width = chtobj.Width
 
         Dim currentScale As Double
         Try
@@ -1086,7 +1086,7 @@ Public Module awinDiagrams
         Else
             isCockpitChart = False
 
-            width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+            'width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
 
         End If
 
@@ -1235,7 +1235,7 @@ Public Module awinDiagrams
                     End If
 
                     datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
-                    hmxWert = datenreihe.Max
+                    hmxWert = Max(datenreihe.Max, hmxWert)
 
                     If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                         ' Ergänzung wegen Anzeige der selektierten Objekte ... 
@@ -1275,7 +1275,6 @@ Public Module awinDiagrams
                         datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
                     End If
 
-                    hmxWert = datenreihe.Max
 
                     If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                         ' Ergänzung wegen Anzeige der selektierten Objekte ... 
@@ -1315,12 +1314,6 @@ Public Module awinDiagrams
                         'edatenreihe = ShowProjekte.getCosteValuesInMonth
                         datenreihe = ShowProjekte.getCostGpValuesInMonth
 
-
-                        For i = 0 To bis - von
-                            seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
-                            hmxWert = Max(hmxWert, datenreihe(i) + edatenreihe(i))
-                        Next i
-
                     Else
                         ' es handelt sich nicht um die Personalkosten
                         isPersCost = False
@@ -1347,6 +1340,7 @@ Public Module awinDiagrams
                     datenreihe = ShowProjekte.getEarnedValuesInMonth()
                     ' jetzt müssen die - theoretischen Earned Values um die externen Kosten bereinigt werden, die abfallen, weil aufgrund 
                     ' bestimmter überlasteter Rollen externe , teurere Kräfte reingeholt werden müssen 
+
 
                     edatenreihe = ShowProjekte.getCosteValuesInMonth(True)
                     For i = 0 To bis - von
@@ -1384,17 +1378,7 @@ Public Module awinDiagrams
                         objektFarbe = tmpMilestoneDef.farbe
                     End If
                     msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
-                End If
 
-                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
-                    For i = 0 To bis - von
-                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
-                                                    edatenreihe(i)
-                    Next i
-                Else
-                    For i = 0 To bis - von
-                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
-                    Next i
                 End If
 
 
@@ -1452,7 +1436,6 @@ Public Module awinDiagrams
                         End With
 
 
-
                     Else
 
                         With CType(.SeriesCollection.NewSeries, Excel.Series)
@@ -1465,7 +1448,12 @@ Public Module awinDiagrams
                                 End If
                             ElseIf prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                 ' repmsg!
-                                .Name = prcName & ": Platzhalter"
+                                If awinSettings.englishLanguage Then
+                                    .Name = prcName & ": Placeholder"
+                                Else
+                                    .Name = prcName & ": Platzhalter"
+                                End If
+
                             Else
                                 .Name = prcName
                             End If
@@ -1489,7 +1477,12 @@ Public Module awinDiagrams
                             ' alle anderen zeigen 
                             With CType(.SeriesCollection.NewSeries, Excel.Series)
 
-                                .Name = prcName & ": zugeordnet"
+                                If awinSettings.englishLanguage Then
+                                    .Name = prcName & ": assigned"
+                                Else
+                                    .Name = prcName & ": zugeordnet"
+                                End If
+
                                 .Interior.Color = awinSettings.AmpelNichtBewertet
                                 .Values = edatenreihe
                                 .XValues = Xdatenreihe
@@ -1502,6 +1495,17 @@ Public Module awinDiagrams
 
                     End If
 
+                End If
+
+                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
+                    For i = 0 To bis - von
+                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
+                                                    edatenreihe(i)
+                    Next i
+                Else
+                    For i = 0 To bis - von
+                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
+                    Next i
                 End If
 
             Next r
@@ -1624,9 +1628,10 @@ Public Module awinDiagrams
 
             ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
             ' ansonsten werden nur die internen Kapazitäten angezeigt 
+            ' hier werden die externen mitgezeichnet ....
             If prcTyp = DiagrammTypen(1) Then
                 If kdatenreihe.Sum < kdatenreihePlus.Sum Then
-                    ' es gibt geplante externe Ressourcen ... 
+                    'es gibt geplante externe Ressourcen ... 
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
                         '.name = "Kapazität incl. Externe"
@@ -1636,18 +1641,19 @@ Public Module awinDiagrams
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
 
+                        'tk 28.3.17 soll bleiben wie es urspünglich war 
                         With .Format.Line
                             .DashStyle = MsoLineDashStyle.msoLineSysDot
                             .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                            .Weight = 3
-
+                            .Weight = 2
                         End With
+
                         nr_pts = CType(.Points, Excel.Points).Count
                     End With
                 End If
             End If
 
-
+            ' hier werde nur die internen gezeichnet ...
             If prcTyp = DiagrammTypen(1) Or _
                    (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
                    (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
@@ -1666,10 +1672,12 @@ Public Module awinDiagrams
                     .Values = kdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
+
+                    ' tk: da es neu aufgebaut wird, muss es neu gezeichnet werden ..
                     With .Format.Line
-                        .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
+                        .DashStyle = MsoLineDashStyle.msoLineSolid
                         .ForeColor.RGB = XlRgbColor.rgbFireBrick
-                        .Weight = 3
+                        .Weight = 1.5
                     End With
 
                     nr_pts = CType(.Points, Excel.Points).Count
@@ -1743,11 +1751,12 @@ Public Module awinDiagrams
 
         'End With ' with worksheet ...
 
-        With chtobj
-            If Not isCockpitChart Then
-                .Width = width
-            End If
-        End With
+        ' tk, darf nicht verändert werden, weil sonst ein defniertes Cockpit völlig aus dem Rahmen läuft  
+        'With chtobj
+        '    If Not isCockpitChart Then
+        '        .Width = width
+        '    End If
+        'End With
 
         ' Skalierung nur ändern, wenn erforderlich, weil der maxwert höher ist als die bisherige Skalierung ... 
         hmxWert = Max(seriesSumDatenreihe.Max, hmxWert)
@@ -5794,6 +5803,7 @@ Public Module awinDiagrams
                         CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
         End If
 
+
         ' typus:
         ' 1 - verschieben
         ' 2 - einfügen
@@ -5818,6 +5828,7 @@ Public Module awinDiagrams
                 anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 For i = 1 To anz_diagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
+
                     Select Case typus
                         '
                         '

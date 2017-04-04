@@ -117,7 +117,7 @@ Public Class frmSelectPPTTempl
                     awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
                     For Each tmpname In awinSelection
                         Try
-                            selectedProjekte.Add(ShowProjekte.getProject(tmpname))
+                            selectedProjekte.Add(ShowProjekte.getProject(tmpname), False)
                         Catch ex As Exception
 
                         End Try
@@ -126,7 +126,7 @@ Public Class frmSelectPPTTempl
 
             Catch ex As Exception
                 awinSelection = Nothing
-                selectedProjekte.Clear()
+                selectedProjekte.Clear(False)
             End Try
 
             Try
@@ -171,7 +171,7 @@ Public Class frmSelectPPTTempl
             End If
         End With
 
-        selectedProjekte.Clear()
+        selectedProjekte.Clear(False)
         'Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
 

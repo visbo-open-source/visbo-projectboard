@@ -142,7 +142,7 @@ Public Class clsOpenXML
             .StrategicFit = Me.strategicFit
             .Erloes = Me.budget
             .leadPerson = task0.responsible
-            .tfZeile = 0
+            '.tfZeile = 0
             .startDate = task0.startDate.ToLocalTime
 
             .earliestStart = task0.earliestStartOffset
