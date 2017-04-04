@@ -412,6 +412,7 @@ Public Module Module1
         sessionFilterDefinieren = 11
         setWriteProtection = 12
         unsetWriteProtection = 13
+        reportMultiprojektTafel = 14
     End Enum
 
     Public Enum PTProtectedMode

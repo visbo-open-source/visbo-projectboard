@@ -7,7 +7,7 @@ Imports System.ComponentModel
 Public Class frmHierarchySelection
 
     Private hry As clsHierarchy
-    Public repProfil As clsReport
+    Public repProfil As clsReportAll
 
     Private selectedMilestones As New Collection
     Private selectedPhases As New Collection
@@ -276,7 +276,8 @@ Public Class frmHierarchySelection
                 .filterLabel.Visible = True
 
 
-            ElseIf .menuOption = PTmenue.reportBHTC Then
+            ElseIf .menuOption = PTmenue.reportBHTC Or _
+                .menuOption = PTmenue.reportMultiprojektTafel Then
 
                 If awinSettings.englishLanguage Then
                     .Text = "Create Project Report"
@@ -288,7 +289,7 @@ Public Class frmHierarchySelection
                     .filterLabel.Text = "Name Report-Profil"
                 End If
 
-                
+
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -313,7 +314,7 @@ Public Class frmHierarchySelection
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
 
-
+          
             End If
 
         End With
@@ -379,18 +380,26 @@ Public Class frmHierarchySelection
         End If
 
 
-        If Not Me.calledFrom = "MS-Project" Then
-
-            Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
-        Else
+        If Me.calledFrom = "MS-Project" Then
 
             Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportBHTC, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
             If IsNothing(repProfil) Then
                 Throw New ArgumentException("Fehler beim Lesen des áusgewählten ReportProfils")
             End If
 
-        End If
+        Else   ' calledFrom = "Multiprojekt-Tafel"
 
+            If menuOption = PTmenue.reportMultiprojektTafel Then
+
+                Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportMultiprojektTafel, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
+                If IsNothing(repProfil) Then
+                    Throw New ArgumentException("Fehler beim Lesen des áusgewählten ReportProfils")
+                End If
+            Else
+                Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+            End If
+
+        End If
 
         Call buildHryTreeView()
 
@@ -402,11 +411,17 @@ Public Class frmHierarchySelection
         Cursor = Cursors.Default
 
         ' die Vorlagen  einlesen
-        Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
+        If IsNothing(repProfil) Then
+            Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
+        Else
+            Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox, repProfil.isMpp)
+        End If
+
 
         ' die Filter einlesen
 
-        If Not Me.menuOption = PTmenue.reportBHTC Then
+        If Not (Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel) Then
+
             Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
 
             ' alle definierten Filter in ComboBox anzeigen
@@ -437,10 +452,27 @@ Public Class frmHierarchySelection
                     End If
                 End If
 
+            Else
+                If Not IsNothing(repProfil) Then
+                    If repProfil.isMpp Then
+                        If My.Computer.FileSystem.FileExists(awinPath & RepPortfolioVorOrdner & "\" & repProfil.PPTTemplate) Then
+                            repVorlagenDropbox.Text = repProfil.PPTTemplate
+                        Else
+                            repVorlagenDropbox.Text = ""
+                        End If
+                    Else
+                        If My.Computer.FileSystem.FileExists(awinPath & RepProjectVorOrdner & "\" & repProfil.PPTTemplate) Then
+                            repVorlagenDropbox.Text = repProfil.PPTTemplate
+                        Else
+                            repVorlagenDropbox.Text = ""
+                        End If
+                    End If
+                    
+                End If
             End If
 
 
-            End If
+        End If
 
 
 
@@ -545,7 +577,7 @@ Public Class frmHierarchySelection
 
         ' jetzt wird der letzte Filter gespeichert ..
         Dim lastfilter As String = "Last"
-        If Not Me.menuOption = PTmenue.reportBHTC Then
+        If Not (Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel) Then
             Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, True)
@@ -563,7 +595,7 @@ Public Class frmHierarchySelection
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
             Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
             Me.menuOption = PTmenue.vorlageErstellen Or _
-            Me.menuOption = PTmenue.reportBHTC Then
+            Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
             validOption = True
@@ -572,7 +604,7 @@ Public Class frmHierarchySelection
         End If
 
         If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.reportBHTC Then
+            Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
             If ((selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
@@ -581,7 +613,7 @@ Public Class frmHierarchySelection
 
                 Dim vorlagenDateiName As String
 
-                If Me.menuOption = PTmenue.multiprojektReport Then
+                If Me.menuOption = PTmenue.multiprojektReport Or repProfil.isMpp Then
                     vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
                                     "\" & repVorlagenDropbox.Text
                 Else
@@ -629,37 +661,41 @@ Public Class frmHierarchySelection
 
 
                         ' Alternativ ohne Background Worker
-                        If Me.menuOption = PTmenue.reportBHTC Then
+                        If Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
-                            If Me.calledFrom = "MS-Project" Then
+                            'Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
 
-                                'Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
+                            If menuOption = PTmenue.reportMultiprojektTafel Then
+                                If Not repProfil.isMpp And selectedProjekte.Count < 1 Then
+                                    Throw New ArgumentException("Zum Erstellen des Reports muss ein Projekt ausgewählt sein")
+                                ElseIf repProfil.isMpp And _
+                                    Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then  ' Zeitraum wurde nicht gesetzt
+                                    Throw New ArgumentException("Zum Erstellen des Reports muss ein ein Zeitraum gesetzt sein")
+                                End If
+
+                            Else
                                 Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 
                                 repProfil.PPTTemplate = repVorlagenDropbox.Text
 
-                                'Call PPTstarten()
-
                                 BackgroundWorker3.RunWorkerAsync(repProfil)
 
+
+                            End If
                             Else
 
                                 'Call PPTstarten()
 
                                 BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
-
                             End If
-
-                        Else
-
-                            'Call PPTstarten()
-
-                            BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
-                        End If
 
 
                     Catch ex As Exception
+                        Me.Cursor = System.Windows.Forms.Cursors.Arrow
                         Call MsgBox(ex.Message)
+                        appInstance.EnableEvents = formerEE
+                        enableOnUpdate = formerEoU
+                        MyBase.Close()
                     End Try
 
                 Else
@@ -683,7 +719,7 @@ Public Class frmHierarchySelection
                     Me.statusLabel.Text = "bitte mindestens ein Element selektieren bzw. " & vbLf & _
                              "einen Zeitraum angeben ..."
                 End If
-                
+
                 Me.statusLabel.Visible = True
             End If
 
@@ -721,7 +757,7 @@ Public Class frmHierarchySelection
         Dim dialogreturn As DialogResult
 
 
-        If Me.menuOption = PTmenue.reportBHTC Then
+        If Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
             mppFrm.calledfrom = "frmBHTC"
 
             With awinSettings
@@ -1408,7 +1444,8 @@ Public Class frmHierarchySelection
         Dim filterName As String = ""
         Dim element As String
 
-        If Not Me.menuOption = PTmenue.reportBHTC Then
+        If Not (Me.menuOption = PTmenue.reportBHTC Or _
+            Me.menuOption = PTmenue.reportMultiprojektTafel) Then
 
 
             appInstance.EnableEvents = False
@@ -1508,7 +1545,8 @@ Public Class frmHierarchySelection
             End If
 
 
-        ElseIf Me.menuOption = PTmenue.reportBHTC Then
+        ElseIf Me.menuOption = PTmenue.reportBHTC Or _
+            Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
 
             statusLabel.Text = ""
@@ -1557,9 +1595,14 @@ Public Class frmHierarchySelection
 
 
             Dim vorlagenDateiName As String
+            If Not repProfil.isMpp Then
+                vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                                    "\" & repVorlagenDropbox.Text
+            Else
+                vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                                   "\" & repVorlagenDropbox.Text
+            End If
 
-            vorlagenDateiName = awinPath & RepProjectVorOrdner & _
-                                "\" & repVorlagenDropbox.Text
 
             ' Prüfen, ob die Datei überhaupt existirt 
             If repVorlagenDropbox.Text.Length = 0 Then
@@ -1596,7 +1639,7 @@ Public Class frmHierarchySelection
                         Call MsgBox("Bitte geben Sie einen Namen für diese Report-Profil an")
                         Me.statusLabel.Text = "Bitte geben Sie einen Namen für diese Report-Profil an"
                     End If
-                    
+
                     Me.statusLabel.Visible = True
                 End If
 
@@ -1651,7 +1694,7 @@ Public Class frmHierarchySelection
         ' ''Dim vorlagenDateiName As String = CType(e.Argument, String)
 
         ' ReportProfil ist nun in reportProfil komplett enthalten
-        Dim reportProfil As clsReport = CType(e.Argument, clsReport)
+        Dim reportProfil As clsReportAll = CType(e.Argument, clsReportAll)
 
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
@@ -1689,50 +1732,102 @@ Public Class frmHierarchySelection
             .mppUseAbbreviation = reportProfil.UseAbbreviation
             .mppUseOriginalNames = reportProfil.UseOriginalNames
             .mppKwInMilestone = reportProfil.KwInMilestone
+            .mppProjectsWithNoMPmayPass = reportProfil.projectsWithNoMPmayPass
         End With
 
 
-        ' Report wird von Projekt hproj, das vor Aufruf des Formulars in hproj gespeichert wurde erzeugt
-
-        showRangeLeft = getColumnOfDate(reportProfil.VonDate)
-        showRangeRight = getColumnOfDate(reportProfil.BisDate)
 
         Try
-            Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
-
-            If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
-
-                Dim projname As String = reportProfil.Projects.ElementAt(0).Value
-
-                Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
-
-                Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
-                                                selectedPhases, selectedMilestones, _
-                                                selectedRoles, selectedCosts, _
-                                                selectedBUs, selectedTyps, True, _
-                                                True, zeilenhoehe, _
-                                                legendFontSize, _
-                                                worker, e)
+            If Not reportProfil.isMpp Then
 
 
-                ' ''Call createPPTReportFromProjects(vorlagenDateiName, _
-                ' ''                                   selectedPhases, selectedMilestones, _
-                ' ''                                   selectedRoles, selectedCosts, _
-                ' ''                                   selectedBUs, selectedTyps, _
-                ' ''                                   worker, e)
+                Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
+                If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                    appInstance.EnableEvents = False
+                    'appInstance.ScreenUpdating = False
+
+                    If selectedProjekte.Count < 1 Then
+                        Dim projname As String = reportProfil.Projects.ElementAt(0).Value
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
+                    End If
+
+                    Call createPPTReportFromProjects(vorlagendateiname, _
+                                                     selectedPhases, selectedMilestones, _
+                                                     selectedRoles, selectedCosts, _
+                                                     selectedBUs, selectedTyps, _
+                                                     worker, e)
+
+                End If
             Else
 
-                ''Call createPPTSlidesFromConstellation(reportProfil.PPTTemplate, _
-                ''                                reportProfil.Phases, reportProfil.Milestones, _
-                ''                                reportProfil.Roles, reportProfil.Costs, _
-                ''                                reportProfil.BUs, reportProfil.Typs, True, _
-                ''                                worker, e)
+                If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+
+                    showRangeLeft = getColumnOfDate(reportProfil.VonDate)
+                    showRangeRight = getColumnOfDate(reportProfil.BisDate)
+
+                End If
+
+                Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
+                If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                    Call createPPTSlidesFromConstellation(vorlagendateiname, _
+                                                          selectedPhases, selectedMilestones, _
+                                                          selectedRoles, selectedCosts, _
+                                                          selectedBUs, selectedTyps, True, _
+                                                          worker, e)
+
+                End If
+
             End If
+
 
 
         Catch ex As Exception
             Call MsgBox("Fehler: " & vbLf & ex.Message)
         End Try
+
+        ' '' '' Report wird von Projekt hproj, das vor Aufruf des Formulars in hproj gespeichert wurde erzeugt
+
+        '' ''showRangeLeft = getColumnOfDate(reportProfil.VonDate)
+        '' ''showRangeRight = getColumnOfDate(reportProfil.BisDate)
+
+        '' ''Try
+        '' ''    Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
+
+        '' ''    If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+        '' ''        Dim projname As String = reportProfil.Projects.ElementAt(0).Value
+
+        '' ''        Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
+
+        '' ''        Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
+        '' ''                                        selectedPhases, selectedMilestones, _
+        '' ''                                        selectedRoles, selectedCosts, _
+        '' ''                                        selectedBUs, selectedTyps, True, _
+        '' ''                                        True, zeilenhoehe, _
+        '' ''                                        legendFontSize, _
+        '' ''                                        worker, e)
+
+
+        '' ''        ' ''Call createPPTReportFromProjects(vorlagenDateiName, _
+        '' ''        ' ''                                   selectedPhases, selectedMilestones, _
+        '' ''        ' ''                                   selectedRoles, selectedCosts, _
+        '' ''        ' ''                                   selectedBUs, selectedTyps, _
+        '' ''        ' ''                                   worker, e)
+        '' ''    Else
+
+        '' ''        ''Call createPPTSlidesFromConstellation(reportProfil.PPTTemplate, _
+        '' ''        ''                                reportProfil.Phases, reportProfil.Milestones, _
+        '' ''        ''                                reportProfil.Roles, reportProfil.Costs, _
+        '' ''        ''                                reportProfil.BUs, reportProfil.Typs, True, _
+        '' ''        ''                                worker, e)
+        '' ''    End If
+
+
+        '' ''Catch ex As Exception
+        '' ''    Call MsgBox("Fehler: " & vbLf & ex.Message)
+        '' ''End Try
 
     End Sub
 
@@ -1767,7 +1862,8 @@ Public Class frmHierarchySelection
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
-        If menuOption = PTmenue.reportBHTC Then
+        If (menuOption = PTmenue.reportBHTC Or _
+            menuOption = PTmenue.reportMultiprojektTafel) Then
 
             If awinSettings.englishLanguage Then
                 statusLabel.Text = "Report Creation cancelled"

@@ -38,7 +38,7 @@ Public Class frmStoreReportProfil
     Private Sub NameReportProfil_SelectedIndexChanged(sender As Object, e As EventArgs) Handles NameReportProfil.SelectedIndexChanged
         Dim hilfsReportProfil As New clsReportAll
 
-        hilfsReportProfil = XMLImportReportAllProfil(NameReportProfil.SelectedItem.ToString)
+        hilfsReportProfil = XMLImportReportProfil(NameReportProfil.SelectedItem.ToString)
         If Not IsNothing(hilfsReportProfil) Then
             profilDescription.Text = hilfsReportProfil.description
         Else

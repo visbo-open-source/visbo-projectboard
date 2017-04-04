@@ -23,13 +23,13 @@ Public Module PBBModules
     ''' <param name="controlID"></param>
     ''' <remarks></remarks>
 
-    Sub PBBBHTCHierarchySelAction(controlID As String, ByVal reportprofil As clsReport)
+    Sub PBBBHTCHierarchySelAction(controlID As String, ByVal reportprofil As clsReportAll)
 
         Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
         Dim formerSettings(3) As Boolean
 
-        If controlID = "PT1G1B3" Then
+        If controlID <> "BHTC" Then
             hryFormular.calledFrom = "Multiprojekt-Tafel"
 
             With awinSettings
@@ -49,10 +49,9 @@ Public Module PBBModules
         Else
             hryFormular.calledFrom = "MS-Project"
 
-            hryFormular.repProfil = New clsReport
+            hryFormular.repProfil = New clsReportAll
             reportprofil.CopyTo(hryFormular.repProfil)
         End If
-
 
         ' Dim formerSettings(3) As Boolean
         With awinSettings
@@ -72,30 +71,29 @@ Public Module PBBModules
         awinSettings.useHierarchy = True
         With hryFormular
 
-            
-            .menuOption = PTmenue.reportBHTC
-
-            ' hier müssen die für BHTC nicht wählbaren Optionen gesetzt werden 
-            With awinSettings
-                .mppShowProjectLine = False
-                .mppShowAmpel = False
-                .mppShowAllIfOne = False
-                .mppSortiertDauer = False
-                .mppExtendedMode = True
-                '.eppExtendedMode = True
-            End With
-
-            
-            If Not IsNothing(reportprofil) Then
-                .filterDropbox.Text = reportprofil.name
-            Else
-                .filterDropbox.Text = ""
-            End If
-
-
 
             Try
                 If .calledFrom = "MS-Project" Then
+
+
+                    .menuOption = PTmenue.reportBHTC
+
+                    ' hier müssen die für BHTC nicht wählbaren Optionen gesetzt werden 
+                    With awinSettings
+                        .mppShowProjectLine = False
+                        .mppShowAmpel = False
+                        .mppShowAllIfOne = False
+                        .mppSortiertDauer = False
+                        .mppExtendedMode = True
+                        '.eppExtendedMode = True
+                    End With
+
+                    If Not IsNothing(reportprofil) Then
+                        .filterDropbox.Text = reportprofil.name
+                    Else
+                        .filterDropbox.Text = ""
+                    End If
+
 
                     Dim lic As New clsLicences
                     Try
@@ -113,8 +111,21 @@ Public Module PBBModules
                         .auswSpeichern.Visible = False
                         .filterDropbox.Enabled = False
                     End If
-                Else
 
+                ElseIf .calledFrom = "Multiprojekt-Tafel" Then
+
+                    .menuOption = PTmenue.reportMultiprojektTafel
+
+                    If Not IsNothing(reportprofil) Then
+                        .filterDropbox.Text = reportprofil.name
+                    Else
+                        .filterDropbox.Text = ""
+                    End If
+
+                    .auswSpeichern.Visible = True
+                    .filterDropbox.Enabled = True
+
+                Else
                     .auswSpeichern.Visible = False
                     .filterDropbox.Enabled = False
                 End If
@@ -139,6 +150,7 @@ Public Module PBBModules
 
 
     End Sub
+   
 
     ''' <summary>
     ''' wird aus der Multiprojekt-Tafel aufgerufen 

@@ -3876,22 +3876,24 @@ Imports System.Windows
         Call PBBLoeschen(control)
 
     End Sub
+    ' ur: 31.03.2017 trägt nur zur Verwirrung bei
+    ' ReportProfil kann nun bei Report-Erstellung bearbeitet
 
-    ''' <summary>
-    ''' EinzelProjekt Report mit selektierter Vorlage erstellen
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub awinBHTCReport(control As IRibbonControl)
+    ' '' ''' <summary>
+    ' '' ''' EinzelProjekt Report mit selektierter Vorlage erstellen
+    ' '' ''' </summary>
+    ' '' ''' <param name="control"></param>
+    ' '' ''' <remarks></remarks>
+    ' ''Sub awinBHTCReport(control As IRibbonControl)
 
-        ' Hierarchie auswählen, Einzelprojekt Berichte 
-        appInstance.ScreenUpdating = False
+    ' ''    ' Hierarchie auswählen, Einzelprojekt Berichte 
+    ' ''    appInstance.ScreenUpdating = False
 
-        Call PBBBHTCHierarchySelAction(control.Id, Nothing)
+    ' ''    Call PBBBHTCHierarchySelAction(control.Id, Nothing)
 
-        appInstance.ScreenUpdating = True
+    ' ''    appInstance.ScreenUpdating = True
 
-    End Sub
+    ' ''End Sub
 
 
 
