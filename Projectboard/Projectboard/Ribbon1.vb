@@ -622,94 +622,128 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        'If ShowProjekte.Count > 0 Then
+        '' ''If showRangeRight - showRangeLeft >= minColumns - 1 Then
+        '' ''Else
+        '' ''    Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+        '' ''End If
 
-        'If showRangeRight - showRangeLeft >= minColumns - 1 Then
+        If ShowProjekte.Count < 1 Then
 
-        Dim awinSelection As Excel.ShapeRange
+            Dim msgtxt As String = ""
+            If awinSettings.englishLanguage Then
+                msgtxt = "Please first load at least one project"
+            Else
+                msgtxt = "Bitte laden Sie zunächst mindestens ein Projekt"
+            End If
+            Call MsgBox(msgtxt)
 
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+        Else
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                ' alles ok , bereits gesetzt 
 
-        ' hier muss die Auswahl des Names für das Cockpit erfolgen
-
-        returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
-
-        If returnValue = DialogResult.OK Then
-
-            cockpitName = loadCockpitFrm.ListBox1.Text
-
-            appInstance.ScreenUpdating = False
-
-            If loadCockpitFrm.deleteOtherCharts.Checked Then
-                ' erst alle anderen Charts löschen ... 
-                Dim currentWsName As String
-                If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                    currentWsName = arrWsNames(3)
+            Else
+                If selectedProjekte.Count > 0 Then
+                    showRangeLeft = selectedProjekte.getMinMonthColumn
+                    showRangeRight = selectedProjekte.getMaxMonthColumn
                 Else
-                    currentWsName = arrWsNames(5)
+                    showRangeLeft = ShowProjekte.getMinMonthColumn
+                    showRangeRight = ShowProjekte.getMaxMonthColumn
                 End If
-
-                Call deleteChartsInSheet(currentWsName)
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
             End If
 
+            Dim awinSelection As Excel.ShapeRange
+
             Try
-                Call awinLoadCockpit(cockpitName)
+                'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+            Catch ex As Exception
+                awinSelection = Nothing
+            End Try
 
-                ' nur wenn ein Projekt selektiert wurde, werden die Projekt-Charts aktualisiert
-                If Not awinSelection Is Nothing Then
+
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
+
+            ' hier muss die Auswahl des Names für das Cockpit erfolgen
+
+            returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+
+            If returnValue = DialogResult.OK Then
+
+                cockpitName = loadCockpitFrm.ListBox1.Text
+
+                appInstance.ScreenUpdating = False
+
+                If loadCockpitFrm.deleteOtherCharts.Checked Then
+                    ' erst alle anderen Charts löschen ... 
+                    Dim currentWsName As String
+                    If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                        currentWsName = arrWsNames(3)
+                    Else
+                        currentWsName = arrWsNames(5)
+                    End If
+
+                    Call deleteChartsInSheet(currentWsName)
+                End If
+
+                Try
+                    Call awinLoadCockpit(cockpitName)
+
+                    Dim hproj As clsProjekt = Nothing
+
+                    ' nur wenn ein Projekt selektiert wurde, werden die Projekt-Charts aktualisiert
+                    If Not awinSelection Is Nothing Then
 
 
-                    If awinSelection.Count = 1 Then
-                        Dim singleShp As Excel.Shape
-                        Dim hproj As clsProjekt
+                        If awinSelection.Count = 1 Then
+                            Dim singleShp As Excel.Shape
 
-                        ' jetzt die Aktion durchführen ...
-                        singleShp = awinSelection.Item(1)
+                            ' jetzt die Aktion durchführen ...
+                            singleShp = awinSelection.Item(1)
 
+                            Try
+                                hproj = ShowProjekte.getProject(singleShp.Name, True)
+                            Catch ex As Exception
+                                Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
+                                Exit Sub
+                            End Try
+
+                            Call aktualisiereCharts(hproj, True)
+
+                            Call awinDeSelect()
+                        End If
+                    Else
                         Try
-                            hproj = ShowProjekte.getProject(singleShp.Name, True)
+                            hproj = ShowProjekte.getProject(1)
                         Catch ex As Exception
-                            Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
+                            Call MsgBox("Projekt nicht gefunden ..." & hproj.name)
                             Exit Sub
                         End Try
 
                         Call aktualisiereCharts(hproj, True)
 
                         Call awinDeSelect()
+
                     End If
 
-                End If
+                    Call awinNeuZeichnenDiagramme(9)
 
-                Call awinNeuZeichnenDiagramme(9)
+                Catch ex As Exception
+                    appInstance.ScreenUpdating = True
+                    Call MsgBox("Fehler beim Laden ..")
+                End Try
 
-            Catch ex As Exception
+
                 appInstance.ScreenUpdating = True
-                Call MsgBox("Fehler beim Laden ..")
-            End Try
 
+            Else
+                appInstance.ScreenUpdating = True
 
-
-
-            appInstance.ScreenUpdating = True
-
-        Else
-            appInstance.ScreenUpdating = True
+            End If
 
         End If
-        'Else
-        '    Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-        'End If
-        'Else
-        '    Call MsgBox("Es sind noch keine Projekte geladen!")
-        'End If
 
         ' hier muss eventuell ein Neuzeichnen erfolgen
         enableOnUpdate = True

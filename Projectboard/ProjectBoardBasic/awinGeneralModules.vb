@@ -8022,14 +8022,14 @@ Public Module awinGeneralModules
                             'Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
 
 
-                            ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
-                            Dim verbRange As Excel.Range
-                            Dim iv As Integer
+                            '' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
+                            'Dim verbRange As Excel.Range
+                            'Dim iv As Integer
 
-                            For iv = 0 To rng.Rows.Count - 1
-                                verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
-                                verbRange.Merge()
-                            Next
+                            'For iv = 0 To rng.Rows.Count - 1
+                            '    verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
+                            '    verbRange.Merge()
+                            'Next
                         End If
 
                         Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
