@@ -575,14 +575,12 @@ Public Class frmProjPortfolioAdmin
 
 
         ' Ende neuer Ansatz 
-        ' Testen ..
-        Dim formervD As Boolean = awinSettings.visboDebug
-        awinSettings.visboDebug = True
+     
         ' jetzt die Korrektheitsprüfung ...
         If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
             currentBrowserConstellation.checkAndCorrectYourself()
         End If
-        awinSettings.visboDebug = formervD
+
 
         ' jetzt die vorkommenden Timestamps auslesen 
         ' aber nicht bei allen Aktionskennungen 
@@ -2109,12 +2107,11 @@ Public Class frmProjPortfolioAdmin
 
                 ' Korrektheitsprüfung
                 ' testen 
-                Dim formervD As Boolean = awinSettings.visboDebug
-                awinSettings.visboDebug = True
+              
                 If awinSettings.visboDebug Then
                     toStoreConstellation.checkAndCorrectYourself()
                 End If
-                awinSettings.visboDebug = formervD
+             
 
                 projectConstellations.update(toStoreConstellation)
 

@@ -11641,7 +11641,9 @@ Public Module awinGeneralModules
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim msgtxt As String = ""
         Dim fehler As Boolean = False
+        Dim oPCollection As New Collection
 
+        Dim kapaWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim spalte As Integer = 2
         Dim firstUrlspalte As Integer = 5
         Dim noColor As Integer = -4142
@@ -11676,8 +11678,7 @@ Public Module awinGeneralModules
         If My.Computer.FileSystem.FileExists(kapaFileName) Then
 
             Try
-                appInstance.Workbooks.Open(kapaFileName)
-
+                kapaWB = appInstance.Workbooks.Open(kapaFileName)
 
                 Try
                     For index = 1 To appInstance.Worksheets.Count
@@ -11734,11 +11735,19 @@ Public Module awinGeneralModules
 
 
                             If Not ok Then
-                                msgtxt = "Fehler beim Lesen der Urlaubsplanung: Bitte prüfen Sie die Korrektheit des Kalenders ..."
+
+                                fehler = True
+
                                 If awinSettings.englishLanguage Then
                                     msgtxt = "Error reading planning holidays: Please check die calendar in this file ..."
+                                Else
+                                    msgtxt = "Fehler beim Lesen der Urlaubsplanung: Bitte prüfen Sie die Korrektheit des Kalenders ..."
                                 End If
-                                Call MsgBox(msgtxt)
+                                If Not oPCollection.Contains(msgtxt) Then
+                                    oPCollection.Add(msgtxt, msgtxt)
+                                End If
+                                'Call MsgBox(msgtxt)
+
                                 If formerEE Then
                                     appInstance.EnableEvents = True
                                 End If
@@ -11748,108 +11757,140 @@ Public Module awinGeneralModules
                                 End If
 
                                 enableOnUpdate = True
-                                Exit Sub
-                            End If
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Your planning holidays couldn't be read, because of problems"
+                                Else
+                                    msgtxt = "Ihre Urlaubsplanung konnte nicht berücksichtigt werden"
+                                End If
+                                If Not oPCollection.Contains(msgtxt) Then
+                                    oPCollection.Add(msgtxt, msgtxt)
+                                End If
+                                'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
+                                Throw New ArgumentException(msgtxt)
+                            Else
 
+                                For iZ = 5 To lastZeile
 
+                                    rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                    If rolename <> "" Then
+                                        hrole = RoleDefinitions.getRoledef(rolename)
+                                        If Not IsNothing(hrole) Then
 
-                            For iZ = 5 To lastZeile
+                                            Dim iSp As Integer = firstUrlspalte
+                                            Dim anzArbTage As Double = 0
+                                            Dim anzArbStd As Double = 0
 
-                                rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
-                                If rolename <> "" Then
-                                    hrole = RoleDefinitions.getRoledef(rolename)
-                                    If Not IsNothing(hrole) Then
+                                            For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
 
-                                        Dim iSp As Integer = firstUrlspalte
-                                        Dim anzArbTage As Double = 0
-                                        Dim anzArbStd As Double = 0
+                                                Dim colOfDate As Integer = kvp.Key
+                                                anzDays = kvp.Value
+                                                For sp = iSp + 0 To iSp + anzDays - 1
 
-                                        For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
+                                                    If iSp <= lastSpalte Then
+                                                        Dim hint As Integer = CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex)
 
-                                            Dim colOfDate As Integer = kvp.Key
-                                            anzDays = kvp.Value
-                                            For sp = iSp + 0 To iSp + anzDays - 1
+                                                        If CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex) = noColor _
+                                                            Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
 
-                                                If iSp <= lastSpalte Then
-                                                    Dim hint As Integer = CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex)
+                                                            If Not IsNothing(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
 
-                                                    If CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex) = noColor _
-                                                        Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
-
-                                                        If Not IsNothing(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
-
-                                                            If CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 And _
-                                                                   CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) <= 24 Then
-                                                                anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                            Else
-
-                                                                msgtxt = "Fehler beim Lesen der zu leistenden Arbeitsstunden " & hrole.name & " ..."
-                                                                If awinSettings.englishLanguage Then
-                                                                    msgtxt = "Error reading the  working hours of " & hrole.name & " ..."
+                                                                If CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 And _
+                                                                       CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) <= 24 Then
+                                                                    anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                                Else
+                                                                    If awinSettings.englishLanguage Then
+                                                                        msgtxt = "Error reading the  amount of working hours of " & hrole.name & " ..."
+                                                                    Else
+                                                                        msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " ..."
+                                                                    End If
+                                                                    If Not oPCollection.Contains(msgtxt) Then
+                                                                        oPCollection.Add(msgtxt, msgtxt)
+                                                                    End If
+                                                                    'Call MsgBox(msgtxt)
+                                                                    fehler = True
+                                                                    Throw New ArgumentException(msgtxt)
                                                                 End If
-                                                                'Call MsgBox(msgtxt)
-                                                                fehler = True
-                                                                Throw New ArgumentException(msgtxt)
-                                                            End If
 
 
-                                                        Else
-                                                            ' Dim colorInddown As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalDown).ColorIndex
-                                                            Dim colorIndup As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex
-
-                                                            ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
-                                                            If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex = noColor Then
-                                                                anzArbStd = anzArbStd + 8
                                                             Else
-                                                                ' freier Tag für Teilzeitbeschäftigte
-                                                            End If
+                                                                ' Dim colorInddown As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalDown).ColorIndex
+                                                                Dim colorIndup As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex
 
+                                                                ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
+                                                                If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex = noColor Then
+                                                                    anzArbStd = anzArbStd + 8
+                                                                Else
+                                                                    ' freier Tag für Teilzeitbeschäftigte
+                                                                End If
+
+                                                            End If
                                                         End If
+                                                    Else
+                                                        If awinSettings.englishLanguage Then
+                                                            msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
+                                                        Else
+                                                            msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
+                                                        End If
+                                                        fehler = True
+                                                        If Not oPCollection.Contains(msgtxt) Then
+                                                            oPCollection.Add(msgtxt, msgtxt)
+                                                        End If
+                                                        Throw New ArgumentException(msgtxt)
                                                     End If
-                                                Else
-                                                    msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
-                                                    If awinSettings.englishLanguage Then
-                                                        msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
-                                                    End If
-                                                    fehler = True
-                                                    Throw New ArgumentException(msgtxt)
-                                                End If
+
+                                                Next
+
+                                                anzArbTage = anzArbStd / 8
+                                                hrole.kapazitaet(colOfDate) = anzArbTage
+                                                iSp = iSp + anzDays
+                                                anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
+                                                anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
 
                                             Next
 
-                                            anzArbTage = anzArbStd / 8
-                                            hrole.kapazitaet(colOfDate) = anzArbTage
-                                            iSp = iSp + anzDays
-                                            anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
-                                            anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
+                                        Else
 
-                                        Next
-
-                                    Else
-                                        msgtxt = "Rolle " & rolename & " nicht definiert ..."
-                                        If awinSettings.englishLanguage Then
-                                            msgtxt = "Role " & rolename & " not defined ..."
+                                            If awinSettings.englishLanguage Then
+                                                msgtxt = "Role " & rolename & " not defined ..."
+                                            Else
+                                                msgtxt = "Rolle " & rolename & " nicht definiert ..."
+                                            End If
+                                            If Not oPCollection.Contains(msgtxt) Then
+                                                oPCollection.Add(msgtxt, msgtxt)
+                                            End If
+                                            'Call MsgBox(msgtxt)
+                                            fehler = True
                                         End If
-                                        Call MsgBox(msgtxt)
-                                        fehler = True
-                                    End If
-                                Else
-                                    msgtxt = "kein Rollenname angegeben ..."
-                                    If awinSettings.englishLanguage Then
-                                        msgtxt = "Name of role not given ..."
-                                    End If
-                                    Call MsgBox(msgtxt)
-                                    fehler = True
-                                End If
+                                    Else
 
-                            Next iZ
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "No Name of role given ..."
+                                        Else
+                                            msgtxt = "kein Rollenname angegeben ..."
+                                        End If
+                                        If Not oPCollection.Contains(msgtxt) Then
+                                            oPCollection.Add(msgtxt, msgtxt)
+                                        End If
+                                        'Call MsgBox(msgtxt)
+                                    End If
 
+                                Next iZ
+
+                            End If   ' ende von if not OK
                         Else
-                            msgtxt = "Worksheet" & hstr(0) & " gehört nicht zum Urlaubsplaner ..."
-                            If awinSettings.englishLanguage Then
-                                msgtxt = "Worksheet " & hstr(0) & "doesn't belongs to planning holidays ..."
+                            If awinSettings.visboDebug Then
+
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Worksheet " & hstr(0) & "doesn't belongs to planning holidays ..."
+                                Else
+                                    msgtxt = "Worksheet" & hstr(0) & " gehört nicht zum Urlaubsplaner ..."
+                                End If
+                                If Not oPCollection.Contains(msgtxt) Then
+                                    oPCollection.Add(msgtxt, msgtxt)
+                                End If
+                                Call MsgBox(msgtxt)
                             End If
-                            'Call MsgBox(msgtxt)
+
                         End If
 
                     Next index
@@ -11857,7 +11898,7 @@ Public Module awinGeneralModules
 
                 Catch ex2 As Exception
                     If fehler Then
-                        Call MsgBox(msgtxt)
+                        'Call MsgBox(msgtxt)
                         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         RoleDefinitions = request.retrieveRolesFromDB(DateTime.Now)
 
@@ -11865,11 +11906,14 @@ Public Module awinGeneralModules
                         If awinSettings.englishLanguage Then
                             msgtxt = "Therefore read the capacity of every Role from the DB  ..."
                         End If
+                        If Not oPCollection.Contains(msgtxt) Then
+                            oPCollection.Add(msgtxt, msgtxt)
+                        End If
                         Call MsgBox(msgtxt)
                     End If
                 End Try
 
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                'kapaWB.Close(SaveChanges:=False)
             Catch ex As Exception
 
             End Try
@@ -11886,6 +11930,9 @@ Public Module awinGeneralModules
         End If
 
         enableOnUpdate = True
+        kapaWB.Close(SaveChanges:=False)
+
+        Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Problem sind beim Lesen der Urlaubsplanung aufgetreten")
 
     End Sub
 

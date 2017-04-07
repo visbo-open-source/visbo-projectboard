@@ -148,6 +148,7 @@ Imports System.Windows
         Dim storedAtOrBefore As Date = Date.Now
         Dim ControlID As String = control.Id
         Dim timeStampsCollection As New Collection
+        Dim dbConstellations As New clsConstellations
 
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
@@ -163,7 +164,8 @@ Imports System.Windows
         If ControlID = loadFromDatenbank And Not noDB Then
 
             If request.pingMongoDb() Then
-                Dim dbConstellations As clsConstellations = request.retrieveConstellationsFromDB()
+
+                dbConstellations = request.retrieveConstellationsFromDB()
 
                 Try
                     timeStampsCollection = request.retrieveZeitstempelFromDB()
@@ -229,6 +231,15 @@ Imports System.Windows
                     If Not constellationsToDo.Contains(constellation.constellationName) Then
                         constellationsToDo.Add(constellation)
                     End If
+                Else
+                    constellation = dbConstellations.getConstellation(tmpName)
+                    If Not IsNothing(constellation) Then
+                        If Not constellationsToDo.Contains(constellation.constellationName) Then
+                            constellationsToDo.Add(constellation)
+                        End If
+                        projectConstellations.Add(constellation)
+                    End If
+
                 End If
 
             Next
