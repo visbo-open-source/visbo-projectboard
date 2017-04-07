@@ -315,8 +315,14 @@ Public Class clsPPTShapes
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function calcXtoDate(ByVal xPos As Double) As Date
-        Dim tmpDate As Date = Me.PPTStartOFCalendar.AddDays(CInt((xPos - Me._drawingAreaLeft) / Me._tagesbreite))
+
+        Dim tmpDate As Date = Me.PPTStartOFCalendar
+
+        If Me._tagesbreite > 0 Then
+            tmpDate = Me.PPTStartOFCalendar.AddDays(CInt((xPos - Me._drawingAreaLeft) / Me._tagesbreite))
+        End If
         calcXtoDate = tmpDate
+
     End Function
 
     ''' <summary>

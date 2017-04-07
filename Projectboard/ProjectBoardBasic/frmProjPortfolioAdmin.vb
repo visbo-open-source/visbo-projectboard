@@ -57,6 +57,8 @@ Public Class frmProjPortfolioAdmin
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Friend aKtionskennung As Integer
 
+   
+
     Private Sub frmProjPortfolioAdmin_Disposed(sender As Object, e As EventArgs) Handles Me.Disposed
 
     End Sub
@@ -74,8 +76,9 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.activateV Or _
             aKtionskennung = PTTvActions.loadPV Then
 
-            currentBrowserConstellation.constellationName = "Last"
-            projectConstellations.update(currentBrowserConstellation)
+            ' 27.3.17 die letzte Editor Zusammenstellung nicht speichern; damit aucn im load nicht abfragen ... 
+            'currentBrowserConstellation.constellationName = calcLastEditorScenarioName() ' wird damit jetzt auf Last & dbusername gesetzt 
+            'projectConstellations.update(currentBrowserConstellation)
 
         End If
         
@@ -487,6 +490,10 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    Private Sub frmProjPortfolioAdmin_InputLanguageChanging(sender As Object, e As InputLanguageChangingEventArgs) Handles Me.InputLanguageChanging
+
+    End Sub
+
 
     Private Sub frmDefineEditPortfolio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -533,23 +540,44 @@ Public Class frmProjPortfolioAdmin
         ' wie heisst das aktuelle Szenario ? 
         Me.Text = Me.Text & ": " & currentConstellationName
 
-        ' jetzt muss bestimmt werden , was die aktuelle SessionConstellation ist 
-        If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
-            currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy("Last")
-            'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+        ' '' jetzt muss bestimmt werden , was die aktuelle SessionConstellation ist 
+        ''If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
+        ''    currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy("Last")
+        ''    'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
 
-        ElseIf projectConstellations.Contains("Last") And AlleProjekte.Count > 0 Then
-            currentBrowserConstellation = projectConstellations.getConstellation("Last")
-            'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+        ''ElseIf projectConstellations.Contains("Last") And AlleProjekte.Count > 0 Then
+        ''    currentBrowserConstellation = projectConstellations.getConstellation("Last")
+        ''    'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
 
-        ElseIf AlleProjekte.Count > 0 Then
-            'browserAlleProjekte = AlleProjekte.createCopy
-            'currentBrowserConstellation = New clsConstellation(browserAlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
-            currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
+        ''ElseIf AlleProjekte.Count > 0 Then
+        ''    'browserAlleProjekte = AlleProjekte.createCopy
+        ''    'currentBrowserConstellation = New clsConstellation(browserAlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
+        ''    currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
+        ''End If
+
+        ' neuer Ansatz
+        '' das hier nicht machen, weil man damit nicht mehr an alle kommt 
+        If Not quickList Then
+            If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
+                currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy()
+
+
+                'ElseIf projectConstellations.Contains(calcLastEditorScenarioName) And AlleProjekte.Count > 0 Then
+                '    currentBrowserConstellation = projectConstellations.getConstellation(calcLastEditorScenarioName)
+
+
+            ElseIf AlleProjekte.Count > 0 Then
+                currentBrowserConstellation = currentSessionConstellation.copy()
+            End If
         End If
 
+        
+
+
+        ' Ende neuer Ansatz 
+     
         ' jetzt die Korrektheitsprüfung ...
-        If awinSettings.visboDebug Then
+        If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
             currentBrowserConstellation.checkAndCorrectYourself()
         End If
 
@@ -706,8 +734,8 @@ Public Class frmProjPortfolioAdmin
         ' das muss hier vermerkt werden ...
         If aKtionskennung = PTTvActions.chgInSession Or _
             aKtionskennung = PTTvActions.activateV Then
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & " (*)"
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
             End If
 
             Dim preText As String
@@ -1042,11 +1070,11 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
+                    ' jetzt das Browser Szenario aktualisieren 
+                    currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, node.Checked)
+
                     ' jetzt die Variante aktivieren 
                     Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
-
-                    ' jetzt das Browser Szenario aktualsieren 
-                    currentBrowserConstellation.updateShowAttributes(pName)
 
                     ' jetzt die Charts , Einzel- wie Multiprojekt-Charts aktualisieren 
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
@@ -1094,7 +1122,14 @@ Public Class frmProjPortfolioAdmin
                             selectedVariantName = getVariantNameOfTreeNode(childNode.Text)
                         End If
 
-                        Call putProjectInShow(pName, selectedVariantName, considerDependencies, False)
+                        ' jetzt das Browser Szenario aktualisieren 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, node.Checked)
+
+                        Call putProjectInShow(pName:=pName, _
+                                          vName:=selectedVariantName, considerDependencies:=considerDependencies, _
+                                          upDateDiagrams:=False, _
+                                          myConstellation:=currentBrowserConstellation)
+
                         ' jetzt muss das Projekt aus AlleProjekte auch in ShowProjekte transferiert werden 
 
                         ' jetzt muss noch die TreeView ggf angepasst werden, wenn considerDependencies true ist 
@@ -1110,6 +1145,7 @@ Public Class frmProjPortfolioAdmin
                         End If
                     Else
                         ' wurde abgewählt 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, Nothing, False)
 
                         Call putProjectInNoShow(pName, considerDependencies, False)
 
@@ -1126,9 +1162,6 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-
-                    ' jetzt das Browser Szenario aktualisieren 
-                    currentBrowserConstellation.updateShowAttributes()
 
                     ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
@@ -1159,6 +1192,7 @@ Public Class frmProjPortfolioAdmin
                         ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
                         selectedVariantName = getVariantNameOfTreeNode(node.Text)
 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, True)
 
 
                     Else
@@ -1173,6 +1207,8 @@ Public Class frmProjPortfolioAdmin
                             ' darf eigentlich gar nicht vorkommen 
                             selectedVariantName = ""
                         End If
+
+                        Call currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, False)
 
                         ' '' die Standard Variante auf Checked setzen 
                         ''For i = 0 To projektNode.Nodes.Count - 1
@@ -1191,9 +1227,6 @@ Public Class frmProjPortfolioAdmin
                     If ShowProjekte.contains(pName) And projektNode.Checked Then
 
                         Call replaceProjectVariant(pName, selectedVariantName, False, True, 0)
-
-                        ' jetzt das Browser Szenario aktualsieren 
-                        currentBrowserConstellation.updateShowAttributes(pName)
 
                         Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                         Call aktualisiereCharts(hproj, True)
@@ -1888,6 +1921,10 @@ Public Class frmProjPortfolioAdmin
                                 End If
                             End If
 
+                            ' da hier manuell Projekte hinzu kommen, muss der Sort-Type auf customTF gesetzt werden 
+                            currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
                             For v = 1 To anzahlVarianten
 
                                 'variantNode = projektNode.Nodes.Item(v - 1)
@@ -1908,6 +1945,7 @@ Public Class frmProjPortfolioAdmin
                                         showAttribute = False
                                     End If
                                 End If
+
 
                                 Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
 
@@ -1974,6 +2012,10 @@ Public Class frmProjPortfolioAdmin
 
                                 ElseIf aKtionskennung = PTTvActions.loadPV Then
 
+                                    ' da hier manuell Projekte hinzu kommen, muss der Sort-Type auf customTF gesetzt werden 
+                                    currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF
+                                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
                                     Call loadProjectfromDB(outPutCollection, pname, variantName, first, storedAtOrBefore)
                                     first = False
 
@@ -1988,7 +2030,6 @@ Public Class frmProjPortfolioAdmin
                                         End With
                                         currentBrowserConstellation.add(cItem)
                                     End If
-
 
                                 End If
 
@@ -2032,11 +2073,11 @@ Public Class frmProjPortfolioAdmin
             If aKtionskennung = PTTvActions.delFromSession Or _
                 aKtionskennung = PTTvActions.loadPV Or _
                 aKtionskennung = PTTvActions.deleteV Then
-                If Not currentConstellationName.EndsWith("(*)") Then
-                    currentConstellationName = currentConstellationName & " (*)"
+                If currentConstellationName <> calcLastSessionScenarioName() Then
+                    currentConstellationName = calcLastSessionScenarioName()
                 End If
 
-                Call storeSessionConstellation("Last")
+                'Call storeSessionConstellation("Last")
             End If
 
 
@@ -2065,9 +2106,12 @@ Public Class frmProjPortfolioAdmin
                     currentBrowserConstellation.copy(currentConstellationName)
 
                 ' Korrektheitsprüfung
+                ' testen 
+              
                 If awinSettings.visboDebug Then
                     toStoreConstellation.checkAndCorrectYourself()
                 End If
+             
 
                 projectConstellations.update(toStoreConstellation)
 
@@ -2082,10 +2126,10 @@ Public Class frmProjPortfolioAdmin
 
                         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                             txtMsg1 = "Speichern Szenario " & toStoreConstellation.constellationName
-                            txtMsg2 = "folgende Probleme sind aufgetreten:"
+                            txtMsg2 = "folgende Informationen:"
                         Else
                             txtMsg1 = "Store Scenario " & toStoreConstellation.constellationName
-                            txtMsg2 = "following problems occurred:"
+                            txtMsg2 = "following messages:"
                         End If
                         Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
 
@@ -2196,6 +2240,10 @@ Public Class frmProjPortfolioAdmin
                             Next
                         End If
 
+                        ' jetzt muss das Show-Attribut entsprechend gesetzt werden 
+                        Call currentBrowserConstellation.updateShowAttributes(pName, variantName, True)
+
+
                         ' jetzt muss das Projekt in Showprojekte eingetragen werden bzw. das alte zuvor gelöscht werden 
                         If ShowProjekte.contains(pName) Then
                             ShowProjekte.Remove(pName)
@@ -2205,21 +2253,19 @@ Public Class frmProjPortfolioAdmin
                         Dim hproj As clsProjekt = AlleProjekte.getProject(key)
 
                         ShowProjekte.Add(hproj)
-
+                        
                     Else
                         ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
                     End If
 
                 Next
 
-                ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
-                currentBrowserConstellation.updateShowAttributes()
-
                 ' jetzt muss die Plan-Tafel gelöscht werden 
                 Call awinClearPlanTafel()
 
                 ' jetzt muss die Plan-Tafel neu gezeichnet werden 
-                Call awinZeichnePlanTafelNeu(True)
+                'Call awinZeichnePlanTafelNeu(True)
+                Call awinZeichnePlanTafel(True)
 
                 ' jetzt müssen die Diagramme neu gezeichnet werden 
                 Call awinNeuZeichnenDiagramme(2)
@@ -2372,8 +2418,10 @@ Public Class frmProjPortfolioAdmin
 
         If aKtionskennung = PTTvActions.chgInSession Or _
             aKtionskennung = PTTvActions.activateV Then
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & " (*)"
+
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
+
                 Dim preText As String = "Szenario "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                     preText = "Scenario "
@@ -2381,7 +2429,6 @@ Public Class frmProjPortfolioAdmin
 
                 Me.Text = preText & currentConstellationName
             End If
-
 
         End If
 
@@ -2558,6 +2605,9 @@ Public Class frmProjPortfolioAdmin
 
                             projectNode.Checked = False
 
+                            ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
+                            currentBrowserConstellation.updateShowAttributes(pName, Nothing, False)
+
                         Else
                             ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
                         End If
@@ -2570,9 +2620,7 @@ Public Class frmProjPortfolioAdmin
                     ' jetzt muss Showprojekte gelöscht werden 
                     ShowProjekte.Clear()
 
-                    ' jetzt müssen die Show Attribute und die Zeilen neu gesetzt werden ...
-                    currentBrowserConstellation.updateShowAttributes()
-
+                    
                     ' jetzt müssen die Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
 
@@ -2698,8 +2746,9 @@ Public Class frmProjPortfolioAdmin
 
         If aKtionskennung = PTTvActions.chgInSession Or _
             aKtionskennung = PTTvActions.activateV Then
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & " (*)"
+
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
 
                 Dim preText As String = "Szenario "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -2707,7 +2756,6 @@ Public Class frmProjPortfolioAdmin
                 End If
                 Me.Text = preText & currentConstellationName
             End If
-
 
         End If
 
@@ -2740,8 +2788,8 @@ Public Class frmProjPortfolioAdmin
         ' wenn auf der Datenbank gefiltert werden soll - und das geht nur , in dem etwas geladen wird ... 
         Dim browserAlleProjekte As New clsProjekteAlle
 
-        If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & " (*)"
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
 
             Dim preText As String = "Szenario "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -2791,7 +2839,7 @@ Public Class frmProjPortfolioAdmin
             'jetzt wird die aktuelleGesamtListe aufgebaut; sobald die mal aufgebaut wurde, muss sie nicht wieder aufgebaut werden ... 
             ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
             If Not browserAlleProjekte.Count = 0 Then
-                browserAlleProjekte.Clear()
+                browserAlleProjekte.Clear(False)
             End If
             browserAlleProjekte.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
             quickList = False
@@ -2869,7 +2917,8 @@ Public Class frmProjPortfolioAdmin
 
                     ' jetzt müssen die tfZeile neu besetzt werden;
                     '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
-                    currentBrowserConstellation.setTfZeilen(0)
+                    ' tk 21.3.17: ab jetzt nicht mehr .... jetzt wird ja in der _sortlist alles mitgeführt 
+                    ''currentBrowserConstellation.setTfZeilen(0)
 
                     If removeList.Count > 0 Then
                         Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
@@ -3157,8 +3206,8 @@ Public Class frmProjPortfolioAdmin
     ''' <remarks></remarks>
     Private Sub onlyActive_Click(sender As Object, e As EventArgs) Handles onlyActive.Click
 
-        If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & " (*)"
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
 
             Dim preText As String = "Szenario "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -3178,8 +3227,8 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub onlyInactive_Click(sender As Object, e As EventArgs) Handles onlyInactive.Click
 
-        If Not currentConstellationName.EndsWith("(*)") Then
-            currentConstellationName = currentConstellationName & " (*)"
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
 
             Dim preText As String = "Szenario "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
@@ -3260,7 +3309,8 @@ Public Class frmProjPortfolioAdmin
         If currentBrowserConstellation.count <> anzPVsBefore Then
 
             ' die Positionierung entsprechend Standard setzen ...
-            currentBrowserConstellation.setTfZeilen(0)
+            ' tk 21.3.17 jetzt nicht mehr 
+            ' currentBrowserConstellation.setTfZeilen(0)
 
             Dim tmpConstellation As New clsConstellations
             tmpConstellation.Add(currentBrowserConstellation)

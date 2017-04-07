@@ -58,6 +58,11 @@ Public Class frmSelectImportFiles
             Me.Text = "Massen-Edit Datei auswählen"
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
             Me.alleButton.Visible = False
+        ElseIf menueAswhl = PTImpExp.scenariodefs Then
+            dirname = importOrdnerNames(PTImpExp.scenariodefs)
+            Me.Text = "Szenario-Definitions-Datei auswählen"
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
         End If
 
 
@@ -141,6 +146,8 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.massenEdit Then
             dirName = importOrdnerNames(PTImpExp.massenEdit)
 
+        ElseIf menueAswhl = PTImpExp.scenariodefs Then
+            dirName = importOrdnerNames(PTImpExp.scenariodefs)
         End If
 
         For i = 1 To Me.ListImportFiles.Items.Count
@@ -196,6 +203,9 @@ Public Class frmSelectImportFiles
             selectedDateiName = dirName & "\" & ListImportFiles.Text
         ElseIf menueAswhl = PTImpExp.massenEdit Then
             dirName = importOrdnerNames(PTImpExp.massenEdit)
+            selectedDateiName = dirName & "\" & ListImportFiles.Text
+        ElseIf menueAswhl = PTImpExp.scenariodefs Then
+            dirName = importOrdnerNames(PTImpExp.scenariodefs)
             selectedDateiName = dirName & "\" & ListImportFiles.Text
         End If
 

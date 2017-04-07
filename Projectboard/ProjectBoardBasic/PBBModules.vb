@@ -202,53 +202,121 @@ Public Module PBBModules
 
             ElseIf controlID = "PTXG1B4" Or controlID = "PT0G1B8" Then
                 ' Namen auswählen, Visualisieren
-                awinSettings.useHierarchy = False
-                With nameFormular
-                    
-                    .menuOption = PTmenue.visualisieren
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                Dim ok As Boolean = True
+                If controlID = "PTXG1B4" Then
+                    ' Multiprojekt Sicht erfordert Zeitraum 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                        ' alles ok 
+                    Else
+                        ok = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define timeframe first ...")
+                        Else
+                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        End If
+                    End If
+                End If
 
-                End With
+                If ok Then
+                    awinSettings.useHierarchy = False
+                    With nameFormular
+
+                        .menuOption = PTmenue.visualisieren
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+
+                    End With
+                End If
+                
 
             ElseIf controlID = "PTXG1B5" Or controlID = "PT0G1B9" Then
                 ' Hierarchie auswählen, visualisieren
-                awinSettings.useHierarchy = True
+                Dim ok As Boolean = True
+                If controlID = "PTXG1B5" Then
+                    ' Multiprojekt Sicht erfordert Zeitraum 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                        ' alles ok 
+                    Else
+                        ok = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define timeframe first ...")
+                        Else
+                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        End If
+                    End If
+                End If
 
-                With hryFormular
-                    
-                    .menuOption = PTmenue.visualisieren
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                If ok Then
+                    awinSettings.useHierarchy = True
 
-                End With
+                    With hryFormular
+
+                        .menuOption = PTmenue.visualisieren
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+
+                    End With
+                End If
+                
             ElseIf controlID = "PTXG1B6" Or controlID = "PTMEC1" Then
                 ' Namen auswählen, Leistbarkeit
+                Dim ok As Boolean = True
+                If controlID = "PTXG1B6" Then
+                    ' Multiprojekt Sicht erfordert Zeitraum 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                        ' alles ok 
+                    Else
+                        ok = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define timeframe first ...")
+                        Else
+                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        End If
+                    End If
+                End If
 
-                awinSettings.useHierarchy = False
-                With nameFormular
+                If ok Then
+                    awinSettings.useHierarchy = False
+                    With nameFormular
 
-                    .ribbonButtonID = controlID
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                        .ribbonButtonID = controlID
+                        .menuOption = PTmenue.leistbarkeitsAnalyse
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
 
-                End With
+                    End With
+                End If
+                
 
             ElseIf controlID = "PTXG1B7" Then
-                ' Hierarchie auswählen, Leistbarkeit
-                awinSettings.useHierarchy = True
-                With hryFormular
-                    
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
 
-                End With
+
+
+                ' Multiprojekt Sicht erfordert Zeitraum 
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                    ' alles ok 
+                    ' Hierarchie auswählen, Leistbarkeit
+                    awinSettings.useHierarchy = True
+                    With hryFormular
+
+                        .menuOption = PTmenue.leistbarkeitsAnalyse
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+
+                    End With
+
+                Else
+
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please define timeframe first ...")
+                    Else
+                        Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                    End If
+                End If
 
 
             ElseIf controlID = "PT1G1M1B1" Then
@@ -272,7 +340,7 @@ Public Module PBBModules
 
                     With nameFormular
 
-                        
+
                         .menuOption = PTmenue.einzelprojektReport
                         '.Show()
                         ' bei Reports mit der Background Worker Behandlung 
@@ -306,7 +374,7 @@ Public Module PBBModules
 
                     awinSettings.useHierarchy = True
                     With hryFormular
-                        
+
                         .menuOption = PTmenue.einzelprojektReport
                         ' bei Verwendung Background Worker muss Modal erfolgen 
                         '.Show()
@@ -386,7 +454,7 @@ Public Module PBBModules
 
                 With nameFormular
 
-                    
+
                     .menuOption = PTmenue.excelExport
                     returnValue = .ShowDialog
 
@@ -429,7 +497,7 @@ Public Module PBBModules
 
                 With nameFormular
 
-                    
+
                     .menuOption = PTmenue.vorlageErstellen
                     returnValue = .ShowDialog
 
@@ -578,7 +646,7 @@ Public Module PBBModules
         Dim resultat As DialogResult
         ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim newproj As clsProjekt
-        Dim key As String
+        'Dim key As String
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
         Dim neuerVariantenName As String = ""
@@ -665,16 +733,16 @@ Public Module PBBModules
 
                         End With
 
-                        If Not currentConstellationName.EndsWith("(*)") Then
-                            currentConstellationName = currentConstellationName & " (*)"
+                        If currentConstellationName <> calcLastSessionScenarioName() Then
+                            currentConstellationName = calcLastSessionScenarioName()
                         End If
 
                         ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
                         ShowProjekte.Remove(hproj.name)
 
                         ' die neue Variante wird aufgenommen
-                        key = calcProjektKey(newproj)
-                        AlleProjekte.Add(key, newproj)
+                        'key = calcProjektKey(newproj)
+                        AlleProjekte.Add(newproj)
                         ShowProjekte.Add(newproj)
 
                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
@@ -706,7 +774,9 @@ Public Module PBBModules
 
         End If
 
-        Call storeSessionConstellation("Last")
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
         enableOnUpdate = True
 
@@ -749,6 +819,9 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
     End Sub
     ''' <summary>
@@ -836,8 +909,8 @@ Public Module PBBModules
 
             Next
 
-            If Not currentConstellationName.EndsWith("(*)") Then
-                currentConstellationName = currentConstellationName & " (*)"
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
             End If
 
             ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
@@ -894,7 +967,10 @@ Public Module PBBModules
 
         Call awinDeSelect()
 
-        Call storeSessionConstellation("Last")
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -941,7 +1017,9 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
-
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
 
     End Sub
@@ -964,7 +1042,7 @@ Public Module PBBModules
 
         If AlleProjekte.Count > 0 Then
             ' das letzte Portfolio speichern 
-            Call storeSessionConstellation("Last")
+            'Call storeSessionConstellation("Last")
 
             Try
 
@@ -1121,6 +1199,9 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
+        If currentConstellationName <> calcLastSessionScenarioName() Then
+            currentConstellationName = calcLastSessionScenarioName()
+        End If
 
     End Sub
 

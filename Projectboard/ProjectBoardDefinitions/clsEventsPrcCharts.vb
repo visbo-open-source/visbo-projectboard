@@ -16,7 +16,7 @@ Public Class clsEventsPrcCharts
 
 
         If selectedProjekte.Count > 0 Then
-            selectedProjekte.Clear()
+            selectedProjekte.Clear(False)
             Call awinNeuZeichnenDiagramme(8)
         End If
 
