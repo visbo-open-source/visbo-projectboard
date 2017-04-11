@@ -162,7 +162,11 @@ Public Class Tabelle2
         End Try
 
         Application.EnableEvents = formerEE
-        'Application.ScreenUpdating = True
+        If Application.ScreenUpdating = False Then
+            Application.ScreenUpdating = True
+        End If
+
+
 
     End Sub
 

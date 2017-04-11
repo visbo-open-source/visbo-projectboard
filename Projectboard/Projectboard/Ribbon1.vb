@@ -2439,6 +2439,13 @@ Imports System.Windows
                     tmpLabel = "Database"
                 End If
 
+            Case "PT4G2B3" ' WritePrioList
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Prioritäten-Liste"
+                Else
+                    tmpLabel = "Priority-List"
+                End If
+
             Case "PT5G1" ' Laden
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Laden"
@@ -2787,7 +2794,11 @@ Imports System.Windows
             ' wenn es jetzt etwas zu tun gibt ... 
             If todoListe.Count > 0 Then
                 ' alles ok ...
-                'Call deleteChartsInSheet(arrWsNames(3))
+                ' wenn die Charts da bleiben, kann das zu Fehlern führen ... 
+                'appInstance.ScreenUpdating = False
+                'Call awinStoreCockpit("_Last")
+                Call deleteChartsInSheet(arrWsNames(3))
+
                 Call enableControls(ptModus.massEditRessCost)
 
                 ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
@@ -2896,12 +2907,14 @@ Imports System.Windows
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
-        appInstance.ScreenUpdating = False
+        ' tk , das Dalassen der Charts kann zu Fehlern führen ... 
+        'appInstance.ScreenUpdating = False
+        'Call awinLoadCockpit("_Last")
+        'appInstance.ScreenUpdating = True
         ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             .Activate()
         End With
-
 
 
     End Sub
@@ -4875,6 +4888,25 @@ Imports System.Windows
 
 
 
+    End Sub
+
+    Public Sub awinWritePrioList(control As IRibbonControl)
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Try
+            Call writeProjektsForSequencing()
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
     End Sub
 
     ''' <summary>

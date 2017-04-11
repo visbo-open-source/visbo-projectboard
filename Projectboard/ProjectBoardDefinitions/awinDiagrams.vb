@@ -397,14 +397,15 @@ Public Module awinDiagrams
 
                     ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
                     Dim sumRoleShowsPlaceHolderAndAssigned As Boolean
-
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
                     For r = 1 To myCollection.Count
 
                         sumRoleShowsPlaceHolderAndAssigned = False
                         'prcName = CStr(myCollection.Item(r))
                         ' wird jetzt über das folgende bestimmt
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                            Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+                            Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvName)
                         Else
                             prcName = CStr(myCollection.Item(r))
                         End If
@@ -424,7 +425,7 @@ Public Module awinDiagrams
                                 objektFarbe = tmpPhaseDef.farbe
                             End If
 
-                            datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
+                            datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
 
                         ElseIf prcTyp = DiagrammTypen(1) Then
                             einheit = " " & awinSettings.kapaEinheit
@@ -1206,13 +1207,15 @@ Public Module awinDiagrams
 
             ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
             Dim sumRoleShowsPlaceHolderAndAssigned As Boolean
-
+            
             For r = 1 To myCollection.Count
 
+                Dim type As Integer = -1
+                Dim pvname As String = ""
                 sumRoleShowsPlaceHolderAndAssigned = False
 
                 If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                    Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
+                    Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvname)
                 Else
                     prcName = CStr(myCollection.Item(r))
                 End If
@@ -1234,12 +1237,12 @@ Public Module awinDiagrams
                         objektFarbe = tmpPhaseDef.farbe
                     End If
 
-                    datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
+                    datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvname)
                     hmxWert = Max(datenreihe.Max, hmxWert)
 
                     If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                         ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                        tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName, breadcrumb)
+                        tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvname)
                         For ix = 0 To bis - von
                             datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
                             seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)

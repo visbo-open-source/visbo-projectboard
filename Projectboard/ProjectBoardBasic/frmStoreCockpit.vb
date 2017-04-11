@@ -78,7 +78,10 @@ Public Class frmStoreCockpit
         i = 1
         While i <= xlsCockpits.Worksheets.Count
             wsSheet = CType(xlsCockpits.Worksheets.Item(i), xlNS.Worksheet)
-            ComboBox1.Items.Add(wsSheet.Name)
+            If wsSheet.Name <> "_Last" Then
+                ComboBox1.Items.Add(wsSheet.Name)
+            End If
+
             i = i + 1
         End While
 

@@ -1368,7 +1368,11 @@ Public Module testModule
                                             Dim fullmsName As String = tmpStr(i - 1).Trim
                                             Dim msName As String = ""
                                             Dim breadcrumb As String = ""
-                                            Call splitHryFullnameTo2(fullmsName, msName, breadcrumb)
+                                            Dim type As Integer = -1
+                                            Dim pvName As String = ""
+                                            Call splitHryFullnameTo2(fullmsName, msName, breadcrumb, type, pvName)
+
+
                                             Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
                                             Dim msItem As String
 
@@ -6463,12 +6467,16 @@ Public Module testModule
         Dim elemName As String = ""
         Dim breadcrumb As String = ""
 
+
         ' die eindeutigen Klassen-Namen bestimmen
         ' nur für die muss eine Legende geschrieben werden 
         If selectedPhases.Count > 0 Then
             For i As Integer = 1 To selectedPhases.Count
                 fullName = CStr(selectedPhases.Item(i))
-                Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+
+                Dim type As Integer = -1
+                Dim pvName As String = ""
+                Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
                 If uniquePhases.Contains(elemName) Then
                     ' nichts tun
@@ -6482,7 +6490,10 @@ Public Module testModule
         If selectedMilestones.Count > 0 Then
             For i As Integer = 1 To selectedMilestones.Count
                 fullName = CStr(selectedMilestones.Item(i))
-                Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+
+                Dim type As Integer = -1
+                Dim pvName As String = ""
+                Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
                 If uniqueMilestones.Contains(elemName) Then
                     ' nichts tun
@@ -11209,46 +11220,56 @@ Public Module testModule
                         Dim breadcrumb As String = ""
                         Dim phaseName As String = ""
 
-                        Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
-                        Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                        Dim type As Integer = -1
+                        Dim pvName As String = ""
+                        Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb, type, pvName)
 
-                        For px As Integer = 0 To phaseIndices.Length - 1
-                            If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
-                                cphase = hproj.getPhase(phaseIndices(px))
-                                If Not IsNothing(cphase) Then
-                                    If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
-                                        ' das umschliesst jetzt bereits fullyContained 
+                        If type = -1 Or
+                            (type = PTProjektType.projekt And pvName = hproj.name) Or
+                            (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
 
-                                        If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
-                                            tmpMinimum = cphase.getStartDate
-                                        End If
+                            Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
-                                        If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
-                                            tmpMaximum = cphase.getEndDate
-                                        End If
+                            For px As Integer = 0 To phaseIndices.Length - 1
+                                If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                                    cphase = hproj.getPhase(phaseIndices(px))
+                                    If Not IsNothing(cphase) Then
+                                        If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
+                                            ' das umschliesst jetzt bereits fullyContained 
+
+                                            If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                                tmpMinimum = cphase.getStartDate
+                                            End If
+
+                                            If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                                tmpMaximum = cphase.getEndDate
+                                            End If
 
 
-                                    Else
-                                        ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
-                                        ' andernfalls muss nichts gemacht werden 
+                                        Else
+                                            ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
+                                            ' andernfalls muss nichts gemacht werden 
 
-                                        If awinSettings.mppFullyContained Then
-                                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+                                            If awinSettings.mppFullyContained Then
+                                                If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
 
-                                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
-                                                    tmpMinimum = cphase.getStartDate
+                                                    If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                                        tmpMinimum = cphase.getStartDate
+                                                    End If
+
+                                                    If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                                        tmpMaximum = cphase.getEndDate
+                                                    End If
+
                                                 End If
-
-                                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
-                                                    tmpMaximum = cphase.getEndDate
-                                                End If
-
                                             End If
                                         End If
                                     End If
                                 End If
-                            End If
-                        Next ' ix
+                            Next ' ix
+
+                        End If
+                        
                     Catch ex As Exception
 
                         Call MsgBox(" in catch von for each phase")
@@ -11271,36 +11292,46 @@ Public Module testModule
 
                     Dim breadcrumb As String = ""
                     Dim msName As String = ""
-                    Call splitHryFullnameTo2(fullMsName, msName, breadcrumb)
+                    Dim type As Integer = -1
+                    Dim pvName As String = ""
+                    Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
 
-                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
-                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                    If type = -1 Or
+                            (type = PTProjektType.projekt And pvName = hproj.name) Or
+                            (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
 
-                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                        Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
+                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
-                        If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
+                        For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                            Try
-                                tmpDate = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).getDate
+                            If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
 
-                                If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+                                Try
+                                    tmpDate = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).getDate
 
-                                    If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
-                                        tmpMinimum = tmpDate
+                                    If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+
+                                        If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                                            tmpMinimum = tmpDate
+                                        End If
+
+                                        If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                                            tmpMaximum = tmpDate
+                                        End If
+
                                     End If
+                                Catch ex As Exception
 
-                                    If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
-                                        tmpMaximum = tmpDate
-                                    End If
+                                End Try
 
-                                End If
-                            Catch ex As Exception
+                            End If
 
-                            End Try
+                        Next
 
-                        End If
+                    End If
 
-                    Next
+                    
                 Next
             End If
 
@@ -14717,16 +14748,28 @@ Public Module testModule
 
                         While j <= selectedPhases.Count And Not found
 
-                            Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb)
-                            If cphase.name = selPhaseName Then
-                                If vglBreadCrumb.EndsWith(breadcrumb) Then
-                                    found = True
+                            Dim type As Integer = -1
+                            Dim pvName As String = ""
+                            Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
+
+                            If type = -1 Or
+                                (type = PTProjektType.projekt And pvName = hproj.name) Or _
+                                (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
+
+                                If cphase.name = selPhaseName Then
+                                    If vglBreadCrumb.EndsWith(breadcrumb) Then
+                                        found = True
+                                    Else
+                                        j = j + 1
+                                    End If
                                 Else
                                     j = j + 1
                                 End If
+
                             Else
                                 j = j + 1
                             End If
+                            
 
                         End While
 
@@ -15049,75 +15092,84 @@ Public Module testModule
 
                                 Dim breadcrumbMS As String = ""
 
-                                Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS)
+                                Dim type As Integer = -1
+                                Dim pvName As String = ""
+                                Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS, type, pvName)
 
+                                If type = -1 Or
+                                    (type = PTProjektType.projekt And pvName = hproj.name) Or _
+                                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
 
-                                ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
-                                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
+                                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
 
-                                Dim phaseNameID As String = ""
+                                    Dim phaseNameID As String = ""
 
-                                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                                    ms = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                                        ms = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                                    If Not IsNothing(ms) Then
+                                        If Not IsNothing(ms) Then
 
-                                        Dim msDate As Date = ms.getDate
+                                            Dim msDate As Date = ms.getDate
 
-                                        Dim phaseNameID1 As String = hproj.hierarchy.getParentIDOfID(ms.nameID)
-                                        phaseNameID = hproj.getPhase(milestoneIndices(0, mx)).nameID
+                                            Dim phaseNameID1 As String = hproj.hierarchy.getParentIDOfID(ms.nameID)
+                                            phaseNameID = hproj.getPhase(milestoneIndices(0, mx)).nameID
 
-                                        If phaseNameID <> phaseNameID1 Then
-                                            'Call MsgBox(" Schleife über Meilensteine,  Fehler in zeichnePPTprojects,")
-                                        End If
+                                            If phaseNameID <> phaseNameID1 Then
+                                                'Call MsgBox(" Schleife über Meilensteine,  Fehler in zeichnePPTprojects,")
+                                            End If
 
-                                        If phaseNameID = cphase.nameID Then
-                                            Dim zeichnenMS As Boolean
+                                            If phaseNameID = cphase.nameID Then
+                                                Dim zeichnenMS As Boolean
 
-                                            Dim hilfsvar As Integer = hproj.hierarchy.getIndexOfID(cphase.nameID)
+                                                Dim hilfsvar As Integer = hproj.hierarchy.getIndexOfID(cphase.nameID)
 
-                                            If IsNothing(msDate) Then
-                                                zeichnenMS = False
-                                            Else
-                                                If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+                                                If IsNothing(msDate) Then
+                                                    zeichnenMS = False
+                                                Else
+                                                    If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
 
-                                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                                    If awinSettings.mppShowAllIfOne Then
-                                                        zeichnenMS = True
-                                                    Else
-                                                        If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+                                                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                                                        If awinSettings.mppShowAllIfOne Then
                                                             zeichnenMS = True
                                                         Else
-                                                            zeichnenMS = False
+                                                            If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+                                                                zeichnenMS = True
+                                                            Else
+                                                                zeichnenMS = False
+                                                            End If
                                                         End If
+                                                    Else
+                                                        zeichnenMS = False
                                                     End If
-                                                Else
-                                                    zeichnenMS = False
                                                 End If
+
+
+                                                If zeichnenMS Then
+
+                                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                                      ms, hproj, milestoneGrafikYPos, rds)
+
+
+
+
+                                                End If
+
+
+                                            Else
+                                                ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
+                                                ' also: nichts tun
                                             End If
 
-
-                                            If zeichnenMS Then
-
-                                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
-                                                                                  ms, hproj, milestoneGrafikYPos, rds)
-
-
-
-
-                                            End If
-
-
-                                        Else
-                                            ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
-                                            ' also: nichts tun
                                         End If
 
-                                    End If
 
+                                    Next mx
 
-                                Next mx
+                                End If
+
+                                
 
                             Next ix  ' nächsten selektieren Meilenstein überprüfen und ggfs. einzeichnen 
 
@@ -16428,7 +16480,9 @@ Public Module testModule
 
         Dim uniqueElemClasses As New Collection
         For i = 1 To selectedPhases.Count
-            Call splitHryFullnameTo2(CStr(selectedPhases(i)), phaseName, breadcrumb)
+            Dim type As Integer = -1
+            Dim pvName As String = ""
+            Call splitHryFullnameTo2(CStr(selectedPhases(i)), phaseName, breadcrumb, type, pvName)
 
             If uniqueElemClasses.Contains(phaseName) Then
                 ' nichts tun, ist schon enthalten 
@@ -16536,7 +16590,9 @@ Public Module testModule
 
         uniqueElemClasses.Clear()
         For i = 1 To selectedMilestones.Count
-            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(i)), msName, breadcrumbMS)
+            Dim type As Integer = -1
+            Dim pvName As String = ""
+            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(i)), msName, breadcrumbMS, type, pvName)
 
             If uniqueElemClasses.Contains(msName) Then
                 ' nichts tun, ist schon enthalten 
@@ -17057,7 +17113,9 @@ Public Module testModule
                         Case PTpfdk.Phasen
                             Dim phName As String = ""
                             Dim tmpBC As String = ""
-                            Call splitHryFullnameTo2(tmpName, phName, tmpBC)
+                            Dim typePv As Integer = -1
+                            Dim pvName As String = ""
+                            Call splitHryFullnameTo2(tmpName, phName, tmpBC, typePv, pvName)
                             If PhaseDefinitions.Contains(phName) Then
                                 tmpCollection.Add(tmpName, tmpName)
                             End If
@@ -17065,7 +17123,9 @@ Public Module testModule
                         Case PTpfdk.Meilenstein
                             Dim msName As String = ""
                             Dim tmpBC As String = ""
-                            Call splitHryFullnameTo2(tmpName, msName, tmpBC)
+                            Dim typePv As Integer = -1
+                            Dim pvName As String = ""
+                            Call splitHryFullnameTo2(tmpName, msName, tmpBC, typePv, pvName)
                             If MilestoneDefinitions.Contains(msName) Then
                                 tmpCollection.Add(tmpName, tmpName)
                             End If

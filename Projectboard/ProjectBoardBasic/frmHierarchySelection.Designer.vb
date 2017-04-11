@@ -61,15 +61,15 @@ Partial Class frmHierarchySelection
         'hryStufenLabel
         '
         Me.hryStufenLabel.AutoSize = True
-        Me.hryStufenLabel.Location = New System.Drawing.Point(12, 24)
+        Me.hryStufenLabel.Location = New System.Drawing.Point(215, 24)
         Me.hryStufenLabel.Name = "hryStufenLabel"
-        Me.hryStufenLabel.Size = New System.Drawing.Size(300, 13)
+        Me.hryStufenLabel.Size = New System.Drawing.Size(264, 13)
         Me.hryStufenLabel.TabIndex = 35
-        Me.hryStufenLabel.Text = "wie viele ""Eltern"" sollen bei der Suche berücksichtigt werden?"
+        Me.hryStufenLabel.Text = "Anzahl Parents in der Projekt-Struktur berücksichtigen:"
         '
         'hryStufen
         '
-        Me.hryStufen.Location = New System.Drawing.Point(388, 24)
+        Me.hryStufen.Location = New System.Drawing.Point(490, 20)
         Me.hryStufen.Name = "hryStufen"
         Me.hryStufen.Size = New System.Drawing.Size(57, 20)
         Me.hryStufen.TabIndex = 34
