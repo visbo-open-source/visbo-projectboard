@@ -205,7 +205,7 @@ Public Class clsawinSettings
 
     ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
     Public Property isHryNameFrmActive As Boolean
-
+    
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
@@ -344,7 +344,7 @@ Public Class clsawinSettings
 
         _useHierarchy = True
         _isHryNameFrmActive = False
-
+   
         _visboDebug = False
 
 

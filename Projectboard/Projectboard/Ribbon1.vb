@@ -10509,7 +10509,9 @@ Imports System.Windows
 
             reportAuswahl.calledFrom = "Multiprojekt-Tafel"
             returnvalue = reportAuswahl.ShowDialog
+
             Call awinDeSelect()
+
         Else
             If awinSettings.englishLanguage Then
                 Call MsgBox("please load some projects first ...")

@@ -311,6 +311,7 @@ Public Class frmHierarchySelection
                 .einstellungen.Visible = True
 
                 ' Filter
+                .filterDropbox.DropDownStyle = ComboBoxStyle.Simple
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
 
@@ -613,13 +614,30 @@ Public Class frmHierarchySelection
 
                 Dim vorlagenDateiName As String
 
-                If Me.menuOption = PTmenue.multiprojektReport Or repProfil.isMpp Then
+                If Me.menuOption = PTmenue.multiprojektReport Then
                     vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
                                     "\" & repVorlagenDropbox.Text
-                Else
+                ElseIf Me.menuOption = PTmenue.einzelprojektReport Then
 
                     vorlagenDateiName = awinPath & RepProjectVorOrdner & _
                                     "\" & repVorlagenDropbox.Text
+
+                Else
+
+                    If Not IsNothing(repProfil) Then
+                        If repProfil.isMpp Then
+                            vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                                    "\" & repVorlagenDropbox.Text
+                        Else
+
+                            vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                                            "\" & repVorlagenDropbox.Text
+                        End If
+                    Else
+                        ' im zweifelsfall werden die Portfolio Vorlagen angezeigt
+                        vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                                                            "\" & repVorlagenDropbox.Text
+                    End If
                 End If
 
                 ' Prüfen, ob die Datei überhaupt existirt 
@@ -672,22 +690,21 @@ Public Class frmHierarchySelection
                                     Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then  ' Zeitraum wurde nicht gesetzt
                                     Throw New ArgumentException("Zum Erstellen des Reports muss ein ein Zeitraum gesetzt sein")
                                 End If
-
-                            Else
-                                Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
-
-                                repProfil.PPTTemplate = repVorlagenDropbox.Text
-
-                                BackgroundWorker3.RunWorkerAsync(repProfil)
-
-
                             End If
-                            Else
 
-                                'Call PPTstarten()
 
-                                BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
-                            End If
+                            Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+
+                            repProfil.PPTTemplate = repVorlagenDropbox.Text
+
+                            BackgroundWorker3.RunWorkerAsync(repProfil)
+
+                        Else
+
+                            'Call PPTstarten()
+                            BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+
+                        End If
 
 
                     Catch ex As Exception

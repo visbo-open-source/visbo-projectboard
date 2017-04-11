@@ -36,7 +36,7 @@ Public Class frmReportProfil
                     e.Cancel = True 'Fenster wird nicht geschlossen
             End Select
         End If
-
+      
     End Sub
 
     Private Sub languageSettings()
@@ -56,6 +56,8 @@ Public Class frmReportProfil
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Call languageSettings()
+
+
 
         If Me.calledFrom = "MS Project" Then
 
@@ -178,6 +180,8 @@ Public Class frmReportProfil
             End Try
 
         ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+
+        
             Try
                 If currentReportProfil.name = "Last" Then
                     ' Profil von letztem Report unter Name "Last" speichern
@@ -208,9 +212,11 @@ Public Class frmReportProfil
 
                     If listOfFiles.Count < 1 Then
 
-                        Dim msgTxt As String = " Es existiert noch kein Report-Profil! "
+                        Dim msgTxt As String
                         If awinSettings.englishLanguage Then
                             msgTxt = "no Report Profile existing!"
+                        Else
+                            msgTxt = " Es existiert noch kein Report-Profil! "
                         End If
                         Call MsgBox(msgTxt)
 
@@ -239,9 +245,11 @@ Public Class frmReportProfil
 
                                 Catch ex As Exception
                                     'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
-                                    Dim msgTxt As String = "ReportProfil '" & profilName & "' konnte nicht eingelesen werden!"
+                                    Dim msgTxt As String
                                     If awinSettings.englishLanguage Then
                                         msgTxt = "Report Profile '" & profilName & "' could not be read!"
+                                    Else
+                                        msgTxt = "ReportProfil '" & profilName & "' konnte nicht eingelesen werden!"
                                     End If
                                     Call MsgBox(msgTxt)
                                 End Try
@@ -522,7 +530,7 @@ Public Class frmReportProfil
                                 Me.statusLabel.Text = msgTxt
 
                                 Call MsgBox(msgTxt)
-                                MyBase.Close()
+                                ' MyBase.Close()
 
                             Else
 
@@ -552,7 +560,7 @@ Public Class frmReportProfil
                                 Me.statusLabel.Text = msgTxt
 
                                 Call MsgBox(msgTxt)
-                                MyBase.Close()
+                                'MyBase.Close()
                             Else
                                 Me.statusLabel.Visible = True
                                 Me.statusLabel.Text = "...started"
@@ -683,8 +691,8 @@ Public Class frmReportProfil
                 '' '' Einlesen des ausgewählten ReportProfils 
                 '' '' ''reportAllProfil = XMLImportReportAllProfil(reportProfilName)
 
-                ' TO DO :nun muss das Formular zum Ändern gefüllt und angezeigt werden
 
+                ' TO DO :nun muss das Formular zum Ändern gefüllt und angezeigt werden
 
                 If Not IsNothing(reportProfil) Then
                     ToolTipProfil.Show(reportProfil.description, RepProfilListbox, 6000)
@@ -794,32 +802,6 @@ Public Class frmReportProfil
 
                             End If
 
-
-                            '' ''        For k As Integer = 1 To listOfFiles.Count
-
-                            '' ''            dateiName = listOfFiles.Item(k - 1)
-                            '' ''            If dateiName.Contains(".xml") Then
-
-                            '' ''                Try
-
-                            '' ''                    Dim hstr() As String
-                            '' ''                    hstr = Split(dateiName, ".xml", 2)
-                            '' ''                    Dim hhstr() As String
-                            '' ''                    hhstr = Split(hstr(0), "\")
-                            '' ''                    profilName = hhstr(hhstr.Length - 1)
-                            '' ''                    RepProfilListbox.Items.Add(profilName)
-
-                            '' ''                Catch ex As Exception
-
-                            '' ''                End Try
-
-                            '' ''            End If
-
-                            '' ''        Next k
-                            '' ''        RepProfilListbox.SelectedItem = selectedItem
-
-                            '' ''Else
-                            '' ''        Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
 
                         End If
                         'RepVorlagenListBox ist nun  neu aufgebaut
@@ -1152,6 +1134,7 @@ Public Class frmReportProfil
 
                     End If
                 Next
+
 
 
             Catch ex As Exception
