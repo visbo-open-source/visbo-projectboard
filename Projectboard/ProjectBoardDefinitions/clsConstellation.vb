@@ -403,29 +403,41 @@
 
     Public Sub checkAndCorrectYourself()
 
-        ' Check 1: 
-        ' sind alle ShowProjekte auch in der Constellation aufgeführt ? 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            ' Check 1: 
+            ' sind alle ShowProjekte auch in der Constellation aufgeführt ? 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            Try
 
-            Dim key As String = calcProjektKey(kvp.Value)
-            If _allItems.ContainsKey(key) Then
-                If _allItems.Item(key).show = True Then
-                    ' alles in Ordnung 
+                Dim key As String = calcProjektKey(kvp.Value)
+                If _allItems.ContainsKey(key) Then
+                    If _allItems.Item(key).show = True Then
+                        ' alles in Ordnung 
+                    Else
+                        Call MsgBox("hat kein Show-Attribut:" & key)
+                    End If
+
                 Else
-                    Call MsgBox("hat kein Show-Attribut:" & key)
+                    Call MsgBox("Show-Projekt nicht enthalten: " & key)
                 End If
 
-            Else
-                Call MsgBox("Show-Projekt nicht enthalten: " & key)
-            End If
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
 
         Next
 
-        ' Check 2: 
-        ' sind alle Items aus der Constellation mit Attribut Show=true auch in ShowProjekte? 
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+            ' Check 2: 
+            ' sind alle Items aus der Constellation mit Attribut Show=true auch in ShowProjekte? 
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
             If kvp.Value.show = True Then
-                Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.projectName)
+                Dim hproj As clsProjekt = Nothing
+
+                Try
+                    hproj = ShowProjekte.getProject(kvp.Value.projectName)
+                Catch ex As Exception
+                    hproj = Nothing
+                End Try
+
                 If Not IsNothing(hproj) Then
                     If hproj.variantName = kvp.Value.variantName Then
                         ' alles in Ordnung 
@@ -437,7 +449,7 @@
                 End If
             End If
 
-        Next
+            Next
 
     End Sub
     ''' <summary>

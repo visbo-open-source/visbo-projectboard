@@ -349,6 +349,9 @@ Public Class ThisWorkbook
         'Dim anzWindows As Integer = appInstance.Windows.Count
 
 
+
+
+
         appInstance.ScreenUpdating = True
 
         If Application.Workbooks.Count <= 1 Then
