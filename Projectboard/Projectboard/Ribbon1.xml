@@ -346,6 +346,8 @@
         <group id="PT4G1" getLabel ="bestimmeLabel">
           <!--label="Import Projekte (Batch)"-->
           <button id="PT4G1B1" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="auf Basis einer Batch-Datei können neue Projekte unter Verwendung von Projekt-Templates schnell erzeugt werden"/>
+          <!--label="Import Szenario Definition"-->
+          <button id="PT4G1B5" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Szenario Definitionen eingelesen werden"/>
           <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
           <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
           <separator id="PT4G1s1"/>
@@ -385,13 +387,11 @@
             <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
           </menu>
           <separator id="PT4G2s2"/>-->
-          <!--<menu id="PT4G2M3" label ="Rollen - Kostenzuordnung " supertip ="alle angezeigten Projekte werden ausgeleitet ">
+          <menu id="PT4G2M3" label ="Rollen - Kostenzuordnung " supertip ="alle angezeigten Projekte werden ausgeleitet ">
             <button id="PT4G2M3B1" label="Exportieren" onAction="awinWriteProjektBedarfeXLSX" supertip ="alle Werte im sogenannten Massen-Edit bearbeiten"/>
-            -->
-          <!--<button id="PT4G1M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
-            <button id="PT4G1M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
-          <!--
-          </menu>-->
+            <button id="PT4G1M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
+            <button id="PT4G1M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>
+          </menu>
           <!--<menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
             <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
             <button id="PT4G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Hierarchie"/>
@@ -490,8 +490,8 @@
           <button id="pt4g5b6" label="import alte projekt-steckbriefe vor pt113" onAction="tom2g4m1importold" supertip ="alle projekte, die als visbo steckbrief beschrieben im folder projectfiles liegen, werden importiert; achtung: struktur von feature pt113, spalte summe"/>
           <button id="pt4g5b7" label="neue rollen/kosten-struktur" onAction="pttestfunktion7" supertip ="test der optimierten rollen-/kosten verweise"/>
           <button id="pt6g5b5" label="Test WriteProtection"  onAction ="pttestWriteProtect" supertip ="Test der Funktion WriteProtect"/>
-        </group>
-        <group id ="PT6G6" label ="Licensierung">
+        </group>-->
+        <!--<group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
         </group>-->

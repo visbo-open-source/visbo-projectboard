@@ -54,6 +54,7 @@ Partial Class frmOutputWindow
         Me.Controls.Add(Me.lblOutput)
         Me.Name = "frmOutputWindow"
         Me.Text = "Meldungen"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

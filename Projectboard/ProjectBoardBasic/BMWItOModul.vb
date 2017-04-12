@@ -1063,7 +1063,7 @@ Public Module BMWItOModul
                         End If
 
                         ' jetzt muss das Projekt eingetragen werden 
-                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                        ImportProjekte.Add(hproj, False)
                         myCollection.Add(calcProjektKey(hproj))
 
                     End If
@@ -1491,7 +1491,8 @@ Public Module BMWItOModul
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
             Dim zeile1 As Integer = kvp.Value.tfZeile
-            Dim zeile2 As Integer = ShowProjekte.getPTZeile(kvp.Key)
+            'Dim zeile2 As Integer = ShowProjekte.getPTZeile(kvp.Key)
+            Dim zeile2 As Integer = currentSessionConstellation.getBoardZeile(kvp.Key)
             If zeile1 <> zeile2 Then
                 Call MsgBox("ungleich 1/2: " & kvp.Key & ": " & zeile1.ToString & " , " & zeile2.ToString)
                 atleastOne = True

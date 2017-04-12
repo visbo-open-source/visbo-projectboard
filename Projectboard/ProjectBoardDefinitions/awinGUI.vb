@@ -467,7 +467,12 @@ Public Module awinGUI
                             Catch ex As Exception
 
                             End Try
+                        ElseIf bubbleValues(i - 1) > 0 Then
+                            Try
+                                .DataLabel.Font.Color = awinSettings.AmpelGruen
+                            Catch ex As Exception
 
+                            End Try
                         End If
 
                     End With
@@ -1137,7 +1142,7 @@ Public Module awinGUI
 
             showLabels = True
 
-            If projektListe.Count > 0 Then
+            If projektListe.Count >= 0 Then
 
                 ' Einstellungen der vorhandenen SeriesCollection merken
 
@@ -1196,147 +1201,161 @@ Public Module awinGUI
                 ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
 
 
-
                 .SeriesCollection.NewSeries()
                 .SeriesCollection(1).name = diagramTitle
                 .SeriesCollection(1).ChartType = Excel.XlChartType.xlBubble3DEffect
 
-                For i = 1 To anzBubbles
-                    tempArray(i - 1) = xAchsenValues(i - 1)
-                Next i
-                .SeriesCollection(1).XValues = tempArray ' strategic
 
-                For i = 1 To anzBubbles
-                    tempArray(i - 1) = riskValues(i - 1)
-                Next i
-                .SeriesCollection(1).Values = tempArray
+                ' ur: 06.04.2017: nur wenn Werte für die SeriesCollection vorhanden sind
+                ' d.h. ProjekteListe ist nicht leer
+                If projektListe.Count > 0 Then
 
-                For i = 1 To anzBubbles
-                    If bubbleValues(i - 1) < 0.01 And bubbleValues(i - 1) > -0.01 Then
-                        tempArray(i - 1) = 0.01
-                    ElseIf bubbleValues(i - 1) < 0 Then
-                        ' negative Werte werden Positiv dargestellt mit roten Beschriftung siehe unten
-                        tempArray(i - 1) = System.Math.Abs(bubbleValues(i - 1))
-                    Else
-                        tempArray(i - 1) = bubbleValues(i - 1)
-                    End If
-                Next i
+                    For i = 1 To anzBubbles
+                        tempArray(i - 1) = xAchsenValues(i - 1)
+                    Next i
+                    .SeriesCollection(1).XValues = tempArray ' strategic
 
+                    For i = 1 To anzBubbles
+                        tempArray(i - 1) = riskValues(i - 1)
+                    Next i
+                    .SeriesCollection(1).Values = tempArray
 
-                .SeriesCollection(1).BubbleSizes = tempArray
-
-                Dim series1 As Excel.Series = _
-                        CType(.SeriesCollection(1),  _
-                                Excel.Series)
-                Dim point1 As Excel.Point = _
-                            CType(series1.Points(1), Excel.Point)
-
-                'Dim testName As String
-
-                Dim bubblePoint As Excel.Point
-                For i = 1 To anzBubbles
-
-                    bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
-
-                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
-
-                        If showLabels Then
-                            Try
-                                .HasDataLabel = True
-
-                                With .DataLabel
-                                    .Text = PfChartBubbleNames(i - 1)
-                                    .Font.Size = dlFontSize
-                                    .Font.Background = dlFontBackground
-                                    .Font.Bold = dlFontBold
-                                    .Font.Color = dlFontColor
-                                    .Font.ColorIndex = dlFontColorIndex
-                                    .Font.FontStyle = dlFontFontStyle
-                                    .Font.Italic = dlFontItalic
-                                    .Font.Size = dlFontSize
-                                    .Font.Strikethrough = dlFontStrikethrough
-                                    .Font.Subscript = dlFontSubscript
-                                    .Font.Superscript = dlFontSuperscript
-                                    .Font.Underline = dlFontUnderline
-
-                                    'ur: 17.7.2014: fontsize kommt vom existierenden Chart
-                                    '.Font.Size = awinSettings.CPfontsizeItems
-
-                                    ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
-
-                                    If bubbleValues(i - 1) < 0 Then
-                                        .Font.Color = awinSettings.AmpelRot
-
-                                    End If
-
-                                    Select Case positionValues(i - 1)
-                                        Case labelPosition(0)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
-                                        Case labelPosition(1)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionRight
-                                        Case labelPosition(2)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionBelow
-                                        Case labelPosition(3)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionLeft
-                                        Case Else
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
-                                    End Select
-                                End With
-                            Catch ex As Exception
-
-                            End Try
+                    For i = 1 To anzBubbles
+                        If bubbleValues(i - 1) < 0.01 And bubbleValues(i - 1) > -0.01 Then
+                            tempArray(i - 1) = 0.01
+                        ElseIf bubbleValues(i - 1) < 0 Then
+                            ' negative Werte werden Positiv dargestellt mit roten Beschriftung siehe unten
+                            tempArray(i - 1) = System.Math.Abs(bubbleValues(i - 1))
                         Else
-                            .HasDataLabel = False
+                            tempArray(i - 1) = bubbleValues(i - 1)
                         End If
+                    Next i
 
-                        ' Änderung 30.12.15 
-                        If awinSettings.mppShowAmpel Then
-                            .Interior.Color = ampelValues(i - 1)
+
+                    .SeriesCollection(1).BubbleSizes = tempArray
+
+                    Dim series1 As Excel.Series = _
+                            CType(.SeriesCollection(1),  _
+                                    Excel.Series)
+                    Dim point1 As Excel.Point = _
+                                CType(series1.Points(1), Excel.Point)
+
+                    'Dim testName As String
+
+                    Dim bubblePoint As Excel.Point
+                    For i = 1 To anzBubbles
+
+                        bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                        With CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                            If showLabels Then
+                                Try
+                                    .HasDataLabel = True
+
+                                    With .DataLabel
+                                        .Text = PfChartBubbleNames(i - 1)
+                                        .Font.Size = dlFontSize
+                                        .Font.Background = dlFontBackground
+                                        .Font.Bold = dlFontBold
+                                        .Font.Color = dlFontColor
+                                        .Font.ColorIndex = dlFontColorIndex
+                                        .Font.FontStyle = dlFontFontStyle
+                                        .Font.Italic = dlFontItalic
+                                        .Font.Size = dlFontSize
+                                        .Font.Strikethrough = dlFontStrikethrough
+                                        .Font.Subscript = dlFontSubscript
+                                        .Font.Superscript = dlFontSuperscript
+                                        .Font.Underline = dlFontUnderline
+
+                                        'ur: 17.7.2014: fontsize kommt vom existierenden Chart
+                                        '.Font.Size = awinSettings.CPfontsizeItems
+
+                                        ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+
+                                        Select Case positionValues(i - 1)
+                                            Case labelPosition(0)
+                                                .Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                                            Case labelPosition(1)
+                                                .Position = Excel.XlDataLabelPosition.xlLabelPositionRight
+                                            Case labelPosition(2)
+                                                .Position = Excel.XlDataLabelPosition.xlLabelPositionBelow
+                                            Case labelPosition(3)
+                                                .Position = Excel.XlDataLabelPosition.xlLabelPositionLeft
+                                            Case Else
+                                                .Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
+                                        End Select
+                                    End With
+                                Catch ex As Exception
+
+                                End Try
+
+                                ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+                                If bubbleValues(i - 1) < 0 Then
+                                    Try
+                                        .DataLabel.Font.Color = awinSettings.AmpelRot
+                                    Catch ex As Exception
+
+                                    End Try
+                                ElseIf bubbleValues(i - 1) > 0 Then
+                                    Try
+                                        .DataLabel.Font.Color = awinSettings.AmpelGruen
+                                    Catch ex As Exception
+
+                                    End Try
+                                Else
+                                    Try
+                                        .DataLabel.Font.Color = System.Drawing.Color.Black
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
+
+                            Else
+                                .HasDataLabel = False
+                            End If
+
+                            ' Änderung 30.12.15 
+                            If awinSettings.mppShowAmpel Then
+                                .Interior.Color = ampelValues(i - 1)
+                            Else
+                                .Interior.Color = colorValues(i - 1)
+                            End If
+
+
+                            ' Änderung wenn ampeln gezeigt werden sollen ...
+
+                            'If awinSettings.mppShowAmpel Then
+
+                            '    With .Format.Glow
+                            '        .Color.RGB = CInt(ampelValues(i - 1))
+                            '        .Transparency = 0
+                            '        .Radius = 3
+                            '    End With
+
+                            'End If
+                            ' Ende Äderung 30.12.15
+
+                        End With
+                    Next i
+
+
+
+                    '.ChartGroups(1).BubbleScale = sollte in Abhängigkeit der width gemacht werden 
+                    With .ChartGroups(1)
+
+                        .BubbleScale = 20
+                        .SizeRepresents = Microsoft.Office.Interop.Excel.XlSizeRepresents.xlSizeIsArea
+
+                        If showNegativeValues Then
+                            .shownegativeBubbles = True
                         Else
-                            .Interior.Color = colorValues(i - 1)
-                        End If
-
-
-                        ' Änderung wenn ampeln gezeigt werden sollen ...
-
-                        'If awinSettings.mppShowAmpel Then
-
-                        '    With .Format.Glow
-                        '        .Color.RGB = CInt(ampelValues(i - 1))
-                        '        .Transparency = 0
-                        '        .Radius = 3
-                        '    End With
-
-                        'End If
-                        ' Ende Äderung 30.12.15
-
-
-                        ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
-                        If bubbleValues(i - 1) < 0 Then
-                            Try
-                                .DataLabel.Font.Color = awinSettings.AmpelRot
-                            Catch ex As Exception
-
-                            End Try
-
+                            .shownegativeBubbles = False
                         End If
                     End With
-                Next i
-
-
-
-                '.ChartGroups(1).BubbleScale = sollte in Abhängigkeit der width gemacht werden 
-                With .ChartGroups(1)
-
-                    .BubbleScale = 20
-                    .SizeRepresents = Microsoft.Office.Interop.Excel.XlSizeRepresents.xlSizeIsArea
-
-                    If showNegativeValues Then
-                        .shownegativeBubbles = True
-                    Else
-                        .shownegativeBubbles = False
-                    End If
-                End With
+                Else
+                    ' Projektliste ist leer
+                End If
 
             End If
 

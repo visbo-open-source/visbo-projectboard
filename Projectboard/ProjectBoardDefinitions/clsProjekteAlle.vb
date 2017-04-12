@@ -22,14 +22,14 @@ Public Class clsProjekteAlle
             If IsNothing(filteredBy) Then
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     If Not tmpKopie.Containskey(kvp.Key) Then
-                        tmpKopie.Add(kvp.Key, kvp.Value)
+                        tmpKopie.Add(kvp.Value)
                     End If
                 Next
             Else
                 ' nur die übernehmen, die auch in der Constellation enthalten sind 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     If filteredBy.contains(kvp.Key, False) And Not tmpKopie.Containskey(kvp.Key) Then
-                        tmpKopie.Add(kvp.Key, kvp.Value)
+                        tmpKopie.Add(kvp.Value)
                     End If
                 Next
             End If
@@ -42,11 +42,44 @@ Public Class clsProjekteAlle
     ''' <summary>
     ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
     ''' später soll die Aufrufleiste bereinigt werden ... 
+    ''' wenn der Schlüssel bereits existiert, wird eine Argument-Exception geworfen 
+    ''' </summary>
+    ''' <param name="project"></param>
+    ''' <param name="updateCurrentConstellation">soll die currentConstellation aktualisiert werden; nur bei AlleProjekte</param>
+    ''' <remarks></remarks>
+    Public Sub Add(ByVal project As clsProjekt, _
+                   Optional ByVal updateCurrentConstellation As Boolean = True, _
+                   Optional ByVal sortkey As Integer = -1)
+
+        Dim keyReal As String = calcProjektKey(project.name, project.variantName)
+        ' existiert es bereits ? 
+        ' wenn ja, dann löschen ...
+        If _allProjects.ContainsKey(keyReal) Then
+            _allProjects.Remove(keyReal)
+        End If
+
+        _allProjects.Add(keyReal, project)
+
+        ' 21.3.17
+        ' soll die currentConstellation upgedated werden ? 
+        If updateCurrentConstellation Then
+            Dim cItem As New clsConstellationItem
+            With cItem
+                .projectName = project.name
+                .variantName = project.variantName
+            End With
+            currentSessionConstellation.add(cItem, sortkey)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' so war Add bis zum 21.3.17
     ''' </summary>
     ''' <param name="key"></param>
     ''' <param name="project"></param>
     ''' <remarks></remarks>
-    Public Sub Add(ByVal key As String, ByVal project As clsProjekt)
+    Public Sub Add_old(ByVal key As String, ByVal project As clsProjekt)
 
         Dim keyReal As String = calcProjektKey(project.name, project.variantName)
         _allProjects.Add(keyReal, project)
@@ -85,7 +118,11 @@ Public Class clsProjekteAlle
         End Get
 
         Set(value As SortedList(Of String, clsProjekt))
-            _allProjects = value
+
+            If Not IsNothing(value) Then
+                _allProjects = value
+            End If
+
         End Set
 
     End Property
@@ -603,10 +640,15 @@ Public Class clsProjekteAlle
 
     ''' <summary>
     ''' entfernt das Element mit Schlüssel "Key" aus der Sorted List
+    ''' es wird - im Falle AlleProjekte (Aufruf-Schnittstelle beachten) auch die currentConstellation aktualisiert 
     ''' </summary>
     ''' <param name="key"></param>
     ''' <remarks></remarks>
-    Public Sub Remove(ByVal key As String)
+    Public Sub Remove(ByVal key As String, Optional ByVal updateCurrentConstellation As Boolean = True)
+
+        If updateCurrentConstellation Then
+            currentSessionConstellation.remove(key)
+        End If
 
         If _allProjects.ContainsKey(key) Then
             _allProjects.Remove(key)
@@ -619,7 +661,7 @@ Public Class clsProjekteAlle
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <remarks></remarks>
-    Public Sub RemoveAllVariantsOf(ByVal pName As String)
+    Public Sub RemoveAllVariantsOf(ByVal pName As String, Optional ByVal updateCurrentConstellation As Boolean = True)
 
         Dim i As Integer = 0
         Dim found As Boolean = False
@@ -639,6 +681,12 @@ Public Class clsProjekteAlle
             If i < _allProjects.Count Then
 
                 If _allProjects.ElementAt(i).Value.name = pName Then
+                    ' jetzt die currentConstellation aktualisieren 
+                    Dim key As String = _allProjects.ElementAt(i).Key
+                    If updateCurrentConstellation Then
+                        currentSessionConstellation.remove(key)
+                    End If
+
                     _allProjects.RemoveAt(i)
                 Else
                     found = False
@@ -656,9 +704,16 @@ Public Class clsProjekteAlle
     ''' setzt die Liste der Projekte zurück 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub Clear()
+    Public Sub Clear(Optional ByVal updateCurrentConstellation As Boolean = True)
 
         _allProjects.Clear()
+        ' die currentSessionConstellation neu aufsetzen
+        ' dei bekommt damit den Namen last<dbUSerName>
+
+        If updateCurrentConstellation Then
+            currentSessionConstellation = New clsConstellation
+        End If
+
 
     End Sub
 

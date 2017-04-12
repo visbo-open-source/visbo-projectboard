@@ -6,7 +6,7 @@ Public Class clsConstellationItem
     Private _projectName As String = ""
     Private _variantName As String = ""
     Private _start As Date = StartofCalendar
-    Private _show As Boolean = True
+    Private _show As Boolean = False
     Private _zeile As Integer = 0
 
     Public Property reasonToInclude As String
@@ -124,7 +124,7 @@ Public Class clsConstellationItem
         _projectName = ""
         _variantName = ""
         _Start = StartofCalendar.AddMonths(-1)
-        _show = True
+        _show = False
         _zeile = 0
         _reasonToInclude = ""
         _reasonToExclude = ""

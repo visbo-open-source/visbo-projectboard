@@ -181,6 +181,13 @@ Public Class clsProjekt
     'Public Property tfSpalte As Integer
 
     Private _tfZeile As Integer = 2
+    ''' <summary>
+    ''' muss immer richtig gesetzt sein; wird verwendet um Projekt, Phasne und Meilensteine zu zeichnen 
+    ''' wenn es neu gesetzt wird, werden auch die aktuelle Constellation und die "Hintergrund-Constellation" entsprechend gesetzt 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property tfZeile As Integer
         Get
             If Not IsNothing(_tfZeile) Then
@@ -191,9 +198,25 @@ Public Class clsProjekt
         End Get
         Set(value As Integer)
             If Not IsNothing(value) Then
-                _tfZeile = value
+                If value >= 2 Then
+                    _tfZeile = value
+                Else
+                    _tfZeile = 2
+                End If
+
             Else
                 _tfZeile = 2
+            End If
+
+            ' die tfzeile wird immer aufgrund der constellationItem.zeile gesetzt 
+            ' '' jetzt werden die currentConstellationsession und von der currentConstellation Werte entsprechend gesetzt 
+            Dim key As String = calcProjektKey(Me.name, Me.variantName)
+            currentSessionConstellation.updateTFzeile(key, _tfZeile)
+
+            Dim tmpConst As clsConstellation = _
+                projectConstellations.getConstellation(currentConstellationName)
+            If Not IsNothing(tmpConst) Then
+                tmpConst.updateTFzeile(key, _tfZeile)
             End If
 
         End Set
@@ -2087,6 +2110,59 @@ Public Class clsProjekt
 
 
     End Sub
+
+    ''' <summary>
+    ''' liefert den Sortierungs-Key für das das angegebene Sort-Kriterium 
+    ''' dient zur Verwendung in der Constellation
+    ''' </summary>
+    ''' <param name="sortType"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSortKeyForConstellation(ByVal sortType As Integer, _
+                                                              Optional ByVal lfdNr As Integer = 99999) As String
+        Get
+            Dim formatStr As String = "00000000"
+            Dim tmpResult As String = "xxx"
+            Select Case sortType
+
+                Case ptSortCriteria.alphabet
+                    ' das ist die Default-Lösung 
+                    tmpResult = Me.name
+
+                Case ptSortCriteria.buStartName
+                    tmpResult = Me.businessUnit & Me.Start.ToString(formatStr) & Me.name
+
+                Case ptSortCriteria.customFields12
+                    ' nimm aktuell die Default- Lösung 
+                    tmpResult = Me.name
+
+                Case ptSortCriteria.customListe
+                    ' in diesem Fall muss die Sortier-Kennung aus einer Excel-Liste kommen 
+                    tmpResult = calcSortKeyCustomTF(lfdNr)
+
+                Case ptSortCriteria.customTF
+                    tmpResult = calcSortKeyCustomTF(lfdNr)
+
+                Case ptSortCriteria.formel
+                    ' nimm aktuell die Default- Lösung 
+                    tmpResult = Me.name
+
+                Case ptSortCriteria.strategyProfitLossRisk
+                    Dim tmp(4) As Double
+                    Call Me.calculateRoundedKPI(tmp(0), tmp(1), tmp(2), tmp(3), tmp(4))
+                    tmpResult = CInt(Me.StrategicFit * 1000 + tmp(4) * 60 - Me.Risiko * 800).ToString(formatStr) & Me.name
+
+                Case Else
+                    ' nimm die Default- Lösung 
+                    tmpResult = Me.name
+
+            End Select
+
+            getSortKeyForConstellation = tmpResult
+
+        End Get
+    End Property
 
 
     ''' <summary>
