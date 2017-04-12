@@ -2,6 +2,7 @@
 Imports ProjectBoardBasic
 Imports MongoDbAccess
 Imports System.Windows.Forms
+Imports System.Drawing
 
 ''' <summary>
 ''' wird verwendet um Portfolios zu definieren, Varianten zu aktivieren, Projekte und Varianten zu laden, zu aktivieren und zu löschen 
@@ -32,6 +33,9 @@ Public Class frmProjPortfolioAdmin
     Private selectedTyps As New Collection
 
     Private toolTippsAreShowing As Integer
+
+    ' um den Fehler im bestimmeNode zu umgehen 
+
 
     ''' <summary>
     ''' welche ToolTipps sollen im Browser Fenster gezeigt werden 
@@ -572,8 +576,13 @@ Public Class frmProjPortfolioAdmin
         End If
 
         
-        ' Check ...
-        Call currentBrowserConstellation.checkAndCorrectYourself(aKtionskennung)
+
+     
+        ' jetzt die Korrektheitsprüfung ...
+        If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
+            currentBrowserConstellation.checkAndCorrectYourself()
+        End If
+
 
         ' jetzt die vorkommenden Timestamps auslesen 
         ' aber nicht bei allen Aktionskennungen 
@@ -672,7 +681,7 @@ Public Class frmProjPortfolioAdmin
         End If
 
         stopRecursion = True
-        Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
+        Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
         'Call buildTreeview(projektHistorien, TreeViewProjekte, pvNamesList, currentBrowserConstellation, _
         '                   aKtionskennung, quickList, _
         '                   storedAtOrBefore)
@@ -2098,8 +2107,14 @@ Public Class frmProjPortfolioAdmin
                 Dim toStoreConstellation As clsConstellation = _
                     currentBrowserConstellation.copy(currentConstellationName)
 
-                ' Check()
-                Call toStoreConstellation.checkAndCorrectYourself(aKtionskennung)
+
+                ' Korrektheitsprüfung
+                ' testen 
+              
+                If awinSettings.visboDebug Then
+                    toStoreConstellation.checkAndCorrectYourself()
+                End If
+             
 
                 projectConstellations.update(toStoreConstellation)
 
@@ -2909,7 +2924,7 @@ Public Class frmProjPortfolioAdmin
                     ''currentBrowserConstellation.setTfZeilen(0)
 
                     If removeList.Count > 0 Then
-                        Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
+                        Call updateTreeview(currentBrowserConstellation, pvNamesList, _
                                             aKtionskennung, quickList)
 
                         If aKtionskennung = PTTvActions.chgInSession Then
@@ -3036,7 +3051,7 @@ Public Class frmProjPortfolioAdmin
         filterDefinitions.storeFilter(fName, lastFilter)
 
         stopRecursion = True
-        Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, aKtionskennung, False)
+        Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, False)
         'Call buildTreeview(projektHistorien, TreeViewProjekte, browserAlleProjekte, pvNamesList, _
         '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
         stopRecursion = False
@@ -3309,7 +3324,7 @@ Public Class frmProjPortfolioAdmin
 
             ' den TreeView updaten ... 
             stopRecursion = True
-            Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, _
+            Call updateTreeview(currentBrowserConstellation, pvNamesList, _
                                             aKtionskennung, quickList)
             stopRecursion = False
 
@@ -3389,7 +3404,7 @@ Public Class frmProjPortfolioAdmin
             quickList = True
         End If
 
-        Call updateTreeview(TreeViewProjekte, currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
+        Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
 
         stopRecursion = False
 
@@ -3402,5 +3417,623 @@ Public Class frmProjPortfolioAdmin
     
     Private Sub OKButton_MouseHover(sender As Object, e As EventArgs) Handles OKButton.MouseHover
         Me.Cursor = Cursors.Default
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert bzw. baut die TreeView gemäß der aktuelleGesamtListe bzw. der pvNamesList neu auf
+    ''' Rahmenbedingung: stopRecursion ist immer False, wenn Update TreeView aufgerufen wird 
+    ''' </summary>
+    ''' <param name="constellation"></param>
+    ''' <param name="pvNamesList"></param>
+    ''' <param name="aKtionskennung"></param>
+    ''' <param name="quickList"></param>
+    ''' <remarks></remarks>
+    Private Sub updateTreeview(ByVal constellation As clsConstellation, _
+                                  ByVal pvNamesList As SortedList(Of String, String), _
+                                  ByVal aKtionskennung As Integer, _
+                                  ByVal quickList As Boolean)
+
+        Dim projectNode As TreeNode
+        Dim zeitraumVon As Date = StartofCalendar
+        Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
+        'Dim storedHeute As Date = Now
+        Dim storedGestern As Date = StartofCalendar
+        Dim pname As String = ""
+        Dim variantName As String = ""
+        Dim loadErrorMsg As String = ""
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' es ist ein Zeitraum definiert 
+            zeitraumVon = getDateofColumn(showRangeLeft, False)
+            zeitraumbis = getDateofColumn(showRangeRight, True)
+        End If
+
+        ' steuert, ob erstmal nur Projekt-Namen, Varianten-Namen gelesen werden 
+        ' geht wesentlich schneller, wenn es sich um eine Datenbank mit sehr vielen Projekten handelt ... 
+
+
+        With TreeviewProjekte
+            .Nodes.Clear()
+        End With
+
+
+
+        If Not IsNothing(constellation) Or pvNamesList.Count >= 1 Then
+
+            If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            End If
+
+            With TreeviewProjekte
+
+                .CheckBoxes = True
+
+                Dim projektliste As SortedList(Of String, String)
+
+                If quickList Then
+                    projektliste = New SortedList(Of String, String)
+                    For Each kvp As KeyValuePair(Of String, String) In pvNamesList
+                        Dim tmpName As String = kvp.Key
+                        If tmpName.Contains("#") Then
+                            Dim tmpStr() As String = tmpName.Split(New Char() {CChar("#")})
+                            If Not projektliste.ContainsKey(tmpStr(0)) Then
+                                projektliste.Add(tmpStr(0), tmpStr(0))
+                            End If
+                        Else
+                            If Not projektliste.ContainsKey(tmpName) Then
+                                projektliste.Add(tmpName, tmpName)
+                            End If
+                        End If
+                    Next
+
+                Else
+                    ' hole die Namen aus der sortierten Liste, nicht aus der cItem-Liste 
+                    projektliste = constellation.getProjectNames(False)
+                End If
+
+                Dim showPname As Boolean
+
+
+
+                For Each kvp As KeyValuePair(Of String, String) In projektliste
+
+                    showPname = True
+                    pname = kvp.Value ' der key ist das sortier-Kriterium, kann pName sein, aber auch was ganz anderes 
+
+                    Dim hproj As clsProjekt = Nothing
+                    Dim variantNames As Collection
+
+                    If quickList Then
+                        variantNames = getVariantListeFromPVNames(pvNamesList, pname)
+                    Else
+                        variantNames = constellation.getVariantNames(pname, True)
+                    End If
+
+
+                    If ShowProjekte.contains(pname) Then
+                        hproj = ShowProjekte.getProject(pname)
+                        'shownVariant = "(" & hproj.variantName & ")"
+                        'projectIsShown = True
+
+                    ElseIf AlleProjekte.Count > 0 Then
+                        Dim tmpList As Collection = AlleProjekte.getVariantNames(pname, False)
+
+                        If tmpList.Count > 0 Then
+                            variantName = CStr(tmpList.Item(1))
+                            hproj = AlleProjekte.getProject(pname, variantName)
+                        End If
+
+                    End If
+
+
+
+                    ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
+                    If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then
+                        If constellation.getVariantZahl(pname) <= 1 Then
+                            showPname = False
+                        End If
+                    End If
+
+                    If showPname Then
+
+
+                        projectNode = .Nodes.Add(pname)
+                        'projectNode.Text = pname
+                        ' das wird jetzt über bestimmeCheckStatus gemacht bzw. über bestimmeNodeAppearance
+                        ''If aKtionskennung = PTTvActions.chgInSession Or _
+                        ''    aKtionskennung = PTTvActions.activateV Then
+
+                        ''    If projectIsShown Then
+                        ''        projectNode.Checked = True
+                        ''        If aKtionskennung = PTTvActions.chgInSession Then
+                        ''            projectNode.Text = pname & " (" & hproj.variantName & ")"
+                        ''        End If
+                        ''    End If
+                        ''ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+                        ''    ' setzen der Checked Informationen 
+                        ''End If
+
+                        ' damit kann evtl direkt auf den Node zugegriffen werden ...
+                        projectNode.Name = pname
+
+
+
+                        If Not IsNothing(hproj) Then
+                            variantName = hproj.variantName
+                        End If
+
+                        ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
+
+                        If variantNames.Count > 1 Or _
+                            aKtionskennung = PTTvActions.delFromDB Then
+
+                            Dim vName As String = variantName
+                            projectNode.Tag = "X"
+                            For iv As Integer = 1 To variantNames.Count
+                                vName = CStr(variantNames.Item(iv))
+                                Dim vNameStripped As String = ""
+                                Dim tmpStr() As String = vName.Split(New Char() {CChar("("), CChar(")")})
+                                If tmpStr.Length = 1 Then
+                                    vNameStripped = tmpStr(0)
+                                ElseIf tmpStr.Length >= 3 Then
+                                    vNameStripped = tmpStr(1).Trim
+                                End If
+
+                                Dim variantNode As TreeNode = projectNode.Nodes.Add(vName)
+                                'variantNode.Text = vName
+
+                                If aKtionskennung = PTTvActions.delFromDB Then
+                                    variantNode.Tag = "P"
+                                    Dim tmpNodeLevel2 As TreeNode = variantNode.Nodes.Add("Platzhalter-Datum")
+                                Else
+                                    variantNode.Tag = "X"
+                                End If
+
+                                Call bestimmeNodeCheckStatus(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, _
+                                                             pname, vNameStripped)
+                                Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pname, vNameStripped)
+
+                            Next
+
+                        Else
+                            projectNode.Tag = "X"
+                        End If
+
+                        Call bestimmeNodeCheckStatus(projectNode, aKtionskennung, PTTreeNodeTyp.project, _
+                                                      pname, variantName)
+                        Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pname, variantName)
+
+                    End If
+
+                Next
+
+            End With
+        Else
+            Call MsgBox(loadErrorMsg)
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt in Abhängigkeit von Aktionskennung den Checkstatus, den das Projekt bzw. die Projekt-Variante haben soll 
+    ''' </summary>
+    ''' <param name="currentNode"></param>
+    ''' <param name="aktionskennung"></param>
+    ''' <param name="nodeTyp"></param>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <remarks></remarks>
+    Private Sub bestimmeNodeCheckStatus(ByRef currentNode As TreeNode, _
+                                           ByVal aktionskennung As Integer, ByVal nodeTyp As Integer, _
+                                           ByVal pName As String, ByVal vName As String)
+
+        Dim hproj As clsProjekt
+        Dim shownVariant As String
+
+        If aktionskennung = PTTvActions.chgInSession Or _
+                            aktionskennung = PTTvActions.activateV Then
+            Dim projectIsShown As Boolean = False
+
+            If ShowProjekte.contains(pName) Then
+                hproj = ShowProjekte.getProject(pName)
+                shownVariant = hproj.variantName
+
+                If nodeTyp = PTTreeNodeTyp.project Then
+                    ' setze den Projekt-Node
+                    currentNode.Checked = True
+
+                ElseIf nodeTyp = PTTreeNodeTyp.pVariant Then
+                    If shownVariant = vName Then
+                        currentNode.Checked = True
+                    Else
+                        currentNode.Checked = False
+                    End If
+
+
+                End If
+                projectIsShown = True
+            Else
+                If nodeTyp = PTTreeNodeTyp.project Then
+                    currentNode.Checked = False
+                Else
+                    ' keine Veränderung am CheckStatus vornehmen 
+                End If
+            End If
+
+
+        ElseIf aktionskennung = PTTvActions.setWriteProtection Then
+            ' setzen der Checked Informationen 
+            If nodeTyp = PTTreeNodeTyp.project Then
+                If currentNode.Nodes.Count = 0 Then
+                    ' es geht um den WriteProtections-Status des einen pName, vName Projektes 
+                    Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+                    Dim activeVariantName As String = vName
+                    If variantNames.Count = 1 Then
+                        activeVariantName = CStr(variantNames.Item(1))
+                    End If
+                    Dim pvName As String = calcProjektKey(pName, activeVariantName)
+                    If writeProtections.isProtected(pvName) Then
+                        currentNode.Checked = True
+                    Else
+                        currentNode.Checked = False
+                    End If
+                Else
+                    ' der Check-Status ergibt sich aus der Betrachtung der Child-Nodes 
+                    ' child-Nodes unterschiedlich: project-Node nicht gecheckt 
+                    ' child Nodes alle gecheckt: project Node gecheckt 
+                    Dim atleastOneIsDifferent As Boolean = False
+                    Dim checkStatus As Boolean = False
+                    For i As Integer = 1 To currentNode.Nodes.Count
+                        Dim childNode As TreeNode = currentNode.Nodes.Item(i - 1)
+                        If i = 1 Then
+                            checkStatus = childNode.Checked
+                        ElseIf childNode.Checked <> checkStatus Then
+                            atleastOneIsDifferent = True
+                            Exit For
+                        End If
+                    Next
+                    If atleastOneIsDifferent Then
+                        currentNode.Checked = False
+                    Else
+                        currentNode.Checked = checkStatus
+                    End If
+                End If
+            ElseIf nodeTyp = PTTreeNodeTyp.pVariant Then
+                ' es geht um den WriteProtections-Status des einen pName, vName Projektes
+                Dim pvName As String = calcProjektKey(pName, vName)
+                If writeProtections.isProtected(pvName) Then
+                    currentNode.Checked = True
+                Else
+                    currentNode.Checked = False
+                End If
+            End If
+
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt das Erscheinungsbild des Knoten in Abhängigkeiten von aktionskennung und dem Check-Zustand des Knoten
+    ''' ausserdem wird berücksichtigt, ob der Knoten isoliert betrachtet werden soll oder 
+    ''' sein Erscheinunngsbild in Abhängigkeit von den Child Knoten gesetzt werden soll 
+    ''' </summary>
+    ''' <param name="currentNode">der übergebene Node</param>
+    ''' <param name="aktionskennung">mit welcher Aktionskennung wurde der Portfolio Browser aufgerufe</param>
+    ''' <param name="nodeTyp">project, variant, timestamp</param>
+    ''' <param name="pName">der Projekt Name</param>
+    ''' <param name="vName">der Varianten Name</param>
+    ''' <remarks></remarks>
+    Private Sub bestimmeNodeAppearance(ByRef currentNode As TreeNode, _
+                                              ByVal aktionskennung As Integer, ByVal nodeTyp As Integer, _
+                                              ByVal pName As String, ByVal vName As String)
+
+
+        'Dim fontProtectedbyOther As System.Drawing.Font = New System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Italic)
+
+        'Dim fontPermanentProtected As System.Drawing.Font = awinSettings.protectedPermanentFont
+        'Dim fontNormal As System.Drawing.Font = awinSettings.normalFont
+
+        'Dim colorProtectedByMe As System.Drawing.Color = awinSettings.protectedByMeColor
+        'Dim colorProtectedByOther As System.Drawing.Color = awinSettings.protectedByOtherColor
+        'Dim colorNormal As System.Drawing.Color = awinSettings.normalColor
+        'Dim colorNoShow As System.Drawing.Color = awinSettings.noShowColor
+
+        ' hier auf Normal Font setzen ; in den TreeView Eigenschaften ist die Schriftgröße auf 12 gesetzt, 
+        ' um sicherzustellen, dass der Text immer vollständig angezeigt wird 
+        ' ur rausgenommen, weil es zu Fehlern führt  
+        ' currentNode.NodeFont = awinSettings.normalFont
+
+
+        If nodeTyp = PTTreeNodeTyp.project Then
+
+            If aktionskennung = PTTvActions.chgInSession Then
+                If vName = "" Then
+                    currentNode.Text = pName
+
+                Else
+                    currentNode.Text = pName & " (" & vName & ")"
+                End If
+            End If
+
+            If allDependencies.projectCount > 0 Then
+                ' es gibt irgendwelche Dependencies, die Lead-Projekte, abhängigen Projekte 
+                ' und sowohl-als-auch-Projekte werden farblich markiert  
+
+                ' die Projekte suchen, von denen dieses Projekt abhängt 
+                Dim passivListe As Collection = allDependencies.passiveListe(pName, PTdpndncyType.inhalt)
+                Dim aktivListe As Collection = allDependencies.activeListe(pName, PTdpndncyType.inhalt)
+
+                If passivListe.Count > 0 And aktivListe.Count = 0 Then
+                    ' ist nur abhängiges Projekt ...
+                    'currentNode.ForeColor = Color.Gray
+                    If Not currentNode.Text.EndsWith(" /D") Then
+                        currentNode.Text = currentNode.Text & " /D"
+                    End If
+
+
+                ElseIf passivListe.Count = 0 And aktivListe.Count > 0 Then
+                    ' hat abhängige Projekte  
+                    'currentNode.ForeColor = Color.OrangeRed
+                    If Not currentNode.Text.EndsWith(" /L") Then
+                        currentNode.Text = currentNode.Text & " /L"
+                    End If
+
+
+                ElseIf passivListe.Count > 0 And aktivListe.Count > 0 Then
+                    ' ist abhängig und hat abhängige Projekte 
+                    'currentNode.ForeColor = Color.Orange
+                    If Not currentNode.Text.EndsWith(" /LD") Then
+                        currentNode.Text = currentNode.Text & " /LD"
+                    End If
+
+                End If
+
+            End If
+
+            If aktionskennung = PTTvActions.setWriteProtection And Not noDB Then
+
+                If (currentNode.Nodes.Count = 0) Then
+                    Dim pvName As String = calcProjektKey(pName, vName)
+                    If currentNode.Checked Then
+
+                        If dbUsername = writeProtections.lastModifiedBy(pvName) Then
+                            ' entsprechend kennzeichnen 
+                            currentNode.ForeColor = awinSettings.protectedByMeColor
+                        Else
+                            ' entsprechend kennzeichnen 
+                            currentNode.ForeColor = awinSettings.protectedByOtherColor
+                        End If
+
+                        If writeProtections.isPermanentProtected(pvName) Then
+                            currentNode.NodeFont = awinSettings.protectedPermanentFont
+                        Else
+                            currentNode.NodeFont = awinSettings.normalFont
+                        End If
+                    Else
+                        ' entsprechend kennzeichnen 
+                        currentNode.ForeColor = awinSettings.normalColor
+                        currentNode.NodeFont = awinSettings.normalFont
+                    End If
+                Else
+
+                    currentNode.ForeColor = awinSettings.normalColor
+                    currentNode.NodeFont = awinSettings.normalFont
+
+                    ' wenn alle Varianten drunter geschützt / nicht geschützt sind: entsprechend setzen 
+                    Call adjustNodeAppearanceToChilds(currentNode)
+
+                End If
+
+
+            ElseIf aktionskennung = PTTvActions.delFromDB And Not noDB Then
+                If (currentNode.Nodes.Count = 0) Then
+
+                    If notReferencedByAnyPortfolio(pName, vName) And _
+                        Not writeProtections.isProtected(calcProjektKey(pName, vName)) Then
+                        ' kann gelöscht werden  
+                        currentNode.ForeColor = awinSettings.normalColor
+                    Else
+                        currentNode.ForeColor = awinSettings.noShowColor
+                    End If
+                Else
+                    currentNode.ForeColor = awinSettings.normalColor
+
+                    ' wenn alle Varianten drunter geschützt / nicht geschützt sind: entsprechend setzen 
+                    Call adjustNodeAppearanceToChilds(currentNode)
+                End If
+
+            ElseIf aktionskennung = PTTvActions.delFromSession Then
+                ' alle  deutlicher zeigen, die im NoShow sind 
+                If currentNode.Nodes.Count = 0 Then
+                    If ShowProjekte.contains(pName) Then
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        If hproj.variantName = vName Then
+                            currentNode.ForeColor = awinSettings.noShowColor
+                        Else
+                            currentNode.ForeColor = awinSettings.normalColor
+                        End If
+                    Else
+                        currentNode.ForeColor = awinSettings.normalColor
+                    End If
+                Else
+                    ' hat Kinder ...
+                    currentNode.ForeColor = awinSettings.normalColor
+
+                    ' wenn alle Varianten drunter geschützt / nicht geschützt sind: entsprechend setzen 
+                    Call adjustNodeAppearanceToChilds(currentNode)
+                End If
+
+
+            ElseIf aktionskennung = PTTvActions.loadPV Then
+                ' alle  markieren, die noch nicht geladen sind, ob im Show oder NoShow  
+                If currentNode.Nodes.Count = 0 Then
+                    Dim tmpKey As String = calcProjektKey(pName, vName)
+                    If AlleProjekte.Containskey(tmpKey) Then
+                        Dim hproj As clsProjekt = AlleProjekte.getProject(tmpKey)
+                        If Not IsNothing(hproj) Then
+                            currentNode.ForeColor = awinSettings.noShowColor
+                        Else
+                            currentNode.ForeColor = awinSettings.normalColor
+                        End If
+                    Else
+                        currentNode.ForeColor = awinSettings.normalColor
+                    End If
+                Else
+                    ' hat Kinder ...
+                    currentNode.ForeColor = awinSettings.normalColor
+
+                    ' wenn alle Varianten drunter geschützt / nicht geschützt sind: entsprechend setzen 
+                    Call adjustNodeAppearanceToChilds(currentNode)
+                End If
+
+
+
+            Else
+                currentNode.ForeColor = awinSettings.normalColor
+            End If
+
+        ElseIf nodeTyp = PTTreeNodeTyp.pVariant Then
+
+            ' der Current Node Text für die Variante ist schon gesetzt ...
+            ' in updateTreeView
+
+            If aktionskennung = PTTvActions.setWriteProtection And Not noDB Then
+                Dim pvName As String = calcProjektKey(pName, vName)
+
+                If currentNode.Checked Then
+                    If dbUsername = writeProtections.lastModifiedBy(pvName) Then
+                        ' entsprechend kennzeichnen 
+                        currentNode.ForeColor = awinSettings.protectedByMeColor
+                    Else
+                        ' entsprechend kennzeichnen 
+                        currentNode.ForeColor = awinSettings.protectedByOtherColor
+                    End If
+
+                    If writeProtections.isPermanentProtected(pvName) Then
+                        currentNode.NodeFont = awinSettings.protectedPermanentFont
+                    Else
+                        currentNode.NodeFont = awinSettings.normalFont
+                    End If
+                Else
+                    ' entsprechend kennzeichnen 
+                    currentNode.ForeColor = awinSettings.normalColor
+                    currentNode.NodeFont = awinSettings.normalFont
+                End If
+
+
+
+            ElseIf aktionskennung = PTTvActions.delFromDB And Not noDB Then
+
+                If notReferencedByAnyPortfolio(pName, vName) Then
+                    ' kann gelöscht werden  
+                    currentNode.ForeColor = awinSettings.normalColor
+                Else
+                    currentNode.ForeColor = awinSettings.noShowColor
+                End If
+
+
+            ElseIf aktionskennung = PTTvActions.delFromSession Then
+
+                If ShowProjekte.contains(pName) Then
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    If hproj.variantName = vName Then
+                        currentNode.ForeColor = awinSettings.noShowColor
+                    Else
+                        currentNode.ForeColor = awinSettings.normalColor
+                    End If
+                Else
+                    currentNode.ForeColor = awinSettings.normalColor
+                End If
+
+
+            ElseIf aktionskennung = PTTvActions.loadPV Then
+
+                ' alle  markieren, die noch nicht geladen sind, ob im Show oder NoShow  
+                Dim tmpKey As String = calcProjektKey(pName, vName)
+                If AlleProjekte.Containskey(tmpKey) Then
+                    Dim hproj As clsProjekt = AlleProjekte.getProject(tmpKey)
+                    If Not IsNothing(hproj) Then
+                        currentNode.ForeColor = awinSettings.noShowColor
+                    Else
+                        currentNode.ForeColor = awinSettings.normalColor
+                    End If
+                Else
+                    currentNode.ForeColor = awinSettings.normalColor
+                End If
+
+            Else
+                currentNode.ForeColor = Drawing.Color.Black
+            End If
+
+        End If
+        ' Berücksichtigung der Abhängigkeiten im TreeView ...
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' passt die ForeColor des Eltern-Knoten an die Child-Nodes an, sofern die alle gleich sind 
+    ''' </summary>
+    ''' <param name="currentNode"></param>
+    ''' <remarks></remarks>
+    Private Sub adjustNodeAppearanceToChilds(ByRef currentNode As TreeNode)
+
+        Dim atLeastOneDifferenceInColor As Boolean = False
+        Dim atLeastOneDifferenceInFont As Boolean = False
+
+        'Dim colorNormal As System.Drawing.Color = Drawing.Color.Black
+        'Dim fontNormal As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
+
+        Dim colorNormal As System.Drawing.Color = awinSettings.normalColor
+        Dim fontNormal As System.Drawing.Font = awinSettings.normalFont
+
+        Dim currentColor As System.Drawing.Color = currentNode.ForeColor
+        Dim currentFont As System.Drawing.Font = currentNode.NodeFont
+
+        For iv As Integer = 1 To currentNode.Nodes.Count
+
+            Dim variantNode As TreeNode = currentNode.Nodes.Item(iv - 1)
+
+            If iv = 1 Then
+                currentColor = variantNode.ForeColor
+                currentFont = variantNode.NodeFont
+            Else
+                If currentColor.ToArgb = variantNode.ForeColor.ToArgb Then
+                    ' identisch ...
+                Else
+                    atLeastOneDifferenceInColor = True
+                End If
+
+                If Not IsNothing(currentFont) And Not IsNothing(variantNode.NodeFont) Then
+                    If currentFont.Equals(variantNode.NodeFont) Then
+                        ' identisch 
+                    Else
+                        atLeastOneDifferenceInFont = True
+                    End If
+                ElseIf IsNothing(currentFont) And IsNothing(currentFont) Then
+                    ' identisch 
+                Else
+                    atLeastOneDifferenceInFont = True
+                End If
+
+            End If
+        Next
+
+        If Not atLeastOneDifferenceInColor Then
+            currentNode.ForeColor = currentColor
+        Else
+            currentNode.ForeColor = colorNormal
+        End If
+
+        If Not atLeastOneDifferenceInFont Then
+            currentNode.NodeFont = currentFont
+        Else
+            currentNode.NodeFont = fontNormal
+        End If
+
     End Sub
 End Class
