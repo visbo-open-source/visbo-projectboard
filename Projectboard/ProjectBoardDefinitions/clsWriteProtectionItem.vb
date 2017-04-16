@@ -66,8 +66,10 @@
         Set(value As String)
             If IsNothing(value) Then
                 Throw New ArgumentException("value may not be Null")
-            ElseIf value = "" Then
-                Throw New ArgumentException("value may not be empty string")
+                ''ElseIf value = "" Then
+                ''    Throw New ArgumentException("value may not be empty string")
+                ''     soll im Falle noAuth schon auch erlaubt sein ...
+                ''    _userName = value
             Else
                 _userName = value
             End If
@@ -153,11 +155,11 @@
         _pvName = ""
         _type = ptWriteProtectionType.project
         _userName = ""
-        _isProtected = True
+        _isProtected = False
         _isSessionOnly = False
         _permanent = False
-        _lastDateSet = Date.Now
-        _lastDateReleased = Date.MinValue
+        _lastDateSet = Date.MinValue
+        _lastDateReleased = Date.Now
     End Sub
 
     ''' <summary>
