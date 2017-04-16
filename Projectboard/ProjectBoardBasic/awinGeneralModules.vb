@@ -901,13 +901,15 @@ Public Module awinGeneralModules
             '
             arrWsNames(1) = "Portfolio"
             arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
-            arrWsNames(3) = "Tabelle1"
+            arrWsNames(3) = "Tabelle1"                          ' Multiprojekt-Tafel 
             arrWsNames(4) = "Einstellungen"
-            arrWsNames(5) = "Tabelle2"
-            arrWsNames(6) = "Edit Allgemein"
+            arrWsNames(5) = "Tabelle2"                          ' Edit Ressourcen
+            'arrWsNames(6) = "Edit Allgemein"
+            arrWsNames(6) = "Tabelle3"                          ' Edit Termine
             arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
             arrWsNames(8) = "Phasen-Mappings"
-            arrWsNames(9) = "Tabelle3"
+            'arrWsNames(9) = "Tabelle3"
+            arrWsNames(9) = "Tabelle4"                          ' Edit Attribute 
             arrWsNames(10) = "Meilenstein-Mappings"
             arrWsNames(11) = "Projekt editieren"
             arrWsNames(12) = "Lizenzen"

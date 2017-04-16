@@ -38,7 +38,7 @@ Public Class frmHierarchySelection
             labelPPTVorlage.Text = "Powerpoint Template"
             AbbrButton.Text = "Reset Selection"
         End If
-        
+
         With Me
 
             ' Änderung tk: die Hierarchie soll, wie bisher nur bei BHTC nie sichtbar sein; 
@@ -104,7 +104,7 @@ Public Class frmHierarchySelection
                     .AbbrButton.Text = "Abbrechen"
                     .chkbxOneChart.Text = "alles in einem Chart"
                 End If
-                
+
                 .AbbrButton.Visible = False
                 .AbbrButton.Enabled = False
                 .statusLabel.Text = ""
@@ -293,7 +293,7 @@ Public Class frmHierarchySelection
                     .filterLabel.Text = "Name Report-Profil"
                 End If
 
-                
+
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -321,7 +321,7 @@ Public Class frmHierarchySelection
             End If
 
         End With
-        
+
 
     End Sub
 
@@ -457,7 +457,7 @@ Public Class frmHierarchySelection
             End If
 
 
-            End If
+        End If
 
 
 
@@ -847,7 +847,7 @@ Public Class frmHierarchySelection
             Loop
             tmpResult = curNode.Checked
         End If
-        
+
         topNodeIsSelected = tmpResult
 
     End Function
@@ -905,7 +905,7 @@ Public Class frmHierarchySelection
             End If
 
         End If
-        
+
         getPVnameFromNode = tmpResult
 
     End Function
@@ -1150,7 +1150,7 @@ Public Class frmHierarchySelection
 
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
-                    
+
 
                 Next
             ElseIf auswahl = 1 Then
@@ -1166,7 +1166,7 @@ Public Class frmHierarchySelection
 
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
-                    
+
                 Next
             Else
                 ' alle Projekte zeigen 
@@ -1181,7 +1181,7 @@ Public Class frmHierarchySelection
 
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
-                    
+
                 Next
             End If
 

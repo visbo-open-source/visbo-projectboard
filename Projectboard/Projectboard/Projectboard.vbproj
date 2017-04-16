@@ -171,6 +171,18 @@
     <Compile Include="Tabelle3.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <Compile Include="Tabelle4.Designer.vb">
+      <DependentUpon>Tabelle4.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle4.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle5.Designer.vb">
+      <DependentUpon>Tabelle5.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle5.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
     <Compile Include="ThisWorkbook.Designer.vb">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
@@ -288,6 +300,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\milestones_icon1.png" />
+    <None Include="Tabelle4.Designer.xml">
+      <DependentUpon>Tabelle4.vb</DependentUpon>
+    </None>
+    <None Include="Tabelle5.Designer.xml">
+      <DependentUpon>Tabelle5.vb</DependentUpon>
+    </None>
     <None Include="Resources\navigate_check1.png" />
     <None Include="Resources\navigate_check.png" />
     <None Include="Resources\selection_delete.png" />
@@ -346,6 +364,8 @@
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="Tabelle3" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
+          <HostItem Name="Tabelle4" Code="Tabelle4.vb" CanonicalName="Tabelle4" DisplayName="Tabelle4" Blueprint="Tabelle4.Designer.xml" GeneratedCode="Tabelle4.Designer.vb" />
+          <HostItem Name="Tabelle5" Code="Tabelle5.vb" CanonicalName="Tabelle5" DisplayName="Tabelle5" Blueprint="Tabelle5.Designer.xml" GeneratedCode="Tabelle5.Designer.vb" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
         </Host>
       </FlavorProperties>

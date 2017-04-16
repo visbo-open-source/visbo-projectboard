@@ -577,7 +577,7 @@ Public Class frmProjPortfolioAdmin
 
         
 
-     
+
         ' jetzt die Korrektheitsprüfung ...
         If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
             currentBrowserConstellation.checkAndCorrectYourself()
