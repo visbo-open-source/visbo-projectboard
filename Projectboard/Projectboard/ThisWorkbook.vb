@@ -183,11 +183,6 @@ Public Class ThisWorkbook
 
         If loginErfolgreich Then
 
-
-
-
-
-
             ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
             Try
 
@@ -199,7 +194,7 @@ Public Class ThisWorkbook
 
                         If returnValue = DialogResult.Yes Then
 
-                            Call StoreAllProjectsinDB()
+                            Call StoreAllProjectsinDB(True)
 
                         ElseIf returnValue = DialogResult.Cancel Then
 

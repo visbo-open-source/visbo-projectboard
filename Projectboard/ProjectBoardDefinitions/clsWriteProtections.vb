@@ -83,12 +83,10 @@
                 If IsNothing(userName) Then
                     tmpResult = _allWriteProtections.Item(pvname).isProtected
 
-                ElseIf userName <> "" Then
+                Else
+
                     tmpResult = _allWriteProtections.Item(pvname).isProtected And _
                                 _allWriteProtections.Item(pvname).userName <> userName
-
-                Else
-                    tmpResult = _allWriteProtections.Item(pvname).isProtected
                 End If
 
             End If
@@ -149,7 +147,7 @@
     End Property
 
     ''' <summary>
-    ''' aktualisiert die Hauptspeicher-Struktur der Schreibberechtgungen und aktualisiert das Erscheinungsbild auf der Multiprojekt-Tafel 
+    ''' aktualisiert die Hauptspeicher-Struktur der Schreibberechtigungen und aktualisiert das Erscheinungsbild auf der Multiprojekt-Tafel 
     ''' </summary>
     ''' <param name="wpItem"></param>
     ''' <remarks></remarks>
