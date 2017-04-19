@@ -32,7 +32,7 @@
 
     ''' <summary>
     ''' gibt die Zeile zurück, auf der dieses Projekt gezeichnet werden soll 
-    ''' 
+    ''' im Fall customTF gibt die Tahl im Key die Zeile wieder ...
     ''' </summary>
     ''' <param name="pName">NAme des Projektes, ohne den Varianten-Namen Anteil </param>
     ''' <value></value>
@@ -43,7 +43,7 @@
             Dim found As Boolean = False
             Dim ix As Integer = 0
             Dim bzeile As Integer = 0
-            Dim deductBecausePoint As Integer = 0
+            Dim deductBecausePrevNotShown As Integer = 0
 
             ' der wievielte Eintrag mit Attribut = Show ist es in der Liste ? 
             Do While ix <= _sortList.Count - 1 And Not found
@@ -51,9 +51,28 @@
                 If vglName = pName Then
 
                     If _sortType = ptSortCriteria.customTF Then
-                        If _sortList.ElementAt(ix).Key.EndsWith(".") Then
-                            deductBecausePoint = deductBecausePoint + 1
-                        End If
+                        ' wenn der String vor dem ersten x als Zahl zu verstehen ist 
+
+                        bzeile = Me.getRowNrFromKey(ix)
+
+                        ' jetzt muss noch überprüft werden, ob alle Items mit vx < ix auch angezeigt sind; 
+                        ' für jeden nicht angezeigten, der in einer der oberen Zeile ist, wird bzeile um eins reduziert 
+                        Dim chkzeile As Integer = bzeile - 1
+                        Dim vx As Integer = ix - 1
+
+                        Do While vx >= 0 And chkzeile >= 2
+                            'If Not ShowProjekte.contains(_sortList.ElementAt(vx).Value) And _
+                            If Not Me.isShown(_sortList.ElementAt(vx).Value) And _
+                                (Me.getRowNrFromKey(vx) <= chkzeile) Then
+                                deductBecausePrevNotShown = deductBecausePrevNotShown + 1
+                                chkzeile = chkzeile - 1
+                            End If
+                            vx = vx - 1
+                        Loop
+
+                        'If _sortList.ElementAt(ix).Key.EndsWith("x") Then
+                        '    deductBecausePoint = deductBecausePoint + 1
+                        'End If
                     End If
 
                     found = True
@@ -62,11 +81,11 @@
                     If Me.isShown(vglName) = True Then
                         bzeile = bzeile + 1
 
-                        If _sortType = ptSortCriteria.customTF Then
-                            If _sortList.ElementAt(ix).Key.EndsWith(".") Then
-                                deductBecausePoint = deductBecausePoint + 1
-                            End If
-                        End If
+                        'If _sortType = ptSortCriteria.customTF Then
+                        '    If _sortList.ElementAt(ix).Key.EndsWith("x") Then
+                        '        deductBecausePoint = deductBecausePoint + 1
+                        '    End If
+                        'End If
 
                     End If
 
@@ -76,15 +95,45 @@
 
             Loop
 
-            If _sortType = ptSortCriteria.customTF Then
-                bzeile = bzeile - deductBecausePoint
-            End If
-            
+            'If _sortType = ptSortCriteria.customTF Then
+            '    bzeile = bzeile - deductBecausePoint
+            'End If
 
-            getBoardZeile = bzeile + 2
+            If found And _sortType = ptSortCriteria.customTF Then
+                getBoardZeile = bzeile - deductBecausePrevNotShown
+            Else
+                getBoardZeile = bzeile + 2
+            End If
+
+
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt von der customTF Key , der als zeilen-Nummer plus evtl x aufgebaut ist 
+    ''' die Zeilen-Nummer zurück ..
+    ''' </summary>
+    ''' <param name="ix"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getRowNrFromKey(ByVal ix As Integer) As Integer
+
+        Dim tmpResult As Integer = 2
+        If _sortList.ElementAt(ix).Key.Contains("x") Then
+            Dim ixPos As Integer = _sortList.ElementAt(ix).Key.IndexOf("x")
+            Dim tmpStr As String = _sortList.ElementAt(ix).Key.Substring(0, ixPos)
+            If IsNumeric(tmpStr) Then
+                tmpResult = CInt(tmpStr)
+            End If
+        Else
+            If IsNumeric(_sortList.ElementAt(ix).Key) Then
+                tmpResult = CInt(_sortList.ElementAt(ix).Key)
+            End If
+
+        End If
+        getRowNrFromKey = tmpResult
+    End Function
 
     Private ReadOnly Property isShown(ByVal pName As String) As Boolean
         Get

@@ -4031,9 +4031,9 @@ Public Module awinGeneralModules
                             End If
 
                         ElseIf existsInSession Then
-                            AlleProjekte.Remove(vglName)
+                            AlleProjekte.Remove(vglName, False)
                             If ShowProjekte.contains(hproj.name) Then
-                                ShowProjekte.Remove(hproj.name)
+                                ShowProjekte.Remove(hproj.name, False)
                             End If
                         End If
 
@@ -4060,8 +4060,14 @@ Public Module awinGeneralModules
 
             Try
                 vglName = calcProjektKey(hproj.name, hproj.variantName)
-                AlleProjekte.Add(hproj)
-                ShowProjekte.Add(hproj)
+                If existsInSession Then
+                    AlleProjekte.Add(hproj, False)
+                    ShowProjekte.Add(hproj, False)
+                Else
+                    AlleProjekte.Add(hproj)
+                    ShowProjekte.Add(hproj)
+                End If
+                
 
                 ' ggf Bedarfe anzeigen 
                 If roentgenBlick.isOn Then
@@ -4169,7 +4175,8 @@ Public Module awinGeneralModules
 
                 If existsInSession Then
                     .shpUID = cproj.shpUID
-                    .tfZeile = cproj.tfZeile
+                    ' in diesem Fall heisst es ja genaus, dann ist es auch in der sortListe der Constellations bereits vorhanden ...
+                    '.tfZeile = cproj.tfZeile
                 Else
                     .shpUID = ""
                     .tfZeile = tafelZeile
