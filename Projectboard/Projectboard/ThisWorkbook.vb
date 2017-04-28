@@ -23,7 +23,6 @@ Public Class ThisWorkbook
 
         Application.DisplayFormulaBar = False
 
-
     End Sub
 
     ''' <summary>
