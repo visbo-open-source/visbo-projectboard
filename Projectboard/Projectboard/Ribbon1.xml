@@ -278,16 +278,72 @@
       <!--label="Reports"-->
       <tab id="PTreport" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT8G1" >
-        </group>
+          <!--label="Bericht erstellen"-->
+          <button id="PT1G1B5" getLabel ="bestimmeLabel" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
+          <!--label="Report-Profil definieren"-->
+          <separator id="PT8G1s1"/>
+          <menu id="PT1G1M0"  getLabel ="bestimmeLabel" supertip="ein Bericht wird von Grund auf konfiguriert; damit wird das Report-Profil definiert">
+            <!--label="Einzelprojekt-Berichte"-->
+            <menu id ="PT1G1M01" getLabel ="bestimmeLabel">
+              <!--label="Typ I"-->
+              <button id="PT1G1M01B0" getLabel ="bestimmeLabel" onAction="Tom2G1Doku" supertip="zu den selektierten Projekten statische Einzelprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
+              <!--label="Typ II"-->
+              <menu id="PT1G1M1" getLabel ="bestimmeLabel"  supertip ="Auswahl von Vorgängen und Meilensteinen, um bspweise alle Varianten eines Projektes zu zeigen">
+                <!--label="Auswahl über Namen"-->
+                <button id="PT1G1M1B1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
+                <!--label="Auswahl über Hierarchie"-->
+                <button id="PT1G1M1B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
+              </menu>
+            </menu>
+            <!--label="Multiprojekt-Berichte"-->
+            <menu id="PT1G1M02" getLabel ="bestimmeLabel">
+              <!--label="Typ I"-->
+              <button id="PT1G1B2" getLabel ="bestimmeLabel" onAction="awinAllprojectsReport" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum statische Multiprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
+              <!--label="Typ II"-->
+              <menu id="PT1G1M2" getLabel ="bestimmeLabel" supertip="Auswahl von Vorgängen und Meilensteinen, um bspweise Multiprojekt Sichten zu erstellen">
+                <!--label="Auswahl über Namen"-->
+                <button id="PT1G1M2B1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
+                <!--label="Auswahl über Hierarchie"-->
+                <button id="PT1G1M2B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
+              </menu>
+            </menu>
+          </menu>
+          <!--label="letztes Report-Profil speichern"-->
+          <button id="PT1G1B4" getLabel ="bestimmeLabel" onAction="PTStoreCurReportProfil" supertip ="Es wird das aktuelle ReportProfil in der XML-Datei mit angegebenen Namen gespeichert"/>
+          <separator id="PT8G1s2"/>
+          <!--label="ReportGenTemplate erstellen"-->
+          <button id="PT1G1B6" getLabel ="bestimmeLabel" onAction="PTCreateReportGenTemplate" supertip ="Es wird ein Template erstellt für die InputDatei, die den Batch-Report triggert"/>
+       </group>
       </tab>
       <!--label="Einstellungen"-->
       <tab id="PTeinst" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-        <group id ="PT9G1" >
+        <!--<group id ="PT9G1" >-->
+        <group id="PT2G3" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+          <!--label="aus der Session löschen"-->
+          <menu id="PT2G3M1" getLabel ="bestimmeLabel">
+            <!--label="alles"-->
+            <button id="PT2G3M1B1" getLabel ="bestimmeLabel"  onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; die Szenarien bleiben erhalten, aber alle dargestellten Projekte, Phasen, Meilensteine und Charts werden gelöscht. Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
+            <!--label="Szenario"-->
+            <button id="PT2G3M1B3" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Session gelöscht; damit wird lediglich die Definition des Szenarios in der Session gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
+            <!--label="einzelne Projekte und Varianten"-->
+            <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
+          </menu>
+          <separator id="PT2G3s1"/>
+          <!--label="Zeichen-Elemente löschen"-->
+          <menu id="PT2G3M2" getLabel ="bestimmeLabel">
+            <!--label="Meilensteine, Phasen, Stati"-->
+            <button id="PT2G3M4B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten (gilt nicht für Extended Mode)"/>
+            <!--label="Beschriftungen"-->
+            <button id="PT2G3M4B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteBeschriftung" supertip ="alle aktuell angezeigten Beschriftungen von Phasen und Meilensteinen werden gelöscht"/>
+            <!--label="Charts"-->
+            <button id="PT2G3M4B2" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
+          </menu>     
         </group>
+        <!--</group>-->
       </tab>
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-        <group id ="PTXG1" >
+        <group id ="PTXG1" > 
         </group>
       </tab>
       <!--label="Lizenzen"-->

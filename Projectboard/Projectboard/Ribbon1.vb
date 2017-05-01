@@ -2011,16 +2011,16 @@ Imports System.Windows
 
             Case "PT1G1M0" ' Report-Profil definieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Report-Profil definieren"
+                    tmpLabel = "Report definieren & erstellen"
                 Else
-                    tmpLabel = "Define a Report-Profile"
+                    tmpLabel = "Define & create a Report"
                 End If
 
             Case "PT1G1M01" ' Einzelprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Einzelprojekt-Berichte"
+                    tmpLabel = "Projekt Report"
                 Else
-                    tmpLabel = "Singleproject Reports"
+                    tmpLabel = "Project Report"
                 End If
 
             Case "PT1G1M01B0" ' Typ I
@@ -2053,9 +2053,9 @@ Imports System.Windows
 
             Case "PT1G1M02" ' Multiprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Multiprojekt-Berichte"
+                    tmpLabel = "Portfolio Report"
                 Else
-                    tmpLabel = "Multiproject Reports"
+                    tmpLabel = "Portfolio Report"
                 End If
 
             Case "PT1G1B2" ' Typ I
@@ -2088,16 +2088,16 @@ Imports System.Windows
 
             Case "PT1G1B4" ' letztes Report-Profil speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Letztes Report-Profil speichern"
+                    tmpLabel = "letzte Report Definition als Vorlage speichern"
                 Else
-                    tmpLabel = "Store last Report-Profile"
+                    tmpLabel = "Store last Report definition as pre-defined"
                 End If
 
             Case "PT1G1B5" ' Report-Profil ausführen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Bericht erstellen"
+                    tmpLabel = "vordefinierten Report erstellen"
                 Else
-                    tmpLabel = "Create Report"
+                    tmpLabel = "Select pre-defined Report"
                 End If
 
             Case "PT1G1B1" ' Report Sprache
@@ -2109,9 +2109,9 @@ Imports System.Windows
 
             Case "PT1G1B6" ' Report Generator Template erstellen Sprache
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rep.-Generator Vorlage erstellen"
+                    tmpLabel = "Batch-File für Report Erstellung erzeugen"
                 Else
-                    tmpLabel = "Create Rep.-Generator Template"
+                    tmpLabel = "Create Batch-File for mass Report Creation"
                 End If
 
             Case "PT2" ' Bearbeiten
