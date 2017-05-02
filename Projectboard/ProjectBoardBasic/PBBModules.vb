@@ -182,6 +182,14 @@ Public Module PBBModules
 
             End With
 
+        ElseIf controlID = "PT0G1B8" Then
+            With nameFormular
+
+                .menuOption = PTmenue.sessionFilterDefinieren
+                .actionCode = PTTvActions.chgInSession
+                returnValue = .ShowDialog
+
+            End With
 
         ElseIf ShowProjekte.Count > 0 Then
 
@@ -216,7 +224,7 @@ Public Module PBBModules
 
                     End With
                 End If
-                
+
 
             ElseIf controlID = "PTXG1B5" Or controlID = "PT0G1B9" Then
                 ' Hierarchie auswählen, visualisieren
@@ -247,7 +255,7 @@ Public Module PBBModules
 
                     End With
                 End If
-                
+
             ElseIf controlID = "PTXG1B6" Or controlID = "PTMEC1" Then
                 ' Namen auswählen, Leistbarkeit
                 Dim ok As Boolean = True
@@ -277,7 +285,7 @@ Public Module PBBModules
 
                     End With
                 End If
-                
+
 
             ElseIf controlID = "PTXG1B7" Then
 
