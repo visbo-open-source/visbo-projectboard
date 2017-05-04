@@ -52,7 +52,6 @@ Imports System.Windows
         Me.ribbon = ribbonUI
     End Sub
 
-
     Sub PTNeueKonstellation(control As IRibbonControl)
 
 
@@ -2409,6 +2408,12 @@ Imports System.Windows
                 Else
                     tmpLabel = "Charts"
                 End If
+            Case "PT0G1BX" ' Charts
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts löschen"
+                Else
+                    tmpLabel = "Delete Charts"
+                End If
 
             Case "PT4" ' Datenmanagement
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2417,18 +2422,18 @@ Imports System.Windows
                     tmpLabel = "Data management"
                 End If
 
-            Case "PTSchließen" 'Session Schließen
+            Case "PTExit" 'Beenden
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Schließen"
+                    tmpLabel = "Beenden"
                 Else
                     tmpLabel = "Exit"
                 End If
 
             Case "PT4G1" ' IMPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "IMPORT"
+                    tmpLabel = "Import"
                 Else
-                    tmpLabel = "Data IMPORT"
+                    tmpLabel = "Data Import"
                 End If
 
             Case "PT4G1B1" ' Import Projekte (Batch)
@@ -2475,9 +2480,9 @@ Imports System.Windows
 
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "EXPORT"
+                    tmpLabel = "Export"
                 Else
-                    tmpLabel = "EXPORT"
+                    tmpLabel = "Export"
                 End If
 
             Case "PT4G1B7" ' Export FC-52
@@ -10617,6 +10622,15 @@ Imports System.Windows
             Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
         End If
 
+
+        enableOnUpdate = True
+
+    End Sub
+    Public Sub PTExit(control As IRibbonControl)
+
+        enableOnUpdate = False
+
+        appInstance.ActiveWorkbook.Close()
 
         enableOnUpdate = True
 

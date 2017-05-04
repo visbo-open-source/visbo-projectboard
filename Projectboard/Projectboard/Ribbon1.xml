@@ -29,14 +29,14 @@
         <!--label="Load from Database"-->
         <group id="PTladen" >
             <!--label="Load from Database"-->
-            <menu id ="PT5G1" getLabel ="bestimmeLabel">
+            <menu id ="PT5G1"  getLabel ="bestimmeLabel" imageMso="DatabaseCopyDatabaseFile" keytip="L">
               <!--label="Portfolio/s"-->
-              <button id="PT5G1B1" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
+              <button id="PT5G1B1"  getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
               <!--label="Project/s"-->
               <button id="PT5G1B3" getLabel ="bestimmeLabel" onAction="PT5DatenbankLoadProjekte" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten und Varianten in der Datenbank; Achtung: Wenn in der Kalenderleiste ein Zeitraum markiert ist, so zeigt das Auswahlfenster auch nur diese Projekte an"/>
             </menu>
             <!--label="Speichern"-->
-            <menu id ="PT5G2" getLabel ="bestimmeLabel">
+            <menu id ="PT5G2" imageMso="FileSave" getLabel ="bestimmeLabel" >
               <!--label="Portfolio/s"-->
               <button id="Pt5G2B1" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Szenarien werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
               <!--label="Projekt/e"-->
@@ -57,8 +57,7 @@
               <button id="Pt5G3B4" getLabel ="bestimmeLabel"  onAction="PT5DeleteProjectsInDBExceptF1" supertip ="es werden immer der erste und der letzte sowie X-2 weitere Versionen behalten; alle anderen werden gelöscht "/>
             </menu>
           </menu>
-          <button id="PTSchließen" getLabel ="bestimmeLabel" onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; die Szenarien bleiben erhalten, aber alle dargestellten Projekte, Phasen, Meilensteine und Charts werden gelöscht. Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
-        </group>
+         </group>
         <!--label="IMPORT/EXPORT"-->
         <group id="PTIpExp">
           <!--label="IMPORT"-->
@@ -128,6 +127,20 @@
           <!--label="neue Variante anlegen"-->
           <button id="PT2G1M1B0" getLabel ="bestimmeLabel" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden."/>
         </group>
+        <!--<group id ="PT9G1" >-->
+        <group id="PT2G3" getVisible="chckVisibility">
+          <!--label="aus der Session löschen"-->
+          <menu id="PT2G3M1" getLabel ="bestimmeLabel">
+            <!--label="alles"-->
+            <button id="PT2G3M1B1" getLabel ="bestimmeLabel"  onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; die Szenarien bleiben erhalten, aber alle dargestellten Projekte, Phasen, Meilensteine und Charts werden gelöscht. Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
+            <!--label="Szenario"-->
+            <button id="PT2G3M1B3" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Session gelöscht; damit wird lediglich die Definition des Szenarios in der Session gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
+            <!--label="einzelne Projekte und Varianten"-->
+            <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
+          </menu>
+          <button id="PTExit" getLabel ="bestimmeLabel" onAction="PTexit" />
+        </group>
+        <!--</group>-->
       </tab>
       <!--label="Edit"-->
       <tab id="PTedit" getVisible="chckVisibility" getLabel ="bestimmeLabel">
@@ -146,7 +159,7 @@
             <!--label=" Projekt Umbenennen"-->
             <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
              <!--label=" Variante Umbenennen"-->
-            <button id="PT2G1B3" getVisible="chckVisibility" label="Rename Variante" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>
+            <button id="PT2G1B3" getVisible="chckVisibility" label="Rename Variant (fehlt)" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>
             <menuSeparator id="separator2" />
             <!--label="Freeze"-->
             <button id="PTfreezeB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Beauftragen" supertip ="ein fixiertes Projekt kann nicht mehr durch Drag und Drop verschoben, verkürzt, verlängert werden."/>
@@ -154,7 +167,7 @@
             <button id="PTfreezeB2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2GXBeauftragen" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
             <menuSeparator id="separator3" />
             <!--label="Schutz setzen / aufheben"-->
-            <button id="PT2G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
+            <button id="PT2G2B5" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
             <menuSeparator id="separator4" />
             <!--label="Variante zum Standard machen"-->
             <button id="PT2G1M1B3" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
@@ -175,38 +188,48 @@
             <!--label="Auswahl über Hierarchie"-->
             <button id="PTXG1B5" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie."/>
           </menu>
-          <menu id="PT3G1M2" getLabel ="bestimmeLabel" supertip="Beschriftung von Phasen und Meilensteinen ON / OFF">
-            <!--label="Phasen / Meilensteine beschriften"-->
-            <button id="PT2G1B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTBeschriften" supertip ="alle angezeigten Meilensteine und Phasen werden auf der Multiprojekt-Tafel beschriftet."/>
-            <!--label="Alle Beschriftungen löschen"-->
-            <button id="PT2G1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT6DeleteBeschriftung" supertip ="alle Beschriftungen von Meilensteinen und Phasen werden auf der Multiprojekt-Tafel werden gelöscht."/>
-          </menu>
+          <!--label="Beschriftungen-->
+          <button id="PT3G1M2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTBeschriften" supertip ="alle angezeigten Meilensteine und Phasen werden auf der Multiprojekt-Tafel beschriftet."/>
           <separator id="PT2G1s1"/>
           <!--label="Extended View"-->
           <button id="PT2G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTExtendedView" supertip ="Die selektierten Projekte werden mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. "/>
           <!--label="Rollup View"-->
           <button id="PT2G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet."/>
+          <separator id="PT2G1s2"/>
+          <!--label="Zeichen-Elemente löschen"-->
+          <menu id="PT2G3M2" getLabel ="bestimmeLabel">
+            <!--label="Meilensteine, Phasen, Stati"-->
+            <button id="PT2G3M4B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten (gilt nicht für Extended Mode)"/>
+            <!--label="Beschriftungen"-->
+            <button id="PT2G3M4B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteBeschriftung" supertip ="alle aktuell angezeigten Beschriftungen von Phasen und Meilensteinen werden gelöscht"/>
+            <!--label="Charts"-->
+            <button id="PT2G3M4B2" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
+          </menu>
         </group>
       </tab>
       <!--label="Filter"-->
       <tab id="PTfilter" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT0G1" >
           <!--label="Auswahl über Namen"-->
-          <button id="PT0G1B8" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
+          <button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
         </group>
       </tab>
       <!--label="Sortieren"-->
       <tab id="PTsort" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-        <group id ="PT6G1" label ="Sort">
-          <button id ="PT" label ="na ja"/>
+        <group id ="PT6G1" >
+          <button id ="PT6G1B1" imageMso="SortUp" label ="Alphabetically"/>
+          <button id ="PT6G1B2" imageMso="Grouping" label ="by Business Unit/Start/Name"/>
+          <button id ="PT6G1B3" imageMso="Grouping" label ="by Strategy/Profit/Risk"/>
+          <button id ="PT6G1B4" imageMso="SortDialog" label ="by Custom List"/>
+          <button id ="PT6G1B5" imageMso="SortDialog" label ="by Custom Formula"/>      
         </group>
       </tab>
       <!--label="Charts"-->
-      <tab id="PTcharts" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <tab id="PTcharts" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
         <!--label="Charts"-->
-        <group id="PT7G1" >
+        <group id="PT7G1"  >
           <!--label="Portfolio-Charts"-->
-          <menu id="PT7G1M0" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+          <menu id="PT7G1M0"  getVisible="chckVisibility" getLabel ="bestimmeLabel">
               <!--label="Ressource/Cost/Milestones/Phases"-->
               <menu id="PTXG1M2" getLabel ="bestimmeLabel" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
                 <!--label="Auswahl über Namen"-->
@@ -268,18 +291,21 @@
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>
           <separator id="PT0G1s8"/>
           <!--label="Save Cockpit"-->
-          <button id="PT0G1M3B2" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
+          <button id="PT0G1M3B2" imageMso="ChartSaveTemplate" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
           <!--label="Load Cockpit"-->
-          <button id="PT0G1M3B1" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
-          <!--label="Ergebnis"-->
-          <button id="PT0G1B7" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>
+          <button id="PT0G1M3B1" imageMso="ChartShowData" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
+          <!--label="Ergebnis"--><!--
+          <button id="PT0G1B7" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>-->
+          <separator id="PT0G1s9"/>
+          <!--label="Charts"-->
+          <button id="PT0G1BX" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
         </group>
       </tab>
       <!--label="Reports"-->
       <tab id="PTreport" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT8G1" >
           <!--label="Bericht erstellen"-->
-          <button id="PT1G1B5" getLabel ="bestimmeLabel" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
+          <button id="PT1G1B5" imageMso="CreateReport" getLabel ="bestimmeLabel" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
           <!--label="Report-Profil definieren"-->
           <separator id="PT8G1s1"/>
           <menu id="PT1G1M0"  getLabel ="bestimmeLabel" supertip="ein Bericht wird von Grund auf konfiguriert; damit wird das Report-Profil definiert">
@@ -317,29 +343,6 @@
       </tab>
       <!--label="Einstellungen"-->
       <tab id="PTeinst" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-        <!--<group id ="PT9G1" >-->
-        <group id="PT2G3" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-          <!--label="aus der Session löschen"-->
-          <menu id="PT2G3M1" getLabel ="bestimmeLabel">
-            <!--label="alles"-->
-            <button id="PT2G3M1B1" getLabel ="bestimmeLabel"  onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; die Szenarien bleiben erhalten, aber alle dargestellten Projekte, Phasen, Meilensteine und Charts werden gelöscht. Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
-            <!--label="Szenario"-->
-            <button id="PT2G3M1B3" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Session gelöscht; damit wird lediglich die Definition des Szenarios in der Session gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
-            <!--label="einzelne Projekte und Varianten"-->
-            <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
-          </menu>
-          <separator id="PT2G3s1"/>
-          <!--label="Zeichen-Elemente löschen"-->
-          <menu id="PT2G3M2" getLabel ="bestimmeLabel">
-            <!--label="Meilensteine, Phasen, Stati"-->
-            <button id="PT2G3M4B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten (gilt nicht für Extended Mode)"/>
-            <!--label="Beschriftungen"-->
-            <button id="PT2G3M4B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteBeschriftung" supertip ="alle aktuell angezeigten Beschriftungen von Phasen und Meilensteinen werden gelöscht"/>
-            <!--label="Charts"-->
-            <button id="PT2G3M4B2" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
-          </menu>     
-        </group>
-        <!--</group>-->
       </tab>
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">

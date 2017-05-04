@@ -13775,7 +13775,7 @@ Public Module Projekte
                 End With
 
                 If awinSettings.drawProjectLine Then
-
+                    ' ????ur: hier geht es schief beim Laden von Konstellation
                     projectShape = worksheetShapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
                                                                 CSng(left + width), CSng(top))
 
