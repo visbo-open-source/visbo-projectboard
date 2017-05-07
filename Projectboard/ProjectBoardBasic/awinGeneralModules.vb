@@ -900,15 +900,13 @@ Public Module awinGeneralModules
             ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
             '
             arrWsNames(1) = "Portfolio"
-            arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
+            arrWsNames(2) = "Vorlage"
             arrWsNames(3) = "Tabelle1"                          ' Multiprojekt-Tafel 
             arrWsNames(4) = "Einstellungen"
             arrWsNames(5) = "Tabelle2"                          ' Edit Ressourcen
-            'arrWsNames(6) = "Edit Allgemein"
             arrWsNames(6) = "Tabelle3"                          ' Edit Termine
-            arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
+            arrWsNames(7) = "Darstellungsklassen"               ' nimmt für die Laufzeit die Darstellungsklassen auf 
             arrWsNames(8) = "Phasen-Mappings"
-            'arrWsNames(9) = "Tabelle3"
             arrWsNames(9) = "Tabelle4"                          ' Edit Attribute 
             arrWsNames(10) = "Meilenstein-Mappings"
             arrWsNames(11) = "Projekt editieren"

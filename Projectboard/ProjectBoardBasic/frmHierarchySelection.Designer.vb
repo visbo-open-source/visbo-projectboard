@@ -61,7 +61,7 @@ Partial Class frmHierarchySelection
         'hryStufenLabel
         '
         Me.hryStufenLabel.AutoSize = True
-        Me.hryStufenLabel.Location = New System.Drawing.Point(215, 24)
+        Me.hryStufenLabel.Location = New System.Drawing.Point(212, 24)
         Me.hryStufenLabel.Name = "hryStufenLabel"
         Me.hryStufenLabel.Size = New System.Drawing.Size(264, 13)
         Me.hryStufenLabel.TabIndex = 35
