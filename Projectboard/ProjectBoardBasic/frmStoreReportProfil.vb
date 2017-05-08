@@ -55,6 +55,8 @@ Public Class frmStoreReportProfil
 
         dirName = awinPath & ReportProfileOrdner
 
+        Call defineFrmButtonVisibility()
+
 
         If My.Computer.FileSystem.DirectoryExists(dirName) Then
 
@@ -87,6 +89,19 @@ Public Class frmStoreReportProfil
         profilDescription.Text = ""
     End Sub
 
+    Private Sub defineFrmButtonVisibility()
+
+        If awinSettings.englishLanguage Then
+            Me.Text = "Store as Report Profile"
+            Label1.Text = "please provide name and short description for the report profile"
+            nameLabel.Text = "Name"
+            descLabel.Text = "Description"
+            OKButton.Text = "Store"
+            AbbruchButton.Text = "Cancel"
+
+        End If
+
+    End Sub
     Private Sub NameReportProfil_KeyDown(sender As Object, e As KeyEventArgs) Handles NameReportProfil.KeyDown
         
         profilDescription.Text = ""

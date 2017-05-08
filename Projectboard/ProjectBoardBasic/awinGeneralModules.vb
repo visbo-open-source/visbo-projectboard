@@ -2231,9 +2231,15 @@ Public Module awinGeneralModules
 
         If listOfFiles.Count = 1 Then
             Call readUrlOfRole(listOfFiles.Item(0))
+        ElseIf listOfFiles.Count = 0 Then
+            Call logfileSchreiben("Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                         & "Es wurde daher jetzt keine berücksichtigt", _
+                         "", anzFehler)
         Else
-            Call MsgBox("Es gibt keine bzw. mehrere Dateien zur Urlaubsplanung" & vbLf _
-                         & "Es wurde daher jetzt keine berücksichtigt")
+
+            Call logfileSchreiben("Es gibt mehrere Dateien zur Urlaubsplanung" & vbLf _
+                         & "Es wurde daher jetzt keine berücksichtigt", _
+                         "", anzFehler)
         End If
 
     End Sub
@@ -4705,7 +4711,7 @@ Public Module awinGeneralModules
 
         Dim newC As New clsConstellation
         newC.constellationName = scenarioName
-        newC.sortCriteria = ptSortCriteria.customTF
+        newC.sortCriteria = ptSortCriteria.customListe
 
 
         zeile = 2
@@ -5464,7 +5470,7 @@ Public Module awinGeneralModules
         Dim newC As New clsConstellation
         newC.constellationName = cName
         ' das Folgende soll sihcerstellen, dass die Projekte in der Reihenfolge ihres Auftretens in der Excel Datei eingelesen und dargestellt werden ..
-        newC.sortCriteria = ptSortCriteria.customTF
+        newC.sortCriteria = ptSortCriteria.customListe
         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
         Dim vglProj As clsProjekt

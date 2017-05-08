@@ -484,7 +484,7 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <!--<group id ="pt6g5" label ="testfunktionen">
+        <group id ="pt6g5" label ="testfunktionen">
           <button id="pt6g5b0" label="enable event aktiv?" onAction="pttestfunktion1" />
           <button id="pt6g5b1" label="aktuelle test funktion"  onAction="pttestfunktion2" />
           <button id="pt6g5b2" label="check hierarchien korrekt ? "  onAction ="pttestfunktion3" />
@@ -493,7 +493,7 @@
           <button id="pt4g5b6" label="import alte projekt-steckbriefe vor pt113" onAction="tom2g4m1importold" supertip ="alle projekte, die als visbo steckbrief beschrieben im folder projectfiles liegen, werden importiert; achtung: struktur von feature pt113, spalte summe"/>
           <button id="pt4g5b7" label="neue rollen/kosten-struktur" onAction="pttestfunktion7" supertip ="test der optimierten rollen-/kosten verweise"/>
           <button id="pt6g5b5" label="Test WriteProtection"  onAction ="pttestWriteProtect" supertip ="Test der Funktion WriteProtect"/>
-        </group>-->
+        </group>
         <!--<group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />

@@ -118,8 +118,10 @@ Partial Class frmAnnotateProject
         Me.Controls.Add(Me.showStdNames)
         Me.Controls.Add(Me.annotateMilestones)
         Me.Controls.Add(Me.annotatePhases)
+        Me.MaximizeBox = False
+        Me.MinimizeBox = False
         Me.Name = "frmAnnotateProject"
-        Me.Text = "Projekt beschriften"
+        Me.Text = "Plan-Elemente beschriften"
         Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()

@@ -240,8 +240,14 @@
         Dim key As String = ""
 
         ' die customTF Liste merken, wenn es sich darum gehandelt hat ... 
-        If _sortType = ptSortCriteria.customTF Then
-            _lastCustomList = _sortList
+        If _sortType = ptSortCriteria.customTF And _sortType <> sCriteria Then
+            ' Kopieren der Liste 
+            _lastCustomList = New SortedList(Of String, String)
+
+            For Each kvp As KeyValuePair(Of String, String) In _sortList
+                _lastCustomList.Add(kvp.Key, kvp.Value)
+            Next
+
         End If
 
         ' jetzt müssen die Sort-Keys gesetzt werden 
