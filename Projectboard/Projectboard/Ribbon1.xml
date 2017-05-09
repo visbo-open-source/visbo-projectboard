@@ -36,16 +36,16 @@
               <button id="PT5G1B3" getLabel ="bestimmeLabel" onAction="PT5DatenbankLoadProjekte" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten und Varianten in der Datenbank; Achtung: Wenn in der Kalenderleiste ein Zeitraum markiert ist, so zeigt das Auswahlfenster auch nur diese Projekte an"/>
             </menu>
             <!--label="Speichern"-->
-            <menu id ="PT5G2" imageMso="FileSave" getLabel ="bestimmeLabel" >
+            <menu id ="PT5G2" imageMso="FileBackupDatabase" getLabel ="bestimmeLabel" >
               <!--label="Portfolio/s"-->
               <button id="Pt5G2B1" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Szenarien werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
               <!--label="Projekt/e"-->
               <button id="Pt5G2B3" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
               <!--label="Alles Speichern"-->
-              <button id="Pt5G2B4" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Szenarios und Filter werden gespeichert"/>
+              <button id="Pt5G2B4" imageMso="FileSave" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Szenarios und Filter werden gespeichert"/>
             </menu>
           <!--label="Löschen"-->
-          <menu id ="PT5G3" getLabel ="bestimmeLabel">
+          <menu id ="PT5G3" imageMso="FileDropSqlDatabase" getLabel ="bestimmeLabel" >         
             <!--label="Multiprojekt-Szenario"-->
             <button id="Pt5G3B1" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Datenbank gelöscht; damit wird lediglich die Definition des Szenarios in der Datenbank gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
             <!--<button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>-->
@@ -70,14 +70,14 @@
           <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
           <!--<separator id="PT4G1s1"/>-->
           <!--label="Import Excel"-->
-          <button id="PT4G1B2" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+          <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <!--label="Import RPLAN RXF"-->
           <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
           <!--label="Import MS Project"-->
-          <button id="PT4G1B4" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
+          <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
           <!--<separator id="PT4G1s2"/>-->
           <!--label="Import VISBO-Steckbriefe"-->
-          <button id="PT4G1M1B1" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+          <button id="PT4G1M1B1" image="money2" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <!--<separator id="PT4G1s3"/>-->
           <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
             <button id="PT4G1M3B1" label="Importieren" onAction="awinImportMassenEdit" supertip ="alle Werte aus der Massen-Edit Datei importieren"/>
@@ -130,15 +130,16 @@
         <!--<group id ="PT9G1" >-->
         <group id="PT2G3" getVisible="chckVisibility">
           <!--label="aus der Session löschen"-->
-          <menu id="PT2G3M1" getLabel ="bestimmeLabel">
+          <menu id="PT2G3M1" getLabel ="bestimmeLabel" imageMso="Delete">
             <!--label="alles"-->
             <button id="PT2G3M1B1" getLabel ="bestimmeLabel"  onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; die Szenarien bleiben erhalten, aber alle dargestellten Projekte, Phasen, Meilensteine und Charts werden gelöscht. Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
+            <menuSeparator id="separator0" />
             <!--label="Szenario"-->
             <button id="PT2G3M1B3" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Szenario wird in der Session gelöscht; damit wird lediglich die Definition des Szenarios in der Session gelöscht; die im Szenario ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
             <!--label="einzelne Projekte und Varianten"-->
             <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
-          <button id="PTExit" getLabel ="bestimmeLabel" onAction="PTexit" />
+          <button id="PTExit" imageMso="PrintPreviewClose" getLabel ="bestimmeLabel" onAction="PTexit" />
         </group>
         <!--</group>-->
       </tab>
@@ -194,7 +195,7 @@
           <!--label="Extended View"-->
           <button id="PT2G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTExtendedView" supertip ="Die selektierten Projekte werden mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. "/>
           <!--label="Rollup View"-->
-          <button id="PT2G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet."/>
+          <button id="PT2G1B7" imageMso="CollapseAll" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet."/>
           <separator id="PT2G1s2"/>
           <!--label="Zeichen-Elemente löschen"-->
           <menu id="PT2G3M2" getLabel ="bestimmeLabel">
@@ -240,6 +241,7 @@
               <menuSeparator id="PTXG1s1"/>
               <!--label="Profit/Loss"-->
               <button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
+              <menuSeparator id="PTXG1s3"/>
               <!--label="Capazity Utilization"-->
               <button id="PTXG1B3" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
               <menuSeparator id="PTXG1s2"/>
@@ -249,15 +251,15 @@
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Custom"-->
               <button id="PTcustom" label ="Custom"/>
-              <menuSeparator id="PTXG1s3"/>
-              <!--label="größter Engpass"-->
+              <!--<menuSeparator id="PTXG1s4"/>
+              --><!--label="größter Engpass"--><!--
               <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/> 
-              <!--label="Optimieren"-->
+              --><!--label="Optimieren"--><!--
               <menu id="PTOPT" getLabel ="bestimmeLabel">
-                <!--label="optimale Varianten-Kombination"-->
+                --><!--label="optimale Varianten-Kombination"--><!--
                 <button id="PTOPTB1" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
-                <!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
-              </menu>
+                --><!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>--><!--
+              </menu>-->
           </menu>
           <!--label="Projekt-Charts"-->
           <menu id ="PT7G1M1" getVisible ="chckVisibility" getLabel ="bestimmeLabel" >
@@ -271,11 +273,12 @@
               <!--label="Kosten Bedarfe"-->
               <button id="PT0G1M1B2" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B5GKosten" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Kostenbedarfe und die Gesamt-Summe zeigen"/>
               <menuSeparator id="PT7G1s2"/>
-              <!--label="Strategie/Risiko/Marge"-->
-              <button id="PT0G1B3" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
-              <menuSeparator id="PT7G1s3"/>
               <!--label="Info Gewinn/Verlust"-->
               <button id="PTMEC3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
+              <menuSeparator id="PT7G1s3"/>
+              <!--label="Strategie/Risiko/Marge"-->
+              <button id="PT0G1B3" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
+              <menuSeparator id="PT7G1s4"/>
               <!--label="Plan/Aktuell"-->
               <menu id="PT7G1M2" getLabel ="bestimmeLabel">
                 <!--label="Personalkosten"-->
@@ -291,24 +294,24 @@
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>
           <separator id="PT0G1s8"/>
           <!--label="Save Cockpit"-->
-          <button id="PT0G1M3B2" imageMso="ChartSaveTemplate" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
+          <button id="PT0G1M3B2" imageMso="ChartSaveTemplates" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
           <!--label="Load Cockpit"-->
-          <button id="PT0G1M3B1" imageMso="ChartShowData" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
+          <button id="PT0G1M3B1" imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
           <!--label="Ergebnis"--><!--
           <button id="PT0G1B7" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>-->
           <separator id="PT0G1s9"/>
           <!--label="Charts"-->
-          <button id="PT0G1BX" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
+          <button id="PT0G1BX" imageMso="Clear" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
         </group>
       </tab>
       <!--label="Reports"-->
-      <tab id="PTreport" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <tab id="PTreport"  getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT8G1" >
           <!--label="Bericht erstellen"-->
-          <button id="PT1G1B5" imageMso="CreateReport" getLabel ="bestimmeLabel" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
+          <button id="PT1G1B5" imageMso ="MicrosoftPowerPoint" getLabel ="bestimmeLabel" onAction="PTDoReportOfProfil" supertip ="Es wird ein Report gemäß ausgewähltem ReportProfil ausgeführt. Für einen Multiprojekt-Report muss ein Zeitraum ausgewählt sein."/>
           <!--label="Report-Profil definieren"-->
           <separator id="PT8G1s1"/>
-          <menu id="PT1G1M0"  getLabel ="bestimmeLabel" supertip="ein Bericht wird von Grund auf konfiguriert; damit wird das Report-Profil definiert">
+          <menu id="PT1G1M0"  imageMso="CreateReport" getLabel ="bestimmeLabel" supertip="ein Bericht wird von Grund auf konfiguriert; damit wird das Report-Profil definiert">
             <!--label="Einzelprojekt-Berichte"-->
             <menu id ="PT1G1M01" getLabel ="bestimmeLabel">
               <!--label="Typ I"-->

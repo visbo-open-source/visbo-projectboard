@@ -1060,7 +1060,11 @@ Public Module testModule
                             Case "Projekt-Name"
 
                                 If qualifier.Length > 0 Then
-                                    .TextFrame2.TextRange.Text = fullName & ": " & qualifier
+                                    If qualifier.Trim <> "Enlarge13" Then
+                                        .TextFrame2.TextRange.Text = fullName & ": " & qualifier
+                                    Else
+                                        .TextFrame2.TextRange.Text = fullName
+                                    End If
                                 Else
                                     .TextFrame2.TextRange.Text = fullName
                                 End If
