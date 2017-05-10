@@ -22,39 +22,38 @@ Partial Class frmConfirmEditRess
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmConfirmEditRess))
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(28, 47)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OKButton.Location = New System.Drawing.Point(22, 38)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(100, 28)
+        Me.OKButton.Size = New System.Drawing.Size(80, 22)
         Me.OKButton.TabIndex = 0
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(247, 47)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.AbbrButton.Location = New System.Drawing.Point(198, 38)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(80, 22)
         Me.AbbrButton.TabIndex = 1
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'frmConfirmEditRess
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(379, 117)
+        Me.ClientSize = New System.Drawing.Size(303, 94)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Location = New System.Drawing.Point(500, 150)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmConfirmEditRess"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
         Me.Text = "Ressourcen Bedarfe ändern"

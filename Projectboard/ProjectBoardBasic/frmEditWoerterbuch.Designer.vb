@@ -22,6 +22,7 @@ Partial Class frmEditWoerterbuch
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmEditWoerterbuch))
         Me.rdbListShowsPhases = New System.Windows.Forms.RadioButton()
         Me.rdbListShowsMilestones = New System.Windows.Forms.RadioButton()
         Me.filterUnknown = New System.Windows.Forms.TextBox()
@@ -196,7 +197,7 @@ Partial Class frmEditWoerterbuch
         'ToolStripStatusLabel1
         '
         Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(134, 17)
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(121, 17)
         Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
         '
         'clearUnknownList
@@ -297,6 +298,7 @@ Partial Class frmEditWoerterbuch
         Me.Controls.Add(Me.rdbListShowsMilestones)
         Me.Controls.Add(Me.rdbListShowsPhases)
         Me.HelpButton = True
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MaximizeBox = False
         Me.Name = "frmEditWoerterbuch"
         Me.Text = "Editieren des Wörterbuchs"

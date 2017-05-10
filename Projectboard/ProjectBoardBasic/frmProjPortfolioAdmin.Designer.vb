@@ -289,6 +289,7 @@ Partial Class frmProjPortfolioAdmin
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.TreeViewProjekte)
         Me.portfolioBrowserHelp.SetHelpString(Me, """das ist die Hilfe""")
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmProjPortfolioAdmin"
         Me.portfolioBrowserHelp.SetShowHelp(Me, True)
         Me.Text = "Multiprojekt-Szenario"

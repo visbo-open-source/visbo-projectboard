@@ -22,6 +22,7 @@ Partial Class frmPhaseInformation
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmPhaseInformation))
         Me.phaseName = New System.Windows.Forms.TextBox()
         Me.phaseStart = New System.Windows.Forms.TextBox()
         Me.phaseEnde = New System.Windows.Forms.TextBox()
@@ -109,6 +110,7 @@ Partial Class frmPhaseInformation
         Me.Controls.Add(Me.phaseEnde)
         Me.Controls.Add(Me.phaseStart)
         Me.Controls.Add(Me.phaseName)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmPhaseInformation"
         Me.Text = "Phasen Information"
         Me.TopMost = True

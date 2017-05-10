@@ -23,6 +23,7 @@ Partial Class frmCreateRolloutProject
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmCreateRolloutProject))
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.endDateMigration = New System.Windows.Forms.TextBox()
         Me.nrVeryComplexObjects = New System.Windows.Forms.TextBox()
@@ -293,6 +294,7 @@ Partial Class frmCreateRolloutProject
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.GroupBox2)
         Me.Controls.Add(Me.GroupBox1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmCreateRolloutProject"
         Me.Text = "Create new Rollout Project"
         Me.GroupBox1.ResumeLayout(False)

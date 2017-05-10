@@ -22,6 +22,7 @@ Partial Class frmProjektAendern
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmProjektAendern))
         Me.pName = New System.Windows.Forms.Label()
         Me.projectName = New System.Windows.Forms.TextBox()
         Me.risiko = New System.Windows.Forms.TextBox()
@@ -61,7 +62,7 @@ Partial Class frmProjektAendern
         'risiko
         '
         Me.risiko.Location = New System.Drawing.Point(306, 175)
-        Me.risiko.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.risiko.Margin = New System.Windows.Forms.Padding(2)
         Me.risiko.Name = "risiko"
         Me.risiko.Size = New System.Drawing.Size(60, 23)
         Me.risiko.TabIndex = 35
@@ -69,7 +70,7 @@ Partial Class frmProjektAendern
         'sFit
         '
         Me.sFit.Location = New System.Drawing.Point(306, 144)
-        Me.sFit.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.sFit.Margin = New System.Windows.Forms.Padding(2)
         Me.sFit.Name = "sFit"
         Me.sFit.Size = New System.Drawing.Size(60, 23)
         Me.sFit.TabIndex = 34
@@ -77,7 +78,7 @@ Partial Class frmProjektAendern
         'Erloes
         '
         Me.Erloes.Location = New System.Drawing.Point(306, 115)
-        Me.Erloes.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Erloes.Margin = New System.Windows.Forms.Padding(2)
         Me.Erloes.Name = "Erloes"
         Me.Erloes.Size = New System.Drawing.Size(60, 23)
         Me.Erloes.TabIndex = 33
@@ -206,6 +207,7 @@ Partial Class frmProjektAendern
         Me.Controls.Add(Me.pName)
         Me.Controls.Add(Me.projectName)
         Me.Font = New System.Drawing.Font("Tahoma", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.Name = "frmProjektAendern"
         Me.Text = "Daten ändern"

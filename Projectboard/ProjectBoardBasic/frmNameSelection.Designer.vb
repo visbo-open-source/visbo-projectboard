@@ -388,6 +388,7 @@ Partial Class frmNameSelection
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.nameListBox)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmNameSelection"
         Me.Text = "Visualisieren von Plan-Objekten"
         Me.TopMost = True

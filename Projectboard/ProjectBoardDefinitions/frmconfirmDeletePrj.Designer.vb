@@ -22,6 +22,7 @@ Partial Class frmconfirmDeletePrj
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmconfirmDeletePrj))
         Me.OK_Button = New System.Windows.Forms.Button()
         Me.Cancel_Button = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -29,20 +30,18 @@ Partial Class frmconfirmDeletePrj
         '
         'OK_Button
         '
-        Me.OK_Button.Location = New System.Drawing.Point(69, 102)
-        Me.OK_Button.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OK_Button.Location = New System.Drawing.Point(55, 82)
         Me.OK_Button.Name = "OK_Button"
-        Me.OK_Button.Size = New System.Drawing.Size(100, 28)
+        Me.OK_Button.Size = New System.Drawing.Size(80, 22)
         Me.OK_Button.TabIndex = 0
         Me.OK_Button.Text = "OK"
         Me.OK_Button.UseVisualStyleBackColor = True
         '
         'Cancel_Button
         '
-        Me.Cancel_Button.Location = New System.Drawing.Point(335, 102)
-        Me.Cancel_Button.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Cancel_Button.Location = New System.Drawing.Point(268, 82)
         Me.Cancel_Button.Name = "Cancel_Button"
-        Me.Cancel_Button.Size = New System.Drawing.Size(100, 28)
+        Me.Cancel_Button.Size = New System.Drawing.Size(80, 22)
         Me.Cancel_Button.TabIndex = 1
         Me.Cancel_Button.Text = "Abbrechen"
         Me.Cancel_Button.UseVisualStyleBackColor = True
@@ -50,22 +49,21 @@ Partial Class frmconfirmDeletePrj
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(65, 42)
-        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label1.Location = New System.Drawing.Point(52, 34)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(245, 17)
+        Me.Label1.Size = New System.Drawing.Size(185, 13)
         Me.Label1.TabIndex = 2
         Me.Label1.Text = "bitte bestätigen Sie das Löschen von:"
         '
         'frmconfirmDeletePrj
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(521, 186)
+        Me.ClientSize = New System.Drawing.Size(417, 149)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.Cancel_Button)
         Me.Controls.Add(Me.OK_Button)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmconfirmDeletePrj"
         Me.Text = "Löschen bestätigen"
         Me.ResumeLayout(False)

@@ -22,6 +22,7 @@ Partial Class frmconfirmOptimierung
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmconfirmOptimierung))
         Me.ButtonJA = New System.Windows.Forms.Button()
         Me.ButtonNEIN = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -31,10 +32,9 @@ Partial Class frmconfirmOptimierung
         'ButtonJA
         '
         Me.ButtonJA.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.ButtonJA.Location = New System.Drawing.Point(49, 81)
-        Me.ButtonJA.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ButtonJA.Location = New System.Drawing.Point(39, 65)
         Me.ButtonJA.Name = "ButtonJA"
-        Me.ButtonJA.Size = New System.Drawing.Size(100, 28)
+        Me.ButtonJA.Size = New System.Drawing.Size(80, 22)
         Me.ButtonJA.TabIndex = 0
         Me.ButtonJA.Text = "Ja"
         Me.ButtonJA.UseVisualStyleBackColor = True
@@ -42,10 +42,9 @@ Partial Class frmconfirmOptimierung
         'ButtonNEIN
         '
         Me.ButtonNEIN.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.ButtonNEIN.Location = New System.Drawing.Point(296, 81)
-        Me.ButtonNEIN.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ButtonNEIN.Location = New System.Drawing.Point(237, 65)
         Me.ButtonNEIN.Name = "ButtonNEIN"
-        Me.ButtonNEIN.Size = New System.Drawing.Size(100, 28)
+        Me.ButtonNEIN.Size = New System.Drawing.Size(80, 22)
         Me.ButtonNEIN.TabIndex = 1
         Me.ButtonNEIN.Text = "Nein"
         Me.ButtonNEIN.UseVisualStyleBackColor = True
@@ -53,32 +52,30 @@ Partial Class frmconfirmOptimierung
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(49, 37)
-        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label1.Location = New System.Drawing.Point(39, 30)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(354, 17)
+        Me.Label1.Size = New System.Drawing.Size(263, 13)
         Me.Label1.TabIndex = 2
         Me.Label1.Text = "Möchten Sie das Optimierungs-Ergebnis übernehmen?"
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(45, 133)
-        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label2.Location = New System.Drawing.Point(36, 106)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(0, 17)
+        Me.Label2.Size = New System.Drawing.Size(0, 13)
         Me.Label2.TabIndex = 3
         '
         'frmconfirmOptimierung
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(463, 145)
+        Me.ClientSize = New System.Drawing.Size(370, 116)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.ButtonNEIN)
         Me.Controls.Add(Me.ButtonJA)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmconfirmOptimierung"
         Me.Text = "Optimierungs-Ergebnis"
         Me.ResumeLayout(False)

@@ -22,6 +22,7 @@ Partial Class frmProjectInfo1
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmProjectInfo1))
         Me.lblProjectName = New System.Windows.Forms.Label()
         Me.lblDBVersion = New System.Windows.Forms.Label()
         Me.dbForecast = New System.Windows.Forms.TextBox()
@@ -89,6 +90,7 @@ Partial Class frmProjectInfo1
         Me.Controls.Add(Me.dbForecast)
         Me.Controls.Add(Me.lblDBVersion)
         Me.Controls.Add(Me.lblProjectName)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmProjectInfo1"

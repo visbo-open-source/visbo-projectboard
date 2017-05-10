@@ -22,6 +22,7 @@ Partial Class frmShowProjCharacteristics
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmShowProjCharacteristics))
         Me.timeSlider = New System.Windows.Forms.TrackBar()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.compareBeauftragung = New System.Windows.Forms.Button()
@@ -165,6 +166,7 @@ Partial Class frmShowProjCharacteristics
         Me.Controls.Add(Me.compareBeauftragung)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.timeSlider)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmShowProjCharacteristics"
         Me.Text = "Projekt Historie"
         Me.TopMost = True

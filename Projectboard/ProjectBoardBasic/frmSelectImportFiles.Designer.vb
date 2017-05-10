@@ -22,6 +22,7 @@ Partial Class frmSelectImportFiles
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSelectImportFiles))
         Me.ListImportFiles = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.SelectAbbruch = New System.Windows.Forms.Button()
@@ -84,6 +85,7 @@ Partial Class frmSelectImportFiles
         Me.Controls.Add(Me.SelectAbbruch)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListImportFiles)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectImportFiles"
         Me.Text = "Auswahl der Import-Dateien"
         Me.ResumeLayout(False)
