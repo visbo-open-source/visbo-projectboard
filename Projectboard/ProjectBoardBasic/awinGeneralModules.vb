@@ -11671,6 +11671,8 @@ Public Module awinGeneralModules
         Dim hrole As New clsRollenDefinition
         Dim rolename As String = ""
 
+        Dim outPutCollection As New Collection
+
         If formerEE Then
             appInstance.EnableEvents = False
         End If
@@ -11940,6 +11942,13 @@ Public Module awinGeneralModules
         kapaWB.Close(SaveChanges:=False)
 
         Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Problem sind beim Lesen der Urlaubsplanung aufgetreten")
+
+        ' ''If outPutCollection.Count > 0 Then
+        ' ''    Call showOutPut(outPutCollection, _
+        ' ''                    "Meldungen Einlesevorgang Urlaubsdatei", _
+        ' ''                    "zum Zeitpunkt " & storedAtOrBefore.ToString & " aufgeführte Rolle nicht definiert")
+        ' ''End If
+
 
     End Sub
 
@@ -13595,7 +13604,7 @@ Public Module awinGeneralModules
     ''' <param name="menuOption"></param>
     ''' <param name="repVorlagenDropbox"></param>
     ''' <remarks></remarks>
-    Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
+    Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox, Optional ByVal mppreport As Boolean = False)
 
 
         Dim dirname As String
@@ -13624,9 +13633,15 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-        ElseIf menuOption = PTmenue.reportBHTC Then
+        ElseIf menuOption = PTmenue.reportBHTC Or _
+            menuOption = PTmenue.reportMultiprojektTafel Then
 
-            dirname = awinPath & RepProjectVorOrdner
+            If mppreport Then
+                dirname = awinPath & RepPortfolioVorOrdner
+            Else
+                dirname = awinPath & RepProjectVorOrdner
+            End If
+
 
             Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
             Try
@@ -17072,26 +17087,50 @@ Public Module awinGeneralModules
     End Sub
 
 
-    Public Function XMLImportReportProfil(ByVal profilName As String) As clsReport
+    Public Function XMLImportReportProfil(ByVal profilName As String) As clsReportAll
 
-        Dim profil As New clsReport
+        Dim ergprofil As New clsReportAll
 
-        Dim serializer = New DataContractSerializer(GetType(clsReport))
+
         Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
         Try
+            ' ur: 31.03.2017 von nun an wird auch bei BHTC mit der Struktur clsReportAll agiert.
+            '                alte ReportProfile von BHTC können trotzdem noch gelesen werden, siehe Catch-fall
+            Dim serializer = New DataContractSerializer(GetType(clsReportAll))
+            Dim profil As New clsReportAll
 
             ' XML-Datei Öffnen
             ' A FileStream is needed to read the XML document.
             Dim file As New FileStream(xmlfilename, FileMode.Open)
             profil = serializer.ReadObject(file)
             file.Close()
+            ergprofil = profil
 
-            XMLImportReportProfil = profil
+            XMLImportReportProfil = ergprofil
+
 
         Catch ex As Exception
+            ' ur: 31.03.2017 neu eingefügt
+            Try
+                Dim serializer = New DataContractSerializer(GetType(clsReport))
+                Dim profil As New clsReport
 
-            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
-            XMLImportReportProfil = Nothing
+                ' XML-Datei Öffnen
+                ' A FileStream is needed to read the XML document.
+                Dim file As New FileStream(xmlfilename, FileMode.Open)
+                profil = serializer.ReadObject(file)
+                file.Close()
+                profil.CopyTo(ergprofil)
+
+                XMLImportReportProfil = ergprofil
+
+
+            Catch ex2 As Exception
+
+                Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+                XMLImportReportProfil = Nothing
+            End Try
+
         End Try
 
     End Function
@@ -17123,45 +17162,55 @@ Public Module awinGeneralModules
     Public Sub retrieveProfilSelection(ByVal profilName As String, ByVal menuOption As Integer, _
                                      ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
                                      ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
-                                     ByRef selectedRoles As Collection, ByRef selectedCosts As Collection, ByRef reportProfil As clsReport)
+                                     ByRef selectedRoles As Collection, ByRef selectedCosts As Collection, ByRef reportProfil As clsReportAll)
         Try
+            If menuOption = PTmenue.reportBHTC Then
 
-            ' Datumsangaben sichern
-            Dim vondate_sav As Date = reportProfil.VonDate
-            Dim bisdate_sav As Date = reportProfil.BisDate
-            Dim PPTvondate_sav As Date = reportProfil.CalendarVonDate
-            Dim PPTbisdate_sav As Date = reportProfil.CalendarBisDate
+                ' Datumsangaben sichern
+                Dim vondate_sav As Date = reportProfil.VonDate
+                Dim bisdate_sav As Date = reportProfil.BisDate
+                Dim PPTvondate_sav As Date = reportProfil.CalendarVonDate
+                Dim PPTbisdate_sav As Date = reportProfil.CalendarBisDate
 
-            ' Projekte sichern
-            Dim projects_sav As New SortedList(Of Double, String)
-            For Each kvp As KeyValuePair(Of Double, String) In reportProfil.Projects
-                projects_sav.Add(kvp.Key, kvp.Value)
-            Next
+                ' Projekte sichern
+                Dim projects_sav As New SortedList(Of Double, String)
+                For Each kvp As KeyValuePair(Of Double, String) In reportProfil.Projects
+                    projects_sav.Add(kvp.Key, kvp.Value)
+                Next
+
+                ' Datumsangaben zurücksichern
+                reportProfil.CalendarVonDate = PPTvondate_sav
+                reportProfil.CalendarBisDate = PPTbisdate_sav
+                reportProfil.calcRepVonBis(vondate_sav, bisdate_sav)
 
 
-            ' Einlesen des ausgewählten ReportProfils
-            reportProfil = XMLImportReportProfil(profilName)
 
-            ' Datumsangaben zurücksichern
-            reportProfil.CalendarVonDate = PPTvondate_sav
-            reportProfil.CalendarBisDate = PPTbisdate_sav
-            reportProfil.calcRepVonBis(vondate_sav, bisdate_sav)
+                ' für BHTC immer true
+                reportProfil.ExtendedMode = True
+                ' für BHTC immer false
+                reportProfil.Ampeln = False
+                reportProfil.AllIfOne = False
+                reportProfil.FullyContained = False
+                reportProfil.SortedDauer = False
+                reportProfil.ProjectLine = False
+                reportProfil.UseOriginalNames = False
 
-            ' für BHTC immer true
-            reportProfil.ExtendedMode = True
-            ' für BHTC immer false
-            reportProfil.Ampeln = False
-            reportProfil.AllIfOne = False
-            reportProfil.FullyContained = False
-            reportProfil.SortedDauer = False
-            reportProfil.ProjectLine = False
-            reportProfil.UseOriginalNames = False
+                ' Projekte zurücksichern
+                reportProfil.Projects.Clear()
+                For Each kvp As KeyValuePair(Of Double, String) In projects_sav
+                    reportProfil.Projects.Add(kvp.Key, kvp.Value)
+                Next
 
-            ' Projekte zurücksichern
-            reportProfil.Projects.Clear()
-            For Each kvp As KeyValuePair(Of Double, String) In projects_sav
-                reportProfil.Projects.Add(kvp.Key, kvp.Value)
-            Next
+            Else
+                '  menuOption = PTmenue.reportMultiprojektTafel
+
+
+                ' Einlesen des ausgewählten ReportProfils
+                reportProfil = XMLImportReportProfil(profilName)
+
+
+            End If
+
 
             '  und bereitstellen der Auswahl für Hierarchieselection
             selectedPhases = copySortedListtoColl(reportProfil.Phases)
@@ -17181,7 +17230,7 @@ Public Module awinGeneralModules
     Public Sub storeReportProfil(ByVal menuOption As Integer, _
                                      ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                      ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, ByVal reportProfil As clsReport)
+                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, ByVal reportProfil As clsReportAll)
 
 
 
@@ -17215,6 +17264,15 @@ Public Module awinGeneralModules
             reportProfil.UseAbbreviation = .mppUseAbbreviation
             reportProfil.UseOriginalNames = .mppUseOriginalNames
             reportProfil.KwInMilestone = .mppKwInMilestone
+
+            If menuOption = PTmenue.reportMultiprojektTafel Then
+                reportProfil.projectsWithNoMPmayPass = .mppProjectsWithNoMPmayPass
+            Else
+                ' dann gilt: menuOption = PTmenue.reportBHTC
+                reportProfil.projectsWithNoMPmayPass = Nothing
+                reportProfil.description = ""
+            End If
+
         End With
 
 
@@ -19962,7 +20020,7 @@ Public Module awinGeneralModules
 
         Dim currentPresentationName As String = ""
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPassword)
-        Dim reportProfil As clsReportAll = XMLImportReportAllProfil(profilname)
+        Dim reportProfil As clsReportAll = XMLImportReportProfil(profilname)
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
 
