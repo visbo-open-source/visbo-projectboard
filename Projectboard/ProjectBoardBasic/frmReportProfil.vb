@@ -5,7 +5,7 @@ Imports System.ComponentModel
 
 Public Class frmReportProfil
 
-
+    Public zeitraum_definiert As Boolean = False
     Public reportProfil As New clsReportAll
 
     ' für calledfrom ="MS Project"
@@ -57,6 +57,7 @@ Public Class frmReportProfil
 
         Call languageSettings()
 
+        zeitraum_definiert = (showRangeLeft > 0 And showRangeRight > showRangeLeft)
 
 
         If Me.calledFrom = "MS Project" Then
@@ -266,6 +267,16 @@ Public Class frmReportProfil
                         ' Report mit Constellation - Multiprojektreport
                         If rdbMPreports.Checked Then
 
+                            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                                ' alles ok , bereits gesetzt 
+                                zeitraum_definiert = True
+                            Else
+                                zeitraum_definiert = False
+                                showRangeLeft = ShowProjekte.getMinMonthColumn
+                                showRangeRight = ShowProjekte.getMaxMonthColumn
+                                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                            End If
+
                             For Each kvp In listofProfils
 
                                 If kvp.Value.isMpp Then
@@ -280,6 +291,15 @@ Public Class frmReportProfil
                         ' Einzelprojektreport
                         If rdbEPreports.Checked Then
 
+                            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                                ' alles ok , bereits gesetzt 
+                                zeitraum_definiert = True
+                            Else
+                                zeitraum_definiert = False
+                                showRangeLeft = 0
+                                showRangeRight = 0
+                            End If
+
                             For Each kvp In listofProfils
 
                                 If Not kvp.Value.isMpp Then
@@ -292,9 +312,9 @@ Public Class frmReportProfil
                         End If
 
 
-                        If listOfFiles.Count > 0 Then
-                            '  RepProfilListbox.SelectedIndex = 1
-                        End If
+                            If listOfFiles.Count > 0 Then
+                                '  RepProfilListbox.SelectedIndex = 1
+                            End If
 
                     End If
 
@@ -320,7 +340,12 @@ Public Class frmReportProfil
                 Me.statusLabel.Visible = True
             End Try
 
-            Me.rdbEPreports.Checked = True
+            If selectedProjekte.Count > 0 Then
+                Me.rdbEPreports.Checked = True
+            Else
+                Me.rdbMPreports.Checked = True
+            End If
+
 
         End If
 
@@ -1087,33 +1112,51 @@ Public Class frmReportProfil
     Private Sub rdbEPreports_CheckedChanged(sender As Object, e As EventArgs) Handles rdbEPreports.CheckedChanged
 
 
-        If Me.calledFrom = "Multiprojekt-Tafel" Then
-            Try
+        If rdbEPreports.Checked Then
 
-                RepProfilListbox.Items.Clear()
+            If Me.calledFrom = "Multiprojekt-Tafel" Then
+                Try
 
-                For Each kvp In listofProfils
+                    RepProfilListbox.Items.Clear()
 
-                    If Not kvp.Value.isMpp Then
-                        ' Profil profilName in Auswahl eintragen
-                        RepProfilListbox.Items.Add(kvp.Value.name)
+                    For Each kvp In listofProfils
 
+                        If Not kvp.Value.isMpp Then
+                            ' Profil profilName in Auswahl eintragen
+                            RepProfilListbox.Items.Add(kvp.Value.name)
+
+                        End If
+                    Next
+
+                    ' es wurde noch kein Projekt selektiert
+                    If selectedProjekte.Count < 1 Then
+
+                        Me.statusLabel.Visible = True
+
+                        Dim msgTxt As String = "bitte zuerst Projekte selektieren!"
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "please select one or more projects!"
+                        End If
+
+                        Me.statusLabel.Text = msgTxt
+
+                        Call MsgBox(msgTxt)
                     End If
-                Next
+
+                Catch ex As Exception
+                    'Throw New ArgumentException("Fehler beim Filtern")
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                End Try
 
 
-            Catch ex As Exception
-                'Throw New ArgumentException("Fehler beim Filtern")
-                Me.statusLabel.Text = ex.Message
-                Me.statusLabel.Visible = True
-            End Try
+                Me.zeitLabel.Visible = False
+                Me.vonDate.Visible = False
+                Me.bisDate.Visible = False
+                Me.changeProfil.Visible = True
+                Me.statusLabel.Visible = False
+            End If
 
-
-            Me.zeitLabel.Visible = False
-            Me.vonDate.Visible = False
-            Me.bisDate.Visible = False
-            Me.changeProfil.Visible = True
-            Me.statusLabel.Visible = False
         End If
 
     End Sub
@@ -1121,37 +1164,52 @@ Public Class frmReportProfil
 
     Private Sub rdbMPreports_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMPreports.CheckedChanged
 
-        If Me.calledFrom = "Multiprojekt-Tafel" Then
-            Try
+        If rdbMPreports.Checked Then
 
-                RepProfilListbox.Items.Clear()
+            If Me.calledFrom = "Multiprojekt-Tafel" Then
+                Try
 
-                For Each kvp In listofProfils
+                    RepProfilListbox.Items.Clear()
 
-                    If kvp.Value.isMpp Then
-                        ' Profil profilName in Auswahl eintragen
-                        RepProfilListbox.Items.Add(kvp.Value.name)
+                    For Each kvp In listofProfils
 
+                        If kvp.Value.isMpp Then
+                            ' Profil profilName in Auswahl eintragen
+                            RepProfilListbox.Items.Add(kvp.Value.name)
+
+                        End If
+                    Next
+
+                    ' es ist kein Zeitraum selektiert
+                    If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
                     End If
-                Next
 
 
+                Catch ex As Exception
+                    'Throw New ArgumentException("Fehler beim Filtern")
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                End Try
 
-            Catch ex As Exception
-                'Throw New ArgumentException("Fehler beim Filtern")
-                Me.statusLabel.Text = ex.Message
-                Me.statusLabel.Visible = True
-            End Try
 
+                Me.zeitLabel.Visible = False
+                Me.vonDate.Visible = False
+                Me.bisDate.Visible = False
+                Me.changeProfil.Visible = True
+                Me.statusLabel.Visible = False
 
-            Me.zeitLabel.Visible = False
-            Me.vonDate.Visible = False
-            Me.bisDate.Visible = False
-            Me.changeProfil.Visible = True
-            Me.statusLabel.Visible = False
-
+            End If
+        Else
+            If zeitraum_definiert = False Then
+                ' zu Beginn war kein zeitraum definiert, also zurücksetzen
+                Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+                showRangeLeft = 0
+                showRangeRight = 0
+            End If
         End If
-
 
     End Sub
 

@@ -816,7 +816,7 @@ Public Class frmHierarchySelection
         dialogreturn = mppFrm.ShowDialog
 
 
-        If Me.menuOption = PTmenue.reportBHTC Then
+        If Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
             With awinSettings
 
