@@ -5456,6 +5456,30 @@ Public Module awinGeneralModules
     End Function
 
     ''' <summary>
+    ''' prüft, ob es sich um einen zugelassenen Projekt-Namen handelt ....
+    ''' nicht zugelassen: #, (, ), Zeilenvorschub 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidProjectName(ByVal pName As String) As Boolean
+        Dim ergebnis As Boolean = False
+        If pName.Contains("#") Or _
+            pName.Contains("(") Or _
+            pName.Contains(")") Or _
+            pName.Contains(".") Or _
+            pName.Contains(vbCr) Or _
+            pName.Contains(vbLf) Then
+            ergebnis = False
+        Else
+            ergebnis = True
+        End If
+
+        isValidProjectName = ergebnis
+
+    End Function
+
+    ''' <summary>
     ''' diese Funktion verarbeitet die Import Projekte 
     ''' wenn sie schon in der Datenbank bzw Session existieren und unterschiedlich sind: es wird eine Variante angelegt, die so heisst wie das Scenario 
     ''' wenn sie bereits existieren und identisch sind: in AlleProjekte holen, wenn nicht schon geschehen

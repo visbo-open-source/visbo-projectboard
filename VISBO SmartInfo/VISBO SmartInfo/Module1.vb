@@ -3005,16 +3005,18 @@ Module Module1
 
                 Case pptPositionType.centerRight
 
-                    If newShape.Width > selectedPlanShape.Width Then
-                        txtShpLeft = selectedPlanShape.Left
-                    Else
-                        txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
+                    txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width + 2
+                    ' es wird jetzt rechts davon positioniert 
+                    'If newShape.Width > selectedPlanShape.Width Then
+                    '    txtShpLeft = selectedPlanShape.Left
+                    'Else
+                    '    txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                    '    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                    '        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                    '        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    '    End If
 
-                    End If
+                    'End If
 
                     txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
@@ -3051,15 +3053,16 @@ Module Module1
                     txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
 
                 Case pptPositionType.centerLeft
-                    If newShape.Width > selectedPlanShape.Width Then
-                        txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                    Else
-                        txtShpLeft = selectedPlanShape.Left
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
-                    End If
+                    txtShpLeft = selectedPlanShape.Left - (newShape.Width + 2)
+                    'If newShape.Width > selectedPlanShape.Width Then
+                    '    txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                    'Else
+                    '    txtShpLeft = selectedPlanShape.Left
+                    '    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                    '        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                    '        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    '    End If
+                    'End If
                     txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
                 Case pptPositionType.aboveLeft
