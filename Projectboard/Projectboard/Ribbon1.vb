@@ -9795,7 +9795,7 @@ Imports System.Windows
 
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
-
+        Dim timeZoneWasOff As Boolean = False
         getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
@@ -9814,29 +9814,28 @@ Imports System.Windows
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
         Else
-            Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+        End If
+
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
         End If
 
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
 
-
-        ' das ist die alte Variante
-        '
-        'enableOnUpdate = False
-        'appInstance.EnableEvents = False
-        'appInstance.ScreenUpdating = False
-
-        'Try
-        '    Call createPPTSlidesFromConstellation()
-        'Catch ex As Exception
-        '    Call MsgBox(ex.Message)
-        'End Try
-
-
-        'appInstance.EnableEvents = True
-        'appInstance.ScreenUpdating = True
-        'enableOnUpdate = True
 
     End Sub
     Sub PTShowVersions(control As IRibbonControl)
@@ -10531,9 +10530,26 @@ Imports System.Windows
         Call projektTafelInit()
 
         enableOnUpdate = False
-
+        Dim timeZoneWasOff As Boolean = False
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
+
+        ' ist ein Timespan selektiert ? 
+        ' wenn nein, selektieren ... 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' alles in Ordnung 
+        Else
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+        End If
 
         If ShowProjekte.Count > 0 Then
 
@@ -10549,7 +10565,12 @@ Imports System.Windows
 
         End If
 
-
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
+        End If
+        
         enableOnUpdate = True
 
     End Sub

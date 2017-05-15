@@ -12283,8 +12283,8 @@ Public Module testModule
 
         End If
 
-        If dimension * (rds.quarterMonthVorlagenShape.Width + rds.calendarQuartalSeparator.Width) > rds.calendarLineShape.Width Then
-            ' es pasts nicht rein, also nicht zeichnen 
+        If 1.1 * (dimension * (rds.quarterMonthVorlagenShape.Width + rds.calendarQuartalSeparator.Width)) > rds.calendarLineShape.Width Then
+            ' es passt nicht rein, also nicht zeichnen 
             beschrifteLevel3 = False
         Else
             beschrifteLevel3 = True
