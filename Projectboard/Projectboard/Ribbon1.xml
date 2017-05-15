@@ -173,8 +173,6 @@
             <!--label="Variante zum Standard machen"-->
             <button id="PT2G1M1B3" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
           </menu>
-          <!--label="zurück zur Multiprojekt-Tafel"-->
-          <button id="PT2G1M2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTbackToProjectBoard" supertip ="zurück zur grafischen Multiprojekt-Tafel"/>
         </group>
       </tab>
       <!--label="View"-->
@@ -274,7 +272,7 @@
               <button id="PT0G1M1B2" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B5GKosten" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Kostenbedarfe und die Gesamt-Summe zeigen"/>
               <menuSeparator id="PT7G1s2"/>
               <!--label="Info Gewinn/Verlust"-->
-              <button id="PTMEC3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
+              <button id="PT0G1M1B3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
               <menuSeparator id="PT7G1s3"/>
               <!--label="Strategie/Risiko/Marge"-->
               <button id="PT0G1B3" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
@@ -359,7 +357,45 @@
             <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
           </group>
         </tab>
-    </tabs>
+      <!--label="zurück zur Multiprojekt-Tafel"-->
+      <tab id="PTzurück" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+        <group id="PTback" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+        </group>
+      </tab>
+      <tab id="PTMEC" getVisible ="chckVisibility" getLabel ="bestimmeLabel">
+        <group id="PTMECG1" label=" ">
+          <!--label="Rollen und Kosten"-->
+          <button id="PTMEC1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>
+          <!--label="Budget/Kosten"-->
+          <button id="PTMEC2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>
+          <!--label="Info Gewinn/Verlust"-->
+          <button id="PTMEC3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
+        </group>
+      </tab>
+      <tab id="PTmassEdit" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+        <group id="PT2G1M2">
+          <!--label="Ressource/Kostenart hinzufügen"-->
+          <button id="PT2G1M2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
+          <!--label="Ressource/Kostenart hinzufügen"-->
+          <button id="PT2G1M2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
+          <!--label="Ressource/Kostenart löschen"-->
+          <button id="PT2G1M2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileLoeschen" supertip ="die Ressource / Kostenart der aktuellen Zeile wird aus der Projekt-Phase gelöscht."/>
+          <separator id="PT2G1M2s1"/>
+        </group>
+      </tab>
+      <tab id="PTMECsettings" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+        <group id="PTMECsettingsG1">
+          <!--label="Änderungen verwerfen"-->
+          <checkBox id="PT2G1M2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>
+          <!--label="prozentuale Auslastungs-Werte anzeigen"-->
+          <checkBox id="PT6G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>
+          <!--label="Platzhalter Rollen automatisch reduzieren"-->
+          <checkBox id="PT6G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>
+          <!--label="Sortierung ermöglichen"-->
+          <checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
+        </group>
+      </tab>  
+     </tabs>
   </ribbon>
   <backstage>
     <button idMso ="FileSave" visible ="false"/>

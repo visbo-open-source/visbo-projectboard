@@ -10018,7 +10018,15 @@ Public Module awinGeneralModules
 
                     If activeConstellation.sortCriteria >= 0 Then
                         currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
+                        '' ''Else
+                        '' ''    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                        '' ''    activeConstellation.sortCriteria = ptSortCriteria.customTF
                     End If
+                    '' ''Else
+                    '' ''    If activeConstellation.sortCriteria < 0 Then
+                    '' ''        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                    '' ''        activeConstellation.sortCriteria = ptSortCriteria.customTF
+                    '' ''    End If
 
                 End If
 

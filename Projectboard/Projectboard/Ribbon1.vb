@@ -1664,14 +1664,14 @@ Imports System.Windows
                 End If
             Case "PTMEC" ' Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Charts & Info"
+                    tmpLabel = "Charts u. Info"
                 Else
-                    tmpLabel = "Charts & Info"
+                    tmpLabel = "Charts and Info"
                 End If
 
             Case "PTMEC1" ' Rollen und Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rollen und Kosten"
+                    tmpLabel = "Rollen u. Kosten"
                 Else
                     tmpLabel = "Roles and Cost"
                 End If
@@ -1906,6 +1906,12 @@ Imports System.Windows
                     tmpLabel = "Cost-Type Needs"
                 End If
 
+            Case "PT0G1M1B3" ' Formular Forecast Gegenüberstellung 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Gewinn/Verlust"
+                Else
+                    tmpLabel = "Profit/Loss"
+                End If
             Case "PT0G1B3" ' Strategie/Risiko/Marge
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Strategie/Risiko"
@@ -2185,21 +2191,27 @@ Imports System.Windows
 
             Case "PT2G1M2B4" ' Ressource/Kostenart hinzufügen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ressource/Kostenart hinzufügen"
+                    tmpLabel = "Rolle hinzufügen"
                 Else
-                    tmpLabel = "Add resource/cost"
+                    tmpLabel = "Add Resource"
+                End If
+            Case "PT2G1M2B7" ' Ressource/Kostenart hinzufügen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Kostenart hinzufügen"
+                Else
+                    tmpLabel = "Add Cost"
                 End If
 
             Case "PT2G1M2B5" ' Ressource/Kostenart löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ressource/Kostenart löschen"
+                    tmpLabel = "Rolle/Kostenart löschen"
                 Else
                     tmpLabel = "Delete resource / cost"
                 End If
 
-            Case "PT2G1M2" ' Editieren
+            Case "PTmassEdit" 'Editieren im MassEdit
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Editieren"
+                    tmpLabel = "Edit"
                 Else
                     tmpLabel = "Edit"
                 End If
@@ -2223,6 +2235,13 @@ Imports System.Windows
                     tmpLabel = "Zeitspanne f. Projektstart"
                 Else
                     tmpLabel = "Timespan for projectstart"
+                End If
+
+            Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einstellungen"
+                Else
+                    tmpLabel = "Settings"
                 End If
 
             Case "PT6G2B3" ' prozentuale Auslastungs-Werte anzeigen
@@ -2260,12 +2279,20 @@ Imports System.Windows
                     tmpLabel = "De-Freeze for moving"
                 End If
 
-            Case "PT2G1M2B7" ' zurück zur Multiprojekt-Tafel
+            Case "PTzurück" ' zurück zur Multiprojekt-Tafel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Zurück zur Multiprojekt-Tafel"
+                    tmpLabel = "Zurück zu Projekt Tafel"
                 Else
-                    tmpLabel = "Back to Multiproject Board"
+                    tmpLabel = "Back to Project Board"
                 End If
+
+            Case "PTback" ' OnAction zur Multiprojekt-Tafel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zurück"
+                Else
+                    tmpLabel = "Back"
+                End If
+                Call PTbackToProjectBoard(control)
 
             Case "PT2G1M2B6" ' Änderungen verwerfen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2736,18 +2763,31 @@ Imports System.Windows
         bestimmeLabel = tmpLabel
 
     End Function
+    ''' <summary>
+    ''' Setzt die Sichtbarkeit der Menu-Buttons je nach visboZustaende.projectBoardMode
+    ''' </summary>
+    ''' <param name="control">Control des Menubuttons, von dem diese Routine über "getVisible" im Ribbon aufgerufen wird</param>
+    ''' <returns>true: wenn der entsprechende Menubutton sichtbar sein soll
+    '''          false: wenn der entsprechende Menubutton unsichtbar sein soll </returns>
+    ''' <remarks></remarks>
     Function chckVisibility(control As IRibbonControl) As Boolean
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             Select Case control.Id
                 Case "PTMEC" ' Massen-Edit Charts
                     chckVisibility = False
-                Case "PT2G1M2B4" ' Bearbeiten - Zeile einfügen
+                Case "PTmassEdit" ' Mass-Edit bearbeiten
+                    chckVisibility = False
+                Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
                     chckVisibility = False
                 Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
                     chckVisibility = False
                 Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
                     chckVisibility = False
-                Case "PT2G1M2B7" ' zurück zur Multiprojekt-Tafel
+                Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
+                    chckVisibility = False
+                Case "PTzurück" ' Zurück
+                    chckVisibility = False
+                Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
                     chckVisibility = False
                 Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
                     chckVisibility = False
@@ -2756,78 +2796,105 @@ Imports System.Windows
                 Case "PT6G2B5" ' Sortierung ermöglichen
                     chckVisibility = False
                 Case Else
+                    ' alle anderen werden sichtbar gemacht
                     chckVisibility = True
             End Select
         Else
             Select Case control.Id
-                Case "PTX" ' Multiprojekt-Info
+
+                Case "PTproj"
                     chckVisibility = False
-                Case "PT0" ' Einzelprojekt-Info
+                Case "PTedit"
                     chckVisibility = False
-                Case "PT7" ' Cockpit
+                Case "PTview"
                     chckVisibility = False
-                Case "PT1" ' Reports
+                Case "PTfilter"
                     chckVisibility = False
-                Case "PT6" ' Einstellungen
+                Case "PTsort"
                     chckVisibility = False
-                Case "PT2G1M0" ' neues Projekt anlegen
+                Case "PTcharts"
                     chckVisibility = False
-                Case "PT2G1M1" ' Variante
+                Case "PTreport"
                     chckVisibility = False
-                    'Case "PT2G1M1B0" ' neue Variante anlegen
-                    '    chckVisibility = False
-                    'Case "PT2G1M1B1" '  Variante aktivieren
-                    '    chckVisibility = False
-                    'Case "PT2G1M1B2" ' Variante löschen    
-                    '    chckVisibility = False
-                    'Case "PT2G1M1B3" ' Variante übernehmen    
-                    '    chckVisibility = False
-                Case "PT2G1M2" ' Editieren   
+                Case "PTeinst"
                     chckVisibility = False
-                    'Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
-                    '    chckVisibility = False
-                    'Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
-                    '    chckVisibility = False
-                Case "PT2G1B2" ' Fixieren
+                Case "PThelp"
                     chckVisibility = False
-                Case "PT2G1B3" ' Fixierung aufheben
+                Case "PTlizenz"
                     chckVisibility = False
-                Case "PT2G1M2B6" ' Änderungen verwerfen
+
+                Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
                     chckVisibility = False
-                Case "PT2G1B4" ' Beschriften
-                    chckVisibility = False
-                Case "PT2G1B5" ' alle Beschriftungen löschen
-                    chckVisibility = False
-                Case "PT2G1B6" ' Extended View
-                    chckVisibility = False
-                Case "PT2G1B7" ' Extended View aufheben
-                    chckVisibility = False
-                Case "PT2G2" ' Bearbeiten - Multiprojekt-Szenario
-                    chckVisibility = False
-                Case "PT2G2B5" ' Schutz setzen / aufheben 
-                    chckVisibility = False
-                Case "PT2G2s3" ' Separator vor Schutz 
-                    chckVisibility = False
-                Case "PT2G1s4" ' Separator vor Extended View
-                    chckVisibility = False
-                Case "PT2G3" ' Bearbeiten - Session
-                    chckVisibility = False
-                Case "PT4" ' Datenmanagement
-                    chckVisibility = False
-                Case "PT6G1" ' Einstellungen - Visualisierung
-                    chckVisibility = False
-                Case "PT6G2B1" ' Einstellungen - Berechnung - Dehnen/Stauchen
-                    chckVisibility = False
-                Case "PT6G2B2" ' Phasenhäufigkeit anteilig berechnen
-                    chckVisibility = False
-                Case "PT6G3" ' Lade- und Import-Vorgänge
-                    chckVisibility = False
-                Case "PT2G1B8" ' umbenennen 
-                    chckVisibility = False
-                Case "PT7G1M1" ' Projekt-Charts
-                    chckVisibility = False
-                Case "PT7G1M0" ' Portfolio-Charts
-                    chckVisibility = False
+
+
+                    '' ''Case "PTX" ' Multiprojekt-Info
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT0" ' Einzelprojekt-Info
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT7" ' Cockpit
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT1" ' Reports
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6" ' Einstellungen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1M0" ' neues Projekt anlegen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1M1" ' Variante
+                    '' ''    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B0" ' neue Variante anlegen
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B1" '  Variante aktivieren
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B2" ' Variante löschen    
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B3" ' Variante übernehmen    
+                    '' ''    '    chckVisibility = False
+                    '' ''Case "PT2G1M2" ' Editieren   
+                    '' ''    chckVisibility = False
+                    '' ''    'Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
+                    '' ''    '    chckVisibility = False
+                    '' ''Case "PT2G1B2" ' Fixieren
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B3" ' Fixierung aufheben
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1M2B6" ' Änderungen verwerfen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B4" ' Beschriften
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B5" ' alle Beschriftungen löschen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B6" ' Extended View
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B7" ' Extended View aufheben
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G2" ' Bearbeiten - Multiprojekt-Szenario
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G2B5" ' Schutz setzen / aufheben 
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G2s3" ' Separator vor Schutz 
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1s4" ' Separator vor Extended View
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G3" ' Bearbeiten - Session
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT4" ' Datenmanagement
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G1" ' Einstellungen - Visualisierung
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G2B1" ' Einstellungen - Berechnung - Dehnen/Stauchen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G2B2" ' Phasenhäufigkeit anteilig berechnen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G3" ' Lade- und Import-Vorgänge
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B8" ' umbenennen 
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT7G1M1" ' Projekt-Charts
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT7G1M0" ' Portfolio-Charts
+                    '' ''    chckVisibility = False
                 Case Else
                     chckVisibility = True
             End Select

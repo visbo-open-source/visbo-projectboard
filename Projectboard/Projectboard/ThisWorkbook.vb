@@ -281,80 +281,84 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
 
-       
-        Dim cbar As CommandBar
-
-        'die Short Cut Menues aus Excel alle wieder aktivieren ...
-
-        For Each cbar In appInstance.CommandBars
-
-            If cbar.Type = MsoBarType.msoBarTypePopup Then
-                cbar.Enabled = True
-            End If
-        Next
-
-        'Call MsgBox(" in shutdown")
-
-
         Try
-            Application.DisplayFormulaBar = True
+
+            Dim cbar As CommandBar
+
+            'die Short Cut Menues aus Excel alle wieder aktivieren ...
+
+            For Each cbar In appInstance.CommandBars
+
+                If cbar.Type = MsoBarType.msoBarTypePopup Then
+                    cbar.Enabled = True
+                End If
+            Next
+
+            'Call MsgBox(" in shutdown")
+
+
+            Try
+                Application.DisplayFormulaBar = True
+            Catch ex As Exception
+
+            End Try
+
+
+            With Application.ActiveWindow
+                Try
+                    .SplitColumn = 0
+                    .SplitRow = 0
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    .DisplayWorkbookTabs = True
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    .GridlineColor = RGB(220, 220, 220)
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    .FreezePanes = False
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    .DisplayHeadings = True
+                Catch ex As Exception
+
+                End Try
+
+            End With
+
+            appInstance.ShowChartTipNames = True
+            appInstance.ShowChartTipValues = True
+
+            'Dim anzWindows As Integer = appInstance.Windows.Count
+
+
+
+
+
+            appInstance.ScreenUpdating = True
+
+            If Application.Workbooks.Count <= 1 Then
+                Dim a As Integer = Application.Workbooks.Count
+                'Dim name asstring = Application.Workbooks(1).name
+            End If
+
+
+
         Catch ex As Exception
 
         End Try
-
-
-        With Application.ActiveWindow
-            Try
-                .SplitColumn = 0
-                .SplitRow = 0
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                .DisplayWorkbookTabs = True
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                .GridlineColor = RGB(220, 220, 220)
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                .FreezePanes = False
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                .DisplayHeadings = True
-            Catch ex As Exception
-
-            End Try
-
-        End With
-
-        appInstance.ShowChartTipNames = True
-        appInstance.ShowChartTipValues = True
-
-        'Dim anzWindows As Integer = appInstance.Windows.Count
-
-
-
-
-
-        appInstance.ScreenUpdating = True
-
-        If Application.Workbooks.Count <= 1 Then
-            Dim a As Integer = Application.Workbooks.Count
-            'Dim name asstring = Application.Workbooks(1).name
-        End If
-        
-
-
 
     End Sub
 
