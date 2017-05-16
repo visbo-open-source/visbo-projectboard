@@ -904,8 +904,10 @@
 
         If _allItems.ContainsKey(key) Then
             Dim cItem As clsConstellationItem = _allItems.Item(key)
-            Dim pName As String = cItem.projectName
 
+            ' hat schon den neuen Namen drin, deswegen muss der Name aus dem key bestimmt werden ...
+            'Dim pName As String = cItem.projectName
+            Dim pName As String = extractName(key, PTshty.projektN)
             _allItems.Remove(key)
 
             ' jetzt in der Sortliste entsprechend löschen und neu bestimmen , falls es in der Constellation 
@@ -938,7 +940,7 @@
                         _lastCustomList.RemoveAt(_lastCustomList.IndexOfValue(pName))
                     End If
                 End If
-                
+
             End If
 
         End If

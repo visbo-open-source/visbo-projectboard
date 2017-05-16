@@ -2016,9 +2016,9 @@ Imports System.Windows
 
             Case "PT1G1M0" ' Report-Profil definieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Report definieren & erstellen"
+                    tmpLabel = "Report definieren"
                 Else
-                    tmpLabel = "Define & create a Report"
+                    tmpLabel = "Define a Report"
                 End If
 
             Case "PT1G1M01" ' Einzelprojekt-Berichte
@@ -2030,16 +2030,16 @@ Imports System.Windows
 
             Case "PT1G1M01B0" ' Typ I
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ I"
+                    tmpLabel = "ohne Element-Auswahl"
                 Else
-                    tmpLabel = "Type I"
+                    tmpLabel = "without element-selection"
                 End If
 
             Case "PT1G1M1" ' Typ II
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ II"
+                    tmpLabel = "mit Element-Auswahl"
                 Else
-                    tmpLabel = "Type II"
+                    tmpLabel = "with element-selection"
                 End If
 
             Case "PT1G1M1B1" ' Auswahl über Namen
@@ -2065,16 +2065,16 @@ Imports System.Windows
 
             Case "PT1G1B2" ' Typ I
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ I"
+                    tmpLabel = "ohne Element-Auswahl"
                 Else
-                    tmpLabel = "Type I"
+                    tmpLabel = "without element-selection"
                 End If
 
             Case "PT1G1M2" ' Typ II
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ II"
+                    tmpLabel = "mit Element-Auswahl"
                 Else
-                    tmpLabel = "Type II"
+                    tmpLabel = "with element-selection"
                 End If
 
             Case "PT1G1M2B1" ' Auswahl über Namen
