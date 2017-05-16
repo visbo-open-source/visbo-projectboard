@@ -17525,8 +17525,25 @@ Public Module testModule
             ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
             ' zeichne die Projekte 
 
-            ' jetzt wird das Slide gekennzeichnet als Smart Slide 
-            Call addSmartPPTSlideInfo(pptslide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
+            ' jetzt wird das Slide gekennzeichnet als Smart Slide
+
+            ' jetzt wird hier die Date Info eingetragen ... 
+            Dim smartInfoCRD As Date = Date.MinValue
+            Try
+                For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                    Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
+                    If Not IsNothing(tmpProj) Then
+                        If smartInfoCRD < tmpProj.timeStamp Then
+                            smartInfoCRD = tmpProj.timeStamp
+                        End If
+                    End If
+                Next
+            Catch ex As Exception
+
+            End Try
+            
+
+            Call addSmartPPTSlideInfo(pptslide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
 
             Try
 
@@ -18142,10 +18159,24 @@ Public Module testModule
 
                 End If
 
+                Dim smartInfoCRD As Date = Date.MinValue
+                ' jetzt wird hier die Date Info eingetragen ... 
+                Try
+                    For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                        Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
+                        If Not IsNothing(tmpProj) Then
+                            If smartInfoCRD < tmpProj.timeStamp Then
+                                smartInfoCRD = tmpProj.timeStamp
+                            End If
+                        End If
+                    Next
+                Catch ex As Exception
+
+                End Try
 
                 ' 
                 ' jetzt wird das Slide gekennzeichnet als Smart Slide 
-                Call addSmartPPTSlideInfo(rds.pptSlide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
+                Call addSmartPPTSlideInfo(rds.pptSlide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
 
                 'ur: 25.03.2015: sichern der im Format veränderten Folie
                 rds.pptSlide.Copy()

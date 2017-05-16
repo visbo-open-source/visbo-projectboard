@@ -3025,7 +3025,8 @@ Public Module Module1
     Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
                                     ByVal type As String, _
                                     ByVal calendarLeft As Date, _
-                                    ByVal calendarRight As Date)
+                                    ByVal calendarRight As Date, _
+                                    Optional ByVal projectTimeStamp As Date = Nothing)
 
         If Not IsNothing(pptSlide) Then
             With pptSlide
@@ -3033,7 +3034,21 @@ Public Module Module1
                 If Not IsNothing(type) Then
                     .Tags.Add("SMART", type)
                     .Tags.Add("SOC", StartofCalendar.ToShortDateString)
-                    .Tags.Add("CRD", Date.Now.ToString)
+                    If IsNothing(projectTimeStamp) Then
+                        .Tags.Add("CRD", Date.Now.ToString)
+                    Else
+                        Try
+                            If projectTimeStamp > StartofCalendar Then
+                                .Tags.Add("CRD", projectTimeStamp.ToString)
+                            Else
+                                .Tags.Add("CRD", Date.Now.ToString)
+                            End If
+                        Catch ex As Exception
+                            .Tags.Add("CRD", Date.Now.ToString)
+                        End Try
+                        
+                    End If
+
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)
                     .Tags.Add("CALR", calendarRight.ToShortDateString)
 

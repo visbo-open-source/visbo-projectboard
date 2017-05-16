@@ -8,7 +8,9 @@ Public Class frmInfo
     Friend abkuerzung As String
     Friend showSearchListBox As Boolean = False
 
-    Private Const deltaAmpel As Integer = 50
+    ' tk , 16.5.
+    ' Private Const deltaAmpel As Integer = 50
+    Private Const deltaAmpel As Integer = 0
     Private Const deltaSearchBox As Integer = 200
     Private Const smallHeight As Integer = 220
 
@@ -45,6 +47,9 @@ Public Class frmInfo
     ''' <param name="istSichtbar"></param>
     ''' <remarks></remarks>
     Private Sub aLuTvBlockVisible(ByVal istSichtbar As Boolean)
+
+        ' tk , 16.5.17 der Block soll immer sichtbar sein ...
+        istSichtbar = True
 
         ' Größen und Positionen anpassen 
         If Not istSichtbar Then
@@ -622,6 +627,7 @@ Public Class frmInfo
             If Me.aLuTvText.Visible And _
                     (Not shwGreenLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) And _
                     (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                ' 
                 Call aLuTvBlockVisible(False)
             End If
         End If
@@ -644,6 +650,7 @@ Public Class frmInfo
             If Me.aLuTvText.Visible And _
                     (Not shwOhneLight.Checked And Not shwYellowLight.Checked And Not shwRedLight.Checked) And _
                     (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                ' hier vorher false
                 Call aLuTvBlockVisible(False)
             End If
         End If
@@ -665,6 +672,7 @@ Public Class frmInfo
             If Me.aLuTvText.Visible And _
                     (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwRedLight.Checked) And _
                     (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
+                ' hier vorher false
                 Call aLuTvBlockVisible(False)
             End If
         End If
@@ -686,7 +694,7 @@ Public Class frmInfo
             If Me.aLuTvText.Visible And _
                     (Not shwGreenLight.Checked And Not shwOhneLight.Checked And Not shwYellowLight.Checked) And _
                     (Not Me.rdbLU.Checked And Not Me.rdbMV.Checked) Then
-
+                ' hier vorher false
                 Call aLuTvBlockVisible(False)
 
             End If

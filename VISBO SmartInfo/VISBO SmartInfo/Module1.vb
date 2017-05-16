@@ -634,12 +634,12 @@ Module Module1
                     ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
                     ' Listbox passt 
 
-                    ' prüfen, ob das Infor Fenster offen ist und der Search bereich sichtbar - 
+                    ' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
                     ' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
                     If Not IsNothing(infoFrm) And formIsShown Then
                         If infoFrm.rdbName.Visible Then
                             If infoFrm.listboxNames.SelectedItems.Count > 0 Then
-                                Call infoFrm.listboxNames.SelectedItems.Clear()
+                                'Call infoFrm.listboxNames.SelectedItems.Clear()
                             End If
                         End If
                     End If
@@ -2294,13 +2294,19 @@ Module Module1
                         If Not shortForm Then
 
                             If englishLanguage Then
-                                tmpText = getElemNameFromShpName(curShape.Name) & " Resource/Costs :" & vbLf
+                                'tmpText = getElemNameFromShpName(curShape.Name) & " Resource/Costs :" & vbLf
+                                tmpText = tmpText & "Resource/Costs :" & vbLf
                             Else
-                                tmpText = getElemNameFromShpName(curShape.Name) & " Ressourcen/Kosten:" & vbLf
+                                'tmpText = getElemNameFromShpName(curShape.Name) & " Ressourcen/Kosten:" & vbLf
+                                tmpText = tmpText & "Ressourcen/Kosten:" & vbLf
                             End If
 
                         Else
-                            tmpText = ""
+                            If englishLanguage Then
+                                tmpText = "Resource/Costs :" & vbLf
+                            Else
+                                tmpText = "Ressourcen/Kosten:" & vbLf
+                            End If
                         End If
 
 
@@ -2956,26 +2962,28 @@ Module Module1
                         txtShpLeft = selectedPlanShape.Left
                     Else
                         txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
+                        'If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        '    newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        '    selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        'End If
                     End If
 
                     txtShpTop = selectedPlanShape.Top - newShape.Height
 
                 Case pptPositionType.centerRight
 
-                    If newShape.Width > selectedPlanShape.Width Then
-                        txtShpLeft = selectedPlanShape.Left
-                    Else
-                        txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
+                    txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width + 2
+                    ' es wird jetzt rechts davon positioniert 
+                    'If newShape.Width > selectedPlanShape.Width Then
+                    '    txtShpLeft = selectedPlanShape.Left
+                    'Else
+                    '    txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
+                    '    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                    '        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                    '        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    '    End If
 
-                    End If
+                    'End If
 
                     txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
@@ -2985,10 +2993,10 @@ Module Module1
                         txtShpLeft = selectedPlanShape.Left
                     Else
                         txtShpLeft = selectedPlanShape.Left + selectedPlanShape.Width - newShape.Width
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
+                        'If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        '    newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        '    selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        'End If
                     End If
 
                     txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
@@ -3003,24 +3011,25 @@ Module Module1
                         txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
                     Else
                         txtShpLeft = selectedPlanShape.Left
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
+                        'If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        '    newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        '    selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        'End If
                     End If
 
                     txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
 
                 Case pptPositionType.centerLeft
-                    If newShape.Width > selectedPlanShape.Width Then
-                        txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
-                    Else
-                        txtShpLeft = selectedPlanShape.Left
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
-                    End If
+                    txtShpLeft = selectedPlanShape.Left - (newShape.Width + 2)
+                    'If newShape.Width > selectedPlanShape.Width Then
+                    '    txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
+                    'Else
+                    '    txtShpLeft = selectedPlanShape.Left
+                    '    If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                    '        newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                    '        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                    '    End If
+                    'End If
                     txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
 
                 Case pptPositionType.aboveLeft
@@ -3028,10 +3037,10 @@ Module Module1
                         txtShpLeft = selectedPlanShape.Left - (newShape.Width - selectedPlanShape.Width)
                     Else
                         txtShpLeft = selectedPlanShape.Left
-                        If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
-                            newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                            selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
-                        End If
+                        'If pptShapeIsMilestone(selectedPlanShape) And newShape.Width < 2 * selectedPlanShape.Width Then
+                        '    newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                        '    selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        'End If
                     End If
                     txtShpTop = selectedPlanShape.Top - newShape.Height
 
