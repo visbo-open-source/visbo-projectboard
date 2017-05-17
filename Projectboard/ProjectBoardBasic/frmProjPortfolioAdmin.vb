@@ -578,8 +578,6 @@ Public Class frmProjPortfolioAdmin
         
 
 
-        ' Ende neuer Ansatz 
-     
         ' jetzt die Korrektheitsprüfung ...
         If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
             currentBrowserConstellation.checkAndCorrectYourself()
@@ -2109,6 +2107,7 @@ Public Class frmProjPortfolioAdmin
                 Dim toStoreConstellation As clsConstellation = _
                     currentBrowserConstellation.copy(currentConstellationName)
 
+
                 ' Korrektheitsprüfung
                 ' testen 
               
@@ -2846,7 +2845,8 @@ Public Class frmProjPortfolioAdmin
                 browserAlleProjekte.Clear(False)
             End If
             browserAlleProjekte.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
-            quickList = False
+            ' das darf hier nicht auf false gesetzt werden .... 
+            'quickList = False
 
         Else
             ' browserAlleProjekte bestimmen  
@@ -2876,8 +2876,62 @@ Public Class frmProjPortfolioAdmin
 
                 If aKtionskennung = PTTvActions.loadPV Or _
                     aKtionskennung = PTTvActions.delAllExceptFromDB Or _
-                    aKtionskennung = PTTvActions.delFromDB Or _
-                    aKtionskennung = PTTvActions.chgInSession Then
+                    aKtionskennung = PTTvActions.delFromDB Then
+
+                    Dim removeList As New Collection
+
+
+                    For Each kvp As KeyValuePair(Of String, String) In pvNamesList
+
+                        Dim tmpkey As String = kvp.Key
+                        If tmpkey.Contains("#") Then
+                            ' alles ok 
+                        Else
+                            tmpkey = calcProjektKey(kvp.Key, "")
+                        End If
+
+                        Dim hproj As clsProjekt = browserAlleProjekte.getProject(tmpkey)
+
+                        If Not filter.isEmpty Then
+                            If Not IsNothing(hproj) Then
+                                ok = filter.doesNotBlock(hproj)
+                            Else
+                                ok = False
+                            End If
+
+                        Else
+                            ok = True
+                        End If
+
+                        If Not ok Then
+                            ' in RemoveListe aufnehmen - diese Projekte werden nachher alle aus aktuelleGesamtliste rausgenommen 
+                            Try
+
+                                If Not removeList.Contains(kvp.Key) Then
+                                    removeList.Add(kvp.Key, kvp.Key)
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+                        Else
+
+                        End If
+
+                    Next
+
+                    ' jetzt die Liste bereinigen ...
+                    For Each tmpPvName As String In removeList
+                        pvNamesList.Remove(tmpPvName)
+                    Next
+
+                    If removeList.Count > 0 Then
+                        Call updateTreeview(currentBrowserConstellation, pvNamesList, _
+                                            aKtionskennung, quickList)
+
+                    End If
+
+                ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
                     Dim removeList As New Collection
 
@@ -2919,6 +2973,12 @@ Public Class frmProjPortfolioAdmin
                         currentBrowserConstellation.remove(tmpPvName)
                     Next
 
+                    If currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF Then
+                        ' jetzt wird das SortCriteria umgesetzt, weil andernfalls, bei customTF, die 
+                        ' Zeilen unverändert bleiben ... 
+                        currentBrowserConstellation.sortCriteria = ptSortCriteria.customListe
+                    End If
+
                     ' jetzt müssen die tfZeile neu besetzt werden;
                     '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
                     ' tk 21.3.17: ab jetzt nicht mehr .... jetzt wird ja in der _sortlist alles mitgeführt 
@@ -2931,19 +2991,16 @@ Public Class frmProjPortfolioAdmin
                         If aKtionskennung = PTTvActions.chgInSession Then
                             ' erst am Ende alle Diagramme neu machen ...
 
+                            Dim tmpConstellation As New clsConstellations
+                            tmpConstellation.Add(currentBrowserConstellation)
 
-                            If removeList.Count > 0 Then
-                                Dim tmpConstellation As New clsConstellations
-                                tmpConstellation.Add(currentBrowserConstellation)
+                            Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
 
-                                Call showConstellations(constellationsToShow:=tmpConstellation, _
-                                                        clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
-
-                                If aKtionskennung = PTTvActions.chgInSession Then
-                                    Call awinNeuZeichnenDiagramme(2)
-                                End If
-
+                            If aKtionskennung = PTTvActions.chgInSession Then
+                                Call awinNeuZeichnenDiagramme(2)
                             End If
+
                         End If
 
                     End If
@@ -3019,44 +3076,56 @@ Public Class frmProjPortfolioAdmin
     Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
 
         Me.Cursor = Cursors.WaitCursor
-
-        currentBrowserConstellation = browserConstellationSav.copy
-        'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
-        browserConstellationSav = Nothing
-
-        ' jetzt das entzsprechende Szenario wieder laden 
-        Dim tmpConstellation As New clsConstellations
-        tmpConstellation.Add(currentBrowserConstellation)
-
         Dim storedAtOrBefore As Date
         If IsNothing(requiredDate.Value) Then
             storedAtOrBefore = Date.Now
         Else
-            storedAtOrBefore = requiredDate.Value
+            storedAtOrBefore = CDate(requiredDate.Value)
         End If
 
+        If quickList Then
+            pvNamesList = buildPvNamesList(storedAtOrBefore)
 
-        Call showConstellations(constellationsToShow:=tmpConstellation, _
-                                clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
+            stopRecursion = True
+            Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
+            stopRecursion = False
+        Else
 
-        ' neu Zeichnen der Diagramme
-        Call awinNeuZeichnenDiagramme(2)
+            currentBrowserConstellation = browserConstellationSav.copy
+            'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+            browserConstellationSav = Nothing
+
+            ' jetzt das entzsprechende Szenario wieder laden 
+            Dim tmpConstellation As New clsConstellations
+            tmpConstellation.Add(currentBrowserConstellation)
 
 
-        ' jetzt muss der Last-Filter zurückgesetzt werden 
-        Dim emptyCollection As New Collection
-        Dim fName As String = "Last"
 
-        Dim lastFilter As New clsFilter(fName, emptyCollection, emptyCollection, emptyCollection, _
-                                        emptyCollection, emptyCollection, emptyCollection)
-        filterDefinitions.storeFilter(fName, lastFilter)
 
-        stopRecursion = True
-        Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, False)
-        'Call buildTreeview(projektHistorien, TreeViewProjekte, browserAlleProjekte, pvNamesList, _
-        '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
-        stopRecursion = False
+            Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
 
+            ' neu Zeichnen der Diagramme
+            Call awinNeuZeichnenDiagramme(2)
+
+
+            ' jetzt muss der Last-Filter zurückgesetzt werden 
+            Dim emptyCollection As New Collection
+            Dim fName As String = "Last"
+
+            Dim lastFilter As New clsFilter(fName, emptyCollection, emptyCollection, emptyCollection, _
+                                            emptyCollection, emptyCollection, emptyCollection)
+            filterDefinitions.storeFilter(fName, lastFilter)
+
+            stopRecursion = True
+            Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, False)
+            'Call buildTreeview(projektHistorien, TreeViewProjekte, browserAlleProjekte, pvNamesList, _
+            '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
+            stopRecursion = False
+
+        End If
+
+        
         ' Das DeleteFilterIcon mit Bild versehen 
         Me.deleteFilterIcon.Image = Nothing
         Me.deleteFilterIcon.Enabled = False

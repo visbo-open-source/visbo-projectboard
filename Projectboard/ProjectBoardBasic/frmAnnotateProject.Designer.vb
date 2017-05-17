@@ -120,8 +120,10 @@ Partial Class frmAnnotateProject
         Me.Controls.Add(Me.annotateMilestones)
         Me.Controls.Add(Me.annotatePhases)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.MaximizeBox = False
+        Me.MinimizeBox = False
         Me.Name = "frmAnnotateProject"
-        Me.Text = "Projekt beschriften"
+        Me.Text = "Plan-Elemente beschriften"
         Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()

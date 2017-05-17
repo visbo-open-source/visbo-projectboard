@@ -164,6 +164,7 @@ Public Module PBBModules
         Dim hryFormular As New frmHierarchySelection
         Dim awinSelection As Excel.ShapeRange
         Dim returnValue As DialogResult
+        Dim timeZoneWasOff As Boolean = True
 
         Call projektTafelInit()
 
@@ -216,12 +217,22 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        ok = False
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("please define timeframe first ...")
+                        timeZoneWasOff = True
+                        If selectedProjekte.Count > 0 Then
+                            showRangeLeft = selectedProjekte.getMinMonthColumn
+                            showRangeRight = selectedProjekte.getMaxMonthColumn
                         Else
-                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                            showRangeLeft = ShowProjekte.getMinMonthColumn
+                            showRangeRight = ShowProjekte.getMaxMonthColumn
                         End If
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        ' wurde jetzt ersetzt durch automatische Selektion
+                        'ok = False
+                        'If awinSettings.englishLanguage Then
+                        '    Call MsgBox("please define timeframe first ...")
+                        'Else
+                        '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        'End If
                     End If
                 End If
 
@@ -246,12 +257,22 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        ok = False
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("please define timeframe first ...")
+                        timeZoneWasOff = True
+                        If selectedProjekte.Count > 0 Then
+                            showRangeLeft = selectedProjekte.getMinMonthColumn
+                            showRangeRight = selectedProjekte.getMaxMonthColumn
                         Else
-                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                            showRangeLeft = ShowProjekte.getMinMonthColumn
+                            showRangeRight = ShowProjekte.getMaxMonthColumn
                         End If
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        '
+                        'ok = False
+                        'If awinSettings.englishLanguage Then
+                        '    Call MsgBox("please define timeframe first ...")
+                        'Else
+                        '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        'End If
                     End If
                 End If
 
@@ -276,12 +297,22 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        ok = False
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("please define timeframe first ...")
+                        timeZoneWasOff = True
+                        If selectedProjekte.Count > 0 Then
+                            showRangeLeft = selectedProjekte.getMinMonthColumn
+                            showRangeRight = selectedProjekte.getMaxMonthColumn
                         Else
-                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                            showRangeLeft = ShowProjekte.getMinMonthColumn
+                            showRangeRight = ShowProjekte.getMaxMonthColumn
                         End If
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        '
+                        'ok = False
+                        'If awinSettings.englishLanguage Then
+                        '    Call MsgBox("please define timeframe first ...")
+                        'Else
+                        '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        'End If
                     End If
                 End If
 
@@ -307,25 +338,30 @@ Public Module PBBModules
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' alles ok 
                     ' Hierarchie auswählen, Leistbarkeit
-                    awinSettings.useHierarchy = True
-                    With hryFormular
-
-                        .menuOption = PTmenue.leistbarkeitsAnalyse
-                        ' Nicht Modal anzeigen
-                        .Show()
-                        'returnValue = .ShowDialog
-
-                    End With
-
                 Else
 
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("please define timeframe first ...")
+                    timeZoneWasOff = True
+                    If selectedProjekte.Count > 0 Then
+                        showRangeLeft = selectedProjekte.getMinMonthColumn
+                        showRangeRight = selectedProjekte.getMaxMonthColumn
                     Else
-                        Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
                     End If
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+                    
                 End If
 
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .menuOption = PTmenue.leistbarkeitsAnalyse
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+
+                End With
 
             ElseIf controlID = "PT1G1M1B1" Then
                 ' Namen auswählen, Einzelprojekt Berichte 
@@ -402,25 +438,35 @@ Public Module PBBModules
                     ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
                     ' dalse, dann auf True gesetzt werden
                     ' bei .show darf das nicht gemacht werden ! 
-                    appInstance.ScreenUpdating = False
-                    appInstance.EnableEvents = False
-
-                    With nameFormular
-
-                        .menuOption = PTmenue.multiprojektReport
-                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                        returnValue = .ShowDialog
-
-                    End With
-
-                    appInstance.ScreenUpdating = True
-                    appInstance.EnableEvents = True
+                    
 
                 Else
 
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+                    timeZoneWasOff = True
+                    If selectedProjekte.Count > 0 Then
+                        showRangeLeft = selectedProjekte.getMinMonthColumn
+                        showRangeRight = selectedProjekte.getMaxMonthColumn
+                    Else
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
+                    End If
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
                 End If
+
+                appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
+
+                With nameFormular
+
+                    .menuOption = PTmenue.multiprojektReport
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    returnValue = .ShowDialog
+
+                End With
+
+                appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
 
             ElseIf controlID = "PT1G1M2B2" Then
 
@@ -430,27 +476,36 @@ Public Module PBBModules
                     ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
                     ' dalse, dann auf True gesetzt werden
                     ' bei .show darf das nicht gemacht werden ! 
-                    appInstance.ScreenUpdating = False
-                    appInstance.EnableEvents = False
-
-                    awinSettings.useHierarchy = True
-                    With hryFormular
-
-                        .menuOption = PTmenue.multiprojektReport
-                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                        returnValue = .ShowDialog
-
-                    End With
-
-                    appInstance.ScreenUpdating = True
-                    appInstance.EnableEvents = True
 
                 Else
 
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+                    timeZoneWasOff = True
+                    If selectedProjekte.Count > 0 Then
+                        showRangeLeft = selectedProjekte.getMinMonthColumn
+                        showRangeRight = selectedProjekte.getMaxMonthColumn
+                    Else
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
+                    End If
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
 
                 End If
+
+                appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
+
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .menuOption = PTmenue.multiprojektReport
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    returnValue = .ShowDialog
+
+                End With
+
+                appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
 
             ElseIf controlID = "PT4G1M0B1" Then
                 ' Auswahl über Namen, Typ II Export
@@ -573,7 +628,13 @@ Public Module PBBModules
             Call MsgBox("Es sind keine Projekte sichtbar!  ")
         End If
 
-
+        ' darf nicht zurückgenommen werden, weil manche Fenster nicht modal angezeigt werden, d.h bevor irgendeine Aktion passiert 
+        ' wird der TimeFrame wieder zurückgesetzt ...
+        'If timeZoneWasOff Then
+        '    Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+        '    showRangeLeft = 0
+        '    showRangeRight = 0
+        'End If
 
         ' oben ist es de-aktiviert 
         'appInstance.EnableEvents = True

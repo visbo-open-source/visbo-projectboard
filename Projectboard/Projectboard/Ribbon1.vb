@@ -2540,7 +2540,18 @@ Imports System.Windows
                     tmpLabel = "Database"
                 End If
 
+<<<<<<< HEAD
             Case "PT5G1" ' Load from Database
+=======
+            Case "PT4G2B3" ' WritePrioList
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Prioritäten-Liste"
+                Else
+                    tmpLabel = "Priority-List"
+                End If
+
+            Case "PT5G1" ' Laden
+>>>>>>> feature/extended_Hierarchy
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Laden von DB "
                 Else
@@ -2985,7 +2996,11 @@ Imports System.Windows
             ' wenn es jetzt etwas zu tun gibt ... 
             If todoListe.Count > 0 Then
                 ' alles ok ...
-                'Call deleteChartsInSheet(arrWsNames(3))
+                ' wenn die Charts da bleiben, kann das zu Fehlern führen ... 
+                'appInstance.ScreenUpdating = False
+                'Call awinStoreCockpit("_Last")
+                Call deleteChartsInSheet(arrWsNames(3))
+
                 Call enableControls(ptModus.massEditRessCost)
 
                 ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
@@ -3094,12 +3109,14 @@ Imports System.Windows
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
-        appInstance.ScreenUpdating = False
+        ' tk , das Dalassen der Charts kann zu Fehlern führen ... 
+        'appInstance.ScreenUpdating = False
+        'Call awinLoadCockpit("_Last")
+        'appInstance.ScreenUpdating = True
         ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             .Activate()
         End With
-
 
 
     End Sub
@@ -5075,6 +5092,25 @@ Imports System.Windows
 
 
 
+    End Sub
+
+    Public Sub awinWritePrioList(control As IRibbonControl)
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Try
+            Call writeProjektsForSequencing()
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
     End Sub
 
     ''' <summary>
@@ -9918,7 +9954,7 @@ Imports System.Windows
 
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
-
+        Dim timeZoneWasOff As Boolean = False
         getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
@@ -9937,29 +9973,28 @@ Imports System.Windows
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
         Else
-            Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+        End If
+
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
         End If
 
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
 
-
-        ' das ist die alte Variante
-        '
-        'enableOnUpdate = False
-        'appInstance.EnableEvents = False
-        'appInstance.ScreenUpdating = False
-
-        'Try
-        '    Call createPPTSlidesFromConstellation()
-        'Catch ex As Exception
-        '    Call MsgBox(ex.Message)
-        'End Try
-
-
-        'appInstance.EnableEvents = True
-        'appInstance.ScreenUpdating = True
-        'enableOnUpdate = True
 
     End Sub
     Sub PTShowVersions(control As IRibbonControl)
@@ -10654,9 +10689,26 @@ Imports System.Windows
         Call projektTafelInit()
 
         enableOnUpdate = False
-
+        Dim timeZoneWasOff As Boolean = False
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
+
+        ' ist ein Timespan selektiert ? 
+        ' wenn nein, selektieren ... 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' alles in Ordnung 
+        Else
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+        End If
 
         If ShowProjekte.Count > 0 Then
 
@@ -10674,7 +10726,12 @@ Imports System.Windows
 
         End If
 
-
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
+        End If
+        
         enableOnUpdate = True
 
     End Sub

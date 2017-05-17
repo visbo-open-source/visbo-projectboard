@@ -6,6 +6,8 @@
     Public constellationsToShow As clsConstellations
     Private Sub frmLoadConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+
+        Call languageSettings()
         For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
             ListBox1.Items.Add(kvp.Key)
@@ -32,6 +34,17 @@
             'End Try
 
             ' jetzt ist dropBoxTimeStamps.selecteditem = Nothing ..
+        End If
+
+    End Sub
+
+    Private Sub languageSettings()
+
+        If awinSettings.englishLanguage Then
+            lblStandvom.Text = "Version"
+            addToSession.Text = "add to loaded projects"
+            OKButton.Text = "OK"
+            Abbrechen.Text = "Cancel"
         End If
 
     End Sub

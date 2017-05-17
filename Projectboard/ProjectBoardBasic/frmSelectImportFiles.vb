@@ -17,54 +17,7 @@ Public Class frmSelectImportFiles
         Dim dateiName As String = ""
         Dim dirname As String = ""
 
-        'dirname = awinPath & rplanimportFilesOrdner
-        If menueAswhl = PTImpExp.visbo Then
-            dirname = importOrdnerNames(PTImpExp.visbo)
-            Me.Text = "Visbo-Steckbriefe auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-            Me.alleButton.Visible = True
-        ElseIf menueAswhl = PTImpExp.rplan Then
-            dirname = importOrdnerNames(PTImpExp.rplan)
-            Me.Text = "RPLAN Excel Dateien auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-            Me.alleButton.Visible = True
-        ElseIf menueAswhl = PTImpExp.msproject Then
-            dirname = importOrdnerNames(PTImpExp.msproject)
-            Me.Text = "MS-Project Dateien auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-            Me.alleButton.Visible = True
-        ElseIf menueAswhl = PTImpExp.rplanrxf Then
-            dirname = importOrdnerNames(PTImpExp.rplanrxf)
-            Me.Text = "RPLAN RXF Dateien auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
-            Me.alleButton.Visible = False
-        ElseIf menueAswhl = PTImpExp.simpleScen Then
-            dirname = importOrdnerNames(PTImpExp.simpleScen)
-            Me.Text = "Szenario Dateien auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
-            Me.alleButton.Visible = False
-        ElseIf menueAswhl = PTImpExp.modulScen Then
-            dirname = importOrdnerNames(PTImpExp.modulScen)
-            Me.Text = "modulare Szenario Dateien auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
-            Me.alleButton.Visible = False
-        ElseIf menueAswhl = PTImpExp.addElements Then
-            dirname = importOrdnerNames(PTImpExp.addElements)
-            Me.Text = "Regel-Dateien auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
-            Me.alleButton.Visible = False
-        ElseIf menueAswhl = PTImpExp.massenEdit Then
-            dirname = importOrdnerNames(PTImpExp.massenEdit)
-            Me.Text = "Massen-Edit Datei auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
-            Me.alleButton.Visible = False
-        ElseIf menueAswhl = PTImpExp.scenariodefs Then
-            dirname = importOrdnerNames(PTImpExp.scenariodefs)
-            Me.Text = "Szenario-Definitions-Datei auswählen"
-            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
-            Me.alleButton.Visible = False
-        End If
-
+        Call defineFrmLanguagesAndVisibility(dirname)
 
         ' jetzt werden die Importfiles ausgelesen 
         ' Änderung tk 18.3.16 es muss abgefragt werden, ob das Directory überhaupt existiert ... 
@@ -109,6 +62,113 @@ Public Class frmSelectImportFiles
 
     
 
+
+    End Sub
+
+    Private Sub defineFrmLanguagesAndVisibility(ByRef dirName As String)
+
+        If awinSettings.englishLanguage Then
+            alleButton.Text = "All"
+            OKButton.Text = "OK"
+            SelectAbbruch.Text = "Cancel"
+        End If
+
+
+        If menueAswhl = PTImpExp.visbo Then
+            dirName = importOrdnerNames(PTImpExp.visbo)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select Visbo lean project briefs"
+            Else
+                Me.Text = "Visbo-Steckbriefe auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+            Me.alleButton.Visible = True
+
+        ElseIf menueAswhl = PTImpExp.rplan Then
+            dirName = importOrdnerNames(PTImpExp.rplan)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select RPLAN Excel files"
+            Else
+                Me.Text = "RPLAN Excel Dateien auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+            Me.alleButton.Visible = True
+        ElseIf menueAswhl = PTImpExp.msproject Then
+            dirName = importOrdnerNames(PTImpExp.msproject)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select MS Project files"
+            Else
+                Me.Text = "MS-Project Dateien auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+            Me.alleButton.Visible = True
+        ElseIf menueAswhl = PTImpExp.rplanrxf Then
+            dirName = importOrdnerNames(PTImpExp.rplanrxf)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select RPLAN RXF-files"
+            Else
+                Me.Text = "RPLAN RXF Dateien auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+        ElseIf menueAswhl = PTImpExp.simpleScen Then
+            dirName = importOrdnerNames(PTImpExp.simpleScen)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select a scenario file"
+            Else
+                Me.Text = "Szenario Datei auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+        ElseIf menueAswhl = PTImpExp.modulScen Then
+
+            dirName = importOrdnerNames(PTImpExp.modulScen)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select a modular scenario file"
+            Else
+                Me.Text = "modulare Szenario Datei auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+        ElseIf menueAswhl = PTImpExp.addElements Then
+            dirName = importOrdnerNames(PTImpExp.addElements)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select a rule file"
+            Else
+                Me.Text = "Regel-Datei auswählen"
+            End If
+
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+        ElseIf menueAswhl = PTImpExp.massenEdit Then
+            dirName = importOrdnerNames(PTImpExp.massenEdit)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select a mass-edit file"
+            Else
+                Me.Text = "Massen-Edit Datei auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+        ElseIf menueAswhl = PTImpExp.scenariodefs Then
+            dirName = importOrdnerNames(PTImpExp.scenariodefs)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select a scenario definition file"
+            Else
+                Me.Text = "Szenario-Definitions-Datei auswählen"
+            End If
+
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+        End If
 
     End Sub
 

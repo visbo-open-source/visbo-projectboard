@@ -20,7 +20,7 @@
     <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.3.0.2</ApplicationVersion>
+    <ApplicationVersion>3.3.0.4</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -171,6 +171,18 @@
     <Compile Include="Tabelle3.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <Compile Include="Tabelle4.Designer.vb">
+      <DependentUpon>Tabelle4.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle4.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle5.Designer.vb">
+      <DependentUpon>Tabelle5.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle5.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
     <Compile Include="ThisWorkbook.Designer.vb">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
@@ -288,6 +300,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\milestones_icon1.png" />
+    <None Include="Tabelle4.Designer.xml">
+      <DependentUpon>Tabelle4.vb</DependentUpon>
+    </None>
+    <None Include="Tabelle5.Designer.xml">
+      <DependentUpon>Tabelle5.vb</DependentUpon>
+    </None>
     <None Include="Resources\navigate_check1.png" />
     <None Include="Resources\navigate_check.png" />
     <None Include="Resources\selection_delete.png" />
@@ -342,10 +360,12 @@
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
         <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
-        <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="453AD57C08540C0F42079FCA83BE658033F2D2F9">
+        <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="08965A812528FB994EB81377CD7896A08EC29DD7">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="Tabelle3" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
+          <HostItem Name="Tabelle4" Code="Tabelle4.vb" CanonicalName="Tabelle4" DisplayName="Tabelle4" Blueprint="Tabelle4.Designer.xml" GeneratedCode="Tabelle4.Designer.vb" PublishedHash="4EE7F2D35207B924053EE001939AA45C186FF267" />
+          <HostItem Name="Tabelle5" Code="Tabelle5.vb" CanonicalName="Tabelle5" DisplayName="Tabelle5" Blueprint="Tabelle5.Designer.xml" GeneratedCode="Tabelle5.Designer.vb" PublishedHash="E7B509583378FAE6D919392398062EB2C72A36F5" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
         </Host>
       </FlavorProperties>
