@@ -257,15 +257,16 @@ Public Module Module1
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
-    Public Enum ptRplanNamen
+    Public Enum ptPlanNamen
         Name = 0
         Anfang = 1
         Ende = 2
         Beschreibung = 3
         Vorgangsklasse = 4
-        Produktlinie = 5
+        BusinessUnit = 5
         Protocol = 6
         Dauer = 7
+        Abkuerzung = 8
     End Enum
 
 

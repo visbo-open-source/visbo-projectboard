@@ -14563,7 +14563,7 @@ Public Module awinGeneralModules
     ''' <param name="myCollection"></param>
     ''' <param name="isVorlage"></param>
     ''' <remarks></remarks>
-    Public Sub rplanExcelImport(ByRef myCollection As Collection, ByVal isVorlage As Boolean, ByVal dateiname As String)
+    Public Sub planExcelImport(ByRef myCollection As Collection, ByVal isVorlage As Boolean, ByVal dateiname As String)
 
         Dim phaseHierarhy(9) As String
         Dim currentHierarchy As Integer = 0
@@ -14637,23 +14637,27 @@ Public Module awinGeneralModules
         Dim colName As Integer
         Dim colAnfang As Integer
         Dim colEnde As Integer
-        Dim colDauer As Integer
-        Dim colProduktlinie As Integer
+        Dim colDauer As Integer = -1
+        Dim colProduktlinie As Integer = -1
         Dim colAbbrev As Integer = -1
         Dim colVorgangsKlasse As Integer = -1
+        Dim colDescription As Integer = -1
+
+        Dim pDescription As String = ""
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(7) As String
-        suchstr(ptRplanNamen.Name) = "Name"
-        suchstr(ptRplanNamen.Anfang) = "Anfang"
-        suchstr(ptRplanNamen.Ende) = "Ende"
-        suchstr(ptRplanNamen.Beschreibung) = "Beschreibung"
-        suchstr(ptRplanNamen.Vorgangsklasse) = "Vorgangsklasse"
-        suchstr(ptRplanNamen.Produktlinie) = "Spalte A"
-        suchstr(ptRplanNamen.Protocol) = "Übernommen als"
-        suchstr(ptRplanNamen.Dauer) = "Dauer"
+        Dim suchstr(8) As String
+        suchstr(ptPlanNamen.Name) = "Name"
+        suchstr(ptPlanNamen.Anfang) = "Start"
+        suchstr(ptPlanNamen.Ende) = "End"
+        suchstr(ptPlanNamen.Beschreibung) = "Description"
+        suchstr(ptPlanNamen.Vorgangsklasse) = "Appearance"
+        suchstr(ptPlanNamen.BusinessUnit) = "Business Unit"
+        suchstr(ptPlanNamen.Protocol) = "Übernommen als"
+        suchstr(ptPlanNamen.Dauer) = "Duration"
+        suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
 
 
         zeile = 2
@@ -14693,36 +14697,42 @@ Public Module awinGeneralModules
 
         ' diese Daten müssen vorhanden sein - andernfalls Abbruch 
         Try
-            colName = firstZeile.Find(What:=suchstr(ptRplanNamen.Name), LookAt:=XlLookAt.xlWhole).Column
-            colAnfang = firstZeile.Find(What:=suchstr(ptRplanNamen.Anfang), LookAt:=XlLookAt.xlWhole).Column
-            colEnde = firstZeile.Find(What:=suchstr(ptRplanNamen.Ende), LookAt:=XlLookAt.xlWhole).Column
+            colName = firstZeile.Find(What:=suchstr(ptPlanNamen.Name), LookAt:=XlLookAt.xlWhole).Column
+            colAnfang = firstZeile.Find(What:=suchstr(ptPlanNamen.Anfang), LookAt:=XlLookAt.xlWhole).Column
+            colEnde = firstZeile.Find(What:=suchstr(ptPlanNamen.Ende), LookAt:=XlLookAt.xlWhole).Column
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
         End Try
 
         Try
-            colDauer = firstZeile.Find(What:=suchstr(ptRplanNamen.Dauer), LookAt:=XlLookAt.xlWhole).Column
+            colDauer = firstZeile.Find(What:=suchstr(ptPlanNamen.Dauer), LookAt:=XlLookAt.xlWhole).Column
         Catch ex As Exception
             colDauer = -1
         End Try
 
 
         Try
-            colProduktlinie = firstZeile.Find(What:=suchstr(ptRplanNamen.Produktlinie), LookAt:=XlLookAt.xlWhole).Column
+            colProduktlinie = firstZeile.Find(What:=suchstr(ptPlanNamen.BusinessUnit), LookAt:=XlLookAt.xlWhole).Column
         Catch ex As Exception
             colProduktlinie = -1
         End Try
 
-        ' diese Daten können vorhanden sein - wenn nicht, weitermachen ...  
-        Try
-            colAbbrev = firstZeile.Find(What:=suchstr(ptRplanNamen.Beschreibung), LookAt:=XlLookAt.xlWhole).Column
-        Catch ex As Exception
 
+        Try
+            colAbbrev = firstZeile.Find(What:=suchstr(ptPlanNamen.Abkuerzung), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colAbbrev = -1
         End Try
 
         Try
-            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptRplanNamen.Vorgangsklasse), LookAt:=XlLookAt.xlWhole).Column
+            colDescription = firstZeile.Find(What:=suchstr(ptPlanNamen.Beschreibung), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colAbbrev = -1
+        End Try
+
+        Try
+            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptPlanNamen.Vorgangsklasse), LookAt:=XlLookAt.xlWhole).Column
         Catch ex As Exception
 
         End Try
@@ -14793,7 +14803,7 @@ Public Module awinGeneralModules
             End If
 
             ' wird immer geschrieben 
-            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptRplanNamen.Protocol)
+            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptPlanNamen.Protocol)
             CType(.Cells(1, colProtocol + 7), Excel.Range).Value = "Grund"
 
         End With
@@ -14832,7 +14842,7 @@ Public Module awinGeneralModules
                     stdIndent = False
                 End If
 
-
+                ' zeile ist an der Stelle 2
                 While zeile <= lastRow
 
                     ' wenn es mit einem neuen Projekt beginnt, muss der lastDuplicateIndent zurückgesetzt sein 
@@ -14861,6 +14871,53 @@ Public Module awinGeneralModules
                     endDate = CDate(CType(.Cells(zeile, colEnde), Global.Microsoft.Office.Interop.Excel.Range).Value)
                     completeName = CStr(CType(.Cells(zeile, colName), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
+                    ' andere Informationen auslesen ... 
+                    pDescription = ""
+                    If colDescription > 0 Then
+                        pDescription = CStr(CType(.Cells(zeile, colDescription), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    End If
+
+                    defaultBU = ""
+                    If colProduktlinie > 0 Then
+
+                        Try
+                            Dim tmpBU As String
+                            If colProduktlinie > 0 Then
+                                tmpBU = CStr(CType(.Cells(zeile, colProduktlinie), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            Else
+                                tmpBU = ""
+                            End If
+
+
+                            ' gibt es die Business Unit ? 
+                            found = False
+                            Dim bix As Integer = 1
+
+                            If tmpBU.Length > 0 Then
+                                While bix <= businessUnitDefinitions.Count And Not found
+                                    If businessUnitDefinitions.ElementAt(bix - 1).Value.name = tmpBU Then
+
+                                        found = True
+                                        defaultBU = tmpBU
+
+                                    Else
+                                        bix = bix + 1
+                                    End If
+                                End While
+                            End If
+
+
+                            If Not found Then
+
+                                CType(aktivesSheet.Cells(zeile, colProduktlinie), Excel.Range).Interior.Color = awinSettings.AmpelRot
+
+                            End If
+
+                        Catch ex1 As Exception
+
+                        End Try
+
+                    End If
 
                     Dim tmpvalue As String
                     Dim tmp2Str() As String
@@ -14928,18 +14985,16 @@ Public Module awinGeneralModules
                                 hproj.latestStartDate = startDate
                             End If
 
-                            hproj.StrategicFit = zufall.NextDouble * 10
-                            hproj.Risiko = zufall.NextDouble * 10
-                            hproj.volume = zufall.NextDouble * 1000000
-                            hproj.complexity = zufall.NextDouble
+                            hproj.StrategicFit = 5
+                            hproj.Risiko = 5
                             hproj.businessUnit = defaultBU
-                            hproj.description = ""
+                            hproj.description = pDescription
 
                             hproj.Erloes = 0.0
 
 
                         Catch ex As Exception
-                            Throw New Exception("in erstelle Import RPLAN Excel Projekte: " & vbLf & ex.Message)
+                            Throw New Exception("in erstelle Import Excel Projekte: " & vbLf & ex.Message)
                         End Try
 
                         ' jetzt wird die Import Hierarchie angelegt 
@@ -15061,52 +15116,6 @@ Public Module awinGeneralModules
 
 
 
-
-                                        If itemName = "Projektphasen" Then
-                                            Try
-                                                Dim tmpBU As String
-                                                If colProduktlinie > 0 Then
-                                                    tmpBU = CStr(CType(.Cells(curZeile, colProduktlinie), Excel.Range).Value).Trim
-                                                Else
-                                                    tmpBU = ""
-                                                End If
-
-
-                                                ' gibt es die Business Unit ? 
-                                                found = False
-                                                Dim bix As Integer = 1
-
-                                                If tmpBU.Length > 0 Then
-                                                    While bix <= businessUnitDefinitions.Count And Not found
-                                                        If businessUnitDefinitions.ElementAt(bix - 1).Value.name = tmpBU Then
-
-                                                            found = True
-                                                            hproj.businessUnit = tmpBU
-
-                                                            If awinSettings.fullProtocol Then
-
-                                                                CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = tmpBU
-                                                            End If
-
-
-                                                        Else
-                                                            bix = bix + 1
-                                                        End If
-                                                    End While
-                                                End If
-
-
-                                                If Not found And awinSettings.fullProtocol Then
-
-                                                    CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
-
-                                                End If
-
-                                            Catch ex1 As Exception
-
-                                            End Try
-                                        End If
-
                                         ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
                                         If isMilestone Then
                                             If MilestoneDefinitions.Contains(itemName) Then
@@ -15191,7 +15200,7 @@ Public Module awinGeneralModules
                                         txtAbbrev = CStr((CType(.Cells(curZeile, colAbbrev), Excel.Range).Value)).Trim
 
                                     Catch ex As Exception
-
+                                        txtAbbrev = ""
                                     End Try
                                 End If
 
@@ -15898,6 +15907,174 @@ Public Module awinGeneralModules
                                  currentDateiName & vbLf)
         End Try
 
+
+    End Sub
+
+    ''' <summary>
+    ''' exportiert das angegebene Projekt in die bereits geöffnete Datei 
+    ''' Das Schreiben beginnt ab "zeile"
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="zeile"></param>
+    ''' <remarks></remarks>
+    Public Sub planExportProject(ByVal hproj As clsProjekt, ByRef zeile As Integer)
+
+        Dim ip As Integer, im As Integer
+        Dim startdate As Date, endDate As Date
+        Dim curName As String
+        Dim color As Long
+        Dim ws As Excel.Worksheet
+        Dim spalte As Integer = 1
+        Dim cphase As clsPhase
+        Dim cmilestone As clsMeilenstein
+        Dim indentlevel As Integer = 0
+        Dim indentDelta As Integer = 3
+
+        ' diese Datei muss offen sein und das aktive Workbook
+        ' wenn nein, dann aktivieren ! 
+        Try
+            If appInstance.ActiveWorkbook.Name <> excelExportVorlage Then
+                appInstance.Workbooks(excelExportVorlage).Activate()
+            End If
+        Catch ex As Exception
+            Throw New ArgumentException("Export Vorlage ist nicht die aktive Excel Datei")
+        End Try
+
+        ' bestimme die Farbe - sie steht im Excel Ausgabe File in der Zeile 2, Spalte 1 
+        ws = CType(appInstance.ActiveWorkbook.Worksheets("Export VISBO Projekttafel"), Excel.Worksheet)
+
+        Dim suchstr(8) As String
+        suchstr(ptPlanNamen.Name) = "Name"
+        suchstr(ptPlanNamen.Anfang) = "Start"
+        suchstr(ptPlanNamen.Ende) = "End"
+        suchstr(ptPlanNamen.Beschreibung) = "Description"
+        suchstr(ptPlanNamen.Vorgangsklasse) = "Appearance"
+        suchstr(ptPlanNamen.BusinessUnit) = "Business Unit"
+        suchstr(ptPlanNamen.Protocol) = "Übernommen als"
+        suchstr(ptPlanNamen.Dauer) = "Duration"
+        suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
+
+        ' jetzt werden die Spaltenüberschriften geschrieben 
+        Dim colName As Integer = 1
+        CType(ws.Cells(1, colName), Excel.Range).Value = suchstr(ptPlanNamen.Name)
+        Dim colStart As Integer = 2
+        CType(ws.Cells(1, colStart), Excel.Range).Value = suchstr(ptPlanNamen.Anfang)
+        Dim colEnde As Integer = 3
+        CType(ws.Cells(1, colEnde), Excel.Range).Value = suchstr(ptPlanNamen.Ende)
+        Dim colBU As Integer = 4
+        CType(ws.Cells(1, colBU), Excel.Range).Value = suchstr(ptPlanNamen.BusinessUnit)
+        Dim colDescription As Integer = 5
+        CType(ws.Cells(1, colDescription), Excel.Range).Value = suchstr(ptPlanNamen.Beschreibung)
+        Dim colAppearance As Integer = 6
+        CType(ws.Cells(1, colAppearance), Excel.Range).Value = suchstr(ptPlanNamen.Vorgangsklasse)
+        Dim colAbbrev As Integer = 7
+        CType(ws.Cells(1, colAbbrev), Excel.Range).Value = suchstr(ptPlanNamen.Abkuerzung)
+
+        color = CLng(CType(ws.Cells(2, 1), Excel.Range).Interior.Color)
+
+        ' jetzt wird das Projekt geschrieben 
+        CType(ws.Cells(zeile, colName), Excel.Range).Value = hproj.getShapeText
+        CType(ws.Cells(zeile, colStart), Excel.Range).Value = hproj.startDate.ToShortDateString
+        CType(ws.Cells(zeile, colEnde), Excel.Range).Value = hproj.endeDate.ToShortDateString
+        CType(ws.Cells(zeile, colBU), Excel.Range).Value = hproj.businessUnit
+        CType(ws.Cells(zeile, colDescription), Excel.Range).Value = hproj.description
+        CType(ws.Rows(zeile), Excel.Range).Interior.Color = color
+
+        Dim indentPhase As String = "   "
+        'Dim indentMS As String = "      "
+
+        ' die erste Phase kann auch Meilensteine haben !
+        cphase = hproj.getPhase(1)
+        indentlevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
+
+        For im = 1 To cphase.countMilestones
+            zeile = zeile + 1
+            cmilestone = cphase.getMilestone(im)
+            startdate = cmilestone.getDate
+            
+            curName = cmilestone.name
+
+            indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
+            CType(ws.Cells(zeile, colName), Excel.Range).Value = erzeugeIndent(indentlevel) & curName
+
+            If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
+                CType(ws.Cells(zeile, colStart), Excel.Range).Value = ""
+                CType(ws.Cells(zeile, colEnde), Excel.Range).Value = startdate.ToShortDateString
+            Else
+                CType(ws.Cells(zeile, colStart), Excel.Range).Value = "Fehler !"
+                CType(ws.Cells(zeile, colEnde), Excel.Range).Value = "Fehler !"
+            End If
+
+            ' jetzt Vorgangsklasse und Abbrev schreiben, falls vorhanden 
+            Dim tmpAbbrev As String = MilestoneDefinitions.getAbbrev(curName)
+            Dim tmpAppearance As String = MilestoneDefinitions.getAppearance(curName)
+
+            CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
+            CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
+
+        Next
+
+
+
+        For ip = 2 To hproj.AllPhases.Count
+            zeile = zeile + 1
+            cphase = hproj.getPhase(ip)
+            startdate = cphase.getStartDate
+            endDate = cphase.getEndDate
+            curName = cphase.name
+
+            indentlevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
+            CType(ws.Cells(zeile, spalte), Excel.Range).Value = erzeugeIndent(indentlevel) & curName
+
+            If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
+                CType(ws.Cells(zeile, colStart), Excel.Range).Value = startdate.ToShortDateString
+            Else
+                CType(ws.Cells(zeile, colStart), Excel.Range).Value = "Fehler !"
+            End If
+
+            If DateDiff(DateInterval.Day, StartofCalendar, endDate) > 0 Then
+                CType(ws.Cells(zeile, colEnde), Excel.Range).Value = endDate.ToShortDateString
+            Else
+                CType(ws.Cells(zeile, colEnde), Excel.Range).Value = "Fehler !"
+            End If
+
+            ' jetzt Vorgangsklasse und Abbrev schreiben, falls vorhanden 
+            Dim tmpAbbrev As String = PhaseDefinitions.getAbbrev(curName)
+            Dim tmpAppearance As String = PhaseDefinitions.getAppearance(curName)
+
+            CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
+            CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
+
+            For im = 1 To cphase.countMilestones
+                zeile = zeile + 1
+                cmilestone = cphase.getMilestone(im)
+                startdate = cmilestone.getDate
+                
+
+                curName = cmilestone.name
+                indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
+                CType(ws.Cells(zeile, spalte), Excel.Range).Value = erzeugeIndent(indentlevel) & curName
+
+                If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
+                    CType(ws.Cells(zeile, colStart), Excel.Range).Value = ""
+                    CType(ws.Cells(zeile, colEnde), Excel.Range).Value = startdate.ToShortDateString
+                Else
+                    CType(ws.Cells(zeile, colStart), Excel.Range).Value = "Fehler !"
+                    CType(ws.Cells(zeile, colEnde), Excel.Range).Value = "Fehler !"
+                End If
+
+                ' jetzt Vorgangsklasse und Abbrev schreiben, falls vorhanden 
+                tmpAbbrev = MilestoneDefinitions.getAbbrev(curName)
+                tmpAppearance = MilestoneDefinitions.getAppearance(curName)
+
+                CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
+                CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
+            Next
+
+        Next
+
+        ' jetzt muss um eine Zeile weitergeschaltet werden, damit immer auf eine freie Zeile geschrieben wird
+        zeile = zeile + 1
 
     End Sub
 
@@ -18742,6 +18919,8 @@ Public Module awinGeneralModules
     Public Sub writeOnlineMassEditRessCost(ByVal todoListe As Collection, _
                                            ByVal von As Integer, ByVal bis As Integer)
 
+        Dim mahleRange As Excel.Range
+
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
@@ -18870,10 +19049,24 @@ Public Module awinGeneralModules
             ' jetzt wird die Zeile 1 geschrieben 
             Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
 
+            ' jetzt wird der Mahle Range definiert ...
+            mahleRange = CType(.Columns(startSpalteDaten - 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn
+            For tmpi As Integer = 0 To bis - von
+                mahleRange = appInstance.Union(mahleRange, CType(.Columns(startSpalteDaten + 2 * tmpi + 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn)
+            Next
+
             ' jetzt wird der Name hinzugefügt
             Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
             Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + 2 * (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
             Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
+
+            Try
+                If Not IsNothing(CType(currentWB.Names.Item("MahleInfo"), Excel.Name)) Then
+                    currentWB.Names.Item("MahleInfo").Delete()
+                End If
+            Catch ex As Exception
+
+            End Try
 
             Try
                 If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then
@@ -18899,6 +19092,7 @@ Public Module awinGeneralModules
 
             End Try
 
+            currentWB.Names.Add(Name:="MahleInfo", RefersToR1C1:=mahleRange)
             currentWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
             currentWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
             currentWB.Names.Add(Name:="RoleCost", RefersToR1C1:=tmpRange3)
@@ -18951,12 +19145,18 @@ Public Module awinGeneralModules
         ' dazu wird ein Array angelegt mit der Dimension (anzahlRollen-1, bis-von+1) 
         Dim auslastungsArray(,) As Double
 
-        Try
-            auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
-            'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
-        Catch ex As Exception
+        ' tk, 18.5.17 damit kann die Gesamt- und Monatliche Auslastungs-Info ausgeblendet werden 
+        If awinSettings.meExtendedColumnsView Then
+            Try
+                auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
+                'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+            Catch ex As Exception
+                ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
+            End Try
+        Else
             ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
-        End Try
+        End If
+        
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -19130,7 +19330,9 @@ Public Module awinGeneralModules
                             For mis As Integer = 0 To bis - von
                                 zeilenWerte(2 * mis) = schnittmenge(mis)
                                 ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
-                                zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+                                If awinSettings.meExtendedColumnsView Then
+                                    zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+                                End If
                             Next
 
                             'editRange.Value = schnittmenge
@@ -19291,7 +19493,8 @@ Public Module awinGeneralModules
                             For mis As Integer = 0 To bis - von
                                 zeilenWerte(2 * mis) = schnittmenge(mis)
                                 ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
-                                zeilenWerte(2 * mis + 1) = 0
+                                ' tk, 18.5 wird ja schon durch Redim erledigt ...
+                                'zeilenWerte(2 * mis + 1) = 0
                             Next
 
                             'editRange.Value = schnittmenge
@@ -19567,6 +19770,16 @@ Public Module awinGeneralModules
 
         End With
 
+        ' jetzt wird ggf der MahleRange ausgeblendet ... 
+        If Not awinSettings.meExtendedColumnsView Then
+            Try
+                'mahleRange.Locked = False
+                mahleRange.EntireColumn.Hidden = True
+            Catch ex As Exception
+
+            End Try
+
+        End If
 
         appInstance.EnableEvents = True
 

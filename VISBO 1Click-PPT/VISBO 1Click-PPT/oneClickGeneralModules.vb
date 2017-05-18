@@ -896,7 +896,7 @@ Module oneClickGeneralModules
                         Dim cp As Integer
                         With hrole
                             .name = tmpStr.Trim
-                            .Startkapa = CDbl(c.Offset(0, 1).Value)
+                            .defaultKapa = CDbl(c.Offset(0, 1).Value)
                             .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
 
                             Try
@@ -913,7 +913,7 @@ Module oneClickGeneralModules
                             ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
                             For cp = 1 To 240
 
-                                .kapazitaet(cp) = .Startkapa
+                                .kapazitaet(cp) = .defaultKapa
                                 .externeKapazitaet(cp) = 0.0
 
                             Next

@@ -2540,18 +2540,8 @@ Imports System.Windows
                     tmpLabel = "Database"
                 End If
 
-<<<<<<< HEAD
             Case "PT5G1" ' Load from Database
-=======
-            Case "PT4G2B3" ' WritePrioList
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Prioritäten-Liste"
-                Else
-                    tmpLabel = "Priority-List"
-                End If
 
-            Case "PT5G1" ' Laden
->>>>>>> feature/extended_Hierarchy
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Laden von DB "
                 Else
@@ -3140,9 +3130,12 @@ Imports System.Windows
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
 
             'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-            Dim columnEndData As Integer = visboZustaende.meColED
+            ' tk 18.5.17 : nicht alles kopieren, weil das Schwieirgkeiten gibt bei ausgeblendeten Spalten wie es normalerweise der Fall ist
+            ' es reicht ja ohnehin, alle Daten aus den ersten Spalten zu kopieren ... 
+            'Dim columnEndData As Integer = visboZustaende.meColED
+            Dim columnEndData As Integer = visboZustaende.meColRC - 1
             'Dim columnStartData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("StartData"), Excel.Range).Column
-            Dim columnStartData As Integer = visboZustaende.meColSD
+            'Dim columnStartData As Integer = visboZustaende.meColSD
             Dim columnRC As Integer = visboZustaende.meColRC
 
             Dim hoehe As Double = CDbl(currentCell.Height)
@@ -3160,15 +3153,16 @@ Imports System.Windows
 
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEnddata)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData)), Excel.Range)
+                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
+                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
                 copySource.Copy(Destination:=copyDestination)
 
                 CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
 
-                For c As Integer = columnStartData - 3 To columnEndData + 1
-                    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
-                Next
+                ' wird nicht benötigt, weil das ohnehin nicht kopiert wurde ...  
+                'For c As Integer = columnStartData - 3 To columnEndData + 1
+                '    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
+                'Next
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
@@ -3182,9 +3176,22 @@ Imports System.Windows
                     If Not IsNothing(.Validation) Then
                         .Validation.Delete()
                     End If
-                    ' jetzt wird die ValidationList aufgebaut 
-                    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                    ' jetzt wird die ValidationList aufgebaut
+                    ' ist es eine Rolle ? 
+                    If control.Id = "PT2G1M2B4" Then
+                        ' Rollen
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                               Formula1:=validationStrings.Item("alleRollen"))
+                    ElseIf control.Id = "PT2G1M2B7" Then
+                        ' Kosten
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                                                       Formula1:=validationStrings.Item("alleKosten"))
+                    Else
+                        ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
                                                Formula1:=validationStrings.Item("alles"))
+                    End If
+                    
                 Catch ex As Exception
 
                 End Try
@@ -4513,6 +4520,11 @@ Imports System.Windows
 
     End Sub
 
+    ''' <summary>
+    ''' importiert eine Excel Datei mit Phasen und Meilensteinen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
     Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
 
 
@@ -4553,7 +4565,7 @@ Imports System.Windows
                     ImportProjekte.Clear(False)
                     myCollection.Clear()
                     'Call bmwImportProjektInventur(myCollection)
-                    Call rplanExcelImport(myCollection, False, dateiName)
+                    Call planExcelImport(myCollection, False, dateiName)
                     'Call bmwImportProjekteITO15(myCollection, False)
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
@@ -4974,7 +4986,7 @@ Imports System.Windows
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Public Sub bmwExcelExport(control As IRibbonControl)
+    Public Sub planExcelExport(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
@@ -5052,7 +5064,8 @@ Imports System.Windows
 
                     ' jetzt wird dieses Projekt exportiert ... 
                     Try
-                        Call bmwExportProject(hproj, zeile)
+                        'Call bmwExportProject(hproj, zeile)
+                        Call planExportProject(hproj, zeile)
                         outputString = outputString & hproj.name & " erfolgreich .." & vbLf
                     Catch ex As Exception
                         outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
@@ -5586,7 +5599,10 @@ Imports System.Windows
 
         ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
         visboZustaende.clearAuslastungsArray()
-        Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+        If awinSettings.meExtendedColumnsView Then
+            Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+        End If
+
 
     End Sub
 
