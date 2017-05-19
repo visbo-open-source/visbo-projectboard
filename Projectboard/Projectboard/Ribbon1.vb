@@ -3031,7 +3031,7 @@ Imports System.Windows
                     Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
                     appInstance.EnableEvents = True
 
-                    With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(5)), Excel.Worksheet)
                         .Activate()
                     End With
 
@@ -3134,7 +3134,7 @@ Imports System.Windows
         'Call awinLoadCockpit("_Last")
         'appInstance.ScreenUpdating = True
         ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(3)), Excel.Worksheet)
             .Activate()
         End With
 
