@@ -1738,6 +1738,13 @@ Imports System.Windows
                     tmpLabel = "Select by Structure"
                 End If
 
+            Case "PTOPTB1" ' Optimieren hier wir onAction gemacht
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Optimieren"
+                Else
+                    tmpLabel = "Optimization"
+                End If
+
             Case "PTPf" ' Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Charts"
@@ -1778,20 +1785,6 @@ Imports System.Windows
                     tmpLabel = "Auslastung"
                 Else
                     tmpLabel = "Capacity Utilization"
-                End If
-
-            Case "PTOPT" ' Optimieren
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Optimieren"
-                Else
-                    tmpLabel = "Optimization"
-                End If
-
-            Case "PTOPTB1" ' optimale Varianten-Kombination
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "optimale Kombination finden"
-                Else
-                    tmpLabel = "Find best combination"
                 End If
 
             Case "PTXG1B8" ' Strategie/Risiko/Marge
@@ -2357,11 +2350,11 @@ Imports System.Windows
                     tmpLabel = "Projects/Variants"
                 End If
 
-            Case "PT2G2B2" ' Laden
+            Case "PT2G2B2" ' Portfolio/s anzeigen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Laden"
+                    tmpLabel = "Portfolio/s anzeigen"
                 Else
-                    tmpLabel = "Load"
+                    tmpLabel = "Show Portfolio/s"
                 End If
 
 
@@ -2463,54 +2456,96 @@ Imports System.Windows
                     tmpLabel = "Import from Filesystem"
                 End If
 
-            Case "PT4G1B1" ' Import Projekte (Batch)
+            Case "PT4G1B6" ' VISBO Open XML
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import Projekte (Batch)"
+                    tmpLabel = "VISBO Open XML"
                 Else
-                    tmpLabel = "Import Projects (Batch)"
+                    tmpLabel = "VISBO Open XML"
+                End If
+
+            Case "PT4G1B1" ' Import VISBO-Steckbriefe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO-Steckbriefe"
+                Else
+                    tmpLabel = "VISBO project briefs"
                 End If
 
             Case "PT4G1B2" ' Import Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import Excel"
+                    tmpLabel = "Excel"
                 Else
-                    tmpLabel = "Import Excel"
-                End If
-
-            Case "PT4G1B3" ' Import RPLAN RXF
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import RPLAN RXF"
-                Else
-                    tmpLabel = "Import RPLAN RXF"
+                    tmpLabel = "Excel"
                 End If
 
             Case "PT4G1B4" ' Import MS Project
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import MS Project"
+                    tmpLabel = "MS Project"
                 Else
-                    tmpLabel = "Import MS Project"
+                    tmpLabel = "MS Project"
+                End If
+
+            Case "PT4G1B3" ' Import RPLAN RXF
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "RPLAN RXF"
+                Else
+                    tmpLabel = "RPLAN RXF"
+                End If
+
+            Case "PT4G1B7" ' Import Projekte (Batch)
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Batch Projekt-Erzeugung"
+                Else
+                    tmpLabel = "Batch Project Creation"
                 End If
 
             Case "PT4G1B5" ' Import Scenario Definition
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import Portfolio Definition"
+                    tmpLabel = "Portfolio Liste"
                 Else
-                    tmpLabel = "Import Definition Portfolio"
+                    tmpLabel = "Portfolio List"
                 End If
-
-            Case "PT4G1M1B1" ' Import VISBO-Steckbriefe
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import VISBO-Steckbriefe"
-                Else
-                    tmpLabel = "Import VISBO lean project briefs"
-                End If
-
+   
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export"
                 Else
                     tmpLabel = "Export to Filesystem"
                 End If
+
+            Case "PT4G1M1B3" ' Export VISBO-Steckbriefe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO-Steckbriefe"
+                Else
+                    tmpLabel = "VISBO project briefs"
+                End If
+
+            Case "PT4G1M1B2" 'Export Visbo OPen Xml
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO Open XML"
+                Else
+                    tmpLabel = "VISBO Open XML"
+                End If
+            Case "PT4G1M1B1" 'Export Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Excel"
+                Else
+                    tmpLabel = "Excel"
+                End If
+
+            Case "PT4G1M0B2" ' exportieren von Meilensteine und Phasen nach Auswahl
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl von Meilensteine und Phasen"
+                Else
+                    tmpLabel = "Selection of Milestones and Phases"
+                End If
+
+            Case "PT4G2M3" ' exportieren von Portfolio Liste
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Portfolio Liste"
+                Else
+                    tmpLabel = "Portfolio List"
+                End If
+
 
             Case "PT4G1B7" ' Export FC-52
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2519,26 +2554,19 @@ Imports System.Windows
                     tmpLabel = "Export FC-52"
                 End If
 
-            Case "PT4G1B8" ' Export RPLAN Excel
+            Case "PT4G1M3" ' Export Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Export RPLAN Excel"
+                    tmpLabel = "Excel"
                 Else
-                    tmpLabel = "Export RPLAN Excel"
+                    tmpLabel = "Excel"
                 End If
 
-            Case "PT4G1M1B3" ' Export VISBO-Steckbriefe
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Export VISBO-Steckbriefe"
-                Else
-                    tmpLabel = "Export VISBO lean project briefs"
-                End If
-
-            Case "PT4G12" ' Datenbank
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Datenbank"
-                Else
-                    tmpLabel = "Database"
-                End If
+                'Case "PT4G2M3" ' Datenbank
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Datenbank"
+                '    Else
+                '        tmpLabel = "Database"
+                '    End If
 
             Case "PT5G1" ' Load from Database
 
@@ -2812,6 +2840,8 @@ Imports System.Windows
                 Case "PTfilter"
                     chckVisibility = False
                 Case "PTsort"
+                    chckVisibility = False
+                Case "PToptimize"
                     chckVisibility = False
                 Case "PTcharts"
                     chckVisibility = False
@@ -3130,12 +3160,10 @@ Imports System.Windows
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
 
             'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-            ' tk 18.5.17 : nicht alles kopieren, weil das Schwieirgkeiten gibt bei ausgeblendeten Spalten wie es normalerweise der Fall ist
-            ' es reicht ja ohnehin, alle Daten aus den ersten Spalten zu kopieren ... 
-            'Dim columnEndData As Integer = visboZustaende.meColED
-            Dim columnEndData As Integer = visboZustaende.meColRC - 1
-            'Dim columnStartData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("StartData"), Excel.Range).Column
-            'Dim columnStartData As Integer = visboZustaende.meColSD
+            
+            Dim columnEndData As Integer = visboZustaende.meColED
+            Dim columnStartData As Integer = visboZustaende.meColSD
+
             Dim columnRC As Integer = visboZustaende.meColRC
 
             Dim hoehe As Double = CDbl(currentCell.Height)
@@ -3150,19 +3178,33 @@ Imports System.Windows
                 End With
             End If
 
-
+            
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
+
+                If Not awinSettings.meExtendedColumnsView Then
+                    appInstance.ScreenUpdating = False
+                    ' einblenden ... 
+                    .Range("MahleInfo").EntireColumn.Hidden = False
+                End If
+
+
                 Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
                 Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
                 copySource.Copy(Destination:=copyDestination)
 
                 CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
 
-                ' wird nicht benötigt, weil das ohnehin nicht kopiert wurde ...  
-                'For c As Integer = columnStartData - 3 To columnEndData + 1
-                '    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
-                'Next
+                For c As Integer = columnStartData - 3 To columnEndData + 1
+                    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
+                Next
+
+                ' jetzt wieder ausblenden ... 
+                If Not awinSettings.meExtendedColumnsView Then
+                    ' ausblenden ... 
+                    .Range("MahleInfo").EntireColumn.Hidden = True
+                    appInstance.ScreenUpdating = True
+                End If
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 

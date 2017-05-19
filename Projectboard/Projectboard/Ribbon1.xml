@@ -62,53 +62,56 @@
         <group id="PTIpExp">
           <!--label="IMPORT"-->
           <menu id="PT4G1" getLabel ="bestimmeLabel">
-          <!--label="Import Projekte (Batch)"-->
-          <button id="PT4G1B1" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="auf Basis einer Batch-Datei können neue Projekte unter Verwendung von Projekt-Templates schnell erzeugt werden"/>
-          <!--label="Import Szenario Definition"-->
-          <button id="PT4G1B5" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Szenario Definitionen eingelesen werden"/>
-          <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
-          <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
-          <!--<separator id="PT4G1s1"/>-->
-          <!--label="Import Excel"-->
-          <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-          <!--label="Import RPLAN RXF"-->
-          <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
-          <!--label="Import MS Project"-->
-          <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
-          <!--<separator id="PT4G1s2"/>-->
-          <!--label="Import VISBO-Steckbriefe"-->
-          <button id="PT4G1M1B1" image="money2" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-          <!--<separator id="PT4G1s3"/>-->
-          <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
+            <!--label="VISBO-Steckbriefe"-->
+            <button id="PT4G1B1" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+            <!--label ="VISBO Open XML-->
+            <button id="PT4G1B6" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="alle Projekte, die in Form einer XML-Datei beschrieben"/>
+            <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
+            <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
+            <!--<separator id="PT4G1s1"/>-->
+            <!--label="Import Excel"-->
+            <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+            <!--label="Import MS Project"-->
+            <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
+            <!--label="Import RPLAN RXF"-->
+            <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
+            <menuSeparator id="menuSeparator1"/>
+            <!--label="Projekte (Batch)"-->
+            <button id="PT4G1B7" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="auf Basis einer Batch-Datei können neue Projekte unter Verwendung von Projekt-Templates schnell erzeugt werden"/>
+             <menuSeparator id="menuSeparator2"/>
+            <!--label="Import Szenario Definition"-->
+            <button id="PT4G1B5" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Szenario Definitionen eingelesen werden"/>
+            <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
             <button id="PT4G1M3B1" label="Importieren" onAction="awinImportMassenEdit" supertip ="alle Werte aus der Massen-Edit Datei importieren"/>
             -->
           <!--<button id="PT4G1M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
             <button id="PT4G1M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
           <!--
           </menu>-->
-          <!--<menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
-            <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
-            <button id="PT4G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Hierarchie"/>
-          </menu>-->
+ 
           </menu>
           <!--label="EXPORT"-->
           <menu id="PT4G2" getLabel ="bestimmeLabel">
-            <!--button id="PT4G1B7" label="Export FC-52" onAction="bmwFC52Export" supertip ="alle geladenen Projekte bzw. Varianten in der Session werden gemaß der FC52 Vorlage exportiert; die neue Datei liegt im Folder Export Dateien"/>-->
-            <!--label="Export RPLAN Excel"-->
-            <button id="PT4G1B8" getLabel ="bestimmeLabel" onAction="planExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner Export Dateien"/>
             <!--label="Export VISBO-Steckbriefe"-->
             <button id="PT4G1M1B3" getLabel ="bestimmeLabel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>
-            <!--<button id="PT4G1M2B2" label="Export MSProject Projekte" onAction="Tom2G4M2ExportMSProject" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>-->
-            <!--<separator id="PT4G1s4"/>
-          <menu id="PT4G1M0" label ="Elemente auswählen und exportieren" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine">
-            <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
-            <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
-          </menu>
-          <separator id="PT4G2s2"/>-->
-            <menu id="PT4G2M3" label ="Rollen - Kostenzuordnung " supertip ="alle angezeigten Projekte werden ausgeleitet ">
+            <!--label="Export VISBO Open XML"-->
+            <button id="PT4G1M1B2" getLabel ="bestimmeLabel" onAction="xxx" supertip="VISBO Projekt als XML file exportieren" />
+            <!--label="Export Excel"-->
+            <button id="PT4G1M1B1" getLabel ="bestimmeLabel" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner Export Dateien"/>
+            <!--label="exportieren in MSProject Projekte-->
+            <!--<button id="PT4G1M2B2" label="MSProject Projekte" onAction="Tom2G4M2ExportMSProject" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>-->
+            <menuSeparator id="menuSeparator3"/>
+            <button id="PT4G1M0B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine"/>
+
+              <!--<menu id="PT4G1M0" getLabel ="bestimmeLabel" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine">
+              <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
+              <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
+            </menu>-->
+            <menuSeparator id="menuSeparator4"/>            
+            <menu id="PT4G2M3" getLabel ="bestimmeLabel" supertip ="alle angezeigten Projekte werden ausgeleitet ">
               <button id="PT4G2M3B1" label="Exportieren" onAction="awinWriteProjektBedarfeXLSX" supertip ="alle Werte im sogenannten Massen-Edit bearbeiten"/>
-              <button id="PT4G1M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
-              <button id="PT4G1M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>
+              <button id="PT4G2M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
+              <button id="PT4G2M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>
             </menu>
             <!--<menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
             <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
@@ -162,13 +165,13 @@
              <!--label=" Variante Umbenennen"-->
             <button id="PT2G1B3" getVisible="chckVisibility" label="Rename Variant (fehlt)" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>
             <menuSeparator id="separator2" />
+            <!--label="Schutz setzen / aufheben"-->
+            <button id="PT2G2B5" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
+            <menuSeparator id="separator3" />
             <!--label="Freeze"-->
             <button id="PTfreezeB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Beauftragen" supertip ="ein fixiertes Projekt kann nicht mehr durch Drag und Drop verschoben, verkürzt, verlängert werden."/>
             <!--label="De-Freeze for moving"-->
             <button id="PTfreezeB2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2GXBeauftragen" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
-            <menuSeparator id="separator3" />
-            <!--label="Schutz setzen / aufheben"-->
-            <button id="PT2G2B5" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
             <menuSeparator id="separator4" />
             <!--label="Variante zum Standard machen"-->
             <button id="PT2G1M1B3" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
@@ -195,6 +198,9 @@
           <!--label="Rollup View"-->
           <button id="PT2G1B7" imageMso="CollapseAll" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet."/>
           <separator id="PT2G1s2"/>
+          <!--label="Portfolio/s anzeigen"-->
+          <button id="PT2G2B2" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt oder es wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: im letzteren Fall gehen in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes verloren"/>
+          <separator id="PT2G1s3"/>
           <!--label="Zeichen-Elemente löschen"-->
           <menu id="PT2G3M2" getLabel ="bestimmeLabel">
             <!--label="Meilensteine, Phasen, Stati"-->
@@ -249,18 +255,10 @@
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Custom"-->
               <button id="PTcustom" label ="Custom"/>
-              <!--<menuSeparator id="PTXG1s4"/>-->
-              <!--label="größter Engpass"-->
-              <!--
-              <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/> 
-              -->
-            <!--label="Optimieren"--><!--
-              <menu id="PTOPT" getLabel ="bestimmeLabel">
-                --><!--label="optimale Varianten-Kombination"--><!--
-                <button id="PTOPTB1" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
-                --><!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>--><!--
-              </menu>-->
-          </menu>
+              <menuSeparator id="PTXG1s4"/>
+              <!--label="größter Engpass"
+              <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/>--> 
+           </menu>
           <!--label="Projekt-Charts"-->
           <menu id ="PT7G1M1" getVisible ="chckVisibility" getLabel ="bestimmeLabel" >
               <!--label="Phasen Übersicht"
@@ -289,9 +287,13 @@
                 <button id="PT7G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
               </menu>
            </menu>
-           <separator id="PT0G1s7"/>
+          <separator id="PT0G1s7"/>
           <button id="PT7G1B1" label="Copy chart style" supertip ="muss noch programmiert werden"/>
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>
+          <separator id="PT0G1s9"/>
+          <!--label="Optimieren"-->
+          <button id="PTOPTB1" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
+          <!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
           <separator id="PT0G1s8"/>
           <!--label="Save Cockpit"-->
           <button id="PT0G1M3B2" imageMso="ChartSaveTemplates" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
@@ -299,8 +301,8 @@
           <button id="PT0G1M3B1" imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
           <!--label="Ergebnis"--><!--
           <button id="PT0G1B7" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>-->
-          <separator id="PT0G1s9"/>
-          <!--label="Charts"-->
+           <separator id="PT0G1sX"/>
+          <!--label="Charts löschen"-->
           <button id="PT0G1BX" imageMso="Clear" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
         </group>
       </tab>
@@ -376,9 +378,9 @@
       </tab>
       <tab id="PTmassEdit" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PT2G1M2">
-          <!--label="Ressource hinzufügen"-->
+          <!--label="Ressource/Kostenart hinzufügen"-->
           <button id="PT2G1M2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
-          <!--label="Kostenart hinzufügen"-->
+          <!--label="Ressource/Kostenart hinzufügen"-->
           <button id="PT2G1M2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
           <!--label="Ressource/Kostenart löschen"-->
           <button id="PT2G1M2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileLoeschen" supertip ="die Ressource / Kostenart der aktuellen Zeile wird aus der Projekt-Phase gelöscht."/>
@@ -396,7 +398,6 @@
           <!--label="Sortierung ermöglichen"-->
           <checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
         </group>
-
       </tab>  
      </tabs>
   </ribbon>

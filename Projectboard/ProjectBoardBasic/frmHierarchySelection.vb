@@ -223,14 +223,15 @@ Public Class frmHierarchySelection
             ElseIf .menuOption = PTmenue.excelExport Then
 
                 If awinSettings.englishLanguage Then
-                    .Text = "Create Excel Report"
-                    .OKButton.Text = "Create Report"
+                    .Text = "Export to Excel"
+                    .OKButton.Text = "Export"
                     .filterLabel.Text = "Selection"
                 Else
-                    .Text = "Excel Report erzeugen"
-                    .OKButton.Text = "Report erstellen"
+                    .Text = "Export nach Excel"
+                    .OKButton.Text = "Export"
                     .filterLabel.Text = "Auswahl"
                 End If
+
 
                 .statusLabel.Text = ""
 
@@ -823,6 +824,7 @@ Public Class frmHierarchySelection
             End With
         Else
             mppFrm.calledfrom = "frmShowPlanElements"
+
         End If
 
 
