@@ -29,7 +29,7 @@
         <!--label="Load from Database"-->
         <group id="PTladen" >
             <!--label="Load from Database"-->
-            <menu id ="PT5G1"  getLabel ="bestimmeLabel" imageMso="DatabaseCopyDatabaseFile" keytip="L">
+            <menu id ="PT5G1"   getLabel ="bestimmeLabel" size="large" imageMso="DatabaseCopyDatabaseFile" keytip="L">
               <!--label="Portfolio/s"-->
               <button id="PT5G1B1"  getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
               <!--label="Project/s"-->
@@ -363,7 +363,8 @@
         </tab>
       <!--label="zurück zur Multiprojekt-Tafel"-->
       <tab id="PTzurück" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-        <group id="PTback" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+        <group id="PTzurück1" getVisible="chckVisibility" >
+          <button id="PTback" getVisible="chckVisibility" onAction="PTbackToProjectBoard" getLabel ="bestimmeLabel" supertip="zurück zur Projekt-Tafel"/>
         </group>
       </tab>
       <tab id="PTMEC" getVisible ="chckVisibility" getLabel ="bestimmeLabel">
