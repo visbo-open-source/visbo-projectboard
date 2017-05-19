@@ -2569,6 +2569,7 @@ Imports System.Windows
                 '    End If
 
             Case "PT5G1" ' Load from Database
+
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Laden von DB "
                 Else
@@ -3015,7 +3016,11 @@ Imports System.Windows
             ' wenn es jetzt etwas zu tun gibt ... 
             If todoListe.Count > 0 Then
                 ' alles ok ...
-                'Call deleteChartsInSheet(arrWsNames(3))
+                ' wenn die Charts da bleiben, kann das zu Fehlern führen ... 
+                'appInstance.ScreenUpdating = False
+                'Call awinStoreCockpit("_Last")
+                Call deleteChartsInSheet(arrWsNames(3))
+
                 Call enableControls(ptModus.massEditRessCost)
 
                 ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
@@ -3124,12 +3129,14 @@ Imports System.Windows
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
-        appInstance.ScreenUpdating = False
+        ' tk , das Dalassen der Charts kann zu Fehlern führen ... 
+        'appInstance.ScreenUpdating = False
+        'Call awinLoadCockpit("_Last")
+        'appInstance.ScreenUpdating = True
         ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             .Activate()
         End With
-
 
 
     End Sub
@@ -3153,9 +3160,10 @@ Imports System.Windows
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
 
             'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
+            
             Dim columnEndData As Integer = visboZustaende.meColED
-            'Dim columnStartData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("StartData"), Excel.Range).Column
             Dim columnStartData As Integer = visboZustaende.meColSD
+
             Dim columnRC As Integer = visboZustaende.meColRC
 
             Dim hoehe As Double = CDbl(currentCell.Height)
@@ -3170,11 +3178,19 @@ Imports System.Windows
                 End With
             End If
 
-
+            
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEnddata)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData)), Excel.Range)
+
+                If Not awinSettings.meExtendedColumnsView Then
+                    appInstance.ScreenUpdating = False
+                    ' einblenden ... 
+                    .Range("MahleInfo").EntireColumn.Hidden = False
+                End If
+
+
+                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
+                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
                 copySource.Copy(Destination:=copyDestination)
 
                 CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
@@ -3182,6 +3198,13 @@ Imports System.Windows
                 For c As Integer = columnStartData - 3 To columnEndData + 1
                     CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
                 Next
+
+                ' jetzt wieder ausblenden ... 
+                If Not awinSettings.meExtendedColumnsView Then
+                    ' ausblenden ... 
+                    .Range("MahleInfo").EntireColumn.Hidden = True
+                    appInstance.ScreenUpdating = True
+                End If
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
@@ -3195,9 +3218,22 @@ Imports System.Windows
                     If Not IsNothing(.Validation) Then
                         .Validation.Delete()
                     End If
-                    ' jetzt wird die ValidationList aufgebaut 
-                    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                    ' jetzt wird die ValidationList aufgebaut
+                    ' ist es eine Rolle ? 
+                    If control.Id = "PT2G1M2B4" Then
+                        ' Rollen
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                               Formula1:=validationStrings.Item("alleRollen"))
+                    ElseIf control.Id = "PT2G1M2B7" Then
+                        ' Kosten
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                                                       Formula1:=validationStrings.Item("alleKosten"))
+                    Else
+                        ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
                                                Formula1:=validationStrings.Item("alles"))
+                    End If
+                    
                 Catch ex As Exception
 
                 End Try
@@ -4526,6 +4562,11 @@ Imports System.Windows
 
     End Sub
 
+    ''' <summary>
+    ''' importiert eine Excel Datei mit Phasen und Meilensteinen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
     Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
 
 
@@ -4566,7 +4607,7 @@ Imports System.Windows
                     ImportProjekte.Clear(False)
                     myCollection.Clear()
                     'Call bmwImportProjektInventur(myCollection)
-                    Call rplanExcelImport(myCollection, False, dateiName)
+                    Call planExcelImport(myCollection, False, dateiName)
                     'Call bmwImportProjekteITO15(myCollection, False)
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
@@ -4987,7 +5028,7 @@ Imports System.Windows
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Public Sub bmwExcelExport(control As IRibbonControl)
+    Public Sub planExcelExport(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
@@ -5065,7 +5106,8 @@ Imports System.Windows
 
                     ' jetzt wird dieses Projekt exportiert ... 
                     Try
-                        Call bmwExportProject(hproj, zeile)
+                        'Call bmwExportProject(hproj, zeile)
+                        Call planExportProject(hproj, zeile)
                         outputString = outputString & hproj.name & " erfolgreich .." & vbLf
                     Catch ex As Exception
                         outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
@@ -5105,6 +5147,25 @@ Imports System.Windows
 
 
 
+    End Sub
+
+    Public Sub awinWritePrioList(control As IRibbonControl)
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Try
+            Call writeProjektsForSequencing()
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
     End Sub
 
     ''' <summary>
@@ -5580,7 +5641,10 @@ Imports System.Windows
 
         ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
         visboZustaende.clearAuslastungsArray()
-        Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+        If awinSettings.meExtendedColumnsView Then
+            Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+        End If
+
 
     End Sub
 
@@ -9948,7 +10012,7 @@ Imports System.Windows
 
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
-
+        Dim timeZoneWasOff As Boolean = False
         getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
@@ -9967,29 +10031,28 @@ Imports System.Windows
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
         Else
-            Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+        End If
+
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
         End If
 
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
 
-
-        ' das ist die alte Variante
-        '
-        'enableOnUpdate = False
-        'appInstance.EnableEvents = False
-        'appInstance.ScreenUpdating = False
-
-        'Try
-        '    Call createPPTSlidesFromConstellation()
-        'Catch ex As Exception
-        '    Call MsgBox(ex.Message)
-        'End Try
-
-
-        'appInstance.EnableEvents = True
-        'appInstance.ScreenUpdating = True
-        'enableOnUpdate = True
 
     End Sub
     Sub PTShowVersions(control As IRibbonControl)
@@ -10684,9 +10747,26 @@ Imports System.Windows
         Call projektTafelInit()
 
         enableOnUpdate = False
-
+        Dim timeZoneWasOff As Boolean = False
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
+
+        ' ist ein Timespan selektiert ? 
+        ' wenn nein, selektieren ... 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' alles in Ordnung 
+        Else
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+        End If
 
         If ShowProjekte.Count > 0 Then
 
@@ -10704,7 +10784,12 @@ Imports System.Windows
 
         End If
 
-
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
+        End If
+        
         enableOnUpdate = True
 
     End Sub

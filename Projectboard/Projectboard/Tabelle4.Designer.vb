@@ -14,16 +14,16 @@ Option Explicit On
 
 
 '''
-<Microsoft.VisualStudio.Tools.Applications.Runtime.StartupObjectAttribute(3), _
+<Microsoft.VisualStudio.Tools.Applications.Runtime.StartupObjectAttribute(4), _
  Global.System.Security.Permissions.PermissionSetAttribute(Global.System.Security.Permissions.SecurityAction.Demand, Name:="FullTrust")> _
-Partial Public NotInheritable Class Tabelle3
+Partial Public NotInheritable Class Tabelle4
     Inherits Microsoft.Office.Tools.Excel.WorksheetBase
 
     '''
     <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
      Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Never)> _
     Public Sub New(ByVal factory As Global.Microsoft.Office.Tools.Excel.Factory, ByVal serviceProvider As Global.System.IServiceProvider)
-        MyBase.New(factory, serviceProvider, "Tabelle3", "Tabelle3")
+        MyBase.New(factory, serviceProvider, "Tabelle4", "Tabelle4")
     End Sub
 
     '''
@@ -32,7 +32,7 @@ Partial Public NotInheritable Class Tabelle3
      Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Never)> _
     Protected Overrides Sub Initialize()
         MyBase.Initialize()
-        Globals.Tabelle3 = Me
+        Globals.Tabelle4 = Me
         Global.System.Windows.Forms.Application.EnableVisualStyles()
         Me.InitializeCachedData()
         Me.InitializeControls()
@@ -146,15 +146,15 @@ End Class
 
 Partial Friend NotInheritable Class Globals
 
-    Private Shared _Tabelle3 As Tabelle3
+    Private Shared _Tabelle4 As Tabelle4
 
-    Friend Shared Property Tabelle3() As Tabelle3
+    Friend Shared Property Tabelle4() As Tabelle4
         Get
-            Return _Tabelle3
+            Return _Tabelle4
         End Get
-        Set(value As Tabelle3)
-            If (_Tabelle3 Is Nothing) Then
-                _Tabelle3 = value
+        Set(value As Tabelle4)
+            If (_Tabelle4 Is Nothing) Then
+                _Tabelle4 = value
             Else
                 Throw New System.NotSupportedException()
             End If

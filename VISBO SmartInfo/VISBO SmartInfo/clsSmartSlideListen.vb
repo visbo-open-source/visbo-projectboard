@@ -198,6 +198,33 @@ Public Class clsSmartSlideListen
 
     End Sub
 
+    ''' <summary>
+    ''' passt die Liste der Timestamps so an, dass das erste Element größer oder gleich gkw ist ...
+    ''' Damit wird sichergestellt, dass, wenn mehrere Projekte geladen sind, jedes Projekt mit dem kleinsten TimeStamp aus der Liste existiert ... 
+    ''' </summary>
+    ''' <param name="gkw"></param>
+    ''' <remarks></remarks>
+    Public Sub adjustListOfTS(ByVal gkw As Date)
+        Dim fertig As Boolean = False
+        Dim ix As Integer = 0
+        Do While ix <= _listOfTimeStamps.Count - 1 And Not fertig
+            If _listOfTimeStamps.ElementAt(ix).Key >= gkw Then
+                fertig = True
+            Else
+                ix = ix + 1
+            End If
+        Loop
+
+        If fertig Then
+            For i As Integer = 0 To ix - 1
+                _listOfTimeStamps.RemoveAt(0)
+            Next
+        Else
+            _listOfTimeStamps.Clear()
+        End If
+
+    End Sub
+
     Public ReadOnly Property getListOfTS As SortedList(Of Date, Boolean)
         Get
             getListOfTS = _listOfTimeStamps

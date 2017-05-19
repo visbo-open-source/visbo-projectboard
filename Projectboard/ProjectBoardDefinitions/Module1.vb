@@ -257,15 +257,16 @@ Public Module Module1
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
-    Public Enum ptRplanNamen
+    Public Enum ptPlanNamen
         Name = 0
         Anfang = 1
         Ende = 2
         Beschreibung = 3
         Vorgangsklasse = 4
-        Produktlinie = 5
+        BusinessUnit = 5
         Protocol = 6
         Dauer = 7
+        Abkuerzung = 8
     End Enum
 
 
@@ -458,6 +459,10 @@ Public Module Module1
         pptAddIn = 2
     End Enum
 
+    Public Enum PTProjektType
+        vorlage = 0
+        projekt = 1
+    End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
@@ -2444,13 +2449,24 @@ Public Module Module1
     ''' <param name="breadcrumb"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String) As String
+    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String, _
+                                    Optional ByVal pvKennung As String = "") As String
 
-        If breadcrumb = "" Then
-            calcHryFullname = elemName
+        If pvKennung = "" Then
+            If breadcrumb = "" Then
+                calcHryFullname = elemName
+            Else
+                calcHryFullname = breadcrumb & "#" & elemName
+            End If
+
         Else
-            calcHryFullname = breadcrumb & "#" & elemName
+            If breadcrumb = "" Then
+                calcHryFullname = "[" & pvKennung & "]" & elemName
+            Else
+                calcHryFullname = "[" & pvKennung & "]" & breadcrumb & "#" & elemName
+            End If
         End If
+        
 
     End Function
 
@@ -2479,10 +2495,30 @@ Public Module Module1
     ''' <param name="elemName"></param>
     ''' <param name="breadcrumb"></param>
     ''' <remarks></remarks>
-    Public Sub splitHryFullnameTo2(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String)
+    Public Sub splitHryFullnameTo2(ByVal fullname As String, _
+                                   ByRef elemName As String, ByRef breadcrumb As String, _
+                                   ByRef type As Integer, ByRef pvName As String)
         Dim tmpstr() As String
         Dim tmpBC As String = ""
         Dim anzahl As Integer
+
+        ' enthält der pvName die Kennung für Vorlage oder Projekt ? 
+        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Then
+            If fullname.StartsWith("[P:") Then
+                type = PTProjektType.projekt
+            Else
+                type = PTProjektType.vorlage
+            End If
+
+            Dim startPos As Integer = 3
+            Dim endPos As Integer = fullname.IndexOf("]") + 1
+            pvName = fullname.Substring(startPos, endPos - startPos - 1)
+
+            fullname = fullname.Substring(endPos)
+        Else
+            type = -1
+            pvName = ""
+        End If
 
         tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
         anzahl = tmpstr.Length
@@ -2512,7 +2548,8 @@ Public Module Module1
     ''' <param name="breadcrumb"></param>
     ''' <param name="lfdNr"></param>
     ''' <remarks></remarks>
-    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer)
+    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer, _
+                                          ByRef type As Integer, ByRef pvName As String)
         Dim tmpstr() As String
         Dim tmpBC As String = ""
         Dim anzahl As Integer
@@ -2523,6 +2560,8 @@ Public Module Module1
             elemName = tmpstr(0)
             breadcrumb = ""
             lfdNr = 1
+            type = -1
+            pvName = ""
         ElseIf tmpstr.Length > 1 Then
             lfdNr = CInt(tmpstr(anzahl - 1))
             For i As Integer = 0 To anzahl - 2
@@ -2532,11 +2571,14 @@ Public Module Module1
                     tmpBC = tmpBC & "#" & tmpstr(i)
                 End If
             Next
-            Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb)
+            
+            Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb, type, pvName)
         Else
             elemName = "?"
             breadcrumb = ""
             lfdNr = 0
+            type = -1
+            pvName = ""
         End If
 
     End Sub

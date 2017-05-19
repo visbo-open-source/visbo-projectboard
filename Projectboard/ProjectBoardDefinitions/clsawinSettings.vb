@@ -162,7 +162,10 @@ Public Class clsawinSettings
     Public Property meEnableSorting As Boolean
     ' soll beim Berechnen der auslastungs-Values im Mass-Edit die bereits beauftragte externe Kapazität mit berücksichtigt werden 
     ' Default = no 
-    Public Property meAuslastungIsInclExt As Boolean = True
+    Public Property meAuslastungIsInclExt As Boolean
+
+    ' steuert, ob im Massen-Edit zu jedem Monat auch die Monats-Auslastung / freien Tage angezeigt werden sollen 
+    Public Property meExtendedColumnsView As Boolean
 
     ' die Farben und Fonts des Schutzes 
     Public Property protectedPermanentFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
@@ -318,6 +321,8 @@ Public Class clsawinSettings
         _meAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
+        _meExtendedColumnsView = False
+
 
         ' Settings für den Schutz von Projekten 
         _protectedPermanentFont = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)

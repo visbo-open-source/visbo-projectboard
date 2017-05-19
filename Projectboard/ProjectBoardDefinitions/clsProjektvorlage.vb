@@ -447,7 +447,9 @@
                     If awinSettings.showBestName And Not awinSettings.drawphases Then
                         ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
                         ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
-                        Call splitHryFullnameTo2(tmpName, description2, description1)
+                        Dim type As Integer = -1
+                        Dim pvName As String = ""
+                        Call splitHryFullnameTo2(tmpName, description2, description1, type, pvName)
 
                         Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
 
@@ -590,8 +592,9 @@
 
                     End If
                 Else
-
-                    Call splitHryFullnameTo2(tmpName, description2, description1)
+                    Dim type As Integer = -1
+                    Dim pvName As String = ""
+                    Call splitHryFullnameTo2(tmpName, description2, description1, type, pvName)
                     Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
 
                     ' jetzt den Std-Name zusammensetzen 
@@ -812,70 +815,7 @@
 
     End Sub
 
-    ''' <summary>
-    ''' gibt zu einer als als voller Name (Breadcrumb + Elemename) übergebenen Phase zurück, ob die so im Projekt existiert 
-    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
-    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
-    '''  
-    ''' </summary>
-    ''' <param name="fullName">der volle Name, das heisst Breadcrum plus Name</param>
-    ''' <param name="strict">gibt an, ob der volle Breadcrumb berücksichtigt werden soll oder nur der Name</param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property containsPhase(ByVal fullName As String, ByVal strict As Boolean) As Boolean
-        Get
-            Dim elemName As String = ""
-            Dim breadcrumb As String = ""
-
-            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
-            If strict Then
-                ' breadcrumb soll unverändert beachtet werden 
-            Else
-                breadcrumb = ""
-            End If
-
-            Dim cphase As clsPhase = Me.getPhase(elemName, breadcrumb, 1)
-            If IsNothing(cphase) Then
-                containsPhase = False
-            Else
-                containsPhase = True
-            End If
-
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' gibt zu einem als als voller Name (Breadcrumb + Elemename) übergebenen Meilenstein zurück, ob der so im Projekt existiert 
-    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
-    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
-    ''' </summary>
-    ''' <param name="fullName"></param>
-    ''' <param name="strict"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property containsMilestone(ByVal fullName As String, ByVal strict As Boolean) As Boolean
-        Get
-            Dim elemName As String = ""
-            Dim breadcrumb As String = ""
-
-            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
-            If strict Then
-                ' breadcrumb soll unverändert beachtet werden 
-            Else
-                breadcrumb = ""
-            End If
-
-            Dim cMilestone As clsMeilenstein = Me.getMilestone(elemName, breadcrumb, 1)
-            If IsNothing(cMilestone) Then
-                containsMilestone = False
-            Else
-                containsMilestone = True
-            End If
-
-        End Get
-    End Property
+   
 
     ''' <summary>
     ''' entfernt den Meilenstein mit der übergebenen nameID 
@@ -1546,139 +1486,7 @@
         End Get
     End Property
 
-    ''' <summary>
-    ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
-    ''' so wird er ersetzt durch alle Elem-IDs, die diesen Namen tragen 
-    ''' es wird sichergestellt, dass jede ID tatsächlich nur einmal aufgeführt ist 
-    ''' </summary>
-    ''' <param name="namenListe"></param>
-    ''' <param name="namesAreMilestones"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getElemIdsOf(ByVal namenListe As Collection, ByVal namesAreMilestones As Boolean) As Collection
-        Get
-            Dim iDCollection As New Collection
-            Dim tmpSortList As New SortedList(Of DateTime, String)
-            Dim sortDate As DateTime
-            Dim itemName As String = ""
-            Dim itemBreadcrumb As String = ""
-            Dim iDItem As String
-            Dim phaseIndices() As Integer
-            Dim milestoneIndices(,) As Integer
-
-            For i As Integer = 1 To namenListe.Count
-
-                itemName = CStr(namenListe.Item(i))
-
-                If istElemID(itemName) Then
-
-                    Dim ok As Boolean = True
-                    If namesAreMilestones Then
-                        Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(itemName)
-                        If Not IsNothing(cMilestone) Then
-                            sortDate = cMilestone.getDate
-                        Else
-                            ok = False
-                        End If
-
-                    Else
-                        Dim cphase As clsPhase = Me.getPhaseByID(itemName)
-                        If Not IsNothing(cphase) Then
-                            sortDate = cphase.getStartDate
-                        Else
-                            ok = False
-                        End If
-
-                    End If
-
-                    If ok And Not tmpSortList.ContainsValue(itemName) Then
-
-                        Do While tmpSortList.ContainsKey(sortDate)
-                            sortDate = sortDate.AddMilliseconds(1)
-                        Loop
-
-                        tmpSortList.Add(sortDate, itemName)
-
-                    End If
-
-
-                Else
-                    Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
-
-                    If namesAreMilestones Then
-                        milestoneIndices = Me.hierarchy.getMilestoneIndices(itemName, itemBreadcrumb)
-
-                        For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
-                            ' wenn der Wert Null ist , so existiert der Wert nicht 
-                            If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
-
-                                Try
-                                    iDItem = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).nameID
-                                    sortDate = Me.getMilestoneByID(iDItem).getDate
-
-                                    If Not tmpSortList.ContainsValue(iDItem) Then
-
-                                        Do While tmpSortList.ContainsKey(sortDate)
-                                            sortDate = sortDate.AddMilliseconds(1)
-                                        Loop
-
-
-                                        tmpSortList.Add(sortDate, iDItem)
-
-
-                                    End If
-
-
-                                Catch ex As Exception
-
-                                End Try
-
-                            End If
-
-                        Next
-                    Else
-                        phaseIndices = Me.hierarchy.getPhaseIndices(itemName, itemBreadcrumb)
-                        For px As Integer = 0 To phaseIndices.Length - 1
-
-                            If phaseIndices(px) > 0 And phaseIndices(px) <= Me.CountPhases Then
-                                iDItem = Me.getPhase(phaseIndices(px)).nameID
-
-                                sortDate = Me.getPhaseByID(iDItem).getStartDate
-
-                                If Not tmpSortList.ContainsValue(iDItem) Then
-
-                                    Do While tmpSortList.ContainsKey(sortDate)
-                                        sortDate = sortDate.AddMilliseconds(1)
-                                    Loop
-
-
-                                    tmpSortList.Add(sortDate, iDItem)
-
-
-                                End If
-
-                                'If Not iDCollection.Contains(iDItem) Then
-                                '    iDCollection.Add(iDItem, iDItem)
-                                'End If
-                            End If
-
-                        Next
-                    End If
-                End If
-
-            Next
-
-            ' jetzt muss umkopiert werden 
-            For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
-                iDCollection.Add(kvp.Value, kvp.Value)
-            Next
-
-            getElemIdsOf = iDCollection
-
-        End Get
-    End Property
-
+    
 
     ''' <summary>
     ''' gibt zurück, ob die Parent-Phase mit ID=parentID identisch zur Phase mit Name elemName, startdate, endDate ist) 

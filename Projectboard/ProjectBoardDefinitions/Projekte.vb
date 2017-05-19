@@ -9372,7 +9372,10 @@ Public Module Projekte
                     appInstance.EnableEvents = formerEE
                     appInstance.ScreenUpdating = True
 
-                    Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
+                    If Not cockpitname = "_Last" Then
+                        Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
+                    End If
+
                     'xlsCockpits.Close(SaveChanges:=True)
 
                 Else
@@ -12147,26 +12150,44 @@ Public Module Projekte
 
                     elemName = ""
                     breadcrumb = ""
-                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb)
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+                    Dim weiter As Boolean = True
+                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb, type, pvName)
 
-                    phaseIndices = kvp.Value.hierarchy.getPhaseIndices(elemName, breadcrumb)
-                    If phaseIndices(0) > 0 Then
+                    If type = PTProjektType.projekt Then
 
-                        i = 1
-                        While i <= phaseIndices.Length And notAdded
-                            elemID = kvp.Value.getPhase(phaseIndices(i - 1)).nameID
-                            If relevantForOptimization(kvp.Value, elemID, False) Then
-                                If Not toDoListe.Contains(kvp.Key) Then
-                                    toDoListe.Add(kvp.Key, kvp.Key)
-                                End If
-                                notAdded = False
-                            Else
-                                i = i + 1
-                            End If
-                        End While
+                        If pvName <> kvp.Value.name Then
+                            weiter = False
+                        End If
+
+                    ElseIf type = PTProjektType.vorlage Then
+
+                        If pvName <> kvp.Value.VorlagenName Then
+                            weiter = False
+                        End If
 
                     End If
 
+                    If weiter Then
+                        phaseIndices = kvp.Value.hierarchy.getPhaseIndices(elemName, breadcrumb)
+                        If phaseIndices(0) > 0 Then
+
+                            i = 1
+                            While i <= phaseIndices.Length And notAdded
+                                elemID = kvp.Value.getPhase(phaseIndices(i - 1)).nameID
+                                If relevantForOptimization(kvp.Value, elemID, False) Then
+                                    If Not toDoListe.Contains(kvp.Key) Then
+                                        toDoListe.Add(kvp.Key, kvp.Key)
+                                    End If
+                                    notAdded = False
+                                Else
+                                    i = i + 1
+                                End If
+                            End While
+
+                        End If
+                    End If
 
                 Next kvp
 
@@ -12193,84 +12214,101 @@ Public Module Projekte
 
                     elemName = ""
                     breadcrumb = ""
-                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb)
-
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb, type, pvName)
 
                     For i = 1 To toDoListe.Count
 
                         curProj = ShowProjekte.getProject(CStr(toDoListe.Item(i)))
-                        phaseIndices = curProj.hierarchy.getPhaseIndices(elemName, breadcrumb)
+                        Dim weiter As Boolean = True
 
-                        ' in den deltaValues sind jetzt die Werte drin, die sich für die Phasen-Verschiebungen ergeben 
+                        If type = PTProjektType.projekt Then
 
-                        ReDim deltaValues(phaseIndices.Length - 1)
+                            If pvName <> curProj.name Then
+                                weiter = False
+                            End If
 
-                        Dim optimizationFound As Boolean = False
+                        ElseIf type = PTProjektType.vorlage Then
 
-                        If phaseIndices(0) > 0 Then
-                            ' nur dann wurde die Phase wenigstens einmal gefunden ...
-                            For ik As Integer = 1 To phaseIndices.Length
-
-                                ' jetzt die Phase holen
-
-                                cphase = curProj.getPhase(phaseIndices(ik - 1))
-                                Dim phaseNameID As String = cphase.nameID
-
-                                ' hier wird der beste Wert für das einzelne Projekt gesucht ....  
-
-                                For versatz = curProj.earliestStart To curProj.latestStart
-                                    If versatz <> 0 Then
-                                        ' jetzt die Phase entsprechend verschieben ...
-                                        cphase.changeStartandDauer(cphase.startOffsetinDays + versatz, cphase.dauerInDays)
-
-                                        currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
-
-                                        If currentValue < bestValue Then
-                                            bestValue = currentValue
-                                            deltaValues(ik - 1) = versatz
-                                            optimizationFound = True
-                                            anzImprovements = anzImprovements + 1
-                                        End If
-                                    End If
-
-                                Next versatz
-
-
-
-                            Next
-
-                            ' zurücksetzen des Offsets in den einzelnen Phasen wieder auf ihre alte Position zurückgesetzt werden 
-
-                            For ik As Integer = 1 To phaseIndices.Length
-                                cphase = curProj.getPhase(phaseIndices(ik - 1))
-                                Dim phaseNameID As String = cphase.nameID
-
-                                If deltaValues(ik - 1) <> 0 Then
-                                    With cphase
-                                        .changeStartandDauer(.startOffsetinDays - deltaValues(ik - 1), .dauerInDays)
-                                    End With
-                                End If
-
-                            Next
-
-
-                            If optimizationFound Then ' es gab eine Verbesserung 
-
-                                With lokalesOptimum
-                                    If bestValue < .bestValue Then
-                                        .projectName = curProj.name
-                                        .bestValue = bestValue
-                                        .offset = deltaValues
-                                        ' Call awinVisualizeProject
-                                    End If
-                                End With
-
+                            If pvName <> curProj.VorlagenName Then
+                                weiter = False
                             End If
 
                         End If
 
+                        If weiter Then
+                            phaseIndices = curProj.hierarchy.getPhaseIndices(elemName, breadcrumb)
+
+                            ' in den deltaValues sind jetzt die Werte drin, die sich für die Phasen-Verschiebungen ergeben 
+
+                            ReDim deltaValues(phaseIndices.Length - 1)
+
+                            Dim optimizationFound As Boolean = False
+
+                            If phaseIndices(0) > 0 Then
+                                ' nur dann wurde die Phase wenigstens einmal gefunden ...
+                                For ik As Integer = 1 To phaseIndices.Length
+
+                                    ' jetzt die Phase holen
+
+                                    cphase = curProj.getPhase(phaseIndices(ik - 1))
+                                    Dim phaseNameID As String = cphase.nameID
+
+                                    ' hier wird der beste Wert für das einzelne Projekt gesucht ....  
+
+                                    For versatz = curProj.earliestStart To curProj.latestStart
+                                        If versatz <> 0 Then
+                                            ' jetzt die Phase entsprechend verschieben ...
+                                            cphase.changeStartandDauer(cphase.startOffsetinDays + versatz, cphase.dauerInDays)
+
+                                            currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+
+                                            If currentValue < bestValue Then
+                                                bestValue = currentValue
+                                                deltaValues(ik - 1) = versatz
+                                                optimizationFound = True
+                                                anzImprovements = anzImprovements + 1
+                                            End If
+                                        End If
+
+                                    Next versatz
 
 
+
+                                Next
+
+                                ' zurücksetzen des Offsets in den einzelnen Phasen wieder auf ihre alte Position zurückgesetzt werden 
+
+                                For ik As Integer = 1 To phaseIndices.Length
+                                    cphase = curProj.getPhase(phaseIndices(ik - 1))
+                                    Dim phaseNameID As String = cphase.nameID
+
+                                    If deltaValues(ik - 1) <> 0 Then
+                                        With cphase
+                                            .changeStartandDauer(.startOffsetinDays - deltaValues(ik - 1), .dauerInDays)
+                                        End With
+                                    End If
+
+                                Next
+
+
+                                If optimizationFound Then ' es gab eine Verbesserung 
+
+                                    With lokalesOptimum
+                                        If bestValue < .bestValue Then
+                                            .projectName = curProj.name
+                                            .bestValue = bestValue
+                                            .offset = deltaValues
+                                            ' Call awinVisualizeProject
+                                        End If
+                                    End With
+
+                                End If
+
+                            End If
+
+                        End If
 
                     Next i
 
@@ -17208,6 +17246,8 @@ Public Module Projekte
 
 
     End Sub
+
+    
 
     ''' <summary>
     ''' Exportiert das Projekt hproj in einen Projektsteckbrief mit verwendeter Hierarchischem Aufbau der Phasen und Meilensteine

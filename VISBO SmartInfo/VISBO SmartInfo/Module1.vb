@@ -461,6 +461,9 @@ Module Module1
                 Try
                     If currentSlide.Tags.Item("SMART").Length > 0 Then
 
+                        ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
+                        Call getDBsettings()
+
                         Dim msg As String = ""
                         If userIsEntitled(msg) Then
 
@@ -526,6 +529,23 @@ Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' bestimmt die Settings der Datenbank, sofern welche da sind 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub getDBsettings()
+        With currentSlide
+            
+            If .Tags.Item("DBURL").Length > 0 And _
+                .Tags.Item("DBNAME").Length > 0 Then
+
+                    noDBAccessInPPT = True
+                    awinSettings.databaseURL = .Tags.Item("DBURL")
+                    awinSettings.databaseName = .Tags.Item("DBNAME")
+
+            End If
+        End With
+    End Sub
     ''' <summary>
     ''' erstellt die SmartSlideListen neu ... 
     ''' </summary>
@@ -604,6 +624,10 @@ Module Module1
             Next
 
         End If
+
+    End Sub
+
+    Private Sub pptAPP_WindowActivate(Pres As Microsoft.Office.Interop.PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowActivate
 
     End Sub
     Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
@@ -1412,6 +1436,7 @@ Module Module1
         Dim newCmtText As String = ""
         Dim newCmtColor As Integer = 0
         Dim cmtType As Integer
+        Dim tmpText As String = ""
 
         If IsNothing(cmtShape) Then
             Exit Sub
@@ -1452,11 +1477,22 @@ Module Module1
                     Else
                         If cmtType = pptAnnotationType.ampelText Then
                             ' Text und Farbe bestimmen 
-                            newCmtText = ms.getBewertung(1).description
+                            If englishLanguage Then
+                                tmpText = ms.name & " traffic light text:" & vbLf
+                            Else
+                                tmpText = ms.name & " Ampel-Text:" & vbLf
+                            End If
+                            newCmtText = tmpText & ms.getBewertung(1).description
                             newCmtColor = ms.getBewertung(1).colorIndex
+
                         ElseIf cmtType = pptAnnotationType.lieferumfang Then
                             ' Text und Farbe bestimmen 
-                            newCmtText = ms.getAllDeliverables
+                            If englishLanguage Then
+                                tmpText = ms.name & " Deliverables:" & vbLf
+                            Else
+                                tmpText = ms.name & " Lieferumfänge:" & vbLf
+                            End If
+                            newCmtText = tmpText & ms.getAllDeliverables
                             newCmtColor = ms.getBewertung(1).colorIndex
                         End If
 
@@ -1518,68 +1554,18 @@ Module Module1
             If pvName <> "" Then
                 ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
                 Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
+                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kliensten datumswert aller Projekte ....
+                If Not IsNothing(tsProj) Then
+                    Dim elemName As String = tmpShape.Tags.Item("CN")
+                    Dim elemBC As String = tmpShape.Tags.Item("BC")
 
-                Dim elemName As String = tmpShape.Tags.Item("CN")
-                Dim elemBC As String = tmpShape.Tags.Item("BC")
-
-                If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
-                    ' Swimlane Name oder Segment Name: kein Verschieben , aber das das Setzen der Tags ist notwendig  
-                    '
-                    Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
-                    If IsNothing(ph) Then
-                        tmpShape.Visible = False
-                    Else
-
-                        ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                        Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
-                                                     ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
-                                                     Nothing)
-                    End If
-
-
-                Else
-
-                    If pptShapeIsMilestone(tmpShape) Then
-
-                        'Call resetMVInfo(tmpShape)
-
-                        Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
-                        If IsNothing(ms) Then
-                            tmpShape.Visible = False
-                        Else
-                            Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, timestamp)
-                            If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
-                                diffMvList.Add(tmpShape.Name, mvDiff)
-                            End If
-
-                            ' jetzt muss ggf die Farbe gesetzt werden 
-                            Dim ampelFarbe As Integer = ms.getBewertung(1).colorIndex
-                            Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
-
-                            ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, Nothing, _
-                                                      ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
-                                                      ms.getAllDeliverables("#"))
-                        End If
-
-
-
-                    ElseIf pptShapeIsPhase(tmpShape) Then
-
-                        'Call resetMVInfo(tmpShape)
-
+                    If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
+                        ' Swimlane Name oder Segment Name: kein Verschieben , aber das das Setzen der Tags ist notwendig  
+                        '
                         Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                         If IsNothing(ph) Then
                             tmpShape.Visible = False
                         Else
-                            Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, timestamp)
-                            If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
-                                diffMvList.Add(tmpShape.Name, mvDiff)
-                            End If
-
-                            ' jetzt muss ggf die Farbe gesetzt werden 
-                            Dim ampelFarbe As Integer = ph.getBewertung(1).colorIndex
-                            Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
 
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                             Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
@@ -1587,9 +1573,62 @@ Module Module1
                                                          Nothing)
                         End If
 
-                    End If
 
+                    Else
+
+                        If pptShapeIsMilestone(tmpShape) Then
+
+                            'Call resetMVInfo(tmpShape)
+
+                            Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
+                            If IsNothing(ms) Then
+                                tmpShape.Visible = False
+                            Else
+                                Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, timestamp)
+                                If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
+                                    diffMvList.Add(tmpShape.Name, mvDiff)
+                                End If
+
+                                ' jetzt muss ggf die Farbe gesetzt werden 
+                                Dim ampelFarbe As Integer = ms.getBewertung(1).colorIndex
+                                Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
+
+                                ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, Nothing, _
+                                                          ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
+                                                          ms.getAllDeliverables("#"))
+                            End If
+
+
+
+                        ElseIf pptShapeIsPhase(tmpShape) Then
+
+                            'Call resetMVInfo(tmpShape)
+
+                            Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
+                            If IsNothing(ph) Then
+                                tmpShape.Visible = False
+                            Else
+                                Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, timestamp)
+                                If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
+                                    diffMvList.Add(tmpShape.Name, mvDiff)
+                                End If
+
+                                ' jetzt muss ggf die Farbe gesetzt werden 
+                                Dim ampelFarbe As Integer = ph.getBewertung(1).colorIndex
+                                Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
+
+                                ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
+                                                             ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
+                                                             Nothing)
+                            End If
+
+                        End If
+
+                    End If
                 End If
+
             End If
 
 
@@ -2365,9 +2404,9 @@ Module Module1
                 ' in allen anderen Fällen den Ampel-Text wählen 
                 If curShape.Tags.Item("AE").Length > 0 Then
                     If englishLanguage Then
-                        tmpText = tmpText & "traffic light explanation:" & vbLf
+                        tmpText = tmpText & "traffic light text:" & vbLf
                     Else
-                        tmpText = tmpText & "Ampel-Erläuterung:" & vbLf
+                        tmpText = tmpText & "Ampel-Text:" & vbLf
                     End If
 
                     tmpText = tmpText & curShape.Tags.Item("AE")

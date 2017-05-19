@@ -162,7 +162,11 @@ Public Class Tabelle2
         End Try
 
         Application.EnableEvents = formerEE
-        'Application.ScreenUpdating = True
+        If Application.ScreenUpdating = False Then
+            Application.ScreenUpdating = True
+        End If
+
+
 
     End Sub
 
@@ -687,7 +691,7 @@ Public Class Tabelle2
                 End If
 
 
-                If auslastungChanged Then
+                If auslastungChanged And awinSettings.meExtendedColumnsView Then
                     Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
                 End If
 
@@ -1247,7 +1251,10 @@ Public Class Tabelle2
         If isRole Then
             roleUID = RoleDefinitions.getRoledef(rcName).UID
             roleCollection.Add(rcName)
-            auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(roleCollection, von, bis, awinSettings.mePrzAuslastung)
+            If awinSettings.meExtendedColumnsView Then
+                auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(roleCollection, von, bis, awinSettings.mePrzAuslastung)
+            End If
+
         End If
 
 
@@ -1263,11 +1270,16 @@ Public Class Tabelle2
 
         With CType(appInstance.ActiveSheet, Excel.Worksheet)
             If isRole Then
-                If awinSettings.mePrzAuslastung Then
-                    CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                If awinSettings.meExtendedColumnsView Then
+                    If awinSettings.mePrzAuslastung Then
+                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                    Else
+                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
+                    End If
                 Else
-                    CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
+                    CType(.Cells(zeile, 7), Excel.Range).Value = ""
                 End If
+                
             Else
                 CType(.Cells(zeile, 7), Excel.Range).Value = ""
             End If
@@ -1279,7 +1291,7 @@ Public Class Tabelle2
         For mis As Integer = 0 To bis - von
             zeilenWerte(2 * mis) = schnittmenge(mis)
             ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
-            If isRole Then
+            If isRole And awinSettings.meExtendedColumnsView Then
                 zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
             Else
                 zeilenWerte(2 * mis + 1) = 0
@@ -1287,7 +1299,17 @@ Public Class Tabelle2
 
         Next
 
-        editRange.Value = zeilenWerte
+        If awinSettings.meExtendedColumnsView Then
+            editRange.Value = zeilenWerte
+        Else
+            For mis As Integer = 0 To bis - von
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                    CType(.Cells(zeile, startSpalteDaten + 2 * mis), Excel.Range).Value = zeilenWerte(2 * mis)
+                    CType(.Cells(zeile, startSpalteDaten + 2 * mis + 1), Excel.Range).Value = zeilenWerte(2 * mis + 1)
+                End With
+            Next
+        End If
+
 
         ' jetzt werden die Zellenwerte noch gelöscht , die nicht zur Phase gehören ...  
         With CType(appInstance.ActiveSheet, Excel.Worksheet)
@@ -1298,12 +1320,19 @@ Public Class Tabelle2
                         ' nichts tun 
                     Else
                         ' Auslastung auf Blank setzen 
-                        CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                        If awinSettings.meExtendedColumnsView Then
+                            CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                        End If
+
                     End If
                 Else
                     ' diese Werte löschen, sie gehören nicht zum Zeitraum der Phase  
                     CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-                    CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+
+                    If awinSettings.meExtendedColumnsView Then
+                        CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                    End If
+
                 End If
 
             Next

@@ -240,8 +240,14 @@
         Dim key As String = ""
 
         ' die customTF Liste merken, wenn es sich darum gehandelt hat ... 
-        If _sortType = ptSortCriteria.customTF Then
-            _lastCustomList = _sortList
+        If _sortType = ptSortCriteria.customTF And _sortType <> sCriteria Then
+            ' Kopieren der Liste 
+            _lastCustomList = New SortedList(Of String, String)
+
+            For Each kvp As KeyValuePair(Of String, String) In _sortList
+                _lastCustomList.Add(kvp.Key, kvp.Value)
+            Next
+
         End If
 
         ' jetzt müssen die Sort-Keys gesetzt werden 
@@ -454,7 +460,7 @@
 
             ' Check 1: 
             ' sind alle ShowProjekte auch in der Constellation aufgeführt ? 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
             Try
 
                 Dim key As String = calcProjektKey(kvp.Value)
@@ -477,7 +483,7 @@
 
             ' Check 2: 
             ' sind alle Items aus der Constellation mit Attribut Show=true auch in ShowProjekte? 
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
             If kvp.Value.show = True Then
                 Dim hproj As clsProjekt = Nothing
 
@@ -498,7 +504,7 @@
                 End If
             End If
 
-            Next
+        Next
 
     End Sub
     ''' <summary>
