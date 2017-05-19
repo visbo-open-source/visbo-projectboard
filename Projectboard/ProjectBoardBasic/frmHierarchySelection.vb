@@ -2068,6 +2068,7 @@ Public Class frmHierarchySelection
                     If selectedProjekte.Count < 1 Then
                         Dim projname As String = reportProfil.Projects.ElementAt(0).Value
                         Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
+                        selectedProjekte.Add(hproj, False)
                     End If
 
                     Call createPPTReportFromProjects(vorlagendateiname, _

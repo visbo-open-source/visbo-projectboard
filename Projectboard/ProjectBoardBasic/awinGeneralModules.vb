@@ -1024,6 +1024,8 @@ Public Module awinGeneralModules
                     xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
                     myCustomizationFile = appInstance.ActiveWorkbook.Name
 
+
+
                     ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
 
                     Call logfileOpen()
@@ -1042,13 +1044,19 @@ Public Module awinGeneralModules
                     myCustomizationFile = appInstance.ActiveWorkbook.Name
                 Catch ex As Exception
                     appInstance.ScreenUpdating = formerSU
-                    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+
                 End Try
+            Else
+                Throw New ArgumentException("Fehler: awinsettypen wurde mit Parameter '" & special & "' aufgerufen!")
+
             End If
 
-            Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+            'Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+            '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
+            Dim wsName4 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(4)), _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                    )
             If special = "ProjectBoard" Then
 
                 If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
@@ -17350,7 +17358,7 @@ Public Module awinGeneralModules
     Public Function XMLImportReportProfil(ByVal profilName As String) As clsReportAll
 
         Dim ergprofil As New clsReportAll
-
+        Dim aktfile As FileStream = Nothing
 
         Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
         Try
@@ -17362,6 +17370,7 @@ Public Module awinGeneralModules
             ' XML-Datei Öffnen
             ' A FileStream is needed to read the XML document.
             Dim file As New FileStream(xmlfilename, FileMode.Open)
+            aktfile = file
             profil = serializer.ReadObject(file)
             file.Close()
             ergprofil = profil
@@ -17370,6 +17379,13 @@ Public Module awinGeneralModules
 
 
         Catch ex As Exception
+
+            ' ur: 18.05.2017: oben geöffnete Datei zunächst schließen, da falsche Format
+            If Not IsNothing(aktfile) Then
+                aktfile.Close()
+            End If
+
+
             ' ur: 31.03.2017 neu eingefügt
             Try
                 Dim serializer = New DataContractSerializer(GetType(clsReport))
