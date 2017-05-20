@@ -201,6 +201,7 @@ Public Class Tabelle2
                 Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                 Dim phaseNameID As String = calcHryElemKey(phaseName, False)
                 Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
                 If Not IsNothing(curComment) Then
@@ -391,7 +392,6 @@ Public Class Tabelle2
                     Dim newDblValue As Double
                     Dim difference As Double
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                     Dim ok As Boolean = False
                     Dim isRole As Boolean
                     Dim uid As Integer
@@ -544,7 +544,6 @@ Public Class Tabelle2
                     Dim zeileSammelRolle As Integer = 0
                     Dim isRole As Boolean
 
-                    Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                     If RoleDefinitions.containsName(rcName) Then
                         isRole = True
                         ' hier muss jetzt bestimmt werden, wo die zugehörige Sammelrolle steht ... 
@@ -717,7 +716,7 @@ Public Class Tabelle2
                         If Not IsNothing(formProjectInfo1) Then
                             Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                         End If
-                        Call awinNeuZeichnenDiagramme(6)
+                        Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
                 Catch ex As Exception
@@ -1022,13 +1021,26 @@ Public Class Tabelle2
     Private Sub Tabelle2_SelectionChange(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.SelectionChange
 
         appInstance.EnableEvents = False
+
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim pname As String
+        Dim rcName As String = ""
+        Dim oldRCName As String = ""
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
             If Target.Cells.Count > 1 Then
                 Target = CType(Target.Cells(1, 1), Excel.Range)
                 Target.Select()
             End If
+
+            rcName = CStr(meWS.Cells(Target.Row, columnRC).value)
+
+            If visboZustaende.oldRow > 0 Then
+                oldRCName = CStr(meWS.Cells(visboZustaende.oldRow, columnRC).value)
+            End If
+
+            ' alte Row merken 
+            visboZustaende.oldRow = Target.Row
 
             If awinSettings.meEnableSorting Then
                 ' es können auch nicht zugelassene Zellen selektiert worden sein 
@@ -1112,7 +1124,17 @@ Public Class Tabelle2
             If pNameChanged And Not IsNothing(formProjectInfo1) Then
 
                 Call updateProjectInfo1(.lastProject, .lastProjectDB)
+                ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
 
+            End If
+
+            ' hier wird jetzt ggf das Role/Cost Portfolio Chart aktualisiert ..
+            If Not IsNothing(rcName) Then
+                If oldRCName <> rcName Then
+                    If rcName <> "" Then
+                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
+                    End If
+                End If
             End If
 
         End With

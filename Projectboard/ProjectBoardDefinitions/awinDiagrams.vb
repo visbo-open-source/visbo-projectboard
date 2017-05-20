@@ -1004,7 +1004,9 @@ Public Module awinDiagrams
     ''' </summary>
     ''' <param name="chtobj"></param>
     ''' <remarks></remarks>
-    Sub awinUpdateprcCollectionDiagram(ByVal chtobj As ChartObject)
+    Sub awinUpdateprcCollectionDiagram(ByVal chtobj As ChartObject, _
+                                       Optional ByVal roleCost As String = Nothing, _
+                                       Optional ByVal isRole As Boolean = True)
 
         Dim von As Integer, bis As Integer
         Dim i As Integer, m As Integer, d As Integer, r As Integer
@@ -1110,11 +1112,26 @@ Public Module awinDiagrams
         d = 1
         Dim foundDiagram As clsDiagramm
 
+        ' bestimmen, ob man sich auf der Projekt-Tafel befindet oder aber im MassEdit Resosurcen, Termine, Attribute
         Try
-            foundDiagram = DiagramList.getDiagramm(chtobjName)
-            myCollection = foundDiagram.gsCollection
-            prcTyp = foundDiagram.diagrammTyp
-            found = True
+            If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                ' bestimmen des prcTyp
+                If isRole Then
+                    prcTyp = DiagrammTypen(1)
+                Else
+                    prcTyp = DiagrammTypen(2)
+                End If
+                If Not IsNothing(roleCost) Then
+                    myCollection.Add(roleCost)
+                End If
+                found = True
+            Else
+                foundDiagram = DiagramList.getDiagramm(chtobjName)
+                myCollection = foundDiagram.gsCollection
+                prcTyp = foundDiagram.diagrammTyp
+                found = True
+            End If
+            
         Catch ex As Exception
             Exit Sub
         End Try
@@ -1207,7 +1224,7 @@ Public Module awinDiagrams
 
             ' wird benötigt, um zu entscheiden, ob es sich um eine SammelRolle handelt ... 
             Dim sumRoleShowsPlaceHolderAndAssigned As Boolean
-            
+
             For r = 1 To myCollection.Count
 
                 Dim type As Integer = -1
@@ -5782,154 +5799,169 @@ Public Module awinDiagrams
 
     ''' <summary>
     ''' zeichnet alle dargestellten Portfolio ("Pf") Diagramme neu
+    ''' der optionale Parameter wird im Fall MassenEdit benötigt - es wird dann mitgegeben, welche Rolle/Kostenart/Milestone/Phase aktualisiert werden soll 
     ''' </summary>
     ''' <param name="typus"></param>
     ''' <remarks></remarks>
-    Sub awinNeuZeichnenDiagramme(ByVal typus As Integer)
+    Sub awinNeuZeichnenDiagramme(ByVal typus As Integer, _
+                                 Optional ByVal roleCost As String = Nothing)
         Dim anz_diagrams As Integer
         Dim chtobj As ChartObject
         Dim i As Integer, p As Integer
 
+        Dim isRole As Boolean = True
+
         Dim currentSheetName As String
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             currentSheetName = arrWsNames(3)
+            roleCost = Nothing
         Else
+            ' roleCost wird übergeben, wenn man sich im modus <> graficboard befindet 
+            If Not IsNothing(roleCost) Then
+                If RoleDefinitions.containsName(roleCost) Then
+                    isRole = True
+                ElseIf CostDefinitions.containsName(roleCost) Then
+                    isRole = False
+                Else
+                    roleCost = Nothing
+                End If
+            End If
             currentSheetName = arrWsNames(5)
         End If
 
-        ' nur etwas tun, wenn ShowProjekte.count > 0 ...
-        'If ShowProjekte.Count > 0 Then
+            ' nur etwas tun, wenn ShowProjekte.count > 0 ...
+            'If ShowProjekte.Count > 0 Then
 
-        ' temporärer Check: 
-        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
-            Call MsgBox("Fehler: " & currentSheetName & " ist ungleich " & _
-                        CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
-        End If
-
-
-        ' typus:
-        ' 1 - verschieben
-        ' 2 - einfügen
-        ' 3 - löschen
-        ' 4 - betrachteten Zeitraum ändern
-        ' 5 - Stammdaten ändern
-        ' 6 - Ressourcen-Bedarfe, Kapas ändern
-        ' 7 - Kosten-Bedarfe , Budgets ändern
-        ' 8 - Selektion geändert
-        ' 9 - Cockpit wurde geladen; (alle Diagramme neuzeichnen)
-
-        ' Schutz Funktion : wenn showrangeleft = 0 und showrangeright = 0 , dann nichts tun
-        If showRangeRight - showRangeLeft >= minColumns - 1 Then
-
-            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
-
-                Dim wasProtected As Boolean = .ProtectContents
-                If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                    .Unprotect(Password:="x")
-                End If
-
-                anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
-                For i = 1 To anz_diagrams
-                    chtobj = CType(.ChartObjects(i), Excel.ChartObject)
-
-                    Select Case typus
-                        '
-                        '
-                        Case 8 ' Selection hat sich geändert 
-
-                            If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                                istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                                Call awinUpdateprcCollectionDiagram(chtobj)
-
-                            End If
-
-                        Case Else
-                            ' 1: Projekt wurde verschoben
-                            ' 2: Projekt wurde eingefügt
-                            ' 3: Projekt wurde gelöscht
-                            ' 4: betrachteter Zeitraum wurde geändert
-                            ' 5: Stammdaten wurden geändert
-                            ' 6: Ressourcen Bedarf eines existierenden Projektes wurde geändert
-                            ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
-                            ' 9: Cockpit wurde geladen; (alle Diagramme neuzeichnen)
-
-                            If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                                istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
-
-                                Call awinUpdateprcCollectionDiagram(chtobj)
+            ' temporärer Check: 
+            If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
+                Call MsgBox("Fehler: " & currentSheetName & " ist ungleich " & _
+                            CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
+            End If
 
 
-                            ElseIf istSummenDiagramm(chtobj, p) Then
+            ' typus:
+            ' 1 - verschieben
+            ' 2 - einfügen
+            ' 3 - löschen
+            ' 4 - betrachteten Zeitraum ändern
+            ' 5 - Stammdaten ändern
+            ' 6 - Ressourcen-Bedarfe, Kapas ändern
+            ' 7 - Kosten-Bedarfe , Budgets ändern
+            ' 8 - Selektion geändert
+            ' 9 - Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
-                                If p = PTpfdk.ErgebnisWasserfall Then
-                                    Call awinUpdateErgebnisDiagramm(chtobj)
+            ' Schutz Funktion : wenn showrangeleft = 0 und showrangeright = 0 , dann nichts tun
+            If showRangeRight - showRangeLeft >= minColumns - 1 Then
 
-                                ElseIf p = PTpfdk.Dependencies Or _
-                                       p = PTpfdk.FitRisiko Or _
-                                       p = PTpfdk.FitRisikoVol Or _
-                                       p = PTpfdk.ZeitRisiko Or _
-                                       p = PTpfdk.ComplexRisiko Then
+                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 
-                                    Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                    Dim wasProtected As Boolean = .ProtectContents
+                    If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                        .Unprotect(Password:="x")
+                    End If
 
-                                ElseIf p = PTpfdk.Auslastung Then
-                                    Try
-                                        Call awinUpdateAuslastungsDiagramm(chtobj)
-                                    Catch ex As Exception
+                    anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+                    For i = 1 To anz_diagrams
+                        chtobj = CType(.ChartObjects(i), Excel.ChartObject)
 
-                                    End Try
+                        Select Case typus
+                            '
+                            '
+                            Case 8 ' Selection hat sich geändert 
 
-                                ElseIf p = PTpfdk.UeberAuslastung Then
-                                    Try
-                                        Call updateAuslastungsDetailPie(chtobj, 1)
-                                    Catch ex As Exception
+                                If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                                    istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
-                                    End Try
-                                ElseIf p = PTpfdk.Unterauslastung Then
-                                    Try
-                                        Call updateAuslastungsDetailPie(chtobj, 2)
-                                    Catch ex As Exception
+                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
 
-                                    End Try
+                                End If
 
-                                    ' p = 19 
-                                ElseIf p = PTpfdk.Budget Then
-                                    Try
-                                        Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                    Catch ex As Exception
+                            Case Else
+                                ' 1: Projekt wurde verschoben
+                                ' 2: Projekt wurde eingefügt
+                                ' 3: Projekt wurde gelöscht
+                                ' 4: betrachteter Zeitraum wurde geändert
+                                ' 5: Stammdaten wurden geändert
+                                ' 6: Ressourcen Bedarf eines existierenden Projektes wurde geändert
+                                ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
+                                ' 9: Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
-                                    End Try
+                                If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                                    istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
+
+                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+
+
+                                ElseIf istSummenDiagramm(chtobj, p) Then
+
+                                    If p = PTpfdk.ErgebnisWasserfall Then
+                                        Call awinUpdateErgebnisDiagramm(chtobj)
+
+                                    ElseIf p = PTpfdk.Dependencies Or _
+                                           p = PTpfdk.FitRisiko Or _
+                                           p = PTpfdk.FitRisikoVol Or _
+                                           p = PTpfdk.ZeitRisiko Or _
+                                           p = PTpfdk.ComplexRisiko Then
+
+                                        Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+
+                                    ElseIf p = PTpfdk.Auslastung Then
+                                        Try
+                                            Call awinUpdateAuslastungsDiagramm(chtobj)
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    ElseIf p = PTpfdk.UeberAuslastung Then
+                                        Try
+                                            Call updateAuslastungsDetailPie(chtobj, 1)
+                                        Catch ex As Exception
+
+                                        End Try
+                                    ElseIf p = PTpfdk.Unterauslastung Then
+                                        Try
+                                            Call updateAuslastungsDetailPie(chtobj, 2)
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                        ' p = 19 
+                                    ElseIf p = PTpfdk.Budget Then
+                                        Try
+                                            Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                        Catch ex As Exception
+
+                                        End Try
+                                    End If
+
+
                                 End If
 
 
-                            End If
+
+                        End Select
+
+                    Next i
+
+                    ' '' wenn es geschützt war .. 
+                    If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                        .Protect(Password:="x", UserInterfaceOnly:=True, _
+                                     AllowFormattingCells:=True, _
+                                     AllowInsertingColumns:=False,
+                                     AllowInsertingRows:=True, _
+                                     AllowDeletingColumns:=False, _
+                                     AllowDeletingRows:=True, _
+                                     AllowSorting:=True, _
+                                     AllowFiltering:=True)
+                        .EnableSelection = XlEnableSelection.xlUnlockedCells
+                        .EnableAutoFilter = True
+                    End If
 
 
+                End With
+            End If
 
-                    End Select
-
-                Next i
-
-                ' '' wenn es geschützt war .. 
-                If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                    .Protect(Password:="x", UserInterfaceOnly:=True, _
-                                 AllowFormattingCells:=True, _
-                                 AllowInsertingColumns:=False,
-                                 AllowInsertingRows:=True, _
-                                 AllowDeletingColumns:=False, _
-                                 AllowDeletingRows:=True, _
-                                 AllowSorting:=True, _
-                                 AllowFiltering:=True)
-                    .EnableSelection = XlEnableSelection.xlUnlockedCells
-                    .EnableAutoFilter = True
-                End If
-
-
-            End With
-        End If
-
-        'End If
+            'End If
 
     End Sub
 
