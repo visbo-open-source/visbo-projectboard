@@ -2285,7 +2285,6 @@ Imports System.Windows
                 Else
                     tmpLabel = "Back"
                 End If
-                Call PTbackToProjectBoard(control)
 
             Case "PT2G1M2B6" ' Änderungen verwerfen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
