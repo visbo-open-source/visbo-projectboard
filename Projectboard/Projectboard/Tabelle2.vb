@@ -17,11 +17,11 @@ Public Class Tabelle2
     Private columnName As Integer = 2
 
 
-    Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
+    Private Sub Tabelle2_ActivateEvent(Optional ByVal rcName As String = Nothing) Handles Me.ActivateEvent
 
         Application.DisplayFormulaBar = False
 
-
+        Dim filterRange As Excel.Range
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
@@ -63,9 +63,21 @@ Public Class Tabelle2
 
             ''End Try
 
+
+            With meWS
+                filterRange = CType(.Range(.Cells(1, 1), .Cells(1, 6)), Excel.Range)
+            End With
+
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                'CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
+
+                ' jetzt überprüfen, ob nur eine bestimmte Rolle/Kostenart angezeigt, d.h gefiltert werden soll  
+                If Not IsNothing(rcName) Then
+                    CType(CType(meWS, Excel.Worksheet).Rows(1), Excel.Range).AutoFilter(Field:=visboZustaende.meColRC, Criteria1:=rcName)
+                End If
+
             End If
 
         Catch ex As Exception
@@ -130,7 +142,7 @@ Public Class Tabelle2
             Dim cz As Integer = 2
             Dim eof As Boolean = (cz > visboZustaende.meMaxZeile)
 
-            Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof 
+            Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
 
             Do While bedingung
                 cz = cz + 1
@@ -156,7 +168,7 @@ Public Class Tabelle2
                 CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
                 CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
             End If
-            
+
         Catch ex As Exception
 
         End Try
@@ -707,7 +719,11 @@ Public Class Tabelle2
                 '    Call MsgBox("Unterschiede: " & testValue1 & ", " & testValue2)
                 'End If
 
-                visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+                If Not IsNothing(Target.Cells(1, 1).value) Then
+                    visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+                Else
+                    visboZustaende.oldValue = ""
+                End If
 
                 ' aktualisieren der Charts 
                 Try
@@ -989,13 +1005,13 @@ Public Class Tabelle2
         End If
 
         Try
-            ' einen Select machen ...
-            Try
-                'CType(CType(meWS, Excel.Worksheet).Cells(1,1), Excel.Range).Select()
-                CType(CType(meWS, Excel.Worksheet).Cells(2, visboZustaende.meColRC), Excel.Range).Select()
-            Catch ex As Exception
+            ' einen Select machen ... muss man doch gar nicht machen , um den Filter anzuwenden ... tk 21.5.17
+            'Try
+            '    'CType(CType(meWS, Excel.Worksheet).Cells(1,1), Excel.Range).Select()
+            '    CType(CType(meWS, Excel.Worksheet).Cells(2, visboZustaende.meColRC), Excel.Range).Select()
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
             ' jetzt die Autofilter de-aktivieren ... 
             If CType(meWS, Excel.Worksheet).AutoFilterMode = True Then

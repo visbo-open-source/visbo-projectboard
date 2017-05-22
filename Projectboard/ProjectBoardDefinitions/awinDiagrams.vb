@@ -1014,7 +1014,7 @@ Public Module awinDiagrams
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
         'Dim minwert As Double, maxwert As Double
-        Dim nr_pts As Integer
+        'Dim nr_pts As Integer
         Dim diagramTitle As String
 
         Dim objektFarbe As Object
@@ -1192,11 +1192,14 @@ Public Module awinDiagrams
 
         ' Änderung tk 26.10.15 
         ' damit Diagramm-Title manuell geändert werden kann und dann beim Update , bis auf die Summe 
-        ' unverändert bleibt, wird der hier rausgelesen
-        Dim tmpstr() As String = chtobj.Chart.ChartTitle.Text.Split(New Char() {CChar("("), CChar(")")}, 20)
-        If tmpstr(0).Length > 0 Then
-            diagramTitle = tmpstr(0).TrimEnd
+        ' unverändert bleibt, wird der hier rausgelesen; das darf aber nicht im Massen-Edit sein ....
+        If Not visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            Dim tmpstr() As String = chtobj.Chart.ChartTitle.Text.Split(New Char() {CChar("("), CChar(")")}, 20)
+            If tmpstr(0).Length > 0 Then
+                diagramTitle = tmpstr(0).TrimEnd
+            End If
         End If
+        
 
 
         If prcTyp = DiagrammTypen(1) Then
@@ -1563,88 +1566,6 @@ Public Module awinDiagrams
 
             lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-            ' '' ''If isCockpitChart Then
-            ' '' ''    ' jetzt muss eine Dummy Series Collection eingeführt werde, damit das Datalabel über dem Balken angezeigt wird
-            ' '' ''    If lastSC > 1 Then
-
-            ' '' ''        maxwert = appInstance.WorksheetFunction.Max(seriesSumDatenreihe)
-
-            ' '' ''        For i = 0 To bis - von
-            ' '' ''            VarValues(i) = 0.5 * maxwert
-            ' '' ''        Next i
-
-            ' '' ''        With .SeriesCollection.NewSeries
-            ' '' ''            .name = "Dummy"
-            ' '' ''            .Interior.color = RGB(255, 255, 255)
-            ' '' ''            .Values = VarValues
-            ' '' ''            .XValues = Xdatenreihe
-            ' '' ''            .ChartType = Excel.XlChartType.xlColumnStacked
-            ' '' ''            .HasDataLabels = False
-            ' '' ''        End With
-            ' '' ''        lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
-
-            ' '' ''    End If
-            ' '' ''    With .SeriesCollection(lastSC)
-            ' '' ''        .HasDataLabels = False
-            ' '' ''        VarValues = seriesSumDatenreihe
-            ' '' ''        nr_pts = CType(.Points, Excel.Points).Count
-            ' '' ''        minwert = VarValues.Min
-            ' '' ''        maxwert = VarValues.Max
-
-            ' '' ''        mindone = False
-            ' '' ''        maxdone = False
-            ' '' ''        i = 1
-            ' '' ''        While i <= nr_pts And (mindone = False Or maxdone = False)
-
-            ' '' ''            If VarValues(i - 1) = minwert And Not mindone Then
-            ' '' ''                mindone = True
-            ' '' ''                With .Points(i)
-            ' '' ''                    .HasDataLabel = True
-            ' '' ''                    .DataLabel.text = Format(minwert, "##,##0")
-
-            ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-            ' '' ''                    Try
-
-            ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-            ' '' ''                    Catch ex As Exception
-            ' '' ''                    End Try
-
-
-            ' '' ''                End With
-            ' '' ''            ElseIf VarValues(i - 1) = maxwert And Not maxdone Then
-            ' '' ''                maxdone = True
-            ' '' ''                With .Points(i)
-            ' '' ''                    .HasDataLabel = True
-            ' '' ''                    .DataLabel.text = Format(maxwert, "##,##0")
-
-            ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-            ' '' ''                    Try
-
-            ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-            ' '' ''                    Catch ex As Exception
-            ' '' ''                    End Try
-
-            ' '' ''                End With
-
-            ' '' ''            End If
-            ' '' ''            i = i + 1
-            ' '' ''        End While
-            ' '' ''    End With
-
-            ' '' ''    ' es ist ein Mini-Diagramm, deswegen müssen folgende Einstellungen gelten:
-
-            ' '' ''    .HasLegend = False
-            ' '' ''    .HasAxis(Excel.XlAxisType.xlCategory) = False
-            ' '' ''    .HasAxis(Excel.XlAxisType.xlValue) = False
-            ' '' ''    .Axes(Excel.XlAxisType.xlCategory).HasMajorGridlines = False
-            ' '' ''    With .Axes(Excel.XlAxisType.xlValue)
-            ' '' ''        .HasMajorGridlines = False
-            ' '' ''    End With
-
-            ' '' ''ElseIf myCollection.Count > 1 Then
-
-            ' '' ''End If
-
 
             ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
             ' ansonsten werden nur die internen Kapazitäten angezeigt 
@@ -1668,7 +1589,7 @@ Public Module awinDiagrams
                             .Weight = 2
                         End With
 
-                        nr_pts = CType(.Points, Excel.Points).Count
+                        'nr_pts = CType(.Points, Excel.Points).Count
                     End With
                 End If
             End If
@@ -1700,13 +1621,13 @@ Public Module awinDiagrams
                         .Weight = 1.5
                     End With
 
-                    nr_pts = CType(.Points, Excel.Points).Count
+                    'nr_pts = CType(.Points, Excel.Points).Count
 
-                    With .Points(nr_pts)
+                    'With .Points(nr_pts)
 
-                        .HasDataLabel = False
+                    '    .HasDataLabel = False
 
-                    End With
+                    'End With
 
                 End With
 
@@ -1779,18 +1700,24 @@ Public Module awinDiagrams
         'End With
 
         ' Skalierung nur ändern, wenn erforderlich, weil der maxwert höher ist als die bisherige Skalierung ... 
-        hmxWert = Max(seriesSumDatenreihe.Max, hmxWert)
-        If hmxWert > currentScale Then
-            With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
-                .MaximumScale = hmxWert + 1
+        If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                .MaximumScaleIsAuto = True
+                '.MaximumScale = hmxWert + 1
             End With
         Else
-            With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
-                .MaximumScale = currentScale
-            End With
+            hmxWert = Max(seriesSumDatenreihe.Max, hmxWert)
+            If hmxWert > currentScale Then
+                With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                    .MaximumScale = hmxWert + 1
+                End With
+            Else
+                With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                    .MaximumScale = currentScale
+                End With
+            End If
         End If
-
-
+        
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
 

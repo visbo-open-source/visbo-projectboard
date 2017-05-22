@@ -1631,6 +1631,11 @@ Imports System.Windows
 
 
     End Sub
+    ''' <summary>
+    ''' aktiviert , je nach Modus die entsprechenden Ribbon Controls 
+    ''' </summary>
+    ''' <param name="modus"></param>
+    ''' <remarks></remarks>
     Private Sub enableControls(ByVal modus As Integer)
 
         If modus = ptModus.graficboard Then

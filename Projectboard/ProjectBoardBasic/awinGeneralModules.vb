@@ -18606,7 +18606,7 @@ Public Module awinGeneralModules
         Try
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
-                CType(CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                'CType(CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
                 CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
             End If
 
@@ -18746,7 +18746,7 @@ Public Module awinGeneralModules
         Try
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
-                CType(CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                'CType(CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
                 CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
             End If
 
@@ -18989,7 +18989,7 @@ Public Module awinGeneralModules
             Try
                 ' off setzen des AutoFilter Modus ... 
                 If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
-                    CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                    'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
                     CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
                 End If
             Catch ex As Exception
