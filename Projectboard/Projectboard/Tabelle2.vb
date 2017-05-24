@@ -19,6 +19,7 @@ Public Class Tabelle2
 
     Private Sub Tabelle2_ActivateEvent(Optional ByVal rcName As String = Nothing) Handles Me.ActivateEvent
 
+
         Application.DisplayFormulaBar = False
 
         Dim filterRange As Excel.Range
@@ -27,7 +28,7 @@ Public Class Tabelle2
 
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
 
         ' jetzt den Schutz aufheben , falls einer definiert ist 
@@ -203,7 +204,7 @@ Public Class Tabelle2
             Dim newStrValue As String = ""
 
             Dim meWB As Excel.Workbook = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
-            Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(5)), Excel.Worksheet)
+            Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
             If Target.Cells.Count = 1 Then
 
@@ -427,7 +428,7 @@ Public Class Tabelle2
 
                             If Not IsNothing(hproj) Then
                                 Dim cPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
-                                
+
                                 If Not IsNothing(cPhase) Then
 
                                     Dim phStart As Integer = hproj.Start + cPhase.relStart - 1
@@ -774,7 +775,7 @@ Public Class Tabelle2
 
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
         Dim pName As String = hproj.name
         Dim phaseNameID As String = cPhase.nameID
@@ -880,7 +881,7 @@ Public Class Tabelle2
         Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, roleName)
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
 
         If zeileOFSummaryRole >= 2 And zeileOFSummaryRole <= visboZustaende.meMaxZeile Then
@@ -995,7 +996,7 @@ Public Class Tabelle2
 
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
         appInstance.EnableEvents = False
 

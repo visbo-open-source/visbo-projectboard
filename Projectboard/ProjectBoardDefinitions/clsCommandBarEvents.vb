@@ -110,7 +110,7 @@ Public Class clsCommandBarEvents
 
 
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             tmpShapes = .Shapes
             'tmpShapes = awinSelection
 
@@ -725,7 +725,7 @@ Public Class clsCommandBarEvents
 
 
 
-    '    With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+    '    With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
     '        tmpShapes = .shapes
     '        'tmpShapes = awinSelection
 

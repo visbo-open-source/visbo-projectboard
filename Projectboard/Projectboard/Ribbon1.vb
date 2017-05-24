@@ -559,9 +559,9 @@ Imports System.Windows
 
         Dim currentWsName As String
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentWsName = arrWsNames(3)
+            currentWsName = arrWsNames(ptTables.MPT)
         Else
-            currentWsName = arrWsNames(5)
+            currentWsName = arrWsNames(ptTables.meRC)
         End If
 
         Call deleteChartsInSheet(currentWsName)
@@ -576,7 +576,7 @@ Imports System.Windows
         Dim returnValue As DialogResult
         Dim cockpitName As String
         Try
-            
+
 
             Call projektTafelInit()
 
@@ -585,7 +585,7 @@ Imports System.Windows
 
             Call awinDeSelect()
 
-            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).ChartObjects, Excel.ChartObjects).Count
 
 
             If anzDiagrams > 0 Then
@@ -608,7 +608,7 @@ Imports System.Windows
 
                 End If
 
-                
+
                 ' hier muss eventuell ein Neuzeichnen erfolgen
             Else
                 Call MsgBox("Es ist kein Chart angezeigt")
@@ -690,9 +690,9 @@ Imports System.Windows
                     ' erst alle anderen Charts löschen ... 
                     Dim currentWsName As String
                     If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                        currentWsName = arrWsNames(3)
+                        currentWsName = arrWsNames(ptTables.MPT)
                     Else
-                        currentWsName = arrWsNames(5)
+                        currentWsName = arrWsNames(ptTables.meRC)
                     End If
 
                     Call deleteChartsInSheet(currentWsName)
@@ -820,40 +820,7 @@ Imports System.Windows
 
         enableOnUpdate = True
 
-        ' für andere Zwecke ... 
-
-        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-        '    If Not kvp.Value.isConsistent Then
-        '        Call MsgBox("inkonsistenz: " & kvp.Key)
-        '        ok = False
-        '    End If
-
-        'Next
-
-        'If ok Then
-        '    Call MsgBox("keine Inkonsistenz gefunden ...")
-        'End If
-
-        'Dim anzProjekte As Integer = ShowProjekte.Liste.Count
-        'Dim anzShapes As Integer = ShowProjekte.shpListe.Count
-        'Call MsgBox("Test ---" & vbLf & _
-        '            "Projekte: " & anzProjekte & _
-        '            "Shapes  : " & anzShapes)
-
-        'Dim hws As Excel.Worksheet
-        'hws = appInstance.Worksheets(arrWsNames(11))
-        'appInstance.EnableEvents = False
-
-        'With hws
-        '    .Unprotect()
-        '    .Visible = True
-        '    .Protect()
-        'End With
-
-
-        'appInstance.EnableEvents = True
-        'hws.Activate()
+        
 
     End Sub
 
@@ -869,7 +836,7 @@ Imports System.Windows
             End If
 
         End With
-        
+
     End Sub
 
 
@@ -1066,7 +1033,7 @@ Imports System.Windows
         Catch ex As Exception
 
         End Try
-        
+
 
     End Sub
 
@@ -1460,7 +1427,7 @@ Imports System.Windows
 
         Call PBBVarianteLoeschen(control)
 
-       
+
     End Sub
 
     ''' <summary>
@@ -1598,7 +1565,7 @@ Imports System.Windows
                     confirmEdit.selectedProject = hproj.name
                     confirmEdit.Show()
 
-                    With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+                    With CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
                         .Activate()
                     End With
                     appInstance.ScreenUpdating = True
@@ -1606,7 +1573,7 @@ Imports System.Windows
                     Call MsgBox("bitte erst eine Variante anlegen ...")
                 End If
 
-                
+
 
 
             Else
@@ -2508,7 +2475,7 @@ Imports System.Windows
                 Else
                     tmpLabel = "Portfolio List"
                 End If
-   
+
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export"
@@ -3023,7 +2990,7 @@ Imports System.Windows
                 ' wenn die Charts da bleiben, kann das zu Fehlern führen ... 
                 'appInstance.ScreenUpdating = False
                 'Call awinStoreCockpit("_Last")
-                Call deleteChartsInSheet(arrWsNames(3))
+                Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
 
                 Call enableControls(ptModus.massEditRessCost)
 
@@ -3032,10 +2999,11 @@ Imports System.Windows
                 'Call saveProjectsToBackup(todoListe)
 
                 Try
+                    enableOnUpdate = False
                     Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
                     appInstance.EnableEvents = True
 
-                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(5)), Excel.Worksheet)
+                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
                         .Activate()
                     End With
 
@@ -3055,6 +3023,11 @@ Imports System.Windows
 
 
         Else
+            enableOnUpdate = True
+            If appInstance.EnableEvents = False Then
+                appInstance.EnableEvents = True
+            End If
+
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects in session!")
             Else
@@ -3126,9 +3099,14 @@ Imports System.Windows
         Call enableControls(ptModus.graficboard)
 
         appInstance.EnableEvents = False
-        enableOnUpdate = False
+        ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
+        'enableOnUpdate = False
 
-        Call deleteChartsInSheet(arrWsNames(5))
+        Call deleteChartsInSheet(arrWsNames(ptTables.meRC))
+
+        ' jetzt werden die Windows gelöscht ...
+        projectboardWindows(1).Close()
+        projectboardWindows(2).Close()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -3138,10 +3116,15 @@ Imports System.Windows
         'Call awinLoadCockpit("_Last")
         'appInstance.ScreenUpdating = True
         ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
-        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             .Activate()
         End With
 
+        ' das eigentliche, ursprüngliche Windows wird wieder angezeigt ...
+        With projectboardWindows(0)
+            .Visible = True
+            .WindowState = Excel.XlWindowState.xlMaximized
+        End With
 
     End Sub
 
@@ -3164,7 +3147,7 @@ Imports System.Windows
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
 
             'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-            
+
             Dim columnEndData As Integer = visboZustaende.meColED
             Dim columnStartData As Integer = visboZustaende.meColSD
 
@@ -3182,7 +3165,7 @@ Imports System.Windows
                 End With
             End If
 
-            
+
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
 
@@ -3237,7 +3220,7 @@ Imports System.Windows
                         .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
                                                Formula1:=validationStrings.Item("alles"))
                     End If
-                    
+
                 Catch ex As Exception
 
                 End Try
@@ -3288,7 +3271,7 @@ Imports System.Windows
     Sub PTzeileLoeschen(control As IRibbonControl)
 
         Dim currentCell As Excel.Range
-        Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+        Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
         appInstance.EnableEvents = False
 
         Dim ok As Boolean = True
@@ -3376,7 +3359,7 @@ Imports System.Windows
                     ' nichts tun 
                 End If
 
-                
+
             Else
                 Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
             End If
@@ -8274,6 +8257,177 @@ Imports System.Windows
 
     End Sub
 
+    ''' <summary>
+    ''' zeigt zwei Windows an, bestehend aus der Massen-Edit Ressourcen Tabelle und der meCharts Tabelle   
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTMEShowCharts(control As IRibbonControl)
+
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Dim currentRow As Integer
+        Dim currentColumn As Integer
+        Dim prcTyp As String
+
+        Try
+            currentRow = appInstance.ActiveCell.Row
+            currentColumn = appInstance.ActiveCell.Column
+        Catch ex As Exception
+            currentRow = 2
+            currentColumn = visboZustaende.meColRC
+        End Try
+
+        Dim rcName As String = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
+        If IsNothing(rcName) Then
+            rcName = ""
+        End If
+
+        Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
+            currentRow = currentRow + 1
+            rcName = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
+            If IsNothing(rcName) Then
+                rcName = ""
+            End If
+        Loop
+
+        ' jetzt ist entweder was gefunden oder es ist komplett ohne Werte 
+        If rcName = "" Then
+            currentRow = 2
+            Try
+                prcTyp = DiagrammTypen(1)
+                rcName = RoleDefinitions.getRoledef(1).name
+            Catch ex As Exception
+                prcTyp = DiagrammTypen(1)
+                rcName = ""
+            End Try
+
+        Else
+            If RoleDefinitions.containsName(rcName) Then
+                prcTyp = DiagrammTypen(1)
+            ElseIf CostDefinitions.containsName(rcName) Then
+                prcTyp = DiagrammTypen(2)
+            Else
+                prcTyp = DiagrammTypen(1)
+                rcName = RoleDefinitions.getRoledef(1).name
+            End If
+
+        End If
+
+
+        Dim buildcustomView As Boolean = True
+        Dim viewName As String = viewNames(1)
+        Dim visboWorkbook As Excel.Workbook = appInstance.Workbooks.Item(myProjektTafel)
+
+
+        projectboardWindows(0) = appInstance.ActiveWindow
+
+        ' Aus dem aktuellen Window ein benanntes Window machen 
+        projectboardWindows(1) = appInstance.ActiveWindow.NewWindow
+        With projectboardWindows(1)
+            .WindowState = Excel.XlWindowState.xlNormal
+            .EnableResize = True
+            .SplitRow = 1
+            .FreezePanes = True
+            .DisplayFormulas = False
+            .DisplayHeadings = False
+            .DisplayGridlines = True
+            .GridlineColor = RGB(220, 220, 220)
+            .DisplayWorkbookTabs = False
+            .Caption = windowNames(1)
+        End With
+
+        ' Aufbau des Windows windowNames(4): Charts
+        projectboardWindows(2) = appInstance.ActiveWindow.NewWindow
+        visboWorkbook.Worksheets.Item(arrWsNames(ptTables.meCharts)).activate()
+        With projectboardWindows(2)
+            .WindowState = Excel.XlWindowState.xlNormal
+            .EnableResize = True
+            .DisplayGridlines = False
+            .DisplayHeadings = False
+            .DisplayRuler = False
+            .DisplayVerticalScrollBar = True
+            .DisplayHorizontalScrollBar = True
+            .DisplayWorkbookTabs = False
+            .Caption = windowNames(4)
+        End With
+
+        ' jetzt das Ursprungs-Window ausblenden ...
+        For Each tmpWindow As Excel.Window In visboWorkbook.Windows
+            If (CStr(tmpWindow.Caption) <> windowNames(4)) And (CStr(tmpWindow.Caption) <> windowNames(1)) Then
+                tmpWindow.Visible = False
+            End If
+        Next
+
+        ' jetzt die verbleibenden arrangieren ...
+        visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
+
+        ' jetzt die Größen anpassen 
+        With projectboardWindows(1)
+            .Top = 0
+            .Height = 3 / 4 * maxScreenHeight
+        End With
+
+        ' jetzt die Größen anpassen 
+        With projectboardWindows(2)
+            .Top = 3 / 4 * maxScreenHeight + 3
+            .Height = 1 / 4 * maxScreenHeight - 3
+        End With
+
+        ' Check: was ist das aktuelle Sheet 
+        'Dim checkSheet As Object = projectboardWindows(1).ActiveSheet
+
+        ' jetzt das Mass-Edit Window aktivieren 
+        projectboardWindows(1).Activate()
+        With CType(projectboardWindows(1).ActiveSheet, Excel.Worksheet)
+            CType(.Cells(currentRow, currentColumn), Excel.Range).Activate()
+        End With
+
+        Dim anz As Integer = appInstance.ActiveWorkbook.Windows.Count
+
+        'projectboardWindows(1).Close()
+        'projectboardWindows(2).Close()
+
+        'projectboardWindows(1) = Nothing
+        'projectboardWindows(2) = Nothing
+
+        'With appInstance.ActiveWindow
+        '    .WindowState = Excel.XlWindowState.xlMaximized
+        'End With
+
+        ' jetzt werden die Charts ggf erzeugt ...  
+        If CType(CType(projectboardWindows(2).ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count = 0 Then
+            ' sie müssen erzeugt werden
+
+            ' erst das PRCCollectionChart ...
+            Dim repObj As Excel.ChartObject = Nothing
+            Dim chWidth As Double = projectboardWindows(2).UsableWidth / 4 - 2
+            Dim chHeight As Double = projectboardWindows(2).UsableHeight - 10
+            Dim chTop As Double = 5
+            Dim chLeft As Double = 3 * chWidth
+            Dim myCollection As New Collection
+
+            myCollection.Add(rcName)
+
+            Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
+                                                                   chWidth, chHeight, False, prcTyp, True)
+
+        Else
+            ' sie sind schon da 
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+        enableOnUpdate = True
+
+    End Sub
+
     Sub PT0ShowAbhaengigkeiten(control As IRibbonControl)
 
         Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -8814,7 +8968,7 @@ Imports System.Windows
             End If
         End If
 
-        
+
     End Sub
 
 
@@ -8883,7 +9037,7 @@ Imports System.Windows
             End If
         End If
 
-        
+
     End Sub
 
 
@@ -10451,7 +10605,7 @@ Imports System.Windows
                         Dim name2 As String = CStr(usedRollen2.Item(ix))
                         atleastOne = True
                     End If
-                    
+
                 Next
             End If
 
@@ -10793,7 +10947,7 @@ Imports System.Windows
             showRangeLeft = 0
             showRangeRight = 0
         End If
-        
+
         enableOnUpdate = True
 
     End Sub

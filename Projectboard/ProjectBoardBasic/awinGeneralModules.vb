@@ -889,31 +889,46 @@ Public Module awinGeneralModules
             autoSzenarioNamen(2) = "2. Optimum"
             autoSzenarioNamen(3) = "3. Optimum"
 
-            windowNames(0) = "Cockpit Phasen"
-            windowNames(1) = "Cockpit Rollen"
-            windowNames(2) = "Cockpit Kosten"
-            windowNames(3) = "Cockpit Wertigkeit"
-            windowNames(4) = "Cockpit Ergebnisse"
-            windowNames(5) = "Projekt Tafel"
+            windowNames(0) = "VISBO Multiprojekt-Tafel"
+            windowNames(1) = "Ressourcen und Kosten"
+            windowNames(2) = "Termine"
+            windowNames(3) = "Attribute"
+            windowNames(4) = "Charts"
+            windowNames(5) = "Diverses"
+
+            viewNames(0) = "Projectboard"
+            viewNames(1) = "Edit"
+            viewNames(2) = "undefined"
+            viewNames(3) = "undefined"
+
+            projectboardWindows(0) = Nothing
+            projectboardWindows(1) = Nothing
+            projectboardWindows(2) = Nothing
+            projectboardWindows(3) = Nothing
+            projectboardWindows(4) = Nothing
+
 
             '
             ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
-            '
-            arrWsNames(1) = "Portfolio"
-            arrWsNames(2) = "Vorlage"
-            arrWsNames(3) = "Tabelle1"                          ' Multiprojekt-Tafel 
-            arrWsNames(4) = "Einstellungen"
-            arrWsNames(5) = "Tabelle2"                          ' Edit Ressourcen
-            arrWsNames(6) = "Tabelle3"                          ' Edit Termine
-            arrWsNames(7) = "Darstellungsklassen"               ' nimmt für die Laufzeit die Darstellungsklassen auf 
-            arrWsNames(8) = "Phasen-Mappings"
-            arrWsNames(9) = "Tabelle4"                          ' Edit Attribute 
-            arrWsNames(10) = "Meilenstein-Mappings"
-            arrWsNames(11) = "Projekt editieren"
-            arrWsNames(12) = "Lizenzen"
-            arrWsNames(13) = "Projekt iErloese"
-            arrWsNames(14) = "Objekte"
-            arrWsNames(15) = "missing Definitions"
+            ' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
+            arrWsNames(1) = "Portfolio" ' depr
+            arrWsNames(2) = "Vorlage" ' depr
+            ' arrWsNames(3) = 
+            arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
+            arrWsNames(4) = "Einstellungen"                ' in Customization File 
+            ' arrWsNames(5) = 
+            arrWsNames(ptTables.meRC) = "meRC"                          ' Edit Ressourcen
+            arrWsNames(6) = "meTE"                          ' Edit Termine
+            arrWsNames(7) = "Darstellungsklassen"           ' wird in awinsettypen hinter MPT kopiert; nimmt für die Laufzeit die Darstellungsklassen auf 
+            arrWsNames(8) = "Phasen-Mappings"               ' in Customization
+            arrWsNames(9) = "meAT"                          ' Edit Attribute 
+            arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
+            ' arrWsNames(11) = 
+            arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
+            arrWsNames(12) = "pfCharts"                     ' vorbereitet: Portfolio Charts 
+            arrWsNames(13) = "prCharts"                     ' vorbereitet: Projekt Charts 
+            arrWsNames(14) = "Objekte" ' depr
+            arrWsNames(15) = "missing Definitions"          ' in Customization File 
 
 
             awinSettings.applyFilter = False
@@ -946,13 +961,13 @@ Public Module awinGeneralModules
 
 
                     If .WindowState = Excel.XlWindowState.xlMaximized Then
-                        maxScreenHeight = .Height
-                        maxScreenWidth = .Width
+                        maxScreenHeight = .UsableHeight
+                        maxScreenWidth = .UsableWidth
                     Else
                         Dim formerState As Excel.XlWindowState = .WindowState
                         .WindowState = Excel.XlWindowState.xlMaximized
-                        maxScreenHeight = .Height
-                        maxScreenWidth = .Width
+                        maxScreenHeight = .UsableHeight
+                        maxScreenWidth = .UsableWidth
                         .WindowState = formerState
                     End If
 
@@ -1190,7 +1205,7 @@ Public Module awinGeneralModules
 
                     ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
                     appInstance.EnableEvents = False
-                    CType(appInstance.Worksheets(arrWsNames(7)), _
+                    CType(appInstance.Workbooks(myCustomizationFile).Worksheets(arrWsNames(7)), _
                     Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
 
                     ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
@@ -1200,7 +1215,7 @@ Public Module awinGeneralModules
 
                     ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
                     appearanceDefinitions.Clear()
-                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
+                    wsName7810 = CType(appInstance.Workbooks(myProjektTafel).Worksheets(arrWsNames(7)), _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
@@ -2417,7 +2432,7 @@ Public Module awinGeneralModules
             CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook).Activate()
         End If
 
-        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), _
+        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
         Dim tmpRange As Excel.Range
@@ -18984,7 +18999,7 @@ Public Module awinGeneralModules
         ' das File 
         Try
             currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
-            currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(5)), Excel.Worksheet)
+            currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
             Try
                 ' off setzen des AutoFilter Modus ... 
@@ -19885,12 +19900,12 @@ Public Module awinGeneralModules
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
             ' nur dann befindet sich das Programm im MassEdit Sheet 
 
             'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
             Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
             If IsNothing(roleNames) Then
                 treatAllRoles = True
@@ -19976,12 +19991,12 @@ Public Module awinGeneralModules
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
             ' nur dann befindet sich das Programm im MassEdit Sheet 
 
             'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
             Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
             If IsNothing(roleCostNames) Then
                 ' nichts tun 
@@ -20121,11 +20136,11 @@ Public Module awinGeneralModules
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(5) Then
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
             ' nur dann befindet sich das Programm im MassEdit Sheet 
 
             Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
             If IsNothing(pName) Or IsNothing(validationString) Then
                 ' nichts tun 
@@ -20207,7 +20222,7 @@ Public Module awinGeneralModules
         Dim chckRCName As String
 
         Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
         With meWS
             chckName = CStr(meWS.Cells(curZeile, 2).value)
@@ -20304,7 +20319,7 @@ Public Module awinGeneralModules
                     '
                     ' auf die Suche gehen ... 
                     Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-                    .Worksheets(arrWsNames(5)), Excel.Worksheet)
+                    .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
                     With meWS
                         chckName = CStr(meWS.Cells(curZeile, 2).value)

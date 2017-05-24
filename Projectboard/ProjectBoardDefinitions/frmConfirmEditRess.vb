@@ -54,7 +54,7 @@ Public Class frmConfirmEditRess
 
             Try
 
-                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Microsoft.Office.Interop.Excel.Worksheet)
+                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Microsoft.Office.Interop.Excel.Worksheet)
                     tmpShapes = .Shapes
                     shpElement = tmpShapes.Item(hproj.name)
                     shpElement.Select()
@@ -89,7 +89,7 @@ Public Class frmConfirmEditRess
 
     Private Sub frmConfirmEditRess_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
-        
+
         frmCoord(PTfrm.editRess, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.editRess, PTpinfo.left) = Me.Left
 
@@ -101,7 +101,7 @@ Public Class frmConfirmEditRess
             appInstance.ScreenUpdating = False
         End If
 
-        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
             .activate()
         End With
 

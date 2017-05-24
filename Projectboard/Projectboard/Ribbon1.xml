@@ -370,7 +370,8 @@
       <tab id="PTMEC" getVisible ="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PTMECG1" label=" ">
           <!--label="Rollen und Kosten"-->
-          <button id="PTMEC1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>
+          <button id="PTMEC1" getLabel ="bestimmeLabel" onAction="PTMEShowCharts"  supertip="es werden für das Editieren 2 Portfolio Charts angezeigt."/>
+          <!--<button id="PTMEC1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>-->
           <!--label="Budget/Kosten"-->
           <button id="PTMEC2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>
           <!--label="Info Gewinn/Verlust"-->

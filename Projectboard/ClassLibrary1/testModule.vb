@@ -3328,7 +3328,7 @@ Public Module testModule
                                     .GridlineColor = RGB(255, 255, 255)
                                 End With
 
-                                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), xlNS.Worksheet)
 
 
 
@@ -3472,7 +3472,7 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                    With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), xlNS.Worksheet)
                                         rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
                                         colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
@@ -4850,7 +4850,7 @@ Public Module testModule
                     msgtxt = " Report mit " & tatsErstellt & " Seiten erstellt !"
                 End If
             End If
-                e.Result = msgtxt
+            e.Result = msgtxt
             If worker.WorkerReportsProgress Then
                 worker.ReportProgress(0, e)
             End If
@@ -4941,7 +4941,7 @@ Public Module testModule
 
                                     Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(kvp.Value.name, kvp.Value.variantName)
                                     writeProtections.upsert(wpItem)
-                                    
+
 
                                 Else
                                     If awinSettings.englishLanguage Then
@@ -5315,7 +5315,7 @@ Public Module testModule
 
                                 End If
                             End If
-                            
+
                         Catch ex As Exception
 
                             ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
@@ -5665,7 +5665,7 @@ Public Module testModule
 
 
 
-            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
 
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 '
@@ -5841,7 +5841,7 @@ Public Module testModule
                         Try
                             'Call Sleep(100)
                             .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                                  Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                                  Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -7224,7 +7224,7 @@ Public Module testModule
 
         Call awinDeleteProjectChildShapes(0)
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), xlNS.Worksheet)
 
             allShapes = .Shapes
             projektShape = allShapes.Item(hproj.name)
@@ -7617,7 +7617,7 @@ Public Module testModule
         ' wird für Bewertung Termine und Meilensteine benötigt 
 
         unterschiede = hproj.listOfDifferences(vglproj, True, 0)
-       
+
 
 
         ' jetzt werden die aktuellen bzw Vergleichswerte der finanziellen KPIs bestimmt 
@@ -9711,7 +9711,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -9743,10 +9743,16 @@ Public Module testModule
                 Exit Sub
             Else
                 With appInstance.Charts.Add
-                    ' remove extra series
-                    Do Until .SeriesCollection.Count = 0
-                        .SeriesCollection(1).Delete()
-                    Loop
+                    ' remove old series
+                    Try
+                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Do While anz > 0
+                            .SeriesCollection(1).Delete()
+                            anz = anz - 1
+                        Loop
+                    Catch ex As Exception
+
+                    End Try
 
                     .HasAxis(Excel.XlAxisType.xlCategory) = True
                     .HasAxis(Excel.XlAxisType.xlValue) = True
@@ -9796,7 +9802,7 @@ Public Module testModule
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -10418,7 +10424,7 @@ Public Module testModule
 
 
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -10782,7 +10788,7 @@ Public Module testModule
                     Try
                         'Call Sleep(100)
                         .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
-                          Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
+                          Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                         achieved = True
                     Catch ex As Exception
                         errmsg = ex.Message
