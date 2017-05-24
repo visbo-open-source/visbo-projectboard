@@ -3108,6 +3108,9 @@ Imports System.Windows
         projectboardWindows(1).Close()
         projectboardWindows(2).Close()
 
+        projectboardWindows(1) = Nothing
+        projectboardWindows(2) = Nothing
+
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
@@ -8387,16 +8390,6 @@ Imports System.Windows
         End With
 
         Dim anz As Integer = appInstance.ActiveWorkbook.Windows.Count
-
-        'projectboardWindows(1).Close()
-        'projectboardWindows(2).Close()
-
-        'projectboardWindows(1) = Nothing
-        'projectboardWindows(2) = Nothing
-
-        'With appInstance.ActiveWindow
-        '    .WindowState = Excel.XlWindowState.xlMaximized
-        'End With
 
         ' jetzt werden die Charts ggf erzeugt ...  
         If CType(CType(projectboardWindows(2).ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count = 0 Then
