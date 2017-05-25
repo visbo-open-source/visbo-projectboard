@@ -366,9 +366,12 @@ Public Class Tabelle2
                                             ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                             Dim newCostID As Integer = CostDefinitions.getCostdef(newStrValue).UID
                                             Dim cCost As clsKostenart = cPhase.getCost(visboZustaende.oldValue)
-                                            hproj.rcLists.removeCP(cCost.KostenTyp, cPhase.nameID)
-                                            cCost.KostenTyp = newCostID
-                                            hproj.rcLists.addCP(newCostID, cPhase.nameID)
+                                            If IsNothing(cCost) Then
+                                            Else
+                                                hproj.rcLists.removeCP(cCost.KostenTyp, cPhase.nameID)
+                                                cCost.KostenTyp = newCostID
+                                                hproj.rcLists.addCP(newCostID, cPhase.nameID)
+                                            End If
                                             kostenChanged = True
                                         Else
                                             ' es kam eine neue Kostenart hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,

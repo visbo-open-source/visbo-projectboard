@@ -1564,8 +1564,10 @@ Public Module awinGeneralModules
 
                                 ' ist die Phase eine special Phase ? 
                                 Try
-                                    If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
-                                        specialListofPhases.Add(hphase.name, hphase.name)
+                                    If Not IsNothing(CType(c.Offset(0, 2), Excel.Range).Value) Then
+                                        If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
+                                            specialListofPhases.Add(hphase.name, hphase.name)
+                                        End If
                                     End If
                                 Catch ex As Exception
                                 End Try
@@ -8180,9 +8182,13 @@ Public Module awinGeneralModules
                             End If
 
                             ' hier wird die Rollen bzw Kosten Information ausgelesen
-                            Dim hname As String
+                            Dim hname As String = ""
                             Try
-                                hname = CType(zelle.Offset(0, 1).Value, String).Trim
+
+                                If Not IsNothing(CType(zelle.Offset(0, 1), Excel.Range).Value) Then
+                                    hname = CType(CType(zelle.Offset(0, 1), Excel.Range).Value, String).Trim
+                                End If
+
                             Catch ex1 As Exception
                                 hname = ""
                             End Try

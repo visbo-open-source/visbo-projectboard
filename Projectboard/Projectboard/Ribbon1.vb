@@ -3102,20 +3102,32 @@ Imports System.Windows
         ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
         'enableOnUpdate = False
 
+        appInstance.ScreenUpdating = False
         Call deleteChartsInSheet(arrWsNames(ptTables.meRC))
 
-        ' jetzt werden die Windows gelöscht ...
-        projectboardWindows(1).Close()
-        projectboardWindows(2).Close()
+        ' das eigentliche, ursprüngliche Windows wird wieder angezeigt ...
+        With projectboardWindows(0)
+            .Activate()
+            .Visible = True
+            .WindowState = Excel.XlWindowState.xlMaximized
+        End With
 
-        projectboardWindows(1) = Nothing
-        projectboardWindows(2) = Nothing
+        ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
+        If Not IsNothing(projectboardWindows(1)) Then
+            projectboardWindows(1).Close()
+            projectboardWindows(1) = Nothing
+        End If
+
+        If Not IsNothing(projectboardWindows(2)) Then
+            projectboardWindows(2).Close()
+            projectboardWindows(2) = Nothing
+        End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
         ' tk , das Dalassen der Charts kann zu Fehlern führen ... 
-        'appInstance.ScreenUpdating = False
+
         'Call awinLoadCockpit("_Last")
         'appInstance.ScreenUpdating = True
         ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
@@ -3123,11 +3135,7 @@ Imports System.Windows
             .Activate()
         End With
 
-        ' das eigentliche, ursprüngliche Windows wird wieder angezeigt ...
-        With projectboardWindows(0)
-            .Visible = True
-            .WindowState = Excel.XlWindowState.xlMaximized
-        End With
+        appInstance.ScreenUpdating = True
 
     End Sub
 

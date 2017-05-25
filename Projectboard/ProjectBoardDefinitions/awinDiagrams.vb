@@ -1027,7 +1027,7 @@ Public Module awinDiagrams
         Dim found As Boolean
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
-        ' Versuch der Korrektur ...
+        ' '' Versuch der Korrektur ...
         Dim tmpName As String = chtobj.Name
         Dim curShtName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
         found = False
@@ -1039,11 +1039,12 @@ Public Module awinDiagrams
             End If
         Next
 
+        chtobj.Activate()
         If Not found Then
             Call MsgBox("What the hell ....")
         End If
 
-        ' Ende der Korrektur 
+        ' '' Ende der Korrektur 
 
         'Dim minwert As Double, maxwert As Double
         'Dim nr_pts As Integer
@@ -1443,6 +1444,17 @@ Public Module awinDiagrams
                     End If
                     msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
 
+                End If
+
+                ' Verzögere den aktuellen Thread ...
+                ' aber nur wenn man im Modus Massen-Edit ist ... weil manchmal das PRogramm abtürzt ...
+                ' und umso mehr , je mehr Zeilen man hat ... 
+                If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    Dim verzoegerung As Integer = 2 * visboZustaende.meMaxZeile
+                    If verzoegerung > 1200 Then
+                        verzoegerung = 1200
+                    End If
+                    Call Sleep(verzoegerung)
                 End If
 
 

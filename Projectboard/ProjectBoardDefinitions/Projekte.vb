@@ -15838,7 +15838,12 @@ Public Module Projekte
                     projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
                 myshape = projectShape
             Else
-                myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
+                If IsNothing(CType(CType(projectShape, Excel.Shape).GroupItems, Excel.GroupShapes)) Then
+                    myshape = projectShape
+                Else
+                    myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
+                End If
+
             End If
         Catch ex As Exception
 
