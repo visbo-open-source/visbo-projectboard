@@ -8408,13 +8408,18 @@ Imports System.Windows
             Dim chWidth As Double = projectboardWindows(2).UsableWidth / 4 - 2
             Dim chHeight As Double = projectboardWindows(2).UsableHeight - 10
             Dim chTop As Double = 5
-            Dim chLeft As Double = 3 * chWidth
+            Dim chLeft As Double = 2 * chWidth
             Dim myCollection As New Collection
 
             myCollection.Add(rcName)
 
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
                                                                    chWidth, chHeight, False, prcTyp, True)
+
+            ' jetzt das Portfolio Chart Budget anzeigen ... 
+            'Dim obj As Excel.ChartObject = Nothing
+            'chLeft = 3 * chWidth
+            'Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
         Else
             ' sie sind schon da 

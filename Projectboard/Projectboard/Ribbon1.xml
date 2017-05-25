@@ -246,7 +246,7 @@
               <!--label="Profit/Loss"-->
               <button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
               <menuSeparator id="PTXG1s3"/>
-              <!--label="Capazity Utilization"-->
+              <!--label="Capacity Utilization"-->
               <button id="PTXG1B3" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
               <menuSeparator id="PTXG1s2"/>
               <!--label="Strategie/Risiko/Marge"-->
