@@ -964,15 +964,18 @@ Public Module awinGeneralModules
                         maxScreenHeight = .UsableHeight
                         maxScreenWidth = .UsableWidth
                     Else
-                        Dim formerState As Excel.XlWindowState = .WindowState
+                        'Dim formerState As Excel.XlWindowState = .WindowState
                         .WindowState = Excel.XlWindowState.xlMaximized
                         maxScreenHeight = .UsableHeight
                         maxScreenWidth = .UsableWidth
-                        .WindowState = formerState
+                        '.WindowState = formerState
                     End If
 
 
                 End With
+
+                ' jetzt das ProjectboardWindows (0) setzen 
+                projectboardWindows(0) = appInstance.ActiveWindow
 
                 miniHeight = maxScreenHeight / 6
                 miniWidth = maxScreenWidth / 10
@@ -7463,12 +7466,19 @@ Public Module awinGeneralModules
 
                         '   Varianten-Beschreibung
                         Try
-                            hproj.variantDescription = CType(.Range("Variant_Description").Value, String)
-                            If Not IsNothing(hproj.variantDescription) Then
-                                hproj.variantDescription = hproj.variantDescription.Trim
-                            Else
-                                hproj.variantDescription = ""
+                            hproj.variantDescription = ""
+                            Dim tmprng As Excel.Range = CType(.Range("Variant_Description"), Excel.Range)
+                            If Not IsNothing(tmprng) Then
+                                If Not IsNothing(tmprng.Value) Then
+                                    hproj.variantDescription = CType(.Range("Variant_Description").Value, String)
+                                End If
                             End If
+
+                            'If Not IsNothing(hproj.variantDescription) Then
+                            '    hproj.variantDescription = hproj.variantDescription.Trim
+                            'Else
+                            '    hproj.variantDescription = ""
+                            'End If
 
                         Catch ex1 As Exception
                             hproj.variantDescription = ""

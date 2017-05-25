@@ -1027,7 +1027,24 @@ Public Module awinDiagrams
         Dim found As Boolean
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
-        
+        ' Versuch der Korrektur ...
+        Dim tmpName As String = chtobj.Name
+        Dim curShtName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
+        found = False
+        For i = 1 To CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+            Dim tmpchtobj As Excel.ChartObject = CType(CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Item(i), Excel.ChartObject)
+            If tmpchtobj.Name = tmpName Then
+                found = True
+                chtobj = tmpchtobj
+            End If
+        Next
+
+        If Not found Then
+            Call MsgBox("What the hell ....")
+        End If
+
+        ' Ende der Korrektur 
+
         'Dim minwert As Double, maxwert As Double
         'Dim nr_pts As Integer
         Dim diagramTitle As String
