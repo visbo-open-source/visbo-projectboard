@@ -94,7 +94,7 @@ Partial Class frmProjectInfo1
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmProjectInfo1"
-        Me.Text = "frmProjectInfo1"
+        Me.Text = "Projekt-Info"
         Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()

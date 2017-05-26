@@ -111,9 +111,9 @@ Imports System.Windows
 
         With storeConstellationFrm
             If awinSettings.englishLanguage Then
-                .Text = "store Scenario(s) in Datenbase"
+                .Text = "store Portfolio(s) in Datenbase"
             Else
-                .Text = "Szenario(s) in Datenbank speichern"
+                .Text = "Portfolio(s) in Datenbank speichern"
             End If
 
             .constellationsToShow = projectConstellations
@@ -1719,30 +1719,30 @@ Imports System.Windows
 
             Case "PT3G1M1" ' Planelemente visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Phasen/Meilensteine"
+                    tmpLabel = "Phasen/Meilensteine..."
                 Else
-                    tmpLabel = "Phases/Milestones"
+                    tmpLabel = "Phases/Milestones..."
                 End If
 
             Case "PTXG1B4" ' Auswahl über Namen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
+                    tmpLabel = "Auswahl über Namen..."
                 Else
-                    tmpLabel = "Select by Names"
+                    tmpLabel = "Select by Names..."
                 End If
 
             Case "PTXG1B5" ' Auswahl über Projekt-Struktur
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Auswahl über Projekt-Struktur..."
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Select by Structure..."
                 End If
 
-            Case "PTOPTB1" ' Optimieren hier wir onAction gemacht
+            Case "PTOPTB1" ' Optimieren 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Optimieren"
+                    tmpLabel = "Portfolio Optimieren"
                 Else
-                    tmpLabel = "Optimization"
+                    tmpLabel = "Portfolio Optimization"
                 End If
 
             Case "PTPf" ' Charts
@@ -1761,16 +1761,16 @@ Imports System.Windows
 
             Case "PTXG1B6" ' Auswahl über Namen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
+                    tmpLabel = "Auswahl über Namen..."
                 Else
-                    tmpLabel = "Select by Names"
+                    tmpLabel = "Select by Names..."
                 End If
 
             Case "PTXG1B7" ' Auswahl über Hierarchie
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Auswahl über Projekt-Struktur..."
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Select by Structure..."
                 End If
 
             Case "PTXG1B10" ' größter Engpass
@@ -1838,23 +1838,23 @@ Imports System.Windows
 
             Case "PT0G1M0" ' Planelemente visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Phasen/Meilensteine visualisieren"
+                    tmpLabel = "Phasen/Meilensteine visualisieren..."
                 Else
-                    tmpLabel = "Visualize Phases/Milestones"
+                    tmpLabel = "Visualize Phases/Milestones..."
                 End If
 
-            Case "PT0G1B8" ' Auswahl über Namen
+            Case "PT0G1B8" ' 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt Filter"
+                    tmpLabel = "Projekt Filter..."
                 Else
-                    tmpLabel = "Project Filter"
+                    tmpLabel = "Project Filter..."
                 End If
 
             Case "PT0G1B9" ' Auswahl über Projekt-Struktur
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Auswahl über Projekt-Struktur..."
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Select by Structure..."
                 End If
 
             Case "PT3G1B5" ' Zeit-Maschine
@@ -1965,7 +1965,7 @@ Imports System.Windows
                     tmpLabel = "Profit"
                 End If
 
-            Case "PT7" ' Cockpit
+            Case "PT0G1B" ' Cockpit
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Cockpit"
                 Else
@@ -1974,16 +1974,16 @@ Imports System.Windows
 
             Case "PT0G1M3B1" ' Cockpit visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Cockpit laden"
+                    tmpLabel = "Cockpit laden..."
                 Else
-                    tmpLabel = "Load Cockpit"
+                    tmpLabel = "Load Cockpit..."
                 End If
 
             Case "PT0G1M3B2" ' Cockpit speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Chart-Set sichern als Cockpit"
+                    tmpLabel = "Chart-Set sichern als Cockpit..."
                 Else
-                    tmpLabel = "Save current Chart-Set as Cockpit"
+                    tmpLabel = "Save current Chart-Set as Cockpit..."
                 End If
 
             Case "PT0G1M3B3" ' Cockpit-Charts löschen
@@ -2009,16 +2009,16 @@ Imports System.Windows
 
             Case "PT1G1M0" ' Report-Profil definieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Report definieren"
+                    tmpLabel = "Report definieren..."
                 Else
-                    tmpLabel = "Define a Report"
+                    tmpLabel = "Define a Report..."
                 End If
 
             Case "PT1G1M01" ' Einzelprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt Report"
+                    tmpLabel = "Projekt Report definieren..."
                 Else
-                    tmpLabel = "Project Report"
+                    tmpLabel = "Define Project Report..."
                 End If
 
             Case "PT1G1M01B0" ' Typ I
@@ -2037,23 +2037,23 @@ Imports System.Windows
 
             Case "PT1G1M1B1" ' Auswahl über Namen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
+                    tmpLabel = "Auswahl über Namen..."
                 Else
-                    tmpLabel = "Select by Names"
+                    tmpLabel = "Select by Names..."
                 End If
 
             Case "PT1G1M1B2" ' Auswahl über Hierarchie
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Auswahl über Projekt-Struktur..."
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Select by Structure..."
                 End If
 
             Case "PT1G1M02" ' Multiprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio Report"
+                    tmpLabel = "Portfolio Report definieren..."
                 Else
-                    tmpLabel = "Portfolio Report"
+                    tmpLabel = "Define Portfolio Report..."
                 End If
 
             Case "PT1G1B2" ' Typ I
@@ -2072,16 +2072,16 @@ Imports System.Windows
 
             Case "PT1G1M2B1" ' Auswahl über Namen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
+                    tmpLabel = "Auswahl über Namen..."
                 Else
-                    tmpLabel = "Select by Names"
+                    tmpLabel = "Select by Names..."
                 End If
 
             Case "PT1G1M2B2" ' Auswahl über Hierarchie
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Auswahl über Projekt-Struktur..."
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Select by Structure..."
                 End If
 
             Case "PT1G1B4" ' letztes Report-Profil speichern
@@ -2093,9 +2093,16 @@ Imports System.Windows
 
             Case "PT1G1B5" ' Report-Profil ausführen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "vordefinierten Report erstellen"
+                    tmpLabel = "Report erstellen..."
                 Else
-                    tmpLabel = "Select pre-defined Report"
+                    tmpLabel = "Select Report..."
+                End If
+
+            Case "PT1G1M0B1" ' Report-Profil ausführen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Report erstellen..."
+                Else
+                    tmpLabel = "Select Report..."
                 End If
 
             Case "PT1G1B1" ' Report Sprache
@@ -2135,16 +2142,16 @@ Imports System.Windows
 
             Case "PT2G1M0B0" ' Neu auf Basis Vorlage
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neu auf Basis Vorlage"
+                    tmpLabel = "Neu auf Basis Vorlage..."
                 Else
-                    tmpLabel = "Based on template"
+                    tmpLabel = "Based on template..."
                 End If
 
             Case "PT2G1M0B1" ' Neu auf Basis Projekt
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neu auf Basis Projekt"
+                    tmpLabel = "Neu auf Basis Projekt..."
                 Else
-                    tmpLabel = "Based on project"
+                    tmpLabel = "Based on project..."
                 End If
 
             Case "PT2G1M1" ' Variante
@@ -2156,23 +2163,23 @@ Imports System.Windows
 
             Case "PT2G1M1B0" ' neue Variante anlegen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neue Variante"
+                    tmpLabel = "Neue Variante..."
                 Else
-                    tmpLabel = "New Variant"
+                    tmpLabel = "New Variant..."
                 End If
 
             Case "PT2G1M1B1" ' Variante aktivieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante aktivieren"
+                    tmpLabel = "Variante aktivieren..."
                 Else
-                    tmpLabel = "Activate Variant"
+                    tmpLabel = "Activate Variant..."
                 End If
 
             Case "PT2G1M1B2" ' Variante löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante löschen"
+                    tmpLabel = "Variante löschen..."
                 Else
-                    tmpLabel = "Delete Variant"
+                    tmpLabel = "Delete Variant..."
                 End If
 
             Case "PT2G1M1B3" ' Variante zum Standard machen
@@ -2295,24 +2302,24 @@ Imports System.Windows
 
             Case "PT3G1M2" ' Beschriften
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Beschriftungen"
+                    tmpLabel = "Beschriftungen..."
                 Else
-                    tmpLabel = "Annotations"
+                    tmpLabel = "Annotations..."
                 End If
 
-            Case "PT2G1B4" ' Beschriften ON
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ein"
-                Else
-                    tmpLabel = "ON"
-                End If
+                ''Case "PT2G1B4" ' Beschriften ON
+                ''    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                ''        tmpLabel = "Ein"
+                ''    Else
+                ''        tmpLabel = "ON"
+                ''    End If
 
-            Case "PT2G1B5" ' Beschriftungen löschen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Aus"
-                Else
-                    tmpLabel = "OFF"
-                End If
+                ''Case "PT2G1B5" ' Beschriftungen löschen
+                ''    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                ''        tmpLabel = "Aus"
+                ''    Else
+                ''        tmpLabel = "OFF"
+                ''    End If
 
             Case "PT2G1B6" ' Extended View
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2330,16 +2337,16 @@ Imports System.Windows
 
             Case "PT2G1B1" ' Umbenennen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt umbenennen"
+                    tmpLabel = "Projekt umbenennen..."
                 Else
-                    tmpLabel = "Rename Project"
+                    tmpLabel = "Rename Project..."
                 End If
 
             Case "PT2G1B3" ' Umbenennen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante umbenennen"
+                    tmpLabel = "Variante umbenennen..."
                 Else
-                    tmpLabel = "Rename Variant"
+                    tmpLabel = "Rename Variant..."
                 End If
 
             Case "PT2G2" 'Projekte/Varianten
@@ -2351,9 +2358,9 @@ Imports System.Windows
 
             Case "PT2G2B2" ' Portfolio/s anzeigen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s anzeigen"
+                    tmpLabel = "Portfolio/s anzeigen..."
                 Else
-                    tmpLabel = "Show Portfolio/s"
+                    tmpLabel = "Show Portfolio/s..."
                 End If
 
 
@@ -2464,44 +2471,44 @@ Imports System.Windows
 
             Case "PT4G1B1" ' Import VISBO-Steckbriefe
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "VISBO-Steckbriefe"
+                    tmpLabel = "VISBO-Steckbriefe..."
                 Else
-                    tmpLabel = "VISBO project briefs"
+                    tmpLabel = "VISBO project briefs..."
                 End If
 
             Case "PT4G1B2" ' Import Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Excel"
+                    tmpLabel = "Excel..."
                 Else
-                    tmpLabel = "Excel"
+                    tmpLabel = "Excel..."
                 End If
 
             Case "PT4G1B4" ' Import MS Project
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "MS Project"
+                    tmpLabel = "MS Project..."
                 Else
-                    tmpLabel = "MS Project"
+                    tmpLabel = "MS Project..."
                 End If
 
             Case "PT4G1B3" ' Import RPLAN RXF
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "RPLAN RXF"
+                    tmpLabel = "RPLAN RXF..."
                 Else
-                    tmpLabel = "RPLAN RXF"
+                    tmpLabel = "RPLAN RXF..."
                 End If
 
             Case "PT4G1B7" ' Import Projekte (Batch)
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Batch Projekt-Erzeugung"
+                    tmpLabel = "Batch Projekt-Erzeugung..."
                 Else
-                    tmpLabel = "Batch Project Creation"
+                    tmpLabel = "Batch Project Creation..."
                 End If
 
             Case "PT4G1B5" ' Import Scenario Definition
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio Liste"
+                    tmpLabel = "Portfolio Liste..."
                 Else
-                    tmpLabel = "Portfolio List"
+                    tmpLabel = "Portfolio List..."
                 End If
    
             Case "PT4G2" ' EXPORT
@@ -2533,16 +2540,16 @@ Imports System.Windows
 
             Case "PT4G1M0B2" ' exportieren von Meilensteine und Phasen nach Auswahl
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl von Meilensteine und Phasen"
+                    tmpLabel = "Auswahl von Meilensteine und Phasen..."
                 Else
-                    tmpLabel = "Selection of Milestones and Phases"
+                    tmpLabel = "Selection of Milestones and Phases..."
                 End If
 
             Case "PT4G2M3" ' exportieren von Portfolio Liste
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio Liste"
+                    tmpLabel = "Portfolio Liste..."
                 Else
-                    tmpLabel = "Portfolio List"
+                    tmpLabel = "Portfolio List..."
                 End If
 
 
@@ -2577,16 +2584,16 @@ Imports System.Windows
 
             Case "PT5G1B1" ' Portfolio/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s"
+                    tmpLabel = "Portfolio/s..."
                 Else
-                    tmpLabel = "Portfolio/s"
+                    tmpLabel = "Portfolio/s..."
                 End If
 
             Case "PT5G1B3" ' Project/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt/e"
+                    tmpLabel = "Projekt/e..."
                 Else
-                    tmpLabel = "Project/s"
+                    tmpLabel = "Project/s..."
                 End If
 
             Case "PT5G2" ' Speichern
@@ -2598,9 +2605,9 @@ Imports System.Windows
 
             Case "Pt5G2B1" ' Portfolio/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s"
+                    tmpLabel = "Portfolio/s..."
                 Else
-                    tmpLabel = "Portfolio/s"
+                    tmpLabel = "Portfolio/s..."
                 End If
 
             Case "Pt5G2B3" ' Projekt/e
@@ -2626,9 +2633,9 @@ Imports System.Windows
 
             Case "Pt5G3B1" ' Multiprojekt-Szenario
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s"
+                    tmpLabel = "Portfolio/s..."
                 Else
-                    tmpLabel = "Portfolio/s"
+                    tmpLabel = "Portfolio/s..."
                 End If
 
             Case "PT5G3M2" ' Projekte/Varianten
@@ -2640,24 +2647,24 @@ Imports System.Windows
 
             Case "Pt5G3B3" ' Projekte/Varianten/TimeStamps auswählen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekte/Varianten/TimeStamps auswählen"
+                    tmpLabel = "Projekte/Varianten/TimeStamps auswählen..."
                 Else
-                    tmpLabel = "Select Projects/Variants/TimeStamps"
+                    tmpLabel = "Select Projects/Variants/TimeStamps..."
                 End If
 
             Case "Pt5G3B4" ' X Versionen behalten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "X Versionen behalten"
+                    tmpLabel = "X Versionen behalten..."
                 Else
-                    tmpLabel = "Keep X Versions"
+                    tmpLabel = "Keep X Versions..."
                 End If
 
 
             Case "PT2G2B5" ' Sperre setzen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Schreibschutz setzen/aufheben"
+                    tmpLabel = "Schreibschutz setzen/aufheben..."
                 Else
-                    tmpLabel = "Set/Unset Write-Protection"
+                    tmpLabel = "Set/Unset Write-Protection..."
                 End If
 
             Case "PTedit"
@@ -4353,7 +4360,7 @@ Imports System.Windows
                         projectConstellations.Add(newConstellation)
                         'Call loadSessionConstellation(scenarioName, False, False, True)
                     Else
-                        Call MsgBox("keine Projekte für Szenario erkannt ...")
+                        Call MsgBox("keine Projekte für Portfolio erkannt ...")
                     End If
 
                     'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))

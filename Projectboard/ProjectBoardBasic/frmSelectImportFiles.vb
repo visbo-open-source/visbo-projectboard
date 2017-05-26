@@ -118,9 +118,9 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.simpleScen Then
             dirName = importOrdnerNames(PTImpExp.simpleScen)
             If awinSettings.englishLanguage Then
-                Me.Text = "select a scenario file"
+                Me.Text = "select a portfolio file"
             Else
-                Me.Text = "Szenario Datei auswählen"
+                Me.Text = "Portfolio Datei auswählen"
             End If
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
@@ -129,9 +129,9 @@ Public Class frmSelectImportFiles
 
             dirName = importOrdnerNames(PTImpExp.modulScen)
             If awinSettings.englishLanguage Then
-                Me.Text = "select a modular scenario file"
+                Me.Text = "select a modular portfolio file"
             Else
-                Me.Text = "modulare Szenario Datei auswählen"
+                Me.Text = "modulare Portfolio Datei auswählen"
             End If
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
@@ -160,9 +160,9 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.scenariodefs Then
             dirName = importOrdnerNames(PTImpExp.scenariodefs)
             If awinSettings.englishLanguage Then
-                Me.Text = "select a scenario definition file"
+                Me.Text = "select a portfolio definition file"
             Else
-                Me.Text = "Szenario-Definitions-Datei auswählen"
+                Me.Text = "Portfolio-Definitions-Datei auswählen"
             End If
 
 

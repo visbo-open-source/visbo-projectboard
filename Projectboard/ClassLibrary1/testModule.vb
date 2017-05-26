@@ -5001,27 +5001,27 @@ Public Module testModule
                         Try
                             If request.storeConstellationToDB(kvp.Value) Then
                                 If awinSettings.englishLanguage Then
-                                    outputline = "Scenario stored: " & kvp.Key
+                                    outputline = "Portfolio stored: " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 Else
-                                    outputline = "Szenario gespeichert: " & kvp.Key
+                                    outputline = "Portfolio gespeichert: " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 End If
                             Else
                                 If awinSettings.englishLanguage Then
-                                    outputline = "Error when writing Scenario " & kvp.Key
+                                    outputline = "Error when writing portfolio " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 Else
-                                    outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                                    outputline = "Fehler in Schreiben Portfolio " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 End If
 
                             End If
                         Catch ex As Exception
                             If awinSettings.englishLanguage Then
-                                outputline = "Error when writing Scenario " & kvp.Key
+                                outputline = "Error when writing portfolio " & kvp.Key
                             Else
-                                outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                                outputline = "Fehler in Schreiben Portfolio " & kvp.Key
                             End If
                             Throw New ArgumentException(outputline)
                             'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
@@ -5086,22 +5086,22 @@ Public Module testModule
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
                             If awinSettings.englishLanguage Then
-                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                outputline = "ok, portfolios stored!" & vbLf & vbLf & _
                                         "1 project/project-variant stored " & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf & _
                                         "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
 
                         Else
                             If awinSettings.englishLanguage Then
-                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                outputline = "ok, portfolios stored!" & vbLf & vbLf & _
                                         anzahlStores & " projects/project-variants stored" & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf & _
                                         "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
@@ -5109,10 +5109,10 @@ Public Module testModule
                         End If
                     Else
                         If awinSettings.englishLanguage Then
-                            outputline = "ok, scenarios stored!" & vbLf & _
+                            outputline = "ok, portfolios stored!" & vbLf & _
                                 "no projects stored, because of no changes"
                         Else
-                            outputline = "ok, Szenarien gespeichert!" & vbLf & _
+                            outputline = "ok, Portfolios gespeichert!" & vbLf & _
                                 "keine Projekte gespeichert, da es keine Änderungen gab"
                         End If
 
@@ -5156,7 +5156,7 @@ Public Module testModule
                     Dim msgH As String, msgE As String
                     If awinSettings.englishLanguage Then
                         If everythingElse Then
-                            msgH = "Store Everything (Projects, Scenarios, Dependencies, ..)"
+                            msgH = "Store Everything (Projects, Portfolios, Dependencies, ..)"
                         Else
                             msgH = "Store Projects"
                         End If
@@ -5164,7 +5164,7 @@ Public Module testModule
                         msgE = "following results:"
                     Else
                         If everythingElse Then
-                            msgH = "Alles speichern (Projekte, Szenarien, Abhängigkeiten, ..)"
+                            msgH = "Alles speichern (Projekte, Portfolios, Abhängigkeiten, ..)"
                         Else
                             msgH = "Projekte speichern"
                         End If

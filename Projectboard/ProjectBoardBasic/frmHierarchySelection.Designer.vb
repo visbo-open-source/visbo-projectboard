@@ -252,7 +252,7 @@ Partial Class frmHierarchySelection
         Me.Controls.Add(Me.hryTreeView)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmHierarchySelection"
-        Me.Text = "Auswahl über Hierarchie"
+        Me.Text = "Auswahl über Projekt-Struktur"
         Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()

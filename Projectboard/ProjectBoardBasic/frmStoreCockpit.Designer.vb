@@ -35,7 +35,7 @@ Partial Class frmStoreCockpit
         Me.ComboBox1.Location = New System.Drawing.Point(22, 63)
         Me.ComboBox1.MaxLength = 30
         Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(226, 21)
+        Me.ComboBox1.Size = New System.Drawing.Size(269, 21)
         Me.ComboBox1.Sorted = True
         Me.ComboBox1.TabIndex = 1
         '
@@ -61,7 +61,7 @@ Partial Class frmStoreCockpit
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(158, 102)
+        Me.AbbrButton.Location = New System.Drawing.Point(201, 102)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(90, 23)
         Me.AbbrButton.TabIndex = 6
@@ -72,7 +72,7 @@ Partial Class frmStoreCockpit
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(290, 145)
+        Me.ClientSize = New System.Drawing.Size(334, 145)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.Label1)

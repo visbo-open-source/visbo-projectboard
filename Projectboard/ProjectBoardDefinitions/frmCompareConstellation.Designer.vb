@@ -67,7 +67,7 @@ Partial Class frmCompareConstellation
         Me.Location = New System.Drawing.Point(290, 0)
         Me.Name = "frmCompareConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-        Me.Text = "Vergleich von zwei Projekt-Konstellationen"
+        Me.Text = "Vergleich von zwei Portfolios"
         Me.ResumeLayout(False)
 
     End Sub

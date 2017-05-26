@@ -292,7 +292,7 @@ Partial Class frmProjPortfolioAdmin
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmProjPortfolioAdmin"
         Me.portfolioBrowserHelp.SetShowHelp(Me, True)
-        Me.Text = "Multiprojekt-Szenario"
+        Me.Text = "Portfolio"
         Me.TopMost = True
         CType(Me.versionsToKeep, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.settingsBtn, System.ComponentModel.ISupportInitialize).EndInit()

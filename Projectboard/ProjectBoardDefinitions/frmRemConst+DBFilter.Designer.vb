@@ -71,7 +71,7 @@ Partial Class frmRemoveConstellation
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmRemoveConstellation"
-        Me.Text = "Szenario löschen"
+        Me.Text = "Portfolio löschen"
         Me.ResumeLayout(False)
 
     End Sub
