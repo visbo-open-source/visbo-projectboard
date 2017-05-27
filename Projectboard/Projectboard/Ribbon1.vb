@@ -3102,20 +3102,32 @@ Imports System.Windows
         ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
         'enableOnUpdate = False
 
+        appInstance.ScreenUpdating = False
         Call deleteChartsInSheet(arrWsNames(ptTables.meRC))
 
-        ' jetzt werden die Windows gelöscht ...
-        projectboardWindows(1).Close()
-        projectboardWindows(2).Close()
+        ' das eigentliche, ursprüngliche Windows wird wieder angezeigt ...
+        With projectboardWindows(0)
+            .Activate()
+            .Visible = True
+            .WindowState = Excel.XlWindowState.xlMaximized
+        End With
 
-        projectboardWindows(1) = Nothing
-        projectboardWindows(2) = Nothing
+        ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
+        If Not IsNothing(projectboardWindows(1)) Then
+            projectboardWindows(1).Close()
+            projectboardWindows(1) = Nothing
+        End If
+
+        If Not IsNothing(projectboardWindows(2)) Then
+            projectboardWindows(2).Close()
+            projectboardWindows(2) = Nothing
+        End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
         ' tk , das Dalassen der Charts kann zu Fehlern führen ... 
-        'appInstance.ScreenUpdating = False
+
         'Call awinLoadCockpit("_Last")
         'appInstance.ScreenUpdating = True
         ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
@@ -3123,11 +3135,7 @@ Imports System.Windows
             .Activate()
         End With
 
-        ' das eigentliche, ursprüngliche Windows wird wieder angezeigt ...
-        With projectboardWindows(0)
-            .Visible = True
-            .WindowState = Excel.XlWindowState.xlMaximized
-        End With
+        appInstance.ScreenUpdating = True
 
     End Sub
 
@@ -8275,6 +8283,9 @@ Imports System.Windows
         Dim currentRow As Integer
         Dim currentColumn As Integer
         Dim prcTyp As String
+        Dim pName As String = ""
+        Dim hproj As clsProjekt = Nothing
+
 
         Try
             currentRow = appInstance.ActiveCell.Row
@@ -8320,6 +8331,7 @@ Imports System.Windows
 
         End If
 
+        pName = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColpName).value)
 
         Dim buildcustomView As Boolean = True
         Dim viewName As String = viewNames(1)
@@ -8349,11 +8361,12 @@ Imports System.Windows
         With projectboardWindows(2)
             .WindowState = Excel.XlWindowState.xlNormal
             .EnableResize = True
+            .DisplayHorizontalScrollBar = False
+            .DisplayVerticalScrollBar = False
             .DisplayGridlines = False
             .DisplayHeadings = False
             .DisplayRuler = False
-            .DisplayVerticalScrollBar = True
-            .DisplayHorizontalScrollBar = True
+            .DisplayOutline = False
             .DisplayWorkbookTabs = False
             .Caption = windowNames(4)
         End With
@@ -8395,18 +8408,38 @@ Imports System.Windows
         If CType(CType(projectboardWindows(2).ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count = 0 Then
             ' sie müssen erzeugt werden
 
-            ' erst das PRCCollectionChart ...
-            Dim repObj As Excel.ChartObject = Nothing
-            Dim chWidth As Double = projectboardWindows(2).UsableWidth / 4 - 2
-            Dim chHeight As Double = projectboardWindows(2).UsableHeight - 10
+            ' jetzt das Projekt Ergebnis Chart anzeigen
+            Dim dummyObj As Excel.ChartObject = Nothing
+            Dim chLeft As Double = 2
+            Dim stdBreite As Double = (projectboardWindows(2).UsableWidth - 12) / 4
+            Dim chWidth As Double = stdBreite
+            Dim chHeight As Double = projectboardWindows(2).UsableHeight - 6
             Dim chTop As Double = 5
-            Dim chLeft As Double = 3 * chWidth
+
+            If ShowProjekte.contains(pName) Then
+                hproj = ShowProjekte.getProject(pName)
+                Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, _
+                                                                     chTop, chLeft, chWidth, chHeight)
+            End If
+
+            ' dann das PRCCollectionChart ...
+            Dim repObj As Excel.ChartObject = Nothing
+            chLeft = chLeft + chWidth + 2
+            chWidth = 2 * stdBreite
+
             Dim myCollection As New Collection
-
             myCollection.Add(rcName)
-
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
                                                                    chWidth, chHeight, False, prcTyp, True)
+
+            ' jetzt das Portfolio Chart Budget anzeigen ... 
+            Dim obj As Excel.ChartObject = Nothing
+            chLeft = chLeft + chWidth + 2
+            chWidth = stdBreite
+            Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
+
+           
+            
 
         Else
             ' sie sind schon da 
@@ -9109,8 +9142,12 @@ Imports System.Windows
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
 
                     Try
-
-                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
+                        Dim top As Double = 0
+                        Dim left As Double = 0
+                        Dim height As Double = 0
+                        Dim width As Double = 0
+                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, _
+                                                                 top, left, width, height)
                     Catch ex1 As Exception
                         Call MsgBox("Fehler bei Diagramm erzeugen: " & ex1.Message)
                     End Try

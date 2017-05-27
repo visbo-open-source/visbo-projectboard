@@ -961,13 +961,17 @@ Public Module awinGeneralModules
 
 
                     If .WindowState = Excel.XlWindowState.xlMaximized Then
-                        maxScreenHeight = .UsableHeight
-                        maxScreenWidth = .UsableWidth
+                        'maxScreenHeight = .UsableHeight
+                        maxScreenHeight = .Height
+                        'maxScreenWidth = .UsableWidth
+                        maxScreenWidth = .Width
                     Else
                         'Dim formerState As Excel.XlWindowState = .WindowState
                         .WindowState = Excel.XlWindowState.xlMaximized
-                        maxScreenHeight = .UsableHeight
-                        maxScreenWidth = .UsableWidth
+                        'maxScreenHeight = .UsableHeight
+                        maxScreenHeight = .Height
+                        'maxScreenWidth = .UsableWidth
+                        maxScreenWidth = .Width
                         '.WindowState = formerState
                     End If
 
@@ -1564,8 +1568,10 @@ Public Module awinGeneralModules
 
                                 ' ist die Phase eine special Phase ? 
                                 Try
-                                    If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
-                                        specialListofPhases.Add(hphase.name, hphase.name)
+                                    If Not IsNothing(CType(c.Offset(0, 2), Excel.Range).Value) Then
+                                        If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
+                                            specialListofPhases.Add(hphase.name, hphase.name)
+                                        End If
                                     End If
                                 Catch ex As Exception
                                 End Try
@@ -2075,7 +2081,7 @@ Public Module awinGeneralModules
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
                 awinSettings.autoCorrectBedarfe = True
                 awinSettings.propAnpassRess = False
-                awinSettings.showValuesOfSelected = False
+                awinSettings.showValuesOfSelected = True
             Catch ex As Exception
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
@@ -8180,9 +8186,13 @@ Public Module awinGeneralModules
                             End If
 
                             ' hier wird die Rollen bzw Kosten Information ausgelesen
-                            Dim hname As String
+                            Dim hname As String = ""
                             Try
-                                hname = CType(zelle.Offset(0, 1).Value, String).Trim
+
+                                If Not IsNothing(CType(zelle.Offset(0, 1), Excel.Range).Value) Then
+                                    hname = CType(CType(zelle.Offset(0, 1), Excel.Range).Value, String).Trim
+                                End If
+
                             Catch ex1 As Exception
                                 hname = ""
                             End Try
@@ -18973,6 +18983,9 @@ Public Module awinGeneralModules
         End If
 
         appInstance.EnableEvents = False
+
+        ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
+        selectedProjekte.Clear(False)
 
         Dim currentWS As Excel.Worksheet
         Dim currentWB As Excel.Workbook

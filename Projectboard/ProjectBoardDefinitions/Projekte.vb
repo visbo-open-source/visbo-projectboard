@@ -6567,11 +6567,11 @@ Public Module Projekte
                     .HasLegend = True
                     With .Legend
                         .Position = Excel.Constants.xlRight
-                        .Font.Size = awinSettings.fontsizeLegend + 6
+                        .Font.Size = awinSettings.fontsizeLegend
                     End With
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
-                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle + 8
+                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
 
                     Dim achieved As Boolean = False
                     Dim anzahlVersuche As Integer = 0
@@ -6882,11 +6882,11 @@ Public Module Projekte
                     .HasLegend = True
                     With .Legend
                         .Position = Excel.Constants.xlRight
-                        .Font.Size = awinSettings.fontsizeLegend + 6
+                        .Font.Size = awinSettings.fontsizeLegend
                     End With
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
-                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle + 8
+                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
 
                     Dim achieved As Boolean = False
                     Dim anzahlVersuche As Integer = 0
@@ -7647,7 +7647,8 @@ Public Module Projekte
     ''' <summary>
     ''' diese Sub zeigt das vorauss. Projektergebnis in einem Chart an - Erloes, Risiko Kosten, Personalkosten, Sonstige Kosten und 
     ''' dann den vermutl. Projekt-Ertrag
-    ''' auswahl: 0=beauftragung; 1: letzter Stand; 2: aktueller Stand   
+    ''' auswahl: 0=beauftragung; 1: letzter Stand; 2: aktueller Stand  
+    ''' top, left, width und height werden nur im Fall massEdit berücksichtigt, andernfalls bestimmt ... 
     ''' </summary>
     ''' <param name="hproj">das Projekt</param>
     ''' <param name="reportObj">
@@ -7655,7 +7656,8 @@ Public Module Projekte
     ''' wird für das Reporting benötigt 
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer)
+    Public Sub createProjektErgebnisCharakteristik2(ByVal hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer, _
+                                                    ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
@@ -7671,7 +7673,7 @@ Public Module Projekte
         Dim projektErloes As Double, projektPersKosten As Double, projektSonstKosten As Double, projektRisikoKosten As Double
         Dim projektErgebnis As Double
         'Dim earnedValueWeighted As Double
-        Dim top As Double, left As Double, width As Double, height As Double
+
         Dim pstart As Integer
         Dim mycollection As New Collection
         'Dim catName As String
@@ -7679,7 +7681,7 @@ Public Module Projekte
         Dim titelTeilLaengen(1) As Integer
         Dim kennung As String
         Dim tmpcollection As New Collection
-
+        Dim currentSheetName As String
 
         tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
@@ -7706,6 +7708,26 @@ Public Module Projekte
         Xdatenreihe(3) = repMessages.getmsg(53)
 
 
+        ' jetzt den current SheetName bestimmen 
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentSheetName = arrWsNames(ptTables.MPT)
+            '
+            ' die Position des Diagramms wird ausgerechnet ...
+            '
+            top = topOfMagicBoard + hproj.tfZeile * boxHeight
+            left = hproj.tfspalte * boxWidth - 10
+            If left < 0 Then
+                left = 1
+            End If
+            height = awinSettings.ChartHoehe2
+            width = 450
+        Else
+            ' tk, 22.5. Chart wird jetzt in meCharts gezeichnet ... 
+            'currentSheetName = arrWsNames(ptTables.meRC)
+            currentSheetName = arrWsNames(ptTables.meCharts)
+
+            found = True
+        End If
 
 
         With hproj
@@ -7732,39 +7754,45 @@ Public Module Projekte
             End If
         End With
 
+        Dim projektTextTeil As String = ""
+        Dim dauerTextTeil As String = ""
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            dauerTextTeil = vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        End If
 
         If auswahl = PThis.beauftragung Then
             'titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
-            titelTeile(0) = hproj.getShapeText & repMessages.getmsg(47) & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            projektTextTeil = hproj.getShapeText & repMessages.getmsg(47) & dauerTextTeil
         ElseIf auswahl = PThis.letzterStand Then
             'titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
-            titelTeile(0) = hproj.getShapeText & repMessages.getmsg(48) & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            projektTextTeil = hproj.getShapeText & repMessages.getmsg(48) & dauerTextTeil
         Else
-            titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            projektTextTeil = hproj.getShapeText & dauerTextTeil
+        End If
+
+        If hproj.endeDate < Date.Now Then
+            titelTeile(0) = projektTextTeil
+        Else
+            titelTeile(0) = "Forecast " & projektTextTeil
+        End If
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+        Else
+            titelTeile(1) = ""
         End If
 
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
 
         diagramTitle = titelTeile(0) & titelTeile(1)
         'kennung = pname & "#Ergebnis#1"
 
 
-        ' neu 
-        '
-        ' die Position des Diagramms wird ausgerechnet ...
-        '
-        top = topOfMagicBoard + hproj.tfZeile * boxHeight
-        left = hproj.tfspalte * boxWidth - 10
-        If left < 0 Then
-            left = 1
-        End If
-        height = awinSettings.ChartHoehe2
-        width = 450
 
 
-        With CType(appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
@@ -7798,25 +7826,30 @@ Public Module Projekte
 
                 Dim valueCrossesNull As Boolean = False
 
+                Dim newChtObj As Excel.ChartObject
 
-                Dim newChart As Microsoft.Office.Interop.Excel.Chart = Nothing
+                newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(currentSheetName),  _
+                    Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
 
-                Dim achieved As Boolean = False
-                Dim anzahlVersuche As Integer = 0
+                Dim newChart As Microsoft.Office.Interop.Excel.Chart = newChtObj.Chart
 
-                Do While Not achieved And anzahlVersuche < 10
-                    Try
-                        newChart = CType(appInstance.Charts.Add, Microsoft.Office.Interop.Excel.Chart)
-                        achieved = True
-                    Catch ex As Exception
-                        'Call Sleep(100)
-                        anzahlVersuche = anzahlVersuche + 1
-                    End Try
-                Loop
+                Dim achieved As Boolean = True
+                ' tk 26.5.17 nicht mehr notwendig, wird jetzt als embedded chart erzeugt 
+                'Dim anzahlVersuche As Integer = 0
 
-                If Not achieved Then
-                    Throw New ArgumentException("Chart konnte nicht erzeugt werden ...")
-                End If
+                'Do While Not achieved And anzahlVersuche < 10
+                '    Try
+                '        newChart = CType(appInstance.Charts.Add, Microsoft.Office.Interop.Excel.Chart)
+                '        achieved = True
+                '    Catch ex As Exception
+                '        'Call Sleep(100)
+                '        anzahlVersuche = anzahlVersuche + 1
+                '    End Try
+                'Loop
+
+                'If Not achieved Then
+                '    Throw New ArgumentException("Chart konnte nicht erzeugt werden ...")
+                'End If
 
                 With newChart
                     ' remove old series
@@ -7965,36 +7998,38 @@ Public Module Projekte
                     .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
-                    achieved = False
-                    anzahlVersuche = 0
-                    Dim errmsg As String = ""
-                    Do While Not achieved And anzahlVersuche < 10
-                        Try
-                            'Call Sleep(100)
-                            newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(ptTables.MPT)).name)
-                            achieved = True
-                        Catch ex As Exception
-                            errmsg = ex.Message
-                            'Call Sleep(100)
-                            anzahlVersuche = anzahlVersuche + 1
-                        End Try
-                    Loop
+                    ' tk 26.5.17 nicht mehr notwendig ...
+                    'achieved = False
+                    'anzahlVersuche = 0
+                    'Dim errmsg As String = ""
+                    'Do While Not achieved And anzahlVersuche < 10
+                    '    Try
+                    '        'Call Sleep(100)
+                    '        newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(ptTables.MPT)).name)
+                    '        achieved = True
+                    '    Catch ex As Exception
+                    '        errmsg = ex.Message
+                    '        'Call Sleep(100)
+                    '        anzahlVersuche = anzahlVersuche + 1
+                    '    End Try
+                    'Loop
 
-                    If Not achieved Then
-                        Throw New ArgumentException(errmsg)
-                    End If
+                    'If Not achieved Then
+                    '    Throw New ArgumentException(errmsg)
+                    'End If
 
 
                 End With
 
 
 
-                With .ChartObjects(anzDiagrams + 1)
-                    .top = top
-                    .left = left
-                    .width = width
-                    .height = height
-                    .name = kennung
+                'With .ChartObjects(anzDiagrams + 1)
+                With newChtObj
+                    '.Top = top
+                    '.Left = left
+                    '.Width = width
+                    '.Height = height
+                    .Name = kennung
 
                 End With
 
@@ -8014,7 +8049,7 @@ Public Module Projekte
 
     
 
-    Public Sub updateProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+    Public Sub updateProjektErgebnisCharakteristik2(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
                                                     ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
@@ -8032,7 +8067,7 @@ Public Module Projekte
 
         Dim pstart As Integer
         Dim mycollection As New Collection
-        
+
         Dim minscale As Double
 
         Dim titelTeile(1) As String
@@ -8098,13 +8133,46 @@ Public Module Projekte
         End With
 
 
+        Dim projektTextTeil As String = ""
+        Dim dauerTextTeil As String = ""
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            dauerTextTeil = vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        End If
 
-        titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        If auswahl = PThis.beauftragung Then
+            'titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            projektTextTeil = hproj.getShapeText & repMessages.getmsg(47) & dauerTextTeil
+        ElseIf auswahl = PThis.letzterStand Then
+            'titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            projektTextTeil = hproj.getShapeText & repMessages.getmsg(48) & dauerTextTeil
+        Else
+            projektTextTeil = hproj.getShapeText & dauerTextTeil
+        End If
+
+        If hproj.endeDate < Date.Now Then
+            titelTeile(0) = projektTextTeil
+        Else
+            titelTeile(0) = "Forecast " & projektTextTeil
+        End If
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+        Else
+            titelTeile(1) = ""
+        End If
+
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
+
         diagramTitle = titelTeile(0) & titelTeile(1)
-        'kennung = pname & "#Ergebnis#1"
+
+
+        'titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        'titelTeilLaengen(0) = titelTeile(0).Length
+        'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+        'titelTeilLaengen(1) = titelTeile(1).Length
+        'diagramTitle = titelTeile(0) & titelTeile(1)
+        ''kennung = pname & "#Ergebnis#1"
 
 
         If changeScale Then
@@ -15300,7 +15368,7 @@ Public Module Projekte
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             currentWsName = arrWsNames(ptTables.MPT)
         Else
-            currentWsName = arrWsNames(ptTables.meRC)
+            currentWsName = arrWsNames(ptTables.meCharts)
         End If
 
         If Not (hproj Is Nothing) Then
@@ -15838,7 +15906,12 @@ Public Module Projekte
                     projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
                 myshape = projectShape
             Else
-                myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
+                If IsNothing(CType(CType(projectShape, Excel.Shape).GroupItems, Excel.GroupShapes)) Then
+                    myshape = projectShape
+                Else
+                    myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
+                End If
+
             End If
         Catch ex As Exception
 

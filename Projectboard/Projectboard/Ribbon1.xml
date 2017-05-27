@@ -246,7 +246,7 @@
               <!--label="Profit/Loss"-->
               <button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
               <menuSeparator id="PTXG1s3"/>
-              <!--label="Capazity Utilization"-->
+              <!--label="Capacity Utilization"-->
               <button id="PTXG1B3" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
               <menuSeparator id="PTXG1s2"/>
               <!--label="Strategie/Risiko/Marge"-->
@@ -272,7 +272,7 @@
               <button id="PT0G1M1B2" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B5GKosten" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Kostenbedarfe und die Gesamt-Summe zeigen"/>
               <menuSeparator id="PT7G1s2"/>
               <!--label="Info Gewinn/Verlust"-->
-              <button id="PT0G1M1B3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
+              <button id="PT0G1M1B3" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
               <menuSeparator id="PT7G1s3"/>
               <!--label="Strategie/Risiko/Marge"-->
               <button id="PT0G1B3" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
