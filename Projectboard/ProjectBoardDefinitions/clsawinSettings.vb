@@ -219,9 +219,9 @@ Public Class clsawinSettings
     Sub New()
 
         ' Chart Settings
-        _fontsizeTitle = 14
-        _fontsizeLegend = 10
-        _fontsizeItems = 10
+        _fontsizeTitle = 13
+        _fontsizeLegend = 9
+        _fontsizeItems = 9
         _CPfontsizeTitle = 10
         _CPfontsizeItems = 8
         _ChartHoehe1 = 150.0
@@ -259,7 +259,7 @@ Public Class clsawinSettings
         _propAnpassRess = False
         _phasesProzentual = False
         _drawphases = False
-        _showValuesOfSelected = False
+        _showValuesOfSelected = True
         _applyFilter = False
         _createIfNotThere = False
         _showOrigName = False

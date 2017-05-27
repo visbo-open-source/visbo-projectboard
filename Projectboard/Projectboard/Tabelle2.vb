@@ -211,7 +211,7 @@ Public Class Tabelle2
                 Dim roleCostNames As New Collection
 
                 Dim zeile As Integer = Target.Row
-                Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
+                Dim pName As String = CStr(meWS.Cells(zeile, visboZustaende.meColpName).value)
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
@@ -220,7 +220,6 @@ Public Class Tabelle2
                 If Not IsNothing(curComment) Then
                     phaseNameID = curComment.Text
                 End If
-
 
                 If Target.Column = columnRC Then
                     ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
@@ -736,6 +735,7 @@ Public Class Tabelle2
                         If Not IsNothing(formProjectInfo1) Then
                             Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                         End If
+                        Call aktualisiereCharts(visboZustaende.lastProject, True)
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
@@ -1141,17 +1141,34 @@ Public Class Tabelle2
             End If
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
-            If pNameChanged And Not IsNothing(formProjectInfo1) Then
+            Dim alreadyDone As Boolean = False
+            If pNameChanged Then
 
-                Call updateProjectInfo1(.lastProject, .lastProjectDB)
-                ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
+                selectedProjekte.Clear(False)
+                selectedProjekte.Add(.lastProject, False)
 
+                Call aktualisiereCharts(.lastProject, True)
+
+                If Not IsNothing(rcName) Then
+
+                    If rcName <> "" Then
+                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
+                        alreadyDone = True
+                    End If
+                End If
+
+
+                If Not IsNothing(formProjectInfo1) Then
+                    Call updateProjectInfo1(.lastProject, .lastProjectDB)
+                    ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
+                End If
             End If
+
 
             ' hier wird jetzt ggf das Role/Cost Portfolio Chart aktualisiert ..
             If Not IsNothing(rcName) Then
                 If oldRCName <> rcName Then
-                    If rcName <> "" Then
+                    If rcName <> "" And Not alreadyDone Then
                         Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
                     End If
                 End If

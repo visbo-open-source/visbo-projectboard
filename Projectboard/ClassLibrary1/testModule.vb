@@ -1717,15 +1717,19 @@ Public Module testModule
 
 
                                 Try
+                                    
                                     If qualifier = "letzter Stand" Then
 
-                                        Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand)
+                                        Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand, _
+                                                                                  0, 0, 0, 0)
 
                                     ElseIf qualifier = "Beauftragung" Then
-                                        Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung)
+                                        Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung, _
+                                                                                  0, 0, 0, 0)
 
                                     Else
-                                        Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current)
+                                        Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current, _
+                                                                                  0, 0, 0, 0)
 
                                     End If
 

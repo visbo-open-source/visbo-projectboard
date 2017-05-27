@@ -961,13 +961,17 @@ Public Module awinGeneralModules
 
 
                     If .WindowState = Excel.XlWindowState.xlMaximized Then
-                        maxScreenHeight = .UsableHeight
-                        maxScreenWidth = .UsableWidth
+                        'maxScreenHeight = .UsableHeight
+                        maxScreenHeight = .Height
+                        'maxScreenWidth = .UsableWidth
+                        maxScreenWidth = .Width
                     Else
                         'Dim formerState As Excel.XlWindowState = .WindowState
                         .WindowState = Excel.XlWindowState.xlMaximized
-                        maxScreenHeight = .UsableHeight
-                        maxScreenWidth = .UsableWidth
+                        'maxScreenHeight = .UsableHeight
+                        maxScreenHeight = .Height
+                        'maxScreenWidth = .UsableWidth
+                        maxScreenWidth = .Width
                         '.WindowState = formerState
                     End If
 
@@ -2077,7 +2081,7 @@ Public Module awinGeneralModules
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
                 awinSettings.autoCorrectBedarfe = True
                 awinSettings.propAnpassRess = False
-                awinSettings.showValuesOfSelected = False
+                awinSettings.showValuesOfSelected = True
             Catch ex As Exception
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
@@ -18979,6 +18983,9 @@ Public Module awinGeneralModules
         End If
 
         appInstance.EnableEvents = False
+
+        ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
+        selectedProjekte.Clear(False)
 
         Dim currentWS As Excel.Worksheet
         Dim currentWB As Excel.Workbook
