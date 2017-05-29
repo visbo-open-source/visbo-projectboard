@@ -1037,24 +1037,25 @@ Public Module awinDiagrams
         Dim found As Boolean
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
-        ' '' Versuch der Korrektur ...
-        Dim tmpName As String = chtobj.Name
-        Dim curShtName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
-        found = False
-        For i = 1 To CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
-            Dim tmpchtobj As Excel.ChartObject = CType(CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Item(i), Excel.ChartObject)
-            If tmpchtobj.Name = tmpName Then
-                found = True
-                chtobj = tmpchtobj
-            End If
-        Next
+        ' tk nicht mehr notwendig .... 
+        '' '' Versuch der Korrektur ...
+        ' ''Dim tmpName As String = chtobj.Name
+        ' ''Dim curShtName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
+        ' ''found = False
+        ' ''For i = 1 To CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+        ' ''    Dim tmpchtobj As Excel.ChartObject = CType(CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Item(i), Excel.ChartObject)
+        ' ''    If tmpchtobj.Name = tmpName Then
+        ' ''        found = True
+        ' ''        chtobj = tmpchtobj
+        ' ''    End If
+        ' ''Next
 
-        chtobj.Activate()
-        If Not found Then
-            Call MsgBox("What the hell ....")
-        End If
+        ' ''chtobj.Activate()
+        ' ''If Not found Then
+        ' ''    Call MsgBox("What the hell ....")
+        ' ''End If
 
-        ' '' Ende der Korrektur 
+        '' '' Ende der Korrektur 
 
         'Dim minwert As Double, maxwert As Double
         'Dim nr_pts As Integer
@@ -1154,7 +1155,7 @@ Public Module awinDiagrams
         einheit = " "
         prcTyp = " "
         d = 1
-        Dim foundDiagram As clsDiagramm
+        Dim foundDiagram As clsDiagramm = Nothing
 
         ' bestimmen, ob man sich auf der Projekt-Tafel befindet oder aber im MassEdit Resosurcen, Termine, Attribute
         Try
@@ -1171,10 +1172,14 @@ Public Module awinDiagrams
                 found = True
 
             Else
-                foundDiagram = DiagramList.getDiagramm(chtobjName)
-                myCollection = foundDiagram.gsCollection
-                prcTyp = foundDiagram.diagrammTyp
-                found = True
+                If DiagramList.contains(chtobjName) Then
+                    foundDiagram = DiagramList.getDiagramm(chtobjName)
+
+                    myCollection = foundDiagram.gsCollection
+                    prcTyp = foundDiagram.diagrammTyp
+                    found = True
+                End If
+                
             End If
 
         Catch ex As Exception
@@ -2427,17 +2432,20 @@ Public Module awinDiagrams
 
         If Not calledfromReporting Then
 
-            Dim foundDiagramm As clsDiagramm
+            Dim foundDiagramm As clsDiagramm = Nothing
 
             ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
             Try
-                foundDiagramm = DiagramList.getDiagramm(chtobjName)
-                With foundDiagramm
-                    top = .top
-                    left = .left
-                    width = .width
-                    height = .height
-                End With
+                If DiagramList.contains(chtobjName) Then
+                    foundDiagramm = DiagramList.getDiagramm(chtobjName)
+                    With foundDiagramm
+                        top = .top
+                        left = .left
+                        width = .width
+                        height = .height
+                    End With
+                End If
+                
             Catch ex As Exception
 
 
@@ -2805,16 +2813,19 @@ Public Module awinDiagrams
 
 
         If Not calledfromReporting Then
-            Dim foundDiagramm As clsDiagramm
+            Dim foundDiagramm As clsDiagramm = Nothing
 
             Try
-                foundDiagramm = DiagramList.getDiagramm(chtobjName)
-                With foundDiagramm
-                    top = .top
-                    left = .left
-                    width = .width
-                    height = .height
-                End With
+                If DiagramList.contains(chtobjName) Then
+                    foundDiagramm = DiagramList.getDiagramm(chtobjName)
+                    With foundDiagramm
+                        top = .top
+                        left = .left
+                        width = .width
+                        height = .height
+                    End With
+                End If
+                
             Catch ex As Exception
 
             End Try
@@ -3535,17 +3546,20 @@ Public Module awinDiagrams
 
         If Not calledfromReporting Then
 
-            Dim foundDiagramm As clsDiagramm
+            Dim foundDiagramm As clsDiagramm = Nothing
 
             ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
             Try
-                foundDiagramm = DiagramList.getDiagramm(chtobjName)
-                With foundDiagramm
-                    top = .top
-                    left = .left
-                    width = .width
-                    height = .height
-                End With
+                If DiagramList.contains(chtobjName) Then
+                    foundDiagramm = DiagramList.getDiagramm(chtobjName)
+                    With foundDiagramm
+                        top = .top
+                        left = .left
+                        width = .width
+                        height = .height
+                    End With
+                End If
+                
             Catch ex As Exception
 
 
@@ -3974,17 +3988,20 @@ Public Module awinDiagrams
 
         If Not calledfromReporting Then
 
-            Dim foundDiagramm As clsDiagramm
+            Dim foundDiagramm As clsDiagramm = Nothing
 
             ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
             Try
-                foundDiagramm = DiagramList.getDiagramm(chtobjName)
-                With foundDiagramm
-                    top = .top
-                    left = .left
-                    width = .width
-                    height = .height
-                End With
+                If DiagramList.contains(chtobjName) Then
+                    foundDiagramm = DiagramList.getDiagramm(chtobjName)
+                    With foundDiagramm
+                        top = .top
+                        left = .left
+                        width = .width
+                        height = .height
+                    End With
+                End If
+
             Catch ex As Exception
 
 
@@ -4404,17 +4421,20 @@ Public Module awinDiagrams
 
         If Not calledfromReporting Then
 
-            Dim foundDiagramm As clsDiagramm
+            Dim foundDiagramm As clsDiagramm = Nothing
 
             ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
             Try
-                foundDiagramm = DiagramList.getDiagramm(chtobjName)
-                With foundDiagramm
-                    top = .top
-                    left = .left
-                    width = .width
-                    height = .height
-                End With
+                If DiagramList.contains(chtobjName) Then
+                    foundDiagramm = DiagramList.getDiagramm(chtobjName)
+                    With foundDiagramm
+                        top = .top
+                        left = .left
+                        width = .width
+                        height = .height
+                    End With
+                End If
+
             Catch ex As Exception
 
 
@@ -4832,17 +4852,20 @@ Public Module awinDiagrams
 
         If Not calledfromReporting Then
 
-            Dim foundDiagramm As clsDiagramm
+            Dim foundDiagramm As clsDiagramm = Nothing
 
             ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
             Try
-                foundDiagramm = DiagramList.getDiagramm(chtobjName)
-                With foundDiagramm
-                    top = .top
-                    left = .left
-                    width = .width
-                    height = .height
-                End With
+                If DiagramList.contains(chtobjName) Then
+                    foundDiagramm = DiagramList.getDiagramm(chtobjName)
+                    With foundDiagramm
+                        top = .top
+                        left = .left
+                        width = .width
+                        height = .height
+                    End With
+                End If
+
             Catch ex As Exception
 
 

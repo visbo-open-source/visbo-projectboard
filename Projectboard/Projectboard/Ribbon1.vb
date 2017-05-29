@@ -2905,16 +2905,17 @@ Imports System.Windows
     End Function
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
-        Dim singleShp As Excel.Shape
-        Dim awinSelection As Excel.ShapeRange
+        ' für alte Methode notwendig ... 
+        'Dim singleShp As Excel.Shape
+        'Dim awinSelection As Excel.ShapeRange
         Dim todoListe As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        ' zurücksetzen der dbCache-Projekte
-        dbCacheProjekte.Clear(False)
+        ' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
+        ' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
 
         Call projektTafelInit()
 
@@ -2922,74 +2923,28 @@ Imports System.Windows
 
         If ShowProjekte.Count > 0 Then
 
-            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                ' alles ok , bereits gesetzt 
-
-            Else
-                If selectedProjekte.Count > 0 Then
-                    showRangeLeft = selectedProjekte.getMinMonthColumn
-                    showRangeRight = selectedProjekte.getMaxMonthColumn
-                Else
-                    showRangeLeft = ShowProjekte.getMinMonthColumn
-                    showRangeRight = ShowProjekte.getMaxMonthColumn
-                End If
-                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-            End If
-
-            Try
-                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-            Catch ex As Exception
-                awinSelection = Nothing
-            End Try
-
-            If IsNothing(awinSelection) Then
-
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                    todoListe.Add(kvp.Key, kvp.Key)
-
-                    If Not noDB Then
-
-                        ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
-                        If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
-                            Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
-                            dbCacheProjekte.upsert(dbProj)
-                        End If
-
-                    End If
-
-                Next
-
-            Else
-
-                For i As Integer = 1 To awinSelection.Count
-                    singleShp = awinSelection.Item(i)
-                    Dim hproj As clsProjekt
-                    Try
-                        hproj = ShowProjekte.getProject(singleShp.Name, True)
-                        todoListe.Add(hproj.name, hproj.name)
-
-                        If Not noDB Then
-                            ' wenn es in der DB existiert, dann im Cache aufbauen 
-                            If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-                                ' für den Datenbank Cache aufbauen 
-                                Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
-                                dbCacheProjekte.upsert(dbProj)
-                            End If
-                        End If
-
-                    Catch ex As Exception
-
-                    End Try
-                Next
-            End If
-
-            ' wenn es jetzt etwas zu tun gibt ... 
+            ' neue Methode 
+            todoListe = getProjectSelectionList(True)
             If todoListe.Count > 0 Then
-                ' alles ok ...
-                ' wenn die Charts da bleiben, kann das zu Fehlern führen ... 
-                'appInstance.ScreenUpdating = False
-                'Call awinStoreCockpit("_Last")
+
+                ' jetzt aufbauen der dbCacheProjekte
+                Call buildCacheProjekte(todoListe)
+
+
+                ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                    ' alles ok , bereits gesetzt 
+
+                Else
+                    
+                    showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                    showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                End If
+
+
+                
                 Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
 
                 Call enableControls(ptModus.massEditRessCost)
@@ -3013,13 +2968,19 @@ Imports System.Windows
                         appInstance.EnableEvents = True
                     End If
                 End Try
+                
             Else
                 enableOnUpdate = True
                 If appInstance.EnableEvents = False Then
                     appInstance.EnableEvents = True
                 End If
-            End If
 
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects apply to criterias ...")
+                Else
+                    Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
+                End If
+            End If
 
 
         Else
@@ -3029,9 +2990,9 @@ Imports System.Windows
             End If
 
             If awinSettings.englishLanguage Then
-                Call MsgBox("no projects in session!")
+                Call MsgBox("no active projects ...")
             Else
-                Call MsgBox("Es sind keine Projekte geladen!")
+                Call MsgBox("Es gibt keine aktiven Projekte ...")
             End If
 
         End If

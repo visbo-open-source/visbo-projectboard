@@ -110,7 +110,11 @@
     Public ReadOnly Property getDiagramm(myitem As String) As clsDiagramm
 
         Get
-            getDiagramm = AllDiagrams(myitem)
+            If AllDiagrams.ContainsKey(myitem) Then
+                getDiagramm = AllDiagrams(myitem)
+            Else
+                getDiagramm = Nothing
+            End If
         End Get
 
     End Property

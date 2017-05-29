@@ -678,17 +678,27 @@ Public Class clsProjekte
 
     ''' <summary>
     ''' bestimmt die kleinste auftretende Spalten-Column über alle Projekte  
+    ''' wenn eine liste angegeben ist, werden nur die in der Liste vorhandenen PRoekte betrachtet 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMinMonthColumn() As Integer
+    Public ReadOnly Property getMinMonthColumn(Optional ByVal liste As Collection = Nothing) As Integer
         Get
             Dim tmpMin As Integer = 10000
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                If kvp.Value.Start < tmpMin Then
-                    tmpMin = kvp.Value.Start
+                If IsNothing(liste) Then
+                    If kvp.Value.Start < tmpMin Then
+                        tmpMin = kvp.Value.Start
+                    End If
+                Else
+                    If liste.Contains(kvp.Key) Then
+                        If kvp.Value.Start < tmpMin Then
+                            tmpMin = kvp.Value.Start
+                        End If
+                    End If
                 End If
+                
             Next
             getMinMonthColumn = tmpMin
         End Get
@@ -696,17 +706,28 @@ Public Class clsProjekte
 
     ''' <summary>
     ''' bestimmt die größte auftretende Spalten-Column über alle Projekte  
+    ''' wenn eine liste angegeben ist, werden nur die in der Liste vorhandenen PRoekte betrachtet 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMaxMonthColumn() As Integer
+    Public ReadOnly Property getMaxMonthColumn(Optional ByVal liste As Collection = Nothing) As Integer
         Get
             Dim tmpMax As Integer = 0
+            Dim endeCol As Integer
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                Dim endeCol As Integer = getColumnOfDate(kvp.Value.endeDate)
-                If endeCol > tmpMax Then
-                    tmpMax = endeCol
+                If IsNothing(liste) Then
+                    endeCol = getColumnOfDate(kvp.Value.endeDate)
+                    If endeCol > tmpMax Then
+                        tmpMax = endeCol
+                    End If
+                Else
+                    If liste.Contains(kvp.Key) Then
+                        endeCol = getColumnOfDate(kvp.Value.endeDate)
+                        If endeCol > tmpMax Then
+                            tmpMax = endeCol
+                        End If
+                    End If
                 End If
             Next
             getMaxMonthColumn = tmpMax
@@ -829,47 +850,37 @@ Public Class clsProjekte
 
                 With kvp.Value
 
-                    If (.Start + .StartOffset > bis) Or (.Start + .StartOffset + .anzahlRasterElemente - 1 < von) Then
-                        ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
-                    Else
+                    Select Case selectionType
 
-                        Select Case selectionType
-
-                            Case PTpsel.alle
+                        Case PTpsel.alle
+                            ' Aufteilung in if .. elseif gemacht, um Geschwindigkeit zu gewinnen 
+                            If bis - von < 1 Then
                                 tmpListe.Add(kvp.Key, kvp.Key)
+                            ElseIf Not ((getColumnOfDate(.startDate) > bis) Or (getColumnOfDate(.endeDate) < von)) Then
+                                ' kein TimeFrame oder liegt innerhalb des TimeFrame ... dann wird es übernommen 
+                                tmpListe.Add(kvp.Key, kvp.Key)
+                            End If
 
-                            Case PTpsel.laufend
+                        Case PTpsel.lfundab
 
-                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
-                                    .Status <> ProjektStatus(3) And _
-                                    .Status <> ProjektStatus(4) Then
-
-                                    tmpListe.Add(kvp.Key, kvp.Key)
-
-                                End If
-
-                            Case PTpsel.lfundab
-
+                            If bis - von < 1 Then
                                 If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 Then
-
                                     tmpListe.Add(kvp.Key, kvp.Key)
-
                                 End If
-
-                            Case PTpsel.abgeschlossen
-
-                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
-                                   (.Status = ProjektStatus(3) Or _
-                                   .Status = ProjektStatus(4)) Then
-
+                            ElseIf Not ((getColumnOfDate(.startDate) > bis) Or (getColumnOfDate(.endeDate) < von)) Then
+                                ' Projekt liegt innerhalb des TimeFrames 
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 Then
                                     tmpListe.Add(kvp.Key, kvp.Key)
-
                                 End If
+                            End If
 
-                        End Select
+                        Case Else
+
+                            Call MsgBox("Selektion in clsProjekte.withinTimeFrame noch nicht implementiert ")
+
+                    End Select
 
 
-                    End If
                 End With
 
             Next
