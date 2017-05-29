@@ -4743,7 +4743,7 @@ Public Module awinGeneralModules
 
         Dim newC As New clsConstellation
         newC.constellationName = scenarioName
-        newC.sortCriteria = ptSortCriteria.customListe
+        newC.sortCriteria = ptSortCriteria.customTF
 
 
         zeile = 2

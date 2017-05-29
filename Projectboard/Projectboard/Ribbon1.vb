@@ -2524,7 +2524,12 @@ Imports System.Windows
                     tmpLabel = "Portfolio List..."
                 End If
 
-
+            Case "PT4G2B3" ' Export Priorisierungsliste
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Portfolio Liste..."
+                Else
+                    tmpLabel = "Portfolio List..."
+                End If
             Case "PT4G1B7" ' Export FC-52
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export FC-52"
@@ -4305,7 +4310,7 @@ Imports System.Windows
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         
             ' Aktion durchführen ...
         getScenarioImport.menueAswhl = PTImpExp.scenariodefs
@@ -4348,22 +4353,34 @@ Imports System.Windows
 
                     If newConstellation.count > 0 Then
 
-                        If projectConstellations.Contains(scenarioName) Then
-                            projectConstellations.Remove(scenarioName)
-                        End If
 
                         If projectConstellations.Contains(scenarioName) Then
                             projectConstellations.Remove(scenarioName)
                         End If
 
                         projectConstellations.Add(newConstellation)
-                        'Call loadSessionConstellation(scenarioName, False, False, True)
+
+
+                        ' Beginn
+
+                        Dim constellationsToDo As New clsConstellations
+                        constellationsToDo.Add(newConstellation)
+
+                        Dim clearBoard As Boolean = True
+                        Dim clearSession As Boolean = False
+                        If constellationsToDo.Count > 0 Then
+                            Call showConstellations(constellationsToDo, clearBoard, clearSession, Date.Now)
+                        End If
+
+                        ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
+                        If Not noDB Then
+                            writeProtections.adjustListe = Request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                        End If
+
                     Else
                         Call MsgBox("keine Projekte für Portfolio erkannt ...")
                     End If
 
-                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                     If ImportProjekte.Count > 0 Then
                         ImportProjekte.Clear(False)
