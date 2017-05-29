@@ -30,7 +30,8 @@
         <group id="PTladen" >
             <!--label="Load from Database"-->
             <splitButton id="PT5G1split" size ="large">
-              <button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="DatabaseCopyDatabaseFile"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
+              <!--<button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="DataFromDatabase"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />-->
+              <button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="MindMapExportData"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
               <menu id ="PT5G1M" >
                 <!--label="Portfolio/s"-->
                 <button id="PT5G1B1"  getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
@@ -40,14 +41,15 @@
             </splitButton>
             <!--label="Speichern"-->
             <splitButton id="PT5G2split" size ="large">
-              <button id="PT5G2" getLabel ="bestimmeLabel"  imageMso="FileSave" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
+              <!--<button id="PT5G2" getLabel ="bestimmeLabel"  imageMso="ExportMoreMenu" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>-->
+              <button id="PT5G2" getLabel ="bestimmeLabel"  imageMso="MindMapImportData" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
               <menu id ="PT5G2M" >
                 <!--label="Portfolio/s"-->
                 <button id="Pt5G2B1" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Portfolios werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
                 <!--label="Projekt/e"-->
                 <button id="Pt5G2B3" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
                 <!--label="Alles Speichern"-->
-                <button id="Pt5G2B4" imageMso="FileSave" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
+                <button id="Pt5G2B4" imageMso="SaveAll" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
               </menu>
             </splitButton>
           <!--label="Löschen"-->
@@ -72,12 +74,12 @@
         <group id="PTIpExp">
           <!--label="IMPORT"-->
           <splitButton id="PT4G1split" size ="large">
-            <button id="PT4G1" getLabel ="bestimmeLabel" imageMso="ImportExcel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+            <button id="PT4G1" getLabel ="bestimmeLabel" imageMso="Import" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
             <menu id="PT4G1M" >
               <!--label="VISBO-Steckbriefe"-->
-              <button id="PT4G1B1" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+              <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
               <!--label ="VISBO Open XML-->
-              <button id="PT4G1B6" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
+              <button id="PT4G1B6" imageMso="DataFromXmlFile" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
               <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
               <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
               <!--<separator id="PT4G1s1"/>-->
@@ -103,15 +105,15 @@
            </menu>
           </splitButton>
           <splitButton id="PT4G2split" size ="large">
-            <button id="PT4G2" getLabel ="bestimmeLabel" imageMso="ExportExcel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
+            <button id="PT4G2" getLabel ="bestimmeLabel" imageMso="ExportFile" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
             <!--label="EXPORT"-->
             <menu id="PT4G2M" >
               <!--label="Export VISBO-Steckbriefe"-->
-              <button id="PT4G1M1B3" getLabel ="bestimmeLabel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
+              <button id="PT4G1M1B3" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
               <!--label="Export VISBO Open XML"-->
-              <button id="PT4G1M1B2" getLabel ="bestimmeLabel" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
+              <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
               <!--label="Export Excel"-->
-              <button id="PT4G1M1B1" getLabel ="bestimmeLabel" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
+              <button id="PT4G1M1B1" imageMso="ExportFile" getLabel ="bestimmeLabel" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
               <!--label="exportieren in MSProject Projekte-->
               <!--<button id="PT4G1M2B2" label="MSProject Projekte" onAction="Tom2G4M2ExportMSProject" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>-->
               <menuSeparator id="menuSeparator3"/>
@@ -137,7 +139,7 @@
         <group id="PTneu">
           <!--label="Neues Projekt anlegen"-->
           <splitButton id="PT2G1split" size ="large">
-            <button id="PT2G1M0" getLabel ="bestimmeLabel" imageMso="FileNew" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
+            <button id="PT2G1M0" getLabel ="bestimmeLabel" imageMso="CreateNewDrawing" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
             <menu id="PT2G1M" getVisible="chckVisibility">
               <!--label="Neu auf Basis Vorlage"-->
               <button id="PT2G1M0B0" getLabel ="bestimmeLabel" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
@@ -168,10 +170,10 @@
         <!--label="Editieren"-->
         <group id="PTeditieren">
           <!--label="Portfolio"-->
-          <button id="PT2G2B4" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="im Portfolio dargestellte/nicht dargestellt Projekte der Session können ausgeblendet/eingeblendet werden und ein neues Portfolio kann definiert werden."/>
+          <button id="PT2G2B4" imageMso="EditFileGallery" size="large" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="im Portfolio dargestellte/nicht dargestellt Projekte der Session können ausgeblendet/eingeblendet werden und ein neues Portfolio kann definiert werden."/>
           <splitButton id="PT2G2split" size ="large">
             <!--label="Modify Ressourcen und Kosten"-->
-            <button id="PT2G2" getLabel ="bestimmeLabel"  image="HappyFace" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
+            <button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
             <menu id="PT2G2M" getVisible="chckVisibility">
               <!--label="Modify Ressourcen und Kosten"-->
               <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
@@ -373,7 +375,7 @@
                 </menu>
               </menu>
               <!--label="letztes Report-Profil speichern"-->
-              <button id="PT1G1B4" imageMso="FileSaveAs" getLabel ="bestimmeLabel" onAction="PTStoreCurReportProfil" supertip ="Es wird die zuletzt verwendete Report-Definition in der Datei mit angegebenen Namen gespeichert"/>
+              <button id="PT1G1B4" imageMso="SaveAsPowerPointPotx" getLabel ="bestimmeLabel" onAction="PTStoreCurReportProfil" supertip ="Es wird die zuletzt verwendete Report-Definition in der Datei mit angegebenen Namen gespeichert"/>
             </menu>
           </splitButton>
           <separator id="PT8G1s2"/>
