@@ -107,7 +107,7 @@ Partial Class frmLoadConstellation
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmLoadConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-        Me.Text = "Szenario laden "
+        Me.Text = "Portfolio laden"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
