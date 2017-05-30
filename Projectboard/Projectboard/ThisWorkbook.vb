@@ -138,25 +138,26 @@ Public Class ThisWorkbook
 
         With plantafel
             .DisplayHeadings = False
-            .Caption = windowNames(5)
-            .ScrollRow = 1
-            .ScrollColumn = 1
+            .Caption = windowNames(0)
+            '.ScrollRow = 1
+            '.ScrollColumn = 1
             .Visible = True
             .Zoom = 100
+            .WindowState = XlWindowState.xlMaximized
         End With
 
 
-        If appInstance.Windows.Count < 2 Then
-            Try
-                With appInstance
-                    .Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleTiled)
-                    .Windows(1).WindowState = XlWindowState.xlMaximized
-                End With
-            Catch ex As Exception
-                ' 
-            End Try
+        'If appInstance.Windows.Count < 2 Then
+        '    Try
+        '        With appInstance
+        '            .Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleTiled)
+        '            .Windows(1).WindowState = XlWindowState.xlMaximized
+        '        End With
+        '    Catch ex As Exception
+        '        ' 
+        '    End Try
 
-        End If
+        'End If
 
 
         ' hier wird die Projekt Tafel so dargestellt, daß Zeitraum zu sehen ist ... und ein späteres Diagramm 

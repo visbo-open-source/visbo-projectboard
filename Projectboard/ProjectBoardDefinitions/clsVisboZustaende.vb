@@ -38,6 +38,28 @@ Public Class clsVisboZustaende
         End Set
     End Property
 
+    Private _oldRow As Integer
+    ''' <summary>
+    ''' nimmt die letzte Zeile im massEdit auf 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property oldRow As Integer
+        Get
+            oldRow = _oldRow
+        End Get
+        Set(value As Integer)
+            If IsNothing(value) Then
+                _oldRow = 0
+            ElseIf value > 0 Then
+                _oldRow = value
+            Else
+                _oldRow = 0
+            End If
+        End Set
+    End Property
+
     ' wird jetzt von getUpdatedAuslastungsArray übernommen ...
     ''Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer, _
     ''                                             ByVal percentValues As Boolean) As Double(,)
@@ -145,6 +167,7 @@ Public Class clsVisboZustaende
         _projectBoardMode = ptModus.graficboard
         _meMaxZeile = 0
         _oldValue = ""
+        _oldRow = 0
         _lastProject = Nothing
         _lastProjectDB = Nothing
         _auslastungsArray = Nothing

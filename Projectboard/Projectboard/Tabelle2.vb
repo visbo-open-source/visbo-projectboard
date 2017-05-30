@@ -17,17 +17,18 @@ Public Class Tabelle2
     Private columnName As Integer = 2
 
 
-    Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
+    Private Sub Tabelle2_ActivateEvent(Optional ByVal rcName As String = Nothing) Handles Me.ActivateEvent
+
 
         Application.DisplayFormulaBar = False
 
-
+        Dim filterRange As Excel.Range
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
 
         ' jetzt den Schutz aufheben , falls einer definiert ist 
@@ -63,9 +64,21 @@ Public Class Tabelle2
 
             ''End Try
 
+
+            With meWS
+                filterRange = CType(.Range(.Cells(1, 1), .Cells(1, 6)), Excel.Range)
+            End With
+
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                'CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
+
+                ' jetzt überprüfen, ob nur eine bestimmte Rolle/Kostenart angezeigt, d.h gefiltert werden soll  
+                If Not IsNothing(rcName) Then
+                    CType(CType(meWS, Excel.Worksheet).Rows(1), Excel.Range).AutoFilter(Field:=visboZustaende.meColRC, Criteria1:=rcName)
+                End If
+
             End If
 
         Catch ex As Exception
@@ -130,7 +143,7 @@ Public Class Tabelle2
             Dim cz As Integer = 2
             Dim eof As Boolean = (cz > visboZustaende.meMaxZeile)
 
-            Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof 
+            Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
 
             Do While bedingung
                 cz = cz + 1
@@ -156,7 +169,7 @@ Public Class Tabelle2
                 CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
                 CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
             End If
-            
+
         Catch ex As Exception
 
         End Try
@@ -191,22 +204,22 @@ Public Class Tabelle2
             Dim newStrValue As String = ""
 
             Dim meWB As Excel.Workbook = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
-            Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(5)), Excel.Worksheet)
+            Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
             If Target.Cells.Count = 1 Then
 
                 Dim roleCostNames As New Collection
 
                 Dim zeile As Integer = Target.Row
-                Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
+                Dim pName As String = CStr(meWS.Cells(zeile, visboZustaende.meColpName).value)
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                 Dim phaseNameID As String = calcHryElemKey(phaseName, False)
                 Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
                 If Not IsNothing(curComment) Then
                     phaseNameID = curComment.Text
                 End If
-
 
                 If Target.Column = columnRC Then
                     ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
@@ -352,9 +365,12 @@ Public Class Tabelle2
                                             ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                             Dim newCostID As Integer = CostDefinitions.getCostdef(newStrValue).UID
                                             Dim cCost As clsKostenart = cPhase.getCost(visboZustaende.oldValue)
-                                            hproj.rcLists.removeCP(cCost.KostenTyp, cPhase.nameID)
-                                            cCost.KostenTyp = newCostID
-                                            hproj.rcLists.addCP(newCostID, cPhase.nameID)
+                                            If IsNothing(cCost) Then
+                                            Else
+                                                hproj.rcLists.removeCP(cCost.KostenTyp, cPhase.nameID)
+                                                cCost.KostenTyp = newCostID
+                                                hproj.rcLists.addCP(newCostID, cPhase.nameID)
+                                            End If
                                             kostenChanged = True
                                         Else
                                             ' es kam eine neue Kostenart hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
@@ -391,7 +407,6 @@ Public Class Tabelle2
                     Dim newDblValue As Double
                     Dim difference As Double
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                     Dim ok As Boolean = False
                     Dim isRole As Boolean
                     Dim uid As Integer
@@ -415,7 +430,7 @@ Public Class Tabelle2
 
                             If Not IsNothing(hproj) Then
                                 Dim cPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
-                                
+
                                 If Not IsNothing(cPhase) Then
 
                                     Dim phStart As Integer = hproj.Start + cPhase.relStart - 1
@@ -544,7 +559,6 @@ Public Class Tabelle2
                     Dim zeileSammelRolle As Integer = 0
                     Dim isRole As Boolean
 
-                    Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                     If RoleDefinitions.containsName(rcName) Then
                         isRole = True
                         ' hier muss jetzt bestimmt werden, wo die zugehörige Sammelrolle steht ... 
@@ -708,7 +722,11 @@ Public Class Tabelle2
                 '    Call MsgBox("Unterschiede: " & testValue1 & ", " & testValue2)
                 'End If
 
-                visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+                If Not IsNothing(Target.Cells(1, 1).value) Then
+                    visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+                Else
+                    visboZustaende.oldValue = ""
+                End If
 
                 ' aktualisieren der Charts 
                 Try
@@ -717,7 +735,8 @@ Public Class Tabelle2
                         If Not IsNothing(formProjectInfo1) Then
                             Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                         End If
-                        Call awinNeuZeichnenDiagramme(6)
+                        Call aktualisiereCharts(visboZustaende.lastProject, True)
+                        Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
                 Catch ex As Exception
@@ -759,7 +778,7 @@ Public Class Tabelle2
 
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
         Dim pName As String = hproj.name
         Dim phaseNameID As String = cPhase.nameID
@@ -865,7 +884,7 @@ Public Class Tabelle2
         Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, roleName)
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
 
         If zeileOFSummaryRole >= 2 And zeileOFSummaryRole <= visboZustaende.meMaxZeile Then
@@ -980,7 +999,7 @@ Public Class Tabelle2
 
         Dim meWS As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(5)), Excel.Worksheet)
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
         appInstance.EnableEvents = False
 
@@ -990,13 +1009,13 @@ Public Class Tabelle2
         End If
 
         Try
-            ' einen Select machen ...
-            Try
-                'CType(CType(meWS, Excel.Worksheet).Cells(1,1), Excel.Range).Select()
-                CType(CType(meWS, Excel.Worksheet).Cells(2, visboZustaende.meColRC), Excel.Range).Select()
-            Catch ex As Exception
+            ' einen Select machen ... muss man doch gar nicht machen , um den Filter anzuwenden ... tk 21.5.17
+            'Try
+            '    'CType(CType(meWS, Excel.Worksheet).Cells(1,1), Excel.Range).Select()
+            '    CType(CType(meWS, Excel.Worksheet).Cells(2, visboZustaende.meColRC), Excel.Range).Select()
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
             ' jetzt die Autofilter de-aktivieren ... 
             If CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
@@ -1022,13 +1041,26 @@ Public Class Tabelle2
     Private Sub Tabelle2_SelectionChange(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.SelectionChange
 
         appInstance.EnableEvents = False
+
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim pname As String
+        Dim rcName As String = ""
+        Dim oldRCName As String = ""
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
             If Target.Cells.Count > 1 Then
                 Target = CType(Target.Cells(1, 1), Excel.Range)
                 Target.Select()
             End If
+
+            rcName = CStr(meWS.Cells(Target.Row, columnRC).value)
+
+            If visboZustaende.oldRow > 0 Then
+                oldRCName = CStr(meWS.Cells(visboZustaende.oldRow, columnRC).value)
+            End If
+
+            ' alte Row merken 
+            visboZustaende.oldRow = Target.Row
 
             If awinSettings.meEnableSorting Then
                 ' es können auch nicht zugelassene Zellen selektiert worden sein 
@@ -1109,10 +1141,37 @@ Public Class Tabelle2
             End If
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
-            If pNameChanged And Not IsNothing(formProjectInfo1) Then
+            Dim alreadyDone As Boolean = False
+            If pNameChanged Then
 
-                Call updateProjectInfo1(.lastProject, .lastProjectDB)
+                selectedProjekte.Clear(False)
+                selectedProjekte.Add(.lastProject, False)
 
+                Call aktualisiereCharts(.lastProject, True)
+
+                If Not IsNothing(rcName) Then
+
+                    If rcName <> "" Then
+                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
+                        alreadyDone = True
+                    End If
+                End If
+
+
+                If Not IsNothing(formProjectInfo1) Then
+                    Call updateProjectInfo1(.lastProject, .lastProjectDB)
+                    ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
+                End If
+            End If
+
+
+            ' hier wird jetzt ggf das Role/Cost Portfolio Chart aktualisiert ..
+            If Not IsNothing(rcName) Then
+                If oldRCName <> rcName Then
+                    If rcName <> "" And Not alreadyDone Then
+                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
+                    End If
+                End If
             End If
 
         End With

@@ -43,7 +43,7 @@ Public Class frmOptimizeKPI
             activeChart = Nothing
         End Try
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), xlNS.Worksheet)
 
 
             For Each chtobj As xlNS.ChartObject In CType(.ChartObjects, xlNS.ChartObjects)

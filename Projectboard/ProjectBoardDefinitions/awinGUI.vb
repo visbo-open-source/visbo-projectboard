@@ -84,9 +84,9 @@ Public Module awinGUI
         Dim currentSheetName As String
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentSheetName = arrWsNames(3)
+            currentSheetName = arrWsNames(ptTables.MPT)
         Else
-            currentSheetName = arrWsNames(5)
+            currentSheetName = arrWsNames(ptTables.meRC)
         End If
 
         appInstance.ScreenUpdating = False
@@ -1194,9 +1194,15 @@ Public Module awinGUI
                 Next i
 
                 ' remove old series
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
+                Try
+                    Dim anz As Integer = CInt(.SeriesCollection.count)
+                    Do While anz > 0
+                        .SeriesCollection(1).Delete()
+                        anz = anz - 1
+                    Loop
+                Catch ex As Exception
+
+                End Try
 
                 ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
 

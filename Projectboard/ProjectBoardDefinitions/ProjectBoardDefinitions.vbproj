@@ -87,6 +87,7 @@
     <Compile Include="clsAddElementRuleItem.vb" />
     <Compile Include="clsAddElements.vb" />
     <Compile Include="clsFilterDB.vb" />
+    <Compile Include="clsWindowWithEvents.vb" />
     <Compile Include="clsWriteProtectionItem.vb" />
     <Compile Include="clsWriteProtectionItemDB.vb" />
     <Compile Include="clsReport.vb" />

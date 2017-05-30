@@ -34,7 +34,7 @@ Public Class clsCommandBarEvents
             Exit Sub
         End If
 
-        If Not enableOnUpdate Then
+        If Not enableOnUpdate Or Not (CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.MPT)) Then
             Exit Sub
         End If
 
@@ -47,10 +47,11 @@ Public Class clsCommandBarEvents
         ' awinSelection enthält alle selektierten Shapes 
         Dim awinSelection As Excel.ShapeRange
         Try
+            
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
             If awinSelection.Count > 0 Then
 
-                
+
                 ' in selCollection kommen jetzt alle Shapes, die Projekte sind ... 
                 For i = 1 To awinSelection.Count
                     ' es dürfen nur solche in die Collection aufgenommen werden, die schon existiert haben; also wenn shpelement.id = hproj.shpuid 
@@ -110,7 +111,7 @@ Public Class clsCommandBarEvents
 
 
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             tmpShapes = .Shapes
             'tmpShapes = awinSelection
 
@@ -725,7 +726,7 @@ Public Class clsCommandBarEvents
 
 
 
-    '    With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+    '    With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
     '        tmpShapes = .shapes
     '        'tmpShapes = awinSelection
 

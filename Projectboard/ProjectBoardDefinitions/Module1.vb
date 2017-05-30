@@ -230,6 +230,20 @@ Public Module Module1
         formel = 6
     End Enum
 
+    Public Enum ptTables
+        none = 0
+        MPT = 3
+        cstSettings = 4
+        meRC = 5
+        meTE = 6
+        cstPmappings = 8
+        meAT = 9
+        cstMmappings = 10
+        meCharts = 11
+        pfCharts = 12
+        prCharts = 13
+        cstMissingDefs = 15
+    End Enum
     
     Public Enum ptWriteProtectionType
         project = 0
@@ -615,6 +629,12 @@ Public Module Module1
 
     ' Variable nimmt die Namen der Windows auf  
     Public windowNames(5) As String
+
+    ' nimmt alle Excel.Window Definitionen auf 
+    Public projectboardWindows(4) As Excel.Window
+
+    ' Variable nimmt die View Namen auf ; eine View ist eine Zusammenstellung von Windows
+    Public viewNames(3) As String
 
     ' Variable nimmt die Namen der Ergebnis Charts auf  
     Public ergebnisChartName(3) As String
@@ -1561,7 +1581,7 @@ Public Module Module1
         Dim i As Integer
         Dim chtobj As Excel.ChartObject
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
@@ -1596,7 +1616,7 @@ Public Module Module1
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
-        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
             Dim found As Boolean
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
@@ -1638,7 +1658,7 @@ Public Module Module1
 
 
 
-        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
@@ -1749,7 +1769,7 @@ Public Module Module1
         ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
 
         If selectedProjekte.Count > 0 Then
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
             ReDim shpArray(selectedProjekte.Count - 1)
 
             For Each kvp In selectedProjekte.Liste
@@ -1757,7 +1777,7 @@ Public Module Module1
                 hproj = kvp.Value
                 i = i + 1
                 Try
-                    shpElement = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpElement = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Item(hproj.name)
                     shpArray(i - 1) = shpElement.Name
 
                 Catch ex As Exception
@@ -1975,7 +1995,7 @@ Public Module Module1
         End Select
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
 
 
@@ -2020,7 +2040,7 @@ Public Module Module1
 
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
             If pName = "" Then
                 For Each shpElement In worksheetShapes
