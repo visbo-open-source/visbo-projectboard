@@ -236,7 +236,7 @@ Public Module awinDiagrams
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Phasen)
             Else
-                diagramTitle = CStr(myCollection.Item(1))
+                diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
 
         ElseIf prcTyp = DiagrammTypen(1) Then
@@ -272,7 +272,7 @@ Public Module awinDiagrams
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
             Else
-                diagramTitle = CStr(myCollection.Item(1))
+                diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
 
         Else
@@ -387,8 +387,13 @@ Public Module awinDiagrams
             If Not found Then
 
                 ' 25.5.17 es wird jetzt mit embedded chartobjects gearbeitet, nicht mit Chart-Sheet wie es mit appinstance.charts.add der Fall wäre ...
-                newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(currentSheetName),  _
-                    Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
+                'newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(currentSheetName),  _
+                '    Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
+
+
+                newChtObj = CType(.ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
+
+                Dim tmpAnz As Integer = CType(.ChartObjects, Excel.ChartObjects).Count
 
                 With newChtObj.Chart
 
@@ -595,15 +600,15 @@ Public Module awinDiagrams
                                     Next
                                 Next
 
-                                With CType(.SeriesCollection, Excel.Series).NewSeries
+                                With CType(.SeriesCollection.NewSeries, Excel.Series)
                                     If breadcrumb = "" Then
-                                        .name = prcName
+                                        .Name = prcName
                                     Else
-                                        .name = breadcrumb & "-" & prcName
+                                        .Name = breadcrumb & "-" & prcName
                                     End If
 
                                     '.Interior.color = ampelfarbe(0)
-                                    .Interior.color = objektFarbe
+                                    .Interior.Color = objektFarbe
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
                                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1037,25 +1042,6 @@ Public Module awinDiagrams
         Dim found As Boolean
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
-        ' '' Versuch der Korrektur ...
-        Dim tmpName As String = chtobj.Name
-        Dim curShtName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
-        found = False
-        For i = 1 To CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
-            Dim tmpchtobj As Excel.ChartObject = CType(CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Item(i), Excel.ChartObject)
-            If tmpchtobj.Name = tmpName Then
-                found = True
-                chtobj = tmpchtobj
-            End If
-        Next
-
-        chtobj.Activate()
-        If Not found Then
-            Call MsgBox("What the hell ....")
-        End If
-
-        ' '' Ende der Korrektur 
-
         'Dim minwert As Double, maxwert As Double
         'Dim nr_pts As Integer
         Dim diagramTitle As String
@@ -1216,18 +1202,13 @@ Public Module awinDiagrams
                 diagramTitle = repMessages.getmsg(113)
             ElseIf prcTyp = DiagrammTypen(5) Then
                 chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
-
-                If myCollection.Count > 1 Then
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
-                Else
-                    diagramTitle = CStr(myCollection.Item(1))
-                End If
+                diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
+            
             Else
-                'diagramTitle = "Übersicht"
                 diagramTitle = repMessages.getmsg(114)
             End If
         Else
-            diagramTitle = CStr(myCollection.Item(1))
+            diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
         End If
 
         ' jetzt den Namen aus optischen Gründen ändern 

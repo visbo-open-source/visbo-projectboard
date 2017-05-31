@@ -19796,7 +19796,9 @@ Public Module Projekte
                         Else
 
                             For i = 1 To mycollection.Count
-                                cName = CStr(mycollection.Item(i)).Replace("#", "-")
+
+                                cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))
+                                'cName = CStr(mycollection.Item(i)).Replace("#", "-")
                                 ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
                                 Try
                                     IDkennung = IDkennung & "#" & cName
@@ -19811,7 +19813,9 @@ Public Module Projekte
                     Case PTpfdk.Meilenstein
 
                         For i = 1 To mycollection.Count
-                            cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                            ' Änderung tk 30.5.17
+                            cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))
+                            'cName = CStr(mycollection.Item(i)).Replace("#", "-")
                             IDkennung = IDkennung & "#" & cName
 
                         Next
@@ -19921,7 +19925,7 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' falls ein customTF-key bereits existiert, wird durch Append von . ein neuer key erteugt
+    ''' falls ein TF-key bereits existiert, wird durch Append von . ein neuer key erteugt
     ''' </summary>
     ''' <param name="oldStr"></param>
     ''' <returns></returns>
