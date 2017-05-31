@@ -3124,16 +3124,22 @@ Imports System.Windows
             .WindowState = Excel.XlWindowState.xlMaximized
         End With
 
-        ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
-        If Not IsNothing(projectboardWindows(1)) Then
-            projectboardWindows(1).Close()
-            projectboardWindows(1) = Nothing
-        End If
+        Try
 
-        If Not IsNothing(projectboardWindows(2)) Then
-            projectboardWindows(2).Close()
-            projectboardWindows(2) = Nothing
-        End If
+            ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
+            If Not IsNothing(projectboardWindows(1)) Then
+                projectboardWindows(1).Close()
+                projectboardWindows(1) = Nothing
+            End If
+
+            If Not IsNothing(projectboardWindows(2)) Then
+                projectboardWindows(2).Close()
+                projectboardWindows(2) = Nothing
+            End If
+
+        Catch ex As Exception
+
+        End Try
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -8381,6 +8387,7 @@ Imports System.Windows
 
         ' Aufbau des Windows windowNames(4): Charts
         projectboardWindows(2) = appInstance.ActiveWindow.NewWindow
+
         visboWorkbook.Worksheets.Item(arrWsNames(ptTables.meCharts)).activate()
         With projectboardWindows(2)
             .WindowState = Excel.XlWindowState.xlNormal
@@ -8394,8 +8401,11 @@ Imports System.Windows
             .DisplayWorkbookTabs = False
             .Caption = windowNames(4)
         End With
+        ' Ribbon ausblenden:  windowNames(4): Charts
+        Call Workbook_WindowActivate(projectboardWindows(2))
 
-        ' jetzt das Ursprungs-Window ausblenden ...
+
+        'jetzt das Ursprungs-Window ausblenden ...
         For Each tmpWindow As Excel.Window In visboWorkbook.Windows
             If (CStr(tmpWindow.Caption) <> windowNames(4)) And (CStr(tmpWindow.Caption) <> windowNames(1)) Then
                 tmpWindow.Visible = False
@@ -8417,14 +8427,15 @@ Imports System.Windows
             .Height = 1 / 4 * maxScreenHeight - 3
         End With
 
+
         ' Check: was ist das aktuelle Sheet 
         'Dim checkSheet As Object = projectboardWindows(1).ActiveSheet
 
         ' jetzt das Mass-Edit Window aktivieren 
         projectboardWindows(1).Activate()
-        With CType(projectboardWindows(1).ActiveSheet, Excel.Worksheet)
-            CType(.Cells(currentRow, currentColumn), Excel.Range).Activate()
-        End With
+        'With CType(projectboardWindows(1).ActiveSheet, Excel.Worksheet)
+        '    CType(.Cells(currentRow, currentColumn), Excel.Range).Activate()
+        'End With
 
         Dim anz As Integer = appInstance.ActiveWorkbook.Windows.Count
 
@@ -8462,15 +8473,12 @@ Imports System.Windows
             chWidth = stdBreite
             Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
-           
-            
-
         Else
             ' sie sind schon da 
-
+        
         End If
 
-
+    
 
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
