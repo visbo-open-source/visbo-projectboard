@@ -1726,6 +1726,7 @@ Public Class clsProjekte
 
     ''' <summary>
     ''' gibt für den aktuellen Zeitraum und die übergebene Collection mit Phasen-Namen die Schwellwerte an  
+    ''' es muss berücksichtigt werden, dass in der myCollection jetzt ggf noch die Kennung steht, welche Vorlage bzw. welches PRojekt denn gemeint ist ...
     ''' </summary>
     ''' <param name="myCollection"></param>
     ''' <value></value>

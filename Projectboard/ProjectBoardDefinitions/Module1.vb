@@ -2561,6 +2561,32 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' zerhackt den übergebenen String in seine Bestandteile [V:vorlagen-name] bzw. [P:projekt-name] und 
+    ''' Breadcrumb-Name
+    ''' 
+    ''' </summary>
+    ''' <param name="fullname"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function splitHryFullnameTo1(ByVal fullname As String) As String
+        Dim tmpResult As String = ""
+        Dim elemName As String = ""
+        Dim breadCrumb As String = ""
+        Dim type As Integer = -1
+        Dim pvName As String = ""
+        Call splitHryFullnameTo2(fullname, elemName, breadCrumb, type, pvName)
+
+        If breadCrumb = "" Then
+            tmpResult = elemName
+        Else
+            tmpResult = breadCrumb.Replace("#", "-") & "-" & elemName
+        End If
+
+        splitHryFullnameTo1 = tmpResult
+
+    End Function
+
+    ''' <summary>
     ''' zerteilt einen String, der folgendes Format hat: breadcrumb#elemName#lfdnr in seine Bestandteile 
     ''' </summary>
     ''' <param name="fullname"></param>

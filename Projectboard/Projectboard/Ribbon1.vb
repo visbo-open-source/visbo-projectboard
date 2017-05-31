@@ -2202,11 +2202,11 @@ Imports System.Windows
                     tmpLabel = "Strategy/Risk/Budget"
                 End If
 
-            Case "PT2G1M2B3" ' Zeitspanne f. Projektstart
+            Case "PT2G1M2B3" ' Modify Attributes
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Zeitspanne f. Projektstart"
+                    tmpLabel = "Budget und Attribute"
                 Else
-                    tmpLabel = "Timespan for projectstart"
+                    tmpLabel = "Budget and attributes"
                 End If
 
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen

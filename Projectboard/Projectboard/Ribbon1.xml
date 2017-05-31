@@ -182,7 +182,7 @@
               <!--label="Modify Dates of Phases & MIlestones"-->
               <button id="PT2G1M2B2" label="Modify Dates of Phases and Milestones (fehlt)" />            
               <!--label="Modify Attributes"-->
-              <button id="PT2G1M2B3" label="Modify Attributes (fehlt)" />
+              <button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Business Unit, Budget, strateg. Fit und Risiko Einschätzung."/>
               <menuSeparator id="separator1" />
               <!--label=" Projekt Umbenennen"-->
               <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
