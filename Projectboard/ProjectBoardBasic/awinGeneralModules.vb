@@ -755,6 +755,8 @@ Public Module awinGeneralModules
             If awinSettings.visboDebug Then
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
+                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+                            "Excel-Version: " & appInstance.Version, vbInformation, "Info")
             End If
 
 
