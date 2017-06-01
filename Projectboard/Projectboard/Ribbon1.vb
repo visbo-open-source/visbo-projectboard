@@ -7727,7 +7727,7 @@ Imports System.Windows
 
     Sub PT0ShowAuslastung(control As IRibbonControl)
 
-        Dim selectionType As Integer = -1 ' Keine Einschränkung
+        Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
         Dim obj As Excel.ChartObject = Nothing
         Dim myCollection As New Collection
@@ -7744,18 +7744,18 @@ Imports System.Windows
 
             If myCollection.Count > 0 Then
 
-                top = 180
-                width = 340
+                top = 50
+                width = 300
                 left = showRangeRight * boxWidth + 4
                 If left < 0 Then
                     left = 4
                 End If
-                height = awinSettings.ChartHoehe2
+                height = awinSettings.ChartHoehe1
 
                 Try
-                    Call awinCreateAuslastungsDiagramm(obj, top, left, width, height, False)
+                    'Call awinCreateAuslastungsDiagramm(obj, top, left, width, height, False)
 
-                    top = top + height + 10
+                    'top = top + height + 10
                     Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
 
                     ' jetzt Unterauslastung
@@ -8371,6 +8371,7 @@ Imports System.Windows
         projectboardWindows(0) = appInstance.ActiveWindow
 
         ' Aus dem aktuellen Window ein benanntes Window machen 
+        
         projectboardWindows(1) = appInstance.ActiveWindow.NewWindow
         With projectboardWindows(1)
             .WindowState = Excel.XlWindowState.xlNormal
@@ -8401,9 +8402,14 @@ Imports System.Windows
             .DisplayWorkbookTabs = False
             .Caption = windowNames(4)
         End With
-        ' Ribbon ausblenden:  windowNames(4): Charts
-        Call Workbook_WindowActivate(projectboardWindows(2))
 
+        ' Ribbon ausblenden:  windowNames(4): Charts
+        ' jetzt die verbleibenden arrangieren ...
+
+        If appInstance.Version <> "14.0" Then
+            Call Workbook_WindowActivate(projectboardWindows(2))
+        End If
+       
 
         'jetzt das Ursprungs-Window ausblenden ...
         For Each tmpWindow As Excel.Window In visboWorkbook.Windows
@@ -8412,7 +8418,6 @@ Imports System.Windows
             End If
         Next
 
-        ' jetzt die verbleibenden arrangieren ...
         visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
 
         ' jetzt die Größen anpassen 

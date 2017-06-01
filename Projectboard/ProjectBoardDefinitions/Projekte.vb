@@ -144,7 +144,7 @@ Public Module Projekte
 
 
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         .Name = name1
                         .Interior.Color = vergleichsfarbe1
                         .Values = array1
@@ -152,7 +152,7 @@ Public Module Projekte
                         ' Unterschied farblich hervorheben ...
                         For ix = 1 To maxlength
                             If array1(ix - 1) = array2(ix - 1) Then
-                                With CType(.Points(ix), Excel.Point)
+                                With .Points(ix)
                                     .Interior.Color = vergleichsfarbe0
                                 End With
                             End If
@@ -160,7 +160,7 @@ Public Module Projekte
                         .ChartType = Excel.XlChartType.xlColumnClustered
                     End With
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         .Name = name2
                         .Interior.Color = vergleichsfarbe2
                         .Values = array2
@@ -168,7 +168,7 @@ Public Module Projekte
                         ' Unterschied farblich hervorheben ...
                         For ix = 1 To maxlength
                             If array1(ix - 1) = array2(ix - 1) Then
-                                With CType(.Points(ix), Excel.Point)
+                                With .Points(ix)
                                     .Interior.Color = vergleichsfarbe0
                                 End With
                             End If
@@ -438,7 +438,7 @@ Public Module Projekte
 
 
                     'series
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         .Name = "identisch"
                         .Interior.Color = vergleichsfarbe0
                         .Values = array0
@@ -447,7 +447,7 @@ Public Module Projekte
                     End With
 
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "mehr"
                         .Name = name1
                         .Interior.Color = vergleichsfarbe1
@@ -456,7 +456,7 @@ Public Module Projekte
                         .ChartType = Excel.XlChartType.xlColumnStacked
                     End With
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "weniger"
                         .Name = name2
                         .Interior.Color = vergleichsfarbe2
@@ -727,7 +727,7 @@ Public Module Projekte
                     '    .ChartType = Excel.XlChartType.xlColumnStacked
                     'End With
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         .Name = name1
                         .Interior.Color = vergleichsfarbe1
                         .Values = array1
@@ -1011,7 +1011,7 @@ Public Module Projekte
 
                     'Aufbau der Series 
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                         For i = 0 To anzPhasen - 1
                             mdatenreihe(i) = tdatenreihe1(i) / 365 * 12
@@ -1024,7 +1024,7 @@ Public Module Projekte
 
                         For px = 1 To anzPhasen
 
-                            With CType(.Points(px), Excel.Point)
+                            With .Points(px)
                                 If tdatenreihe1(px - 1) < 90 Then
                                     .HasDataLabel = False
                                 Else
@@ -1053,7 +1053,7 @@ Public Module Projekte
                         .ChartType = Excel.XlChartType.xlBarStacked
                     End With
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                         For i = 0 To anzPhasen - 1
                             mdatenreihe(i) = tdatenreihe2(i) / 365 * 12
@@ -1067,7 +1067,7 @@ Public Module Projekte
                         CType(.DataLabels, Excel.DataLabels).Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
 
                         For i = 1 To anzPhasen
-                            With CType(.Points(i), Excel.Point)
+                            With .Points(i)
                                 .Interior.Color = valueColor(i - 1)
 
                                 If mdatenreihe(i - 1) <= 3 Then
@@ -1084,7 +1084,7 @@ Public Module Projekte
                         .ChartType = Excel.XlChartType.xlBarStacked
                     End With
 
-                    With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                         .Name = "null2"
                         .Interior.ColorIndex = -4142
@@ -1098,7 +1098,7 @@ Public Module Projekte
                         Dim bis As Integer
                         For px = 1 To anzPhasen
 
-                            With CType(.Points(px), Excel.Point)
+                            With .Points(px)
 
                                 bis = CInt(tdatenreihe1(px - 1) + tdatenreihe2(px - 1))
                                 .DataLabel.Text = hproj.startDate.AddDays(bis - 1).ToShortDateString
@@ -1347,7 +1347,7 @@ Public Module Projekte
             'Aufbau der Series 
 
             'With .SeriesCollection.NewSeries
-            With .SeriesCollection(1)
+            With CType(.SeriesCollection(1), Excel.Series)
 
                 For i = 0 To anzPhasen - 1
                     mdatenreihe(i) = tdatenreihe1(i) / 365 * 12
@@ -1363,7 +1363,7 @@ Public Module Projekte
 
                 For px = 1 To anzPhasen
 
-                    With CType(.Points(px), Excel.Point)
+                    With .Points(px)
 
                         If tdatenreihe1(px - 1) < 90 Then
                             .HasDataLabel = False
@@ -1397,7 +1397,7 @@ Public Module Projekte
 
 
             'With .SeriesCollection.NewSeries
-            With .SeriesCollection(2)
+            With CType(.SeriesCollection(2), Excel.Series)
 
                 For i = 0 To anzPhasen - 1
                     mdatenreihe(i) = tdatenreihe2(i) / 365 * 12
@@ -1418,7 +1418,7 @@ Public Module Projekte
                 .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
 
                 For i = 1 To anzPhasen
-                    With CType(.Points(i), Excel.Point)
+                    With .Points(i)
                         .Interior.Color = valueColor(i - 1)
 
                         If mdatenreihe(i - 1) <= 3 Then
@@ -1436,10 +1436,10 @@ Public Module Projekte
 
 
             'With .SeriesCollection.NewSeries
-            With .SeriesCollection(3)
+            With CType(.SeriesCollection(3), Excel.Series)
 
                 .Name = "null2"
-                .Interior.colorindex = -4142
+                .Interior.ColorIndex = -4142
 
                 .Values = tdatenreihe3
                 .XValues = Xdatenreihe
@@ -1453,7 +1453,7 @@ Public Module Projekte
                 Dim bis As Integer
                 For px = 1 To anzPhasen
 
-                    With CType(.Points(px), Excel.Point)
+                    With .Points(px)
 
                         bis = CInt(tdatenreihe1(px - 1) + tdatenreihe2(px - 1))
                         .DataLabel.Text = hproj.startDate.AddDays(bis - 1).ToShortDateString
@@ -1819,7 +1819,7 @@ Public Module Projekte
 
                 For i = 1 To pts.Count
 
-                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
+                    With .SeriesCollection(1).Points(i)
 
                         Try
                             If .HasDataLabel = True Then
@@ -1855,7 +1855,7 @@ Public Module Projekte
 
                 ' remove old series
                 Try
-                    Dim anz As Integer = CInt(.SeriesCollection.count)
+                    Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                     Do While anz > 0
                         .SeriesCollection(1).Delete()
                         anz = anz - 1
@@ -1908,7 +1908,6 @@ Public Module Projekte
                     bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                     With CType(.SeriesCollection(1).Points(i), Excel.Point)
-
                         If showLabels Then
                             Try
                                 .HasDataLabel = True
@@ -2511,7 +2510,7 @@ Public Module Projekte
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -2599,16 +2598,16 @@ Public Module Projekte
 
                 If isMinMax Or vglBaseline Then
 
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
-                            .name = "Minimum (" & ersteVersion.timeStamp.ToString("d") & ")"
+                            .Name = "Minimum (" & ersteVersion.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .name = "Planung: " & ersteVersion.timeStamp.ToString("d") & ")"
+                            .Name = "Planung: " & ersteVersion.timeStamp.ToString("d") & ")"
                         End If
 
                         '.name = "Baseline"
-                        .Interior.color = awinSettings.SollIstFarbeB
+                        .Interior.Color = awinSettings.SollIstFarbeB
                         .Values = tdatenreiheB
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnClustered
@@ -2648,15 +2647,15 @@ Public Module Projekte
 
 
                 If isMinMax Or Not vglBaseline Then
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
-                            .name = "Maximum (" & letzteVersion.timeStamp.ToString("d") & ")"
+                            .Name = "Maximum (" & letzteVersion.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .name = "letzte Version: " & letzteVersion.timeStamp.ToString("d") & ")"
+                            .Name = "letzte Version: " & letzteVersion.timeStamp.ToString("d") & ")"
                         End If
 
-                        .Interior.color = awinSettings.SollIstFarbeL
+                        .Interior.Color = awinSettings.SollIstFarbeL
                         .Values = tdatenreiheL
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnClustered
@@ -2694,11 +2693,11 @@ Public Module Projekte
                 End If
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "aktuell"
+                    .Name = "aktuell"
                     '.name = "Current"
-                    .Interior.color = awinSettings.SollIstFarbeC
+                    .Interior.Color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -3299,10 +3298,10 @@ Public Module Projekte
                 If pastAndFuture Then
                     ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
 
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Istwerte"
-                        .name = repMessages.getmsg(194)
-                        .Interior.color = awinSettings.SollIstFarbeArea
+                        .Name = repMessages.getmsg(194)
+                        .Interior.Color = awinSettings.SollIstFarbeArea
                         .Values = gesterndatenreihe
                         '.XValues = Xgestern
                         .XValues = Xdatenreihe
@@ -3313,16 +3312,16 @@ Public Module Projekte
                 End If
 
                 If isMinMax Or vglBaseline Then
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
                             '.name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .name = repMessages.getmsg(195) & " (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(195) & " (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .name = repMessages.getmsg(196) & " (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(196) & " (" & beauftragung.timeStamp.ToString("d") & ")"
                         End If
 
-                        .Interior.color = awinSettings.SollIstFarbeB
+                        .Interior.Color = awinSettings.SollIstFarbeB
                         .Values = tdatenreiheB
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
@@ -3333,16 +3332,16 @@ Public Module Projekte
 
 
                 If isMinMax Or Not vglBaseline Then
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
                             '.name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .name = repMessages.getmsg(197) & " (" & lastPlan.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(197) & " (" & lastPlan.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .name = repMessages.getmsg(198) & " (" & lastPlan.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(198) & " (" & lastPlan.timeStamp.ToString("d") & ")"
                         End If
 
-                        .Interior.color = awinSettings.SollIstFarbeL
+                        .Interior.Color = awinSettings.SollIstFarbeL
                         .Values = tdatenreiheL
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
@@ -3352,10 +3351,10 @@ Public Module Projekte
                 End If
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = repMessages.getmsg(199) & " (" & hproj.timeStamp.ToString("d") & ")"
-                    .Interior.color = awinSettings.SollIstFarbeC
+                    .Name = repMessages.getmsg(199) & " (" & hproj.timeStamp.ToString("d") & ")"
+                    .Interior.Color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
@@ -3534,7 +3533,7 @@ Public Module Projekte
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -3600,7 +3599,7 @@ Public Module Projekte
 
                 ' remove old series
                 Try
-                    Dim anz As Integer = CInt(.SeriesCollection.count)
+                    Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                     Do While anz > 0
                         .SeriesCollection(1).Delete()
                         anz = anz - 1
@@ -3669,7 +3668,7 @@ Public Module Projekte
                         Next
 
                         'series
-                        With CType(.SeriesCollection.NewSeries, Excel.Series)
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             .Name = drawnMilestones.ToString & " - " & elemNameOfElemID(msName)
                             .ChartType = Excel.XlChartType.xlLineMarkers
                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -3690,7 +3689,8 @@ Public Module Projekte
 
                         For px = 1 To tdatenreihe.Length
 
-                            With CType(.SeriesCollection(drawnMilestones).Points(px), Point)
+                            With CType(CType(.SeriesCollection, Excel.SeriesCollection).Item(drawnMilestones), Excel.Series).Points(px)
+
                                 .Interior.Color = ampelfarben(px - 1)
                                 .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
                                 .MarkerForegroundColor = CInt(ampelfarben(px - 1))
@@ -4031,7 +4031,7 @@ Public Module Projekte
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -4120,9 +4120,9 @@ Public Module Projekte
                     gesamt_summe = gesamt_summe + hsum(r - 1)
 
                     'series
-                    With .SeriesCollection.NewSeries
-                        .name = roleName
-                        .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = roleName
+                        .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -4305,7 +4305,7 @@ Public Module Projekte
 
             ' remove old series
             Try
-                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -4332,10 +4332,10 @@ Public Module Projekte
                 'gesamt_summe = gesamt_summe + hsum(r - 1)
 
                 'series
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                     .Name = roleName
-                    .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
+                    .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
                     .Values = tdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -4551,7 +4551,7 @@ Public Module Projekte
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -4638,9 +4638,9 @@ Public Module Projekte
                     gesamt_summe = gesamt_summe + hsum(ik)
 
 
-                    With .SeriesCollection.NewSeries
-                        .name = costname
-                        .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = costname
+                        .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -4657,9 +4657,9 @@ Public Module Projekte
 
                     gesamt_summe = gesamt_summe + hsum(k - ik)
 
-                    With .SeriesCollection.NewSeries
-                        .name = costname
-                        .Interior.color = CostDefinitions.getCostdef(costname).farbe
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = costname
+                        .Interior.Color = CostDefinitions.getCostdef(costname).farbe
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -4900,8 +4900,8 @@ Public Module Projekte
             ' -----------------------
             ' Schreibe Über- bzw Unterauslastung 
 
-            With .SeriesCollection(1)
-                .name = "Details"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).Item(1), Excel.Series)
+                .Name = "Details"
 
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
@@ -4909,7 +4909,7 @@ Public Module Projekte
                 .ChartType = Excel.XlChartType.xlPie
                 .HasDataLabels = True
 
-                With .Datalabels
+                With .DataLabels
                     .Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
                     ' ur: 17.7.2014 fontsize kommt vom existierenden chart
                     '.Font.Size = awinSettings.fontsizeItems + 2
@@ -4922,9 +4922,9 @@ Public Module Projekte
 
                 'roleName = RoleDefinitions.getRoledef(r).name
                 roleName = Xdatenreihe(r - 1)
-                With .SeriesCollection(1).Points(r)
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).Item(1), Excel.Series).Points(r)
                     '.Interior.color = RoleDefinitions.getRoledef(roleName).farbe
-                    .Interior.color = colors(r - 1)
+                    .Interior.Color = colors(r - 1)
                     ' ur: 17.7.2014 fontsize kommt vom existierenden chart
                     '.DataLabel.Font.Size = awinSettings.fontsizeItems
                 End With
@@ -5073,7 +5073,7 @@ Public Module Projekte
 
             ' remove old series
             Try
-                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -5096,9 +5096,9 @@ Public Module Projekte
 
                 gesamt_summe = gesamt_summe + +hsum(ik)
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .Name = costname
-                    .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
+                    .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                     .Values = tdatenreihe
                     .XValues = Xdatenreihe
                     '.ChartType = Excel.XlChartType.xlColumnStacked
@@ -5119,9 +5119,9 @@ Public Module Projekte
 
                 Dim iSerColl As Integer = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                With .SeriesCollection.NewSeries
-                    .name = costname
-                    .Interior.color = CostDefinitions.getCostdef(costname).farbe
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    .Name = costname
+                    .Interior.Color = CostDefinitions.getCostdef(costname).farbe
                     .Values = tdatenreihe
                     .XValues = Xdatenreihe
                     '.ChartType = Excel.XlChartType.xlColumnStacked
@@ -5414,7 +5414,7 @@ Public Module Projekte
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -5427,8 +5427,8 @@ Public Module Projekte
                     ' -----------------------
                     ' Schreibe Über- bzw Unterauslastung 
 
-                    With .SeriesCollection.NewSeries
-                        .name = "Details"
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = "Details"
 
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
@@ -5436,7 +5436,7 @@ Public Module Projekte
                         .ChartType = Excel.XlChartType.xlPie
                         .HasDataLabels = True
 
-                        With .Datalabels
+                        With .DataLabels
                             .Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
                             .Font.Size = awinSettings.fontsizeItems + 2
                         End With
@@ -5448,9 +5448,9 @@ Public Module Projekte
 
                         'roleName = RoleDefinitions.getRoledef(r).name
                         roleName = Xdatenreihe(r - 1)
-                        With .SeriesCollection(1).Points(r)
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).Item(1), Excel.Series).Points(r)
                             '.Interior.color = RoleDefinitions.getRoledef(roleName).farbe
-                            .Interior.color = colors(r - 1)
+                            .Interior.Color = colors(r - 1)
                             .DataLabel.Font.Size = awinSettings.fontsizeItems
                         End With
 
@@ -5711,7 +5711,7 @@ Public Module Projekte
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -5720,8 +5720,8 @@ Public Module Projekte
 
                     End Try
 
-                    With .SeriesCollection.NewSeries
-                        .name = pname
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = pname
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlPie
@@ -5920,7 +5920,7 @@ Public Module Projekte
             'Loop
 
             'With .SeriesCollection.NewSeries
-            With .SeriesCollection(1)
+            With CType(.SeriesCollection(1), Excel.Series)
                 .Name = pname
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
@@ -5932,7 +5932,7 @@ Public Module Projekte
             For r = 1 To anzRollen
                 roleName = CStr(ErgebnisListeR.Item(r))
                 With .SeriesCollection(1).Points(r)
-                    .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
+                    .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
                     ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                     '.DataLabel.Font.Size = awinSettings.fontsizeItems
                 End With
@@ -6113,7 +6113,7 @@ Public Module Projekte
                     With appInstance.Charts.Add
                         ' remove old series
                         Try
-                            Dim anz As Integer = CInt(.SeriesCollection.count)
+                            Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                             Do While anz > 0
                                 .SeriesCollection(1).Delete()
                                 anz = anz - 1
@@ -6122,8 +6122,8 @@ Public Module Projekte
 
                         End Try
 
-                        With .SeriesCollection.NewSeries
-                            .name = pname
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                            .Name = pname
                             .Values = tdatenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlPie
@@ -6136,14 +6136,14 @@ Public Module Projekte
                                 'costname = "Personal-Kosten"
                                 costname = repMessages.getmsg(164)
                                 With .SeriesCollection(1).Points(k + 1)
-                                    .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
+                                    .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                                     .DataLabel.Font.Size = 10
 
                                 End With
                             Else
                                 costname = CStr(ErgebnisListeK.Item(k + 1))
                                 With .SeriesCollection(1).Points(k + 1)
-                                    .Interior.color = CostDefinitions.getCostdef(costname).farbe
+                                    .Interior.Color = CostDefinitions.getCostdef(costname).farbe
                                     .DataLabel.Font.Size = 10
 
                                 End With

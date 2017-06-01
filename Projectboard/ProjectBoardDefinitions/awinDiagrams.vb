@@ -391,10 +391,45 @@ Public Module awinDiagrams
                 '    Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
 
 
-                newChtObj = CType(.ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
-
                 Dim tmpAnz As Integer = CType(.ChartObjects, Excel.ChartObjects).Count
 
+                ''Dim dummyChartObject As Excel.ChartObject = Nothing
+                ''If calledfromReporting And currentSheetName = arrWsNames(ptTables.MPT) And tmpAnz = 0 Then
+                ''    ' wenn die tmpAnz = 0 ist, muss mit charts.add ein neuer
+                ''    Dim dummyChart As Object = appInstance.Charts.Add()
+                ''    dummyChart.Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=arrWsNames(ptTables.MPT))
+
+
+                ''    Try
+                ''        dummyChartObject = CType(dummyChart.Parent, Excel.ChartObject)
+                ''    Catch ex As Exception
+
+                ''    End Try
+
+                ''    Try
+                ''        dummyChartObject = CType(dummyChart, Excel.ChartObject)
+                ''    Catch ex As Exception
+
+                ''    End Try
+
+                ''    dummyChartObject.Name = "Dummy"
+
+                ''End If
+
+                newChtObj = CType(.ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
+                tmpAnz = CType(.ChartObjects, Excel.ChartObjects).Count
+
+                ' '' wenn es ein dummyChart gibt, jetzt löschen 
+                ''If Not IsNothing(dummyChartObject) Then
+                ''    Try
+                ''        dummyChartObject.Delete()
+                ''    Catch ex As Exception
+
+                ''    End Try
+
+                ''End If
+
+                'Call Sleep(500)
                 With newChtObj.Chart
 
 
@@ -407,7 +442,7 @@ Public Module awinDiagrams
 
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -422,10 +457,13 @@ Public Module awinDiagrams
                     Dim type As Integer = -1
                     For r = 1 To myCollection.Count
 
+                        pvName = ""
+                        type = -1
                         sumRoleShowsPlaceHolderAndAssigned = False
-                        'prcName = CStr(myCollection.Item(r))
-                        ' wird jetzt über das folgende bestimmt
+                        
+                        
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
+                            ' Phasen oder Meilensteine ..
                             Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvName)
                         Else
                             prcName = CStr(myCollection.Item(r))
@@ -433,6 +471,7 @@ Public Module awinDiagrams
 
 
                         If prcTyp = DiagrammTypen(0) Then
+                            ' Phasen ...
                             einheit = " "
                             Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
                             If IsNothing(tmpPhaseDef) Then
@@ -449,6 +488,7 @@ Public Module awinDiagrams
                             datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
 
                         ElseIf prcTyp = DiagrammTypen(1) Then
+                            ' Rollen 
                             einheit = " " & awinSettings.kapaEinheit
                             Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(prcName)
                             objektFarbe = tmpRole.farbe
@@ -479,6 +519,7 @@ Public Module awinDiagrams
 
 
                         ElseIf prcTyp = DiagrammTypen(2) Then
+                            ' Kostenarten 
                             einheit = " T€"
                             If prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
 
@@ -502,6 +543,7 @@ Public Module awinDiagrams
                                 datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
                             End If
                         ElseIf prcTyp = DiagrammTypen(4) Then
+                            ' Portfolio Charts wie Ergebnis 
 
                             ' es handelt sich um die Ergebnisse Earned Value bzw. Earned Value - gewichtet 
                             einheit = " T€"
@@ -533,6 +575,7 @@ Public Module awinDiagrams
                             End If
 
                         ElseIf prcTyp = DiagrammTypen(5) Then
+                            ' Meilensteine ... 
 
                             einheit = " "
 
@@ -548,7 +591,7 @@ Public Module awinDiagrams
                                 objektFarbe = tmpMilestoneDef.farbe
                             End If
 
-                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
+                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb, type, pvName)
 
                         End If
 
@@ -565,20 +608,20 @@ Public Module awinDiagrams
 
 
                         If isPersCost Then
-                            With CType(.SeriesCollection, Excel.Series).NewSeries
+                            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                 '.name = prcName & " intern "
-                                .name = prcName & repMessages.getmsg(115)
-                                .Interior.color = objektFarbe
+                                .Name = prcName & repMessages.getmsg(115)
+                                .Interior.Color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
                                 .ChartType = Excel.XlChartType.xlColumnStacked
                                 .HasDataLabels = False
                             End With
                             If edatenreihe.Sum > 0 Then
-                                With CType(.SeriesCollection, Excel.Series).NewSeries
+                                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                     '.name = "Kosten durch Überlastung "
-                                    .name = repMessages.getmsg(152)
-                                    .Interior.color = farbeExterne
+                                    .Name = repMessages.getmsg(152)
+                                    .Interior.Color = farbeExterne
                                     .Values = edatenreihe
                                     .XValues = Xdatenreihe
                                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -600,7 +643,7 @@ Public Module awinDiagrams
                                     Next
                                 Next
 
-                                With CType(.SeriesCollection.NewSeries, Excel.Series)
+                                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                     If breadcrumb = "" Then
                                         .Name = prcName
                                     Else
@@ -618,7 +661,7 @@ Public Module awinDiagrams
 
                             Else
 
-                                With CType(.SeriesCollection.NewSeries, Excel.Series)
+                                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                                     If prcTyp = DiagrammTypen(0) Then
                                         If breadcrumb = "" Then
@@ -650,7 +693,7 @@ Public Module awinDiagrams
 
                                 If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                     ' alle anderen zeigen 
-                                    With CType(.SeriesCollection.NewSeries, Excel.Series)
+                                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                                         .Name = prcName & ": zugeordnet"
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -671,11 +714,11 @@ Public Module awinDiagrams
 
                     ' wenn es sich um die weighted Variante handelt
                     If isWeightedValues Then
-                        With CType(.SeriesCollection, Excel.Series).NewSeries
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             .HasDataLabels = False
                             '.name = "Risiko Abschlag"
-                            .name = repMessages.getmsg(117)
-                            .Interior.color = ergebnisfarbe2
+                            .Name = repMessages.getmsg(117)
+                            .Interior.Color = ergebnisfarbe2
                             .Values = edatenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlColumnStacked
@@ -697,9 +740,9 @@ Public Module awinDiagrams
                                 VarValues(i) = 0.5 * maxwert
                             Next i
 
-                            With CType(.SeriesCollection, Excel.Series).NewSeries
-                                .name = "Dummy"
-                                .Interior.color = RGB(255, 255, 255)
+                            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                                .Name = "Dummy"
+                                .Interior.Color = RGB(255, 255, 255)
                                 .Values = VarValues
                                 .XValues = Xdatenreihe
                                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -708,7 +751,7 @@ Public Module awinDiagrams
                             lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
                         End If
-                        With CType(.SeriesCollection(lastSC), Excel.SeriesCollection)
+                        With CType(.SeriesCollection(lastSC), Excel.Series)
                             .HasDataLabels = False
                             VarValues = seriesSumDatenreihe
                             nr_pts = CType(.Points, Excel.Points).Count
@@ -773,7 +816,7 @@ Public Module awinDiagrams
                     If prcTyp = DiagrammTypen(1) Then
                         If kdatenreihe.Sum < kdatenreihePlus.Sum Then
                             ' es gibt geplante externe Ressourcen ... 
-                            With CType(.SeriesCollection.NewSeries, Excel.Series)
+                            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                 .HasDataLabels = False
                                 '.name = "Kapazität incl. Externe"
                                 .Name = repMessages.getmsg(118)
@@ -798,7 +841,7 @@ Public Module awinDiagrams
                     If prcTyp = DiagrammTypen(1) Or _
                         (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
                         (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
-                        With CType(.SeriesCollection.NewSeries, Excel.Series)
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             .HasDataLabels = False
 
                             If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
@@ -1248,7 +1291,7 @@ Public Module awinDiagrams
 
             ' remove old series
             Try
-                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -1433,7 +1476,7 @@ Public Module awinDiagrams
                     Else
                         objektFarbe = tmpMilestoneDef.farbe
                     End If
-                    msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
+                    msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb, type, pvname)
 
                 End If
 
@@ -1450,11 +1493,11 @@ Public Module awinDiagrams
 
 
                 If isPersCost Then
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                         '.name = prcName & " intern "
-                        .name = prcName & repMessages.getmsg(115)
-                        .Interior.color = objektFarbe
+                        .Name = prcName & repMessages.getmsg(115)
+                        .Interior.Color = objektFarbe
                         .Values = datenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1462,10 +1505,10 @@ Public Module awinDiagrams
                     End With
 
                     If edatenreihe.Sum > 0 Then
-                        With .SeriesCollection.NewSeries
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             '.name = "Kosten durch Überlastung "
-                            .name = repMessages.getmsg(152)
-                            .Interior.color = farbeExterne
+                            .Name = repMessages.getmsg(152)
+                            .Interior.Color = farbeExterne
                             .Values = edatenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1487,15 +1530,15 @@ Public Module awinDiagrams
                             Next
                         Next
 
-                        With .SeriesCollection.NewSeries
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             If breadcrumb = "" Then
-                                .name = prcName
+                                .Name = prcName
                             Else
-                                .name = breadcrumb & "-" & prcName
+                                .Name = breadcrumb & "-" & prcName
                             End If
 
                             '.Interior.color = ampelfarbe(0)
-                            .Interior.color = objektFarbe
+                            .Interior.Color = objektFarbe
                             .Values = datenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1509,18 +1552,18 @@ Public Module awinDiagrams
                         ' wenn der Wert größer ist als Null, dann Anzeigen ... 
                         If myCollection.Count = 1 Then
                             If (awinSettings.showValuesOfSelected) And selectedProjekte.Count > 0 Then
-                                With .SeriesCollection.NewSeries
+                                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                     .HasDataLabels = False
                                     If selectedProjekte.Count = 1 Then
-                                        .name = selectedProjekte.getProject(1).name
+                                        .Name = selectedProjekte.getProject(1).name
                                     Else
                                         If awinSettings.englishLanguage Then
-                                            .name = "selected projects"
+                                            .Name = "selected projects"
                                         Else
-                                            .name = "selektierte Projekte"
+                                            .Name = "selektierte Projekte"
                                         End If
                                     End If
-                                    .Interior.color = selectionFarbe
+                                    .Interior.Color = selectionFarbe
                                     .Values = seldatenreihe
                                     .XValues = Xdatenreihe
                                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1530,7 +1573,7 @@ Public Module awinDiagrams
                         End If
                         
 
-                        With CType(chtobj.Chart.SeriesCollection.NewSeries, Excel.Series)
+                        With CType(CType(chtobj.Chart.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                             If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                 ' repmsg!
@@ -1576,7 +1619,7 @@ Public Module awinDiagrams
 
                         If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                             ' alle anderen zeigen 
-                            With CType(.SeriesCollection.NewSeries, Excel.Series)
+                            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                                 If awinSettings.englishLanguage Then
                                     .Name = prcName & ": assigned"
@@ -1613,11 +1656,11 @@ Public Module awinDiagrams
 
             ' wenn es sich um die weighted Variante handelt
             If isWeightedValues Then
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .HasDataLabels = False
                     '.name = "Risiko Abschlag"
-                    .name = repMessages.getmsg(117)
-                    .Interior.color = ergebnisfarbe2
+                    .Name = repMessages.getmsg(117)
+                    .Interior.Color = ergebnisfarbe2
                     .Values = edatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1636,10 +1679,10 @@ Public Module awinDiagrams
             If prcTyp = DiagrammTypen(1) Then
                 If kdatenreihe.Sum < kdatenreihePlus.Sum Then
                     'es gibt geplante externe Ressourcen ... 
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         .HasDataLabels = False
                         '.name = "Kapazität incl. Externe"
-                        .name = repMessages.getmsg(118)
+                        .Name = repMessages.getmsg(118)
 
                         .Values = kdatenreihePlus
                         .XValues = Xdatenreihe
@@ -1661,18 +1704,18 @@ Public Module awinDiagrams
             If prcTyp = DiagrammTypen(1) Or _
                    (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
                    (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .HasDataLabels = False
 
                     If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                         '.name = "Leistbarkeitsgrenze"
-                        .name = repMessages.getmsg(119)
+                        .Name = repMessages.getmsg(119)
                     Else
                         '.name = "Interne Kapazität"
-                        .name = repMessages.getmsg(260)
+                        .Name = repMessages.getmsg(260)
                     End If
 
-                    .Border.color = rollenKapaFarbe
+                    .Border.Color = rollenKapaFarbe
                     .Values = kdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
@@ -1900,7 +1943,7 @@ Public Module awinDiagrams
         With chtObj.Chart
             ' remove old series
             Try
-                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -1955,10 +1998,10 @@ Public Module awinDiagrams
 
 
             'series
-            With .SeriesCollection.NewSeries
-                .name = "Bottom"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = "Bottom"
                 .HasDataLabels = False
-                .Interior.colorindex = -4142
+                .Interior.ColorIndex = -4142
                 .Values = valueDatenreihe1
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1971,8 +2014,8 @@ Public Module awinDiagrams
 
             End With
 
-            With .SeriesCollection.NewSeries
-                .name = "Top"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = "Top"
                 .HasDataLabels = True
                 .Values = valueDatenreihe2
                 .XValues = Xdatenreihe
@@ -2196,7 +2239,7 @@ Public Module awinDiagrams
             ' remove extra series
             ' remove old series
             Try
-                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -2251,10 +2294,10 @@ Public Module awinDiagrams
 
 
             'series
-            With .SeriesCollection.NewSeries
-                .name = "Bottom"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = "Bottom"
                 .HasDataLabels = False
-                .Interior.colorindex = -4142
+                .Interior.ColorIndex = -4142
                 .Values = valueDatenreihe1
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -2267,8 +2310,8 @@ Public Module awinDiagrams
 
             End With
 
-            With .SeriesCollection.NewSeries
-                .name = "Top"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = "Top"
                 .HasDataLabels = True
                 .Values = valueDatenreihe2
                 .XValues = Xdatenreihe
@@ -2499,7 +2542,7 @@ Public Module awinDiagrams
 
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -2509,8 +2552,8 @@ Public Module awinDiagrams
                     End Try
 
 
-                    With .SeriesCollection.NewSeries
-                        .name = "Auslastung"
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = "Auslastung"
                         .Values = datenreihe
                         .XValues = Xdatenreihe
                         .HasDataLabels = False
@@ -2877,7 +2920,7 @@ Public Module awinDiagrams
 
                         ' remove old series
                         Try
-                            Dim anz As Integer = CInt(.SeriesCollection.count)
+                            Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                             Do While anz > 0
                                 .SeriesCollection(1).Delete()
                                 anz = anz - 1
@@ -2887,8 +2930,8 @@ Public Module awinDiagrams
                         End Try
 
 
-                        With .SeriesCollection.NewSeries
-                            .name = "Status-Übersicht"
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                            .Name = "Status-Übersicht"
                             .Values = datenreihe
                             .XValues = Xdatenreihe
                             .HasDataLabels = False
@@ -3105,7 +3148,7 @@ Public Module awinDiagrams
 
             ' remove old series
             Try
-                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -3115,8 +3158,8 @@ Public Module awinDiagrams
             End Try
 
 
-            With .SeriesCollection.NewSeries
-                .name = "Auslastung"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = "Auslastung"
                 .Values = datenreihe
                 .XValues = Xdatenreihe
                 .HasDataLabels = False
@@ -3317,7 +3360,7 @@ Public Module awinDiagrams
         With chtobj.Chart
             ' remove old series
             Try
-                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -3372,10 +3415,10 @@ Public Module awinDiagrams
 
 
             'series
-            With .SeriesCollection.NewSeries
-                .name = "Bottom"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = "Bottom"
                 .HasDataLabels = False
-                .Interior.colorindex = -4142
+                .Interior.ColorIndex = -4142
                 .Values = valueDatenreihe1
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -3388,8 +3431,8 @@ Public Module awinDiagrams
 
             End With
 
-            With .SeriesCollection.NewSeries
-                .name = "Top"
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = "Top"
                 .HasDataLabels = True
                 .Values = valueDatenreihe2
                 .XValues = Xdatenreihe
@@ -3656,7 +3699,7 @@ Public Module awinDiagrams
                     ' remove extra series
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -3711,11 +3754,11 @@ Public Module awinDiagrams
 
 
                     'series
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Bottom"
-                        .name = repMessages.getmsg(149)
+                        .Name = repMessages.getmsg(149)
                         .HasDataLabels = False
-                        .Interior.colorindex = -4142
+                        .Interior.ColorIndex = -4142
                         .Values = valueDatenreihe1
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -3728,9 +3771,9 @@ Public Module awinDiagrams
 
                     End With
 
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Top"
-                        .name = repMessages.getmsg(150)
+                        .Name = repMessages.getmsg(150)
                         .HasDataLabels = True
                         .Values = valueDatenreihe2
                         .XValues = Xdatenreihe
@@ -4080,7 +4123,7 @@ Public Module awinDiagrams
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -4135,11 +4178,11 @@ Public Module awinDiagrams
 
 
                     'series
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Bottom"
-                        .name = repMessages.getmsg(149)
+                        .Name = repMessages.getmsg(149)
                         .HasDataLabels = False
-                        .Interior.colorindex = -4142
+                        .Interior.ColorIndex = -4142
                         .Values = valueDatenreihe1
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -4152,9 +4195,9 @@ Public Module awinDiagrams
 
                     End With
 
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Top"
-                        .name = repMessages.getmsg(150)
+                        .Name = repMessages.getmsg(150)
                         .HasDataLabels = True
                         .Values = valueDatenreihe2
                         .XValues = Xdatenreihe
@@ -4513,7 +4556,7 @@ Public Module awinDiagrams
                 With newChtObj.Chart
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -4568,11 +4611,11 @@ Public Module awinDiagrams
 
 
                     'series
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Bottom"
-                        .name = repMessages.getmsg(149)
+                        .Name = repMessages.getmsg(149)
                         .HasDataLabels = False
-                        .Interior.colorindex = -4142
+                        .Interior.ColorIndex = -4142
                         .Values = valueDatenreihe1
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -4585,9 +4628,9 @@ Public Module awinDiagrams
 
                     End With
 
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Top"
-                        .name = repMessages.getmsg(150)
+                        .Name = repMessages.getmsg(150)
                         .HasDataLabels = True
                         .Values = valueDatenreihe2
                         .XValues = Xdatenreihe
@@ -4979,7 +5022,7 @@ Public Module awinDiagrams
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -5034,11 +5077,11 @@ Public Module awinDiagrams
 
 
                     'series
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Bottom"
-                        .name = repMessages.getmsg(149)
+                        .Name = repMessages.getmsg(149)
                         .HasDataLabels = False
-                        .Interior.colorindex = -4142
+                        .Interior.ColorIndex = -4142
                         .Values = valueDatenreihe1
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -5051,9 +5094,9 @@ Public Module awinDiagrams
 
                     End With
 
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Top"
-                        .name = repMessages.getmsg(150)
+                        .Name = repMessages.getmsg(150)
                         .HasDataLabels = True
                         .Values = valueDatenreihe2
                         .XValues = Xdatenreihe
@@ -5316,7 +5359,7 @@ Public Module awinDiagrams
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -5327,11 +5370,11 @@ Public Module awinDiagrams
 
 
                     'series
-                    With .SeriesCollection.NewSeries
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Potentiale"
-                        .name = repMessages.getmsg(143)
+                        .Name = repMessages.getmsg(143)
                         .HasDataLabels = True
-                        .Datalabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                        .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
                         .Values = itemValue
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnClustered

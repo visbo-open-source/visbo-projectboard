@@ -1323,7 +1323,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCountMilestonesInMonth(ByVal milestoneName As String, Optional ByVal breadcrumb As String = "") As Double(,)
+    Public ReadOnly Property getCountMilestonesInMonth(ByVal milestoneName As String, ByVal breadcrumb As String, ByVal type As Integer, ByVal pvName As String) As Double(,)
         Get
 
             Dim milestoneValues(,) As Double
@@ -1349,35 +1349,42 @@ Public Class clsProjekte
 
                 hproj = kvp.Value
 
-                ' neuer Code
-                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
+                If type = -1 Or _
+                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or _
+                    (type = PTProjektType.projekt And pvName = hproj.name) Then
+                    ' Aktion machen
 
-                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                    ' neuer Code
+                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
 
-                    cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                    If Not IsNothing(cMilestone) Then
+                        cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                        ' bestimme den monatsbezogenen Index im Array 
-                        ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
+                        If Not IsNothing(cMilestone) Then
 
-                        If ix >= 0 And ix <= zeitraum Then
+                            ' bestimme den monatsbezogenen Index im Array 
+                            ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
 
-                            If cMilestone.bewertungsCount > 0 Then
-                                idFarbe = cMilestone.getBewertung(1).colorIndex
-                            Else
-                                idFarbe = 0
+                            If ix >= 0 And ix <= zeitraum Then
+
+                                If cMilestone.bewertungsCount > 0 Then
+                                    idFarbe = cMilestone.getBewertung(1).colorIndex
+                                Else
+                                    idFarbe = 0
+                                End If
+
+                                milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
+
                             End If
 
-                            milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
 
                         End If
 
+                    Next
 
-                    End If
 
-                Next
-
+                End If
 
             Next kvp
 
@@ -3702,7 +3709,7 @@ Public Class clsProjekte
                 ElseIf diagrammtyp = DiagrammTypen(2) Then
                     tmpValues = Me.getCostValuesInMonth(rcName)
                 ElseIf diagrammtyp = DiagrammTypen(5) Then
-                    tmpValues2 = Me.getCountMilestonesInMonth(rcName)
+                    tmpValues2 = Me.getCountMilestonesInMonth(rcName, "", -1, "")
 
                     For ix = 0 To zeitraum
                         zwSum = 0

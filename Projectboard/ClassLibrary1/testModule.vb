@@ -4556,7 +4556,8 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(58)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Phase " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -4622,7 +4623,8 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(120)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -9749,7 +9751,7 @@ Public Module testModule
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -9838,11 +9840,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
+                    .Name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
                     '.name = "Baseline"
-                    .Interior.color = awinSettings.SollIstFarbeB
+                    .Interior.Color = awinSettings.SollIstFarbeB
                     .Values = tdatenreiheE
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -9880,11 +9882,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
+                    .Name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
 
-                    .Interior.color = awinSettings.SollIstFarbeL
+                    .Interior.Color = awinSettings.SollIstFarbeL
                     .Values = tdatenreiheL
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -9921,11 +9923,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
+                    .Name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
                     '.name = "Current"
-                    .Interior.color = awinSettings.SollIstFarbeC
+                    .Interior.Color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheH
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -12399,7 +12401,6 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                .TextFrame2.TextRange.Text = beschriftung
                 nameCollection.Add(.Name, .Name)
             End With
 
@@ -18454,7 +18455,8 @@ Public Module testModule
                         srcChartobj.Copy()
                         ok2 = True
                     Catch ex As Exception
-
+                        'Call MsgBox("chartCopy" & ex.Message)
+                        Exit While
                     End Try
                     j = j + 1
                 End While

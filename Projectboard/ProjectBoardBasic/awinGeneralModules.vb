@@ -755,6 +755,9 @@ Public Module awinGeneralModules
             If awinSettings.visboDebug Then
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
+
+                Call MsgBox("Operating System: " & My.Computer.Info.OSVersion)
+                Call MsgBox("Excel-Verison: " & appInstance.Version)
             End If
 
 
@@ -769,6 +772,7 @@ Public Module awinGeneralModules
             If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
                 Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
             End If
+
 
 
             If Not globalPath.EndsWith("\") Then
