@@ -364,6 +364,20 @@ Public Class ThisWorkbook
 
     End Sub
 
-  
+    Private bIShrankTheRibbon As Boolean
 
+    Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
+        If Wn.Caption = windowNames(4) Then
+            bIShrankTheRibbon = False
+            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
+            bIShrankTheRibbon = True
+        End If
+    End Sub
+
+    Private Sub ThisWorkbook_WindowDeactivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowDeactivate
+        If Wn.Caption = windowNames(4) Then
+            If bIShrankTheRibbon Then _
+            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+        End If
+    End Sub
 End Class

@@ -8401,9 +8401,6 @@ Imports System.Windows
             .DisplayWorkbookTabs = False
             .Caption = windowNames(4)
         End With
-        ' Ribbon ausblenden:  windowNames(4): Charts
-        Call Workbook_WindowActivate(projectboardWindows(2))
-
 
         'jetzt das Ursprungs-Window ausblenden ...
         For Each tmpWindow As Excel.Window In visboWorkbook.Windows
