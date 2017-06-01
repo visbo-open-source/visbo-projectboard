@@ -5273,17 +5273,20 @@ Public Module Projekte
 
         If Not calledfromReporting Then
 
-            Dim foundDiagramm As clsDiagramm
+            Dim foundDiagramm As clsDiagramm = Nothing
 
             ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
             Try
-                foundDiagramm = DiagramList.getDiagramm(chtobjname)
-                With foundDiagramm
-                    top = .top
-                    left = .left
-                    width = .width
-                    height = .height
-                End With
+                If DiagramList.contains(chtobjname) Then
+                    foundDiagramm = DiagramList.getDiagramm(chtobjname)
+                    With foundDiagramm
+                        top = .top
+                        left = .left
+                        width = .width
+                        height = .height
+                    End With
+                End If
+                
             Catch ex As Exception
 
 
@@ -9309,11 +9312,19 @@ Public Module Projekte
         End Try
 
         Try
-            hDiagramm = DiagramList.getDiagramm(kennung)
-            With DiagramList.getDiagramm(kennung)
-                .top = chtobj.Top
-                .left = chtobj.Left
-            End With
+
+            If DiagramList.contains(kennung) Then
+                hDiagramm = DiagramList.getDiagramm(kennung)
+                With DiagramList.getDiagramm(kennung)
+                    .top = chtobj.Top
+                    .left = chtobj.Left
+                End With
+            End If
+
+            If selectedCharts.Contains(chtobj.Name) Then
+                selectedCharts.Remove(chtobj.Name)
+            End If
+
         Catch ex As Exception
 
         End Try
@@ -15552,7 +15563,7 @@ Public Module Projekte
                 todoListe = realNameList
             Else
                 'bringt eine List von Phasen ElemIDs zurück, die den angegebenen Zeitraum berühren / überdecken
-                todoListe = hproj.withinTimeFrame(False, vonMonth, bisMonth, realNameList)
+                todoListe = hproj.phasesWithinTimeFrame(False, vonMonth, bisMonth, realNameList)
             End If
 
 

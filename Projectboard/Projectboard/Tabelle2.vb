@@ -275,10 +275,13 @@ Public Class Tabelle2
                                             Try
                                                 auslastungChanged = True
                                                 Dim cRole As clsRolle = cPhase.getRole(visboZustaende.oldValue)
-
-                                                hproj.rcLists.removeRP(cRole.RollenTyp, cPhase.nameID)
-                                                cRole.RollenTyp = newRoleID
-                                                hproj.rcLists.addRP(newRoleID, cPhase.nameID)
+                                                If IsNothing(cRole) Then
+                                                Else
+                                                    hproj.rcLists.removeRP(cRole.RollenTyp, cPhase.nameID)
+                                                    cRole.RollenTyp = newRoleID
+                                                    hproj.rcLists.addRP(newRoleID, cPhase.nameID)
+                                                End If
+                                                
                                             Catch ex As Exception
                                                 visboZustaende.oldValue = ""
                                                 ' in diesem Fall wurde nur von einer noch nicht belegten Rolle auf eine 

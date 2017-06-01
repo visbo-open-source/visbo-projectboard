@@ -1854,7 +1854,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property withinTimeFrame(ByVal areMilestones As Boolean, von As Integer, bis As Integer, ByVal namenListe As Collection) As Collection
+    Public ReadOnly Property phasesWithinTimeFrame(ByVal areMilestones As Boolean, von As Integer, bis As Integer, ByVal namenListe As Collection) As Collection
         Get
             Dim tmpListe As New Collection
             ' selection type wird aktuell noch ignoriert .... 
@@ -1864,7 +1864,7 @@ Public Class clsProjekt
 
             ' ein Zeitraum muss definiert sein 
             If von <= 0 Or bis <= 0 Or bis - von < 0 Then
-                withinTimeFrame = tmpListe
+                phasesWithinTimeFrame = tmpListe
             Else
                 Dim ix As Integer
                 Dim anzElements As Integer
@@ -1933,10 +1933,32 @@ Public Class clsProjekt
 
             End If
 
-            withinTimeFrame = tmpListe
+            phasesWithinTimeFrame = tmpListe
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zuück, ob das Projekt in dem TimeFrame, definiert durch Moant von und Monat bis, liegt 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isWithinTimeFrame(ByVal von As Integer, ByVal bis As Integer) As Boolean
+        Get
+            Dim tmpResult As Boolean
+            If bis - von < 1 Then
+                tmpResult = True
+            Else
+                tmpResult = Not (getColumnOfDate(Me.startDate) > bis Or _
+                    getColumnOfDate(Me.endeDate) < von)
+            End If
+            isWithinTimeFrame = tmpResult
+        End Get
+    End Property
+
 
     Public Sub clearPhases()
 

@@ -125,65 +125,71 @@ Public Class frmOptimizeKPI
 
         tmpDiagramm = DiagramList.getDiagramm(bgKennung)
 
-        With tmpDiagramm
-            myCollection = .gsCollection
-            diagrammTyp = .diagrammTyp
-        End With
-
-        ' Aufruf der Optimierungs-Schleife ....
-
-        enableOnUpdate = False
-        If menueOption = 1 Then
-            ' Varianten Optimierung
-            Call awinCalcOptimizationVarianten(diagrammTyp, myCollection, worker, e)
+        If IsNothing(tmpDiagramm) Then
         Else
-            ' Phasen Freiraum Optimierung 
-            Dim OptimierungsErgebnis As New SortedList(Of String, clsOptimizationObject)
-            Call awinCalcOptimizationElemFreiheitsgrade(diagrammTyp, myCollection, OptimierungsErgebnis, worker, e)
+            With tmpDiagramm
+                myCollection = .gsCollection
+                diagrammTyp = .diagrammTyp
+            End With
 
-            If OptimierungsErgebnis.Count > 0 Then
+            ' Aufruf der Optimierungs-Schleife ....
 
+            enableOnUpdate = False
+            If menueOption = 1 Then
+                ' Varianten Optimierung
+                Call awinCalcOptimizationVarianten(diagrammTyp, myCollection, worker, e)
+            Else
+                ' Phasen Freiraum Optimierung 
+                Dim OptimierungsErgebnis As New SortedList(Of String, clsOptimizationObject)
+                Call awinCalcOptimizationElemFreiheitsgrade(diagrammTyp, myCollection, OptimierungsErgebnis, worker, e)
 
-                For Each kvp In OptimierungsErgebnis
-                    Try
-
-                        With kvp.Value
-
-                            Dim pName As String = kvp.Value.projectName
-                            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                            Dim phaseName As String = CStr(myCollection.Item(1))
-
-                            Dim phaseList As Collection = projectboardShapes.getPhaseList(pName)
-                            Dim milestoneList As Collection = projectboardShapes.getMilestoneList(pName)
-
-                            Call clearProjektinPlantafel(pName)
-
-                            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                            Dim tmpCollection As New Collection
-                            Call ZeichneProjektinPlanTafel(tmpCollection, pName, hproj.tfZeile, phaseList, milestoneList)
+                If OptimierungsErgebnis.Count > 0 Then
 
 
-                        End With
-                    Catch ex As Exception
-                        Call MsgBox("Projekt: " & kvp.Key & " : Startzeitpunkt liegt in der Vergangenheit ")
-                    End Try
+                    For Each kvp In OptimierungsErgebnis
+                        Try
 
-                Next
+                            With kvp.Value
+
+                                Dim pName As String = kvp.Value.projectName
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                                Dim phaseName As String = CStr(myCollection.Item(1))
+
+                                Dim phaseList As Collection = projectboardShapes.getPhaseList(pName)
+                                Dim milestoneList As Collection = projectboardShapes.getMilestoneList(pName)
+
+                                Call clearProjektinPlantafel(pName)
+
+                                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                                Dim tmpCollection As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpCollection, pName, hproj.tfZeile, phaseList, milestoneList)
+
+
+                            End With
+                        Catch ex As Exception
+                            Call MsgBox("Projekt: " & kvp.Key & " : Startzeitpunkt liegt in der Vergangenheit ")
+                        End Try
+
+                    Next
 
                     Call visualisiereErgebnis()
                     OptimierungsErgebnis.Clear()
-                
 
-            Else
-                MsgBox("es waren keine Verbesserungen zu erzielen")
+
+                Else
+                    MsgBox("es waren keine Verbesserungen zu erzielen")
+                End If
+
+
+
             End If
-
-
-
+            ' Änderung tk 29.5: das war vorher auf false !? 
+            enableOnUpdate = True
         End If
+        
 
-        enableOnUpdate = False
+
 
 
     End Sub
