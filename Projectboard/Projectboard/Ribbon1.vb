@@ -8430,9 +8430,6 @@ Imports System.Windows
 
         ' jetzt das Mass-Edit Window aktivieren 
         projectboardWindows(1).Activate()
-        'With CType(projectboardWindows(1).ActiveSheet, Excel.Worksheet)
-        '    CType(.Cells(currentRow, currentColumn), Excel.Range).Activate()
-        'End With
 
         Dim anz As Integer = appInstance.ActiveWorkbook.Windows.Count
 
@@ -8470,16 +8467,19 @@ Imports System.Windows
             chWidth = stdBreite
             Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
+ 
         Else
             ' sie sind schon da 
         
         End If
 
-    
-
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
+
+        ' jetzt das Chart-Window aktivieren (sonst bleibt Ribbon stehen)
+        projectboardWindows(2).Activate()
+
 
     End Sub
 
