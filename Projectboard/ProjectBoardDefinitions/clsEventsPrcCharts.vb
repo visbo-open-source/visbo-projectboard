@@ -20,13 +20,13 @@ Public Class clsEventsPrcCharts
 
         Try
             chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
-            Call MsgBox("Activate ! " & chtobj.Name)
-            '    If selectedCharts.Contains(chtobj.Name) Then
-            '        ' nichst tun 
-            '    Else
-            '        ' aufnehmen 
-            '        selectedCharts.Add(chtobj.Name, chtobj.Name)
-            '    End If
+            'Call MsgBox("Activate ! " & chtobj.Name)
+            If selectedCharts.Contains(chtobj.Name) Then
+                ' nichts tun 
+            Else
+                ' aufnehmen 
+                selectedCharts.Add(chtobj.Name, chtobj.Name)
+            End If
         Catch ex As Exception
 
         End Try
@@ -315,14 +315,20 @@ Public Class clsEventsPrcCharts
 
     End Sub
 
+    ''' <summary>
+    ''' wird aufgerufen, wenn ein Chart De-Activiert wird, sei es durch Selektieren eines anderen Charts, einer Zelle oder eines Shapes 
+    ''' auf alle Fälle wird selectedCharts dadurch auf Null gesetzt 
+    ''' </summary>
+    ''' <remarks></remarks>
     Private Sub PrcChartEvents_Deactivate() Handles PrcChartEvents.Deactivate
 
         Dim chtobj As xlNS.ChartObject
 
-        
+
         Try
-            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
-            Call MsgBox("De-Activate ! " & chtobj.Name)
+            selectedCharts.Clear()
+            'chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+            'Call MsgBox("De-Activate ! " & chtobj.Name)
             'chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             'If Not IsNothing(chtobj) Then
             '    If selectedCharts.Contains(chtobj.Name) Then

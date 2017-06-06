@@ -4960,15 +4960,22 @@ Public Module Projekte
         End If
 
         With prcDiagram
-            
+
             If anzPieSegments > 1 Then
                 .gsCollection = New Collection
+                Dim tmpAnz As Integer = sortierteListe.Count
                 For i = 1 To anzPieSegments - 1
-                    .gsCollection.Add(sortierteListe.ElementAt(i - 1).Value)
+                    Try
+                        .gsCollection.Add(sortierteListe.ElementAt(tmpAnz - i).Value)
+                    Catch ex As Exception
+
+                    End Try
+
                 Next
             Else
                 .gsCollection = Nothing
             End If
+
 
         End With
 
@@ -5554,8 +5561,14 @@ Public Module Projekte
                     .diagrammTyp = DiagrammTypen(4)
                     If anzPieSegments > 1 Then
                         .gsCollection = New Collection
+                        Dim tmpAnz As Integer = sortierteListe.Count
                         For i = 1 To anzPieSegments - 1
-                            .gsCollection.Add(sortierteListe.ElementAt(i - 1).Value)
+                            Try
+                                .gsCollection.Add(sortierteListe.ElementAt(tmpAnz - i).Value)
+                            Catch ex As Exception
+
+                            End Try
+
                         Next
                     Else
                         .gsCollection = Nothing
