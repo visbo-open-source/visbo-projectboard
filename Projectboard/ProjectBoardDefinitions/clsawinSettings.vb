@@ -19,6 +19,9 @@ Public Class clsawinSettings
     Public Property missingDefinitionColor As Long
     Public Property showTimeSpanInPT As Boolean
 
+    ' wieviel Ressourcen Top Bottlenecks sollen gezeigt werden ? Default = 3 
+    Public Property anzTopBottlenecks As Integer
+
     Public Property AmpelGruen As Long
     Public Property AmpelGelb As Long
     Public Property AmpelRot As Long
@@ -233,7 +236,7 @@ Public Class clsawinSettings
         _timeSpanColor = RGB(242, 242, 242)
         _missingDefinitionColor = XlRgbColor.rgbCoral
         _showTimeSpanInPT = True
-
+        _anzTopBottlenecks = 3
 
         ' Projekteingabe Settings
         _lastProjektTyp = ""

@@ -4820,15 +4820,13 @@ Public Module Projekte
         ' in der tdaten-Reihe sollen die 5 Rollen stehen, die am meisten über-/unterausgelastet sind
         ' dann als Summe alle anderen ..
 
-
         Dim anzItems As Integer = sortierteListe.Count
-        Dim anzPieSegments As Integer = 6
-        If anzItems < 6 And anzItems > 0 Then
+        Dim anzPieSegments As Integer = awinSettings.anzTopBottlenecks + 1
+        If anzItems < anzPieSegments And anzItems > 0 Then
             anzPieSegments = anzItems
         ElseIf anzItems = 0 Then
             anzPieSegments = 1
         End If
-
         ReDim tdatenreihe(anzPieSegments - 1)
         ReDim Xdatenreihe(anzPieSegments - 1)
 
@@ -4836,22 +4834,20 @@ Public Module Projekte
         ' jetzt muss die tmpDaten und Xdatenreihen aufgebaut werden  
 
         For r = 1 To anzItems
-            If r <= 5 Then
+            If r <= anzPieSegments - 1 Then
                 tdatenreihe(r - 1) = CInt(sortierteListe.ElementAt(anzItems - r).Key)
                 Xdatenreihe(r - 1) = sortierteListe.ElementAt(anzItems - r).Value
             Else
-                If anzItems = 6 Then
+                If anzItems = anzPieSegments Then
                     tdatenreihe(r - 1) = CInt(sortierteListe.ElementAt(anzItems - r).Key)
                     Xdatenreihe(r - 1) = sortierteListe.ElementAt(anzItems - r).Value
                 Else
-                    tdatenreihe(5) = tdatenreihe(5) + CInt(sortierteListe.ElementAt(anzItems - r).Key)
-                    Xdatenreihe(5) = "others (" & anzItems - 5 & ")"
+                    tdatenreihe(anzPieSegments - 1) = tdatenreihe(anzPieSegments - 1) + CInt(sortierteListe.ElementAt(anzItems - r).Key)
+                    Xdatenreihe(anzPieSegments - 1) = "others (" & anzItems - (anzPieSegments - 1) & ")"
                 End If
 
             End If
         Next
-
-
 
 
         If auswahl = 1 Then
@@ -4920,7 +4916,6 @@ Public Module Projekte
 
             For r = 1 To anzPieSegments
 
-                'roleName = RoleDefinitions.getRoledef(r).name
                 roleName = Xdatenreihe(r - 1)
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).Item(1), Excel.Series).Points(r)
                     '.Interior.color = RoleDefinitions.getRoledef(roleName).farbe
@@ -4950,6 +4945,34 @@ Public Module Projekte
             End If
 
         End With
+
+        ' in diesem Fall muss das Chart in der Diagram-Liste aktualisiert werden ...
+
+
+        Dim prcDiagram As clsDiagramm = Nothing
+
+        If DiagramList.contains(chtobj.Name) Then
+            prcDiagram = DiagramList.getDiagramm(chtobj.Name)
+        End If
+
+        If Not IsNothing(prcDiagram) Then
+
+        End If
+
+        With prcDiagram
+            
+            If anzPieSegments > 1 Then
+                .gsCollection = New Collection
+                For i = 1 To anzPieSegments - 1
+                    .gsCollection.Add(sortierteListe.ElementAt(i - 1).Value)
+                Next
+            Else
+                .gsCollection = Nothing
+            End If
+
+        End With
+
+
 
         'End With
 
@@ -5335,8 +5358,8 @@ Public Module Projekte
 
 
         Dim anzItems As Integer = sortierteListe.Count
-        Dim anzPieSegments As Integer = 6
-        If anzItems < 6 And anzItems > 0 Then
+        Dim anzPieSegments As Integer = awinSettings.anzTopBottlenecks + 1
+        If anzItems < anzPieSegments And anzItems > 0 Then
             anzPieSegments = anzItems
         ElseIf anzItems = 0 Then
             anzPieSegments = 1
@@ -5348,16 +5371,16 @@ Public Module Projekte
         ' jetzt muss die tmpDaten und Xdatenreihen aufgebaut werden  
 
         For r = 1 To anzItems
-            If r <= 5 Then
+            If r <= anzPieSegments - 1 Then
                 tdatenreihe(r - 1) = CInt(sortierteListe.ElementAt(anzItems - r).Key)
                 Xdatenreihe(r - 1) = sortierteListe.ElementAt(anzItems - r).Value
             Else
-                If anzItems = 6 Then
+                If anzItems = anzPieSegments Then
                     tdatenreihe(r - 1) = CInt(sortierteListe.ElementAt(anzItems - r).Key)
                     Xdatenreihe(r - 1) = sortierteListe.ElementAt(anzItems - r).Value
                 Else
-                    tdatenreihe(5) = tdatenreihe(5) + CInt(sortierteListe.ElementAt(anzItems - r).Key)
-                    Xdatenreihe(5) = "others (" & anzItems - 5 & ")"
+                    tdatenreihe(anzPieSegments - 1) = tdatenreihe(anzPieSegments - 1) + CInt(sortierteListe.ElementAt(anzItems - r).Key)
+                    Xdatenreihe(anzPieSegments - 1) = "others (" & anzItems - (anzPieSegments - 1) & ")"
                 End If
 
             End If
@@ -5529,7 +5552,15 @@ Public Module Projekte
                 With prcDiagram
                     .DiagrammTitel = diagramTitle
                     .diagrammTyp = DiagrammTypen(4)
-                    .gsCollection = Nothing
+                    If anzPieSegments > 1 Then
+                        .gsCollection = New Collection
+                        For i = 1 To anzPieSegments - 1
+                            .gsCollection.Add(sortierteListe.ElementAt(i - 1).Value)
+                        Next
+                    Else
+                        .gsCollection = Nothing
+                    End If
+                    
                     .isCockpitChart = False
                     .top = top
                     .left = left
