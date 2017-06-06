@@ -62,9 +62,9 @@ Partial Class frmStoreConstellation
         Me.Label1.AutoSize = True
         Me.Label1.Location = New System.Drawing.Point(19, 30)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(383, 13)
+        Me.Label1.Size = New System.Drawing.Size(380, 13)
         Me.Label1.TabIndex = 3
-        Me.Label1.Text = "Geben  Sie den Namen an, unter dem dieses Szenario gespeichert werden soll: "
+        Me.Label1.Text = "Geben  Sie den Namen an, unter dem dieses Portfolio gespeichert werden soll: "
         '
         'frmStoreConstellation
         '
@@ -77,7 +77,7 @@ Partial Class frmStoreConstellation
         Me.Controls.Add(Me.ComboBox1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmStoreConstellation"
-        Me.Text = "Szenario speichern"
+        Me.Text = "Portfolio speichern"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

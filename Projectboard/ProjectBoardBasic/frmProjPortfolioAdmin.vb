@@ -146,9 +146,9 @@ Public Class frmProjPortfolioAdmin
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    .Text = "Szenario "
+                    .Text = "Portfolio "
                 Else
-                    .Text = "Scenario "
+                    .Text = "Portfolio "
                 End If
 
                 .requiredDate.Visible = False
@@ -742,9 +742,9 @@ Public Class frmProjPortfolioAdmin
 
             Dim preText As String
             If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                preText = "Szenario "
+                preText = "Portfolio "
             Else
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
 
             Me.Text = preText & currentConstellationName
@@ -2128,10 +2128,10 @@ Public Class frmProjPortfolioAdmin
                     If outPutCollection.Count > 0 Then
 
                         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                            txtMsg1 = "Speichern Szenario " & toStoreConstellation.constellationName
+                            txtMsg1 = "Speichern Portfolio " & toStoreConstellation.constellationName
                             txtMsg2 = "folgende Informationen:"
                         Else
-                            txtMsg1 = "Store Scenario " & toStoreConstellation.constellationName
+                            txtMsg1 = "Store Portfolio " & toStoreConstellation.constellationName
                             txtMsg2 = "following messages:"
                         End If
                         Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
@@ -2425,9 +2425,9 @@ Public Class frmProjPortfolioAdmin
             If currentConstellationName <> calcLastSessionScenarioName() Then
                 currentConstellationName = calcLastSessionScenarioName()
 
-                Dim preText As String = "Szenario "
+                Dim preText As String = "Portfolio "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                    preText = "Scenario "
+                    preText = "Portfolio "
                 End If
 
                 Me.Text = preText & currentConstellationName
@@ -2753,9 +2753,9 @@ Public Class frmProjPortfolioAdmin
             If currentConstellationName <> calcLastSessionScenarioName() Then
                 currentConstellationName = calcLastSessionScenarioName()
 
-                Dim preText As String = "Szenario "
+                Dim preText As String = "Portfolio "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                    preText = "Scenario "
+                    preText = "Portfolio "
                 End If
                 Me.Text = preText & currentConstellationName
             End If
@@ -2794,9 +2794,9 @@ Public Class frmProjPortfolioAdmin
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
 
-            Dim preText As String = "Szenario "
+            Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
             Me.Text = preText & currentConstellationName
         End If
@@ -3229,9 +3229,9 @@ Public Class frmProjPortfolioAdmin
     Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
         Dim ttText As String = ""
         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-            ttText = "Szenario-Name auswählen oder neuen Namen eingeben"
+            ttText = "Portfolio-Name auswählen oder neuen Namen eingeben"
         Else
-            ttText = "Select scenario Name and/or edit new name"
+            ttText = "Select portfolio name and/or edit new name"
         End If
         ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
@@ -3282,9 +3282,9 @@ Public Class frmProjPortfolioAdmin
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
 
-            Dim preText As String = "Szenario "
+            Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
             Me.Text = preText & currentConstellationName
         End If
@@ -3303,9 +3303,9 @@ Public Class frmProjPortfolioAdmin
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
 
-            Dim preText As String = "Szenario "
+            Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
             Me.Text = preText & currentConstellationName
         End If

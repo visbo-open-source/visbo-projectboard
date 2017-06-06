@@ -788,6 +788,9 @@ Public Module awinGeneralModules
             If awinSettings.visboDebug Then
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
+
+                Call MsgBox("Operating System: " & My.Computer.Info.OSVersion)
+                Call MsgBox("Excel-Verison: " & appInstance.Version)
             End If
 
 
@@ -802,6 +805,7 @@ Public Module awinGeneralModules
             If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
                 Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
             End If
+
 
 
             If Not globalPath.EndsWith("\") Then
@@ -4776,7 +4780,7 @@ Public Module awinGeneralModules
 
         Dim newC As New clsConstellation
         newC.constellationName = scenarioName
-        newC.sortCriteria = ptSortCriteria.customListe
+        newC.sortCriteria = ptSortCriteria.customTF
 
 
         zeile = 2
@@ -4863,13 +4867,13 @@ Public Module awinGeneralModules
             End With
         Catch ex As Exception
 
-            Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
+            Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
         End Try
 
 
 
         Call MsgBox("gelesen: " & geleseneProjekte & vbLf & _
-                    "Scenario erzeugt: " & scenarioName )
+                    "Portfolio erzeugt: " & scenarioName)
 
         importScenarioDefinition = newC
 
@@ -5411,7 +5415,7 @@ Public Module awinGeneralModules
             End With
         Catch ex As Exception
 
-            Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
+            Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
         End Try
 
 
@@ -9978,7 +9982,7 @@ Public Module awinGeneralModules
 
         ' prüfen, ob diese Constellation auch existiert ..
         If IsNothing(activeConstellation) Then
-            Call MsgBox(" das Szenario darf nicht NULL sein ... ")
+            Call MsgBox(" das Portfolio darf nicht NULL sein ... ")
             Exit Sub
         End If
 
@@ -10206,7 +10210,7 @@ Public Module awinGeneralModules
             'Call storeSessionConstellation("Last")
 
         Catch ex As Exception
-            Call MsgBox("Fehler bei Laden Szenario: " & vbLf & ex.Message)
+            Call MsgBox("Fehler bei Laden : " & vbLf & ex.Message)
         End Try
 
 
@@ -10341,13 +10345,13 @@ Public Module awinGeneralModules
 
         If awinSettings.englishLanguage Then
             outputLine = "Stored ... " & vbLf & _
-                "Scenario: " & currentConstellation.constellationName & vbLf & vbLf & _
+                "Portfolio: " & currentConstellation.constellationName & vbLf & vbLf & _
                 "Number new projects/project-variants: " & anzahlNeue.ToString & vbLf & _
                 "Number changed projects/project-variants: " & anzahlChanged.ToString & vbLf & _
                 tsMessage
         Else
             outputLine = "Gespeichert ... " & vbLf & _
-                "Szenario: " & currentConstellation.constellationName & vbLf & vbLf & _
+                "Portfolio: " & currentConstellation.constellationName & vbLf & vbLf & _
                 "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf & _
                 "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf & _
                 tsMessage
@@ -10388,7 +10392,7 @@ Public Module awinGeneralModules
                 ' Konstellation muss aus der Datenbank gelöscht werden.
                 returnValue = request.removeConstellationFromDB(activeConstellation)
                 If returnValue = False Then
-                    Call MsgBox("Fehler bei Löschen Szenario: " & activeConstellation.constellationName)
+                    Call MsgBox("Fehler bei Löschen Portfolio : " & activeConstellation.constellationName)
                 End If
             Else
                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
@@ -13620,7 +13624,7 @@ Public Module awinGeneralModules
             End With
 
             With CType(.Cells(zeile, spalte + 3), Excel.Range)
-                .Value = "Names des Szenarios / Projekt"
+                .Value = "Names des Portfolios / Projekts"
                 .ColumnWidth = 30
             End With
 
@@ -20968,5 +20972,21 @@ Public Module awinGeneralModules
         isMissingDefinitionOK = checkResult
 
     End Function
+
+    Public bIShrankTheRibbon As Boolean
+    Public Sub Workbook_WindowActivate(ByVal Wn As Window)
+        If Wn.Caption = windowNames(4) Then
+            bIShrankTheRibbon = False
+            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
+            bIShrankTheRibbon = True
+        End If
+    End Sub
+
+    Public Sub Workbook_WindowDeactivate(ByVal Wn As Window)
+        If Wn.Caption = windowNames(4) Then
+            If bIShrankTheRibbon Then _
+            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+        End If
+    End Sub
 
 End Module

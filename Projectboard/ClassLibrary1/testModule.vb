@@ -4556,7 +4556,8 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(58)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Phase " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -4622,7 +4623,8 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(120)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -5005,27 +5007,27 @@ Public Module testModule
                         Try
                             If request.storeConstellationToDB(kvp.Value) Then
                                 If awinSettings.englishLanguage Then
-                                    outputline = "Scenario stored: " & kvp.Key
+                                    outputline = "Portfolio stored: " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 Else
-                                    outputline = "Szenario gespeichert: " & kvp.Key
+                                    outputline = "Portfolio gespeichert: " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 End If
                             Else
                                 If awinSettings.englishLanguage Then
-                                    outputline = "Error when writing Scenario " & kvp.Key
+                                    outputline = "Error when writing portfolio " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 Else
-                                    outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                                    outputline = "Fehler in Schreiben Portfolio " & kvp.Key
                                     outPutCollection.Add(outputline)
                                 End If
 
                             End If
                         Catch ex As Exception
                             If awinSettings.englishLanguage Then
-                                outputline = "Error when writing Scenario " & kvp.Key
+                                outputline = "Error when writing portfolio " & kvp.Key
                             Else
-                                outputline = "Fehler in Schreiben Constellation " & kvp.Key
+                                outputline = "Fehler in Schreiben Portfolio " & kvp.Key
                             End If
                             Throw New ArgumentException(outputline)
                             'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
@@ -5090,22 +5092,22 @@ Public Module testModule
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
                             If awinSettings.englishLanguage Then
-                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                outputline = "ok, portfolios stored!" & vbLf & vbLf & _
                                         "1 project/project-variant stored " & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf & _
                                         "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
 
                         Else
                             If awinSettings.englishLanguage Then
-                                outputline = "ok, scenarios stored!" & vbLf & vbLf & _
+                                outputline = "ok, portfolios stored!" & vbLf & vbLf & _
                                         anzahlStores & " projects/project-variants stored" & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = "ok, Szenarien gespeichert!" & vbLf & vbLf & _
+                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf & _
                                         "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
@@ -5113,10 +5115,10 @@ Public Module testModule
                         End If
                     Else
                         If awinSettings.englishLanguage Then
-                            outputline = "ok, scenarios stored!" & vbLf & _
+                            outputline = "ok, portfolios stored!" & vbLf & _
                                 "no projects stored, because of no changes"
                         Else
-                            outputline = "ok, Szenarien gespeichert!" & vbLf & _
+                            outputline = "ok, Portfolios gespeichert!" & vbLf & _
                                 "keine Projekte gespeichert, da es keine Änderungen gab"
                         End If
 
@@ -5160,7 +5162,7 @@ Public Module testModule
                     Dim msgH As String, msgE As String
                     If awinSettings.englishLanguage Then
                         If everythingElse Then
-                            msgH = "Store Everything (Projects, Scenarios, Dependencies, ..)"
+                            msgH = "Store Everything (Projects, Portfolios, Dependencies, ..)"
                         Else
                             msgH = "Store Projects"
                         End If
@@ -5168,7 +5170,7 @@ Public Module testModule
                         msgE = "following results:"
                     Else
                         If everythingElse Then
-                            msgH = "Alles speichern (Projekte, Szenarien, Abhängigkeiten, ..)"
+                            msgH = "Alles speichern (Projekte, Portfolios, Abhängigkeiten, ..)"
                         Else
                             msgH = "Projekte speichern"
                         End If
@@ -9749,7 +9751,7 @@ Public Module testModule
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -9838,11 +9840,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
+                    .Name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
                     '.name = "Baseline"
-                    .Interior.color = awinSettings.SollIstFarbeB
+                    .Interior.Color = awinSettings.SollIstFarbeB
                     .Values = tdatenreiheE
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -9880,11 +9882,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
+                    .Name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
 
-                    .Interior.color = awinSettings.SollIstFarbeL
+                    .Interior.Color = awinSettings.SollIstFarbeL
                     .Values = tdatenreiheL
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -9921,11 +9923,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
+                    .Name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
                     '.name = "Current"
-                    .Interior.color = awinSettings.SollIstFarbeC
+                    .Interior.Color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheH
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -12399,7 +12401,6 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                .TextFrame2.TextRange.Text = beschriftung
                 nameCollection.Add(.Name, .Name)
             End With
 
@@ -18454,7 +18455,8 @@ Public Module testModule
                         srcChartobj.Copy()
                         ok2 = True
                     Catch ex As Exception
-
+                        'Call MsgBox("chartCopy" & ex.Message)
+                        Exit While
                     End Try
                     j = j + 1
                 End While

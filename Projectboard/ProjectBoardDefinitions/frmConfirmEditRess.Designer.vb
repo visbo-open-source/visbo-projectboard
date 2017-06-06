@@ -49,7 +49,7 @@ Partial Class frmConfirmEditRess
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(303, 94)
+        Me.ClientSize = New System.Drawing.Size(318, 94)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
