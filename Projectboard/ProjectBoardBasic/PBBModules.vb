@@ -323,8 +323,8 @@ Public Module PBBModules
                         .ribbonButtonID = controlID
                         .menuOption = PTmenue.leistbarkeitsAnalyse
                         ' Nicht Modal anzeigen
-                        .Show()
-                        'returnValue = .ShowDialog
+                        '.Show()
+                        returnValue = .ShowDialog
 
                     End With
                 End If
@@ -358,8 +358,8 @@ Public Module PBBModules
 
                     .menuOption = PTmenue.leistbarkeitsAnalyse
                     ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                    '.Show()
+                    returnValue = .ShowDialog
 
                 End With
 

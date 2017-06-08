@@ -15421,7 +15421,7 @@ Public Module Projekte
 
         Dim currentWsName As String
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentWsName = arrWsNames(ptTables.MPT)
+            currentWsName = arrWsNames(ptTables.mptPrCharts)
         Else
             currentWsName = arrWsNames(ptTables.meCharts)
         End If

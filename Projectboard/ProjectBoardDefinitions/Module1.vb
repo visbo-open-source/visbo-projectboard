@@ -243,8 +243,8 @@ Public Module Module1
         meAT = 9
         cstMmappings = 10
         meCharts = 11
-        pfCharts = 12
-        prCharts = 13
+        mptPfCharts = 12
+        mptPrCharts = 13
         cstMissingDefs = 15
     End Enum
     
@@ -481,6 +481,30 @@ Public Module Module1
         projekt = 1
     End Enum
 
+    ''' <summary>
+    ''' Aufzaehlung der Windows, wird in projectboardwindows(x) verwendet 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTwindows
+        mpt = 0
+        mptpr = 1
+        mptpf = 2
+        meChart = 3
+        massEdit = 4
+    End Enum
+
+    ''' <summary>
+    ''' Aufzählung der Views, wird in projectboardViews(x) verwendet 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTview
+        mpt = 0
+        mptpr = 1
+        mptprpf = 2
+        meOnly = 3
+        meChart = 4
+    End Enum
+
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
 
@@ -631,13 +655,13 @@ Public Module Module1
     Public DiagrammTypen(6) As String
 
     ' Variable nimmt die Namen der Windows auf  
-    Public windowNames(5) As String
+    Public windowNames(4) As String
 
     ' nimmt alle Excel.Window Definitionen auf 
     Public projectboardWindows(4) As Excel.Window
 
     ' Variable nimmt die View Namen auf ; eine View ist eine Zusammenstellung von Windows
-    Public viewNames(3) As String
+    Public projectboardViews(4) As Excel.CustomView
 
     ' Variable nimmt die Namen der Ergebnis Charts auf  
     Public ergebnisChartName(3) As String
@@ -3566,4 +3590,128 @@ Public Module Module1
 
         End If
     End Sub
+
+
+    ''' <summary>
+    ''' liefert zurück, ob in dem angegebenen Sheet überhaupt Charts vorhanden sind ... 
+    ''' </summary>
+    ''' <param name="chType"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function thereAreAnyCharts(ByVal chType As Integer) As Boolean
+
+        Dim anzCharts As Integer = 0
+
+        Try
+            If chType = PTwindows.mptpf Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            ElseIf chType = PTwindows.mptpr Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            ElseIf chType = PTwindows.meChart Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.meCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        thereAreAnyCharts = (anzCharts > 0)
+
+    End Function
+
+    ''' <summary>
+    ''' liefert den Caption Namen des Windows in Abhängigkeit von Portfolio oder Projekt und in Abhängigkeit von der Sprache 
+    ''' </summary>
+    ''' <param name="visboWindowTyp"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeWindowCaption(ByVal visboWindowTyp As Integer) As String
+        Dim tmpResult As String = ""
+
+        Select Case visboWindowTyp
+
+            Case PTwindows.mptpf
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Charts for Portfolio " & currentConstellationName & ": " & ShowProjekte.Count & " projects"
+                Else
+                    tmpResult = "Charts für Portfolio " & currentConstellationName & ": " & ShowProjekte.Count & " Projekte"
+                End If
+
+            Case PTwindows.mptpr
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Charts for the selected project"
+                Else
+                    tmpResult = "Charts für das ausgewählte Projekt"
+                End If
+
+            Case PTwindows.meChart
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Project Profit/Loss and Portfolio-Charts " & currentConstellationName & ": " & ShowProjekte.Count & " projects"
+                Else
+                    tmpResult = "Projekt Gewinn/Verlust und Portfolio-Charts " & currentConstellationName & ": " & ShowProjekte.Count & " Projekte"
+                End If
+
+            Case PTwindows.mpt
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Multiproject-Board " & currentConstellationName & ": " & ShowProjekte.Count & " projects"
+                Else
+                    tmpResult = "Multiprojekt-Tafel " & currentConstellationName & ": " & ShowProjekte.Count & " Projekte"
+                End If
+
+            Case PTwindows.massEdit
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Modify Resource and Cost Needs"
+                Else
+                    tmpResult = "Personal- und Kostenbedarfe ändern"
+                End If
+
+        End Select
+
+        bestimmeWindowCaption = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' schliesst alle Windows ausser MPT Window; macht dann das MPT Window wieder groß 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub closeAllWindowsExceptMPT()
+
+        Dim tmpWindow As Excel.Window
+        Dim vglName As String = CType(projectboardWindows(PTwindows.mpt).ActiveSheet, Excel.Worksheet).Name
+        If vglName <> arrWsNames(ptTables.MPT) Then
+            Call MsgBox("Window 0 zeigt auf das falsche Sheet: " & vglName)
+            Exit Sub
+        End If
+
+        ' alle Windows schliessen, bis auf das MPT Window 
+        For Each tmpWindow In CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows
+            If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = vglName Then
+                ' nichts tun ...
+            Else
+                tmpWindow.Close()
+            End If
+        Next
+
+        ' jetzt die projectboardWindows = Nothing setzen 
+        projectboardWindows(PTwindows.massEdit) = Nothing
+        projectboardWindows(PTwindows.meChart) = Nothing
+        projectboardWindows(PTwindows.mptpf) = Nothing
+        projectboardWindows(PTwindows.mptpr) = Nothing
+
+        ' make MPT Window great again ...
+        With projectboardWindows(PTwindows.mpt)
+            .Visible = True
+            .WindowState = XlWindowState.xlMaximized
+        End With
+
+
+    End Sub
+
 End Module

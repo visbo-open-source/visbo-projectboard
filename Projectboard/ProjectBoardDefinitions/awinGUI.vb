@@ -49,7 +49,7 @@ Public Module awinGUI
         Dim pfChart As clsEventsPfCharts
         'Dim chtTitle As String
         Dim hilfsstring As String = ""
-        Dim chtobjName As String = windowNames(3)
+        Dim chtobjName As String = ""
         Dim smallfontsize As Double, titlefontsize As Double
         Dim singleProject As Boolean
         Dim formerSU As Boolean = appInstance.ScreenUpdating

@@ -183,6 +183,18 @@
     <Compile Include="Tabelle5.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <Compile Include="Tabelle6.Designer.vb">
+      <DependentUpon>Tabelle6.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle6.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle7.Designer.vb">
+      <DependentUpon>Tabelle7.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle7.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
     <Compile Include="ThisWorkbook.Designer.vb">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
@@ -300,6 +312,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\milestones_icon1.png" />
+    <None Include="Tabelle7.Designer.xml">
+      <DependentUpon>Tabelle7.vb</DependentUpon>
+    </None>
+    <None Include="Tabelle6.Designer.xml">
+      <DependentUpon>Tabelle6.vb</DependentUpon>
+    </None>
     <None Include="Tabelle4.Designer.xml">
       <DependentUpon>Tabelle4.vb</DependentUpon>
     </None>
@@ -366,6 +384,8 @@
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="meTE" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
           <HostItem Name="Tabelle4" Code="Tabelle4.vb" CanonicalName="Tabelle4" PublishedHash="4EE7F2D35207B924053EE001939AA45C186FF267" DisplayName="meAT" Blueprint="Tabelle4.Designer.xml" GeneratedCode="Tabelle4.Designer.vb" />
           <HostItem Name="Tabelle5" Code="Tabelle5.vb" CanonicalName="Tabelle5" PublishedHash="E7B509583378FAE6D919392398062EB2C72A36F5" DisplayName="meCharts" Blueprint="Tabelle5.Designer.xml" GeneratedCode="Tabelle5.Designer.vb" />
+          <HostItem Name="Tabelle6" Code="Tabelle6.vb" CanonicalName="Tabelle6" DisplayName="mptPrCharts" Blueprint="Tabelle6.Designer.xml" GeneratedCode="Tabelle6.Designer.vb" />
+          <HostItem Name="Tabelle7" Code="Tabelle7.vb" CanonicalName="Tabelle7" DisplayName="mptPfCharts" Blueprint="Tabelle7.Designer.xml" GeneratedCode="Tabelle7.Designer.vb" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
         </Host>
       </FlavorProperties>

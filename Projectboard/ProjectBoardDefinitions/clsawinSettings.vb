@@ -262,7 +262,7 @@ Public Class clsawinSettings
         _propAnpassRess = False
         _phasesProzentual = False
         _drawphases = False
-        _showValuesOfSelected = True
+        _showValuesOfSelected = False
         _applyFilter = False
         _createIfNotThere = False
         _showOrigName = False

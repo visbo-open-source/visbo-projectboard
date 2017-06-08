@@ -166,7 +166,8 @@ Public Module awinDiagrams
         Dim currentSheetName As String
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentSheetName = arrWsNames(ptTables.MPT)
+            'currentSheetName = arrWsNames(ptTables.MPT)
+            currentSheetName = arrWsNames(ptTables.mptPfCharts)
         Else
             ' tk, 22.5. Chart wird jetzt in meCharts gezeichnet ... 
             'currentSheetName = arrWsNames(ptTables.meRC)
@@ -359,12 +360,12 @@ Public Module awinDiagrams
 
         With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 
-            Dim wasProtected As Boolean = .ProtectContents
+            ' das wird hier nicht mehr gebraucht 
 
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Unprotect(Password:="x")
-                awinSettings.meEnableSorting = True
-            End If
+            'If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            '    .Unprotect(Password:="x")
+            '    awinSettings.meEnableSorting = True
+            'End If
 
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -914,25 +915,25 @@ Public Module awinDiagrams
                     ' braucht man doch gar nicht ... 
                     '.Name = prcTyp
 
-                    Dim achieved As Boolean = True
-                    Dim anzahlVersuche As Integer = 0
-                    Dim errmsg As String = ""
-                    ' 25.5.17 wird ja jetzt erreicht durch das Erzeugen eines neuen ChartObjects ganz oben ...
-                    ''Do While Not achieved And anzahlVersuche < 10
-                    ''    Try
-                    ''        'Call Sleep(100)
-                    ''        .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
-                    ''        achieved = True
-                    ''    Catch ex As Exception
-                    ''        errmsg = ex.Message
-                    ''        'Call Sleep(100)
-                    ''        anzahlVersuche = anzahlVersuche + 1
-                    ''    End Try
-                    ''Loop
+                    'Dim achieved As Boolean = True
+                    'Dim anzahlVersuche As Integer = 0
+                    'Dim errmsg As String = ""
+                    '' 25.5.17 wird ja jetzt erreicht durch das Erzeugen eines neuen ChartObjects ganz oben ...
+                    ' ''Do While Not achieved And anzahlVersuche < 10
+                    ' ''    Try
+                    ' ''        'Call Sleep(100)
+                    ' ''        .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
+                    ' ''        achieved = True
+                    ' ''    Catch ex As Exception
+                    ' ''        errmsg = ex.Message
+                    ' ''        'Call Sleep(100)
+                    ' ''        anzahlVersuche = anzahlVersuche + 1
+                    ' ''    End Try
+                    ' ''Loop
 
-                    If Not achieved Then
-                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
-                    End If
+                    'If Not achieved Then
+                    '    Throw New ArgumentException("Chart-Fehler:" & errmsg)
+                    'End If
 
 
 
@@ -969,7 +970,7 @@ Public Module awinDiagrams
                 ' wenn es ein Cockpit Chart ist: dann werden die Borderlines ausgeschaltet ...
                 If isCockpitChart Then
                     Try
-                        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
                             .Shapes.Item(chtobjName).Line.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                         End With
                     Catch ex As Exception
@@ -1185,7 +1186,7 @@ Public Module awinDiagrams
         d = 1
         Dim foundDiagram As clsDiagramm = Nothing
 
-        ' bestimmen, ob man sich auf der Projekt-Tafel befindet oder aber im MassEdit Resosurcen, Termine, Attribute
+        ' bestimmen, ob man sich auf der Projekt-Tafel befindet oder aber im MassEdit Ressourcen, Termine, Attribute
         Try
             If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 ' bestimmen des prcTyp
@@ -5953,13 +5954,14 @@ Public Module awinDiagrams
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
 
+        Dim formerShowValuesOfSelected As Boolean = awinSettings.showValuesOfSelected
         Dim i As Integer, p As Integer
 
         Dim isRole As Boolean = True
 
         Dim currentSheetName As String
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentSheetName = arrWsNames(ptTables.MPT)
+            currentSheetName = arrWsNames(ptTables.mptPfCharts)
             roleCost = Nothing
         Else
             ' roleCost wird übergeben, wenn man sich im modus <> graficboard befindet 
@@ -5973,6 +5975,7 @@ Public Module awinDiagrams
                 End If
             End If
             ' currentSheetName = arrWsNames(ptTables.meRC)
+            awinSettings.showValuesOfSelected = True
             currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
@@ -6134,7 +6137,10 @@ Public Module awinDiagrams
             End With
         End If
 
-        'End If
+        ' jetzt muss geprüft werden, ob sich awinsettings.showValuesofselected geändert hatte ... dann wieder zurücksetzen 
+        If formerShowValuesOfSelected <> awinSettings.showValuesOfSelected Then
+            awinSettings.showValuesOfSelected = formerShowValuesOfSelected
+        End If
 
     End Sub
 
