@@ -2136,7 +2136,7 @@ Public Module awinGeneralModules
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
                 awinSettings.autoCorrectBedarfe = True
                 awinSettings.propAnpassRess = False
-                awinSettings.showValuesOfSelected = True
+                awinSettings.showValuesOfSelected = False
             Catch ex As Exception
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
