@@ -5245,6 +5245,7 @@ Public Module Projekte
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
         Dim chtobjname As String
+        Dim newChtObj As Excel.ChartObject = Nothing
 
         Dim farbThemaRot As System.Drawing.Color = System.Drawing.Color.Aqua
         
@@ -5288,10 +5289,17 @@ Public Module Projekte
 
         Dim currentSheetName As String
 
+        Dim found As Boolean = False
+
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentSheetName = arrWsNames(ptTables.MPT)
+            If calledfromReporting Then
+                currentSheetName = arrWsNames(ptTables.repCharts)
+            Else
+                currentSheetName = arrWsNames(ptTables.mptPfCharts)
+            End If
+
         Else
-            currentSheetName = arrWsNames(ptTables.meRC)
+            currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
         If auswahl = 1 Then
@@ -5300,30 +5308,6 @@ Public Module Projekte
             chtobjname = calcChartKennung("pf", PTpfdk.Unterauslastung, myCollection)
         End If
         myCollection.Clear()
-
-        If Not calledfromReporting Then
-
-            Dim foundDiagramm As clsDiagramm = Nothing
-
-            ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
-            Try
-                If DiagramList.contains(chtobjname) Then
-                    foundDiagramm = DiagramList.getDiagramm(chtobjname)
-                    With foundDiagramm
-                        top = .top
-                        left = .left
-                        width = .width
-                        height = .height
-                    End With
-                End If
-                
-            Catch ex As Exception
-
-
-            End Try
-        End If
-
-
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -5343,8 +5327,6 @@ Public Module Projekte
             Exit Sub
         End If
 
-
-
         Dim sortierteListe As New SortedList(Of Double, String)
         For r = 1 To anzRollen
             'roleName = RoleDefinitions.getRoledef(r).name
@@ -5358,7 +5340,6 @@ Public Module Projekte
                 sortierteListe.Add(tmpValue, roleName)
             End If
         Next r
-
 
         ' in der tdaten-Reihe sollen die 5 Rollen stehen, die am meisten über-/unterausgelastet sind
         ' dann als Summe alle anderen ..
@@ -5410,18 +5391,11 @@ Public Module Projekte
 
         With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 
-            Dim wasProtected As Boolean = .ProtectContents
-
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Unprotect(Password:="x")
-            End If
-
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
             '
             Dim i As Integer = 1
-            Dim found As Boolean = False
 
             While i <= anzDiagrams And Not found
 
@@ -5442,9 +5416,9 @@ Public Module Projekte
             Else
                 Dim tmpValues(1) As Double
 
+                newChtObj = CType(.ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
 
-
-                With appInstance.Charts.Add
+                With newChtObj.Chart
                     ' remove old series
                     Try
                         Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
@@ -5501,47 +5475,23 @@ Public Module Projekte
 
 
                     .HasTitle = True
-                    .ChartTitle.text = diagramTitle
+                    .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                     .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
-
-                    Dim achieved As Boolean = False
-                    Dim anzahlVersuche As Integer = 0
-                    Dim errmsg As String = ""
-                    Do While Not achieved And anzahlVersuche < 10
-                        Try
-                            'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
-                            achieved = True
-                        Catch ex As Exception
-                            errmsg = ex.Message
-                            'Call Sleep(100)
-                            anzahlVersuche = anzahlVersuche + 1
-                        End Try
-                    Loop
-
-                    If Not achieved Then
-                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
-                    End If
-
-                    '.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
                 End With
 
 
 
-                With .ChartObjects(anzDiagrams + 1)
+                With newChtObj
                     .Name = chtobjname
-                    .top = top
-                    .left = left
-                    .height = height
-                    .width = width
+                    .Name = chtobjname
                 End With
             End If
 
 
-            repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+            repObj = newChtObj
 
             ' jetzt muss die letzte Position des Diagramms gespeichert werden , wenn es nicht aus der Reporting Engine 
             ' aufgerufen wurde
@@ -5600,25 +5550,7 @@ Public Module Projekte
 
             End If
 
-            ' wenn es geschützt war .. 
-            If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                .EnableAutoFilter = True
-            End If
-
-
         End With
-
-
-
 
     End Sub
 

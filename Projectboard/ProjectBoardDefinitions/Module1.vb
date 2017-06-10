@@ -216,6 +216,20 @@ Public Module Module1
    
     Public Const maxProjektdauer As Integer = 60
 
+    ''' <summary>
+    ''' kann verwendet werden, um die Typen zu kennzeichnen
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum ptElementTypen
+        phases = 0
+        roles = 1
+        costs = 2
+        portfolio = 3
+        ergebnis = 4
+        milestones = 5
+        mta = 6
+    End Enum
+
 
     ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
     ' 0: alphabetisch nach Name
@@ -235,6 +249,7 @@ Public Module Module1
 
     Public Enum ptTables
         none = 0
+        repCharts = 1
         MPT = 3
         cstSettings = 4
         meRC = 5
@@ -737,19 +752,38 @@ Public Module Module1
     ''' setzt EnableEvents, ScreenUpdating auf true
     ''' </summary>
     ''' <remarks></remarks>
-    Sub projektTafelInit()
+    Public Sub projektTafelInit()
 
         With appInstance
             .EnableEvents = True
             If .ScreenUpdating = False Then
-                'Call MsgBox ("Screen Update !")
                 .ScreenUpdating = True
             End If
         End With
 
-
     End Sub
 
+
+    ''' <summary>
+    ''' aktiviert, wenn visible, das Multiprojekt Window ...
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub activateProjectBoard()
+        Try
+
+            If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+
+                If projectboardWindows(PTwindows.mpt).Visible = True Then
+                    projectboardWindows(PTwindows.mpt).Activate()
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 
     ''' <summary>
     ''' eingefügt, um eine Warteschleife relisieren zu können ... 
@@ -912,13 +946,16 @@ Public Module Module1
 
 
                     ' jetzt für alle selektierten Charts bestimmen, welche Projekte dazu beitragen ... 
-                    Dim allChartsOnSheet As Excel.ChartObjects = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects)
-                    Dim chtObj As Excel.ChartObject
+
+                        
+                    Dim allChartsOnSheet As Excel.ChartObjects = _
+                       CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
+
 
                     If Not IsNothing(allChartsOnSheet) Then
                         If allChartsOnSheet.Count > 0 And selectedCharts.Count > 0 Then
                             userSelectedSomething = True
-                            For Each chtObj In allChartsOnSheet
+                            For Each chtObj As Excel.ChartObject In allChartsOnSheet
 
                                 If selectedCharts.Contains(chtObj.Name) Then
                                     chtobjName = chtObj.Name
@@ -3711,6 +3748,44 @@ Public Module Module1
             .WindowState = XlWindowState.xlMaximized
         End With
 
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt in Abhängigkeit von TableTyp die Größe und Position des Fensters
+    ''' </summary>
+    ''' <param name="tableTyp"></param>
+    ''' <param name="chtop"></param>
+    ''' <param name="chleft"></param>
+    ''' <param name="chwidth"></param>
+    ''' <param name="chHeight"></param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer, _
+                                                ByRef chtop As Double, _
+                                                ByRef chleft As Double, _
+                                                ByRef chwidth As Double, _
+                                                ByRef chHeight As Double)
+
+        Dim currentWorksheet As Excel.Worksheet = _
+            CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(tableTyp)), Excel.Worksheet)
+        Dim tmpTop As Double = 2.0
+        Dim tmpLeft As Double = 2
+        Dim tmpWidth As Double = maxScreenWidth / 5 - 5
+        Dim tmpHeight As Double = (maxScreenHeight - 10) / 5
+
+        With currentWorksheet
+            For Each tmpChtObject As Excel.ChartObject In CType(.ChartObjects, Excel.ChartObjects)
+                If tmpChtObject.Top + tmpChtObject.Height + 2 > tmpTop Then
+                    tmpTop = tmpChtObject.Top + tmpChtObject.Height + 2
+                End If
+            Next
+        End With
+
+        ' jetzt die Werte setzen 
+        chtop = tmpTop
+        chleft = tmpLeft
+        chwidth = tmpWidth
+        chHeight = tmpHeight
 
     End Sub
 

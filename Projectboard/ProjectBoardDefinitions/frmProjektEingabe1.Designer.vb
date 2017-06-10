@@ -26,17 +26,15 @@ Partial Class frmProjektEingabe1
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
-        Me.Label3 = New System.Windows.Forms.Label()
-        Me.Label4 = New System.Windows.Forms.Label()
+        Me.lblStrategicFit = New System.Windows.Forms.Label()
+        Me.lblRisk = New System.Windows.Forms.Label()
+        Me.lblVorlage = New System.Windows.Forms.Label()
         Me.projectName = New System.Windows.Forms.TextBox()
         Me.pName = New System.Windows.Forms.Label()
         Me.Erloes = New System.Windows.Forms.TextBox()
         Me.sFit = New System.Windows.Forms.TextBox()
         Me.risiko = New System.Windows.Forms.TextBox()
         Me.vorlagenDropbox = New System.Windows.Forms.ComboBox()
-        Me.Label5 = New System.Windows.Forms.Label()
-        Me.volume = New System.Windows.Forms.TextBox()
         Me.DateTimeStart = New System.Windows.Forms.DateTimePicker()
         Me.dauerUnverändert = New System.Windows.Forms.CheckBox()
         Me.DateTimeEnde = New System.Windows.Forms.DateTimePicker()
@@ -48,6 +46,8 @@ Partial Class frmProjektEingabe1
         Me.endMilestoneDropbox = New System.Windows.Forms.ComboBox()
         Me.lbl_Laufzeit = New System.Windows.Forms.Label()
         Me.propRessourcenAnpassung = New System.Windows.Forms.CheckBox()
+        Me.lblProfitField = New System.Windows.Forms.Label()
+        Me.profitAskedFor = New System.Windows.Forms.TextBox()
         Me.SuspendLayout()
         '
         'OKButton
@@ -79,48 +79,48 @@ Partial Class frmProjektEingabe1
         Me.Label1.AutoSize = True
         Me.Label1.Enabled = False
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(13, 127)
+        Me.Label1.Location = New System.Drawing.Point(13, 105)
         Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(78, 16)
         Me.Label1.TabIndex = 5
         Me.Label1.Text = "Budget (T€)"
         '
-        'Label2
+        'lblStrategicFit
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Enabled = False
-        Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label2.Location = New System.Drawing.Point(199, 127)
-        Me.Label2.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(104, 16)
-        Me.Label2.TabIndex = 6
-        Me.Label2.Text = "Strategischer Fit"
+        Me.lblStrategicFit.AutoSize = True
+        Me.lblStrategicFit.Enabled = False
+        Me.lblStrategicFit.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblStrategicFit.Location = New System.Drawing.Point(399, 68)
+        Me.lblStrategicFit.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lblStrategicFit.Name = "lblStrategicFit"
+        Me.lblStrategicFit.Size = New System.Drawing.Size(104, 16)
+        Me.lblStrategicFit.TabIndex = 6
+        Me.lblStrategicFit.Text = "Strategischer Fit"
         '
-        'Label3
+        'lblRisk
         '
-        Me.Label3.AutoSize = True
-        Me.Label3.Enabled = False
-        Me.Label3.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label3.Location = New System.Drawing.Point(403, 127)
-        Me.Label3.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(124, 16)
-        Me.Label3.TabIndex = 7
-        Me.Label3.Text = "Umsetzungs-Risiko"
+        Me.lblRisk.AutoSize = True
+        Me.lblRisk.Enabled = False
+        Me.lblRisk.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblRisk.Location = New System.Drawing.Point(602, 68)
+        Me.lblRisk.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lblRisk.Name = "lblRisk"
+        Me.lblRisk.Size = New System.Drawing.Size(124, 16)
+        Me.lblRisk.TabIndex = 7
+        Me.lblRisk.Text = "Umsetzungs-Risiko"
         '
-        'Label4
+        'lblVorlage
         '
-        Me.Label4.AutoSize = True
-        Me.Label4.Enabled = False
-        Me.Label4.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label4.Location = New System.Drawing.Point(447, 28)
-        Me.Label4.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(56, 16)
-        Me.Label4.TabIndex = 14
-        Me.Label4.Text = "Vorlage"
+        Me.lblVorlage.AutoSize = True
+        Me.lblVorlage.Enabled = False
+        Me.lblVorlage.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblVorlage.Location = New System.Drawing.Point(447, 28)
+        Me.lblVorlage.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lblVorlage.Name = "lblVorlage"
+        Me.lblVorlage.Size = New System.Drawing.Size(56, 16)
+        Me.lblVorlage.TabIndex = 14
+        Me.lblVorlage.Text = "Vorlage"
         '
         'projectName
         '
@@ -146,7 +146,7 @@ Partial Class frmProjektEingabe1
         'Erloes
         '
         Me.Erloes.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Erloes.Location = New System.Drawing.Point(114, 124)
+        Me.Erloes.Location = New System.Drawing.Point(114, 99)
         Me.Erloes.Margin = New System.Windows.Forms.Padding(2)
         Me.Erloes.Name = "Erloes"
         Me.Erloes.Size = New System.Drawing.Size(60, 22)
@@ -155,7 +155,7 @@ Partial Class frmProjektEingabe1
         'sFit
         '
         Me.sFit.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.sFit.Location = New System.Drawing.Point(307, 124)
+        Me.sFit.Location = New System.Drawing.Point(506, 65)
         Me.sFit.Margin = New System.Windows.Forms.Padding(2)
         Me.sFit.Name = "sFit"
         Me.sFit.Size = New System.Drawing.Size(60, 22)
@@ -164,7 +164,7 @@ Partial Class frmProjektEingabe1
         'risiko
         '
         Me.risiko.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.risiko.Location = New System.Drawing.Point(531, 124)
+        Me.risiko.Location = New System.Drawing.Point(731, 65)
         Me.risiko.Margin = New System.Windows.Forms.Padding(2)
         Me.risiko.Name = "risiko"
         Me.risiko.Size = New System.Drawing.Size(60, 22)
@@ -179,30 +179,6 @@ Partial Class frmProjektEingabe1
         Me.vorlagenDropbox.Name = "vorlagenDropbox"
         Me.vorlagenDropbox.Size = New System.Drawing.Size(285, 24)
         Me.vorlagenDropbox.TabIndex = 23
-        '
-        'Label5
-        '
-        Me.Label5.AutoEllipsis = True
-        Me.Label5.AutoSize = True
-        Me.Label5.Enabled = False
-        Me.Label5.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label5.Location = New System.Drawing.Point(628, 127)
-        Me.Label5.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(61, 16)
-        Me.Label5.TabIndex = 24
-        Me.Label5.Text = "Volumen"
-        Me.Label5.Visible = False
-        '
-        'volume
-        '
-        Me.volume.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.volume.Location = New System.Drawing.Point(693, 124)
-        Me.volume.Margin = New System.Windows.Forms.Padding(2)
-        Me.volume.Name = "volume"
-        Me.volume.Size = New System.Drawing.Size(98, 22)
-        Me.volume.TabIndex = 25
-        Me.volume.Visible = False
         '
         'DateTimeStart
         '
@@ -307,7 +283,7 @@ Partial Class frmProjektEingabe1
         Me.lbl_Laufzeit.AutoSize = True
         Me.lbl_Laufzeit.Enabled = False
         Me.lbl_Laufzeit.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lbl_Laufzeit.Location = New System.Drawing.Point(447, 68)
+        Me.lbl_Laufzeit.Location = New System.Drawing.Point(304, 160)
         Me.lbl_Laufzeit.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lbl_Laufzeit.Name = "lbl_Laufzeit"
         Me.lbl_Laufzeit.Size = New System.Drawing.Size(53, 16)
@@ -327,12 +303,35 @@ Partial Class frmProjektEingabe1
         Me.propRessourcenAnpassung.Text = "Ressourcen und Kostenbedarfe der Vorlage proportional anpassen"
         Me.propRessourcenAnpassung.UseVisualStyleBackColor = True
         '
+        'lblProfitField
+        '
+        Me.lblProfitField.AutoSize = True
+        Me.lblProfitField.Enabled = False
+        Me.lblProfitField.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblProfitField.Location = New System.Drawing.Point(237, 105)
+        Me.lblProfitField.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lblProfitField.Name = "lblProfitField"
+        Me.lblProfitField.Size = New System.Drawing.Size(78, 16)
+        Me.lblProfitField.TabIndex = 41
+        Me.lblProfitField.Text = "Rendite (%)"
+        '
+        'profitAskedFor
+        '
+        Me.profitAskedFor.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.profitAskedFor.Location = New System.Drawing.Point(329, 102)
+        Me.profitAskedFor.Margin = New System.Windows.Forms.Padding(2)
+        Me.profitAskedFor.Name = "profitAskedFor"
+        Me.profitAskedFor.Size = New System.Drawing.Size(39, 22)
+        Me.profitAskedFor.TabIndex = 42
+        '
         'frmProjektEingabe1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(827, 327)
+        Me.Controls.Add(Me.profitAskedFor)
+        Me.Controls.Add(Me.lblProfitField)
         Me.Controls.Add(Me.propRessourcenAnpassung)
         Me.Controls.Add(Me.lbl_Laufzeit)
         Me.Controls.Add(Me.endMilestoneDropbox)
@@ -344,17 +343,15 @@ Partial Class frmProjektEingabe1
         Me.Controls.Add(Me.DateTimeEnde)
         Me.Controls.Add(Me.dauerUnverändert)
         Me.Controls.Add(Me.DateTimeStart)
-        Me.Controls.Add(Me.volume)
-        Me.Controls.Add(Me.Label5)
         Me.Controls.Add(Me.vorlagenDropbox)
         Me.Controls.Add(Me.risiko)
         Me.Controls.Add(Me.sFit)
         Me.Controls.Add(Me.Erloes)
         Me.Controls.Add(Me.pName)
         Me.Controls.Add(Me.projectName)
-        Me.Controls.Add(Me.Label4)
-        Me.Controls.Add(Me.Label3)
-        Me.Controls.Add(Me.Label2)
+        Me.Controls.Add(Me.lblVorlage)
+        Me.Controls.Add(Me.lblRisk)
+        Me.Controls.Add(Me.lblStrategicFit)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
@@ -371,17 +368,15 @@ Partial Class frmProjektEingabe1
     Public WithEvents OKButton As System.Windows.Forms.Button
     Public WithEvents AbbrButton As System.Windows.Forms.Button
     Public WithEvents Label1 As System.Windows.Forms.Label
-    Public WithEvents Label2 As System.Windows.Forms.Label
-    Public WithEvents Label3 As System.Windows.Forms.Label
-    Public WithEvents Label4 As System.Windows.Forms.Label
+    Public WithEvents lblStrategicFit As System.Windows.Forms.Label
+    Public WithEvents lblRisk As System.Windows.Forms.Label
+    Public WithEvents lblVorlage As System.Windows.Forms.Label
     Public WithEvents projectName As System.Windows.Forms.TextBox
     Public WithEvents pName As System.Windows.Forms.Label
     Public WithEvents Erloes As System.Windows.Forms.TextBox
     Public WithEvents sFit As System.Windows.Forms.TextBox
     Public WithEvents risiko As System.Windows.Forms.TextBox
     Public WithEvents vorlagenDropbox As System.Windows.Forms.ComboBox
-    Public WithEvents Label5 As System.Windows.Forms.Label
-    Public WithEvents volume As System.Windows.Forms.TextBox
     Public WithEvents DateTimeStart As System.Windows.Forms.DateTimePicker
     Friend WithEvents dauerUnverändert As System.Windows.Forms.CheckBox
     Friend WithEvents DateTimeEnde As System.Windows.Forms.DateTimePicker
@@ -393,4 +388,6 @@ Partial Class frmProjektEingabe1
     Public WithEvents endMilestoneDropbox As System.Windows.Forms.ComboBox
     Public WithEvents lbl_Laufzeit As System.Windows.Forms.Label
     Friend WithEvents propRessourcenAnpassung As System.Windows.Forms.CheckBox
+    Public WithEvents lblProfitField As System.Windows.Forms.Label
+    Public WithEvents profitAskedFor As System.Windows.Forms.TextBox
 End Class

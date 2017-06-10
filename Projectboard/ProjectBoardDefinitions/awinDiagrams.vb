@@ -133,7 +133,7 @@ Public Module awinDiagrams
         Dim von As Integer, bis As Integer
 
         Dim anzDiagrams As Integer, i As Integer, m As Integer, r As Integer
-        Dim found As Boolean
+
         'Dim korr_abstand As Double
         Dim minwert As Double, maxwert As Double
         Dim nr_pts As Integer
@@ -164,23 +164,20 @@ Public Module awinDiagrams
 
 
         Dim currentSheetName As String
+        Dim found As Boolean = False
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            'currentSheetName = arrWsNames(ptTables.MPT)
-            currentSheetName = arrWsNames(ptTables.mptPfCharts)
-        Else
-            ' tk, 22.5. Chart wird jetzt in meCharts gezeichnet ... 
-            'currentSheetName = arrWsNames(ptTables.meRC)
-            currentSheetName = arrWsNames(ptTables.meCharts)
+            If calledfromReporting Then
+                currentSheetName = arrWsNames(ptTables.repCharts)
+            Else
+                currentSheetName = arrWsNames(ptTables.mptPfCharts)
+            End If
 
-            found = True
+        Else
+            currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
-        ' nur für Testzwecke 
-        'If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
-        '    Call MsgBox("Namen ungleich: " & currentSheetName & " ist ungleich " & _
-        '                CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
-        'End If
+       
 
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
@@ -286,59 +283,6 @@ Public Module awinDiagrams
             diagramTitle = diagramTitle.Replace("#", "-")
         End If
 
-        ' jetzt prüfen, ob es bereits gespeicherte Werte für top, left, ... gibt ;
-        ' Wenn ja : übernehmen
-
-        ' tk 24.5.17 nicht machen ...
-        'If von > 1 And visboZustaende.projectBoardMode = ptModus.graficboard Then
-        '    left = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-        'ElseIf von > 1 Then
-        '    ' left unverändert lassen ..
-        'Else
-        '    left = 0
-        'End If
-
-        Dim breite As Integer = bis - von
-        If breite < 6 Then
-            breite = 6
-        End If
-        ' width nicht anpassen ! 
-        ''width = 265 + (breite - 12 + 1) * boxWidth + (breite) * screen_correct
-
-
-        ' tk Änderung 24.5.17, wird doch nicht gebraucht ?
-        ''If Not calledfromReporting And Not visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-        ''    Dim foundDiagramm As clsDiagramm
-
-        ''    Try
-        ''        foundDiagramm = DiagramList.getDiagramm(chtobjName)
-        ''        With foundDiagramm
-        ''            top = .top
-        ''            left = .left
-        ''            'width = .width
-        ''            'height = .height
-        ''        End With
-        ''    Catch ex As Exception
-
-        ''    End Try
-
-        ''    ' Änderung tk 26.3.15 
-        ''    ' wenn die Koordinaten ausserhalb des aktuell sichtbaren Windows sind, dann sollen sie 
-        ''    ' ins Sichtbare gerückt werden 
-        ''    ' Änderung tk 24.5.17, nein, nicht mehr machen ...
-        ''    ''With CType(appInstance.ActiveWindow, Excel.Window)
-
-        ''    ''    If top < CDbl(.VisibleRange.Top) Or top + height > CDbl(.VisibleRange.Top + .VisibleRange.Height) Then
-        ''    ''        top = CDbl(.VisibleRange.Top) + 10
-        ''    ''    End If
-
-        ''    ''    If left < CDbl(.VisibleRange.Left) Or left + width > CDbl(.VisibleRange.Left + .VisibleRange.Width) Then
-        ''    ''        left = CDbl(.VisibleRange.Left) + 10
-        ''    ''    End If
-
-        ''    ''End With
-
-        ''End If
 
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
@@ -360,20 +304,12 @@ Public Module awinDiagrams
 
         With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 
-            ' das wird hier nicht mehr gebraucht 
-
-            'If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-            '    .Unprotect(Password:="x")
-            '    awinSettings.meEnableSorting = True
-            'End If
-
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
             '
             ' um welches Diagramm handelt es sich ...
             '
             i = 1
-            found = False
             While i <= anzDiagrams And Not found
 
                 If .ChartObjects(i).name = chtobjName Then
@@ -387,50 +323,8 @@ Public Module awinDiagrams
 
             If Not found Then
 
-                ' 25.5.17 es wird jetzt mit embedded chartobjects gearbeitet, nicht mit Chart-Sheet wie es mit appinstance.charts.add der Fall wäre ...
-                'newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(currentSheetName),  _
-                '    Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
-
-
-                Dim tmpAnz As Integer = CType(.ChartObjects, Excel.ChartObjects).Count
-
-                ''Dim dummyChartObject As Excel.ChartObject = Nothing
-                ''If calledfromReporting And currentSheetName = arrWsNames(ptTables.MPT) And tmpAnz = 0 Then
-                ''    ' wenn die tmpAnz = 0 ist, muss mit charts.add ein neuer
-                ''    Dim dummyChart As Object = appInstance.Charts.Add()
-                ''    dummyChart.Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=arrWsNames(ptTables.MPT))
-
-
-                ''    Try
-                ''        dummyChartObject = CType(dummyChart.Parent, Excel.ChartObject)
-                ''    Catch ex As Exception
-
-                ''    End Try
-
-                ''    Try
-                ''        dummyChartObject = CType(dummyChart, Excel.ChartObject)
-                ''    Catch ex As Exception
-
-                ''    End Try
-
-                ''    dummyChartObject.Name = "Dummy"
-
-                ''End If
-
                 newChtObj = CType(.ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
-                tmpAnz = CType(.ChartObjects, Excel.ChartObjects).Count
 
-                ' '' wenn es ein dummyChart gibt, jetzt löschen 
-                ''If Not IsNothing(dummyChartObject) Then
-                ''    Try
-                ''        dummyChartObject.Delete()
-                ''    Catch ex As Exception
-
-                ''    End Try
-
-                ''End If
-
-                'Call Sleep(500)
                 With newChtObj.Chart
 
 
@@ -461,8 +355,8 @@ Public Module awinDiagrams
                         pvName = ""
                         type = -1
                         sumRoleShowsPlaceHolderAndAssigned = False
-                        
-                        
+
+
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                             ' Phasen oder Meilensteine ..
                             Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvName)
@@ -631,6 +525,12 @@ Public Module awinDiagrams
                             End If
 
                         Else
+                            Dim legendName As String = ""
+                            If awinSettings.englishLanguage Then
+                                legendName = "Sum over all projects"
+                            Else
+                                legendName = "Summe über alle Projekte"
+                            End If
 
                             If prcTyp = DiagrammTypen(5) Then
 
@@ -645,13 +545,7 @@ Public Module awinDiagrams
                                 Next
 
                                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                                    If breadcrumb = "" Then
-                                        .Name = prcName
-                                    Else
-                                        .Name = breadcrumb & "-" & prcName
-                                    End If
-
-                                    '.Interior.color = ampelfarbe(0)
+                                    .Name = legendName
                                     .Interior.Color = objektFarbe
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
@@ -664,17 +558,16 @@ Public Module awinDiagrams
 
                                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                                    If prcTyp = DiagrammTypen(0) Then
-                                        If breadcrumb = "" Then
-                                            .Name = prcName
-                                        Else
-                                            .Name = breadcrumb & "-" & prcName
-                                        End If
-                                    ElseIf prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
+
+                                    If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                         ' repmsg!
-                                        .Name = prcName & ": Platzhalter"
+                                        If awinSettings.englishLanguage Then
+                                            .Name = legendName & ": placeholder"
+                                        Else
+                                            .Name = legendName & ": Platzhalter"
+                                        End If
                                     Else
-                                        .Name = prcName
+                                        .Name = legendName
                                     End If
 
                                     .Interior.Color = objektFarbe
@@ -696,7 +589,12 @@ Public Module awinDiagrams
                                     ' alle anderen zeigen 
                                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                                        .Name = prcName & ": zugeordnet"
+                                        If awinSettings.englishLanguage Then
+                                            .Name = legendName & ": assigned"
+                                        Else
+                                            .Name = legendName & ": zugeordnet"
+                                        End If
+
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
                                         .Values = edatenreihe
                                         .XValues = Xdatenreihe
@@ -902,68 +800,25 @@ Public Module awinDiagrams
                         .ChartTitle.Font.Size = awinSettings.CPfontsizeTitle
                         .HasLegend = False
 
-                    ElseIf lastSC > 1 Then
+                    Else
+
+                        'ElseIf lastSC > 1 Then
 
                         .HasLegend = True
 
                         .Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
                         .Legend.Font.Size = awinSettings.fontsizeLegend
-                    Else
-                        .HasLegend = False
+                        'Else
+                        '    .HasLegend = False
                     End If
-
-                    ' braucht man doch gar nicht ... 
-                    '.Name = prcTyp
-
-                    'Dim achieved As Boolean = True
-                    'Dim anzahlVersuche As Integer = 0
-                    'Dim errmsg As String = ""
-                    '' 25.5.17 wird ja jetzt erreicht durch das Erzeugen eines neuen ChartObjects ganz oben ...
-                    ' ''Do While Not achieved And anzahlVersuche < 10
-                    ' ''    Try
-                    ' ''        'Call Sleep(100)
-                    ' ''        .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
-                    ' ''        achieved = True
-                    ' ''    Catch ex As Exception
-                    ' ''        errmsg = ex.Message
-                    ' ''        'Call Sleep(100)
-                    ' ''        anzahlVersuche = anzahlVersuche + 1
-                    ' ''    End Try
-                    ' ''Loop
-
-                    'If Not achieved Then
-                    '    Throw New ArgumentException("Chart-Fehler:" & errmsg)
-                    'End If
-
-
 
                 End With
 
 
 
                 With newChtObj
-                    'With CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
-
-                    ' wurde bereits beim erzeugen gemacht .... 
-                    '.Top = top
-                    '.Left = left
-                    '.Width = width
-                    '.Height = height
                     .Name = chtobjName
-                    Dim tststr As String = .Name
                     .Chart.Axes(Excel.XlAxisType.xlValue).minimumScale = 0
-
-                    '
-                    ' diese Korrektur ist notwendig, um auszugleichen wenn die Achsenbeschriftungen größer als zweistellig werden
-                    '
-                    ' Änderung tk 17.7 auskommentiert, weil das im Update nicht gemacht wird; deswegen hatte sich beim 1. aktualisieren 
-                    ' immer die Chart-Breite verändert 
-                    'Dim korrAbstand As Double
-                    'korrAbstand = .Chart.Axes(Excel.XlAxisType.xlCategory).left - 22
-                    'If korrAbstand > 1 Then
-                    '    .Left = left - korrAbstand
-                    '    .Width = width + korrAbstand
-                    'End If
                 End With
 
 
@@ -1040,20 +895,6 @@ Public Module awinDiagrams
 
             End If
 
-            ' Schutz nicht mehr aktivieren, weil Chart dann nicht mehr selektierbar ist 
-            ' '' wenn es geschützt war .. 
-            ''If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-            ''    .Protect(Password:="x", UserInterfaceOnly:=True, _
-            ''                 AllowFormattingCells:=True, _
-            ''                 AllowInsertingColumns:=False,
-            ''                 AllowInsertingRows:=True, _
-            ''                 AllowDeletingColumns:=False, _
-            ''                 AllowDeletingRows:=True, _
-            ''                 AllowSorting:=True, _
-            ''                 AllowFiltering:=True)
-            ''    .EnableSelection = XlEnableSelection.xlUnlockedCells
-            ''    .EnableAutoFilter = True
-            ''End If
 
         End With
 
@@ -1485,17 +1326,6 @@ Public Module awinDiagrams
 
                 End If
 
-                ' Verzögere den aktuellen Thread ...
-                ' aber nur wenn man im Modus Massen-Edit ist ... weil manchmal das PRogramm abtürzt ...
-                ' und umso mehr , je mehr Zeilen man hat ... 
-                'If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                '    Dim verzoegerung As Integer = 2 * visboZustaende.meMaxZeile
-                '    If verzoegerung > 1200 Then
-                '        verzoegerung = 1200
-                '    End If
-                '    Call Sleep(verzoegerung)
-                'End If
-
 
                 If isPersCost Then
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
@@ -1577,32 +1407,36 @@ Public Module awinDiagrams
                             End If
                         End If
                         
+                        Dim legendName As String = ""
+                        If awinSettings.englishLanguage Then
+                            legendName = "Sum over all projects"
+                        Else
+                            legendName = "Summe über alle Projekte"
+                        End If
 
                         With CType(CType(chtobj.Chart.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                             If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                 ' repmsg!
                                 If awinSettings.englishLanguage Then
-                                    .Name = prcName & ": Placeholder"
+                                    .Name = legendName & ": placeholder"
                                 Else
-                                    .Name = prcName & ": Platzhalter"
+                                    .Name = legendName & ": Platzhalter"
                                 End If
 
                             Else
-                                If selectedProjekte.Count > 0 And myCollection.Count = 1 Then
+                                If selectedProjekte.Count > 0 And myCollection.Count = 1 And awinSettings.showValuesOfSelected = True Then
                                     If awinSettings.englishLanguage Then
                                         .Name = "all other projects"
                                     Else
                                         .Name = "alle anderen Projekte"
                                     End If
-                                ElseIf selectedProjekte.Count = 0 And myCollection.Count = 1 Then
-                                    If awinSettings.englishLanguage Then
-                                        .Name = "Need over all projects"
-                                    Else
-                                        .Name = "Bedarf über alle Projekte"
-                                    End If
                                 Else
-                                    .Name = prcName
+                                    If awinSettings.englishLanguage Then
+                                        .Name = legendName
+                                    Else
+                                        .Name = legendName
+                                    End If
                                 End If
                             End If
 
@@ -1627,9 +1461,9 @@ Public Module awinDiagrams
                             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                                 If awinSettings.englishLanguage Then
-                                    .Name = prcName & ": assigned"
+                                    .Name = legendName & ": assigned"
                                 Else
-                                    .Name = prcName & ": zugeordnet"
+                                    .Name = legendName & ": zugeordnet"
                                 End If
 
                                 .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -2044,20 +1878,6 @@ Public Module awinDiagrams
 
             End With
 
-            ' Änderung tk: 15.9.16
-            ' das muss ja eigentlich nicht angepasst werden, da es sich hier um Update handelt ... 
-            ''.HasAxis(Excel.XlAxisType.xlCategory) = True
-            ''.HasAxis(Excel.XlAxisType.xlValue) = False
-
-            ''With .Axes(Excel.XlAxisType.xlCategory)
-            ''    .HasTitle = False
-            ''    If minScale < 0 Then
-            ''        .TickLabelPosition = Excel.Constants.xlLow
-            ''    End If
-            ''    '.MinimumScale = 0
-
-            ''End With
-
 
             Try
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
@@ -2075,32 +1895,7 @@ Public Module awinDiagrams
             End Try
 
 
-            ''.HasLegend = False
-            ''.HasTitle = True
-
             .ChartTitle.Text = diagramTitle
-            '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
-
-            '
-            ' tk : das gehört hier doch nicht hin , das ist doch cut&paste Fehler !? 
-            ''Dim achieved As Boolean = False
-            ''Dim anzahlVersuche As Integer = 0
-            ''Dim errmsg As String = ""
-            ''Do While Not achieved And anzahlVersuche < 10
-            ''    Try
-            ''        Call Sleep(100)
-            ''        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
-            ''        achieved = True
-            ''    Catch ex As Exception
-            ''        errmsg = ex.Message
-            ''        Call Sleep(100)
-            ''        anzahlVersuche = anzahlVersuche + 1
-            ''    End Try
-            ''Loop
-
-            ''If Not achieved Then
-            ''    Throw New ArgumentException("Chart-Fehler:" & errmsg)
-            ''End If
 
         End With
 
@@ -4402,7 +4197,7 @@ Public Module awinDiagrams
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
-        Dim found As Boolean
+        Dim found As Boolean = False
         'Dim plen As Integer
         Dim i As Integer
         Dim minScale As Double
@@ -4434,7 +4229,12 @@ Public Module awinDiagrams
         Dim currentSheetName As String
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentSheetName = arrWsNames(ptTables.MPT)
+            If calledfromReporting Then
+                currentSheetName = arrWsNames(ptTables.repCharts)
+            Else
+                currentSheetName = arrWsNames(ptTables.mptPfCharts)
+            End If
+
         Else
             currentSheetName = arrWsNames(ptTables.meCharts)
         End If
@@ -4442,29 +4242,6 @@ Public Module awinDiagrams
         mycollection.Add("Projektergebnisse")
         chtobjName = calcChartKennung("pf", PTpfdk.Budget, mycollection)
         mycollection.Clear()
-
-        If Not calledfromReporting Then
-
-            Dim foundDiagramm As clsDiagramm = Nothing
-
-            ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
-            Try
-                If DiagramList.contains(chtobjName) Then
-                    foundDiagramm = DiagramList.getDiagramm(chtobjName)
-                    With foundDiagramm
-                        top = .top
-                        left = .left
-                        width = .width
-                        height = .height
-                    End With
-                End If
-
-            Catch ex As Exception
-
-
-            End Try
-        End If
-
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.ScreenUpdating = False
@@ -4541,7 +4318,6 @@ Public Module awinDiagrams
             ' um welches Diagramm handelt es sich ...
             '
             i = 1
-            found = False
             While i <= anzDiagrams And Not found
 
 
@@ -4560,19 +4336,12 @@ Public Module awinDiagrams
                 'MsgBox(" Diagramm wird bereits angezeigt ...")
             Else
 
-                'If ertragsWert < 0 Then
-                '    minScale = System.Math.Round(ertragsWert, mode:=MidpointRounding.ToEven)
-                'Else
-                '    minScale = 0
-                'End If
-
-                'Dim htxt As String
                 Dim valueCrossesNull As Boolean = False
 
                 newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel),  _
                             Excel.Workbook).Worksheets.Item(currentSheetName),  _
                             Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
-                'With appInstance.Charts.Add
+
                 With newChtObj.Chart
                     ' remove old series
                     Try
@@ -4723,26 +4492,6 @@ Public Module awinDiagrams
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
 
-                    Dim achieved As Boolean = True
-                    Dim anzahlVersuche As Integer = 0
-                    Dim errmsg As String = ""
-                    ' tk 26.5.17 nicht mehr nötig, weil jetzt newchtobj als embedded ChartObj generiert wird 
-                    'Do While Not achieved And anzahlVersuche < 10
-                    '    Try
-                    '        'Call Sleep(100)
-                    '        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
-                    '        achieved = True
-                    '    Catch ex As Exception
-                    '        errmsg = ex.Message
-                    '        'Call Sleep(100)
-                    '        anzahlVersuche = anzahlVersuche + 1
-                    '    End Try
-                    'Loop
-
-                    'If Not achieved Then
-                    '    Throw New ArgumentException("Chart-Fehler:" & errmsg)
-                    'End If
-
                 End With
 
                 'With .ChartObjects(anzDiagrams + 1)
@@ -4802,24 +4551,8 @@ Public Module awinDiagrams
 
             End If
 
-            ' nicht mehr schützen, weil Charts dann nicht mehr selektierbar sind 
-            '' wenn es geschützt war .. 
-            'If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-            '    .Protect(Password:="x", UserInterfaceOnly:=True, _
-            '                 AllowFormattingCells:=True, _
-            '                 AllowInsertingColumns:=False,
-            '                 AllowInsertingRows:=True, _
-            '                 AllowDeletingColumns:=False, _
-            '                 AllowDeletingRows:=True, _
-            '                 AllowSorting:=True, _
-            '                 AllowFiltering:=True)
-            '    .EnableSelection = XlEnableSelection.xlUnlockedCells
-            '    .EnableAutoFilter = True
-            'End If
-
         End With
 
-        'Call awinScrollintoView()
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
 

@@ -1103,9 +1103,8 @@ Public Module PBBModules
     Sub PBBChangeCurrentPortfolio()
 
 
-        'Dim returnValue As DialogResult
+        Call activateProjectBoard()
 
-        'Dim deleteProjects As New frmDeleteProjects
         Dim changePortfolio As New frmProjPortfolioAdmin
 
 

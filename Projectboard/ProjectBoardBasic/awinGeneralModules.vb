@@ -929,7 +929,7 @@ Public Module awinGeneralModules
             '
             ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
             ' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
-            arrWsNames(1) = "Portfolio" ' depr
+            arrWsNames(1) = "repCharts" ' Tabellenblatt zur Aufnahme der Charts für Reports 
             arrWsNames(2) = "Vorlage" ' depr
             ' arrWsNames(3) = 
             arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
@@ -13724,18 +13724,16 @@ Public Module awinGeneralModules
     ''' <param name="chleft">auf welcher x-Koordinate soll das Chart gezeichnet werden</param>
     ''' <remarks></remarks>
     Friend Sub zeichneLeistbarkeitsChart(ByVal selCollection As Collection, ByVal chTyp As String, ByVal oneChart As Boolean, _
-                                              ByRef chtop As Double, ByRef chleft As Double)
+                                              ByRef chtop As Double, ByRef chleft As Double, ByVal chwidth As Double, ByVal chHeight As Double)
 
 
         Dim repObj As Excel.ChartObject
         Dim myCollection As Collection
 
-        Dim chWidth As Double
-        Dim chHeight As Double
 
-        ' Window Position festlegen 
-        chHeight = maxScreenHeight / 4 - 3
-        chWidth = maxScreenWidth / 5 - 3
+        '' Window Position festlegen 
+        'chHeight = maxScreenHeight / 4 - 3
+        'chWidth = maxScreenWidth / 5 - 3
 
         'chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
         'chHeight = awinSettings.ChartHoehe1
@@ -13946,41 +13944,49 @@ Public Module awinGeneralModules
                 appInstance.ScreenUpdating = False
 
                 ' Window Position festlegen
-                Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
-                Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+                'Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
+                'Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+                Dim chtop As Double
+                Dim chleft As Double
+                Dim chwidth As Double
+                Dim chHeight As Double
 
-                If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                    chleft = (showRangeRight - 1) * boxWidth + 4
-                Else
-                    chleft = 5
-                End If
 
-                ' um es im neuen Portfolio Chart Window anzuzeigen ... 
-                chtop = 3
-                chleft = 3
+                'If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                '    chleft = (showRangeRight - 1) * boxWidth + 4
+                'Else
+                '    chleft = 5
+                'End If
+
+                '' um es im neuen Portfolio Chart Window anzuzeigen ... 
+                'chtop = 3
+                'chleft = 3
+
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, chtop, chleft, chwidth, chHeight)
+
 
                 If selectedPhases.Count > 0 Then
                     chTyp = DiagrammTypen(0)
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chheight)
                 End If
 
                 If selectedMilestones.Count > 0 Then
                     chTyp = DiagrammTypen(5)
                     Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedRoles.Count > 0 Then
                     chTyp = DiagrammTypen(1)
                     Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedCosts.Count > 0 Then
                     chTyp = DiagrammTypen(2)
                     Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
 

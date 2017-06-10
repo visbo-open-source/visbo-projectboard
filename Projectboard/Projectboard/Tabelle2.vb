@@ -112,20 +112,21 @@ Public Class Tabelle2
 
         End Try
 
-        Try
-            With Application.ActiveWindow
-                .SplitColumn = columnRC + 2
-                .SplitRow = 1
-                .DisplayWorkbookTabs = False
-                .GridlineColor = RGB(220, 220, 220)
-                .FreezePanes = True
-                '.DisplayHeadings = True
-                .DisplayHeadings = False
-            End With
+        ' das wird ja jetzt in der Defition der Windows gemacht ...
+        'Try
+        '    With Application.ActiveWindow
+        '        .SplitColumn = columnRC + 2
+        '        .SplitRow = 1
+        '        .DisplayWorkbookTabs = False
+        '        .GridlineColor = RGB(220, 220, 220)
+        '        .FreezePanes = True
+        '        '.DisplayHeadings = True
+        '        .DisplayHeadings = False
+        '    End With
 
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Activate Sheet Massen-Edit" & vbLf & ex.Message)
-        End Try
+        'Catch ex As Exception
+        '    Call MsgBox("Fehler bei Activate Sheet Massen-Edit" & vbLf & ex.Message)
+        'End Try
 
         With meWS
             CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1

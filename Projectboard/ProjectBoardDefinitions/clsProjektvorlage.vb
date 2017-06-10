@@ -2902,6 +2902,51 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt den anteiligen Wert der Rolle/Kostenart in der betreffenden Phase an den Gesamtkosten zurück;
+    ''' kann verwendet werden, um Best Practice Projekte on-the-fly zu definieren  
+    ''' </summary>
+    ''' <param name="phaseID"></param>
+    ''' <param name="rcName"></param>
+    ''' <param name="type"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPercentShareOFTotalCost(ByVal phaseID As String, ByVal rcName As String, ByVal type As Integer) As Double
+        Get
+            Dim tmpResult As Double = 0.0
+            Dim totalCost As Double = Me.getSummeKosten()
+            Dim cphase As clsPhase = Me.getPhaseByID(phaseID)
+            Dim role As clsRolle
+            Dim cost As clsKostenart
+            Dim teilWert As Double
+
+            If totalCost > 0 And Not IsNothing(cphase) Then
+                If type = ptElementTypen.roles Then
+                    role = cphase.getRole(rcName)
+                    If Not IsNothing(role) Then
+                        teilWert = role.Xwerte.Sum * role.tagessatzIntern
+                    Else
+                        teilWert = 0
+                    End If
+                    tmpResult = teilWert / totalCost
+
+                ElseIf type = ptElementTypen.costs Then
+                    cost = cphase.getCost(rcName)
+                    If Not IsNothing(cost) Then
+                        teilWert = cost.Xwerte.Sum
+                    Else
+                        teilWert = 0
+                    End If
+                    tmpResult = teilWert / totalCost
+                End If
+
+            End If
+
+            getPercentShareOFTotalCost = tmpResult
+
+        End Get
+    End Property
 
     '
     ' übergibt in KostenBedarf die Werte der Kostenart <costId>
