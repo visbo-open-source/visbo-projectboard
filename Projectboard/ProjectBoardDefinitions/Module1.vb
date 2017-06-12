@@ -922,6 +922,8 @@ Public Module Module1
         Dim chtobjName As String = ""
         Dim userSelectedSomething As Boolean = False
 
+        Dim testActiveWindow As String
+
         ' Exit, wenn nicht im PRojekt-Tafel-Modus 
         If visboZustaende.projectBoardMode <> ptModus.graficboard Then
             ' leere Menge zurückgegeben 
@@ -951,6 +953,7 @@ Public Module Module1
                     Dim allChartsOnSheet As Excel.ChartObjects = _
                        CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
+                    testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
 
                     If Not IsNothing(allChartsOnSheet) Then
                         If allChartsOnSheet.Count > 0 And selectedCharts.Count > 0 Then
@@ -1063,6 +1066,8 @@ Public Module Module1
             End Try
 
         End If
+
+        testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
 
         getProjectSelectionList = tmpCollection
 
@@ -3669,7 +3674,8 @@ Public Module Module1
     ''' <param name="visboWindowTyp"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function bestimmeWindowCaption(ByVal visboWindowTyp As Integer) As String
+    Public Function bestimmeWindowCaption(ByVal visboWindowTyp As Integer, _
+                                          Optional ByVal addOnMsg As String = "") As String
         Dim tmpResult As String = ""
 
         Select Case visboWindowTyp
@@ -3682,11 +3688,9 @@ Public Module Module1
                 End If
 
             Case PTwindows.mptpr
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Charts for the selected project"
-                Else
-                    tmpResult = "Charts für das ausgewählte Projekt"
-                End If
+
+                tmpResult = addOnMsg
+
 
             Case PTwindows.meChart
                 If awinSettings.englishLanguage Then
@@ -3768,11 +3772,13 @@ Public Module Module1
 
         Dim currentWorksheet As Excel.Worksheet = _
             CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(tableTyp)), Excel.Worksheet)
+
         Dim tmpTop As Double = 2.0
         Dim tmpLeft As Double = 2
-        Dim tmpWidth As Double = maxScreenWidth / 5 - 5
-        Dim tmpHeight As Double = (maxScreenHeight - 10) / 5
+        Dim tmpWidth As Double = maxScreenWidth / 5 - 29
+        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5
 
+        ' wenn schon Charts existieren: ein neues Chart wird immer als letztes  angehängt ..
         With currentWorksheet
             For Each tmpChtObject As Excel.ChartObject In CType(.ChartObjects, Excel.ChartObjects)
                 If tmpChtObject.Top + tmpChtObject.Height + 2 > tmpTop Then

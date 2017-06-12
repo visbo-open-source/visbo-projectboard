@@ -45,7 +45,6 @@ Partial Class frmProjektEingabe1
         Me.lbl_Referenz2 = New System.Windows.Forms.Label()
         Me.endMilestoneDropbox = New System.Windows.Forms.ComboBox()
         Me.lbl_Laufzeit = New System.Windows.Forms.Label()
-        Me.propRessourcenAnpassung = New System.Windows.Forms.CheckBox()
         Me.lblProfitField = New System.Windows.Forms.Label()
         Me.profitAskedFor = New System.Windows.Forms.TextBox()
         Me.SuspendLayout()
@@ -290,19 +289,6 @@ Partial Class frmProjektEingabe1
         Me.lbl_Laufzeit.TabIndex = 39
         Me.lbl_Laufzeit.Text = "Laufzeit"
         '
-        'propRessourcenAnpassung
-        '
-        Me.propRessourcenAnpassung.AutoSize = True
-        Me.propRessourcenAnpassung.Checked = True
-        Me.propRessourcenAnpassung.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.propRessourcenAnpassung.Location = New System.Drawing.Point(370, 251)
-        Me.propRessourcenAnpassung.Margin = New System.Windows.Forms.Padding(2)
-        Me.propRessourcenAnpassung.Name = "propRessourcenAnpassung"
-        Me.propRessourcenAnpassung.Size = New System.Drawing.Size(428, 20)
-        Me.propRessourcenAnpassung.TabIndex = 40
-        Me.propRessourcenAnpassung.Text = "Ressourcen und Kostenbedarfe der Vorlage proportional anpassen"
-        Me.propRessourcenAnpassung.UseVisualStyleBackColor = True
-        '
         'lblProfitField
         '
         Me.lblProfitField.AutoSize = True
@@ -332,7 +318,6 @@ Partial Class frmProjektEingabe1
         Me.ClientSize = New System.Drawing.Size(827, 327)
         Me.Controls.Add(Me.profitAskedFor)
         Me.Controls.Add(Me.lblProfitField)
-        Me.Controls.Add(Me.propRessourcenAnpassung)
         Me.Controls.Add(Me.lbl_Laufzeit)
         Me.Controls.Add(Me.endMilestoneDropbox)
         Me.Controls.Add(Me.lbl_Referenz2)
@@ -387,7 +372,6 @@ Partial Class frmProjektEingabe1
     Public WithEvents lbl_Referenz2 As System.Windows.Forms.Label
     Public WithEvents endMilestoneDropbox As System.Windows.Forms.ComboBox
     Public WithEvents lbl_Laufzeit As System.Windows.Forms.Label
-    Friend WithEvents propRessourcenAnpassung As System.Windows.Forms.CheckBox
     Public WithEvents lblProfitField As System.Windows.Forms.Label
     Public WithEvents profitAskedFor As System.Windows.Forms.TextBox
 End Class

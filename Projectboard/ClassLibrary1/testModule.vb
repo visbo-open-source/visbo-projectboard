@@ -1721,15 +1721,15 @@ Public Module testModule
                                     If qualifier = "letzter Stand" Then
 
                                         Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand, _
-                                                                                  0, 0, 0, 0)
+                                                                                  5, 5, 280, 180, True)
 
                                     ElseIf qualifier = "Beauftragung" Then
                                         Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung, _
-                                                                                  0, 0, 0, 0)
+                                                                                  5, 5, 280, 180, True)
 
                                     Else
                                         Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current, _
-                                                                                  0, 0, 0, 0)
+                                                                                  5, 5, 280, 180, True)
 
                                     End If
 
@@ -1800,12 +1800,12 @@ Public Module testModule
 
                                     If qualifier.Length > 0 Then
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         End If
                                     Else
-                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                     End If
 
 
@@ -1834,13 +1834,13 @@ Public Module testModule
                                     If qualifier.Length > 0 Then
 
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         End If
 
                                     Else
-                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                     End If
 
 
@@ -1867,13 +1867,13 @@ Public Module testModule
                                     If qualifier.Length > 0 Then
 
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         Else
-                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         End If
 
                                     Else
-                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                     End If
 
                                     Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
@@ -1907,13 +1907,13 @@ Public Module testModule
                                     If qualifier.Length > 0 Then
 
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         Else
-                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         End If
 
                                     Else
-                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                     End If
 
                                     Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)

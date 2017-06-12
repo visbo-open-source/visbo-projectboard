@@ -2761,13 +2761,14 @@ Public Class clsProjekt
     End Sub
 
 
-    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
+    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date, _
+                                      Optional ByVal zielRenditenVorgabe As Double = -99999.0)
         Dim p As Integer
         Dim newphase As clsPhase
         Dim oldphase As clsPhase
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
-
+        Dim newPhaseNameID As String = ""
         Call copyAttrTo(newproject)
 
         With newproject
@@ -2784,7 +2785,7 @@ Public Class clsProjekt
                 oldphase = Me.getPhase(p)
                 newphase = New clsPhase(newproject)
 
-                oldphase.korrCopyTo(newphase, CorrectFactor)
+                oldphase.korrCopyTo(newphase, CorrectFactor, newPhaseNameID, zielRenditenVorgabe)
 
                 .AddPhase(newphase)
 
@@ -4206,7 +4207,7 @@ Public Class clsProjekt
             Else
                 containsMilestone = False
             End If
-            
+
 
         End Get
     End Property
@@ -4472,7 +4473,7 @@ Public Class clsProjekt
 
                 End If
 
-                
+
 
 
             Next mx

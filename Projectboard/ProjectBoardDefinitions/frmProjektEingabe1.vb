@@ -21,7 +21,6 @@ Public Class frmProjektEingabe1
         frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
 
-        awinSettings.propAnpassRess = propRessourcenAnpassung.Checked
 
     End Sub
 
@@ -39,14 +38,12 @@ Public Class frmProjektEingabe1
                 .lbl_Laufzeit.Text = "Duration: "
                 .lbl_Referenz1.Text = "Milestone 1"
                 .lbl_Referenz2.Text = "Milestone 2"
-                .propRessourcenAnpassung.Text = "adjust resource and cost needs proportionally"
                 .AbbrButton.Text = "Cancel"
             Else
                 ' Texte sind bereits deutsch im Formular hinterlegt ... 
             End If
 
             ' Sichtbarkeit und Voreinstellungen 
-            .propRessourcenAnpassung.Visible = False
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
         End With
@@ -121,10 +118,6 @@ Public Class frmProjektEingabe1
             .risiko.Text = "5"
             .sFit.Text = "5"
 
-
-            ' Ressourcenanpassung 
-            .propRessourcenAnpassung.Checked = awinSettings.propAnpassRess
-
             .dauerUnverändert.Checked = True
             .calcProjektStart = Date.Now.AddMonths(1)
             .calcProjektEnde = .calcProjektStart.AddDays(dauerVorlage - 1)
@@ -141,7 +134,6 @@ Public Class frmProjektEingabe1
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
             .DateTimeEnde.Visible = False
-            .propRessourcenAnpassung.Visible = False
 
             ' das Formular an die letzte / Default-Position setzen 
             .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
@@ -473,7 +465,6 @@ Public Class frmProjektEingabe1
                 lbl_Referenz2.Visible = False
                 endMilestoneDropbox.Visible = False
                 DateTimeEnde.Visible = False
-                propRessourcenAnpassung.Visible = False
 
                 calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
                 calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
@@ -487,7 +478,6 @@ Public Class frmProjektEingabe1
                 lbl_Referenz2.Visible = True
                 endMilestoneDropbox.Visible = True
                 DateTimeEnde.Visible = True
-                propRessourcenAnpassung.Visible = True
 
             End If
 

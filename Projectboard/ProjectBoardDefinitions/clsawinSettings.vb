@@ -222,9 +222,9 @@ Public Class clsawinSettings
     Sub New()
 
         ' Chart Settings
-        _fontsizeTitle = 13
-        _fontsizeLegend = 9
-        _fontsizeItems = 9
+        _fontsizeTitle = 12
+        _fontsizeLegend = 8
+        _fontsizeItems = 8
         _CPfontsizeTitle = 10
         _CPfontsizeItems = 8
         _ChartHoehe1 = 150.0

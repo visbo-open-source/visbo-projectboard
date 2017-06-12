@@ -1202,12 +1202,13 @@
     End Sub
 
 
-    Public Overridable Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
+    Public Overridable Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date, _
+                                      Optional ByVal zielRenditenVorgabe As Double = -99999.0)
         Dim p As Integer
         Dim newphase As clsPhase
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
-
+        Dim newPhaseNameID As String = ""
 
         Call copyAttrTo(newproject)
         newproject.startDate = startdate
@@ -1218,7 +1219,7 @@
 
         For p = 0 To Me.CountPhases - 1
             newphase = New clsPhase(newproject)
-            AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
+            AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor, newPhaseNameID, zielRenditenVorgabe)
 
             newproject.AddPhase(newphase)
         Next p
