@@ -259,8 +259,8 @@
         <group id="PT7G1"  >
           <!--label="Projekt-Charts"-->
           <splitButton id="PT7G1M1split" size="large">
-            <!--label="Personal Bedarfe"-->
-            <button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
+            <!--label="wichtigsten Projekt-Charts "-->
+            <button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="TomMostImportantProjectCharts" supertip="Anzeige der wichtigsten Projekt-Charts"/>
             <menu id ="PT7G1M1new" >
               <!--label="Personal Bedarfe"-->
               <button id="PT0G1M1B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
@@ -288,7 +288,7 @@
           <!--label="Portfolio-Charts"-->
           <splitButton id="PT7G1M0split" size="large">
           <!--label="Capazity Utilization"-->
-          <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
+          <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="TomMostImportantPortfolioCharts" supertip="Anzeige der wichtigsten Portfolio Charts"/>
           <menu id="PT7G1M"  getVisible="chckVisibility" >
               <!--label="Ressource/Cost/Milestones/Phases"-->
               <menu id="PTXG1M2" getLabel ="bestimmeLabel" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
@@ -305,7 +305,7 @@
               <button id="PTXG1B3" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
               <menuSeparator id="PTXG1s2"/>
               <!--label="Strategie/Risiko/Marge"-->
-              <button id="PTXG1B8" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
+              <button id="PTXG1B8" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
               <!--label="Budget/Kosten/Auslastung"--><!--
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Custom"-->

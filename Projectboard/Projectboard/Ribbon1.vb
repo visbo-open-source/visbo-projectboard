@@ -5998,6 +5998,102 @@ Imports System.Windows
     End Sub
 
     ''' <summary>
+    ''' zeigt eine Zusammenstellung der wichtigsten Projekt-Charts
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub TomMostImportantProjectCharts(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        'Dim SID As String
+        Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
+        Dim auswahl As Integer = 1
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim myCollection As New Collection
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count = 1 Then
+                ' jetzt die Aktion durchführen ...
+                Dim ok As Boolean = True
+                singleShp = awinSelection.Item(1)
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
+                    myCollection.Add(hproj.name)
+                Catch ex As Exception
+                    ok = False
+                    hproj = Nothing
+                End Try
+
+                If ok Then
+
+                    Dim repObj As Excel.ChartObject
+                    appInstance.EnableEvents = False
+                    appInstance.ScreenUpdating = False
+
+                    repObj = Nothing
+
+                    Try
+                        ' Projekt-Ergebnis
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                        Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
+                                                                 top, left, width, height, False)
+
+                        ' Rollen-Balken
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                        Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                        ' Kosten-Balken
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                        Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                        ' Strategie / Risiko / Marge
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                        Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
+
+                        If thereAreAnyCharts(PTwindows.mptpr) Then
+                            Call showVisboWindow(PTwindows.mptpr)
+                        End If
+
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                End If
+
+
+                appInstance.EnableEvents = True
+                appInstance.ScreenUpdating = True
+            Else
+                Call MsgBox("bitte nur ein Projekt selektieren")
+
+            End If
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+
+
+    End Sub
+
+    ''' <summary>
     ''' Charakteristik Personal Bedarfe
     ''' </summary>
     ''' <param name="control"></param>
@@ -7570,6 +7666,110 @@ Imports System.Windows
 
     ' '' ''End Sub
 
+    ''' <summary>
+    ''' zeigt die wichtigsten Portfolio Charts ...
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub TomMostImportantPortfolioCharts(control As IRibbonControl)
+
+        Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim obj As Excel.ChartObject = Nothing
+        Dim myCollection As New Collection
+
+        Call projektTafelInit()
+
+        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
+
+
+            myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+            If myCollection.Count > 0 Then
+
+                ' Portfolio Ergebnis
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+
+                Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
+
+                ' Top 3 Bottlenecks
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+
+                Try
+
+                    'top = top + height + 10
+                    Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
+
+                    ' jetzt sollen hier die bis zu drei Top Bottlenecks gezeigt werden 
+                    If Not IsNothing(obj) Then
+                        Dim top3Collection As New Collection
+                        If DiagramList.contains(obj.Name) Then
+                            ' in der gsCollection ist die Info drin, um welche Rollen es sich handelt ...
+                            top3Collection = DiagramList.getDiagramm(obj.Name).gsCollection
+                            For i As Integer = 1 To top3Collection.Count
+                                Dim roleName As String = CStr(top3Collection.Item(i))
+                                Dim tmpCollection As New Collection
+                                tmpCollection.Add(roleName)
+                                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+                                Call awinCreateprcCollectionDiagram(tmpCollection, obj, top, left, width, height, False, DiagrammTypen(1), False)
+                            Next
+                        End If
+
+                    End If
+
+
+                    If thereAreAnyCharts(PTwindows.mptpf) Then
+                        Call showVisboWindow(PTwindows.mptpf)
+                    End If
+
+                    ' jetzt Unterauslastung
+                    ''top = top + height + 10
+                    ''Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
+
+                Catch ex As Exception
+                    Call MsgBox("keine Information vorhanden")
+                End Try
+
+            Else
+
+                If ShowProjekte.Count = 0 Then
+                    Call MsgBox("es sind keine Projekte angezeigt")
+
+                Else
+                    If showRangeRight - showRangeLeft < minColumns - 1 Then
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define a timeframe first ...")
+                        Else
+                            Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                        End If
+                    Else
+                        Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                    "gibt es keine Projekte ")
+                    End If
+                End If
+
+            End If
+
+
+
+            appInstance.ScreenUpdating = True
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please define a timeframe first ...")
+            Else
+                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+            End If
+        End If
+
+
+
+    End Sub
 
     Sub PT0ShowAuslastung(control As IRibbonControl)
 
