@@ -1762,7 +1762,7 @@ Public Module testModule
                                 Try
                                     mycollection.Add(pname)
 
-                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
+                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight, True)
                                     notYetDone = True
                                 Catch ex As Exception
                                     Dim a As Integer = -1
@@ -1781,7 +1781,7 @@ Public Module testModule
                                 Try
                                     mycollection.Add(pname)
 
-                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
+                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight, True)
                                     notYetDone = True
                                 Catch ex As Exception
 
@@ -3965,9 +3965,9 @@ Public Module testModule
                             obj = Nothing
 
                             If qualifier = "Ampel" Then
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             Else
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             End If
 
 
@@ -4022,9 +4022,9 @@ Public Module testModule
                             obj = Nothing
 
                             If qualifier = "Ampel" Then
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             Else
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             End If
 
 
@@ -4073,7 +4073,7 @@ Public Module testModule
                             hheight = 0.6 * maxScreenHeight
                             obj = Nothing
 
-                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
 
                             reportObj = obj
 
@@ -4124,7 +4124,7 @@ Public Module testModule
                             hheight = 0.6 * maxScreenHeight
                             obj = Nothing
 
-                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             'Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
 
                             reportObj = obj

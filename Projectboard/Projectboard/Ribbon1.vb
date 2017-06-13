@@ -2408,9 +2408,9 @@ Imports System.Windows
 
             Case "PT4G1B5" ' Import Scenario Definition
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio Liste..."
+                    tmpLabel = "Prioritäten Liste..."
                 Else
-                    tmpLabel = "Portfolio List..."
+                    tmpLabel = "Priority List..."
                 End If
 
             Case "PT4G2" ' EXPORT
@@ -2447,18 +2447,11 @@ Imports System.Windows
                     tmpLabel = "Selection of Milestones and Phases..."
                 End If
 
-            Case "PT4G2M3" ' exportieren von Portfolio Liste
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio Liste..."
-                Else
-                    tmpLabel = "Portfolio List..."
-                End If
-
             Case "PT4G2B3" ' Export Priorisierungsliste
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio Liste..."
+                    tmpLabel = "Prioritäten Liste..."
                 Else
-                    tmpLabel = "Portfolio List..."
+                    tmpLabel = "Priority List..."
                 End If
             Case "PT4G1B7" ' Export FC-52
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2474,12 +2467,6 @@ Imports System.Windows
                     tmpLabel = "Excel"
                 End If
 
-                'Case "PT4G2M3" ' Datenbank
-                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                '        tmpLabel = "Datenbank"
-                '    Else
-                '        tmpLabel = "Database"
-                '    End If
 
             Case "PT5G1" ' Load from Database
 
@@ -6192,11 +6179,10 @@ Imports System.Windows
         Dim singleShp As Excel.Shape
         Dim myCollection As New Collection
         Dim awinSelection As Excel.ShapeRange
+        Dim hproj As clsProjekt
 
         Call projektTafelInit()
 
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
 
@@ -6211,33 +6197,49 @@ Imports System.Windows
 
         If Not awinSelection Is Nothing Then
 
-            ' jetzt die Aktion durchführen ...
+            If awinSelection.Count = 1 Then
+                ' jetzt die Aktion durchführen ...
+                Dim ok As Boolean = True
+                singleShp = awinSelection.Item(1)
 
-            For Each singleShp In awinSelection
-                Dim shapeArt As Integer
-                shapeArt = kindOfShape(singleShp)
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
+                    myCollection.Add(hproj.name)
+                Catch ex As Exception
+                    ok = False
+                    hproj = Nothing
+                End Try
 
-                With singleShp
-                    If isProjectType(shapeArt) Then
+                If ok Then
 
-                        myCollection.Add(.Name)
-                        top = .Top + boxHeight + 2
-                        left = .Left - 3
-                        width = 12 * boxWidth
-                        height = 8 * boxHeight
+                    Dim repObj As Excel.ChartObject
+                    
+                    repObj = Nothing
 
-                    End If
-                End With
-            Next
-            Dim obj As Excel.ChartObject = Nothing
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
+                    Try
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                        Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
+
+                        If thereAreAnyCharts(PTwindows.mptpr) Then
+                            Call showVisboWindow(PTwindows.mptpr)
+                        End If
+
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                End If
+
+            Else
+                Call MsgBox("vorher Projekt selektieren ...")
+            End If
         End If
 
+
         enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-        appInstance.ScreenUpdating = formerSU
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
 
     End Sub
@@ -6292,7 +6294,7 @@ Imports System.Windows
                 End With
             Next
             Dim obj As Excel.ChartObject = Nothing
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -6349,7 +6351,7 @@ Imports System.Windows
             Next
             Dim obj As Excel.ChartObject = Nothing
 
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -6438,7 +6440,7 @@ Imports System.Windows
 
             If myCollection.Count > 0 Then
                 Dim obj As Excel.ChartObject = Nothing
-                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Else
                 Call MsgBox("diese Projekte haben keine Abhängigkeiten")
             End If
@@ -6516,7 +6518,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -7994,7 +7996,7 @@ Imports System.Windows
                 Dim obj As Excel.ChartObject = Nothing
 
                 Try
-                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
                 Catch ex As Exception
 
                 End Try
@@ -8072,7 +8074,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -8135,7 +8137,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
                 'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
             Catch ex As Exception
 
@@ -8408,7 +8410,7 @@ Imports System.Windows
 
             Try
                 If myCollection.Count > 0 Then
-                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
                 Else
                     Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
                 End If
@@ -8650,7 +8652,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -8714,7 +8716,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -10265,7 +10267,7 @@ Imports System.Windows
                                 .Width = projectboardWindows(PTwindows.mptpf).Left - 1 - .Left
                             Else
                                 .Left = 1
-                                .Width = maxScreenWidth - (projectboardWindows(PTwindows.mptpf).Width + 1)
+                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1
                             End If
 
                             

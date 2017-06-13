@@ -1593,38 +1593,6 @@ Public Module Projekte
 
 
 
-        '' Änderung 6.6 : wird aktuell noch nicht unterstützt 
-
-        'If charttype = PTpfdk.Dependencies Then
-        '    Dim deleteList As New Collection
-        '    For i = 1 To projektListe.Count
-        '        pName = projektListe.Item(i)
-        '        Try
-        '            activeNumber = allDependencies.activeNumber(pName, PTdpndncyType.inhalt)
-        '            passiveNumber = allDependencies.passiveNumber(pName, PTdpndncyType.inhalt)
-        '            If activeNumber = 0 And passiveNumber = 0 Then
-        '                deleteList.Add(pName)
-        '            End If
-        '        Catch ex As Exception
-
-        '        End Try
-        '    Next
-
-        '    ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
-        '    For i = 1 To deleteList.Count
-        '        pName = deleteList.Item(i)
-        '        Try
-        '            projektListe.Remove(pName)
-        '        Catch ex As Exception
-
-        '        End Try
-        '    Next
-        'End If
-
-
-
-
-
 
         For i = 1 To projektListe.Count
 
@@ -1729,29 +1697,29 @@ Public Module Projekte
         Select Case charttype
             Case PTprdk.StrategieRisiko
 
-                titelTeile(0) = summentitel2 & " " & hproj.name & vbLf
-                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(0) = summentitel2
+                titelTeile(1) = ""
 
             Case PTpfdk.FitRisikoVol
 
-                titelTeile(0) = portfolioDiagrammtitel(PTprdk.FitRisikoVol) & " " & hproj.name & vbLf
-                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(0) = portfolioDiagrammtitel(PTprdk.FitRisikoVol)
+                titelTeile(1) = ""
 
             Case PTpfdk.ZeitRisiko
 
-                titelTeile(0) = portfolioDiagrammtitel(PTprdk.ZeitRisiko) & " " & hproj.name & vbLf
-                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(0) = portfolioDiagrammtitel(PTprdk.ZeitRisiko)
+                titelTeile(1) = ""
 
             Case PTpfdk.ComplexRisiko
 
-                titelTeile(0) = portfolioDiagrammtitel(PTprdk.ComplexRisiko) & " " & hproj.name & vbLf
-                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(0) = portfolioDiagrammtitel(PTprdk.ComplexRisiko)
+                titelTeile(1) = ""
 
             Case PTpfdk.Dependencies
                 ' neuer Typ: 8.3.14 Abhängigkeiten
 
-                titelTeile(0) = portfolioDiagrammtitel(PTprdk.Dependencies) & " " & hproj.name & vbLf
-                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(0) = portfolioDiagrammtitel(PTprdk.Dependencies)
+                titelTeile(1) = ""
 
             Case Else
                 diagramTitle = "Chart-Typ existiert nicht"
@@ -4433,7 +4401,6 @@ Public Module Projekte
         Dim tmpcollection As New Collection
         Dim currentSheetName As String
         Dim newChtObj As Excel.ChartObject = Nothing
-        Dim maxlenTitle1 As Integer = 20
 
         Dim found As Boolean = False
 
@@ -4629,35 +4596,47 @@ Public Module Projekte
 
             If auswahl = 1 Then
                 ' tk 12.6.17 
-                'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf
-                titelTeilLaengen(0) = titelTeile(0).Length
-                titelTeile(1) = hproj.getShapeText
 
-                If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                titelTeilLaengen(0) = titelTeile(0).Length
+                Dim maxlenTitle1 As Integer = 20
+                If calledFromReporting Then
+                    titelTeile(1) = vbLf & hproj.getShapeText
+
+                    If titelTeile(1).Length > maxlenTitle1 + 3 Then
+                        titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+                    Else
+                        titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                    End If
                 Else
-                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                    titelTeile(1) = ""
                 End If
-                'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                
+
                 titelTeilLaengen(1) = titelTeile(1).Length
                 diagramTitle = titelTeile(0) & titelTeile(1)
                 'kennung = "Personalbedarf"
             ElseIf auswahl = 2 Then
                 ' tk 12.6.17
-                'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf
+
+                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
                 titelTeilLaengen(0) = titelTeile(0).Length
-                'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-                titelTeile(1) = hproj.getShapeText
-                If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+
+                If calledFromReporting Then
+                    Dim maxlenTitle1 As Integer = 20
+                    titelTeile(1) = vbLf & hproj.getShapeText
+                    If titelTeile(1).Length > maxlenTitle1 + 3 Then
+                        titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+                    Else
+                        titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                    End If
                 Else
-                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                    titelTeile(1) = ""
                 End If
+                
                 titelTeilLaengen(1) = titelTeile(1).Length
                 diagramTitle = titelTeile(0) & titelTeile(1)
-                'kennung = "Personalkosten"
+
             Else
                 diagramTitle = "--- (T€)" & vbLf & pname
                 'kennung = "Gesamtkosten"
@@ -5110,17 +5089,7 @@ Public Module Projekte
 
                     If changeScale Then
                         .MinimumScale = 0
-                        .MaximumScaleIsAuto = False
-                        If sumdatenreihe.Max > .MaximumScale - 3 Then
-                            .MaximumScale = sumdatenreihe.Max + 3
-                        End If
-                        'If Not (.MaximumScaleIsAuto) Then
-
-                        '    If sumdatenreihe.Max > .MaximumScale - 3 Then
-                        '        .MaximumScale = sumdatenreihe.Max + 3
-                        '    End If
-                        '    .MaximumScaleIsAuto = True
-                        'End If
+                        .MaximumScaleIsAuto = True
                     End If
 
 
@@ -5131,34 +5100,22 @@ Public Module Projekte
             If auswahl = 1 Then
                 ' tk 12.6.17 
                 'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf
+                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
                 titelTeilLaengen(0) = titelTeile(0).Length
-                titelTeile(1) = hproj.getShapeText
-
-                If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-                Else
-                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-                End If
-                'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(1) = ""
                 titelTeilLaengen(1) = titelTeile(1).Length
                 diagramTitle = titelTeile(0) & titelTeile(1)
                 'kennung = "Personalbedarf"
             ElseIf auswahl = 2 Then
                 ' tk 12.6.17
-                'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf
+
+                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
                 titelTeilLaengen(0) = titelTeile(0).Length
-                'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-                titelTeile(1) = hproj.getShapeText
-                If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-                Else
-                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-                End If
+
+                titelTeile(1) = ""
                 titelTeilLaengen(1) = titelTeile(1).Length
                 diagramTitle = titelTeile(0) & titelTeile(1)
-                'kennung = "Personalkosten"
+
             Else
                 diagramTitle = "--- (T€)" & vbLf & pname
                 'kennung = "Gesamtkosten"
@@ -5618,15 +5575,21 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####0.") & " " & zE & ")" & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####0.") & " " & zE & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = hproj.getShapeText
 
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+            If calledFromReporting Then
+                titelTeile(1) = vbLf & hproj.getShapeText
+
+                If titelTeile(1).Length > maxlenTitle1 + 3 Then
+                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+                Else
+                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                End If
             Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(1) = ""
             End If
+            
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
@@ -5634,15 +5597,21 @@ Public Module Projekte
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")" & vbLf
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeile(1) = hproj.getShapeText
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+
+            If calledFromReporting Then
+                titelTeile(1) = vbLf & hproj.getShapeText
+                If titelTeile(1).Length > maxlenTitle1 + 3 Then
+                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+                Else
+                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                End If
             Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(1) = ""
             End If
+            
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             diagramTitle = titelTeile(0) & titelTeile(1)
@@ -5828,15 +5797,9 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####0.") & " " & zE & ")" & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####0.") & " " & zE & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = hproj.getShapeText
-
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-            Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-            End If
+            titelTeile(1) = ""
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
@@ -5844,15 +5807,10 @@ Public Module Projekte
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")" & vbLf
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeile(1) = hproj.getShapeText
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-            Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-            End If
+            titelTeile(1) = ""
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             diagramTitle = titelTeile(0) & titelTeile(1)
@@ -6033,35 +5991,45 @@ Public Module Projekte
 
         If auswahl = 1 Then
             ' tk 12.6.17 
-            'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")" & vbLf
-            titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = hproj.getShapeText
 
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
+            titelTeilLaengen(0) = titelTeile(0).Length
+
+            If calledFromReporting Then
+                titelTeile(1) = vbLf & hproj.getShapeText
+
+                If titelTeile(1).Length > maxlenTitle1 + 3 Then
+                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+                Else
+                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                End If
             Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(1) = ""
             End If
-            'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+            
+
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")" & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
-            'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeile(1) = hproj.getShapeText
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+            If calledFromReporting Then
+                titelTeile(1) = vbLf & hproj.getShapeText
+                If titelTeile(1).Length > maxlenTitle1 + 3 Then
+                    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+                Else
+                    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                End If
             Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+                titelTeile(1) = ""
             End If
+            
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalkosten"
+
         Else
             diagramTitle = "--- (T€)" & vbLf & pname
             'kennung = "Gesamtkosten"
@@ -6280,31 +6248,19 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")" & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
-            titelTeile(1) = hproj.getShapeText
-
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-            Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-            End If
-            'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+            titelTeile(1) = ""
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")" & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
-            'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-            titelTeile(1) = hproj.getShapeText
-            If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-            Else
-                titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-            End If
+
+            titelTeile(1) = ""
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalkosten"
@@ -8088,16 +8044,7 @@ Public Module Projekte
         End If
 
         projektTextTeil = repMessages.getmsg(53)
-        'If auswahl = PThis.beauftragung Then
-        '    'titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
-        '    projektTextTeil = repMessages.getmsg(47) & dauerTextTeil
-        'ElseIf auswahl = PThis.letzterStand Then
-        '    'titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
-        '    projektTextTeil = repMessages.getmsg(48) & dauerTextTeil
-        'Else
-        '    projektTextTeil = hproj.getShapeText & dauerTextTeil
-        'End If
-
+        
        
         If hproj.endeDate < Date.Now Then
             titelTeile(0) = projektTextTeil

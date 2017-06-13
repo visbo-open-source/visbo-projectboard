@@ -30,7 +30,8 @@ Public Module awinGUI
     ''' <remarks></remarks>
     Sub awinCreatePortfolioDiagrams(ByRef ProjektListe As Collection, ByRef repChart As Excel.ChartObject, isProjektCharakteristik As Boolean, _
                                          charttype As Integer, bubbleColor As Integer, showNegativeValues As Boolean, showLabels As Boolean, chartBorderVisible As Boolean, _
-                                         top As Double, left As Double, width As Double, height As Double)
+                                         top As Double, left As Double, width As Double, height As Double, _
+                                         ByVal calledfromReporting As Boolean)
 
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
@@ -59,6 +60,8 @@ Public Module awinGUI
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
 
+        Dim newChtObj As Excel.ChartObject = Nothing
+
         ' Check zu Beginn: gibt es überhaupt etwas zu tun ? 
         ' wenn nein, sofortiger Exit 
         If ProjektListe.Count = 0 Then
@@ -84,9 +87,19 @@ Public Module awinGUI
         Dim currentSheetName As String
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentSheetName = arrWsNames(ptTables.MPT)
+            If calledfromReporting Then
+                currentSheetName = arrWsNames(ptTables.repCharts)
+            Else
+                If ProjektListe.Count = 1 Then
+                    currentSheetName = arrWsNames(ptTables.mptPrCharts)
+                Else
+                    currentSheetName = arrWsNames(ptTables.mptPfCharts)
+                End If
+
+            End If
+
         Else
-            currentSheetName = arrWsNames(ptTables.meRC)
+            currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
         appInstance.ScreenUpdating = False
@@ -99,13 +112,13 @@ Public Module awinGUI
 
 
         If width > 450 Then
-            titlefontsize = 20
+            titlefontsize = 16
             smallfontsize = 10
         ElseIf width > 250 Then
-            titlefontsize = 14
+            titlefontsize = 10
             smallfontsize = 8
         Else
-            titlefontsize = 12
+            titlefontsize = 10
             smallfontsize = 8
         End If
 
@@ -126,21 +139,12 @@ Public Module awinGUI
         ' ausserdem ist jetzt sicher, dass charttype ein zulässiger Wert ist
         ' andernfalls wäre das Programm schon beendet
         If isProjektCharakteristik Then
-            If ProjektListe.Count = 1 Then
-                titelTeile(0) = portfolioDiagrammtitel(charttype) & " " & hproj.getShapeText & vbLf
-                titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-
-            Else
-                titelTeile(0) = portfolioDiagrammtitel(charttype) & vbLf
-                titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
-            End If
-
+            titelTeile(0) = portfolioDiagrammtitel(charttype)
+            titelTeile(1) = ""
         Else
-            titelTeile(0) = portfolioDiagrammtitel(charttype) & vbLf
-            titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+            titelTeile(0) = portfolioDiagrammtitel(charttype)
+            titelTeile(1) = ""
         End If
-
-
 
 
         titelTeilLaengen(0) = titelTeile(0).Length
@@ -161,7 +165,7 @@ Public Module awinGUI
             ReDim positionValues(ProjektListe.Count - 1)
         Catch ex As Exception
 
-            appInstance.ScreenUpdating = True
+            appInstance.ScreenUpdating = formerSU
             'Throw New ArgumentException("Fehler in CreatePortfolioDiagramm " & ex.Message)
             Throw New ArgumentException(repMessages.getmsg(70) & ex.Message)
 
@@ -339,13 +343,6 @@ Public Module awinGUI
 
         With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 
-            Dim wasProtected As Boolean = .ProtectContents
-
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                .Unprotect(Password:="x")
-                awinSettings.meEnableSorting = True
-            End If
-
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -356,7 +353,7 @@ Public Module awinGUI
                 If chtobjName = .ChartObjects(i).name Then
                     found = True
                     repChart = CType(.ChartObjects(i), Excel.ChartObject)
-                    appInstance.ScreenUpdating = True
+                    appInstance.ScreenUpdating = formerSU
                     Exit Sub
                 Else
                     i = i + 1
@@ -368,7 +365,9 @@ Public Module awinGUI
             ReDim tempArray(anzBubbles - 1)
 
 
-            With appInstance.Charts.Add
+            newChtObj = CType(.ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
+
+            With CType(newChtObj.Chart, Excel.Chart)
 
                 .SeriesCollection.NewSeries()
                 .SeriesCollection(1).name = diagramTitle
@@ -446,19 +445,6 @@ Public Module awinGUI
                             .Interior.Color = colorValues(i - 1)
                         End If
 
-
-                        ' alt: 
-                        ' Änderung 30.12.15 
-                        'If awinSettings.mppShowAmpel Then
-
-                        '    With .Format.Glow
-                        '        .Color.RGB = CInt(ampelValues(i - 1))
-                        '        .Transparency = 0
-                        '        .Radius = 3
-                        '    End With
-
-                        'End If
-                        ' Ende Änderung 30.12.15
 
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
@@ -701,56 +687,25 @@ Public Module awinGUI
                 .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                     titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
-
-                ' Events disablen, wegen Report erstellen
-                appInstance.EnableEvents = False
-
-                Dim achieved As Boolean = False
-                Dim anzahlVersuche As Integer = 0
-                Dim errmsg As String = ""
-                Do While Not achieved And anzahlVersuche < 10
-                    Try
-                        'Call Sleep(100)
-                        .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=currentSheetName)
-                        achieved = True
-                    Catch ex As Exception
-                        errmsg = ex.Message
-                        'Call Sleep(100)
-                        anzahlVersuche = anzahlVersuche + 1
-                    End Try
-                Loop
-
-                If Not achieved Then
-                    Throw New ArgumentException("Chart-Fehler:" & errmsg)
-                End If
-
-                appInstance.EnableEvents = formerEE
-                ' Events sind wieder zurückgesetzt
             End With
 
 
-            'appInstance.ShowChartTipNames = False
-            'appInstance.ShowChartTipValues = False
 
             With .ChartObjects(anzDiagrams + 1)
-                .top = top
-                .left = left
-                .width = width
-                .height = height
                 .name = chtobjName
             End With
 
 
 
-            With appInstance.ActiveSheet
-                Try
-                    With appInstance.ActiveSheet
-                        .Shapes(chtobjName).line.visible = chartBorderVisible
-                    End With
-                Catch ex As Exception
+            'With appInstance.ActiveSheet
+            '    Try
+            '        With appInstance.ActiveSheet
+            '            .Shapes(chtobjName).line.visible = chartBorderVisible
+            '        End With
+            '    Catch ex As Exception
 
-                End Try
-            End With
+            '    End Try
+            'End With
 
 
             If isProjektCharakteristik And ProjektListe.Count = 1 Then
@@ -804,20 +759,6 @@ Public Module awinGUI
 
                 DiagramList.Add(pfDiagram)
             End If
-
-            ' wenn es geschützt war .. 
-            ''If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-            ''    .Protect(Password:="x", UserInterfaceOnly:=True, _
-            ''                 AllowFormattingCells:=True, _
-            ''                 AllowInsertingColumns:=False,
-            ''                 AllowInsertingRows:=True, _
-            ''                 AllowDeletingColumns:=False, _
-            ''                 AllowDeletingRows:=True, _
-            ''                 AllowSorting:=True, _
-            ''                 AllowFiltering:=True)
-            ''    .EnableSelection = XlEnableSelection.xlUnlockedCells
-            ''    .EnableAutoFilter = True
-            ''End If
 
             repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
@@ -1088,8 +1029,7 @@ Public Module awinGUI
 
         ' Änderung tk 7.1.16
         ' das hängt ja nur von charttype ab ... 
-        diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
-
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisiko)
         ' ab 7.1.16 auskommentiert 
         'Select Case charttype
         '    Case PTpfdk.FitRisiko
