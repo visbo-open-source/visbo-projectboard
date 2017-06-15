@@ -5696,6 +5696,14 @@ Public Module awinDiagrams
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             currentSheetName = arrWsNames(ptTables.mptPfCharts)
             roleCost = Nothing
+            Try
+                If visboWindowExists(PTwindows.mpt) Then
+                    Dim tmpmsg As String = ""
+                    projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt, tmpmsg)
+                End If
+            Catch ex As Exception
+
+            End Try
         Else
             ' roleCost wird übergeben, wenn man sich im modus <> graficboard befindet 
             If Not IsNothing(roleCost) Then

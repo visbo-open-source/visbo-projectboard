@@ -1731,7 +1731,12 @@ Public Class clsPhase
 
                     If zielrenditeFaktor = -99999.0 Then
                         ' undefiniert, deswegen corrfactor nehmen 
-                        Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, corrFactor, newXwerte)
+                        If awinSettings.propAnpassRess Then
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, corrFactor, newXwerte)
+                        Else
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, 1.0, newXwerte)
+                        End If
+
                     Else
                         Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, zielrenditeFaktor, newXwerte)
                     End If
@@ -1763,7 +1768,12 @@ Public Class clsPhase
 
                     If zielrenditeFaktor = -99999.0 Then
                         ' undefiniert, deswegen corrfactor nehmen
-                        Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, corrFactor, newXwerte)
+                        If awinSettings.propAnpassRess Then
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, corrFactor, newXwerte)
+                        Else
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, 1.0, newXwerte)
+                        End If
+
                     Else
                         Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, zielrenditeFaktor, newXwerte)
                     End If

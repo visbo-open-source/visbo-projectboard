@@ -922,7 +922,7 @@ Public Module Module1
         Dim chtobjName As String = ""
         Dim userSelectedSomething As Boolean = False
 
-        Dim testActiveWindow As String
+        'Dim testActiveWindow As String
 
         ' Exit, wenn nicht im PRojekt-Tafel-Modus 
         If visboZustaende.projectBoardMode <> ptModus.graficboard Then
@@ -953,7 +953,7 @@ Public Module Module1
                     Dim allChartsOnSheet As Excel.ChartObjects = _
                        CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
-                    testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
+                    'testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
 
                     If Not IsNothing(allChartsOnSheet) Then
                         If allChartsOnSheet.Count > 0 And selectedCharts.Count > 0 Then
@@ -1067,7 +1067,7 @@ Public Module Module1
 
         End If
 
-        testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
+        'testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
 
         getProjectSelectionList = tmpCollection
 
@@ -3644,6 +3644,7 @@ Public Module Module1
 
         Dim anzCharts As Integer = 0
 
+
         Try
             If chType = PTwindows.mptpf Then
                 anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
@@ -3669,6 +3670,46 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt zurück ob das angegebene Window existiert
+    ''' wird unter anderem benötigt, um die Caption zu aktualisieren 
+    ''' </summary>
+    ''' <param name="windowTyp"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function visboWindowExists(ByVal windowTyp As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Dim sheetNameLookedFor As String = ""
+
+        Try
+            Select Case windowTyp
+                Case PTwindows.mpt
+                    sheetNameLookedFor = arrWsNames(ptTables.MPT)
+                Case PTwindows.mptpf
+                    sheetNameLookedFor = arrWsNames(ptTables.mptPfCharts)
+                Case PTwindows.mptpr
+                    sheetNameLookedFor = arrWsNames(ptTables.mptPrCharts)
+                Case PTwindows.meChart
+                    sheetNameLookedFor = arrWsNames(ptTables.meCharts)
+                Case PTwindows.massEdit
+                    sheetNameLookedFor = arrWsNames(ptTables.meRC)
+                Case Else
+                    sheetNameLookedFor = "XX?"
+            End Select
+
+            For i As Integer = 1 To CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count
+                If CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Item(i), Excel.Window).ActiveSheet, Excel.Worksheet) _
+                    .Name = sheetNameLookedFor Then
+                    tmpResult = Not IsNothing(projectboardWindows(windowTyp))
+                End If
+            Next
+        Catch ex As Exception
+
+        End Try
+        visboWindowExists = tmpResult
+    End Function
+
+    ''' <summary>
     ''' liefert den Caption Namen des Windows in Abhängigkeit von Portfolio oder Projekt und in Abhängigkeit von der Sprache 
     ''' </summary>
     ''' <param name="visboWindowTyp"></param>
@@ -3682,9 +3723,9 @@ Public Module Module1
 
             Case PTwindows.mptpf
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Charts for Portfolio " & currentConstellationName & ": " & ShowProjekte.Count & " projects"
+                    tmpResult = "Charts for Portfolio '" & currentConstellationName & "'"
                 Else
-                    tmpResult = "Charts für Portfolio " & currentConstellationName & ": " & ShowProjekte.Count & " Projekte"
+                    tmpResult = "Charts für Portfolio " & currentConstellationName & "'"
                 End If
 
             Case PTwindows.mptpr
@@ -3694,16 +3735,16 @@ Public Module Module1
 
             Case PTwindows.meChart
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Project Profit/Loss and Portfolio-Charts " & currentConstellationName & ": " & ShowProjekte.Count & " projects"
+                    tmpResult = "Project-Chart and Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
                 Else
-                    tmpResult = "Projekt Gewinn/Verlust und Portfolio-Charts " & currentConstellationName & ": " & ShowProjekte.Count & " Projekte"
+                    tmpResult = "Projekt-Chart und Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
                 End If
 
             Case PTwindows.mpt
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Multiproject-Board " & currentConstellationName & ": " & ShowProjekte.Count & " projects"
+                    tmpResult = "Multiproject-Board '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
                 Else
-                    tmpResult = "Multiprojekt-Tafel " & currentConstellationName & ": " & ShowProjekte.Count & " Projekte"
+                    tmpResult = "Multiprojekt-Tafel '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
                 End If
 
             Case PTwindows.massEdit

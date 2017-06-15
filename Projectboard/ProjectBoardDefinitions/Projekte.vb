@@ -15250,7 +15250,7 @@ Public Module Projekte
 
         ' aktualisieren der Window Caption ...
         Try
-            If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
+            If visboWindowExists(PTwindows.mptpr) Then
                 Dim tmpmsg As String = "Charts: " & hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
                 projectboardWindows(PTwindows.mptpr).Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
             End If
