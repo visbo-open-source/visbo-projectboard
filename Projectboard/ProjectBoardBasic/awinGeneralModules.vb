@@ -14166,9 +14166,10 @@ Public Module awinGeneralModules
         Dim selCosts As New Collection
         Dim selBUs As New Collection
         Dim selTyps As New Collection
+        Dim auswahl As Integer
 
         Call retrieveSelections(filterName, menueOption, selBUs, selTyps, _
-                                 selphases, selMilestones, selRoles, selCosts)
+                                 selphases, selMilestones, selRoles, selCosts, auswahl)
 
         ' initialisieren 
         earliestDate = StartofCalendar.AddMonths(-12)

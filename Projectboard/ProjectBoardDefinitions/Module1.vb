@@ -476,6 +476,7 @@ Public Module Module1
     Public Enum PTProjektType
         vorlage = 0
         projekt = 1
+        nameList = 2
     End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -3065,7 +3066,7 @@ Public Module Module1
     Public Sub retrieveSelections(ByVal fName As String, ByVal menuOption As Integer, _
                                        ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
                                        ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
-                                       ByRef selectedRoles As Collection, ByRef selectedCosts As Collection)
+                                       ByRef selectedRoles As Collection, ByRef selectedCosts As Collection, ByRef selectionAuswahl As Integer)
 
         Dim lastFilter As clsFilter
 
@@ -3085,7 +3086,6 @@ Public Module Module1
 
         If Not IsNothing(lastFilter) Then
 
-            'selectedBUs = lastFilter.BUs
             selectedBUs = copyCollection(lastFilter.BUs)
             selectedTyps = copyCollection(lastFilter.Typs)
             selectedPhases = copyCollection(lastFilter.Phases)
@@ -3093,16 +3093,73 @@ Public Module Module1
             selectedRoles = copyCollection(lastFilter.Roles)
             selectedCosts = copyCollection(lastFilter.Costs)
 
+            selectionAuswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+
         Else
+            
             selectedBUs = New Collection
             selectedTyps = New Collection
             selectedPhases = New Collection
             selectedMilestones = New Collection
             selectedRoles = New Collection
             selectedCosts = New Collection
+
+            selectionAuswahl = PTProjektType.nameList
+
         End If
 
     End Sub
+
+
+   
+    ''' <summary>
+    ''' Gibt zurück, welchen SelectionTyp die aktuell selektierten Elemente ist
+    ''' 0 = Projekt-Struktur (Vorlage)
+    ''' 1 = Projekt-Struktur(Projekt)
+    ''' 2 = Namensliste
+    ''' </summary>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function selectionTyp(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                           ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                           ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Integer
+
+        Dim element As String = ""
+        Dim tmpresult As PTProjektType = PTProjektType.nameList
+        Dim i As Integer = 1
+
+        Do While tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
+            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
+                Do While tmpresult = PTProjektType.nameList And i <= selectedPhases.Count
+                    element = selectedPhases.Item(i).ToString
+                    Dim hstr1() As String = Split(element, "V:")
+                    If hstr1.Length > 1 Then
+                        tmpresult = PTProjektType.vorlage
+                    End If
+                    Dim hstr2() As String = Split(element, "P:")
+                    If hstr2.Length > 1 Then
+                        tmpresult = PTProjektType.projekt
+                    End If
+                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+                        tmpresult = PTProjektType.nameList
+                    End If
+                    i = i + 1
+                Loop
+            Loop
+        Loop
+
+        ' gleiches noch todo für Milensteine, rollen, kosten, ...
+
+        selectionTyp = tmpresult
+
+    End Function
+
 
     ''' <summary>
     ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
@@ -3134,7 +3191,7 @@ Public Module Module1
                         Catch ex As Exception
                             .Tags.Add("CRD", Date.Now.ToString)
                         End Try
-                        
+
                     End If
 
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)

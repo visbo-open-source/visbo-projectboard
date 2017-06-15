@@ -42,44 +42,75 @@ Partial Class frmHierarchySelection
         Me.expandCompletely = New System.Windows.Forms.PictureBox()
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.BackgroundWorker3 = New System.ComponentModel.BackgroundWorker()
+        Me.rdbPhases = New System.Windows.Forms.RadioButton()
+        Me.headerLine = New System.Windows.Forms.Label()
+        Me.filterBox = New System.Windows.Forms.TextBox()
+        Me.picturePhasen = New System.Windows.Forms.PictureBox()
+        Me.rdbMilestones = New System.Windows.Forms.RadioButton()
+        Me.pictureMilestones = New System.Windows.Forms.PictureBox()
+        Me.rdbRoles = New System.Windows.Forms.RadioButton()
+        Me.pictureRoles = New System.Windows.Forms.PictureBox()
+        Me.rdbCosts = New System.Windows.Forms.RadioButton()
+        Me.pictureCosts = New System.Windows.Forms.PictureBox()
+        Me.rdbBU = New System.Windows.Forms.RadioButton()
+        Me.pictureBU = New System.Windows.Forms.PictureBox()
+        Me.rdbTyp = New System.Windows.Forms.RadioButton()
+        Me.pictureTyp = New System.Windows.Forms.PictureBox()
+        Me.rdbNameList = New System.Windows.Forms.RadioButton()
+        Me.rdbProjStruktProj = New System.Windows.Forms.RadioButton()
+        Me.rdbProjStruktTyp = New System.Windows.Forms.RadioButton()
+        Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.Panel2 = New System.Windows.Forms.Panel()
+        Me.auswLaden = New System.Windows.Forms.Button()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureMilestones, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.Panel1.SuspendLayout()
+        Me.Panel2.SuspendLayout()
         Me.SuspendLayout()
         '
         'hryTreeView
         '
         Me.hryTreeView.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.hryTreeView.FullRowSelect = True
-        Me.hryTreeView.Location = New System.Drawing.Point(12, 50)
+        Me.hryTreeView.Location = New System.Drawing.Point(12, 146)
         Me.hryTreeView.Name = "hryTreeView"
-        Me.hryTreeView.Size = New System.Drawing.Size(534, 291)
+        Me.hryTreeView.Size = New System.Drawing.Size(540, 302)
         Me.hryTreeView.TabIndex = 32
         '
         'hryStufenLabel
         '
         Me.hryStufenLabel.AutoSize = True
-        Me.hryStufenLabel.Location = New System.Drawing.Point(212, 24)
+        Me.hryStufenLabel.Location = New System.Drawing.Point(202, 45)
         Me.hryStufenLabel.Name = "hryStufenLabel"
         Me.hryStufenLabel.Size = New System.Drawing.Size(264, 13)
         Me.hryStufenLabel.TabIndex = 35
         Me.hryStufenLabel.Text = "Anzahl Parents in der Projekt-Struktur berücksichtigen:"
+        Me.hryStufenLabel.Visible = False
         '
         'hryStufen
         '
-        Me.hryStufen.Location = New System.Drawing.Point(490, 20)
+        Me.hryStufen.Location = New System.Drawing.Point(489, 43)
         Me.hryStufen.Name = "hryStufen"
         Me.hryStufen.Size = New System.Drawing.Size(57, 20)
         Me.hryStufen.TabIndex = 34
+        Me.hryStufen.Value = New Decimal(New Integer() {10, 0, 0, 0})
+        Me.hryStufen.Visible = False
         '
         'einstellungen
         '
         Me.einstellungen.AutoSize = True
         Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
-        Me.einstellungen.Location = New System.Drawing.Point(476, 417)
+        Me.einstellungen.Location = New System.Drawing.Point(460, 550)
         Me.einstellungen.Name = "einstellungen"
         Me.einstellungen.Size = New System.Drawing.Size(70, 13)
         Me.einstellungen.TabIndex = 42
@@ -89,7 +120,7 @@ Partial Class frmHierarchySelection
         'chkbxOneChart
         '
         Me.chkbxOneChart.AutoSize = True
-        Me.chkbxOneChart.Location = New System.Drawing.Point(428, 347)
+        Me.chkbxOneChart.Location = New System.Drawing.Point(428, 454)
         Me.chkbxOneChart.Name = "chkbxOneChart"
         Me.chkbxOneChart.Size = New System.Drawing.Size(118, 17)
         Me.chkbxOneChart.TabIndex = 36
@@ -101,7 +132,7 @@ Partial Class frmHierarchySelection
         '
         Me.labelPPTVorlage.AutoSize = True
         Me.labelPPTVorlage.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelPPTVorlage.Location = New System.Drawing.Point(9, 414)
+        Me.labelPPTVorlage.Location = New System.Drawing.Point(12, 525)
         Me.labelPPTVorlage.Name = "labelPPTVorlage"
         Me.labelPPTVorlage.Size = New System.Drawing.Size(136, 16)
         Me.labelPPTVorlage.TabIndex = 39
@@ -111,7 +142,7 @@ Partial Class frmHierarchySelection
         'statusLabel
         '
         Me.statusLabel.AutoSize = True
-        Me.statusLabel.Location = New System.Drawing.Point(9, 470)
+        Me.statusLabel.Location = New System.Drawing.Point(9, 573)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(39, 13)
         Me.statusLabel.TabIndex = 41
@@ -120,7 +151,7 @@ Partial Class frmHierarchySelection
         'repVorlagenDropbox
         '
         Me.repVorlagenDropbox.FormattingEnabled = True
-        Me.repVorlagenDropbox.Location = New System.Drawing.Point(145, 409)
+        Me.repVorlagenDropbox.Location = New System.Drawing.Point(155, 520)
         Me.repVorlagenDropbox.Name = "repVorlagenDropbox"
         Me.repVorlagenDropbox.Size = New System.Drawing.Size(264, 21)
         Me.repVorlagenDropbox.TabIndex = 37
@@ -128,7 +159,7 @@ Partial Class frmHierarchySelection
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(199, 443)
+        Me.OKButton.Location = New System.Drawing.Point(155, 545)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(113, 23)
         Me.OKButton.TabIndex = 38
@@ -143,7 +174,7 @@ Partial Class frmHierarchySelection
         'AbbrButton
         '
         Me.AbbrButton.BackColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.AbbrButton.Location = New System.Drawing.Point(344, 444)
+        Me.AbbrButton.Location = New System.Drawing.Point(306, 545)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(113, 23)
         Me.AbbrButton.TabIndex = 44
@@ -154,9 +185,11 @@ Partial Class frmHierarchySelection
         'filterDropbox
         '
         Me.filterDropbox.FormattingEnabled = True
-        Me.filterDropbox.Location = New System.Drawing.Point(145, 381)
+        Me.filterDropbox.Location = New System.Drawing.Point(155, 493)
+        Me.filterDropbox.MaxDropDownItems = 10
         Me.filterDropbox.Name = "filterDropbox"
         Me.filterDropbox.Size = New System.Drawing.Size(264, 21)
+        Me.filterDropbox.Sorted = True
         Me.filterDropbox.TabIndex = 48
         Me.filterDropbox.Visible = False
         '
@@ -164,7 +197,7 @@ Partial Class frmHierarchySelection
         '
         Me.filterLabel.AutoSize = True
         Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.filterLabel.Location = New System.Drawing.Point(9, 386)
+        Me.filterLabel.Location = New System.Drawing.Point(12, 494)
         Me.filterLabel.Name = "filterLabel"
         Me.filterLabel.Size = New System.Drawing.Size(37, 16)
         Me.filterLabel.TabIndex = 49
@@ -173,9 +206,9 @@ Partial Class frmHierarchySelection
         '
         'auswSpeichern
         '
-        Me.auswSpeichern.Location = New System.Drawing.Point(433, 379)
+        Me.auswSpeichern.Location = New System.Drawing.Point(439, 492)
         Me.auswSpeichern.Name = "auswSpeichern"
-        Me.auswSpeichern.Size = New System.Drawing.Size(113, 23)
+        Me.auswSpeichern.Size = New System.Drawing.Size(113, 21)
         Me.auswSpeichern.TabIndex = 50
         Me.auswSpeichern.Text = "Speichern"
         Me.auswSpeichern.UseVisualStyleBackColor = True
@@ -186,7 +219,7 @@ Partial Class frmHierarchySelection
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
         Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(12, 349)
+        Me.SelectionSet.Location = New System.Drawing.Point(12, 455)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
         Me.SelectionSet.TabIndex = 51
@@ -196,7 +229,7 @@ Partial Class frmHierarchySelection
         '
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(68, 349)
+        Me.collapseCompletely.Location = New System.Drawing.Point(67, 455)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
         Me.collapseCompletely.TabIndex = 47
@@ -206,7 +239,7 @@ Partial Class frmHierarchySelection
         '
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(90, 349)
+        Me.expandCompletely.Location = New System.Drawing.Point(89, 455)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
         Me.expandCompletely.TabIndex = 46
@@ -217,7 +250,7 @@ Partial Class frmHierarchySelection
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
         Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(32, 349)
+        Me.SelectionReset.Location = New System.Drawing.Point(34, 455)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
         Me.SelectionReset.TabIndex = 45
@@ -228,11 +261,213 @@ Partial Class frmHierarchySelection
         Me.BackgroundWorker3.WorkerReportsProgress = True
         Me.BackgroundWorker3.WorkerSupportsCancellation = True
         '
+        'rdbPhases
+        '
+        Me.rdbPhases.AutoSize = True
+        Me.rdbPhases.Location = New System.Drawing.Point(6, 16)
+        Me.rdbPhases.Name = "rdbPhases"
+        Me.rdbPhases.Size = New System.Drawing.Size(14, 13)
+        Me.rdbPhases.TabIndex = 52
+        Me.rdbPhases.UseVisualStyleBackColor = True
+        '
+        'headerLine
+        '
+        Me.headerLine.AutoSize = True
+        Me.headerLine.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.headerLine.Location = New System.Drawing.Point(9, 121)
+        Me.headerLine.Name = "headerLine"
+        Me.headerLine.Size = New System.Drawing.Size(91, 16)
+        Me.headerLine.TabIndex = 53
+        Me.headerLine.Text = "Label1              "
+        '
+        'filterBox
+        '
+        Me.filterBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterBox.HideSelection = False
+        Me.filterBox.Location = New System.Drawing.Point(125, 118)
+        Me.filterBox.Name = "filterBox"
+        Me.filterBox.Size = New System.Drawing.Size(150, 22)
+        Me.filterBox.TabIndex = 54
+        '
+        'picturePhasen
+        '
+        Me.picturePhasen.Image = CType(resources.GetObject("picturePhasen.Image"), System.Drawing.Image)
+        Me.picturePhasen.Location = New System.Drawing.Point(26, 3)
+        Me.picturePhasen.Name = "picturePhasen"
+        Me.picturePhasen.Size = New System.Drawing.Size(33, 33)
+        Me.picturePhasen.TabIndex = 55
+        Me.picturePhasen.TabStop = False
+        '
+        'rdbMilestones
+        '
+        Me.rdbMilestones.AutoSize = True
+        Me.rdbMilestones.Location = New System.Drawing.Point(93, 16)
+        Me.rdbMilestones.Name = "rdbMilestones"
+        Me.rdbMilestones.Size = New System.Drawing.Size(14, 13)
+        Me.rdbMilestones.TabIndex = 56
+        Me.rdbMilestones.UseVisualStyleBackColor = True
+        '
+        'pictureMilestones
+        '
+        Me.pictureMilestones.Image = CType(resources.GetObject("pictureMilestones.Image"), System.Drawing.Image)
+        Me.pictureMilestones.Location = New System.Drawing.Point(113, 3)
+        Me.pictureMilestones.Name = "pictureMilestones"
+        Me.pictureMilestones.Size = New System.Drawing.Size(33, 33)
+        Me.pictureMilestones.TabIndex = 57
+        Me.pictureMilestones.TabStop = False
+        '
+        'rdbRoles
+        '
+        Me.rdbRoles.AutoSize = True
+        Me.rdbRoles.Location = New System.Drawing.Point(203, 16)
+        Me.rdbRoles.Name = "rdbRoles"
+        Me.rdbRoles.Size = New System.Drawing.Size(14, 13)
+        Me.rdbRoles.TabIndex = 58
+        Me.rdbRoles.UseVisualStyleBackColor = True
+        '
+        'pictureRoles
+        '
+        Me.pictureRoles.Image = CType(resources.GetObject("pictureRoles.Image"), System.Drawing.Image)
+        Me.pictureRoles.Location = New System.Drawing.Point(223, 5)
+        Me.pictureRoles.Name = "pictureRoles"
+        Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
+        Me.pictureRoles.TabIndex = 59
+        Me.pictureRoles.TabStop = False
+        '
+        'rdbCosts
+        '
+        Me.rdbCosts.AutoSize = True
+        Me.rdbCosts.Location = New System.Drawing.Point(307, 16)
+        Me.rdbCosts.Name = "rdbCosts"
+        Me.rdbCosts.Size = New System.Drawing.Size(14, 13)
+        Me.rdbCosts.TabIndex = 60
+        Me.rdbCosts.UseVisualStyleBackColor = True
+        '
+        'pictureCosts
+        '
+        Me.pictureCosts.Image = CType(resources.GetObject("pictureCosts.Image"), System.Drawing.Image)
+        Me.pictureCosts.Location = New System.Drawing.Point(327, 3)
+        Me.pictureCosts.Name = "pictureCosts"
+        Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
+        Me.pictureCosts.TabIndex = 61
+        Me.pictureCosts.TabStop = False
+        '
+        'rdbBU
+        '
+        Me.rdbBU.AutoSize = True
+        Me.rdbBU.Location = New System.Drawing.Point(397, 16)
+        Me.rdbBU.Name = "rdbBU"
+        Me.rdbBU.Size = New System.Drawing.Size(14, 13)
+        Me.rdbBU.TabIndex = 62
+        Me.rdbBU.UseVisualStyleBackColor = True
+        '
+        'pictureBU
+        '
+        Me.pictureBU.Image = Global.ProjectBoardBasic.My.Resources.Resources.branch
+        Me.pictureBU.Location = New System.Drawing.Point(416, 3)
+        Me.pictureBU.Name = "pictureBU"
+        Me.pictureBU.Size = New System.Drawing.Size(33, 33)
+        Me.pictureBU.TabIndex = 63
+        Me.pictureBU.TabStop = False
+        '
+        'rdbTyp
+        '
+        Me.rdbTyp.AutoSize = True
+        Me.rdbTyp.Location = New System.Drawing.Point(481, 16)
+        Me.rdbTyp.Name = "rdbTyp"
+        Me.rdbTyp.Size = New System.Drawing.Size(14, 13)
+        Me.rdbTyp.TabIndex = 64
+        Me.rdbTyp.UseVisualStyleBackColor = True
+        '
+        'pictureTyp
+        '
+        Me.pictureTyp.Image = CType(resources.GetObject("pictureTyp.Image"), System.Drawing.Image)
+        Me.pictureTyp.Location = New System.Drawing.Point(501, 3)
+        Me.pictureTyp.Name = "pictureTyp"
+        Me.pictureTyp.Size = New System.Drawing.Size(33, 33)
+        Me.pictureTyp.TabIndex = 65
+        Me.pictureTyp.TabStop = False
+        '
+        'rdbNameList
+        '
+        Me.rdbNameList.AutoSize = True
+        Me.rdbNameList.Checked = True
+        Me.rdbNameList.Location = New System.Drawing.Point(6, 5)
+        Me.rdbNameList.Name = "rdbNameList"
+        Me.rdbNameList.Size = New System.Drawing.Size(47, 17)
+        Me.rdbNameList.TabIndex = 66
+        Me.rdbNameList.TabStop = True
+        Me.rdbNameList.Text = "Liste"
+        Me.rdbNameList.UseVisualStyleBackColor = True
+        '
+        'rdbProjStruktProj
+        '
+        Me.rdbProjStruktProj.AutoSize = True
+        Me.rdbProjStruktProj.Location = New System.Drawing.Point(394, 5)
+        Me.rdbProjStruktProj.Name = "rdbProjStruktProj"
+        Me.rdbProjStruktProj.Size = New System.Drawing.Size(140, 17)
+        Me.rdbProjStruktProj.TabIndex = 67
+        Me.rdbProjStruktProj.Text = "Projekt-Struktur (Projekt)"
+        Me.rdbProjStruktProj.UseVisualStyleBackColor = True
+        '
+        'rdbProjStruktTyp
+        '
+        Me.rdbProjStruktTyp.AutoSize = True
+        Me.rdbProjStruktTyp.Location = New System.Drawing.Point(166, 5)
+        Me.rdbProjStruktTyp.Name = "rdbProjStruktTyp"
+        Me.rdbProjStruktTyp.Size = New System.Drawing.Size(125, 17)
+        Me.rdbProjStruktTyp.TabIndex = 68
+        Me.rdbProjStruktTyp.Text = "Projekt-Struktur (Typ)"
+        Me.rdbProjStruktTyp.UseVisualStyleBackColor = True
+        '
+        'Panel1
+        '
+        Me.Panel1.Controls.Add(Me.rdbPhases)
+        Me.Panel1.Controls.Add(Me.picturePhasen)
+        Me.Panel1.Controls.Add(Me.pictureTyp)
+        Me.Panel1.Controls.Add(Me.rdbMilestones)
+        Me.Panel1.Controls.Add(Me.rdbTyp)
+        Me.Panel1.Controls.Add(Me.pictureMilestones)
+        Me.Panel1.Controls.Add(Me.pictureBU)
+        Me.Panel1.Controls.Add(Me.rdbRoles)
+        Me.Panel1.Controls.Add(Me.rdbBU)
+        Me.Panel1.Controls.Add(Me.pictureRoles)
+        Me.Panel1.Controls.Add(Me.pictureCosts)
+        Me.Panel1.Controls.Add(Me.rdbCosts)
+        Me.Panel1.Location = New System.Drawing.Point(12, 69)
+        Me.Panel1.Name = "Panel1"
+        Me.Panel1.Size = New System.Drawing.Size(540, 41)
+        Me.Panel1.TabIndex = 70
+        '
+        'Panel2
+        '
+        Me.Panel2.Controls.Add(Me.rdbProjStruktTyp)
+        Me.Panel2.Controls.Add(Me.rdbNameList)
+        Me.Panel2.Controls.Add(Me.rdbProjStruktProj)
+        Me.Panel2.Location = New System.Drawing.Point(12, 12)
+        Me.Panel2.Name = "Panel2"
+        Me.Panel2.Size = New System.Drawing.Size(542, 25)
+        Me.Panel2.TabIndex = 71
+        '
+        'auswLaden
+        '
+        Me.auswLaden.Location = New System.Drawing.Point(439, 519)
+        Me.auswLaden.Name = "auswLaden"
+        Me.auswLaden.Size = New System.Drawing.Size(113, 21)
+        Me.auswLaden.TabIndex = 72
+        Me.auswLaden.Text = "Laden"
+        Me.auswLaden.UseVisualStyleBackColor = True
+        '
         'frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(558, 492)
+        Me.ClientSize = New System.Drawing.Size(558, 595)
+        Me.Controls.Add(Me.auswLaden)
+        Me.Controls.Add(Me.Panel2)
+        Me.Controls.Add(Me.Panel1)
+        Me.Controls.Add(Me.filterBox)
+        Me.Controls.Add(Me.headerLine)
         Me.Controls.Add(Me.SelectionSet)
         Me.Controls.Add(Me.auswSpeichern)
         Me.Controls.Add(Me.filterLabel)
@@ -252,13 +487,23 @@ Partial Class frmHierarchySelection
         Me.Controls.Add(Me.hryTreeView)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmHierarchySelection"
-        Me.Text = "Auswahl über Projekt-Struktur"
+        Me.Text = "Auswahl von Plan-Objekten"
         Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureMilestones, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.Panel1.ResumeLayout(False)
+        Me.Panel1.PerformLayout()
+        Me.Panel2.ResumeLayout(False)
+        Me.Panel2.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -282,4 +527,24 @@ Partial Class frmHierarchySelection
     Friend WithEvents auswSpeichern As System.Windows.Forms.Button
     Friend WithEvents SelectionSet As System.Windows.Forms.PictureBox
     Friend WithEvents BackgroundWorker3 As System.ComponentModel.BackgroundWorker
+    Friend WithEvents rdbPhases As System.Windows.Forms.RadioButton
+    Friend WithEvents headerLine As System.Windows.Forms.Label
+    Friend WithEvents filterBox As System.Windows.Forms.TextBox
+    Friend WithEvents picturePhasen As System.Windows.Forms.PictureBox
+    Friend WithEvents rdbMilestones As System.Windows.Forms.RadioButton
+    Friend WithEvents pictureMilestones As System.Windows.Forms.PictureBox
+    Friend WithEvents rdbRoles As System.Windows.Forms.RadioButton
+    Friend WithEvents pictureRoles As System.Windows.Forms.PictureBox
+    Friend WithEvents rdbCosts As System.Windows.Forms.RadioButton
+    Friend WithEvents pictureCosts As System.Windows.Forms.PictureBox
+    Friend WithEvents rdbBU As System.Windows.Forms.RadioButton
+    Friend WithEvents pictureBU As System.Windows.Forms.PictureBox
+    Friend WithEvents rdbTyp As System.Windows.Forms.RadioButton
+    Friend WithEvents pictureTyp As System.Windows.Forms.PictureBox
+    Friend WithEvents rdbNameList As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbProjStruktProj As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbProjStruktTyp As System.Windows.Forms.RadioButton
+    Friend WithEvents Panel1 As System.Windows.Forms.Panel
+    Friend WithEvents Panel2 As System.Windows.Forms.Panel
+    Friend WithEvents auswLaden As System.Windows.Forms.Button
 End Class

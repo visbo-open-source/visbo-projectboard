@@ -30,6 +30,64 @@
         End Get
     End Property
 
+
+    ' '' ''' <summary>
+    ' '' ''' gibt zurück, welchen SelectionTyp der Filter ist
+    ' '' ''' 0 = Projekt-Struktur (Vorlage)
+    ' '' ''' 1 = Projekt-Struktur(Projekt)
+    ' '' ''' 2 = Namensliste
+    ' '' ''' </summary>
+    ' '' ''' <value></value>
+    ' '' ''' <returns></returns>
+    ' '' ''' <remarks></remarks>
+    ' ''Public ReadOnly Property selectionTyp As Integer
+    ' ''    Get
+    ' ''        Dim element As String = ""
+    ' ''        Dim tmpresult As PTProjektType = PTProjektType.nameList
+    ' ''        Dim i As Integer = 1
+
+    ' ''        Do While tmpresult <> PTProjektType.projekt And i <= filterPhase.Count
+    ' ''            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= filterPhase.Count
+    ' ''                Do While tmpresult = PTProjektType.nameList And i <= filterPhase.Count
+    ' ''                    element = filterPhase.Item(i).ToString
+    ' ''                    Dim hstr1() As String = Split(element, "V:")
+    ' ''                    If hstr1.Length > 1 Then
+    ' ''                        tmpresult = PTProjektType.vorlage
+    ' ''                    End If
+    ' ''                    Dim hstr2() As String = Split(element, "P:")
+    ' ''                    If hstr2.Length > 1 Then
+    ' ''                        tmpresult = PTProjektType.projekt
+    ' ''                    End If
+    ' ''                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+    ' ''                        tmpresult = PTProjektType.nameList
+    ' ''                    End If
+    ' ''                    i = i + 1
+    ' ''                Loop
+    ' ''            Loop
+    ' ''        Loop
+
+    ' ''        ''For i As Integer = 1 To filterPhase.Count
+    ' ''        ''    element = filterPhase.Item(i).ToString
+    ' ''        ''    Dim hstr1() As String = Split(element, "V:")
+    ' ''        ''    If hstr1.Length > 0 Then
+    ' ''        ''        tmpresult = PTProjektType.projekt
+    ' ''        ''    End If
+    ' ''        ''    Dim hstr2() As String = Split(element, "P:")
+    ' ''        ''    If hstr2.Length > 0 Then
+    ' ''        ''        tmpresult = PTProjektType.vorlage
+    ' ''        ''    End If
+    ' ''        ''    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+    ' ''        ''        tmpresult = PTProjektType.nameList
+    ' ''        ''    End If
+    ' ''        ''    If tmpresult = PTProjektType.projekt Or tmpresult = PTProjektType.vorlage Then
+    ' ''        ''        Exit For
+    ' ''        ''    End If
+    ' ''        ''Next
+
+    ' ''        selectionTyp = tmpresult
+    ' ''    End Get
+    ' ''End Property
+
     ''' <summary>
     ''' schreibt/liest die Filter Collection der BUs
     ''' </summary>
