@@ -2661,6 +2661,8 @@ Public Module testModule
                                         .Height = CSng(height * 0.96)
                                     End With
 
+                                    Call addSmartPPTShapeInfo2(newShape, hproj, kennzeichnung, qualifier, qualifier2)
+
                                     reportObj.Delete()
                                 Catch ex As Exception
 

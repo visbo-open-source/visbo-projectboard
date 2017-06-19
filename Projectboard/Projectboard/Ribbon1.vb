@@ -2585,6 +2585,42 @@ Imports System.Windows
                 Else
                     tmpLabel = "Sort"
                 End If
+
+            Case "PT6G1B1"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Alphabetisch"
+                Else
+                    tmpLabel = "Alphabetically"
+                End If
+
+            Case "PT6G1B2"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Business Unit-Startdatum-Name"
+                Else
+                    tmpLabel = "by Business Unit-Startdate-Name"
+                End If
+
+            Case "PT6G1B3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Strategie-Profit-Risiko"
+                Else
+                    tmpLabel = "by Strategy-Profit-Risk"
+                End If
+
+            Case "PT6G1B4"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "nach individuellen Kriterien sortieren ..."
+                Else
+                    tmpLabel = "sort by individual criterias"
+                End If
+
+            Case "PT6G1B5"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Sortieren"
+                Else
+                    tmpLabel = "Sort"
+                End If
+
             Case "PTcharts"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Charts"
@@ -3655,59 +3691,79 @@ Imports System.Windows
 
     End Sub
 
-    ' am 21.3.17 von tk rausgenommen 
-    ''' <summary>
-    ''' Projekt ins Noshow stellen  
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    ''' 
-    ''Sub Tom2G1NoShow(control As IRibbonControl)
+    Sub sortCurrentConstellation(control As IRibbonControl)
 
-    ''    Dim singleShp As Excel.Shape
-    ''    'Dim SID As String
+        Dim sortType As Integer = ptSortCriteria.alphabet
 
-    ''    Dim awinSelection As Excel.ShapeRange
+        Call projektTafelInit()
 
-    ''    Call projektTafelInit()
+        ' Vorbesetzungen 
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
 
-    ''    Dim formerEE As Boolean = appInstance.EnableEvents
-    ''    appInstance.EnableEvents = False
 
-    ''    enableOnUpdate = False
+        Try
 
-    ''    Try
-    ''        'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-    ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-    ''    Catch ex As Exception
-    ''        awinSelection = Nothing
-    ''    End Try
+            If control.Id = "PT6G1B1" Then
+                ' alphabetisch sortieren 
+                sortType = ptSortCriteria.alphabet
+            ElseIf control.Id = "PT6G1B2" Then
+                ' Business Unit StartDate Name
+                sortType = ptSortCriteria.buStartName
+            ElseIf control.Id = "PT6G1B3" Then
+                ' Strategy-Profit-Risk
+                sortType = ptSortCriteria.strategyProfitLossRisk
+            ElseIf control.Id = "PT6G1B4" Then
+                ' sort by individual criterias
+                sortType = ptSortCriteria.customListe
+            ElseIf control.Id = "PT6G1B5" Then
+                ' custom Formel , zu implementieren 
+                sortType = ptSortCriteria.alphabet
+            End If
 
-    ''    If Not awinSelection Is Nothing Then
+            Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy("Sort Result")
 
-    ''        ' jetzt die Aktion durchführen ...
+            If currentSortConstellation.sortCriteria <> sortType Then
+                appInstance.ScreenUpdating = False
+                Try
+                    ' nur dann muss was gemacht werden ...  
+                    currentSortConstellation.sortCriteria = sortType
 
-    ''        For Each singleShp In awinSelection
+                    Dim tmpConstellation As New clsConstellations
+                    tmpConstellation.Add(currentSortConstellation)
 
-    ''            Dim shapeArt As Integer
-    ''            shapeArt = kindOfShape(singleShp)
+                    ' es in der Session Liste verfügbar machen
+                    If projectConstellations.Contains(currentSortConstellation.constellationName) Then
+                        projectConstellations.Remove(currentSortConstellation.constellationName)
+                    End If
 
-    ''            With singleShp
-    ''                If isProjectType(shapeArt) Then
+                    projectConstellations.Add(currentSortConstellation)
 
-    ''                    Call awinShowNoShowProject(pname:=.Name)
+                    Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                            clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
 
-    ''                End If
-    ''            End With
-    ''        Next
+                    If sortType = ptSortCriteria.customListe Then
+                        Call awinNeuZeichnenDiagramme(2)
+                    Else
+                        ' in allen anderen Fällen kann sich an der Zahl und Ressourcenbedrag nichts geändert haben 
+                    End If
+                Catch ex As Exception
 
-    ''    Else
-    ''        Call MsgBox("vorher Projekt selektieren ...")
-    ''    End If
+                End Try
+                
+                appInstance.ScreenUpdating = True
 
-    ''    enableOnUpdate = True
-    ''    appInstance.EnableEvents = formerEE
-    ''End Sub
+            End If
+        Catch ex As Exception
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
+        End Try
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+    End Sub
 
     ''' <summary>
     ''' neues Formular zur Auswahl Phasen/Meilensteine/Rollen/Kosten anzeigen
@@ -6124,7 +6180,7 @@ Imports System.Windows
                 ' jetzt die Aktion durchführen ...
                 Dim ok As Boolean = True
                 singleShp = awinSelection.Item(1)
-               
+
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
                 Catch ex As Exception
@@ -6309,7 +6365,7 @@ Imports System.Windows
                 If ok Then
 
                     Dim repObj As Excel.ChartObject
-                    
+
                     repObj = Nothing
 
                     Try
@@ -10470,7 +10526,7 @@ Imports System.Windows
                                 .Width = projectboardWindows(PTwindows.mptpf).Left - 1
                             End If
 
-                            
+
                         End With
 
                         pfWindowAlreadyExisting = True

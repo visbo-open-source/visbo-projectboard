@@ -597,6 +597,11 @@ Module Module1
                     If protectionSolved And tmpShape.Visible = False Then
                         tmpShape.Visible = True
                     End If
+
+                ElseIf isVISBOReportingElement(tmpShape) Then
+                    If protectionSolved And tmpShape.Visible = False Then
+                        tmpShape.Visible = True
+                    End If
                 End If
             End If
         Next
@@ -1425,6 +1430,51 @@ Module Module1
     End Sub
 
     ''' <summary>
+    ''' aktualisiert alle VISBO Charts, VISBO Platzhalter und VISBO Tabellen ...
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="timeStamp"></param>
+    ''' <remarks></remarks>
+    Friend Sub updateVisboComponent(ByRef pptShape As PowerPoint.Shape, ByVal timeStamp As Date)
+        Dim chtObjName As String = ""
+
+        Try
+
+            If Not IsNothing(pptShape) Then
+
+                If pptShape.Tags.Item("CHON").Length > 0 Then
+                    ' es handelt sich um ein Projekt- oder Portfolio Chart 
+
+                    If pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                        Dim pptChart As PowerPoint.Chart = pptShape.Chart
+                        chtObjName = pptChart.Name
+
+                        Dim auswahl As Integer = -1
+                        Dim prpfTyp As Integer = -1
+                        Dim pName As String = ""
+                        Dim vName As String = ""
+                        Dim chartTyp As Integer = -1
+
+
+                        ' der Chart-ObjectName enthält sehr viel ..
+                        'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
+                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, pName, vName, chartTyp, auswahl)
+
+
+                    End If
+
+                End If
+                
+            End If
+
+
+
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+    End Sub
+
+    ''' <summary>
     ''' ändert den Kommentar Ampel-Text, Lieferumfang
     ''' je nachdem, ob es sich um eine Ampel-Erläuterung oder einen Lieferumfang handelt ...  
     ''' </summary>
@@ -2106,7 +2156,7 @@ Module Module1
                     Next
 
                 End Try
-                
+
                 ' die Liste komplett bzw. bis auf die Ausnahme löschen
                 markerShpNames.Clear()
                 If exceptionKey.Length > 0 Then
@@ -2589,7 +2639,7 @@ Module Module1
                             planSDate = CDate(curShape.Tags.Item("SD"))
                             planEDate = CDate(curShape.Tags.Item("ED"))
                         End Try
-                        
+
                     Else
                         planSDate = CDate(curShape.Tags.Item("SD"))
                         planEDate = CDate(curShape.Tags.Item("ED"))
@@ -2600,7 +2650,7 @@ Module Module1
                     planSDate = CDate(curShape.Tags.Item("SD"))
                     planEDate = CDate(curShape.Tags.Item("ED"))
                 End If
-                
+
 
                 ' prüfen, ob es beim Erzeugen abgeschnitten wurde ...
                 Dim pptStartOfCalendar As Date = slideCoordInfo.PPTStartOFCalendar
@@ -2650,7 +2700,24 @@ Module Module1
     End Function
 
     ''' <summary>
-    ''' true, wenn das Shape wenigstens einen Wert für Tag CN enthält
+    ''' prüft, ob es sich um eine andere VISBO Komponente handelt ... (Chart, Tabelle, Platzhalter, ..) 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isOtherVisboComponent(ByVal curShape As PowerPoint.Shape) As Boolean
+
+        Try
+            isOtherVisboComponent = (curShape.Tags.Item("CHON").Length > 0)
+        Catch ex As Exception
+            isOtherVisboComponent = False
+        End Try
+
+    End Function
+
+    ''' <summary>
+    ''' true, wenn das Shape ein VISBO Meilenstein oder eine VISBO Phase ist 
+    ''' true, wenn es einen Wert für Tag CN enthält
     ''' false , sonst
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -2671,6 +2738,27 @@ Module Module1
             isRelevantShape = False
         End If
 
+    End Function
+
+    ''' <summary>
+    ''' true, wenn es ein VISBO Chart, später dann auch ganz allgemein Reporting Element ist ..
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isVISBOReportingElement(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim tmpStr As String = ""
+        Try
+            tmpStr = curShape.Tags.Item("CHON")
+        Catch ex As Exception
+
+        End Try
+
+        If tmpStr.Length > 0 Then
+            isVISBOReportingElement = True
+        Else
+            isVISBOReportingElement = False
+        End If
     End Function
 
     ''' <summary>

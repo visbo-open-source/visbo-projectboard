@@ -246,11 +246,15 @@
       <!--label="Sortieren"-->
       <tab id="PTsort" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT6G1" >
-          <button id ="PT6G1B1" imageMso="SortUp" label ="Alphabetically..."/>
-          <button id ="PT6G1B2" imageMso="Grouping" label ="by Business Unit/Start/Name..."/>
-          <button id ="PT6G1B3" imageMso="Grouping" label ="by Strategy/Profit/Risk..."/>
-          <button id ="PT6G1B4" imageMso="SortDialog" label ="by Custom List..."/>
-          <button id ="PT6G1B5" imageMso="SortDialog" label ="by Custom Formula..."/>      
+          <!--label="alphabetisch"-->
+          <button id ="PT6G1B1" imageMso="SortUp" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <!--label="Business Unit StartDate Name"-->
+          <button id ="PT6G1B2" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <!--label="Strategy Profit Risk"-->
+          <button id ="PT6G1B3" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <!--label="sort by individual criterias"-->
+          <button id ="PT6G1B4" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <button id ="PT6G1B5" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>      
         </group>
       </tab>
       <!--label="Charts"-->

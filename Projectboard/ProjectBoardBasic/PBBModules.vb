@@ -262,6 +262,11 @@ Public Module PBBModules
                         tmpConstellation.Add(currentFilterConstellation)
 
                         ' es in der Session Liste verfügbar machen 
+                        ' es in der Session Liste verfügbar machen
+                        If projectConstellations.Contains(currentFilterConstellation.constellationName) Then
+                            projectConstellations.Remove(currentFilterConstellation.constellationName)
+                        End If
+
                         projectConstellations.Add(currentFilterConstellation)
 
                         Call showConstellations(constellationsToShow:=tmpConstellation, _

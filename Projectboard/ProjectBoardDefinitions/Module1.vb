@@ -216,6 +216,11 @@ Public Module Module1
    
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum ptChartType
+        project = 0
+        portfolio = 1
+    End Enum
+
     ''' <summary>
     ''' kann verwendet werden, um die Typen zu kennzeichnen
     ''' </summary>
@@ -3490,8 +3495,133 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' fügt Projekt-Charts und Reporting Komponenten die entsprechenden Smart-Infos hinzu, so dass 
+    ''' der Powerpoint Add-In das Chart selbstständig aktualisieren kann 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="kennzeichnung"></param>
+    ''' <param name="qualifier"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, _
+                                     ByVal kennzeichnung As String, ByVal qualifier As String, ByVal qualifier2 As String)
 
+        Dim chtObjName As String = ""
+        Try
+            If Not IsNothing(pptShape) Then
+
+                If pptShape.HasChart = MsoTriState.msoTrue Then
+                    Dim pptChart As PowerPoint.Chart = pptShape.Chart
+                    chtObjName = pptChart.Name
+
+                    Dim auswahl As Integer = -1
+                    Dim prpfTyp As Integer = -1
+                    Dim pName As String = ""
+                    Dim vName As String = ""
+                    Dim chartTyp As Integer = -1
+
+
+                    ' der Chart-ObjectName enthält sehr viel ..
+                    'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
+                    Call bestimmeChartInfosFromName(chtObjName, prpfTyp, pName, vName, chartTyp, auswahl)
+
+
+                    With pptShape
+
+
+                        If Not IsNothing(chtObjName) Then
+                            .Tags.Add("CHON", chtObjName)
+                        End If
+
+                        If Not IsNothing(prpfTyp) Then
+                            .Tags.Add("PRPF", CStr(prpfTyp))
+                        End If
+
+                        If Not IsNothing(pName) Then
+                            .Tags.Add("PNM", pName)
+                        End If
+
+                        If Not IsNothing(vName) Then
+                            .Tags.Add("VNM", vName)
+                        End If
+
+                        If Not IsNothing(chartTyp) Then
+                            .Tags.Add("CHT", CStr(chartTyp))
+                        End If
+
+                        If Not IsNothing(auswahl) Then
+                            .Tags.Add("ASW", CStr(auswahl))
+                        End If
+
+                        .Tags.Add("COL", "")
+
+                    End With
+                End If
+
+            End If
+
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt aus dem Namen eines Charts die Informationen, die benötigt werden, um ein PPTShape aus der Smart-PPT heraus zu aktualisieren ...
+    ''' </summary>
+    ''' <param name="chtObjName"></param>
+    ''' <param name="prpfTyp"></param>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="auswahl"></param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeChartInfosFromName(ByVal chtObjName As String, _
+                                              ByRef prpfTyp As Integer, _
+                                              ByRef pName As String, _
+                                              ByRef vName As String, _
+                                              ByRef chartTyp As Integer, _
+                                              ByRef auswahl As Integer)
+
+
+        Dim tmpStr() As String = chtObjName.Split(New Char() {CChar("#")})
+
+        ' bestimme, ob es sich um ein pf oder pr Diagramm handelt ...  
+
+        If tmpStr(0) = "pr" Then
+            ' bestimme den Charttyp ...
+            prpfTyp = ptChartType.project
+
+            chartTyp = CInt(tmpStr(1))
+
+            ' bestimme pName und vName 
+            Dim fullName As String = tmpStr(2)
+
+            If fullName.Contains("[") And fullName.Contains("]") Then
+                Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
+                pName = tmpstr1(0)
+                vName = tmpstr1(1)
+            Else
+                pName = fullName
+                vName = ""
+            End If
+
+            ' bestimme, um welche Auswahl es sich handelt ... 
+            auswahl = CInt(tmpStr(3))
+        ElseIf tmpStr(0) = "pf" Then
+
+            prpfTyp = ptChartType.portfolio
+            ' noch nicht implementiert ... 
+        Else
+
+        End If
+
+
+
+
+    End Sub
     Public Sub PPTstarten()
+
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
             pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
