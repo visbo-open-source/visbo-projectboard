@@ -515,7 +515,6 @@ Public Class frmNameSelection
     ''' <remarks></remarks>
     Private Sub frmShowPlanElements_Load(sender As Object, e As EventArgs) Handles Me.Load
 
-        Dim auswahl As Integer
 
         If frmCoord(PTfrm.listselP, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.listselP, PTpinfo.top))
@@ -539,7 +538,7 @@ Public Class frmNameSelection
 
         Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
                             selectedPhases, selectedMilestones, _
-                            selectedRoles, selectedCosts, auswahl)
+                            selectedRoles, selectedCosts)
 
 
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
@@ -1874,7 +1873,6 @@ Public Class frmNameSelection
 
     Private Sub filterDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles filterDropbox.SelectedIndexChanged
 
-        Dim auswahl As Integer
         If Me.menuOption = PTmenue.filterdefinieren Then
 
             Dim fName As String = filterDropbox.SelectedItem.ToString
@@ -1883,7 +1881,7 @@ Public Class frmNameSelection
             ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
             Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
                                     selectedPhases, selectedMilestones, _
-                                    selectedRoles, selectedCosts, auswahl)
+                                    selectedRoles, selectedCosts)
             If Me.rdbPhases.Checked Then
                 Call rebuildFormerState(PTauswahlTyp.phase)
             ElseIf Me.rdbMilestones.Checked Then
@@ -1907,7 +1905,7 @@ Public Class frmNameSelection
             ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
             Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
                                     selectedPhases, selectedMilestones, _
-                                    selectedRoles, selectedCosts, auswahl)
+                                    selectedRoles, selectedCosts)
             If Me.rdbPhases.Checked Then
                 Call rebuildFormerState(PTauswahlTyp.phase)
             ElseIf Me.rdbMilestones.Checked Then

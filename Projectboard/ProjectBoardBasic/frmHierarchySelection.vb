@@ -453,16 +453,21 @@ Public Class frmHierarchySelection
                     Throw New ArgumentException("Fehler beim Lesen des áusgewählten ReportProfils")
                 End If
             Else
-                Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, auswahl)
+
+                Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, _
+                                        selectedMilestones, selectedRoles, selectedCosts)
                 ' tk 8.4.17
                 ' hier werden nur Phasen und Meilensteine selektiert: deswegen dürfen hier die anderen Collections nicht zählen
                 selectedBUs.Clear()
                 selectedTyps.Clear()
                 selectedRoles.Clear()
                 selectedCosts.Clear()
+
             End If
 
         End If
+
+        auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
         Select Case auswahl
             Case PTProjektType.nameList
@@ -478,20 +483,20 @@ Public Class frmHierarchySelection
                 Me.rdbProjStruktTyp.Checked = True
 
                 Call buildHryTreeViewNew(auswahl)
-                ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                    hryTreeView.ExpandAll()
-                End If
+                '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                '    hryTreeView.ExpandAll()
+                'End If
 
             Case PTProjektType.projekt
 
                 Me.rdbProjStruktProj.Checked = True
 
                 Call buildHryTreeViewNew(auswahl)
-                ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                    hryTreeView.ExpandAll()
-                End If
+                '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                '    hryTreeView.ExpandAll()
+                'End If
 
             Case Else
                 selectedPhases.Clear()
@@ -2483,12 +2488,12 @@ Public Class frmHierarchySelection
     ''' <remarks></remarks>
     Private Sub auswLaden_Click(sender As Object, e As EventArgs) Handles auswLaden.Click
 
-      
+        Dim missingProjCollection As Collection
 
         If Me.menuOption = PTmenue.filterdefinieren Then
 
-
             Dim fName As String
+
 
             Try
                 fName = filterDropbox.SelectedItem.ToString
@@ -2497,7 +2502,11 @@ Public Class frmHierarchySelection
                 ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
                 Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
                                         selectedPhases, selectedMilestones, _
-                                        selectedRoles, selectedCosts, auswahl)
+                                        selectedRoles, selectedCosts)
+
+                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+
+                missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
                 If auswahl = PTProjektType.nameList Then
                     Me.rdbNameList.Checked = True
@@ -2549,7 +2558,13 @@ Public Class frmHierarchySelection
                 ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
                 Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
                                         selectedPhases, selectedMilestones, _
-                                        selectedRoles, selectedCosts, auswahl)
+                                        selectedRoles, selectedCosts)
+
+                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
+                                       selectedRoles, selectedCosts)
+
+                missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
+                                                    selectedRoles, selectedCosts)
 
                 If auswahl = PTProjektType.nameList Then
                     Me.rdbNameList.Checked = True
@@ -2816,23 +2831,33 @@ Public Class frmHierarchySelection
             End If
 
             Select Case auswahl
+
                 Case PTProjektType.nameList
 
-                    Me.rdbNameList.Checked = True
+                    Me.rdbMilestones.Visible = True
+                    Me.rdbPhases.Visible = True
+                    Me.pictureMilestones.Visible = True
+                    Me.picturePhasen.Visible = True
 
                     Call buildHryTreeViewNew(auswahl)
 
 
                 Case PTProjektType.vorlage
 
+                    Me.rdbMilestones.Visible = False
+                    Me.rdbPhases.Visible = False
+                    Me.pictureMilestones.Visible = False
+                    Me.picturePhasen.Visible = False
+
                     Me.rdbProjStruktTyp.Checked = True
+                    ' Call buildHryTreeViewNew(auswahl)
+
                     If awinSettings.englishLanguage Then
                         statusLabel.Text = "only as Project-Structur possible"
                     Else
-                        statusLabel.Text = "Elemente können nur in Projekt-Struktur angezeigt werden"
+                        statusLabel.Text = "Elemente können nur in der Projekt-Struktur angezeigt werden"
                     End If
 
-                    Call buildHryTreeViewNew(auswahl)
                     ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                     'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                     '    hryTreeView.ExpandAll()
@@ -2840,14 +2865,20 @@ Public Class frmHierarchySelection
 
                 Case PTProjektType.projekt
 
+                    Me.rdbMilestones.Visible = False
+                    Me.rdbPhases.Visible = False
+                    Me.pictureMilestones.Visible = False
+                    Me.picturePhasen.Visible = False
+
                     Me.rdbProjStruktProj.Checked = True
+                    'Call buildHryTreeViewNew(auswahl)
 
                     If awinSettings.englishLanguage Then
                         statusLabel.Text = "only as Project-Structur possible"
                     Else
-                        statusLabel.Text = "Elemente können nur in Projekt-Struktur angezeigt werden"
+                        statusLabel.Text = "Elemente können nur in der Projekt-Struktur angezeigt werden"
                     End If
-                    Call buildHryTreeViewNew(auswahl)
+
                     ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                     'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                     '    hryTreeView.ExpandAll()
@@ -2986,6 +3017,11 @@ Public Class frmHierarchySelection
 
         If rdbProjStruktProj.Checked Then
 
+            Me.rdbMilestones.Visible = False
+            Me.rdbPhases.Visible = False
+            Me.pictureMilestones.Visible = False
+            Me.picturePhasen.Visible = False
+
             If selectedBUs.Count = 0 And _
                 selectedTyps.Count = 0 And _
                 selectedPhases.Count = 0 And _
@@ -3000,24 +3036,21 @@ Public Class frmHierarchySelection
             Select Case auswahl
                 Case PTProjektType.nameList
 
-                      Me.rdbProjStruktProj.Checked = True
+                    'Me.rdbProjStruktProj.Checked = True
 
                     Call buildHryTreeViewNew(PTProjektType.projekt)
 
 
                 Case PTProjektType.vorlage
 
-                    Me.rdbProjStruktProj.Checked = True
+                    'Me.rdbProjStruktProj.Checked = True
 
                     Call buildHryTreeViewNew(PTProjektType.projekt)
-                    ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                    'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                    '    hryTreeView.ExpandAll()
-                    'End If
+
 
                 Case PTProjektType.projekt
 
-                    Me.rdbProjStruktProj.Checked = True
+                    'Me.rdbProjStruktProj.Checked = True
 
                     Call buildHryTreeViewNew(auswahl)
                     ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
@@ -3033,10 +3066,10 @@ Public Class frmHierarchySelection
                     selectedRoles.Clear()
                     selectedCosts.Clear()
 
-                    Me.rdbNameList.Checked = True
-                    Me.rdbPhases.Checked = True
+                    'Me.rdbNameList.Checked = True
+                    'Me.rdbPhases.Checked = True
 
-                    Call buildHryTreeViewNew(PTProjektType.nameList)
+                    Call buildHryTreeViewNew(PTProjektType.projekt)
 
             End Select
 
@@ -3049,6 +3082,11 @@ Public Class frmHierarchySelection
         Dim auswahl As Integer = -1
 
         If rdbProjStruktTyp.Checked Then
+
+            Me.rdbMilestones.Visible = False
+            Me.rdbPhases.Visible = False
+            Me.pictureMilestones.Visible = False
+            Me.picturePhasen.Visible = False
 
             If selectedBUs.Count = 0 And _
                  selectedTyps.Count = 0 And _
@@ -3064,14 +3102,14 @@ Public Class frmHierarchySelection
             Select Case auswahl
                 Case PTProjektType.nameList
 
-                    Me.rdbProjStruktTyp.Checked = True
+                    'Me.rdbProjStruktTyp.Checked = True
 
                     Call buildHryTreeViewNew(PTProjektType.vorlage)
 
 
                 Case PTProjektType.vorlage
 
-                    Me.rdbProjStruktTyp.Checked = True
+                    'Me.rdbProjStruktTyp.Checked = True
 
                     Call buildHryTreeViewNew(auswahl)
                     ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
@@ -3083,12 +3121,18 @@ Public Class frmHierarchySelection
 
                     Me.rdbProjStruktProj.Checked = True
 
-                    Call buildHryTreeViewNew(auswahl)
+                    'Call buildHryTreeViewNew(auswahl)
+
+                    If awinSettings.englishLanguage Then
+                        statusLabel.Text = "only as Project-Structur possible"
+                    Else
+                        statusLabel.Text = "Elemente können nur in Projekt-Struktur angezeigt werden"
+                    End If
+
                     '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                     'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                     '    hryTreeView.ExpandAll()
                     'End If
-
                 Case Else
 
                     Call MsgBox("Fehler !!!")
@@ -3099,10 +3143,10 @@ Public Class frmHierarchySelection
                     selectedRoles.Clear()
                     selectedCosts.Clear()
 
-                    Me.rdbNameList.Checked = True
-                    Me.rdbPhases.Checked = True
+                    'Me.rdbNameList.Checked = True
+                    'Me.rdbPhases.Checked = True
 
-                    Call buildHryTreeViewNew(PTProjektType.nameList)
+                    Call buildHryTreeViewNew(PTProjektType.vorlage)
 
             End Select
 
@@ -3189,76 +3233,78 @@ Public Class frmHierarchySelection
         statusLabel.Text = ""
         filterBox.Enabled = True
 
-        If Me.rdbNameList.Checked And Me.rdbPhases.Checked Then
-            ' clear Listbox1 
-            If awinSettings.englishLanguage Then
-                headerLine.Text = "Phases"
+        If Me.rdbNameList.Checked Then
+
+            If Me.rdbPhases.Checked Then
+                ' clear Listbox1 
+                If awinSettings.englishLanguage Then
+                    headerLine.Text = "Phases"
+                Else
+                    headerLine.Text = "Phasen"
+                End If
+
+                filterBox.Text = ""
+
+
+                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                    ' immer die AlleProjekte hernehmen 
+                    If selectedProjekte.Count > 0 Then
+                        allPhases = selectedProjekte.getPhaseNames
+                    ElseIf AlleProjekte.Count > 0 Then
+                        allPhases = AlleProjekte.getPhaseNames
+                    Else
+                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                        allPhases.Clear()
+                    End If
+
+                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                    ' 
+                    If selectedProjekte.Count > 0 Then
+                        allPhases = selectedProjekte.getPhaseNames
+                    Else
+                        ' eigentlich sollten hier alle Phasen der Datenbank stehen ... 
+                        For i As Integer = 1 To PhaseDefinitions.Count
+                            Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                            If Not allPhases.Contains(tmpName) Then
+                                allPhases.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                Else
+                    ' alle anderen Optionen
+                    If selectedProjekte.Count > 0 Then
+                        allPhases = selectedProjekte.getPhaseNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allPhases = ShowProjekte.getPhaseNames
+                    Else
+                        For i As Integer = 1 To PhaseDefinitions.Count
+                            Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                            If Not allPhases.Contains(tmpName) Then
+                                allPhases.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                End If
+
+
+                Call rebuildFormerState(PTauswahlTyp.phase)
+
             Else
-                headerLine.Text = "Phasen"
+
+                ' Merken welches die selektierten Phasen waren 
+                selectedPhases.Clear()
+                For Each tN As TreeNode In hryTreeView.Nodes
+                    If tN.Checked Then
+                        selectedPhases.Add(tN.Name, tN.Name)
+                    End If
+                Next
+
             End If
 
-            filterBox.Text = ""
-
-
-            If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                ' immer die AlleProjekte hernehmen 
-                If selectedProjekte.Count > 0 Then
-                    allPhases = selectedProjekte.getPhaseNames
-                ElseIf AlleProjekte.Count > 0 Then
-                    allPhases = AlleProjekte.getPhaseNames
-                Else
-                    ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
-                    allPhases.Clear()
-                End If
-
-            ElseIf Me.menuOption = PTmenue.filterdefinieren Then
-                ' 
-                If selectedProjekte.Count > 0 Then
-                    allPhases = selectedProjekte.getPhaseNames
-                Else
-                    ' eigentlich sollten hier alle Phasen der Datenbank stehen ... 
-                    For i As Integer = 1 To PhaseDefinitions.Count
-                        Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                        If Not allPhases.Contains(tmpName) Then
-                            allPhases.Add(tmpName, tmpName)
-                        End If
-                    Next
-                End If
-
-            Else
-                ' alle anderen Optionen
-                If selectedProjekte.Count > 0 Then
-                    allPhases = selectedProjekte.getPhaseNames
-                ElseIf ShowProjekte.Count > 0 Then
-                    allPhases = ShowProjekte.getPhaseNames
-                Else
-                    For i As Integer = 1 To PhaseDefinitions.Count
-                        Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                        If Not allPhases.Contains(tmpName) Then
-                            allPhases.Add(tmpName, tmpName)
-                        End If
-                    Next
-                End If
-
-            End If
-
-
-            Call rebuildFormerState(PTauswahlTyp.phase)
-
-
-            ' Merken welches die selektierten Phasen waren 
-            selectedPhases.Clear()
-            For Each tN As TreeNode In hryTreeView.Nodes
-                If tN.Checked Then
-                    selectedPhases.Add(tN.Name, tN.Name)
-                End If
-            Next
 
         End If
-
-        ' Merken, was ggf. das Filterkriterium war 
-        'sKeyPhases = filterBox.Text
-
 
     End Sub
 
@@ -3268,6 +3314,7 @@ Public Class frmHierarchySelection
         filterBox.Enabled = True
 
         If Me.rdbNameList.Checked Then
+
             If Me.rdbMilestones.Checked Then
                 ' clear Listbox1 
                 If awinSettings.englishLanguage Then
@@ -3322,6 +3369,9 @@ Public Class frmHierarchySelection
 
                 Call rebuildFormerState(PTauswahlTyp.meilenstein)
 
+            Else
+
+
                 ' Merken welches die selektierten Meilensteine waren 
                 selectedMilestones.Clear()
                 For Each tN As TreeNode In hryTreeView.Nodes
@@ -3331,67 +3381,67 @@ Public Class frmHierarchySelection
                 Next
 
 
-            ElseIf Me.rdbPhases.Checked Then
-                ' clear Listbox1 
-                If awinSettings.englishLanguage Then
-                    headerLine.Text = "Phases"
-                Else
-                    headerLine.Text = "Phasen"
-                End If
+                ''ElseIf Me.rdbPhases.Checked Then
+                ''    ' clear Listbox1 
+                ''    If awinSettings.englishLanguage Then
+                ''        headerLine.Text = "Phases"
+                ''    Else
+                ''        headerLine.Text = "Phasen"
+                ''    End If
 
-                filterBox.Text = ""
+                ''    filterBox.Text = ""
 
-                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                    ' immer die AlleProjekte hernehmen 
-                    If selectedProjekte.Count > 0 Then
-                        allPhases = selectedProjekte.getPhaseNames
-                    ElseIf AlleProjekte.Count > 0 Then
-                        allPhases = AlleProjekte.getPhaseNames
-                    Else
-                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
-                        allPhases.Clear()
-                    End If
+                ''    If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                ''        ' immer die AlleProjekte hernehmen 
+                ''        If selectedProjekte.Count > 0 Then
+                ''            allPhases = selectedProjekte.getPhaseNames
+                ''        ElseIf AlleProjekte.Count > 0 Then
+                ''            allPhases = AlleProjekte.getPhaseNames
+                ''        Else
+                ''            ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                ''            allPhases.Clear()
+                ''        End If
 
-                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
-                    ' 
-                    If selectedProjekte.Count > 0 Then
-                        allPhases = selectedProjekte.getPhaseNames
-                    Else
-                        ' eigentlich sollten hier alle Meilensteine der Datenbank stehen ... 
-                        For i As Integer = 1 To PhaseDefinitions.Count
-                            Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                            If Not allPhases.Contains(tmpName) Then
-                                allPhases.Add(tmpName, tmpName)
-                            End If
-                        Next
-                    End If
+                ''    ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                ''        ' 
+                ''        If selectedProjekte.Count > 0 Then
+                ''            allPhases = selectedProjekte.getPhaseNames
+                ''        Else
+                ''            ' eigentlich sollten hier alle Meilensteine der Datenbank stehen ... 
+                ''            For i As Integer = 1 To PhaseDefinitions.Count
+                ''                Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                ''                If Not allPhases.Contains(tmpName) Then
+                ''                    allPhases.Add(tmpName, tmpName)
+                ''                End If
+                ''            Next
+                ''        End If
 
-                Else
-                    ' alle anderen Optionen
-                    If selectedProjekte.Count > 0 Then
-                        allPhases = selectedProjekte.getPhaseNames
-                    ElseIf ShowProjekte.Count > 0 Then
-                        allPhases = ShowProjekte.getPhaseNames
-                    Else
-                        For i As Integer = 1 To PhaseDefinitions.Count
-                            Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                            If Not allPhases.Contains(tmpName) Then
-                                allPhases.Add(tmpName, tmpName)
-                            End If
-                        Next
-                    End If
+                ''    Else
+                ''        ' alle anderen Optionen
+                ''        If selectedProjekte.Count > 0 Then
+                ''            allPhases = selectedProjekte.getPhaseNames
+                ''        ElseIf ShowProjekte.Count > 0 Then
+                ''            allPhases = ShowProjekte.getPhaseNames
+                ''        Else
+                ''            For i As Integer = 1 To PhaseDefinitions.Count
+                ''                Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                ''                If Not allPhases.Contains(tmpName) Then
+                ''                    allPhases.Add(tmpName, tmpName)
+                ''                End If
+                ''            Next
+                ''        End If
 
-                End If
+                ''    End If
 
-                Call rebuildFormerState(PTauswahlTyp.meilenstein)
+                ''    Call rebuildFormerState(PTauswahlTyp.meilenstein)
 
-                ' Merken welches die selektierten Meilensteine waren 
-                selectedPhases.Clear()
-                For Each tN As TreeNode In hryTreeView.Nodes
-                    If tN.Checked Then
-                        selectedPhases.Add(tN.Name, tN.Name)
-                    End If
-                Next
+                ''    ' Merken welches die selektierten Meilensteine waren 
+                ''    selectedPhases.Clear()
+                ''    For Each tN As TreeNode In hryTreeView.Nodes
+                ''        If tN.Checked Then
+                ''            selectedPhases.Add(tN.Name, tN.Name)
+                ''        End If
+                ''    Next
 
 
             End If
