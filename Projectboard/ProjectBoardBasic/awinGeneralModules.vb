@@ -1064,10 +1064,6 @@ Public Module awinGeneralModules
                     xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
                     myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-
-
-                    ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
-
                     Call logfileOpen()
 
                     Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)

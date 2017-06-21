@@ -216,7 +216,31 @@ Public Module Module1
    
     Public Const maxProjektdauer As Integer = 60
 
-    Public Enum ptChartType
+    
+    Public Enum ptReportBigTypes
+        charts = 0
+        tables = 1
+        components = 2
+    End Enum
+
+    Public Enum ptReportTables
+        prMilestones = 0
+        pfMilestones = 1
+    End Enum
+
+    Public Enum ptReportComponents
+        prAmpel = 0
+        prStand = 1
+        prName = 2
+        prCustomField = 3
+        prAmpelText = 4
+        prDescription = 5
+        prBusinessUnit = 6
+        prLaufzeit = 7
+        prVerantwortlich = 8
+    End Enum
+
+    Public Enum ptPRPFType
         project = 0
         portfolio = 1
     End Enum
@@ -267,7 +291,7 @@ Public Module Module1
         mptPrCharts = 13
         cstMissingDefs = 15
     End Enum
-    
+
     Public Enum ptWriteProtectionType
         project = 0
         scenario = 1
@@ -358,6 +382,7 @@ Public Module Module1
         ZeitRisiko = 11
         FitRisikoVol = 15
         Dependencies = 16
+        MilestoneTrendanalysis = 17
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
@@ -477,7 +502,7 @@ Public Module Module1
     End Enum
     Public Enum PTlicense
         swimlanes = 0
-       
+
     End Enum
 
     Public Enum PTpptAnnotationType
@@ -954,7 +979,7 @@ Public Module Module1
 
                     ' jetzt für alle selektierten Charts bestimmen, welche Projekte dazu beitragen ... 
 
-                        
+
                     Dim allChartsOnSheet As Excel.ChartObjects = _
                        CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
@@ -1266,7 +1291,7 @@ Public Module Module1
         Dim chtobjName As String
         Dim tmpStr(20) As String
 
-        
+
         found = False
 
 
@@ -2190,7 +2215,7 @@ Public Module Module1
         Call MsgBox("del gedrückt ...")
     End Sub
 
-   
+
 
 
     ''' <summary>
@@ -2365,11 +2390,11 @@ Public Module Module1
         End Select
 
         Try
-            
+
 
             shapeType = kindOfShape(pShape)
 
-                ' neu 
+            ' neu 
 
             If isProjectType(shapeType) And pShape.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
 
@@ -2379,7 +2404,7 @@ Public Module Module1
                 projectboardShapes.remove(pShape)
             End If
 
-                ' Ende neu 
+            ' Ende neu 
 
 
         Catch ex As Exception
@@ -2417,7 +2442,7 @@ Public Module Module1
         Dim typus As Integer
 
         Dim ix As Integer
-        
+
 
 
         Try
@@ -2734,7 +2759,7 @@ Public Module Module1
                 calcHryFullname = "[" & pvKennung & "]" & breadcrumb & "#" & elemName
             End If
         End If
-        
+
 
     End Function
 
@@ -2865,7 +2890,7 @@ Public Module Module1
                     tmpBC = tmpBC & "#" & tmpstr(i)
                 End If
             Next
-            
+
             Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb, type, pvName)
         Else
             elemName = "?"
@@ -3297,7 +3322,7 @@ Public Module Module1
 
     '' ''End Sub
 
-    
+
 
     ''' <summary>
     ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName
@@ -3382,7 +3407,7 @@ Public Module Module1
                         Catch ex As Exception
                             .Tags.Add("CRD", Date.Now.ToString)
                         End Try
-                        
+
                     End If
 
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)
@@ -3504,59 +3529,96 @@ Public Module Module1
     ''' <param name="qualifier"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, _
-                                     ByVal kennzeichnung As String, ByVal qualifier As String, ByVal qualifier2 As String)
+                                     ByVal kennzeichnung As String, ByVal qualifier As String, ByVal qualifier2 As String, _
+                                     ByVal bigType As Integer, ByVal detailID As Integer)
 
         Dim chtObjName As String = ""
         Try
+
             If Not IsNothing(pptShape) Then
 
-                If pptShape.HasChart = MsoTriState.msoTrue Then
-                    Dim pptChart As PowerPoint.Chart = pptShape.Chart
-                    chtObjName = pptChart.Name
+                ' das bekommen alle ...
+                With pptShape
+                    If Not IsNothing(qualifier) Then
+                        .Tags.Add("Q1", qualifier)
+                    End If
 
-                    Dim auswahl As Integer = -1
-                    Dim prpfTyp As Integer = -1
-                    Dim pName As String = ""
-                    Dim vName As String = ""
-                    Dim chartTyp As Integer = -1
+                    If Not IsNothing(qualifier2) Then
+                        .Tags.Add("Q2", qualifier2)
+                    End If
+
+                    If Not IsNothing(bigType) Then
+                        .Tags.Add("BID", bigType.ToString)
+                    End If
+
+                    If Not IsNothing(detailID) Then
+                        .Tags.Add("DID", detailID.ToString)
+                    End If
 
 
-                    ' der Chart-ObjectName enthält sehr viel ..
-                    'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
-                    Call bestimmeChartInfosFromName(chtObjName, prpfTyp, pName, vName, chartTyp, auswahl)
+                End With
+
+                If bigType = ptReportBigTypes.charts Then
+
+                    If pptShape.HasChart = MsoTriState.msoTrue Then
+                        Dim pptChart As PowerPoint.Chart = pptShape.Chart
+                        chtObjName = pptChart.Name
+
+                        Dim auswahl As Integer = -1
+                        Dim prpfTyp As Integer = -1
+                        Dim pName As String = ""
+                        Dim vName As String = ""
+                        Dim chartTyp As Integer = -1
+                        Dim prcTyp As Integer = -1
 
 
-                    With pptShape
+                        ' der Chart-ObjectName enthält sehr viel ..
+                        'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
+                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pName, vName, chartTyp, auswahl)
 
 
-                        If Not IsNothing(chtObjName) Then
-                            .Tags.Add("CHON", chtObjName)
-                        End If
+                        With pptShape
 
-                        If Not IsNothing(prpfTyp) Then
-                            .Tags.Add("PRPF", CStr(prpfTyp))
-                        End If
+                            
+                            If Not IsNothing(chtObjName) Then
+                                .Tags.Add("CHON", chtObjName)
+                            End If
 
-                        If Not IsNothing(pName) Then
-                            .Tags.Add("PNM", pName)
-                        End If
+                            If Not IsNothing(prpfTyp) Then
+                                .Tags.Add("PRPF", CStr(prpfTyp))
+                            End If
 
-                        If Not IsNothing(vName) Then
-                            .Tags.Add("VNM", vName)
-                        End If
+                            If Not IsNothing(pName) Then
+                                .Tags.Add("PNM", pName)
+                            End If
 
-                        If Not IsNothing(chartTyp) Then
-                            .Tags.Add("CHT", CStr(chartTyp))
-                        End If
+                            If Not IsNothing(vName) Then
+                                .Tags.Add("VNM", vName)
+                            End If
 
-                        If Not IsNothing(auswahl) Then
-                            .Tags.Add("ASW", CStr(auswahl))
-                        End If
+                            If Not IsNothing(chartTyp) Then
+                                .Tags.Add("CHT", CStr(chartTyp))
+                            End If
 
-                        .Tags.Add("COL", "")
+                            If Not IsNothing(auswahl) Then
+                                .Tags.Add("ASW", CStr(auswahl))
+                            End If
 
-                    End With
+                            .Tags.Add("COL", "")
+
+                        End With
+                    End If
+
+                ElseIf bigType = ptReportBigTypes.tables Then
+                    ' sonst keine weiteren Dinge ... 
+
+                ElseIf bigType = ptReportBigTypes.components Then
+                    ' sonst keine weiteren Dinge 
+
+                Else
+                    ' noch nicht implementiert 
                 End If
+
 
             End If
 
@@ -3578,6 +3640,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub bestimmeChartInfosFromName(ByVal chtObjName As String, _
                                               ByRef prpfTyp As Integer, _
+                                              ByRef prcTyp As Integer, _
                                               ByRef pName As String, _
                                               ByRef vName As String, _
                                               ByRef chartTyp As Integer, _
@@ -3590,9 +3653,20 @@ Public Module Module1
 
         If tmpStr(0) = "pr" Then
             ' bestimme den Charttyp ...
-            prpfTyp = ptChartType.project
+            prpfTyp = ptPRPFType.project
 
             chartTyp = CInt(tmpStr(1))
+
+            If chartTyp = PTprdk.KostenBalken Or _
+                chartTyp = PTprdk.KostenPie Then
+                prcTyp = ptElementTypen.costs
+            ElseIf chartTyp = PTprdk.PersonalBalken Or _
+                chartTyp = PTprdk.PersonalPie Then
+                prcTyp = ptElementTypen.roles
+            Else
+                prcTyp = ptElementTypen.ergebnis
+            End If
+
 
             ' bestimme pName und vName 
             Dim fullName As String = tmpStr(2)
@@ -3610,7 +3684,7 @@ Public Module Module1
             auswahl = CInt(tmpStr(3))
         ElseIf tmpStr(0) = "pf" Then
 
-            prpfTyp = ptChartType.portfolio
+            prpfTyp = ptPRPFType.portfolio
             ' noch nicht implementiert ... 
         Else
 

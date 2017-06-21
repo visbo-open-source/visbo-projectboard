@@ -1,8 +1,9 @@
 ﻿Imports Microsoft.Office.Interop
-Imports Microsoft.Office.Interop.Excel
+'Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
-Imports Microsoft.Office.Core
+Imports core = Microsoft.Office.Core
 Imports xlNS = Microsoft.Office.Interop.Excel
+Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports System.ComponentModel
 Imports Microsoft.VisualBasic.Constants
 
@@ -246,7 +247,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -534,7 +535,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -783,7 +784,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -1149,7 +1150,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -1521,6 +1522,409 @@ Public Module Projekte
 
     End Sub
 
+    Sub updatePPTProjectPfDiagram(ByVal hproj As clsProjekt, ByRef pptChart As pptNS.Chart, _
+                                  ByVal chartTyp As Integer, ByVal auswahl As Integer)
+
+        Dim i As Integer
+        Dim pName As String
+        Dim anzBubbles As Integer
+        Dim riskValues() As Double, bubbleValues() As Double, tempArray() As Double
+        Dim xAchsenValues() As Double
+        Dim nameValues() As String
+        Dim colorValues() As Object
+        Dim positionValues() As String
+        Dim showLabels As Boolean
+        Dim showNegativeValues As Boolean = False
+        Dim projektListe As New Collection
+        Dim tmpstr(5) As String
+        
+        Dim bubbleColor As Integer = 0
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+
+        Dim fontSize1 As Double = 12, fontSize2 As Double = 8
+
+        projektListe.Add(hproj.name)
+
+
+        pName = hproj.name
+
+
+        ' es handelt sich garantiert nur um ein Projekt  
+        Try
+            ReDim riskValues(0)
+            ReDim xAchsenValues(0)
+            ReDim bubbleValues(0)
+            ReDim nameValues(0)
+            ReDim colorValues(0)
+            ReDim PfChartBubbleNames(0)
+            ReDim positionValues(0)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in UpdatePortfolioDiagramm " & ex.Message)
+        End Try
+
+
+        ' neuer Typ: 8.3.14 Abhängigkeiten
+        Dim activeDepIndex As Integer           ' Kennzahl: wieviel Projekte sind abhängig, wie stark strahlt das Projekt 
+        Dim passiveDepIndex As Integer          ' Kennzahl: von wievielen Projekten abhängig
+        Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
+        Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
+
+        anzBubbles = 0
+
+
+
+
+        For i = 1 To projektListe.Count
+
+            pName = CStr(projektListe.Item(i))
+
+            Try
+
+                With hproj
+
+                    ' neuer Typ: 8.3.14 Abhängigkeiten
+                    If chartTyp = PTpfdk.Dependencies Then
+                        ' wird um eins erhöht , damit es nicht auf der Nullinie liegt 
+                        activeDepIndex = allDependencies.activeIndex(pName, PTdpndncyType.inhalt) + 1
+                        activeNumber = allDependencies.activeNumber(pName, PTdpndncyType.inhalt)
+                        ' wird um eins erhöht , damit es nicht auf der Nullinie liegt 
+                        passiveDepIndex = allDependencies.passiveIndex(pName, PTdpndncyType.inhalt) + 1
+                        passiveNumber = allDependencies.passiveNumber(pName, PTdpndncyType.inhalt)
+                        riskValues(anzBubbles) = activeDepIndex
+                    Else
+                        riskValues(anzBubbles) = .Risiko
+                    End If
+
+                    If bubbleColor = PTpfdk.ProjektFarbe Then
+
+                        ' Projekttyp wird farblich gekennzeichent
+                        colorValues(anzBubbles) = .farbe
+
+                    Else ' bubbleColor ist AmpelFarbe
+
+                        ' ProjektStatus wird farblich gekennzeichnet
+                        Select Case .ampelStatus
+                            Case 0
+                                '"Ampel nicht bewertet"
+                                'colorValues(anzBubbles) = awinSettings.AmpelNichtBewertet
+                                colorValues(anzBubbles) = System.Drawing.Color.Gray.ToArgb
+
+                            Case 1
+                                '"Ampel Grün"
+                                'colorValues(anzBubbles) = awinSettings.AmpelGruen
+                                colorValues(anzBubbles) = System.Drawing.Color.Green.ToArgb
+                            Case 2
+                                '"Ampel Gelb"
+                                'colorValues(anzBubbles) = awinSettings.AmpelGelb
+                                colorValues(anzBubbles) = System.Drawing.Color.Yellow
+                            Case 3
+                                '"Ampel Rot"
+                                'colorValues(anzBubbles) = awinSettings.AmpelRot
+                                colorValues(anzBubbles) = System.Drawing.Color.Red
+                        End Select
+                    End If
+
+                    Select Case chartTyp
+                        Case PTprdk.StrategieRisiko
+                            'Strategie
+                            xAchsenValues(anzBubbles) = .StrategicFit
+                            bubbleValues(anzBubbles) = .ProjectMarge
+                            nameValues(anzBubbles) = .name
+                            PfChartBubbleNames(anzBubbles) = Format(bubbleValues(anzBubbles), "##0.#%")
+
+
+                        Case PTprdk.FitRisikoVol
+
+                            xAchsenValues(anzBubbles) = .StrategicFit
+                            bubbleValues(anzBubbles) = .volume
+                            nameValues(anzBubbles) = .name
+                            PfChartBubbleNames(anzBubbles) = hproj.name & _
+                                    " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
+
+
+                        Case PTprdk.ZeitRisiko
+
+                            xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit
+                            bubbleValues(anzBubbles) = System.Math.Round(.volume / 10000) * 10
+                            'tmpstr = .name.Split(New Char() {" "}, 10)                             'Zeit/Risiko
+                            'nameValues(anzBubbles) = tmpstr(0) & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)" 
+                            nameValues(anzBubbles) = .name & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                                    " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
+
+                        Case PTprdk.ComplexRisiko
+
+                            xAchsenValues(anzBubbles) = .complexity                                'Complex
+                            bubbleValues(anzBubbles) = .volume                                     'Bubblegröße gemäß Volumen
+                            nameValues(anzBubbles) = .name
+                            PfChartBubbleNames(anzBubbles) = hproj.name & _
+                             " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
+
+
+                        Case PTprdk.Dependencies
+                            ' neuer Typ: 8.3.14 Abhängigkeiten
+
+                            xAchsenValues(anzBubbles) = passiveDepIndex                            'Abhängigkeiten
+                            bubbleValues(anzBubbles) = .StrategicFit
+                            nameValues(anzBubbles) = .name
+
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                                " (" & passiveNumber.ToString & ", " & activeNumber.ToString & ")"
+
+                    End Select
+                End With
+                anzBubbles = anzBubbles + 1
+            Catch ex As Exception
+
+            End Try
+        Next
+
+
+        ' bestimmen der besten Position für die Werte ...
+        Dim labelPosition(4) As String
+        labelPosition(0) = "oben"
+        labelPosition(1) = "rechts"
+        labelPosition(2) = "unten"
+        labelPosition(3) = "links"
+        labelPosition(4) = "mittig"
+
+        For i = 0 To anzBubbles - 1
+
+            positionValues(i) = pfchartIstFrei(i, xAchsenValues, riskValues)
+
+        Next
+
+
+        ReDim tempArray(anzBubbles - 1)
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
+
+        If projektListe.Count > 0 Then
+
+            With pptChart
+
+                '' bestimmen der Fontsize Größen 
+                'Try
+                '    If .HasTitle Then
+                '        Dim len As Integer = .ChartTitle.Text.Length
+                '        fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                '        fontSize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                '    End If
+                'Catch ex As Exception
+
+                'End Try
+
+                showLabels = True
+
+                ' Einstellungen der vorhandenen SeriesCollection merken
+
+                Dim pts As Excel.Points = CType(.SeriesCollection(1).Points, Excel.Points)
+                Dim dlFontSize As Double
+                Dim dlFontBackground As Double
+                Dim dlFontBold As Boolean
+                Dim dlFontColorIndex As Integer
+                Dim dlFontColor As Integer
+                Dim dlFontFontStyle As String = ""
+                Dim dlFontItalic As Boolean
+                Dim dlFontStrikethrough As Boolean
+                Dim dlFontSuperscript As Boolean
+                Dim dlFontSubscript As Boolean
+                'ur: 21.07.2015: Dim dlFontUnderline As Double
+
+                For i = 1 To pts.Count
+
+                    With .SeriesCollection(1).Points(i)
+
+                        Try
+                            If .HasDataLabel = True Then
+
+                                With .DataLabel
+                                    dlFontSize = CDbl(.Font.Size)
+                                    dlFontBackground = CDbl(.Font.Background)
+                                    dlFontBold = CBool(.Font.Bold)
+                                    dlFontColorIndex = CInt(.Font.ColorIndex)
+                                    dlFontFontStyle = CStr(.Font.FontStyle)
+                                    dlFontItalic = CBool(.Font.Italic)
+                                    dlFontStrikethrough = CBool(.Font.Strikethrough)
+                                    dlFontSubscript = CBool(.Font.Subscript)
+                                    dlFontSuperscript = CBool(.Font.Superscript)
+                                    'ur 21.07.2015 dlFontUnderline = CDbl(.Font.Underline)
+
+                                    dlFontSize = CDbl(.Font.Size)
+                                    If .Font.Color <> awinSettings.AmpelRot Then
+                                        dlFontColor = CInt(.Font.Color)
+                                    End If
+
+                                End With
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+                    End With
+
+                Next i
+
+
+
+                ' remove old series
+                Try
+                    Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
+                    Do While anz > 0
+                        .SeriesCollection(1).Delete()
+                        anz = anz - 1
+                    Loop
+                Catch ex As Exception
+
+                End Try
+
+
+
+                .SeriesCollection.NewSeries()
+                .SeriesCollection(1).name = "projectdiagram"
+                .SeriesCollection(1).ChartType = Excel.XlChartType.xlBubble3DEffect
+
+                For i = 1 To anzBubbles
+                    tempArray(i - 1) = xAchsenValues(i - 1)
+                Next i
+                .SeriesCollection(1).XValues = tempArray ' strategic
+
+                For i = 1 To anzBubbles
+                    tempArray(i - 1) = riskValues(i - 1)
+                Next i
+                .SeriesCollection(1).Values = tempArray
+
+                For i = 1 To anzBubbles
+                    If bubbleValues(i - 1) < 0.01 And bubbleValues(i - 1) > -0.01 Then
+                        tempArray(i - 1) = 0.01
+                    ElseIf bubbleValues(i - 1) < 0 Then
+                        ' negative Werte werden Positiv dargestellt mit roten Beschriftung siehe unten
+                        tempArray(i - 1) = System.Math.Abs(bubbleValues(i - 1))
+                    Else
+                        tempArray(i - 1) = bubbleValues(i - 1)
+                    End If
+                Next i
+
+
+                .SeriesCollection(1).BubbleSizes = tempArray
+
+                Dim series1 As Excel.Series = _
+                        CType(.SeriesCollection(1),  _
+                                Excel.Series)
+                Dim point1 As Excel.Point = _
+                            CType(series1.Points(1), Excel.Point)
+
+                'Dim testName As String
+
+                Dim bubblePoint As Excel.Point
+                For i = 1 To anzBubbles
+
+                    bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
+                        If showLabels Then
+                            Try
+                                .HasDataLabel = True
+
+                                With .DataLabel
+                                    .Text = PfChartBubbleNames(i - 1)
+                                    .Font.Size = dlFontSize
+                                    .Font.Background = dlFontBackground
+                                    .Font.Bold = dlFontBold
+                                    .Font.Color = dlFontColor
+                                    .Font.ColorIndex = dlFontColorIndex
+                                    .Font.FontStyle = dlFontFontStyle
+                                    .Font.Italic = dlFontItalic
+                                    .Font.Strikethrough = dlFontStrikethrough
+                                    .Font.Subscript = dlFontSubscript
+                                    .Font.Superscript = dlFontSuperscript
+                                    'ur: 21.07.2015: .Font.Underline = dlFontUnderline
+
+                                    'ur: 17.7.2014: fontsize kommt vom existierenden Chart
+                                    '.Font.Size = awinSettings.CPfontsizeItems
+
+                                    ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+
+                                    If bubbleValues(i - 1) < 0 Then
+                                        .Font.Color = awinSettings.AmpelRot
+
+                                    End If
+                                    Select Case positionValues(i - 1)
+                                        Case labelPosition(0)
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                                        Case labelPosition(1)
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionRight
+                                        Case labelPosition(2)
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionBelow
+                                        Case labelPosition(3)
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionLeft
+                                        Case Else
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
+                                    End Select
+                                End With
+                            Catch ex As Exception
+
+                            End Try
+                        Else
+                            .HasDataLabel = False
+                        End If
+
+                        .Interior.Color = colorValues(i - 1)
+
+                        ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+                        If bubbleValues(i - 1) < 0 Then
+                            '.DataLabel.Font.Color = awinSettings.AmpelRot
+                            .DataLabel.Font.Color = System.Drawing.Color.Red.ToArgb
+                        ElseIf bubbleValues(i - 1) > 0 Then
+                            '.DataLabel.Font.Color = awinSettings.AmpelGruen
+                            .DataLabel.Font.Color = System.Drawing.Color.Green.ToArgb
+                        Else
+                            '.DataLabel.Font.Color = System.Drawing.Color.Black
+                            .DataLabel.Font.Color = System.Drawing.Color.Black.ToArgb
+                        End If
+
+                    End With
+                Next i
+
+
+
+                '.ChartGroups(1).BubbleScale = sollte in Abhängigkeit der width gemacht werden 
+                With .ChartGroups(1)
+
+                    .BubbleScale = 20
+                    .SizeRepresents = Microsoft.Office.Interop.Excel.XlSizeRepresents.xlSizeIsArea
+
+                    If showNegativeValues Then
+                        .shownegativeBubbles = True
+                    Else
+                        .shownegativeBubbles = False
+                    End If
+                End With
+
+
+                'If .HasTitle Then
+                '    .ChartTitle.Text = diagramTitle
+                '    ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+                '    .ChartTitle.Font.Size = CSng(fontSize1)
+                '    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '        titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
+                '    ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '    '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '    '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '    '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                'End If
+
+            End With
+
+        End If
+
+
+
+    End Sub
     
     ''' <summary>
     ''' aktualisiert das Portfolio Einzelprojekt Chart 
@@ -2535,7 +2939,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3234,7 +3638,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3520,7 +3924,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -3648,9 +4052,9 @@ Public Module Projekte
                             .MarkerBackgroundColor = CInt(awinSettings.AmpelNichtBewertet)
 
                             With .Format.Line
-                                .Visible = MsoTriState.msoTrue
+                                .Visible = core.MsoTriState.msoTrue
                                 .ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
-                                .DashStyle = MsoLineDashStyle.msoLineDashDot
+                                .DashStyle = core.MsoLineDashStyle.msoLineDashDot
                             End With
                         End With
 
@@ -4155,6 +4559,213 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' aktualisiert in PPT die Balken Diagramme Rollen (PT oder T€) bzw. Kostenarten (T€)
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="pptChart"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <param name="auswahl"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePPTBalkenOfProject(ByVal hproj As clsProjekt, ByRef pptChart As pptNS.Chart, _
+                                             ByVal prcTyp As Integer, ByVal auswahl As Integer)
+
+
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
+        Dim plen As Integer
+        Dim i As Integer
+        Dim Xdatenreihe() As String
+        Dim tdatenreihe() As Double
+        Dim sumdatenreihe() As Double
+        'Dim hsum() As Double, gesamt_summe As Double
+        Dim anzElemente As Integer
+        Dim pkIndex As Integer = CostDefinitions.Count
+        Dim pstart As Integer
+        Dim ErgebnisListeRC As New Collection
+        Dim roleCostName As String
+        Dim zE As String = awinSettings.kapaEinheit
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+        Dim tmpCollection As New Collection
+        Dim maxlenTitle1 As Integer = 20
+
+        Dim chartType As core.XlChartType
+        Dim maxScale As Double
+
+        ' die ganzen Vor-Klärungen machen ...
+        With pptChart
+            chartType = .ChartType
+
+            'Dim refName As String = CStr(myChartData.Workbook.name)
+            'Dim refWorkbook As xlNS.Workbook = CType(myChartData.Workbook, xlNS.Workbook)
+            '.SetSourceData("C:\temp\Mappe1.xlsx")
+            'refName = CStr(myChartData.Workbook.name)
+
+
+            If CBool(.HasAxis(pptNS.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(pptNS.XlAxisType.xlValue), pptNS.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+                    maxScale = .MaximumScale
+                    .MaximumScaleIsAuto = False
+                End With
+
+            End If
+
+        End With
+
+
+        Dim pname As String = hproj.name
+
+        '
+        ' hole die Projektdauer
+        '
+        With hproj
+            plen = .anzahlRasterElemente
+            pstart = .Start
+        End With
+        '
+        ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
+        '
+        '
+        ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
+        '
+        If prcTyp = ptElementTypen.roles Then
+            ErgebnisListeRC = hproj.getRoleNames
+        Else
+            ErgebnisListeRC = hproj.getCostNames
+        End If
+
+        anzElemente = ErgebnisListeRC.Count
+
+
+
+
+        ReDim Xdatenreihe(plen - 1)
+        ReDim tdatenreihe(plen - 1)
+        ReDim sumdatenreihe(plen - 1)
+
+
+        For i = 1 To plen
+            Xdatenreihe(i - 1) = hproj.startDate.AddDays(-1 * hproj.startDate.Day + 1).AddMonths(i - 1).ToString("MMM yy", repCult)
+        Next i
+
+
+
+        With CType(pptChart, pptNS.Chart)
+
+            ' remove old series
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, pptNS.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+
+            For r = 1 To anzElemente
+                roleCostName = CStr(ErgebnisListeRC.Item(r))
+                If prcTyp = ptElementTypen.roles Then
+                    If auswahl = 1 Then
+                        tdatenreihe = hproj.getRessourcenBedarf(roleCostName)
+                    Else
+                        tdatenreihe = hproj.getPersonalKosten(roleCostName)
+                    End If
+                Else
+                    tdatenreihe = hproj.getKostenBedarf(roleCostName)
+                End If
+
+
+                For i = 0 To plen - 1
+                    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
+                Next
+
+
+                'series
+                With CType(CType(.SeriesCollection, pptNS.SeriesCollection).NewSeries, pptNS.Series)
+                    .Name = roleCostName
+                    If prcTyp = ptElementTypen.roles Then
+                        .Interior.Color = RoleDefinitions.getRoledef(roleCostName).farbe
+                    Else
+                        .Interior.Color = CostDefinitions.getCostdef(roleCostName).farbe
+                    End If
+                    .Values = tdatenreihe
+                    .XValues = Xdatenreihe
+                    '.ChartType = core.XlChartType.xlColumnStacked
+                    .ChartType = chartType
+                End With
+
+            Next r
+
+            If CBool(.HasAxis(pptNS.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(pptNS.XlAxisType.xlValue), pptNS.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+
+                    If sumdatenreihe.Max > maxScale * 1.07 Then
+                        .MaximumScale = sumdatenreihe.Max * 1.07
+                    End If
+
+                    ' alt
+
+                End With
+
+            End If
+
+            Dim gesamt_Summe As Double = sumdatenreihe.Sum
+
+            ' nur wenn es auch einen Titel gibt ... 
+            If .HasTitle Then
+                ' jetzt muss der Header bestimmt werden 
+                Dim tmpStr() As String = .ChartTitle.Text.Split(New Char() {CType("(", Char)})
+                titelTeile(0) = tmpStr(0).Trim
+
+                If prcTyp = ptElementTypen.roles Then
+                    If auswahl = 1 Then
+                        'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
+                        titelTeile(0) = titelTeile(0) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
+                        titelTeile(1) = ""
+
+                    ElseIf auswahl = 2 Then
+                        'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
+                        titelTeile(0) = titelTeile(0) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
+                        titelTeile(1) = ""
+                    Else
+                        'titelTeile(0) = "--- (T€)"
+                        titelTeile(1) = ""
+                    End If
+                Else
+                    ' jetzt muss das aus Kosten übernommen werden 
+                    'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = titelTeile(0) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
+                    titelTeile(1) = ""
+                End If
+
+                titelTeilLaengen(1) = titelTeile(1).Length
+                titelTeilLaengen(0) = titelTeile(0).Length
+                diagramTitle = titelTeile(0) & titelTeile(1)
+
+                .ChartTitle.Text = diagramTitle
+            End If
+
+
+        End With
+
+
+        Try
+            CType(pptChart.ChartData, pptNS.ChartData).Activate()
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Update: " & ex.Message)
+        End Try
+
+
+
+    End Sub
 
     ''' <summary>
     ''' aktualisiert das Info Chart "Ressourcen Bedarf eines Projektes
@@ -6515,7 +7126,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6558,9 +7169,9 @@ Public Module Projekte
                     .XValues = Xdatenreihe
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleTriangle
                     .MarkerSize = 3
-                    .MarkerForegroundColor = XlRgbColor.rgbDarkGreen
+                    .MarkerForegroundColor = xlNS.XlRgbColor.rgbDarkGreen
                     With .Format.Line
-                        .ForeColor.RGB = XlRgbColor.rgbDarkGreen
+                        .ForeColor.RGB = xlNS.XlRgbColor.rgbDarkGreen
                         .Weight = 3
                     End With
 
@@ -6577,9 +7188,9 @@ Public Module Projekte
                     .XValues = Xdatenreihe
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
                     .MarkerSize = 3
-                    .MarkerForegroundColor = XlRgbColor.rgbDarkRed
+                    .MarkerForegroundColor = xlNS.XlRgbColor.rgbDarkRed
                     With .Format.Line
-                        .ForeColor.RGB = XlRgbColor.rgbDarkRed
+                        .ForeColor.RGB = xlNS.XlRgbColor.rgbDarkRed
                         .Weight = 3
                     End With
                 End With
@@ -6594,9 +7205,9 @@ Public Module Projekte
                     .ChartType = Excel.XlChartType.xlLine
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
                     .MarkerSize = 3
-                    .MarkerForegroundColor = XlRgbColor.rgbDarkOrange
+                    .MarkerForegroundColor = xlNS.XlRgbColor.rgbDarkOrange
                     With .Format.Line
-                        .ForeColor.RGB = XlRgbColor.rgbDarkOrange
+                        .ForeColor.RGB = xlNS.XlRgbColor.rgbDarkOrange
                         .Weight = 3
                     End With
                 End With
@@ -6611,9 +7222,9 @@ Public Module Projekte
                     .ChartType = Excel.XlChartType.xlLine
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleDot
                     .MarkerSize = 3
-                    .MarkerForegroundColor = XlRgbColor.rgbLightGray
+                    .MarkerForegroundColor = xlNS.XlRgbColor.rgbLightGray
                     With .Format.Line
-                        .ForeColor.RGB = XlRgbColor.rgbLightGray
+                        .ForeColor.RGB = xlNS.XlRgbColor.rgbLightGray
                         .Weight = 3
                     End With
                 End With
@@ -6628,9 +7239,9 @@ Public Module Projekte
                     .ChartType = Excel.XlChartType.xlLine
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleDiamond
                     .MarkerSize = 5
-                    .MarkerForegroundColor = XlRgbColor.rgbDarkGreen
+                    .MarkerForegroundColor = xlNS.XlRgbColor.rgbDarkGreen
                     With .Format.Line
-                        .ForeColor.RGB = XlRgbColor.rgbDarkGreen
+                        .ForeColor.RGB = xlNS.XlRgbColor.rgbDarkGreen
                         .Weight = 3
                     End With
 
@@ -6830,7 +7441,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -6872,9 +7483,9 @@ Public Module Projekte
                     .XValues = Xdatenreihe
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleStar
                     .MarkerSize = 5
-                    .MarkerForegroundColor = XlRgbColor.rgbDarkGreen
+                    .MarkerForegroundColor = xlNS.XlRgbColor.rgbDarkGreen
                     With .Format.Line
-                        .ForeColor.RGB = XlRgbColor.rgbDarkGreen
+                        .ForeColor.RGB = xlNS.XlRgbColor.rgbDarkGreen
                         .Weight = 3
                     End With
 
@@ -6891,9 +7502,9 @@ Public Module Projekte
                     .XValues = Xdatenreihe
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
                     .MarkerSize = 5
-                    .MarkerForegroundColor = XlRgbColor.rgbDarkOrange
+                    .MarkerForegroundColor = xlNS.XlRgbColor.rgbDarkOrange
                     With .Format.Line
-                        .ForeColor.RGB = XlRgbColor.rgbDarkOrange
+                        .ForeColor.RGB = xlNS.XlRgbColor.rgbDarkOrange
                         .Weight = 3
                     End With
                 End With
@@ -7155,7 +7766,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -7539,7 +8150,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            newChart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(ptTables.MPT)).name)
+                            newChart.Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item("Projectboard.xlsx").Worksheets(arrWsNames(ptTables.MPT)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -7687,9 +8298,10 @@ Public Module Projekte
 
         Dim projektTextTeil As String = ""
         Dim dauerTextTeil As String = ""
+
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             If calledFromReporting Then
-                dauerTextTeil = vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+                dauerTextTeil = vbLf & textZeitraum(pstart, pstart + plen - 1)
             Else
                 dauerTextTeil = " " & textZeitraum(pstart, pstart + plen - 1)
             End If
@@ -7703,7 +8315,7 @@ Public Module Projekte
                 'titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
                 projektTextTeil = hproj.getShapeText & repMessages.getmsg(48) & dauerTextTeil & vbLf
             Else
-                projektTextTeil = hproj.getShapeText & dauerTextTeil & vbLf
+                projektTextTeil = hproj.getShapeText & dauerTextTeil
             End If
         Else
             projektTextTeil = repMessages.getmsg(53)
@@ -7717,7 +8329,7 @@ Public Module Projekte
             '    projektTextTeil = hproj.getShapeText & dauerTextTeil
             'End If
         End If
-        
+
 
         If hproj.endeDate < Date.Now Then
             titelTeile(0) = projektTextTeil
@@ -7950,10 +8562,303 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' aktualisiert das Projekt Ergebnis Chart in einer PPT Datei  
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="pptChart"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePPTProjektErgebnis(ByVal hproj As clsProjekt, ByRef pptChart As PowerPoint.Chart)
+
+
+        'Dim diagramTitle As String
+        Dim languageIsGerman As Boolean = False
+        Dim plen As Integer
+        Dim Xdatenreihe(3) As String
+        Dim valueDatenreihe1(3) As Double
+        Dim valueDatenreihe2(3) As Double
+        Dim itemColor(3) As Object
+        Dim itemValue(3) As Double
+        Dim projektErloes As Double, projektPersKosten As Double, projektSonstKosten As Double, projektRisikoKosten As Double
+        Dim projektErgebnis As Double
+
+        Dim pstart As Integer
+        Dim mycollection As New Collection
+        Dim maxlenTitle1 As Integer = 20
+        Dim fontSize1 As Double = 12, fontsize2 As Double = 8
+        Dim minscale As Double
+
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+        Dim tmpcollection As New Collection
+
+
+        ' bestimme die Sprache  ...
+        With pptChart.ChartTitle.Format.TextFrame2
+            If .HasText = core.MsoTriState.msoTrue Then
+                If .TextRange.Text.Contains("Ergebnis") Then
+                    languageIsGerman = True
+                Else
+                    languageIsGerman = False
+                End If
+            Else
+                languageIsGerman = True
+            End If
+        End With
+
+
+
+        '
+        ' hole die Projektdauer
+        '
+        With hproj
+            plen = .anzahlRasterElemente
+            pstart = .Start
+        End With
+
+        ' das hier muss später wieder auf repMessages gesetzt werden ... 
+        If languageIsGerman Then
+            'Xdatenreihe(0) = repMessages.getmsg(49)
+            Xdatenreihe(0) = "Budget"
+            'Xdatenreihe(1) = repMessages.getmsg(50)
+            Xdatenreihe(1) = "Personalkosten"
+            'Xdatenreihe(2) = repMessages.getmsg(52)
+            Xdatenreihe(2) = "sonstige Kosten"
+            'Xdatenreihe(3) = repMessages.getmsg(53)
+            Xdatenreihe(3) = "Gewinn/Verlust"
+
+        Else
+            'Xdatenreihe(0) = repMessages.getmsg(49)
+            Xdatenreihe(0) = "Budget"
+            'Xdatenreihe(1) = repMessages.getmsg(50)
+            Xdatenreihe(1) = "Personnel Cost"
+            'Xdatenreihe(2) = repMessages.getmsg(52)
+            Xdatenreihe(2) = "other Cost"
+            'Xdatenreihe(3) = repMessages.getmsg(53)
+            Xdatenreihe(3) = "Profit/Loss"
+        End If
+
+
+
+        With hproj
+            Dim gk As Double = .getSummeKosten
+
+            .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
+
+            itemValue(0) = projektErloes
+            itemColor(0) = ergebnisfarbe1
+
+            'itemValue(1) = projektRisikoKosten
+            'itemColor(1) = iProjektFarbe
+
+            itemValue(1) = projektPersKosten
+            itemColor(1) = farbeExterne
+
+            itemValue(2) = projektSonstKosten
+            itemColor(2) = farbeExterne
+
+            itemValue(3) = projektErgebnis
+            If projektErgebnis > 0 Then
+                itemColor(3) = ergebnisfarbe2
+            Else
+                itemColor(3) = farbeExterne
+            End If
+        End With
+
+
+        If projektErgebnis < 0 Then
+            minscale = System.Math.Round(projektErgebnis - 5, mode:=MidpointRounding.ToEven)
+
+            If projektErgebnis < -300 Then
+                minscale = Math.Round(projektErgebnis / 50 - 0.6) * 50
+            ElseIf projektErgebnis < -80 Then
+                minscale = Math.Round(projektErgebnis / 10 - 0.6) * 10
+            Else
+                minscale = Math.Round(projektErgebnis / 5 - 0.6) * 5
+            End If
+
+
+        Else
+            minscale = 0
+        End If
+
+        Dim currentWert As Double
+
+        Dim valueCrossesNull As Boolean = False
+
+        With pptChart
+
+            ' bestimmen der Fontsize Größen 
+            Try
+                If .HasTitle Then
+                    Dim len As Integer = .ChartTitle.Text.Length
+                    fontSize1 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Size
+                    fontsize2 = .ChartTitle.Format.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Size
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            ' remove old series
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, pptNS.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+
+            Dim crossindex As Integer = -1
+
+            ' bestimmen des Anfangs  
+            Dim iv = 0
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
+            currentWert = itemValue(iv)
+
+            ' alle nächsten Zwischen-Werte 
+            Dim negativeFromNull As Boolean = False
+            Dim formerValue As Double = currentWert
+            For iv = 1 To 2
+                If formerValue <= 0 Then
+                    negativeFromNull = True
+                Else
+                    negativeFromNull = False
+                End If
+
+                currentWert = currentWert - itemValue(iv)
+                valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
+
+                If currentWert >= 0 Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv)
+                ElseIf valueCrossesNull Then
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
+                    crossindex = iv + 1
+                ElseIf negativeFromNull Then
+                    valueDatenreihe1(iv) = formerValue
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                Else
+                    valueDatenreihe1(iv) = currentWert
+                    valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                End If
+
+                formerValue = currentWert
+            Next
+
+            ' bestimmen des Ende 
+            iv = 3
+            valueDatenreihe1(iv) = 0
+            valueDatenreihe2(iv) = itemValue(iv)
+
+
+
+            'series
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(1)
+                .name = "Bottom"
+                .HasDataLabels = False
+                .Interior.colorindex = -4142
+                .Values = valueDatenreihe1
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+                If crossindex > 0 Then
+                    ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
+                    With .Points(crossindex)
+                        .Interior.color = itemColor(crossindex - 1)
+                    End With
+                End If
+
+            End With
+
+
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(2)
+                .name = "Top"
+                .HasDataLabels = True
+                .Values = valueDatenreihe2
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+
+                For iv = 0 To 3
+
+                    With .Points(iv + 1)
+                        .HasDataLabel = True
+                        .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
+                        .Interior.color = itemColor(iv)
+                    End With
+
+                Next
+
+            End With
+
+            With .Axes(Excel.XlAxisType.xlCategory)
+                .HasTitle = False
+                If minscale < 0 Then
+                    .TickLabelPosition = Excel.Constants.xlLow
+                End If
+
+
+            End With
+
+
+            Try
+                With .Axes(Excel.XlAxisType.xlValue)
+                    .HasTitle = False
+                    .HasMajorGridlines = False
+                    .hasminorgridlines = False
+                End With
+            Catch ex As Exception
+
+            End Try
+
+
+            With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+
+
+                If (minscale < .MinimumScale) And (minscale < 0) Then
+                    .MinimumScale = minscale
+                End If
+
+
+                If itemValue(0) > .MaximumScale + 10 Then
+                    .MaximumScale = itemValue(0) + 10
+                End If
+
+
+            End With
+
+            'If .HasTitle Then
+            '    .ChartTitle.Text = diagramTitle
+            '    ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
+            '    .ChartTitle.Font.Size = CSng(fontSize1)
+            '    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+            '        titelTeilLaengen(1)).Font.Size = CSng(fontsize2)
+            '    ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+            '    '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+            '    '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+            '    '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+            'End If
+
+        End With
+
+
+    End Sub
     
 
+    ''' <summary>
+    ''' aktualisiert das Projekt Ergebnis Chart 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="chtobj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="changeScale"></param>
+    ''' <remarks></remarks>
     Public Sub updateProjektErgebnisCharakteristik2(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
-                                                    ByVal auswahl As Integer, ByVal changeScale As Boolean)
+                                                        ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
         Dim diagramTitle As String
@@ -8044,15 +8949,15 @@ Public Module Projekte
         End If
 
         projektTextTeil = repMessages.getmsg(53)
-        
-       
+
+
         If hproj.endeDate < Date.Now Then
             titelTeile(0) = projektTextTeil
         Else
             titelTeile(0) = "Forecast " & projektTextTeil
         End If
 
-        
+
         titelTeile(1) = ""
 
 
@@ -8101,12 +9006,16 @@ Public Module Projekte
 
             End Try
 
-            'ur:22.07.2014: bereits in Charts enthalten und soll nur mit neuen Daten bestückt werden
-            '' remove extra series
+            ' remove old series
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, pptNS.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
 
-            'Do Until .SeriesCollection.Count = 0
-            '    .SeriesCollection(1).Delete()
-            'Loop
+            End Try
 
             Dim crossindex As Integer = -1
 
@@ -9164,7 +10073,7 @@ Public Module Projekte
     '
     '
     
-    Public Sub awinDeleteChart(ByRef chtobj As ChartObject)
+    Public Sub awinDeleteChart(ByRef chtobj As xlNS.ChartObject)
         Dim kennung As String
         Dim hDiagramm As clsDiagramm
 
@@ -9668,7 +10577,7 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="cho">ChartObject</param>
     ''' <remarks></remarks>
-    Function chtobj2shape(ByRef cho As ChartObject) As Excel.Shape
+    Function chtobj2shape(ByRef cho As xlNS.ChartObject) As Excel.Shape
 
         'Dim zo As Long
         Dim ws As Excel.Worksheet
@@ -10426,7 +11335,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -11168,7 +12077,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -11279,7 +12188,7 @@ Public Module Projekte
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).name)
                             achieved = True
                         Catch ex As Exception
                             errmsg = ex.Message
@@ -11380,8 +12289,8 @@ Public Module Projekte
             With shp
 
                 Try
-                    If shp.AutoShapeType = MsoAutoShapeType.msoShapeRightArrow Or _
-                    shp.AutoShapeType = MsoAutoShapeType.msoShapeLeftArrow Then
+                    If shp.AutoShapeType = core.MsoAutoShapeType.msoShapeRightArrow Or _
+                    shp.AutoShapeType = core.MsoAutoShapeType.msoShapeLeftArrow Then
                         .Delete()
                     End If
                 Catch ex As Exception
@@ -12875,7 +13784,7 @@ Public Module Projekte
                         ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
                         (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
 
-                        CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(MsoZOrderCmd.msoBringToFront)
+                        CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(core.MsoZOrderCmd.msoBringToFront)
 
                     End If
                 End With
@@ -13684,7 +14593,7 @@ Public Module Projekte
 
                             If awinSettings.drawProjectLine Then
 
-                                phaseShape = worksheetShapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
+                                phaseShape = worksheetShapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
                                                                             CSng(left + width), CSng(top))
                             Else
 
@@ -13836,7 +14745,7 @@ Public Module Projekte
                     Next
 
                     Try
-                        CType(worksheetShapes.Range(arrayOfMSNames), Excel.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+                        CType(worksheetShapes.Range(arrayOfMSNames), Excel.ShapeRange).ZOrder(core.MsoZOrderCmd.msoBringToFront)
                     Catch ex As Exception
 
                     End Try
@@ -13877,7 +14786,7 @@ Public Module Projekte
 
                 If awinSettings.drawProjectLine Then
                     ' ????ur: hier geht es schief beim Laden von Konstellation
-                    projectShape = worksheetShapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
+                    projectShape = worksheetShapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
                                                                 CSng(left + width), CSng(top))
 
                 Else
@@ -14420,7 +15329,7 @@ Public Module Projekte
 
                 ' jetzt muss die Liste an Shapes aufgebaut werden 
                 If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
-                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    projectShape.AutoShapeType = core.MsoAutoShapeType.msoShapeRoundedRectangle Then
 
                     listOFShapes.Add(projectShape.Name)
 
@@ -14655,7 +15564,7 @@ Public Module Projekte
                 ' jetzt muss die Liste an Shapes aufgebaut werden 
 
                 If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
-                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    projectShape.AutoShapeType = core.MsoAutoShapeType.msoShapeRoundedRectangle Then
                     listOFShapes.Add(projectShape.Name)
                 Else
                     shapeGruppe = projectShape.Ungroup
@@ -14685,21 +15594,21 @@ Public Module Projekte
 
 
                 ' jetzt muss das Textshape erzeugt werden 
-                pNameShape = worksheetShapes.AddLabel(MsoTextOrientation.msoTextOrientationHorizontal, _
+                pNameShape = worksheetShapes.AddLabel(core.MsoTextOrientation.msoTextOrientationHorizontal, _
                                                         txtLeft, txtTop, txtwidth, txtHeight)
 
                 With pNameShape
                     .AlternativeText = "(Projektname)"
-                    .TextFrame2.AutoSize = MsoAutoSize.msoAutoSizeShapeToFitText
-                    .TextFrame2.WordWrap = MsoTriState.msoFalse
+                    .TextFrame2.AutoSize = core.MsoAutoSize.msoAutoSizeShapeToFitText
+                    .TextFrame2.WordWrap = core.MsoTriState.msoFalse
                     .TextFrame2.TextRange.Text = hproj.getShapeText
                     .TextFrame2.TextRange.Font.Size = hproj.Schrift
                     .TextFrame2.MarginLeft = 4
                     .TextFrame2.MarginRight = 4
                     .TextFrame2.MarginTop = 0
                     .TextFrame2.MarginBottom = 0
-                    .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                    .TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
                     ' braucht man für die Update Routine 
                     .Name = calcProjectTextShapeName(hproj.name)
 
@@ -14730,7 +15639,7 @@ Public Module Projekte
                         ' es ist nicht protected, also muss nichts verändert werden 
                     End If
 
-                    .Fill.Visible = MsoTriState.msoTrue
+                    .Fill.Visible = core.MsoTriState.msoTrue
                     .Fill.ForeColor.RGB = RGB(255, 255, 255)
                     .Fill.Transparency = 0
                     .Fill.Solid()
@@ -14859,10 +15768,10 @@ Public Module Projekte
                             With newConnector
                                 If curDegree = PTdpndncy.schwach Then
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineLongDash
                                 Else
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineSolid
                                 End If
                             End With
 
@@ -14871,19 +15780,19 @@ Public Module Projekte
                         Catch ex As Exception
 
                             Call calculateDepCoord(pShape, dpShape, X1, Y1, X2, Y2)
-                            newConnector = tmpshapes.AddConnector(MsoConnectorType.msoConnectorStraight, X1, Y1, X2, Y2)
+                            newConnector = tmpshapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, X1, Y1, X2, Y2)
 
                             With newConnector
-                                .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadTriangle
+                                .Line.EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
                                 .ConnectorFormat.BeginConnect(pShape, 3)
                                 .ConnectorFormat.EndConnect(dpShape, 1)
                                 .Line.ForeColor.RGB = CInt(awinSettings.AmpelRot)
                                 If curDegree = PTdpndncy.schwach Then
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineLongDash
                                 Else
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineSolid
                                 End If
                                 .Name = newShapeName
                                 .AlternativeText = CInt(PTshty.dependency).ToString
@@ -14936,10 +15845,10 @@ Public Module Projekte
                             With newConnector
                                 If curDegree = PTdpndncy.schwach Then
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineLongDash
                                 Else
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineSolid
                                 End If
                             End With
 
@@ -14947,19 +15856,19 @@ Public Module Projekte
                         Catch ex As Exception
 
                             Call calculateDepCoord(pShape, dpShape, X1, Y1, X2, Y2)
-                            newConnector = tmpshapes.AddConnector(MsoConnectorType.msoConnectorStraight, X1, Y1, X2, Y2)
+                            newConnector = tmpshapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, X1, Y1, X2, Y2)
 
                             With newConnector
-                                .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadTriangle
+                                .Line.EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
                                 .ConnectorFormat.BeginConnect(pShape, 3)
                                 .ConnectorFormat.EndConnect(dpShape, 1)
                                 .Line.ForeColor.RGB = CInt(awinSettings.AmpelRot)
                                 If curDegree = PTdpndncy.schwach Then
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineLongDash
                                 Else
                                     .Line.Weight = 4.0
-                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                    .Line.DashStyle = core.MsoLineDashStyle.msoLineSolid
                                 End If
                                 .Name = newShapeName
                                 .Title = "Dependency"
@@ -15467,7 +16376,7 @@ Public Module Projekte
 
                 ' jetzt muss die Liste an Shapes aufgebaut werden 
                 If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
-                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    projectShape.AutoShapeType = core.MsoAutoShapeType.msoShapeRoundedRectangle Then
 
                     listOFShapes.Add(projectShape.Name)
 
@@ -15635,7 +16544,7 @@ Public Module Projekte
 
             Try
 
-                If .TextFrame2.HasText <> MsoTriState.msoFalse Then
+                If .TextFrame2.HasText <> core.MsoTriState.msoFalse Then
                     .TextFrame2.TextRange.Text = ""
                 End If
 
@@ -15647,8 +16556,8 @@ Public Module Projekte
                         .MarginBottom = 0
                         .MarginTop = 0
                         .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                        .VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
                         .TextRange.Text = number.ToString
                         .TextRange.Font.Size = awinSettings.fontsizeLegend
                         .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
@@ -15683,8 +16592,8 @@ Public Module Projekte
 
             If isMissingDefinition Then
 
-                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
-                    .Line.Visible = MsoTriState.msoTrue
+                If awinSettings.missingDefinitionColor <> xlNS.XlRgbColor.rgbWhite Then
+                    .Line.Visible = core.MsoTriState.msoTrue
                     .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
                     .Line.Transparency = 0
                     .Line.Weight = 2
@@ -15723,8 +16632,8 @@ Public Module Projekte
 
             If isMissingDefinition Then
 
-                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
-                    .Line.Visible = MsoTriState.msoTrue
+                If awinSettings.missingDefinitionColor <> xlNS.XlRgbColor.rgbWhite Then
+                    .Line.Visible = core.MsoTriState.msoTrue
                     .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
                     .Line.Weight = 2
                     .Fill.ForeColor.RGB = CInt(farbe)
@@ -15734,7 +16643,7 @@ Public Module Projekte
 
 
             Try
-                If .TextFrame2.HasText <> MsoTriState.msoFalse Then
+                If .TextFrame2.HasText <> core.MsoTriState.msoFalse Then
                     .TextFrame2.TextRange.Text = ""
                 End If
 
@@ -15746,8 +16655,8 @@ Public Module Projekte
                         .MarginBottom = 0
                         .MarginTop = 0
                         .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                        .VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
                         .TextRange.Text = number.ToString
                         .TextRange.Font.Size = awinSettings.fontsizeLegend
                         .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
@@ -15775,7 +16684,7 @@ Public Module Projekte
     ''' am 7.3.17 Änderung: parameter myProject wird als byval nicht als byref übergeben</remarks>
     Public Sub defineShapeAppearance(ByVal myproject As clsProjekt, ByRef projectShape As Excel.Shape)
 
-        Dim pcolor As Object = XlRgbColor.rgbAqua
+        Dim pcolor As Object = xlNS.XlRgbColor.rgbAqua
         Dim schriftFarbe As Long
         Dim schriftGroesse As Integer
         Dim status As String = ""
@@ -15791,7 +16700,7 @@ Public Module Projekte
         Try
 
             If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
-                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    projectShape.AutoShapeType = core.MsoAutoShapeType.msoShapeRoundedRectangle Then
                 myshape = projectShape
             Else
                 If IsNothing(CType(CType(projectShape, Excel.Shape).GroupItems, Excel.GroupShapes)) Then
@@ -15854,7 +16763,7 @@ Public Module Projekte
                         .ForeColor.RGB = CInt(pcolor)
                         .Transparency = 0
                         .Weight = 4.0
-                        .DashStyle = MsoLineDashStyle.msoLineDash
+                        .DashStyle = core.MsoLineDashStyle.msoLineDash
                     End With
                 Catch ex As Exception
 
@@ -15865,11 +16774,11 @@ Public Module Projekte
 
                     With .Line
                         If status = ProjektStatus(0) Then
-                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
-                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
+                            .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                            .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
                         Else
-                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
-                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
+                            .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
+                            .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
                         End If
 
                     End With
@@ -15903,8 +16812,8 @@ Public Module Projekte
 
                 Try
                     With .TextFrame2
-                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+                        .VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorNone
                         .TextRange.Font.Size = schriftGroesse
                         .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
                     End With
@@ -16278,7 +17187,7 @@ Public Module Projekte
         Dim tfz As Integer, tfs As Integer
         Dim top As Double, left As Double, width As Double, height As Double
 
-        Dim straightLine As MsoConnectorType = MsoConnectorType.msoConnectorStraight
+        Dim straightLine As core.MsoConnectorType = core.MsoConnectorType.msoConnectorStraight
 
 
         hproj = ShowProjekte.getProject(pname)
@@ -16477,11 +17386,11 @@ Public Module Projekte
     End Sub
 
     Public Sub awinSelectProjectiPF(ByRef pname As String)
-        Dim chtobj As ChartObject, rightObject As ChartObject = Nothing
+        Dim chtobj As xlNS.ChartObject, rightObject As xlNS.ChartObject = Nothing
         Dim found As Boolean = False
         Dim diagramTitle As String = "strategischer Fit, Risiko & Marge"
         Dim ptNr As Integer
-        Dim chartPT As Point
+        Dim chartPT As xlNS.Point
         Dim anzPts As Integer
 
         ' das kann hier auskommentiert werden, da ab jetzt die Labels immer angezeigt werden 
@@ -16740,7 +17649,7 @@ Public Module Projekte
                     End With
 
                     ' die Zeitleiste mit den Monatsangaben automatisch befüllen
-                    rng.AutoFill(Destination:=destinationRange, Type:=XlAutoFillType.xlFillDefault)
+                    rng.AutoFill(Destination:=destinationRange, Type:=xlNS.XlAutoFillType.xlFillDefault)
 
 
                 ElseIf awinSettings.zeitEinheit = "PW" Then
@@ -17313,7 +18222,7 @@ Public Module Projekte
         Try
 
             appInstance.ActiveWorkbook.SaveAs(fileName, _
-                                          ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges
+                                          ConflictResolution:=xlNS.XlSaveConflictResolution.xlLocalSessionChanges
                                           )
 
         Catch ex As Exception
@@ -17476,7 +18385,7 @@ Public Module Projekte
                     End With
 
                     ' die Zeitleiste mit den Monatsangaben automatisch befüllen
-                    rng.AutoFill(Destination:=destinationRange, Type:=XlAutoFillType.xlFillDefault)
+                    rng.AutoFill(Destination:=destinationRange, Type:=xlNS.XlAutoFillType.xlFillDefault)
 
 
                 ElseIf awinSettings.zeitEinheit = "PW" Then
@@ -18177,7 +19086,7 @@ Public Module Projekte
 
                     Try
                         .Validation.Delete()
-                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                        .Validation.Add(Type:=xlNS.XlDVType.xlValidateList, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, _
                                            Formula1:="=ProjektVorlagen")
                         .Validation.InputMessage = "bitte nicht ändern! Dient nur als Hinweis, mit welcher Vorlage das Projekt verglichen werden soll."
                     Catch ex As Exception
@@ -18200,7 +19109,7 @@ Public Module Projekte
 
                     Try
                         .Validation.Delete()
-                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                        .Validation.Add(Type:=xlNS.XlDVType.xlValidateList, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, _
                                            Formula1:="=ProjektStatus")
                         .Validation.InputMessage = ""
                     Catch ex As Exception
@@ -18220,7 +19129,7 @@ Public Module Projekte
 
                     Try
                         .Validation.Delete()
-                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                        .Validation.Add(Type:=xlNS.XlDVType.xlValidateList, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, _
                                            Formula1:="=BusinessUnits")
                         .Validation.InputMessage = ""
                     Catch ex As Exception
@@ -18240,8 +19149,8 @@ Public Module Projekte
 
                     Try
                         .Validation.Delete()
-                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=XlFormatConditionOperator.xlBetween)
+                        .Validation.Add(Type:=xlNS.XlDVType.xlValidateDecimal, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=xlNS.XlFormatConditionOperator.xlBetween)
                         .Validation.InputMessage = "Werte zwischen 0.1 und 9.9"
                     Catch ex As Exception
 
@@ -18260,8 +19169,8 @@ Public Module Projekte
 
                     Try
                         .Validation.Delete()
-                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=XlFormatConditionOperator.xlBetween)
+                        .Validation.Add(Type:=xlNS.XlDVType.xlValidateDecimal, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=xlNS.XlFormatConditionOperator.xlBetween)
                         .Validation.InputMessage = "Werte zwischen 0.1 und 9.9"
                     Catch ex As Exception
 
@@ -18376,7 +19285,7 @@ Public Module Projekte
                     ' jetzt werden noch die Validation. also Auswahl aus Liste gesetzt ...
                     For iz As Integer = startZeileOfCFs To startZeileOfCFs + zeilenoffset + customFieldDefinitions.count
                         Try
-                            rng.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                            rng.Validation.Add(Type:=xlNS.XlDVType.xlValidateList, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, _
                                            Formula1:="=Custom_Fields")
                         Catch ex As Exception
 
@@ -18413,7 +19322,7 @@ Public Module Projekte
         Try
 
             appInstance.ActiveWorkbook.SaveAs(fileName, _
-                                          ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges
+                                          ConflictResolution:=xlNS.XlSaveConflictResolution.xlLocalSessionChanges
                                           )
 
         Catch ex As Exception
@@ -18804,7 +19713,7 @@ Public Module Projekte
 
             'zeile = 2
             'lastRow = .range(.Cells(1, 1), .cells(2000, 1)).End(XlDirection.xlUp).row
-            lastRow = System.Math.Max(CType(.cells(2000, 1), Excel.Range).End(XlDirection.xlUp).Row, CType(.cells(2000, 2), Excel.Range).End(XlDirection.xlUp).Row) + 1
+            lastRow = System.Math.Max(CType(.cells(2000, 1), Excel.Range).End(xlNS.XlDirection.xlUp).Row, CType(.cells(2000, 2), Excel.Range).End(xlNS.XlDirection.xlUp).Row) + 1
             rng = CType(.range(.cells(2, 1), .cells(lastRow, 1)), Excel.Range)
             'If .cells(zeile, 1).value <> hproj.name Then
             '    hproj.name = .cells(zeile, 1).value
@@ -18985,7 +19894,7 @@ Public Module Projekte
         With appInstance.ActiveSheet
 
 
-            lastRow = System.Math.Max(CType(.cells(2000, 1), Excel.Range).End(XlDirection.xlUp).Row, CType(.cells(2000, 2), Excel.Range).End(XlDirection.xlUp).Row) + 1
+            lastRow = System.Math.Max(CType(.cells(2000, 1), Excel.Range).End(xlNS.XlDirection.xlUp).Row, CType(.cells(2000, 2), Excel.Range).End(xlNS.XlDirection.xlUp).Row) + 1
             rng = CType(.range(.cells(2, 1), .cells(lastRow, 1)), Excel.Range)
 
             For Each zelle In rng
@@ -20143,25 +21052,25 @@ Public Module Projekte
                         width = 30
                         height = 30
 
-                        txtShape = worksheetShapes.AddLabel(MsoTextOrientation.msoTextOrientationHorizontal, _
+                        txtShape = worksheetShapes.AddLabel(core.MsoTextOrientation.msoTextOrientationHorizontal, _
                                                                 left, top, width, height)
 
                         With txtShape
-                            .TextFrame2.AutoSize = MsoAutoSize.msoAutoSizeShapeToFitText
-                            .TextFrame2.WordWrap = MsoTriState.msoFalse
+                            .TextFrame2.AutoSize = core.MsoAutoSize.msoAutoSizeShapeToFitText
+                            .TextFrame2.WordWrap = core.MsoTriState.msoFalse
                             .TextFrame2.TextRange.Text = description
                             .TextFrame2.TextRange.Font.Size = hproj.Schrift - 2
                             .TextFrame2.MarginLeft = 2
                             .TextFrame2.MarginRight = 2
                             .TextFrame2.MarginTop = 0
                             .TextFrame2.MarginBottom = 0
-                            .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                            .TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                            .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
+                            .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
 
                             If description = "-" Then
-                                .Fill.Visible = MsoTriState.msoFalse
+                                .Fill.Visible = core.MsoTriState.msoFalse
                             Else
-                                .Fill.Visible = MsoTriState.msoTrue
+                                .Fill.Visible = core.MsoTriState.msoTrue
                                 .Fill.ForeColor.RGB = RGB(255, 255, 255)
                                 .Fill.Transparency = 0
                                 .Fill.Solid()
@@ -21290,12 +22199,12 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="selrange"></param>
     ''' <remarks></remarks>
-    Private Sub InputZahlValidationforRange(ByRef selrange As Range)
+    Private Sub InputZahlValidationforRange(ByRef selrange As xlNS.Range)
 
         With selrange.Validation
             .Delete()
-            .Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                 Operator:=XlFormatConditionOperator.xlGreaterEqual, Formula1:="0")
+            .Add(Type:=xlNS.XlDVType.xlValidateDecimal, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, _
+                 Operator:=xlNS.XlFormatConditionOperator.xlGreaterEqual, Formula1:="0")
             .IgnoreBlank = True
             .InCellDropdown = True
             .InputTitle = ""
@@ -21310,7 +22219,7 @@ Public Module Projekte
 
 
     '
-    Private Sub InputValidationforRange(ByRef selrange As Range, ByVal stage As Integer, showvalidation As Boolean)
+    Private Sub InputValidationforRange(ByRef selrange As xlNS.Range, ByVal stage As Integer, showvalidation As Boolean)
 
         ' Diese Subroutine erstellt ein Dropdownliste für die Felder von selrange mit den Phasen und Rollen als Auswahl
         ' für stage = 1: Rollen-Kostenarten-Liste
@@ -21356,8 +22265,8 @@ Public Module Projekte
 
             With selrange.Validation
                 .Delete()
-                .Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, Operator:= _
-                           XlFormatConditionOperator.xlBetween, Formula1:=inputstr)
+                .Add(Type:=xlNS.XlDVType.xlValidateList, AlertStyle:=xlNS.XlDVAlertStyle.xlValidAlertStop, Operator:= _
+                           xlNS.XlFormatConditionOperator.xlBetween, Formula1:=inputstr)
                 .IgnoreBlank = True
                 .InCellDropdown = True
                 .InputTitle = iTitle
@@ -21578,7 +22487,7 @@ Public Module Projekte
         With shpElement
             If .AlternativeText = CInt(PTshty.projektL).ToString Then
                 tmpErg = True
-            ElseIf .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+            ElseIf .AutoShapeType = core.MsoAutoShapeType.msoShapeRoundedRectangle Then
                 If .AlternativeText = CInt(PTshty.projektN).ToString Then
                     tmpErg = True
                 End If

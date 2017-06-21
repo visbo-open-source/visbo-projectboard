@@ -1,6 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Imports MongoDbAccess
 Imports ProjectBoardBasic
+Imports xlNS = Microsoft.Office.Interop.Excel
 Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -10,6 +11,9 @@ Module Module1
     Friend Const markerName As String = "VisboMarker"
     Friend Const protectionTag As String = "VisboProtection"
     Friend Const protectionValue As String = "VisboValue"
+
+    Friend xlApp As xlNS.Application = Nothing
+    Friend updateWorkbook As xlNS.Workbook = Nothing
 
     Friend currentSlide As PowerPoint.Slide
     Friend VisboProtected As Boolean = False
@@ -388,6 +392,7 @@ Module Module1
         ' ein ggf. vorhandener Schutz  muss wieder aktiviert werden ... 
         protectionSolved = False
 
+
         ' gibt es eine Sprachen-Tabelle ? 
         Dim langGUID As String = pptAPP.ActivePresentation.Tags.Item("langGUID")
         If langGUID.Length > 0 Then
@@ -399,6 +404,10 @@ Module Module1
 
         End If
 
+
+    End Sub
+
+    Private Sub pptAPP_NewPresentation(Pres As Microsoft.Office.Interop.PowerPoint.Presentation) Handles pptAPP.NewPresentation
 
     End Sub
 
@@ -418,9 +427,17 @@ Module Module1
     End Sub
 
     Private Sub pptAPP_PresentationCloseFinal(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationCloseFinal
-        'If Not Pres.Name.EndsWith(".pptx") Then
-        '    Call MsgBox("Alarm! unter falschem Namen gespeichert ... ")
-        'End If
+
+        If Not IsNothing(xlApp) Then
+            For Each tmpWB As Excel.Workbook In CType(xlApp.Workbooks, Excel.Workbooks)
+                tmpWB.Close(SaveChanges:=False)
+            Next
+            xlApp.Quit()
+        End If
+
+        updateWorkbook = Nothing
+
+
     End Sub
 
     ''' <summary>
@@ -632,9 +649,6 @@ Module Module1
 
     End Sub
 
-    Private Sub pptAPP_WindowActivate(Pres As Microsoft.Office.Interop.PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowActivate
-
-    End Sub
     Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
         If VisboProtected Then
             Call makeVisboShapesVisible(False)
@@ -1437,43 +1451,224 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub updateVisboComponent(ByRef pptShape As PowerPoint.Shape, ByVal timeStamp As Date)
         Dim chtObjName As String = ""
-
+        Dim bigType As Integer = -1
+        Dim detailID As Integer = -1
         Try
 
             If Not IsNothing(pptShape) Then
 
-                If pptShape.Tags.Item("CHON").Length > 0 Then
-                    ' es handelt sich um ein Projekt- oder Portfolio Chart 
+                If pptShape.Tags("BID").Length > 0 And pptShape.Tags("DID").Length > 0 Then
+                    If IsNumeric(pptShape.Tags("BID")) And IsNumeric(pptShape.Tags("DID")) Then
+                        bigType = CInt(pptShape.Tags("BID"))
+                        detailID = CInt(pptShape.Tags("DID"))
+                    End If
+                End If
 
-                    If pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue Then
-                        Dim pptChart As PowerPoint.Chart = pptShape.Chart
-                        chtObjName = pptChart.Name
+                If bigType = ptReportBigTypes.charts Then
 
-                        Dim auswahl As Integer = -1
-                        Dim prpfTyp As Integer = -1
-                        Dim pName As String = ""
-                        Dim vName As String = ""
-                        Dim chartTyp As Integer = -1
+                    If pptShape.Tags.Item("CHON").Length > 0 Then
+                        ' es handelt sich um ein Projekt- oder Portfolio Chart 
 
+                        If pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                            Dim pptChart As PowerPoint.Chart = pptShape.Chart
 
-                        ' der Chart-ObjectName enthält sehr viel ..
-                        'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
-                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, pName, vName, chartTyp, auswahl)
+                            chtObjName = pptChart.Name
 
+                            Dim auswahl As Integer = -1
+                            Dim prpfTyp As Integer = -1
+                            Dim pName As String = ""
+                            Dim vName As String = ""
+                            Dim chartTyp As Integer = -1
+                            Dim prcTyp As Integer = ptElementTypen.roles
+                            Dim ws As xlNS.Worksheet
+
+                            ' der Chart-ObjectName enthält sehr viel ..
+                            'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
+                            Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pName, vName, chartTyp, auswahl)
+
+                            If pName <> "" Then
+                                Dim pvName As String = calcProjektKey(pName, vName)
+
+                                ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                                Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timeStamp)
+                                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                                If Not IsNothing(tsProj) Then
+
+                                    '' '' jetzt muss , falls nicht schon geschehen, Excel versteckt in einer neuen Instanz geöffnet werden und das Chart dorthin kopiert werden und wieder 
+                                    '' '' zurückgeholt werden; damit wird der Link aufgebrochen 
+
+                                    ' das neue Chart ..
+                                    Dim newPPTShape As PowerPoint.Shape = Nothing
+                                    Dim newchtobj As xlNS.ChartObject = Nothing
+
+                                    ' der ganze folgende Zauber muss nur gemacht werden, wenn das Chart zum Ersten Mal geupdated wird ... 
+                                    Dim straightforward As Boolean
+                                    Dim weiterMachen As Boolean = True
+
+                                    If pptShape.Tags.Item("UPDT") = "TRUE" Then
+                                        straightforward = True
+                                        newPPTShape = pptShape
+                                        weiterMachen = True
+                                    Else
+                                        Try
+                                            Call createNewHiddenExcel()
+
+                                            If Not IsNothing(updateWorkbook) Then
+
+                                                ws = CType(updateWorkbook.Worksheets.Item(1), xlNS.Worksheet)
+                                                ' das Workbook wird aktiviert ... 
+
+                                                ' dann muss das Shape in Excel kopiert werden 
+                                                pptShape.Copy()
+                                                ws.Paste()
+                                                Dim anzCharts As Integer = CType(ws.ChartObjects, Excel.ChartObjects).Count
+
+                                                If anzCharts > 0 Then
+                                                    newchtobj = CType(ws.ChartObjects(anzCharts), Excel.ChartObject)
+                                                    newchtobj.Copy()
+
+                                                    ' dann muss das Excel-Shape wieder zurück in PPT kopiert werden 
+                                                    Dim newShapeRange As PowerPoint.ShapeRange = currentSlide.Shapes.Paste()
+                                                    newPPTShape = newShapeRange.Item(1)
+
+                                                    ' dann mus das Powerpoint Shape aktualisiert werden ...
+                                                    With newPPTShape
+                                                        .Top = pptShape.Top
+                                                        .Left = pptShape.Left
+                                                        .Height = pptShape.Height
+                                                        .Width = pptShape.Width
+                                                        .Name = pptShape.Name
+                                                        .Tags.Add("CHON", pptShape.Tags("CHON"))
+                                                        .Tags.Add("PNM", pptShape.Tags("PNM"))
+                                                        .Tags.Add("VNM", pptShape.Tags("VNM"))
+                                                        .Tags.Add("CHT", pptShape.Tags("CHT"))
+                                                        .Tags.Add("ASW", pptShape.Tags("ASW"))
+                                                        .Tags.Add("COL", pptShape.Tags("COL"))
+                                                        .Tags.Add("UPDT", "TRUE")
+                                                        .Tags.Add("BID", pptShape.Tags("BID"))
+                                                        .Tags.Add("DID", pptShape.Tags("DID"))
+                                                        .Tags.Add("Q1", pptShape.Tags("Q1"))
+                                                        .Tags.Add("Q2", pptShape.Tags("Q2"))
+                                                    End With
+                                                Else
+                                                    weiterMachen = False
+                                                    newPPTShape = Nothing
+                                                End If
+                                            Else
+                                                weiterMachen = False
+                                            End If
+                                        Catch ex As Exception
+                                            weiterMachen = False
+                                        End Try
+
+                                    End If
+
+                                    If weiterMachen Then
+                                        Try
+                                            If prpfTyp = ptPRPFType.project Then
+
+                                                If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
+                                                    Call updatePPTBalkenOfProject(tsProj, newPPTShape.Chart, prcTyp, auswahl)
+
+                                                ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
+                                                    ' Aktualisieren der Personal- bzw. Kosten-Pies ...
+
+                                                ElseIf chartTyp = PTprdk.Ergebnis Then
+                                                    ' Aktualisieren des Ergebnis Charts 
+                                                    Call updatePPTProjektErgebnis(tsProj, newPPTShape.Chart)
+
+                                                ElseIf chartTyp = PTprdk.StrategieRisiko Or _
+                                                    chartTyp = PTprdk.ZeitRisiko Or _
+                                                    chartTyp = PTprdk.FitRisikoVol Or _
+                                                    chartTyp = PTprdk.ComplexRisiko Then
+                                                    ' Aktualisieren der Strategie-Charts
+
+                                                    Call updatePPTProjectPfDiagram(tsProj, newPPTShape.Chart, chartTyp, 0)
+
+                                                End If
+
+                                            ElseIf prpfTyp = ptPRPFType.portfolio Then
+
+                                            End If
+
+                                            If Not straightforward Then
+                                                ' das Original Shape wird gelöscht und das neue tritt an seine Stelle ... 
+                                                ' sowohl newChtobj als auch das late Powerpoint Shape ... 
+                                                If Not IsNothing(newchtobj) Then
+                                                    newchtobj.Delete()
+                                                End If
+                                                pptShape.Delete()
+                                                xlApp.ScreenUpdating = True
+                                            End If
+
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    End If
+
+                                End If
+
+                            End If
+
+                        End If
 
                     End If
 
+
+
+                ElseIf bigType = ptReportBigTypes.tables Then
+                    ' noch nicht implementiert .. 
+
+                ElseIf bigType = ptReportBigTypes.components Then
+
+
+                Else
+                    ' kein zu aktualisierendes Shape ... 
                 End If
-                
+
+
             End If
-
-
 
         Catch ex As Exception
             Dim a As Integer = 1
         End Try
     End Sub
+    ''' <summary>
+    ''' erzeugt eine verborgene Excel-Instanz, die verwendet werden kann, um PPT charts hin und her zu kopieren und damit die Referenz zu löschen, 
+    ''' die verhindert, dass ein PPT Chart geupdated werden kann;
+    ''' wenn das HiddenExcel bereits existiert wird nichts gemacht ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub createNewHiddenExcel()
 
+        If IsNothing(updateWorkbook) Then
+            ' es wird auf jeden Fall eine neue, verborgene Excel-Instanz aufgemacht 
+            ' die wird dann beim Schliessen einer Presentation wieder beendet bzw. zugemacht 
+            Try
+                xlApp = CreateObject("Excel.Application")
+                xlApp.Visible = False
+                xlApp.ScreenUpdating = False
+                '' prüft, ob bereits Powerpoint geöffnet ist 
+                'xlApp = GetObject(, "Excel.Application")
+            Catch ex As Exception
+                xlApp = Nothing
+                updateWorkbook = Nothing
+                Exit Sub
+            End Try
+
+            If My.Computer.FileSystem.FileExists("visboupdate.xlsx") Then
+                ' öffnen
+                xlApp.Workbooks.Open("visboupdate.xlsx")
+            Else
+                xlApp.Workbooks.Add()
+            End If
+            updateWorkbook = xlApp.ActiveWorkbook
+        Else
+            ' existiert schon, also existiert auch xlApp bereits ...
+        End If
+
+    End Sub
     ''' <summary>
     ''' ändert den Kommentar Ampel-Text, Lieferumfang
     ''' je nachdem, ob es sich um eine Ampel-Erläuterung oder einen Lieferumfang handelt ...  
@@ -2708,7 +2903,8 @@ Module Module1
     Public Function isOtherVisboComponent(ByVal curShape As PowerPoint.Shape) As Boolean
 
         Try
-            isOtherVisboComponent = (curShape.Tags.Item("CHON").Length > 0)
+            isOtherVisboComponent = (curShape.Tags.Item("CHON").Length > 0) Or _
+                (curShape.Tags.Item("BID").Length > 0 And curShape.Tags.Item("DID").Length > 0) 
         Catch ex As Exception
             isOtherVisboComponent = False
         End Try
