@@ -5502,7 +5502,7 @@ Public Module testModule
         Dim pfChart As clsEventsPfCharts
         'Dim ptype As String
         Dim chtTitle As String
-        Dim chtobjName As String = windowNames(3)
+        Dim chtobjName As String = "noch zu bestimmen"
         Dim smallfontsize As Double, titlefontsize As Double
         Dim kennung As String
         Dim singleProject As Boolean
@@ -10107,7 +10107,7 @@ Public Module testModule
         Dim pfChart As clsEventsPfCharts
         'Dim chtTitle As String
         Dim hilfsstring As String = ""
-        Dim chtobjName As String = windowNames(3)
+        Dim chtobjName As String = "noch zu bestimmen"
         Dim smallfontsize As Double, titlefontsize As Double
         Dim singleProject As Boolean
         Dim outOfToleranceProjekte As New SortedList(Of String, Double())
