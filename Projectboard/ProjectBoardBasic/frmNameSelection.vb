@@ -515,6 +515,7 @@ Public Class frmNameSelection
     ''' <remarks></remarks>
     Private Sub frmShowPlanElements_Load(sender As Object, e As EventArgs) Handles Me.Load
 
+
         If frmCoord(PTfrm.listselP, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.listselP, PTpinfo.top))
             Me.Left = CInt(frmCoord(PTfrm.listselP, PTpinfo.left))

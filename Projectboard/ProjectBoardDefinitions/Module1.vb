@@ -476,6 +476,7 @@ Public Module Module1
     Public Enum PTProjektType
         vorlage = 0
         projekt = 1
+        nameList = 2
     End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -3085,7 +3086,6 @@ Public Module Module1
 
         If Not IsNothing(lastFilter) Then
 
-            'selectedBUs = lastFilter.BUs
             selectedBUs = copyCollection(lastFilter.BUs)
             selectedTyps = copyCollection(lastFilter.Typs)
             selectedPhases = copyCollection(lastFilter.Phases)
@@ -3094,15 +3094,159 @@ Public Module Module1
             selectedCosts = copyCollection(lastFilter.Costs)
 
         Else
+
             selectedBUs = New Collection
             selectedTyps = New Collection
             selectedPhases = New Collection
             selectedMilestones = New Collection
             selectedRoles = New Collection
             selectedCosts = New Collection
+
         End If
 
     End Sub
+
+
+   
+    ''' <summary>
+    ''' Gibt zurück Selectiontyp der aktuell selektierten Elemente
+    ''' 0 = Projekt-Struktur (Vorlage)
+    ''' 1 = Projekt-Struktur(Projekt)
+    ''' 2 = Namensliste
+    ''' </summary>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function selectionTyp(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                           ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                           ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Integer
+
+        Dim element As String = ""
+        Dim tmpresult As PTProjektType = PTProjektType.nameList
+        Dim i As Integer = 1
+
+        ' Check ob selectedPhases P: oder V: enthält
+        Do While tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
+            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
+                Do While tmpresult = PTProjektType.nameList And i <= selectedPhases.Count
+                    element = selectedPhases.Item(i).ToString
+                    Dim hstr1() As String = Split(element, "V:")
+                    If hstr1.Length > 1 Then
+                        tmpresult = PTProjektType.vorlage
+                    End If
+                    Dim hstr2() As String = Split(element, "P:")
+                    If hstr2.Length > 1 Then
+                        tmpresult = PTProjektType.projekt
+                    End If
+                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+                        tmpresult = PTProjektType.nameList
+                    End If
+                    i = i + 1
+                Loop
+            Loop
+        Loop
+
+        ' Check ob selectedMeilstones P: oder V: enthält
+        i = 1
+        Do While tmpresult <> PTProjektType.projekt And i <= selectedMilestones.Count
+            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= selectedMilestones.Count
+                Do While tmpresult = PTProjektType.nameList And i <= selectedMilestones.Count
+                    element = selectedMilestones.Item(i).ToString
+                    Dim hstr1() As String = Split(element, "V:")
+                    If hstr1.Length > 1 Then
+                        tmpresult = PTProjektType.vorlage
+                    End If
+                    Dim hstr2() As String = Split(element, "P:")
+                    If hstr2.Length > 1 Then
+                        tmpresult = PTProjektType.projekt
+                    End If
+                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+                        tmpresult = PTProjektType.nameList
+                    End If
+                    i = i + 1
+                Loop
+            Loop
+        Loop
+
+
+        ' gleiches noch todo für Milensteine, rollen, kosten, ...
+
+        selectionTyp = tmpresult
+
+    End Function
+
+   
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function checkFilter(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                               ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                               ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Collection
+
+        Dim element As String = ""
+        Dim outputCollection As New Collection
+        Dim tmpresult As PTProjektType = PTProjektType.nameList
+        Dim i As Integer = 1
+        Dim projName As String = ""
+
+
+        For i = 1 To selectedPhases.Count
+
+            element = selectedPhases.Item(i).ToString
+            Dim hstr() As String = Split(element, "P:")
+            If hstr.Length > 1 Then
+                Dim hstr1() As String = Split(hstr(1), "]", , )
+                If hstr1.Length > 0 Then
+                    projName = hstr1(0)
+                    If Not ShowProjekte.contains(projName) Then
+                        If Not outputCollection.Contains(projName) Then
+                            outputCollection.Add(projName, projName)
+                        End If
+                    End If
+                End If
+            End If
+        Next i
+
+        For i = 1 To selectedMilestones.Count
+
+            element = selectedMilestones.Item(i).ToString
+            Dim hstr() As String = Split(element, "P:")
+            If hstr.Length > 1 Then
+                Dim hstr1() As String = Split(hstr(1), "]", , )
+                If hstr1.Length > 0 Then
+                    projName = hstr1(0)
+                    If Not ShowProjekte.contains(projName) Then
+                        If Not outputCollection.Contains(projName) Then
+                            outputCollection.Add(projName, projName)
+                        End If
+                    End If
+                End If
+            End If
+        Next i
+
+        Dim explstr As String = "Folgende Projekte sind im Filter enthalten, doch nicht in der Multprojekt-Tafel geladen"
+        Dim headerstr As String = "nicht geladene Projekte"
+
+        Call showOutPut(outputCollection, headerstr, explstr)
+
+        checkFilter = outputCollection
+  
+    End Function
+
+
 
     ''' <summary>
     ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
@@ -3134,7 +3278,7 @@ Public Module Module1
                         Catch ex As Exception
                             .Tags.Add("CRD", Date.Now.ToString)
                         End Try
-                        
+
                     End If
 
                     .Tags.Add("CALL", calendarLeft.ToShortDateString)

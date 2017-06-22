@@ -14167,6 +14167,7 @@ Public Module awinGeneralModules
         Dim selBUs As New Collection
         Dim selTyps As New Collection
 
+
         Call retrieveSelections(filterName, menueOption, selBUs, selTyps, _
                                  selphases, selMilestones, selRoles, selCosts)
 
