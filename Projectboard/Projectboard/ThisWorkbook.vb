@@ -479,10 +479,13 @@ Public Class ThisWorkbook
     End Sub
   
 
-
+    Private bIShrankTheRibbon As Boolean
     Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
-        'Dim anz As Integer = appInstance.Windows.Count
-        'Call MsgBox("Activate Window: " & CType(Wn.ActiveSheet, Excel.Worksheet).Name & "; Anzahl Fenster: " & anz)
+        If Wn.Caption = windowNames(4) Then
+            bIShrankTheRibbon = False
+            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
+            bIShrankTheRibbon = True
+        End If
     End Sub
 
     Private Sub ThisWorkbook_WindowResize(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowResize

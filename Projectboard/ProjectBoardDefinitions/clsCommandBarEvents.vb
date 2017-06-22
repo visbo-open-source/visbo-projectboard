@@ -34,6 +34,9 @@ Public Class clsCommandBarEvents
             Exit Sub
         End If
 
+        If IsNothing(appInstance.ActiveSheet) Then
+            Exit Sub
+        End If
         If Not enableOnUpdate Or Not (CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.MPT)) Then
             Exit Sub
         End If
@@ -47,7 +50,7 @@ Public Class clsCommandBarEvents
         ' awinSelection enthält alle selektierten Shapes 
         Dim awinSelection As Excel.ShapeRange
         Try
-            
+
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
             If awinSelection.Count > 0 Then
 

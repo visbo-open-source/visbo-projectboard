@@ -8522,6 +8522,14 @@ Imports System.Windows
             '.Caption = windowNames(PTwindows.meChart)
         End With
 
+        'jetzt das Ursprungs-Window ausblenden ...
+        For Each tmpWindow As Excel.Window In visboWorkbook.Windows
+            If (CStr(tmpWindow.Caption) <> windowNames(4)) And (CStr(tmpWindow.Caption) <> windowNames(1)) Then
+                tmpWindow.Visible = False
+            End If
+        Next
+
+
         visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
 
         ' jetzt die Größen anpassen 
@@ -8541,6 +8549,7 @@ Imports System.Windows
         'Dim checkSheet As Object = projectboardWindows(1).ActiveSheet
 
         ' jetzt das Mass-Edit Window aktivieren 
+
         projectboardWindows(PTwindows.massEdit).Activate()
         'With CType(projectboardWindows(1).ActiveSheet, Excel.Worksheet)
         '    CType(.Cells(currentRow, currentColumn), Excel.Range).Activate()
@@ -8582,16 +8591,19 @@ Imports System.Windows
             chWidth = stdBreite
             Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
+ 
         Else
             ' sie sind schon da 
 
         End If
 
-
-
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
+
+        ' jetzt das Chart-Window aktivieren (sonst bleibt Ribbon stehen)
+        projectboardWindows(2).Activate()
+
 
     End Sub
 
