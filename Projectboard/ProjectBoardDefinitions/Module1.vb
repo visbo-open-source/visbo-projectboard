@@ -76,6 +76,9 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
 
+    ' wird benutzt, um zu bestimmen, welche Charts selektiert wurden ... 
+    Public selectedCharts As New Collection
+
     ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
     ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
     ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
@@ -213,6 +216,49 @@ Public Module Module1
    
     Public Const maxProjektdauer As Integer = 60
 
+    
+    Public Enum ptReportBigTypes
+        charts = 0
+        tables = 1
+        components = 2
+    End Enum
+
+    Public Enum ptReportTables
+        prMilestones = 0
+        pfMilestones = 1
+    End Enum
+
+    Public Enum ptReportComponents
+        prAmpel = 0
+        prStand = 1
+        prName = 2
+        prCustomField = 3
+        prAmpelText = 4
+        prDescription = 5
+        prBusinessUnit = 6
+        prLaufzeit = 7
+        prVerantwortlich = 8
+    End Enum
+
+    Public Enum ptPRPFType
+        project = 0
+        portfolio = 1
+    End Enum
+
+    ''' <summary>
+    ''' kann verwendet werden, um die Typen zu kennzeichnen
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum ptElementTypen
+        phases = 0
+        roles = 1
+        costs = 2
+        portfolio = 3
+        ergebnis = 4
+        milestones = 5
+        mta = 6
+    End Enum
+
 
     ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
     ' 0: alphabetisch nach Name
@@ -232,6 +278,7 @@ Public Module Module1
 
     Public Enum ptTables
         none = 0
+        repCharts = 1
         MPT = 3
         cstSettings = 4
         meRC = 5
@@ -240,11 +287,11 @@ Public Module Module1
         meAT = 9
         cstMmappings = 10
         meCharts = 11
-        pfCharts = 12
-        prCharts = 13
+        mptPfCharts = 12
+        mptPrCharts = 13
         cstMissingDefs = 15
     End Enum
-    
+
     Public Enum ptWriteProtectionType
         project = 0
         scenario = 1
@@ -335,6 +382,7 @@ Public Module Module1
         ZeitRisiko = 11
         FitRisikoVol = 15
         Dependencies = 16
+        MilestoneTrendanalysis = 17
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
@@ -454,7 +502,7 @@ Public Module Module1
     End Enum
     Public Enum PTlicense
         swimlanes = 0
-       
+
     End Enum
 
     Public Enum PTpptAnnotationType
@@ -477,6 +525,30 @@ Public Module Module1
         vorlage = 0
         projekt = 1
         nameList = 2
+    End Enum
+
+    ''' <summary>
+    ''' Aufzaehlung der Windows, wird in projectboardwindows(x) verwendet 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTwindows
+        mpt = 0
+        mptpr = 1
+        mptpf = 2
+        meChart = 3
+        massEdit = 4
+    End Enum
+
+    ''' <summary>
+    ''' Aufzählung der Views, wird in projectboardViews(x) verwendet 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTview
+        mpt = 0
+        mptpr = 1
+        mptprpf = 2
+        meOnly = 3
+        meChart = 4
     End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -629,13 +701,13 @@ Public Module Module1
     Public DiagrammTypen(6) As String
 
     ' Variable nimmt die Namen der Windows auf  
-    Public windowNames(5) As String
+    Public windowNames(4) As String
 
     ' nimmt alle Excel.Window Definitionen auf 
     Public projectboardWindows(4) As Excel.Window
 
     ' Variable nimmt die View Namen auf ; eine View ist eine Zusammenstellung von Windows
-    Public viewNames(3) As String
+    Public projectboardViews(4) As Excel.CustomView
 
     ' Variable nimmt die Namen der Ergebnis Charts auf  
     Public ergebnisChartName(3) As String
@@ -711,19 +783,38 @@ Public Module Module1
     ''' setzt EnableEvents, ScreenUpdating auf true
     ''' </summary>
     ''' <remarks></remarks>
-    Sub projektTafelInit()
+    Public Sub projektTafelInit()
 
         With appInstance
             .EnableEvents = True
             If .ScreenUpdating = False Then
-                'Call MsgBox ("Screen Update !")
                 .ScreenUpdating = True
             End If
         End With
 
-
     End Sub
 
+
+    ''' <summary>
+    ''' aktiviert, wenn visible, das Multiprojekt Window ...
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub activateProjectBoard()
+        Try
+
+            If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+
+                If projectboardWindows(PTwindows.mpt).Visible = True Then
+                    projectboardWindows(PTwindows.mpt).Activate()
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 
     ''' <summary>
     ''' eingefügt, um eine Warteschleife relisieren zu können ... 
@@ -799,35 +890,217 @@ Public Module Module1
     ' prüft , ob übergebenes Diagramm ein Ergebnis Diagramm ist - in index steht ggf als Ergebnis die entsprechende Nummer; 0 wenn es kein Ergebnis Diagramm ist
     '
     Function istErgebnisDiagramm(ByRef chtobj As ChartObject, ByRef index As Integer) As Boolean
-        Dim e As Integer
+
         Dim found As Boolean
-        Dim anzErgebnisArten As Integer = 2
-        'Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
 
-        e = 1
-        index = 0
         found = False
 
-        'Try
-        '    chtTitle = chtobj.Chart.ChartTitle.Text
-        'Catch ex As Exception
-        '    chtTitle = " "
-        'End Try
 
-        'While Not found And e <= anzErgebnisArten
-        '    If chtTitle Like ergebnisChartName(e - 1) & "*" Then
-        '        found = True
-        '    Else
-        '        e = e + 1
-        '    End If
-        'End While
+        chtobjName = chtobj.Name
 
-        'If found Then
-        '    index = e
-        'End If
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.UeberAuslastung Then
+                    found = True
+                    index = PTpfdk.UeberAuslastung
+
+                ElseIf CInt(tmpStr(1)) = PTpfdk.Unterauslastung Then
+                    found = True
+                    index = PTpfdk.Unterauslastung
+
+                ElseIf CInt(tmpStr(1)) = PTpfdk.Auslastung Then
+                    found = True
+                    index = PTpfdk.Auslastung
+
+                ElseIf CInt(tmpStr(1)) = PTpfdk.ErgebnisWasserfall Then
+                    found = True
+                    index = PTpfdk.ErgebnisWasserfall
+
+                Else
+                    found = False
+                End If
+
+            End If
+
+
+        Catch ex As Exception
+        End Try
+
 
         istErgebnisDiagramm = found
+
+    End Function
+
+    ''' <summary>
+    ''' liefert eine Liste an Namen der Projekte zurück, die als "selektiert" gelten 
+    ''' Projekte können selektiert werden durch explizites Selektieren des Project-Shapes, alle Projekte, die zu einem selektierten Chart beitragen und/oder 
+    ''' alle Projekte, die markiert sind ... 
+    ''' 
+    ''' </summary>
+    ''' <param name="takeAllIFNothingWasSelected"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getProjectSelectionList(ByVal takeAllIFNothingWasSelected As Boolean) As Collection
+        Dim tmpCollection As Collection = New Collection
+        Dim msg As String = ""
+
+        Dim chtobjName As String = ""
+        Dim userSelectedSomething As Boolean = False
+
+        'Dim testActiveWindow As String
+
+        ' Exit, wenn nicht im PRojekt-Tafel-Modus 
+        If visboZustaende.projectBoardMode <> ptModus.graficboard Then
+            ' leere Menge zurückgegeben 
+        Else
+
+            Try
+                If ShowProjekte.Count > 0 Then
+
+                    ' alle selektierten Projekte aufnehmen ... 
+                    If selectedProjekte.Count > 0 Then
+                        userSelectedSomething = True
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                            If Not tmpCollection.Contains(kvp.Key) Then
+                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
+                                End If
+                            End If
+
+                        Next
+                    End If
+
+
+                    ' jetzt für alle selektierten Charts bestimmen, welche Projekte dazu beitragen ... 
+
+
+                    Dim allChartsOnSheet As Excel.ChartObjects = _
+                       CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
+
+                    'testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
+
+                    If Not IsNothing(allChartsOnSheet) Then
+                        If allChartsOnSheet.Count > 0 And selectedCharts.Count > 0 Then
+                            userSelectedSomething = True
+                            For Each chtObj As Excel.ChartObject In allChartsOnSheet
+
+                                If selectedCharts.Contains(chtObj.Name) Then
+                                    chtobjName = chtObj.Name
+
+
+                                    Dim index As Integer = -1
+                                    ' bestimmen, um welchen Typ es sich handelt 
+                                    Dim weiterMachen As Boolean = istRollenDiagramm(chtObj) Or _
+                                                                istKostenartDiagramm(chtObj) Or _
+                                                                (istErgebnisDiagramm(chtObj, index) And index = PTpfdk.UeberAuslastung) Or _
+                                                                (istErgebnisDiagramm(chtObj, index) And index = PTpfdk.Unterauslastung)
+
+                                    If weiterMachen Then
+
+
+                                        Dim found As Boolean = False
+                                        Dim myCollection As Collection = New Collection
+
+                                        Dim foundDiagram As clsDiagramm = Nothing
+
+                                        Try
+
+                                            foundDiagram = DiagramList.getDiagramm(chtobjName)
+                                            If Not IsNothing(foundDiagram) Then
+                                                myCollection = foundDiagram.gsCollection
+                                                found = True
+                                            End If
+
+                                        Catch ex As Exception
+                                            myCollection = New Collection
+                                        End Try
+
+
+                                        ' es ist ein Rollen Diagramm mit der Menge von angegebenen Rollen in myCollection 
+                                        If found Then
+                                            If istRollenDiagramm(chtObj) Then
+                                                Dim currentFilter As clsFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                                                myCollection, Nothing)
+
+                                                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                                                    If currentFilter.doesNotBlock(kvp.Value) Then
+                                                        If Not tmpCollection.Contains(kvp.Key) Then
+                                                            tmpCollection.Add(kvp.Key, kvp.Key)
+                                                        End If
+                                                    End If
+                                                Next
+
+                                            ElseIf istKostenartDiagramm(chtObj) Then
+                                                Dim currentFilter As clsFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                                                Nothing, myCollection)
+
+                                                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                                                    If currentFilter.doesNotBlock(kvp.Value) Then
+                                                        If Not tmpCollection.Contains(kvp.Key) Then
+                                                            tmpCollection.Add(kvp.Key, kvp.Key)
+                                                        End If
+                                                    End If
+                                                Next
+
+
+                                            ElseIf istErgebnisDiagramm(chtObj, index) Then
+
+                                                If index = PTpfdk.UeberAuslastung Or _
+                                                    index = PTpfdk.Unterauslastung Then
+
+                                                    Dim currentFilter As clsFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                                                    myCollection, Nothing)
+                                                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                                                        If currentFilter.doesNotBlock(kvp.Value) Then
+                                                            If Not tmpCollection.Contains(kvp.Key) Then
+                                                                tmpCollection.Add(kvp.Key, kvp.Key)
+                                                            End If
+                                                        End If
+                                                    Next
+
+                                                End If
+
+                                            End If
+                                        End If
+
+                                    End If
+                                End If
+                            Next
+                        End If
+                    End If
+
+
+                    If Not userSelectedSomething And takeAllIFNothingWasSelected Then
+                        ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
+                        tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
+                    End If
+
+
+                Else
+                    If awinSettings.englishLanguage Then
+                        msg = "no active projects - please load or activate projects first"
+                    Else
+                        msg = "keine aktiven Projekte - bitte zuerst Projekte laden bzw. aktivieren"
+                    End If
+                    Call MsgBox(msg)
+                End If
+            Catch ex As Exception
+
+                Call MsgBox(ex.Message)
+            End Try
+
+        End If
+
+        'testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
+
+        getProjectSelectionList = tmpCollection
 
     End Function
 
@@ -1019,7 +1292,7 @@ Public Module Module1
         Dim chtobjName As String
         Dim tmpStr(20) As String
 
-        
+
         found = False
 
 
@@ -1943,7 +2216,7 @@ Public Module Module1
         Call MsgBox("del gedrückt ...")
     End Sub
 
-   
+
 
 
     ''' <summary>
@@ -2118,11 +2391,11 @@ Public Module Module1
         End Select
 
         Try
-            
+
 
             shapeType = kindOfShape(pShape)
 
-                ' neu 
+            ' neu 
 
             If isProjectType(shapeType) And pShape.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
 
@@ -2132,7 +2405,7 @@ Public Module Module1
                 projectboardShapes.remove(pShape)
             End If
 
-                ' Ende neu 
+            ' Ende neu 
 
 
         Catch ex As Exception
@@ -2170,7 +2443,7 @@ Public Module Module1
         Dim typus As Integer
 
         Dim ix As Integer
-        
+
 
 
         Try
@@ -2487,7 +2760,7 @@ Public Module Module1
                 calcHryFullname = "[" & pvKennung & "]" & breadcrumb & "#" & elemName
             End If
         End If
-        
+
 
     End Function
 
@@ -2618,7 +2891,7 @@ Public Module Module1
                     tmpBC = tmpBC & "#" & tmpstr(i)
                 End If
             Next
-            
+
             Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb, type, pvName)
         Else
             elemName = "?"
@@ -3050,7 +3323,7 @@ Public Module Module1
 
     '' ''End Sub
 
-    
+
 
     ''' <summary>
     ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName
@@ -3391,8 +3664,182 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' fügt Projekt-Charts und Reporting Komponenten die entsprechenden Smart-Infos hinzu, so dass 
+    ''' der Powerpoint Add-In das Chart selbstständig aktualisieren kann 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="kennzeichnung"></param>
+    ''' <param name="qualifier"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, _
+                                     ByVal kennzeichnung As String, ByVal qualifier As String, ByVal qualifier2 As String, _
+                                     ByVal bigType As Integer, ByVal detailID As Integer)
 
+        Dim chtObjName As String = ""
+        Try
+
+            If Not IsNothing(pptShape) Then
+
+                ' das bekommen alle ...
+                With pptShape
+                    If Not IsNothing(qualifier) Then
+                        .Tags.Add("Q1", qualifier)
+                    End If
+
+                    If Not IsNothing(qualifier2) Then
+                        .Tags.Add("Q2", qualifier2)
+                    End If
+
+                    If Not IsNothing(bigType) Then
+                        .Tags.Add("BID", bigType.ToString)
+                    End If
+
+                    If Not IsNothing(detailID) Then
+                        .Tags.Add("DID", detailID.ToString)
+                    End If
+
+
+                End With
+
+                If bigType = ptReportBigTypes.charts Then
+
+                    If pptShape.HasChart = MsoTriState.msoTrue Then
+                        Dim pptChart As PowerPoint.Chart = pptShape.Chart
+                        chtObjName = pptChart.Name
+
+                        Dim auswahl As Integer = -1
+                        Dim prpfTyp As Integer = -1
+                        Dim pName As String = ""
+                        Dim vName As String = ""
+                        Dim chartTyp As Integer = -1
+                        Dim prcTyp As Integer = -1
+
+
+                        ' der Chart-ObjectName enthält sehr viel ..
+                        'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
+                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pName, vName, chartTyp, auswahl)
+
+
+                        With pptShape
+
+                            
+                            If Not IsNothing(chtObjName) Then
+                                .Tags.Add("CHON", chtObjName)
+                            End If
+
+                            If Not IsNothing(prpfTyp) Then
+                                .Tags.Add("PRPF", CStr(prpfTyp))
+                            End If
+
+                            If Not IsNothing(pName) Then
+                                .Tags.Add("PNM", pName)
+                            End If
+
+                            If Not IsNothing(vName) Then
+                                .Tags.Add("VNM", vName)
+                            End If
+
+                            If Not IsNothing(chartTyp) Then
+                                .Tags.Add("CHT", CStr(chartTyp))
+                            End If
+
+                            If Not IsNothing(auswahl) Then
+                                .Tags.Add("ASW", CStr(auswahl))
+                            End If
+
+                            .Tags.Add("COL", "")
+
+                        End With
+                    End If
+
+                ElseIf bigType = ptReportBigTypes.tables Then
+                    ' sonst keine weiteren Dinge ... 
+
+                ElseIf bigType = ptReportBigTypes.components Then
+                    ' sonst keine weiteren Dinge 
+
+                Else
+                    ' noch nicht implementiert 
+                End If
+
+
+            End If
+
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt aus dem Namen eines Charts die Informationen, die benötigt werden, um ein PPTShape aus der Smart-PPT heraus zu aktualisieren ...
+    ''' </summary>
+    ''' <param name="chtObjName"></param>
+    ''' <param name="prpfTyp"></param>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="auswahl"></param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeChartInfosFromName(ByVal chtObjName As String, _
+                                              ByRef prpfTyp As Integer, _
+                                              ByRef prcTyp As Integer, _
+                                              ByRef pName As String, _
+                                              ByRef vName As String, _
+                                              ByRef chartTyp As Integer, _
+                                              ByRef auswahl As Integer)
+
+
+        Dim tmpStr() As String = chtObjName.Split(New Char() {CChar("#")})
+
+        ' bestimme, ob es sich um ein pf oder pr Diagramm handelt ...  
+
+        If tmpStr(0) = "pr" Then
+            ' bestimme den Charttyp ...
+            prpfTyp = ptPRPFType.project
+
+            chartTyp = CInt(tmpStr(1))
+
+            If chartTyp = PTprdk.KostenBalken Or _
+                chartTyp = PTprdk.KostenPie Then
+                prcTyp = ptElementTypen.costs
+            ElseIf chartTyp = PTprdk.PersonalBalken Or _
+                chartTyp = PTprdk.PersonalPie Then
+                prcTyp = ptElementTypen.roles
+            Else
+                prcTyp = ptElementTypen.ergebnis
+            End If
+
+
+            ' bestimme pName und vName 
+            Dim fullName As String = tmpStr(2)
+
+            If fullName.Contains("[") And fullName.Contains("]") Then
+                Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
+                pName = tmpstr1(0)
+                vName = tmpstr1(1)
+            Else
+                pName = fullName
+                vName = ""
+            End If
+
+            ' bestimme, um welche Auswahl es sich handelt ... 
+            auswahl = CInt(tmpStr(3))
+        ElseIf tmpStr(0) = "pf" Then
+
+            prpfTyp = ptPRPFType.portfolio
+            ' noch nicht implementiert ... 
+        Else
+
+        End If
+
+
+
+
+    End Sub
     Public Sub PPTstarten()
+
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
             pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
@@ -3533,4 +3980,208 @@ Public Module Module1
 
         End If
     End Sub
+
+
+    ''' <summary>
+    ''' liefert zurück, ob in dem angegebenen Sheet überhaupt Charts vorhanden sind ... 
+    ''' </summary>
+    ''' <param name="chType"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function thereAreAnyCharts(ByVal chType As Integer) As Boolean
+
+        Dim anzCharts As Integer = 0
+
+
+        Try
+            If chType = PTwindows.mptpf Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            ElseIf chType = PTwindows.mptpr Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            ElseIf chType = PTwindows.meChart Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.meCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        thereAreAnyCharts = (anzCharts > 0)
+
+    End Function
+
+    ''' <summary>
+    ''' gibt zurück ob das angegebene Window existiert
+    ''' wird unter anderem benötigt, um die Caption zu aktualisieren 
+    ''' </summary>
+    ''' <param name="windowTyp"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function visboWindowExists(ByVal windowTyp As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Dim sheetNameLookedFor As String = ""
+
+        Try
+            Select Case windowTyp
+                Case PTwindows.mpt
+                    sheetNameLookedFor = arrWsNames(ptTables.MPT)
+                Case PTwindows.mptpf
+                    sheetNameLookedFor = arrWsNames(ptTables.mptPfCharts)
+                Case PTwindows.mptpr
+                    sheetNameLookedFor = arrWsNames(ptTables.mptPrCharts)
+                Case PTwindows.meChart
+                    sheetNameLookedFor = arrWsNames(ptTables.meCharts)
+                Case PTwindows.massEdit
+                    sheetNameLookedFor = arrWsNames(ptTables.meRC)
+                Case Else
+                    sheetNameLookedFor = "XX?"
+            End Select
+
+            For i As Integer = 1 To CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count
+                If CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Item(i), Excel.Window).ActiveSheet, Excel.Worksheet) _
+                    .Name = sheetNameLookedFor Then
+                    tmpResult = Not IsNothing(projectboardWindows(windowTyp))
+                End If
+            Next
+        Catch ex As Exception
+
+        End Try
+        visboWindowExists = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' liefert den Caption Namen des Windows in Abhängigkeit von Portfolio oder Projekt und in Abhängigkeit von der Sprache 
+    ''' </summary>
+    ''' <param name="visboWindowTyp"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeWindowCaption(ByVal visboWindowTyp As Integer, _
+                                          Optional ByVal addOnMsg As String = "") As String
+        Dim tmpResult As String = ""
+
+        Select Case visboWindowTyp
+
+            Case PTwindows.mptpf
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Charts for Portfolio '" & currentConstellationName & "'"
+                Else
+                    tmpResult = "Charts für Portfolio " & currentConstellationName & "'"
+                End If
+
+            Case PTwindows.mptpr
+
+                tmpResult = addOnMsg
+
+
+            Case PTwindows.meChart
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Project-Chart and Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
+                Else
+                    tmpResult = "Projekt-Chart und Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
+                End If
+
+            Case PTwindows.mpt
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Multiproject-Board '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
+                Else
+                    tmpResult = "Multiprojekt-Tafel '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
+                End If
+
+            Case PTwindows.massEdit
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Modify Resource and Cost Needs"
+                Else
+                    tmpResult = "Personal- und Kostenbedarfe ändern"
+                End If
+
+        End Select
+
+        bestimmeWindowCaption = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' schliesst alle Windows ausser MPT Window; macht dann das MPT Window wieder groß 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub closeAllWindowsExceptMPT()
+
+        Dim tmpWindow As Excel.Window
+        Dim vglName As String = CType(projectboardWindows(PTwindows.mpt).ActiveSheet, Excel.Worksheet).Name
+        If vglName <> arrWsNames(ptTables.MPT) Then
+            Call MsgBox("Window 0 zeigt auf das falsche Sheet: " & vglName)
+            Exit Sub
+        End If
+
+        ' alle Windows schliessen, bis auf das MPT Window 
+        For Each tmpWindow In CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows
+            If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = vglName Then
+                ' nichts tun ...
+            Else
+                tmpWindow.Close()
+            End If
+        Next
+
+        ' jetzt die projectboardWindows = Nothing setzen 
+        projectboardWindows(PTwindows.massEdit) = Nothing
+        projectboardWindows(PTwindows.meChart) = Nothing
+        projectboardWindows(PTwindows.mptpf) = Nothing
+        projectboardWindows(PTwindows.mptpr) = Nothing
+
+        ' make MPT Window great again ...
+        With projectboardWindows(PTwindows.mpt)
+            .Visible = True
+            .WindowState = XlWindowState.xlMaximized
+        End With
+
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt in Abhängigkeit von TableTyp die Größe und Position des Fensters
+    ''' </summary>
+    ''' <param name="tableTyp"></param>
+    ''' <param name="chtop"></param>
+    ''' <param name="chleft"></param>
+    ''' <param name="chwidth"></param>
+    ''' <param name="chHeight"></param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer, _
+                                                ByRef chtop As Double, _
+                                                ByRef chleft As Double, _
+                                                ByRef chwidth As Double, _
+                                                ByRef chHeight As Double)
+
+        Dim currentWorksheet As Excel.Worksheet = _
+            CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(tableTyp)), Excel.Worksheet)
+
+        Dim tmpTop As Double = 2.0
+        Dim tmpLeft As Double = 2
+        Dim tmpWidth As Double = maxScreenWidth / 5 - 29
+        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5
+
+        ' wenn schon Charts existieren: ein neues Chart wird immer als letztes  angehängt ..
+        With currentWorksheet
+            For Each tmpChtObject As Excel.ChartObject In CType(.ChartObjects, Excel.ChartObjects)
+                If tmpChtObject.Top + tmpChtObject.Height + 2 > tmpTop Then
+                    tmpTop = tmpChtObject.Top + tmpChtObject.Height + 2
+                End If
+            Next
+        End With
+
+        ' jetzt die Werte setzen 
+        chtop = tmpTop
+        chleft = tmpLeft
+        chwidth = tmpWidth
+        chHeight = tmpHeight
+
+    End Sub
+
 End Module
