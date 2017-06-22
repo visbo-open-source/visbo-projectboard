@@ -322,7 +322,7 @@ Public Class clsEventsPrcCharts
     ''' <remarks></remarks>
     Private Sub PrcChartEvents_Deactivate() Handles PrcChartEvents.Deactivate
 
-        Dim chtobj As xlNS.ChartObject
+        'Dim chtobj As xlNS.ChartObject
 
 
         Try

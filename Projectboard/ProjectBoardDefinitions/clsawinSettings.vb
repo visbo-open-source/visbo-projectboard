@@ -47,6 +47,7 @@ Public Class clsawinSettings
 
     Public Property databaseName As String
     Public Property databaseURL As String
+    
     Public Property globalPath As String
     Public Property awinPath As String
 
@@ -222,9 +223,9 @@ Public Class clsawinSettings
     Sub New()
 
         ' Chart Settings
-        _fontsizeTitle = 13
-        _fontsizeLegend = 9
-        _fontsizeItems = 9
+        _fontsizeTitle = 12
+        _fontsizeLegend = 8
+        _fontsizeItems = 8
         _CPfontsizeTitle = 10
         _CPfontsizeItems = 8
         _ChartHoehe1 = 150.0
@@ -262,7 +263,7 @@ Public Class clsawinSettings
         _propAnpassRess = False
         _phasesProzentual = False
         _drawphases = False
-        _showValuesOfSelected = True
+        _showValuesOfSelected = False
         _applyFilter = False
         _createIfNotThere = False
         _showOrigName = False

@@ -133,8 +133,7 @@
               <!--<menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
               <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
               <button id="PT4G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Hierarchie"/>
-              </menu>
-              <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />-->
+              </menu>-->
             </menu>
           </splitButton>
         </group>
@@ -247,21 +246,53 @@
       <!--label="Sortieren"-->
       <tab id="PTsort" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT6G1" >
-          <button id ="PT6G1B1" imageMso="SortUp" label ="Alphabetically..."/>
-          <button id ="PT6G1B2" imageMso="Grouping" label ="by Business Unit/Start/Name..."/>
-          <button id ="PT6G1B3" imageMso="Grouping" label ="by Strategy/Profit/Risk..."/>
-          <button id ="PT6G1B4" imageMso="SortDialog" label ="by Custom List..."/>
-          <button id ="PT6G1B5" imageMso="SortDialog" label ="by Custom Formula..."/>      
+          <!--label="alphabetisch"-->
+          <button id ="PT6G1B1" imageMso="SortUp" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <!--label="Business Unit StartDate Name"-->
+          <button id ="PT6G1B2" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <!--label="Strategy Profit Risk"-->
+          <button id ="PT6G1B3" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <!--label="sort by individual criterias"-->
+          <button id ="PT6G1B4" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <button id ="PT6G1B5" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>      
         </group>
       </tab>
       <!--label="Charts"-->
       <tab id="PTcharts" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
         <!--label="Charts"-->
         <group id="PT7G1"  >
+          <!--label="Projekt-Charts"-->
+          <splitButton id="PT7G1M1split" size="large">
+            <!--label="wichtigsten Projekt-Charts "-->
+            <button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="TomMostImportantProjectCharts" supertip="Anzeige der wichtigsten Projekt-Charts"/>
+            <menu id ="PT7G1M1new" >
+              <!--label="Personal Bedarfe"-->
+              <button id="PT0G1M1B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
+              <menuSeparator id="PT7G1s1"/>
+              <!--label="Kosten Bedarfe"-->
+              <button id="PT0G1M1B2" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B5GKosten" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Kostenbedarfe und die Gesamt-Summe zeigen"/>
+              <menuSeparator id="PT7G1s2"/>
+              <!--label="Gewinn/Verlust"-->
+              <button id="PT0G1M1B3" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>
+              <menuSeparator id="PT7G1s3"/>
+              <!--label="Strategie/Risiko/Marge"-->
+              <button id="PT0G1B3" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
+              <menuSeparator id="PT7G1s4"/>
+              <!--label="Plan/Aktuell"-->
+              <menu id="PT7G1M2" getLabel ="bestimmeLabel">
+                <!--label="Personalkosten"-->
+                <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  enabled ="false" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <!--label="Sonstige Kosten"-->
+                <button id="PT7G1M2B2" getLabel ="bestimmeLabel"  enabled ="false" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <!--label="Gesamt Kosten"-->
+                <button id="PT7G1M2B3" getLabel ="bestimmeLabel" enabled="false" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+              </menu>
+            </menu>
+          </splitButton>
           <!--label="Portfolio-Charts"-->
           <splitButton id="PT7G1M0split" size="large">
           <!--label="Capazity Utilization"-->
-          <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
+          <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="TomMostImportantPortfolioCharts" supertip="Anzeige der wichtigsten Portfolio Charts"/>
           <menu id="PT7G1M"  getVisible="chckVisibility" >
               <!--label="Ressource/Cost/Milestones/Phases"-->
               <menu id="PTXG1M2" getLabel ="bestimmeLabel" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
@@ -278,7 +309,7 @@
               <button id="PTXG1B3" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
               <menuSeparator id="PTXG1s2"/>
               <!--label="Strategie/Risiko/Marge"-->
-              <button id="PTXG1B8" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
+              <button id="PTXG1B8" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
               <!--label="Budget/Kosten/Auslastung"--><!--
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Custom"-->
@@ -288,37 +319,9 @@
               <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/>--> 
            </menu>
           </splitButton>
-          <!--label="Projekt-Charts"-->
-          <splitButton id="PT7G1M1split" size="large">
-            <!--label="Personal Bedarfe"-->
-            <button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
-            <menu id ="PT7G1M1new" >
-              <!--label="Personal Bedarfe"-->
-              <button id="PT0G1M1B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
-              <menuSeparator id="PT7G1s1"/>
-              <!--label="Kosten Bedarfe"-->
-              <button id="PT0G1M1B2" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B5GKosten" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Kostenbedarfe und die Gesamt-Summe zeigen"/>
-              <menuSeparator id="PT7G1s2"/>
-              <!--label=" Gewinn/Verlust"-->
-              <button id="PT0G1M1B3" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>
-              <menuSeparator id="PT7G1s3"/>
-              <!--label="Strategie/Risiko/Marge"-->
-              <button id="PT0G1B3" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
-              <menuSeparator id="PT7G1s4"/>
-              <!--label="Plan/Aktuell"-->
-              <menu id="PT7G1M2" getLabel ="bestimmeLabel">
-                <!--label="Personalkosten"-->
-                <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-                <!--label="Sonstige Kosten"-->
-                <button id="PT7G1M2B2" getLabel ="bestimmeLabel"  onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-                <!--label="Gesamt Kosten"-->
-                <button id="PT7G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-              </menu>
-           </menu>
-          </splitButton>
-          <separator id="PT0G1s7"/>
+          <!--<separator id="PT0G1s7"/>
           <button id="PT7G1B1" label="Copy chart style" supertip ="muss noch programmiert werden"/>
-          <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>
+          <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>-->
           <separator id="PT0G1s9"/>
           <!--label="Optimieren"-->
           <button id="PTOPTB1" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>

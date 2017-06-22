@@ -926,29 +926,10 @@ Public Module awinGeneralModules
             autoSzenarioNamen(2) = "2. Optimum"
             autoSzenarioNamen(3) = "3. Optimum"
 
-            windowNames(0) = "VISBO Multiprojekt-Tafel"
-            windowNames(1) = "Ressourcen und Kosten"
-            windowNames(2) = "Termine"
-            windowNames(3) = "Attribute"
-            windowNames(4) = "Charts"
-            windowNames(5) = "Diverses"
-
-            viewNames(0) = "Projectboard"
-            viewNames(1) = "Edit"
-            viewNames(2) = "undefined"
-            viewNames(3) = "undefined"
-
-            projectboardWindows(0) = Nothing
-            projectboardWindows(1) = Nothing
-            projectboardWindows(2) = Nothing
-            projectboardWindows(3) = Nothing
-            projectboardWindows(4) = Nothing
-
-
             '
             ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
             ' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
-            arrWsNames(1) = "Portfolio" ' depr
+            arrWsNames(1) = "repCharts" ' Tabellenblatt zur Aufnahme der Charts für Reports 
             arrWsNames(2) = "Vorlage" ' depr
             ' arrWsNames(3) = 
             arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
@@ -962,8 +943,8 @@ Public Module awinGeneralModules
             arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
             ' arrWsNames(11) = 
             arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
-            arrWsNames(12) = "pfCharts"                     ' vorbereitet: Portfolio Charts 
-            arrWsNames(13) = "prCharts"                     ' vorbereitet: Projekt Charts 
+            arrWsNames(ptTables.mptPfCharts) = "mptPfCharts"                     ' vorbereitet: Portfolio Charts 
+            arrWsNames(ptTables.mptPrCharts) = "mptPrCharts"                     ' vorbereitet: Projekt Charts 
             arrWsNames(14) = "Objekte" ' depr
             arrWsNames(15) = "missing Definitions"          ' in Customization File 
 
@@ -1016,7 +997,7 @@ Public Module awinGeneralModules
                 End With
 
                 ' jetzt das ProjectboardWindows (0) setzen 
-                projectboardWindows(0) = appInstance.ActiveWindow
+                projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
 
                 miniHeight = maxScreenHeight / 6
                 miniWidth = maxScreenWidth / 10
@@ -1083,10 +1064,6 @@ Public Module awinGeneralModules
                     xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
                     myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-
-
-                    ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
-
                     Call logfileOpen()
 
                     Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
@@ -1129,10 +1106,9 @@ Public Module awinGeneralModules
                     If Not loginErfolgreich Then
                         ' Customization-File wird geschlossen
                         xlsCustomization.Close(SaveChanges:=False)
-                        Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
+                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
                         Call logfileSchliessen()
-                        appInstance.Quit()
-                        Exit Sub
+                        Throw New ArgumentException("LOGIN cancelled ...")
 
                     End If
 
@@ -1330,11 +1306,49 @@ Public Module awinGeneralModules
                 Throw New ArgumentException(ex.Message)
             End Try
 
+            ' jetzt werden die windowNames noch gesetzt 
+
+
+            If awinSettings.englishLanguage Then
+                windowNames(PTwindows.mpt) = "VISBO Multiproject-Board"
+                windowNames(PTwindows.massEdit) = "edit projects: "
+                windowNames(PTwindows.meChart) = "project and portfolio Charts: "
+                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
+                windowNames(PTwindows.mptpr) = "Project Charts"
+            Else
+                windowNames(PTwindows.mpt) = "VISBO Multiprojekt-Tafel"
+                windowNames(PTwindows.massEdit) = "Projekte editieren: "
+                windowNames(PTwindows.meChart) = "Projekt und Portfolio Charts: "
+                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
+                windowNames(PTwindows.mptpr) = "Projekt Charts"
+            End If
+            
+
+            projectboardViews(PTview.mpt) = Nothing
+            projectboardViews(PTview.mptpr) = Nothing
+            projectboardViews(PTview.mptprpf) = Nothing
+            projectboardViews(PTview.meOnly) = Nothing
+            projectboardViews(PTview.meChart) = Nothing
+
+            projectboardWindows(PTwindows.mpt) = Nothing
+            projectboardWindows(PTwindows.mptpr) = Nothing
+            projectboardWindows(PTwindows.mptpf) = Nothing
+            projectboardWindows(PTwindows.massEdit) = Nothing
+            projectboardWindows(PTwindows.meChart) = Nothing
+
 
         Catch ex As Exception
-            Call MsgBox("Fehler in awinsettypen " & special & vbLf & ex.Message)
-            Throw New ArgumentException("Fehler in awinsettypen " & special & vbLf & ex.Message)
+            Dim msg As String = ""
+            If Not ex.Message.StartsWith("LOGIN cancelled") Then
+                ' wird an der aufrufenden Stelle gemacht 
+                'Call MsgBox("Fehler in awinsettypen " & special & vbLf & ex.Message)
+                msg = "Fehler in awinsettypen " & special & vbLf & ex.Message
+            Else
+                msg = ex.Message
+            End If
+            Throw New ArgumentException(msg)
         End Try
+
 
     End Sub
 
@@ -2118,7 +2132,7 @@ Public Module awinGeneralModules
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
                 awinSettings.autoCorrectBedarfe = True
                 awinSettings.propAnpassRess = False
-                awinSettings.showValuesOfSelected = True
+                awinSettings.showValuesOfSelected = False
             Catch ex As Exception
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
@@ -13706,18 +13720,19 @@ Public Module awinGeneralModules
     ''' <param name="chleft">auf welcher x-Koordinate soll das Chart gezeichnet werden</param>
     ''' <remarks></remarks>
     Friend Sub zeichneLeistbarkeitsChart(ByVal selCollection As Collection, ByVal chTyp As String, ByVal oneChart As Boolean, _
-                                              ByRef chtop As Double, ByRef chleft As Double)
+                                              ByRef chtop As Double, ByRef chleft As Double, ByVal chwidth As Double, ByVal chHeight As Double)
 
 
         Dim repObj As Excel.ChartObject
         Dim myCollection As Collection
 
-        Dim chWidth As Double
-        Dim chHeight As Double
 
-        ' Window Position festlegen 
-        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
-        chHeight = awinSettings.ChartHoehe1
+        '' Window Position festlegen 
+        'chHeight = maxScreenHeight / 4 - 3
+        'chWidth = maxScreenWidth / 5 - 3
+
+        'chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
+        'chHeight = awinSettings.ChartHoehe1
 
 
         If oneChart = True Then
@@ -13734,8 +13749,9 @@ Public Module awinGeneralModules
                                                               chWidth, chHeight, False, chTyp, False)
 
 
-            chtop = chtop + 5
-            chleft = chleft + 7
+            'chtop = chtop + 7 + chHeight
+            chtop = chtop + 2 + chHeight
+            'chleft = chleft + 7
         Else
             ' für jedes ITEM ein eigenes Chart machen
             For Each element As String In selCollection
@@ -13748,8 +13764,10 @@ Public Module awinGeneralModules
                 Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
                                                                    chWidth, chHeight, False, chTyp, False)
 
-                chtop = chtop + 5
-                chleft = chleft + 7
+                'chtop = chtop + 5
+                'chleft = chleft + 7
+
+                chtop = chtop + 2 + chHeight
             Next
 
         End If
@@ -13922,38 +13940,51 @@ Public Module awinGeneralModules
                 appInstance.ScreenUpdating = False
 
                 ' Window Position festlegen
-                Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
-                Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+                'Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
+                'Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+                Dim chtop As Double
+                Dim chleft As Double
+                Dim chwidth As Double
+                Dim chHeight As Double
 
-                If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                    chleft = (showRangeRight - 1) * boxWidth + 4
-                Else
-                    chleft = 5
-                End If
+
+                'If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                '    chleft = (showRangeRight - 1) * boxWidth + 4
+                'Else
+                '    chleft = 5
+                'End If
+
+                '' um es im neuen Portfolio Chart Window anzuzeigen ... 
+                'chtop = 3
+                'chleft = 3
+
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, chtop, chleft, chwidth, chHeight)
+
 
                 If selectedPhases.Count > 0 Then
                     chTyp = DiagrammTypen(0)
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chheight)
                 End If
 
                 If selectedMilestones.Count > 0 Then
                     chTyp = DiagrammTypen(5)
                     Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedRoles.Count > 0 Then
                     chTyp = DiagrammTypen(1)
                     Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedCosts.Count > 0 Then
                     chTyp = DiagrammTypen(2)
                     Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
+
 
                 appInstance.ScreenUpdating = formerSU
 
@@ -20975,7 +21006,8 @@ Public Module awinGeneralModules
 
     Public bIShrankTheRibbon As Boolean
     Public Sub Workbook_WindowActivate(ByVal Wn As Window)
-        If Wn.Caption = windowNames(4) Then
+        If Wn.Caption <> bestimmeWindowCaption(PTwindows.mpt) And _
+            Wn.Caption <> bestimmeWindowCaption(PTwindows.massEdit) Then
             bIShrankTheRibbon = False
             appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
             bIShrankTheRibbon = True
@@ -20983,9 +21015,11 @@ Public Module awinGeneralModules
     End Sub
 
     Public Sub Workbook_WindowDeactivate(ByVal Wn As Window)
-        If Wn.Caption = windowNames(4) Then
-            If bIShrankTheRibbon Then _
-            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+        If Wn.Caption <> bestimmeWindowCaption(PTwindows.mpt) And _
+            Wn.Caption <> bestimmeWindowCaption(PTwindows.massEdit) Then
+            If bIShrankTheRibbon Then
+                appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+            End If
         End If
     End Sub
 

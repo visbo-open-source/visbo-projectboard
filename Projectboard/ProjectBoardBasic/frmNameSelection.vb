@@ -794,6 +794,7 @@ Public Class frmNameSelection
         If Me.menuOption = PTmenue.excelExport Or _
             menuOption = PTmenue.filterdefinieren Or _
             menuOption = PTmenue.sessionFilterDefinieren Or _
+            menuOption = PTmenue.leistbarkeitsAnalyse Or _
             (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
             Me.DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
