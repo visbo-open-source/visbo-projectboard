@@ -51,6 +51,39 @@ Public Module awinGeneralModules
         budget = 7
     End Enum
 
+    ''' <summary>
+    ''' erstellt die CacheProjekte Liste , vorläufig erstmal die DBCache
+    ''' </summary>
+    ''' <param name="todoListe"></param>
+    ''' <remarks></remarks>
+    Public Sub buildCacheProjekte(ByVal todoListe As Collection)
+        Dim pName As String
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        For i As Integer = 1 To todoListe.Count
+            pName = CStr(todoListe.Item(i))
+            Dim hproj As clsProjekt = Nothing
+            Try
+                If ShowProjekte.contains(pName) Then
+                    hproj = ShowProjekte.getProject(pName, True)
+
+                    If Not noDB Then
+                        ' wenn es in der DB existiert, dann im Cache aufbauen 
+                        If Request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+                            ' für den Datenbank Cache aufbauen 
+                            Dim dbProj As clsProjekt = Request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                            dbCacheProjekte.upsert(dbProj)
+                        End If
+                    End If
+                End If
+                
+
+            Catch ex As Exception
+
+            End Try
+        Next
+
+    End Sub
 
     ' Änderung tk: ist ersetzt worden durch writePhaseMilestoneDefinitions
 
@@ -755,6 +788,7 @@ Public Module awinGeneralModules
             If awinSettings.visboDebug Then
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
+
                 Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
                             "Excel-Version: " & appInstance.Version, vbInformation, "Info")
             End If
@@ -771,6 +805,7 @@ Public Module awinGeneralModules
             If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
                 Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
             End If
+
 
 
             If Not globalPath.EndsWith("\") Then
@@ -891,29 +926,10 @@ Public Module awinGeneralModules
             autoSzenarioNamen(2) = "2. Optimum"
             autoSzenarioNamen(3) = "3. Optimum"
 
-            windowNames(0) = "VISBO Multiprojekt-Tafel"
-            windowNames(1) = "Ressourcen und Kosten"
-            windowNames(2) = "Termine"
-            windowNames(3) = "Attribute"
-            windowNames(4) = "Charts"
-            windowNames(5) = "Diverses"
-
-            viewNames(0) = "Projectboard"
-            viewNames(1) = "Edit"
-            viewNames(2) = "undefined"
-            viewNames(3) = "undefined"
-
-            projectboardWindows(0) = Nothing
-            projectboardWindows(1) = Nothing
-            projectboardWindows(2) = Nothing
-            projectboardWindows(3) = Nothing
-            projectboardWindows(4) = Nothing
-
-
             '
             ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
             ' die Zahlen müssen korrespondieren mit der globalen Enumeration ptTables 
-            arrWsNames(1) = "Portfolio" ' depr
+            arrWsNames(1) = "repCharts" ' Tabellenblatt zur Aufnahme der Charts für Reports 
             arrWsNames(2) = "Vorlage" ' depr
             ' arrWsNames(3) = 
             arrWsNames(ptTables.MPT) = "MPT"                          ' Multiprojekt-Tafel 
@@ -927,8 +943,8 @@ Public Module awinGeneralModules
             arrWsNames(10) = "Meilenstein-Mappings"         ' in Customization
             ' arrWsNames(11) = 
             arrWsNames(ptTables.meCharts) = "meCharts"                     ' Massen-Edit Charts 
-            arrWsNames(12) = "pfCharts"                     ' vorbereitet: Portfolio Charts 
-            arrWsNames(13) = "prCharts"                     ' vorbereitet: Projekt Charts 
+            arrWsNames(ptTables.mptPfCharts) = "mptPfCharts"                     ' vorbereitet: Portfolio Charts 
+            arrWsNames(ptTables.mptPrCharts) = "mptPrCharts"                     ' vorbereitet: Projekt Charts 
             arrWsNames(14) = "Objekte" ' depr
             arrWsNames(15) = "missing Definitions"          ' in Customization File 
 
@@ -981,7 +997,7 @@ Public Module awinGeneralModules
                 End With
 
                 ' jetzt das ProjectboardWindows (0) setzen 
-                projectboardWindows(0) = appInstance.ActiveWindow
+                projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
 
                 miniHeight = maxScreenHeight / 6
                 miniWidth = maxScreenWidth / 10
@@ -1048,10 +1064,6 @@ Public Module awinGeneralModules
                     xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
                     myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-
-
-                    ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
-
                     Call logfileOpen()
 
                     Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
@@ -1094,10 +1106,9 @@ Public Module awinGeneralModules
                     If Not loginErfolgreich Then
                         ' Customization-File wird geschlossen
                         xlsCustomization.Close(SaveChanges:=False)
-                        Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
+                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
                         Call logfileSchliessen()
-                        appInstance.Quit()
-                        Exit Sub
+                        Throw New ArgumentException("LOGIN cancelled ...")
 
                     End If
 
@@ -1295,11 +1306,49 @@ Public Module awinGeneralModules
                 Throw New ArgumentException(ex.Message)
             End Try
 
+            ' jetzt werden die windowNames noch gesetzt 
+
+
+            If awinSettings.englishLanguage Then
+                windowNames(PTwindows.mpt) = "VISBO Multiproject-Board"
+                windowNames(PTwindows.massEdit) = "edit projects: "
+                windowNames(PTwindows.meChart) = "project and portfolio Charts: "
+                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
+                windowNames(PTwindows.mptpr) = "Project Charts"
+            Else
+                windowNames(PTwindows.mpt) = "VISBO Multiprojekt-Tafel"
+                windowNames(PTwindows.massEdit) = "Projekte editieren: "
+                windowNames(PTwindows.meChart) = "Projekt und Portfolio Charts: "
+                windowNames(PTwindows.mptpf) = "Portfolio Charts: "
+                windowNames(PTwindows.mptpr) = "Projekt Charts"
+            End If
+            
+
+            projectboardViews(PTview.mpt) = Nothing
+            projectboardViews(PTview.mptpr) = Nothing
+            projectboardViews(PTview.mptprpf) = Nothing
+            projectboardViews(PTview.meOnly) = Nothing
+            projectboardViews(PTview.meChart) = Nothing
+
+            projectboardWindows(PTwindows.mpt) = Nothing
+            projectboardWindows(PTwindows.mptpr) = Nothing
+            projectboardWindows(PTwindows.mptpf) = Nothing
+            projectboardWindows(PTwindows.massEdit) = Nothing
+            projectboardWindows(PTwindows.meChart) = Nothing
+
 
         Catch ex As Exception
-            Call MsgBox("Fehler in awinsettypen " & special & vbLf & ex.Message)
-            Throw New ArgumentException("Fehler in awinsettypen " & special & vbLf & ex.Message)
+            Dim msg As String = ""
+            If Not ex.Message.StartsWith("LOGIN cancelled") Then
+                ' wird an der aufrufenden Stelle gemacht 
+                'Call MsgBox("Fehler in awinsettypen " & special & vbLf & ex.Message)
+                msg = "Fehler in awinsettypen " & special & vbLf & ex.Message
+            Else
+                msg = ex.Message
+            End If
+            Throw New ArgumentException(msg)
         End Try
+
 
     End Sub
 
@@ -2083,7 +2132,7 @@ Public Module awinGeneralModules
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
                 awinSettings.autoCorrectBedarfe = True
                 awinSettings.propAnpassRess = False
-                awinSettings.showValuesOfSelected = True
+                awinSettings.showValuesOfSelected = False
             Catch ex As Exception
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
@@ -13671,18 +13720,19 @@ Public Module awinGeneralModules
     ''' <param name="chleft">auf welcher x-Koordinate soll das Chart gezeichnet werden</param>
     ''' <remarks></remarks>
     Friend Sub zeichneLeistbarkeitsChart(ByVal selCollection As Collection, ByVal chTyp As String, ByVal oneChart As Boolean, _
-                                              ByRef chtop As Double, ByRef chleft As Double)
+                                              ByRef chtop As Double, ByRef chleft As Double, ByVal chwidth As Double, ByVal chHeight As Double)
 
 
         Dim repObj As Excel.ChartObject
         Dim myCollection As Collection
 
-        Dim chWidth As Double
-        Dim chHeight As Double
 
-        ' Window Position festlegen 
-        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
-        chHeight = awinSettings.ChartHoehe1
+        '' Window Position festlegen 
+        'chHeight = maxScreenHeight / 4 - 3
+        'chWidth = maxScreenWidth / 5 - 3
+
+        'chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
+        'chHeight = awinSettings.ChartHoehe1
 
 
         If oneChart = True Then
@@ -13699,8 +13749,9 @@ Public Module awinGeneralModules
                                                               chWidth, chHeight, False, chTyp, False)
 
 
-            chtop = chtop + 5
-            chleft = chleft + 7
+            'chtop = chtop + 7 + chHeight
+            chtop = chtop + 2 + chHeight
+            'chleft = chleft + 7
         Else
             ' für jedes ITEM ein eigenes Chart machen
             For Each element As String In selCollection
@@ -13713,8 +13764,10 @@ Public Module awinGeneralModules
                 Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
                                                                    chWidth, chHeight, False, chTyp, False)
 
-                chtop = chtop + 5
-                chleft = chleft + 7
+                'chtop = chtop + 5
+                'chleft = chleft + 7
+
+                chtop = chtop + 2 + chHeight
             Next
 
         End If
@@ -13887,38 +13940,51 @@ Public Module awinGeneralModules
                 appInstance.ScreenUpdating = False
 
                 ' Window Position festlegen
-                Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
-                Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+                'Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
+                'Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+                Dim chtop As Double
+                Dim chleft As Double
+                Dim chwidth As Double
+                Dim chHeight As Double
 
-                If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                    chleft = (showRangeRight - 1) * boxWidth + 4
-                Else
-                    chleft = 5
-                End If
+
+                'If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                '    chleft = (showRangeRight - 1) * boxWidth + 4
+                'Else
+                '    chleft = 5
+                'End If
+
+                '' um es im neuen Portfolio Chart Window anzuzeigen ... 
+                'chtop = 3
+                'chleft = 3
+
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, chtop, chleft, chwidth, chHeight)
+
 
                 If selectedPhases.Count > 0 Then
                     chTyp = DiagrammTypen(0)
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chheight)
                 End If
 
                 If selectedMilestones.Count > 0 Then
                     chTyp = DiagrammTypen(5)
                     Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedRoles.Count > 0 Then
                     chTyp = DiagrammTypen(1)
                     Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedCosts.Count > 0 Then
                     chTyp = DiagrammTypen(2)
                     Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, oneChart, _
-                                                   chtop, chleft)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
+
 
                 appInstance.ScreenUpdating = formerSU
 
@@ -18984,373 +19050,518 @@ Public Module awinGeneralModules
             Exit Sub
         End If
 
-        appInstance.EnableEvents = False
-
-        ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
-        selectedProjekte.Clear(False)
-
-        Dim currentWS As Excel.Worksheet
-        Dim currentWB As Excel.Workbook
-        Dim ersteZeile As Excel.Range
-        Dim ressCostColumn As Integer
-        Dim tmpName As String
-
-        ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
-        Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
-        Dim anzahlRollen As Integer = RoleDefinitions.Count
-        Dim rcValidation() As String
-        ' in rcValidation(0) steht der Name "alleKosten" für den Validation-String für alle Kosten
-        ' in rcValidation(i) steht der Name des Validation-String für Rolle mit UID i 
-        ReDim rcValidation(anzahlRollen + 1)
-
-        rcValidation(0) = "alleKosten"
-        rcValidation(anzahlRollen + 1) = "alles"
-
-        For i = 1 To anzahlRollen
-            Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-            If tmprole.isCombinedRole Then
-                rcValidation(i) = tmprole.name
-            Else
-                Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.name)
-                If parentName = "" Then
-                    rcValidation(i) = "alleRollen"
-                Else
-                    rcValidation(i) = parentName
-                End If
-            End If
-        Next
-
-        ' hier muss jetzt das entsprechende File aufgemacht werden ...
-        ' das File 
         Try
-            currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
-            currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
-            Try
-                ' off setzen des AutoFilter Modus ... 
-                If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
-                    'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-                    CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-                End If
-            Catch ex As Exception
+            appInstance.EnableEvents = False
 
-            End Try
+            ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
+            selectedProjekte.Clear(False)
 
-            ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
-            Try
-                currentWS.UsedRange.Clear()
-            Catch ex As Exception
+            Dim currentWS As Excel.Worksheet
+            Dim currentWB As Excel.Workbook
+            Dim ersteZeile As Excel.Range
+            Dim ressCostColumn As Integer
+            Dim tmpName As String
 
-            End Try
+            ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
+            Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
+            Dim anzahlRollen As Integer = RoleDefinitions.Count
+            Dim rcValidation() As String
+            ' in rcValidation(0) steht der Name "alleKosten" für den Validation-String für alle Kosten
+            ' in rcValidation(i) steht der Name des Validation-String für Rolle mit UID i 
+            ReDim rcValidation(anzahlRollen + 1)
 
+            rcValidation(0) = "alleKosten"
+            rcValidation(anzahlRollen + 1) = "alles"
 
-        Catch ex As Exception
-            Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
-            appInstance.EnableEvents = True
-            Exit Sub
-        End Try
-
-
-        ' jetzt schreiben der ersten Zeile 
-        Dim zeile As Integer = 1
-        Dim spalte As Integer = 1
-
-        'Dim startSpalteDaten As Integer = 8
-        Dim startSpalteDaten As Integer = 8
-        'Dim roleCostNames As Excel.Range = Nothing
-        Dim roleCostInput As Excel.Range = Nothing
-
-        tmpName = ""
-
-        With CType(currentWS, Excel.Worksheet)
-
-            If .ProtectContents Then
-                .Unprotect(Password:="x")
-            End If
-
-            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
-
-            If awinSettings.englishLanguage Then
-                CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
-                CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
-                CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
-                CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
-                CType(.Cells(1, 6), Excel.Range).Value = "Sum"
-
-                If awinSettings.mePrzAuslastung Then
-                    CType(.Cells(1, 7), Excel.Range).Value = "Percent."
+            For i = 1 To anzahlRollen
+                Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+                If tmprole.isCombinedRole Then
+                    rcValidation(i) = tmprole.name
                 Else
-                    CType(.Cells(1, 7), Excel.Range).Value = "Avail."
+                    Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.name)
+                    If parentName = "" Then
+                        rcValidation(i) = "alleRollen"
+                    Else
+                        rcValidation(i) = parentName
+                    End If
                 End If
+            Next
+
+            ' hier muss jetzt das entsprechende File aufgemacht werden ...
+            ' das File 
+            Try
+                currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+                currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+
+                Try
+                    ' off setzen des AutoFilter Modus ... 
+                    If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+                        'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                        CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                Try
+                    currentWS.UsedRange.Clear()
+                Catch ex As Exception
+
+                End Try
+
+
+            Catch ex As Exception
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                appInstance.EnableEvents = True
+                Exit Sub
+            End Try
+
+
+            ' jetzt schreiben der ersten Zeile 
+            Dim zeile As Integer = 1
+            Dim spalte As Integer = 1
+
+            'Dim startSpalteDaten As Integer = 8
+            Dim startSpalteDaten As Integer = 8
+            'Dim roleCostNames As Excel.Range = Nothing
+            Dim roleCostInput As Excel.Range = Nothing
+
+            tmpName = ""
+
+            With CType(currentWS, Excel.Worksheet)
+
+                If .ProtectContents Then
+                    .Unprotect(Password:="x")
+                End If
+
+                ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+                If awinSettings.englishLanguage Then
+                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
+                    CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
+                    CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
+                    CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Sum"
+
+                    If awinSettings.mePrzAuslastung Then
+                        CType(.Cells(1, 7), Excel.Range).Value = "Percent."
+                    Else
+                        CType(.Cells(1, 7), Excel.Range).Value = "Avail."
+                    End If
+                Else
+                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+                    CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+                    CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
+                    CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Summe"
+
+                    If awinSettings.mePrzAuslastung Then
+                        CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+                    Else
+                        CType(.Cells(1, 7), Excel.Range).Value = "Frei"
+                    End If
+                End If
+
+
+
+                ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+                ressCostColumn = 5
+                ' jetzt wird die Zeile 1 geschrieben 
+                Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+                ' jetzt wird der Mahle Range definiert ...
+                mahleRange = CType(.Columns(startSpalteDaten - 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn
+                For tmpi As Integer = 0 To bis - von
+                    mahleRange = appInstance.Union(mahleRange, CType(.Columns(startSpalteDaten + 2 * tmpi + 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn)
+                Next
+
+                ' jetzt wird der Name hinzugefügt
+                Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
+                Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + 2 * (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
+                Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
+
+                Try
+                    If Not IsNothing(CType(currentWB.Names.Item("MahleInfo"), Excel.Name)) Then
+                        currentWB.Names.Item("MahleInfo").Delete()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then
+                        currentWB.Names.Item("StartData").Delete()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    If Not IsNothing(CType(currentWB.Names.Item("EndData"), Excel.Name)) Then
+                        currentWB.Names.Item("EndData").Delete()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    If Not IsNothing(CType(currentWB.Names.Item("RoleCost"), Excel.Name)) Then
+                        currentWB.Names.Item("RoleCost").Delete()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                currentWB.Names.Add(Name:="MahleInfo", RefersToR1C1:=mahleRange)
+                currentWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
+                currentWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
+                currentWB.Names.Add(Name:="RoleCost", RefersToR1C1:=tmpRange3)
+
+                ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+                For m As Integer = 0 To bis - von
+                    With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
+                        .Value = startMonat.AddMonths(m)
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                        .NumberFormat = "[$-409]mmm yy;@"
+                        .WrapText = False
+                        .Orientation = 90
+                        .ShrinkToFit = False
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ReadingOrder = Excel.Constants.xlContext
+                    End With
+
+                    With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
+                        .Value = ""
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        .Orientation = 0
+                        .ShrinkToFit = False
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ReadingOrder = Excel.Constants.xlContext
+                    End With
+
+                Next
+
+
+            End With
+
+
+            zeile = 2
+
+            Dim schnittmenge() As Double
+            Dim zeilenWerte() As Double
+            Dim zeilensumme As Double
+            Dim pStart As Integer, pEnde As Integer
+
+            Dim editRange As Excel.Range
+
+
+            ' zu Beginn werden die rollen-spezifischen Auslastungskennzahlen ermittelt, die sich über alle aktuell 
+            ' betrachteten Projekte ergeben; 
+            ' es werden sowohl die Gesamt-Auslastungs Werte im Zeitraum betrachtet als auch der einzelne monats-spezifische Wert   
+            ' dazu wird ein Array angelegt mit der Dimension (anzahlRollen-1, bis-von+1) 
+            Dim auslastungsArray(,) As Double
+
+            ' tk, 18.5.17 damit kann die Gesamt- und Monatliche Auslastungs-Info ausgeblendet werden 
+            If awinSettings.meExtendedColumnsView Then
+                Try
+                    auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
+                    'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+                Catch ex As Exception
+                    ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
+                End Try
             Else
-                CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
-                CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
-                CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
-                CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
-                CType(.Cells(1, 6), Excel.Range).Value = "Summe"
-
-                If awinSettings.mePrzAuslastung Then
-                    CType(.Cells(1, 7), Excel.Range).Value = "Proz."
-                Else
-                    CType(.Cells(1, 7), Excel.Range).Value = "Frei"
-                End If
-            End If
-            
-
-
-            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
-            ressCostColumn = 5
-            ' jetzt wird die Zeile 1 geschrieben 
-            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
-
-            ' jetzt wird der Mahle Range definiert ...
-            mahleRange = CType(.Columns(startSpalteDaten - 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn
-            For tmpi As Integer = 0 To bis - von
-                mahleRange = appInstance.Union(mahleRange, CType(.Columns(startSpalteDaten + 2 * tmpi + 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn)
-            Next
-
-            ' jetzt wird der Name hinzugefügt
-            Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
-            Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + 2 * (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
-            Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
-
-            Try
-                If Not IsNothing(CType(currentWB.Names.Item("MahleInfo"), Excel.Name)) Then
-                    currentWB.Names.Item("MahleInfo").Delete()
-                End If
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then
-                    currentWB.Names.Item("StartData").Delete()
-                End If
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                If Not IsNothing(CType(currentWB.Names.Item("EndData"), Excel.Name)) Then
-                    currentWB.Names.Item("EndData").Delete()
-                End If
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                If Not IsNothing(CType(currentWB.Names.Item("RoleCost"), Excel.Name)) Then
-                    currentWB.Names.Item("RoleCost").Delete()
-                End If
-            Catch ex As Exception
-
-            End Try
-
-            currentWB.Names.Add(Name:="MahleInfo", RefersToR1C1:=mahleRange)
-            currentWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
-            currentWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
-            currentWB.Names.Add(Name:="RoleCost", RefersToR1C1:=tmpRange3)
-
-            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
-            For m As Integer = 0 To bis - von
-                With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
-                    .Value = startMonat.AddMonths(m)
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                    .NumberFormat = "[$-409]mmm yy;@"
-                    .WrapText = False
-                    .Orientation = 90
-                    .ShrinkToFit = False
-                    .AddIndent = False
-                    .IndentLevel = 0
-                    .ReadingOrder = Excel.Constants.xlContext
-                End With
-
-                With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
-                    .Value = ""
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                    .Orientation = 0
-                    .ShrinkToFit = False
-                    .AddIndent = False
-                    .IndentLevel = 0
-                    .ReadingOrder = Excel.Constants.xlContext
-                End With
-
-            Next
-
-
-        End With
-
-
-        zeile = 2
-
-        Dim schnittmenge() As Double
-        Dim zeilenWerte() As Double
-        Dim zeilensumme As Double
-        Dim pStart As Integer, pEnde As Integer
-
-        Dim editRange As Excel.Range
-
-
-        ' zu Beginn werden die rollen-spezifischen Auslastungskennzahlen ermittelt, die sich über alle aktuell 
-        ' betrachteten Projekte ergeben; 
-        ' es werden sowohl die Gesamt-Auslastungs Werte im Zeitraum betrachtet als auch der einzelne monats-spezifische Wert   
-        ' dazu wird ein Array angelegt mit der Dimension (anzahlRollen-1, bis-von+1) 
-        Dim auslastungsArray(,) As Double
-
-        ' tk, 18.5.17 damit kann die Gesamt- und Monatliche Auslastungs-Info ausgeblendet werden 
-        If awinSettings.meExtendedColumnsView Then
-            Try
-                auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
-                'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
-            Catch ex As Exception
                 ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
-            End Try
-        Else
-            ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
-        End If
-        
-
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-        
-        For Each projektName As String In todoListe
-
-            Dim hproj As clsProjekt = Nothing
-            If ShowProjekte.contains(projektName) Then
-                hproj = ShowProjekte.getProject(projektName)
             End If
 
-            If Not IsNothing(hproj) Then
 
-                ' ist das Projekt geschützt ? 
-                ' wenn nein, dann temporär schützen 
-                Dim protectionText As String = ""
-                Dim wpItem As clsWriteProtectionItem
-                Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If isProtectedbyOthers Then
 
-                    ' nicht erfolgreich, weil durch anderen geschützt ... 
-                    ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                    wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-                    writeProtections.upsert(wpItem)
+            For Each projektName As String In todoListe
 
-                    protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
-
+                Dim hproj As clsProjekt = Nothing
+                If ShowProjekte.contains(projektName) Then
+                    hproj = ShowProjekte.getProject(projektName)
                 End If
 
+                If Not IsNothing(hproj) Then
 
-                pStart = getColumnOfDate(hproj.startDate)
-                pEnde = getColumnOfDate(hproj.endeDate)
-                Dim defaultEmptyValidation As String = validationStrings(rcValidation(anzahlRollen + 1)) ' alle Rollen und Kostenarten 
+                    ' ist das Projekt geschützt ? 
+                    ' wenn nein, dann temporär schützen 
+                    Dim protectionText As String = ""
+                    Dim wpItem As clsWriteProtectionItem
+                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
-                For p = 1 To hproj.CountPhases
+                    If isProtectedbyOthers Then
 
-                    Dim cphase As clsPhase = hproj.getPhase(p)
-                    Dim phaseNameID As String = cphase.nameID
-                    Dim phaseName As String = cphase.name
-                    Dim chckNameID As String = calcHryElemKey(phaseName, False)
+                        ' nicht erfolgreich, weil durch anderen geschützt ... 
+                        ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
+                        wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem)
 
-                    If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
-                        ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+                        protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
-                        ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
-                        Dim ixZeitraum As Integer
-                        Dim ix As Integer, breite As Integer
-
-                        Dim atLeastOne As Boolean = False
-
-                        Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
+                    End If
 
 
-                        For r = 1 To cphase.countRoles
+                    pStart = getColumnOfDate(hproj.startDate)
+                    pEnde = getColumnOfDate(hproj.endeDate)
+                    Dim defaultEmptyValidation As String = validationStrings(rcValidation(anzahlRollen + 1)) ' alle Rollen und Kostenarten 
 
-                            Dim role As clsRolle = cphase.getRole(r)
-                            Dim roleName As String = role.name
-                            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
-                            Dim isSammelRolle As Boolean = RoleDefinitions.getRoledef(roleName).isCombinedRole
-                            Dim xValues() As Double = role.Xwerte
+                    For p = 1 To hproj.CountPhases
 
-                            If p = 1 And cphase.countRoles = 1 And r = 1 Then
-                                ' bestimme die defaultValidation für leere Zeilen : siehe if not atleastOne ...
-                                defaultEmptyValidation = validationStrings.Item(rcValidation(roleUID)) & ";" & _
-                                    validationStrings.Item(rcValidation(0))
-                            End If
+                        Dim cphase As clsPhase = hproj.getPhase(p)
+                        Dim phaseNameID As String = cphase.nameID
+                        Dim phaseName As String = cphase.name
+                        Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
-                            schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                            zeilensumme = schnittmenge.Sum
+                        If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
+                            ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
 
-                            ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                            ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
+                            Dim ixZeitraum As Integer
+                            Dim ix As Integer, breite As Integer
 
-                            ' Schreiben der Projekt-Informationen 
-                            With CType(currentWS, Excel.Worksheet)
-                                Dim cellComment As Excel.Comment
+                            Dim atLeastOne As Boolean = False
 
-                                ' Business Unit schreiben 
-                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                            Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
 
-                                ' Name schreiben
-                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                ' wenn es protected ist, entsprechend markieren 
-                                If isProtectedbyOthers Then
-                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
-                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
-                                    ' Kommentar einfügen 
-                                    cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
-                                    If Not IsNothing(cellComment) Then
-                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
-                                    End If
-                                    CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
-                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+
+                            For r = 1 To cphase.countRoles
+
+                                Dim role As clsRolle = cphase.getRole(r)
+                                Dim roleName As String = role.name
+                                Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                                Dim isSammelRolle As Boolean = RoleDefinitions.getRoledef(roleName).isCombinedRole
+                                Dim xValues() As Double = role.Xwerte
+
+                                If p = 1 And cphase.countRoles = 1 And r = 1 Then
+                                    ' bestimme die defaultValidation für leere Zeilen : siehe if not atleastOne ...
+                                    defaultEmptyValidation = validationStrings.Item(rcValidation(roleUID)) & ";" & _
+                                        validationStrings.Item(rcValidation(0))
                                 End If
 
-                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
-                                CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
 
-                                cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
-                                If Not IsNothing(cellComment) Then
-                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
-                                End If
-                                If chckNameID = phaseNameID Then
-                                    ' nichts weiter tun ... 
-                                    ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
-                                    ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
-                                Else
-                                    CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
-                                End If
+                                ReDim zeilenWerte(2 * (bis - von + 1) - 1)
 
-                                With CType(.Cells(zeile, 5), Excel.Range)
-                                    .Value = roleName
+                                ' Schreiben der Projekt-Informationen 
+                                With CType(currentWS, Excel.Worksheet)
+                                    Dim cellComment As Excel.Comment
+
+                                    ' Business Unit schreiben 
+                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+
+                                    ' Name schreiben
+                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                    ' wenn es protected ist, entsprechend markieren 
                                     If isProtectedbyOthers Then
-                                    Else
-                                        .Locked = False
-                                        .Interior.Color = awinSettings.AmpelNichtBewertet
-                                        Try
+                                        'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                        CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                        ' Kommentar einfügen 
+                                        cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                        If Not IsNothing(cellComment) Then
+                                            CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                        End If
+                                        CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                                    End If
 
-                                            If Not IsNothing(.Validation) Then
-                                                .Validation.Delete()
+                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                    CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                    If Not IsNothing(cellComment) Then
+                                        CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                                    End If
+                                    If chckNameID = phaseNameID Then
+                                        ' nichts weiter tun ... 
+                                        ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                        ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                                    Else
+                                        CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                        CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                                    End If
+
+                                    With CType(.Cells(zeile, 5), Excel.Range)
+                                        .Value = roleName
+                                        If isProtectedbyOthers Then
+                                        Else
+                                            .Locked = False
+                                            .Interior.Color = awinSettings.AmpelNichtBewertet
+                                            Try
+
+                                                If Not IsNothing(.Validation) Then
+                                                    .Validation.Delete()
+                                                End If
+
+                                                ' jetzt wird die ValidationList aufgebaut 
+
+                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                           Formula1:=validationStrings.Item(rcValidation(roleUID)))
+                                            Catch ex As Exception
+
+                                            End Try
+                                        End If
+
+                                    End With
+
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                    If awinSettings.allowSumEditing Then
+                                        With CType(.Cells(zeile, 6), Excel.Range)
+
+                                            If isProtectedbyOthers Then
+                                            Else
+                                                .Locked = False
+                                                .Interior.Color = awinSettings.AmpelNichtBewertet
+                                                Try
+                                                    If Not IsNothing(.Validation) Then
+                                                        .Validation.Delete()
+                                                    End If
+                                                    ' jetzt wird die ValidationList aufgebaut 
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                    Formula1:="0")
+                                                Catch ex As Exception
+
+                                                End Try
                                             End If
 
-                                        ' jetzt wird die ValidationList aufgebaut 
-
-                                            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                       Formula1:=validationStrings.Item(rcValidation(roleUID)))
-                                        Catch ex As Exception
-
-                                        End Try
+                                        End With
                                     End If
 
+
+                                    If awinSettings.mePrzAuslastung Then
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                                    Else
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
+                                    End If
+
+                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
                                 End With
 
-                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                                If awinSettings.allowSumEditing Then
-                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                For mis As Integer = 0 To bis - von
+                                    zeilenWerte(2 * mis) = schnittmenge(mis)
+                                    ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
+                                    If awinSettings.meExtendedColumnsView Then
+                                        zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+                                    End If
+                                Next
 
+                                'editRange.Value = schnittmenge
+                                editRange.Value = zeilenWerte
+                                atLeastOne = True
+                                ' die Zellen entsperren, die editiert werden dürfen ...
+
+                                With CType(currentWS, Excel.Worksheet)
+                                    For l = 0 To bis - von
+
+                                        If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+
+                                            With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+
+                                                If isProtectedbyOthers Then
+                                                Else
+                                                    .Locked = False
+                                                    Try
+                                                        If Not IsNothing(.Validation) Then
+                                                            .Validation.Delete()
+                                                        End If
+                                                    Catch ex As Exception
+
+                                                    End Try
+
+                                                    Try
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                    Formula1:="0")
+                                                    Catch ex As Exception
+                                                        
+                                                    End Try
+                                                End If
+
+
+                                            End With
+                                            ' erlaubter Eingabebereich grau markieren, aber nur wenn nicht protected 
+                                            If isProtectedbyOthers Then
+                                            Else
+                                                CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                         .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                            End If
+
+
+                                            'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                        Else
+                                            CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                            CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
+                                        End If
+
+                                    Next
+                                End With
+
+
+                                zeile = zeile + 1
+
+                            Next r
+
+                            For c = 1 To cphase.countCosts
+                                Dim cost As clsKostenart = cphase.getCost(c)
+                                Dim xValues() As Double = cost.Xwerte
+                                Dim costName As String = cost.name
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
+
+                                ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+
+                                ' Schreiben der Projekt-Informationen 
+                                With CType(currentWS, Excel.Worksheet)
+                                    Dim cellComment As Excel.Comment
+
+                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                    If isProtectedbyOthers Then
+                                        'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                        CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                        ' Kommentar einfügen 
+                                        cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                        If Not IsNothing(cellComment) Then
+                                            CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                        End If
+                                        CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                                    End If
+
+
+                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                    CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
+                                    If Not IsNothing(cellComment) Then
+                                        CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                                    End If
+                                    If chckNameID = phaseNameID Then
+                                        ' nichts weiter tun ... 
+                                        ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                        ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                                    Else
+                                        CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                        CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                                    End If
+
+                                    With CType(.Cells(zeile, 5), Excel.Range)
+                                        .Value = costName
                                         If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
@@ -19360,325 +19571,158 @@ Public Module awinGeneralModules
                                                     .Validation.Delete()
                                                 End If
                                                 ' jetzt wird die ValidationList aufgebaut 
-                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                                Formula1:="0")
+                                                'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
+                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                               Formula1:=validationStrings.Item(rcValidation(0)))
                                             Catch ex As Exception
 
                                             End Try
                                         End If
 
+
                                     End With
-                                End If
 
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                    If awinSettings.allowSumEditing Then
 
-                                If awinSettings.mePrzAuslastung Then
-                                    CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
-                                Else
-                                    CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
-                                End If
-
-                                editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
-                            End With
-
-                            ' zusammenmischen von Schnittmenge und Prozentual-Werte 
-                            For mis As Integer = 0 To bis - von
-                                zeilenWerte(2 * mis) = schnittmenge(mis)
-                                ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
-                                If awinSettings.meExtendedColumnsView Then
-                                    zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
-                                End If
-                            Next
-
-                            'editRange.Value = schnittmenge
-                            editRange.Value = zeilenWerte
-                            atLeastOne = True
-                            ' die Zellen entsperren, die editiert werden dürfen ...
-
-                            With CType(currentWS, Excel.Worksheet)
-                                For l = 0 To bis - von
-
-                                    If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-
-                                        With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-
+                                        With CType(.Cells(zeile, 6), Excel.Range)
                                             If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
+                                                .Interior.Color = awinSettings.AmpelNichtBewertet
                                                 Try
                                                     If Not IsNothing(.Validation) Then
                                                         .Validation.Delete()
                                                     End If
+                                                    ' jetzt wird die ValidationList aufgebaut 
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                    Formula1:="0")
                                                 Catch ex As Exception
 
-                                                End Try
-                                                Try
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                                Formula1:="0")
-                                                Catch ex As Exception
-                                                    .Validation.Modify(Type:=XlDVType.xlValidateDecimal, _
-                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                                Formula1:="0")
                                                 End Try
                                             End If
 
 
                                         End With
-                                        ' erlaubter Eingabebereich grau markieren, aber nur wenn nicht protected 
-                                        If isProtectedbyOthers Then
-                                        Else
-                                            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
-                                                     .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                                        End If
-
-
-                                        'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                                    Else
-                                        CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-                                        CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
                                     End If
 
-                                Next
-                            End With
-
-
-                            zeile = zeile + 1
-
-                        Next r
-
-                        For c = 1 To cphase.countCosts
-                            Dim cost As clsKostenart = cphase.getCost(c)
-                            Dim xValues() As Double = cost.Xwerte
-                            Dim costName As String = cost.name
-                            schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                            zeilensumme = schnittmenge.Sum
-
-                            ReDim zeilenWerte(2 * (bis - von + 1) - 1)
-
-                            ' Schreiben der Projekt-Informationen 
-                            With CType(currentWS, Excel.Worksheet)
-                                Dim cellComment As Excel.Comment
-
-                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
-                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                If isProtectedbyOthers Then
-                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
-                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
-                                    ' Kommentar einfügen 
-                                    cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
-                                    If Not IsNothing(cellComment) Then
-                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
-                                    End If
-                                    CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
-                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
-                                End If
-
-
-                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
-                                CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-
-                                cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
-                                If Not IsNothing(cellComment) Then
-                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
-                                End If
-                                If chckNameID = phaseNameID Then
-                                    ' nichts weiter tun ... 
-                                    ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
-                                    ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
-                                Else
-                                    CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
-                                End If
-
-                                With CType(.Cells(zeile, 5), Excel.Range)
-                                    .Value = costName
-                                    If isProtectedbyOthers Then
-                                    Else
-                                        .Locked = False
-                                        .Interior.Color = awinSettings.AmpelNichtBewertet
-                                        Try
-                                            If Not IsNothing(.Validation) Then
-                                                .Validation.Delete()
-                                            End If
-                                            ' jetzt wird die ValidationList aufgebaut 
-                                            'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
-                                            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                           Formula1:=validationStrings.Item(rcValidation(0)))
-                                        Catch ex As Exception
-
-                                        End Try
-                                    End If
-
-
+                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
                                 End With
 
-                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                                If awinSettings.allowSumEditing Then
+                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                For mis As Integer = 0 To bis - von
+                                    zeilenWerte(2 * mis) = schnittmenge(mis)
+                                    ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
+                                    ' tk, 18.5 wird ja schon durch Redim erledigt ...
+                                    'zeilenWerte(2 * mis + 1) = 0
+                                Next
 
-                                    With CType(.Cells(zeile, 6), Excel.Range)
-                                        If isProtectedbyOthers Then
-                                        Else
-                                            .Locked = False
-                                            .Interior.Color = awinSettings.AmpelNichtBewertet
-                                            Try
-                                                If Not IsNothing(.Validation) Then
-                                                    .Validation.Delete()
+                                'editRange.Value = schnittmenge
+                                editRange.Value = zeilenWerte
+                                atLeastOne = True
+
+                                ' die Zellen entsperren, die editiert werden dürfen ...
+
+                                With CType(currentWS, Excel.Worksheet)
+
+                                    For l = 0 To bis - von
+
+                                        If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+
+                                            With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                                If isProtectedbyOthers Then
+                                                Else
+                                                    .Locked = False
+                                                    Try
+                                                        If Not IsNothing(.Validation) Then
+                                                            .Validation.Delete()
+                                                        End If
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                    Formula1:="0")
+                                                    Catch ex As Exception
+
+                                                    End Try
+
                                                 End If
-                                                ' jetzt wird die ValidationList aufgebaut 
-                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                                Formula1:="0")
-                                            Catch ex As Exception
 
-                                            End Try
-                                        End If
+                                            End With
 
+                                            CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
-                                    End With
-                                End If
-
-                                editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
-                            End With
-
-                            ' zusammenmischen von Schnittmenge und Prozentual-Werte 
-                            For mis As Integer = 0 To bis - von
-                                zeilenWerte(2 * mis) = schnittmenge(mis)
-                                ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
-                                ' tk, 18.5 wird ja schon durch Redim erledigt ...
-                                'zeilenWerte(2 * mis + 1) = 0
-                            Next
-
-                            'editRange.Value = schnittmenge
-                            editRange.Value = zeilenWerte
-                            atLeastOne = True
-
-                            ' die Zellen entsperren, die editiert werden dürfen ...
-
-                            With CType(currentWS, Excel.Worksheet)
-
-                                For l = 0 To bis - von
-
-                                    If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-
-                                        With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                            ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
                                             If isProtectedbyOthers Then
                                             Else
-                                                .Locked = False
-                                                Try
-                                                    If Not IsNothing(.Validation) Then
-                                                        .Validation.Delete()
-                                                    End If
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                                Formula1:="0")
-                                                Catch ex As Exception
-
-                                                End Try
-                                                
+                                                CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                         .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                                             End If
 
-                                        End With
-
-                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
-
-                                        ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
-                                        If isProtectedbyOthers Then
                                         Else
-                                            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
-                                                     .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                            CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                            CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
                                         End If
 
-                                    Else
-                                        CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
-                                    End If
-
-                                Next
-
-                            End With
-
-                            zeile = zeile + 1
-
-                        Next c
-
-                        If Not atLeastOne Then
-                            ' in diesem Fall sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
-                            ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
-                            ' Schreiben der Projekt-Informationen 
-                            Dim currentValidation As String = rcValidation(anzahlRollen + 1)
-
-                            ' bestimmen, ob rootPhase nur eine Rolle hat, dann soll die Validation aus der Validation dieser Rolle plus allen Kostenarten gebildet werden ... 
-                            Try
-                                If cphase.nameID <> rootPhaseName Then
-
-                                End If
-                            Catch ex As Exception
-
-                            End Try
-
-                            With CType(currentWS, Excel.Worksheet)
-                                Dim cellComment As Excel.Comment
-
-                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
-                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                If isProtectedbyOthers Then
-                                    'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
-                                    CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
-                                    ' Kommentar einfügen 
-                                    cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
-                                    If Not IsNothing(cellComment) Then
-                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
-                                    End If
-                                    CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
-                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
-                                End If
-
-                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
-                                CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
-
-                                cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
-
-                                If Not IsNothing(cellComment) Then
-                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
-                                End If
-                                If chckNameID = phaseNameID Then
-                                    ' nichts weiter tun ... 
-                                    ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
-                                    ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
-                                Else
-                                    CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
-                                    CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
-                                End If
-
-                                With CType(.Cells(zeile, 5), Excel.Range)
-                                    .Value = ""
-                                    If isProtectedbyOthers Then
-                                    Else
-                                        .Locked = False
-                                        .Interior.Color = awinSettings.AmpelNichtBewertet
-                                        Try
-                                            If Not IsNothing(.Validation) Then
-                                                .Validation.Delete()
-                                            End If
-                                            ' jetzt wird die ValidationList aufgebaut 
-                                            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                           Formula1:=defaultEmptyValidation)
-                                        Catch ex As Exception
-                                            Dim a As Integer = 0
-                                        End Try
-                                    End If
-
+                                    Next
 
                                 End With
 
-                                If awinSettings.allowSumEditing Then
-                                    With CType(.Cells(zeile, 6), Excel.Range)
+                                zeile = zeile + 1
+
+                            Next c
+
+                            If Not atLeastOne Then
+                                ' in diesem Fall sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
+                                ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
+                                ' Schreiben der Projekt-Informationen 
+                                Dim currentValidation As String = rcValidation(anzahlRollen + 1)
+
+                                ' bestimmen, ob rootPhase nur eine Rolle hat, dann soll die Validation aus der Validation dieser Rolle plus allen Kostenarten gebildet werden ... 
+                                Try
+                                    If cphase.nameID <> rootPhaseName Then
+
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                With CType(currentWS, Excel.Worksheet)
+                                    Dim cellComment As Excel.Comment
+
+                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                    If isProtectedbyOthers Then
+                                        'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
+                                        CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                        ' Kommentar einfügen 
+                                        cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                        If Not IsNothing(cellComment) Then
+                                            CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                        End If
+                                        CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                        CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                                    End If
+
+                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                    CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
+
+                                    If Not IsNothing(cellComment) Then
+                                        CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
+                                    End If
+                                    If chckNameID = phaseNameID Then
+                                        ' nichts weiter tun ... 
+                                        ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
+                                        ' wenn es eine laufende Nummer 2, 3 etc ist, dann muss explizit die PhaseNameID in den Kommentarbereich geschreiben werden 
+                                    Else
+                                        CType(.Cells(zeile, 4), Excel.Range).AddComment(Text:=cphase.nameID)
+                                        CType(.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                                    End If
+
+                                    With CType(.Cells(zeile, 5), Excel.Range)
                                         .Value = ""
                                         If isProtectedbyOthers Then
                                         Else
@@ -19689,155 +19733,183 @@ Public Module awinGeneralModules
                                                     .Validation.Delete()
                                                 End If
                                                 ' jetzt wird die ValidationList aufgebaut 
-                                                .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                                Formula1:="0")
+                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                               Formula1:=defaultEmptyValidation)
                                             Catch ex As Exception
-
+                                                Dim a As Integer = 0
                                             End Try
                                         End If
 
 
                                     End With
 
-                                Else
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = ""
-                                End If
-
-
-                                CType(.Cells(zeile, 7), Excel.Range).Value = ""
-                                editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
-                            End With
-
-                            ' die Zellen farblich markieren, die editiert werden können ...
-                            With CType(currentWS, Excel.Worksheet)
-
-                                For l = 0 To bis - von
-
-                                    If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-
-                                        With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                    If awinSettings.allowSumEditing Then
+                                        With CType(.Cells(zeile, 6), Excel.Range)
+                                            .Value = ""
                                             If isProtectedbyOthers Then
                                             Else
                                                 .Locked = False
-
-                                                If Not IsNothing(.Validation) Then
-                                                    .Validation.Delete()
-                                                End If
-
+                                                .Interior.Color = awinSettings.AmpelNichtBewertet
                                                 Try
+                                                    If Not IsNothing(.Validation) Then
+                                                        .Validation.Delete()
+                                                    End If
+                                                    ' jetzt wird die ValidationList aufgebaut 
                                                     .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                Operator:=XlFormatConditionOperator.xlGreaterEqual, _
-                                                                Formula1:="0")
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                    Formula1:="0")
                                                 Catch ex As Exception
 
                                                 End Try
-                                                
                                             End If
+
 
                                         End With
 
-                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
-
-                                        If isProtectedbyOthers Then
-                                        Else
-                                            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
-                                                     .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                                        End If
-
                                     Else
-                                        CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-                                        CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                        CType(.Cells(zeile, 6), Excel.Range).Value = ""
                                     End If
 
-                                Next
 
-                            End With
+                                    CType(.Cells(zeile, 7), Excel.Range).Value = ""
+                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
+                                End With
 
-                            zeile = zeile + 1
+                                ' die Zellen farblich markieren, die editiert werden können ...
+                                With CType(currentWS, Excel.Worksheet)
+
+                                    For l = 0 To bis - von
+
+                                        If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+
+                                            With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
+                                                If isProtectedbyOthers Then
+                                                Else
+                                                    .Locked = False
+
+                                                    If Not IsNothing(.Validation) Then
+                                                        .Validation.Delete()
+                                                    End If
+
+                                                    Try
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                                    Formula1:="0")
+                                                    Catch ex As Exception
+
+                                                    End Try
+
+                                                End If
+
+                                            End With
+
+                                            CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+
+                                            If isProtectedbyOthers Then
+                                            Else
+                                                CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                         .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                            End If
+
+                                        Else
+                                            CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                                            CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                                        End If
+
+                                    Next
+
+                                End With
+
+                                zeile = zeile + 1
+
+                            End If
 
                         End If
 
+
+
+                    Next p
+
+
+                End If
+
+
+
+            Next
+
+
+            ' tk 7.12.16 kommt immer auf Fehler, weil nur 1 Zeile und eine Auswahl von Spalten .... 
+            '' jetzt die erste Zeile so groß wie nötig machen 
+            'Try
+            '    ersteZeile.AutoFit()
+            'Catch ex As Exception
+
+            'End Try
+
+            ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
+            Dim infoBlock As Excel.Range
+            With CType(currentWS, Excel.Worksheet)
+                infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 3)), Excel.Range)
+                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                infoBlock.AutoFit()
+            End With
+
+            ' Summe und Frei / Proz. 
+            With CType(currentWS, Excel.Worksheet)
+                infoBlock = CType(.Range(.Columns(startSpalteDaten - 2), .Columns(startSpalteDaten - 1)), Excel.Range)
+                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                infoBlock.AutoFit()
+            End With
+
+            Dim tmpRange As Excel.Range
+            With CType(currentWS, Excel.Worksheet)
+
+                Dim isPrz As Boolean = False
+                For mis As Integer = 0 To 2 * (bis - von + 1) - 1
+                    tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
+                    If isPrz Then
+                        tmpRange.Columns.ColumnWidth = 4
+                        tmpRange.Font.Size = 8
+                        If awinSettings.mePrzAuslastung Then
+                            tmpRange.NumberFormat = "0%"
+                        Else
+                            tmpRange.NumberFormat = "0"
+                        End If
+
+                        tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    Else
+                        tmpRange.Columns.ColumnWidth = 5
+                        tmpRange.Font.Size = 10
+                        tmpRange.NumberFormat = "0"
+                        tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     End If
+                    isPrz = Not isPrz
+                Next
 
+            End With
 
+            ' jetzt wird ggf der MahleRange ausgeblendet ... 
+            If Not awinSettings.meExtendedColumnsView Then
+                Try
+                    'mahleRange.Locked = False
+                    mahleRange.EntireColumn.Hidden = True
+                Catch ex As Exception
 
-                Next p
-
+                End Try
 
             End If
 
+            appInstance.EnableEvents = True
 
+        Catch ex As Exception
+            Dim a As Integer = 0
+        End Try
 
-        Next
-
-
-        ' tk 7.12.16 kommt immer auf Fehler, weil nur 1 Zeile und eine Auswahl von Spalten .... 
-        '' jetzt die erste Zeile so groß wie nötig machen 
-        'Try
-        '    ersteZeile.AutoFit()
-        'Catch ex As Exception
-
-        'End Try
-
-        ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
-        Dim infoBlock As Excel.Range
-        With CType(currentWS, Excel.Worksheet)
-            infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 3)), Excel.Range)
-            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-            infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-            infoBlock.AutoFit()
-        End With
-
-        ' Summe und Frei / Proz. 
-        With CType(currentWS, Excel.Worksheet)
-            infoBlock = CType(.Range(.Columns(startSpalteDaten - 2), .Columns(startSpalteDaten - 1)), Excel.Range)
-            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-            infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-            infoBlock.AutoFit()
-        End With
-
-        Dim tmpRange As Excel.Range
-        With CType(currentWS, Excel.Worksheet)
-
-            Dim isPrz As Boolean = False
-            For mis As Integer = 0 To 2 * (bis - von + 1) - 1
-                tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
-                If isPrz Then
-                    tmpRange.Columns.ColumnWidth = 4
-                    tmpRange.Font.Size = 8
-                    If awinSettings.mePrzAuslastung Then
-                        tmpRange.NumberFormat = "0%"
-                    Else
-                        tmpRange.NumberFormat = "0"
-                    End If
-
-                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                Else
-                    tmpRange.Columns.ColumnWidth = 5
-                    tmpRange.Font.Size = 10
-                    tmpRange.NumberFormat = "0"
-                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                End If
-                isPrz = Not isPrz
-            Next
-
-        End With
-
-        ' jetzt wird ggf der MahleRange ausgeblendet ... 
-        If Not awinSettings.meExtendedColumnsView Then
-            Try
-                'mahleRange.Locked = False
-                mahleRange.EntireColumn.Hidden = True
-            Catch ex As Exception
-
-            End Try
-
-        End If
-
-        appInstance.EnableEvents = True
+        
 
 
     End Sub
@@ -20931,21 +21003,5 @@ Public Module awinGeneralModules
         isMissingDefinitionOK = checkResult
 
     End Function
-
-    ''Public bIShrankTheRibbon As Boolean
-    ''Public Sub Workbook_WindowActivate(ByVal Wn As Window)
-    ''    If Wn.Caption = windowNames(4) Then
-    ''        bIShrankTheRibbon = False
-    ''        appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
-    ''        bIShrankTheRibbon = True
-    ''    End If
-    ''End Sub
-
-    ''Public Sub Workbook_WindowDeactivate(ByVal Wn As Window)
-    ''    If Wn.Caption = windowNames(4) Then
-    ''        If bIShrankTheRibbon Then _
-    ''        appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
-    ''    End If
-    ''End Sub
 
 End Module

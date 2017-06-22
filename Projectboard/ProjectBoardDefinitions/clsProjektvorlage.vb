@@ -1202,12 +1202,13 @@
     End Sub
 
 
-    Public Overridable Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
+    Public Overridable Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date, _
+                                      Optional ByVal zielRenditenVorgabe As Double = -99999.0)
         Dim p As Integer
         Dim newphase As clsPhase
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
-
+        Dim newPhaseNameID As String = ""
 
         Call copyAttrTo(newproject)
         newproject.startDate = startdate
@@ -1218,7 +1219,7 @@
 
         For p = 0 To Me.CountPhases - 1
             newphase = New clsPhase(newproject)
-            AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
+            AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor, newPhaseNameID, zielRenditenVorgabe)
 
             newproject.AddPhase(newphase)
         Next p
@@ -1340,6 +1341,126 @@
         Next p
 
     End Sub
+
+    ''' <summary>
+    ''' gibt true zurück, wenn in der Vorlage irgendeiner der Meilensteine, entweder über BreadCrumb oder nur als Name angegeben, vorhanden ist
+    ''' </summary>
+    ''' <param name="msCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Overridable ReadOnly Property containsAnyMilestonesOfCollection(ByVal msCollection As Collection) As Boolean
+        Get
+            Dim ix As Integer
+            Dim fullName As String
+            Dim tmpResult As Boolean = False
+            Dim containsMS As Boolean = False
+            Dim tmpMilestone As clsMeilenstein
+
+            If msCollection.Count = 0 Then
+                tmpResult = True
+            Else
+                While ix <= msCollection.Count And Not containsMS
+
+                    fullName = CStr(msCollection.Item(ix))
+                    Dim curMsName As String = ""
+                    Dim breadcrumb As String = ""
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+
+                    ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                    Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
+
+                    If type = -1 Or _
+                        (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
+
+                        Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
+                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+
+                        For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                            tmpMilestone = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                            If IsNothing(tmpMilestone) Then
+
+                            Else
+                                containsMS = True
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+                    ix = ix + 1
+
+                End While
+                tmpResult = containsMS
+            End If
+
+            containsAnyMilestonesOfCollection = tmpResult
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn in der Vorlage irgendeiner der Meilensteine, entweder über BreadCrumb oder nur als Name angegeben, vorhanden ist
+    ''' </summary>
+    ''' <param name="phCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Overridable ReadOnly Property containsAnyPhasesOfCollection(ByVal phCollection As Collection) As Boolean
+        Get
+            Dim ix As Integer
+            Dim fullName As String
+            Dim tmpResult As Boolean = False
+            Dim containsPH As Boolean = False
+            Dim tmpPhase As clsPhase
+
+            If phCollection.Count = 0 Then
+                tmpResult = True
+            Else
+                While ix <= phCollection.Count And Not containsPH
+
+                    fullName = CStr(phCollection.Item(ix))
+                    Dim curPhName As String = ""
+                    Dim breadcrumb As String = ""
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+
+                    ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                    Call splitHryFullnameTo2(fullName, curPhName, breadcrumb, type, pvName)
+
+                    If type = -1 Or _
+                        (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
+
+                        Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(curPhName, breadcrumb)
+                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+
+                        For mx As Integer = 0 To CInt(phaseIndices.Length) - 1
+
+                            tmpPhase = Me.getPhase(phaseIndices(mx))
+                            If IsNothing(tmpPhase) Then
+
+                            Else
+                                containsPH = True
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+                    ix = ix + 1
+
+                End While
+                tmpResult = containsPH
+            End If
+
+            containsAnyPhasesOfCollection = tmpResult
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' kopiert die Hierarchie des aktuellen Me Projektes 
@@ -2902,6 +3023,51 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt den anteiligen Wert der Rolle/Kostenart in der betreffenden Phase an den Gesamtkosten zurück;
+    ''' kann verwendet werden, um Best Practice Projekte on-the-fly zu definieren  
+    ''' </summary>
+    ''' <param name="phaseID"></param>
+    ''' <param name="rcName"></param>
+    ''' <param name="type"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPercentShareOFTotalCost(ByVal phaseID As String, ByVal rcName As String, ByVal type As Integer) As Double
+        Get
+            Dim tmpResult As Double = 0.0
+            Dim totalCost As Double = Me.getSummeKosten()
+            Dim cphase As clsPhase = Me.getPhaseByID(phaseID)
+            Dim role As clsRolle
+            Dim cost As clsKostenart
+            Dim teilWert As Double
+
+            If totalCost > 0 And Not IsNothing(cphase) Then
+                If type = ptElementTypen.roles Then
+                    role = cphase.getRole(rcName)
+                    If Not IsNothing(role) Then
+                        teilWert = role.Xwerte.Sum * role.tagessatzIntern
+                    Else
+                        teilWert = 0
+                    End If
+                    tmpResult = teilWert / totalCost
+
+                ElseIf type = ptElementTypen.costs Then
+                    cost = cphase.getCost(rcName)
+                    If Not IsNothing(cost) Then
+                        teilWert = cost.Xwerte.Sum
+                    Else
+                        teilWert = 0
+                    End If
+                    tmpResult = teilWert / totalCost
+                End If
+
+            End If
+
+            getPercentShareOFTotalCost = tmpResult
+
+        End Get
+    End Property
 
     '
     ' übergibt in KostenBedarf die Werte der Kostenart <costId>

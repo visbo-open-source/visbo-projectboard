@@ -33,6 +33,10 @@
 
                 Call modifyComment(tmpShape, currentTimestamp)
 
+            ElseIf isOtherVisboComponent(tmpShape) Then
+
+                Call updateVisboComponent(tmpShape, currentTimestamp)
+
             End If
 
             If CInt(10 * ix / anzahlShapesOnSlide) > oldProgressValue Then

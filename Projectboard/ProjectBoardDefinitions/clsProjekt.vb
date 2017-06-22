@@ -1854,7 +1854,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property withinTimeFrame(ByVal areMilestones As Boolean, von As Integer, bis As Integer, ByVal namenListe As Collection) As Collection
+    Public ReadOnly Property phasesWithinTimeFrame(ByVal areMilestones As Boolean, von As Integer, bis As Integer, ByVal namenListe As Collection) As Collection
         Get
             Dim tmpListe As New Collection
             ' selection type wird aktuell noch ignoriert .... 
@@ -1864,7 +1864,7 @@ Public Class clsProjekt
 
             ' ein Zeitraum muss definiert sein 
             If von <= 0 Or bis <= 0 Or bis - von < 0 Then
-                withinTimeFrame = tmpListe
+                phasesWithinTimeFrame = tmpListe
             Else
                 Dim ix As Integer
                 Dim anzElements As Integer
@@ -1933,10 +1933,32 @@ Public Class clsProjekt
 
             End If
 
-            withinTimeFrame = tmpListe
+            phasesWithinTimeFrame = tmpListe
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zuück, ob das Projekt in dem TimeFrame, definiert durch Moant von und Monat bis, liegt 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isWithinTimeFrame(ByVal von As Integer, ByVal bis As Integer) As Boolean
+        Get
+            Dim tmpResult As Boolean
+            If bis - von < 1 Then
+                tmpResult = True
+            Else
+                tmpResult = Not (getColumnOfDate(Me.startDate) > bis Or _
+                    getColumnOfDate(Me.endeDate) < von)
+            End If
+            isWithinTimeFrame = tmpResult
+        End Get
+    End Property
+
 
     Public Sub clearPhases()
 
@@ -2739,13 +2761,14 @@ Public Class clsProjekt
     End Sub
 
 
-    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
+    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date, _
+                                      Optional ByVal zielRenditenVorgabe As Double = -99999.0)
         Dim p As Integer
         Dim newphase As clsPhase
         Dim oldphase As clsPhase
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
-
+        Dim newPhaseNameID As String = ""
         Call copyAttrTo(newproject)
 
         With newproject
@@ -2762,7 +2785,7 @@ Public Class clsProjekt
                 oldphase = Me.getPhase(p)
                 newphase = New clsPhase(newproject)
 
-                oldphase.korrCopyTo(newphase, CorrectFactor)
+                oldphase.korrCopyTo(newphase, CorrectFactor, newPhaseNameID, zielRenditenVorgabe)
 
                 .AddPhase(newphase)
 
@@ -4184,7 +4207,129 @@ Public Class clsProjekt
             Else
                 containsMilestone = False
             End If
-            
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn in der Vorlage irgendeiner der Meilensteine, entweder über BreadCrumb oder nur als Name angegeben, vorhanden ist
+    ''' </summary>
+    ''' <param name="msCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Overrides ReadOnly Property containsAnyMilestonesOfCollection(ByVal msCollection As Collection) As Boolean
+        Get
+            Dim ix As Integer
+            Dim fullName As String
+            Dim tmpResult As Boolean = False
+            Dim containsMS As Boolean = False
+            Dim tmpMilestone As clsMeilenstein
+
+            If msCollection.Count = 0 Then
+                tmpResult = True
+            Else
+                While ix <= msCollection.Count And Not containsMS
+
+                    fullName = CStr(msCollection.Item(ix))
+                    Dim curMsName As String = ""
+                    Dim breadcrumb As String = ""
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+
+                    ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                    Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
+
+                    If type = -1 Or _
+                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                        (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
+
+                        Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
+                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+
+                        For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                            tmpMilestone = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                            If IsNothing(tmpMilestone) Then
+
+                            Else
+                                containsMS = True
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+                    ix = ix + 1
+
+                End While
+                tmpResult = containsMS
+            End If
+
+            containsAnyMilestonesOfCollection = tmpResult
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn in der Vorlage irgendeiner der Meilensteine, entweder über BreadCrumb oder nur als Name angegeben, vorhanden ist
+    ''' </summary>
+    ''' <param name="phCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Overrides ReadOnly Property containsAnyPhasesOfCollection(ByVal phCollection As Collection) As Boolean
+        Get
+            Dim ix As Integer
+            Dim fullName As String
+            Dim tmpResult As Boolean = False
+            Dim containsPH As Boolean = False
+            Dim tmpPhase As clsPhase
+
+            If phCollection.Count = 0 Then
+                tmpResult = True
+            Else
+                While ix <= phCollection.Count And Not containsPH
+
+                    fullName = CStr(phCollection.Item(ix))
+                    Dim curPhName As String = ""
+                    Dim breadcrumb As String = ""
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+
+                    ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                    Call splitHryFullnameTo2(fullName, curPhName, breadcrumb, type, pvName)
+
+                    If type = -1 Or _
+                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                        (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
+
+                        Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(curPhName, breadcrumb)
+                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+
+                        For mx As Integer = 0 To CInt(phaseIndices.Length) - 1
+
+                            tmpPhase = Me.getPhase(phaseIndices(mx))
+                            If IsNothing(tmpPhase) Then
+
+                            Else
+                                containsPH = True
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+                    ix = ix + 1
+
+                End While
+                tmpResult = containsPH
+            End If
+
+            containsAnyPhasesOfCollection = tmpResult
 
         End Get
     End Property
@@ -4450,7 +4595,7 @@ Public Class clsProjekt
 
                 End If
 
-                
+
 
 
             Next mx

@@ -1677,7 +1677,20 @@ Public Class clsPhase
         End With
 
     End Sub
-    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double, Optional newPhaseNameID As String = "")
+    ''' <summary>
+    ''' kopiert Phase mit ihren Ressourcen- und Kostenbedarfen in eine neue Phase
+    ''' wenn newPhaseNameID ungleich "", dann wird als neue PhaseNameID verwendet; ist für den modularen Aufbau von Projekten wichtig
+    ''' correctfactor streckt / staucht die Dauer des Projektes und passt, wenn awinsettings.propanpassRess = true auch die Ressoucen- und Kostenbedarfe proportional an 
+    ''' wenn zielrenditeFaktor angegeben ist, dann wird die Länge gemäßss corrFactor angepasst, nicht aber die Ressourcenbedarfe. Die werden über den ZielrenditeFaktor berechnet
+    ''' </summary>
+    ''' <param name="newphase"></param>
+    ''' <param name="corrFactor"></param>
+    ''' <param name="newPhaseNameID"></param>
+    ''' <param name="zielrenditeFaktor">wenn Nothing angegeben wird: die Ressourcen- und Kostenbedarfe werden über corrFactor und propanpassRess bestimmt
+    ''' wenn ein Wert angegeben ist, dann werden die alten Ressourcen- und Kosten-Summen mit diesem Wert modifiziert; das sichert eine vorgegebene Rendite </param>
+    ''' <remarks></remarks>
+    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double, ByVal newPhaseNameID As String, _
+                          Optional ByVal zielrenditeFaktor As Double = -99999.0)
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
         Dim newcost As clsKostenart, oldcost As clsKostenart
@@ -1716,7 +1729,18 @@ Public Class clsPhase
                     ReDim newXwerte(dimension)
                     hname = oldrole.name
 
-                    Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, corrFactor, newXwerte)
+                    If zielrenditeFaktor = -99999.0 Then
+                        ' undefiniert, deswegen corrfactor nehmen 
+                        If awinSettings.propAnpassRess Then
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, corrFactor, newXwerte)
+                        Else
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, 1.0, newXwerte)
+                        End If
+
+                    Else
+                        Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, zielrenditeFaktor, newXwerte)
+                    End If
+
 
                     With newrole
                         .RollenTyp = oldrole.RollenTyp
@@ -1742,7 +1766,18 @@ Public Class clsPhase
                     ReDim newXwerte(newphase.relEnde - newphase.relStart)
                     hname = oldcost.name
 
-                    Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, corrFactor, newXwerte)
+                    If zielrenditeFaktor = -99999.0 Then
+                        ' undefiniert, deswegen corrfactor nehmen
+                        If awinSettings.propAnpassRess Then
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, corrFactor, newXwerte)
+                        Else
+                            Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, 1.0, newXwerte)
+                        End If
+
+                    Else
+                        Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, zielrenditeFaktor, newXwerte)
+                    End If
+
 
                     With newcost
                         .KostenTyp = oldcost.KostenTyp
@@ -2226,6 +2261,7 @@ Public Class clsPhase
 
     ''' <summary>
     ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
+    ''' neu: wird immer gemacht, nicht mehr in Abhängigkeit von propAnpassRess
     ''' </summary>
     ''' <param name="startdate"></param>
     ''' <param name="endedate"></param>
@@ -2245,17 +2281,19 @@ Public Class clsPhase
         Try
             ReDim newXwerte(newValues.Length - 1)
 
-            gesBedarf = oldXwerte.Sum
-            If awinSettings.propAnpassRess Then
-                ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
-                gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+            If corrFakt <= 0 Then
+                corrFakt = 1.0
             End If
+
+            gesBedarf = oldXwerte.Sum
+            gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+
 
             If newValues.Length = oldXwerte.Length Then
 
                 'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
 
-                If Not awinSettings.propAnpassRess Then
+                If gesBedarf = oldXwerte.Sum Then
                     newXwerte = oldXwerte
                 Else
                     For i = 0 To newValues.Length - 1
@@ -2351,7 +2389,7 @@ Public Class clsPhase
 
         Catch ex As Exception
 
-            Call MsgBox("Fehler in berechneBedarfe: " & vbLF & ex.Message)
+            Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
 
         End Try
 

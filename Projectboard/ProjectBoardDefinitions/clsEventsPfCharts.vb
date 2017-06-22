@@ -174,9 +174,9 @@ Public Class clsEventsPfCharts
 
 
                 ' Schriftgröße der eingezeichenten Daten bestimmen
-                If .SeriesCollection.Count > 0 Then
+                If CType(.SeriesCollection, Excel.SeriesCollection).Count > 0 Then
 
-                    For j = 1 To .SeriesCollection.Count
+                    For j = 1 To CType(.SeriesCollection, Excel.SeriesCollection).Count
 
                         With CType(.SeriesCollection(j), Excel.Series)
                             For i = 1 To .Points.count
