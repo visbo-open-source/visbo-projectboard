@@ -475,13 +475,15 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
 
         If appInstance.Version <> "14.0" Then
-            If Wn.Caption = windowNames(4) Then
+            If CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.mpt) And _
+                CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.massEdit) Then
+
                 bIShrankTheRibbon = False
                 appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
                 bIShrankTheRibbon = True
             End If
         End If
-        
+
     End Sub
 
     Private Sub ThisWorkbook_WindowResize(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowResize
@@ -490,7 +492,13 @@ Public Class ThisWorkbook
     End Sub
 
     Private Sub ThisWorkbook_WindowDeactivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowDeactivate
-        'Dim anz As Integer = appInstance.Windows.Count
-        'Call MsgBox("De-Activate Window: " & CType(Wn.ActiveSheet, Excel.Worksheet).Name & "; Anzahl Fenster: " & anz)
+        If appInstance.Version <> "14.0" Then
+            If CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.mpt) And _
+            CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.massEdit) Then
+                If bIShrankTheRibbon Then
+                    appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+                End If
+            End If
+        End If
     End Sub
 End Class
