@@ -446,8 +446,8 @@ Public Class ThisWorkbook
         ' jetzt die verbleibenden arrangieren ...
 
         If appInstance.Version <> "14.0" Then
-            Call Workbook_WindowActivate(projectboardWindows(PTwindows.mptpr))
-            Call Workbook_WindowActivate(projectboardWindows(PTwindows.mptpf))
+            Call ThisWorkbook_WindowActivate(projectboardWindows(PTwindows.mptpr))
+            Call ThisWorkbook_WindowActivate(projectboardWindows(PTwindows.mptpf))
         End If
 
 

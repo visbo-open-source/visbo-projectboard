@@ -3421,7 +3421,9 @@ Public Module Module1
                     End If
                     i = i + 1
                 Loop
+                i = i + 1
             Loop
+            i = i + 1
         Loop
 
         ' Check ob selectedMeilstones P: oder V: enthält
@@ -3443,7 +3445,9 @@ Public Module Module1
                     End If
                     i = i + 1
                 Loop
+                i = i + 1
             Loop
+            i = i + 1
         Loop
 
 
