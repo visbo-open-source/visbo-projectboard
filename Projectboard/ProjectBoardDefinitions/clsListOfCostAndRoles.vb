@@ -104,8 +104,7 @@ Public Class clsListOfCostAndRoles
 
 
     ''' <summary>
-    ''' gibt die Phasen zurück, die diese Rolle enthalten 
-    ''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles enthalten 
+    ''' gibt die Phasen zurück, die diese Kostenart enthalten 
     ''' </summary>
     ''' <param name="costName"></param>
     ''' <value></value>
@@ -135,8 +134,7 @@ Public Class clsListOfCostAndRoles
     End Property
 
     ''' <summary>
-    ''' gibt die Phasen zurück, die eine der Rollen aus der Collection enthält
-    ''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles einer der Rollen aus der Collection enthalten 
+    ''' gibt die Phasen zurück, die eine der Kostenarten aus der Collection enthält
     ''' </summary>
     ''' <param name="costCollection"></param>
     ''' <value></value>

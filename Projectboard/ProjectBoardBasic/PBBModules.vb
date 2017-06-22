@@ -196,13 +196,93 @@ Public Module PBBModules
             End With
 
         ElseIf controlID = "PT0G1B8" Then
-            With nameFormular
 
-                .menuOption = PTmenue.sessionFilterDefinieren
-                .actionCode = PTTvActions.chgInSession
-                returnValue = .ShowDialog
+            Dim currentFilterConstellation As clsConstellation = currentSessionConstellation.copy("Filter Result")
 
-            End With
+            Dim formerEoU As Boolean = enableOnUpdate
+            enableOnUpdate = False
+
+
+            Try
+                With nameFormular
+
+                    Dim anzP As Integer = ShowProjekte.Count
+                    .menuOption = PTmenue.sessionFilterDefinieren
+                    .actionCode = PTTvActions.chgInSession
+                    returnValue = .ShowDialog
+                    Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
+
+                    ' Anzeigen ...
+                    Dim removeList As New Collection
+
+
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentFilterConstellation.Liste
+
+                        If ShowProjekte.contains(kvp.Value.projectName) Then
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.projectName)
+
+                            If filter.doesNotBlock(hproj) Then
+                                ' nichts tun 
+                            Else
+                                If Not removeList.Contains(kvp.Key) Then
+                                    removeList.Add(kvp.Key, kvp.Key)
+                                End If
+                            End If
+
+                        Else
+                            If Not removeList.Contains(kvp.Key) Then
+                                removeList.Add(kvp.Key, kvp.Key)
+                            End If
+                        End If
+
+                    Next
+
+                    ' jetzt die Liste bereinigen ...
+                    For Each tmpPvName As String In removeList
+                        currentFilterConstellation.remove(tmpPvName)
+                    Next
+
+                    If currentFilterConstellation.sortCriteria = ptSortCriteria.customTF Then
+                        ' jetzt wird das SortCriteria umgesetzt, weil andernfalls, bei customTF, die 
+                        ' Zeilen unverändert bleiben ... 
+                        currentFilterConstellation.sortCriteria = ptSortCriteria.customListe
+                    End If
+
+                    ' jetzt müssen die tfZeile neu besetzt werden;
+                    '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
+                    ' tk 21.3.17: ab jetzt nicht mehr .... jetzt wird ja in der _sortlist alles mitgeführt 
+                    ''currentBrowserConstellation.setTfZeilen(0)
+
+                    If removeList.Count > 0 Then
+
+
+                        ' erst am Ende alle Diagramme neu machen ...
+
+                        Dim tmpConstellation As New clsConstellations
+                        tmpConstellation.Add(currentFilterConstellation)
+
+                        ' es in der Session Liste verfügbar machen 
+                        ' es in der Session Liste verfügbar machen
+                        If projectConstellations.Contains(currentFilterConstellation.constellationName) Then
+                            projectConstellations.Remove(currentFilterConstellation.constellationName)
+                        End If
+
+                        projectConstellations.Add(currentFilterConstellation)
+
+                        Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                                clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                        Call awinNeuZeichnenDiagramme(2)
+
+                    End If
+
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            enableOnUpdate = formerEoU
 
         ElseIf ShowProjekte.Count > 0 Then
 
@@ -323,8 +403,8 @@ Public Module PBBModules
                         .ribbonButtonID = controlID
                         .menuOption = PTmenue.leistbarkeitsAnalyse
                         ' Nicht Modal anzeigen
-                        .Show()
-                        'returnValue = .ShowDialog
+                        '.Show()
+                        returnValue = .ShowDialog
 
                     End With
                 End If
@@ -358,8 +438,8 @@ Public Module PBBModules
 
                     .menuOption = PTmenue.leistbarkeitsAnalyse
                     ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
+                    '.Show()
+                    returnValue = .ShowDialog
 
                 End With
 
@@ -1103,9 +1183,8 @@ Public Module PBBModules
     Sub PBBChangeCurrentPortfolio()
 
 
-        'Dim returnValue As DialogResult
+        Call activateProjectBoard()
 
-        'Dim deleteProjects As New frmDeleteProjects
         Dim changePortfolio As New frmProjPortfolioAdmin
 
 

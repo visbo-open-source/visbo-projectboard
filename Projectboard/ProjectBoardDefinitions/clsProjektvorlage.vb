@@ -1351,7 +1351,7 @@
     ''' <remarks></remarks>
     Public Overridable ReadOnly Property containsAnyMilestonesOfCollection(ByVal msCollection As Collection) As Boolean
         Get
-            Dim ix As Integer
+            Dim ix As Integer = 1
             Dim fullName As String
             Dim tmpResult As Boolean = False
             Dim containsMS As Boolean = False
@@ -1411,7 +1411,7 @@
     ''' <remarks></remarks>
     Public Overridable ReadOnly Property containsAnyPhasesOfCollection(ByVal phCollection As Collection) As Boolean
         Get
-            Dim ix As Integer
+            Dim ix As Integer = 1
             Dim fullName As String
             Dim tmpResult As Boolean = False
             Dim containsPH As Boolean = False

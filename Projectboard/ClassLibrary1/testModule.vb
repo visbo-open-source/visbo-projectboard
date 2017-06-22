@@ -51,6 +51,7 @@ Public Module testModule
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
         Dim tatsErstellt As Integer = 0
         Dim msgTxt As String
+        
 
         Dim todoListe As New Collection
 
@@ -326,6 +327,9 @@ Public Module testModule
         Dim fallendShape As pptNS.Shape = Nothing
         Dim ampelShape As pptNS.Shape = Nothing
         Dim sternShape As pptNS.Shape = Nothing
+
+        Dim bigType As Integer = -1
+        Dim compID As Integer = -1
 
         Dim msgTxt As String = ""
 
@@ -858,6 +862,9 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = fullName
                                 End If
 
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                           ptReportBigTypes.components, ptReportComponents.prName)
+
                             Case "Custom-Field"
                                 If qualifier.Length > 0 Then
                                     ' existiert der überhaupt 
@@ -900,6 +907,9 @@ Public Module testModule
                                                 End If
 
                                         End Select
+
+                                        Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                           ptReportBigTypes.components, ptReportComponents.prCustomField)
                                     Else
                                         .TextFrame2.TextRange.Text = "Custom-Field " & qualifier & _
                                             " existiert nicht !"
@@ -1201,6 +1211,9 @@ Public Module testModule
 
                                             reportObj = obj
                                             notYetDone = True
+                                            bigType = ptReportBigTypes.charts
+                                            compID = PTprdk.MilestoneTrendanalysis
+
                                         Catch ex As Exception
                                             '.TextFrame2.TextRange.Text = "zum Projekt" & hproj.name & vbLf & "gibt es noch keine Trend-Analyse," & vbLf & _
                                             '                            "da es noch nicht begonnen hat"
@@ -1273,6 +1286,9 @@ Public Module testModule
 
 
                                     notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.Phasen
+
                                 End If
 
 
@@ -1721,15 +1737,15 @@ Public Module testModule
                                     If qualifier = "letzter Stand" Then
 
                                         Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand, _
-                                                                                  0, 0, 0, 0)
+                                                                                  5, 5, 280, 180, True)
 
                                     ElseIf qualifier = "Beauftragung" Then
                                         Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung, _
-                                                                                  0, 0, 0, 0)
+                                                                                  5, 5, 280, 180, True)
 
                                     Else
                                         Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current, _
-                                                                                  0, 0, 0, 0)
+                                                                                  5, 5, 280, 180, True)
 
                                     End If
 
@@ -1743,6 +1759,9 @@ Public Module testModule
                                     End With
 
                                     notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.Ergebnis
+
                                 Catch ex As Exception
 
                                 End Try
@@ -1762,8 +1781,12 @@ Public Module testModule
                                 Try
                                     mycollection.Add(pname)
 
-                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
+                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight, True)
                                     notYetDone = True
+
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.StrategieRisiko
+
                                 Catch ex As Exception
                                     Dim a As Integer = -1
                                 End Try
@@ -1781,8 +1804,10 @@ Public Module testModule
                                 Try
                                     mycollection.Add(pname)
 
-                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
+                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight, True)
                                     notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.Dependencies
                                 Catch ex As Exception
 
                                 End Try
@@ -1800,12 +1825,12 @@ Public Module testModule
 
                                     If qualifier.Length > 0 Then
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         End If
                                     Else
-                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                     End If
 
 
@@ -1815,6 +1840,9 @@ Public Module testModule
 
                                     reportObj = obj
                                     notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.PersonalBalken
+
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(233)
@@ -1834,13 +1862,16 @@ Public Module testModule
                                     If qualifier.Length > 0 Then
 
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalBalken
                                         End If
 
                                     Else
-                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.PersonalPie
                                     End If
 
 
@@ -1849,6 +1880,8 @@ Public Module testModule
 
                                     reportObj = obj
                                     notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+
 
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
@@ -1867,13 +1900,16 @@ Public Module testModule
                                     If qualifier.Length > 0 Then
 
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenPie
                                         Else
-                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenBalken
                                         End If
 
                                     Else
-                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.KostenPie
                                     End If
 
                                     Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
@@ -1881,6 +1917,9 @@ Public Module testModule
 
                                     reportObj = obj
                                     notYetDone = True
+
+                                    bigType = ptReportBigTypes.charts
+
                                 Catch ex As Exception
 
                                     '.TextFrame2.TextRange.Text = "Sonstige Kosten sind Null"
@@ -1907,13 +1946,15 @@ Public Module testModule
                                     If qualifier.Length > 0 Then
 
                                         If qualifier.Trim <> "Balken" Then
-                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenPie
                                         Else
-                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenBalken
                                         End If
 
                                     Else
-                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                     End If
 
                                     Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
@@ -1922,6 +1963,7 @@ Public Module testModule
 
                                     reportObj = obj
                                     notYetDone = True
+                                    bigType = ptReportBigTypes.charts
 
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
@@ -1943,6 +1985,9 @@ Public Module testModule
 
                                     reportObj = obj
                                     notYetDone = True
+
+                                    bigType = -1
+                                    compID = -1
 
                                 Else
                                     '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
@@ -1969,6 +2014,9 @@ Public Module testModule
 
                                     reportObj = obj
                                     notYetDone = True
+
+                                    bigType = -1
+                                    compID = -1
 
                                 Else
                                     '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
@@ -2577,6 +2625,12 @@ Public Module testModule
                                     Case Else
                                 End Select
 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prAmpel
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                          bigType, compID)
+
+
                             Case "Ampel-Text"
 
                                 If boxName = kennzeichnung Then
@@ -2584,12 +2638,22 @@ Public Module testModule
                                 End If
                                 .TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prAmpelText
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                          bigType, compID)
+
                             Case "Business-Unit:"
 
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(226)
                                 End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.businessUnit
+
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prBusinessUnit
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                          bigType, compID)
 
                             Case "Beschreibung"
 
@@ -2607,6 +2671,11 @@ Public Module testModule
 
                                 End Try
 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prDescription
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                          bigType, compID)
+
 
                             Case "Stand:"
 
@@ -2615,6 +2684,10 @@ Public Module testModule
                                 End If
 
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prStand
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                          bigType, compID)
 
                             Case "Laufzeit:"
 
@@ -2623,12 +2696,22 @@ Public Module testModule
                                 End If
                                 .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.Start, hproj.Start + hproj.anzahlRasterElemente - 1)
 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prLaufzeit
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                          bigType, compID)
+
                             Case "Verantwortlich:"
 
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(229)
                                 End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.leadPerson
+
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prVerantwortlich
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                          bigType, compID)
                             Case Else
                         End Select
 
@@ -2660,6 +2743,9 @@ Public Module testModule
                                         .Width = CSng(width * 0.96)
                                         .Height = CSng(height * 0.96)
                                     End With
+
+                                    Call addSmartPPTShapeInfo2(newShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                                               bigType, compID)
 
                                     reportObj.Delete()
                                 Catch ex As Exception
@@ -3965,9 +4051,9 @@ Public Module testModule
                             obj = Nothing
 
                             If qualifier = "Ampel" Then
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             Else
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             End If
 
 
@@ -4022,9 +4108,9 @@ Public Module testModule
                             obj = Nothing
 
                             If qualifier = "Ampel" Then
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             Else
-                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             End If
 
 
@@ -4073,7 +4159,7 @@ Public Module testModule
                             hheight = 0.6 * maxScreenHeight
                             obj = Nothing
 
-                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
 
                             reportObj = obj
 
@@ -4124,7 +4210,7 @@ Public Module testModule
                             hheight = 0.6 * maxScreenHeight
                             obj = Nothing
 
-                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight, True)
                             'Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
 
                             reportObj = obj
@@ -4556,7 +4642,8 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(58)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Phase " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -4622,7 +4709,8 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(120)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -9749,7 +9837,7 @@ Public Module testModule
                 With appInstance.Charts.Add
                     ' remove old series
                     Try
-                        Dim anz As Integer = CInt(.SeriesCollection.count)
+                        Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                         Do While anz > 0
                             .SeriesCollection(1).Delete()
                             anz = anz - 1
@@ -9838,11 +9926,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
+                    .Name = "Stand: " & ersterStandDatum.ToShortDateString & " (" & anzE.ToString & " P)"
                     '.name = "Baseline"
-                    .Interior.color = awinSettings.SollIstFarbeB
+                    .Interior.Color = awinSettings.SollIstFarbeB
                     .Values = tdatenreiheE
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -9880,11 +9968,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
+                    .Name = "Stand: " & letzterStandDatum.ToShortDateString & " (" & anzL.ToString & " P)"
 
-                    .Interior.color = awinSettings.SollIstFarbeL
+                    .Interior.Color = awinSettings.SollIstFarbeL
                     .Values = tdatenreiheL
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -9921,11 +10009,11 @@ Public Module testModule
 
 
 
-                With .SeriesCollection.NewSeries
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
+                    .Name = "aktueller Stand: " & aktuellesDatum.ToShortDateString & " (" & anzH.ToString & " P)"
                     '.name = "Current"
-                    .Interior.color = awinSettings.SollIstFarbeC
+                    .Interior.Color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheH
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -12399,7 +12487,6 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                .TextFrame2.TextRange.Text = beschriftung
                 nameCollection.Add(.Name, .Name)
             End With
 
@@ -18444,6 +18531,7 @@ Public Module testModule
         Dim ok2 As Boolean = False
         Dim i As Integer = 1
         Dim j As Integer = 1
+        
 
         While Not ok1 And i < 100
             Try
@@ -18454,7 +18542,8 @@ Public Module testModule
                         srcChartobj.Copy()
                         ok2 = True
                     Catch ex As Exception
-
+                        'Call MsgBox("chartCopy" & ex.Message)
+                        Exit While
                     End Try
                     j = j + 1
                 End While
@@ -18465,8 +18554,24 @@ Public Module testModule
                     End If
                 End If
 
-                chartCopypptPaste = pptslide.Shapes.Paste()
+                chartCopypptPaste = pptslide.Shapes.Paste
                 ok1 = True
+
+                '' jetzt wird der Link zum Projectboard.xlsx aufgebrochen ... 
+                'Try
+                '    With chartCopypptPaste.Item(1)
+                '        .Chart.ChartData.Activate()
+                '        .Chart.ChartData.BreakLink()
+                '        .Chart.SetSourceData(Source:="C:\temp\[Mappe1.xlsx]Tabelle1!$A$1:$E$20")
+                '        Call Sleep(1000)
+                '        Dim islinked As Boolean = .Chart.ChartData.IsLinked
+                '        'Dim wbName As String = CType(.Chart.ChartData.Workbook, Excel.Workbook).Name
+
+                '    End With
+                'Catch ex As Exception
+                '    Call MsgBox("in chartCopypptPaste: " & ex.Message)
+                'End Try
+
             Catch ex As Exception
                 'Call MsgBox("chartCopypptPaste catch")
                 chartCopypptPaste = Nothing
@@ -18474,6 +18579,7 @@ Public Module testModule
             i = i + 1
 
         End While
+
         If Not ok1 Then
             Call MsgBox("chartCopypptPaste Timeout oder i = " & i.ToString)
             Throw New ArgumentException("chartCopypptPaste timeout")

@@ -14,7 +14,22 @@ Public Class clsEventsPrcCharts
 
     Private Sub PrcChartEvents_Activate() Handles PrcChartEvents.Activate
 
+        Dim chtobj As xlNS.ChartObject
 
+        
+
+        Try
+            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+            'Call MsgBox("Activate ! " & chtobj.Name)
+            If selectedCharts.Contains(chtobj.Name) Then
+                ' nichts tun 
+            Else
+                ' aufnehmen 
+                selectedCharts.Add(chtobj.Name, chtobj.Name)
+            End If
+        Catch ex As Exception
+
+        End Try
         If selectedProjekte.Count > 0 Then
             selectedProjekte.Clear(False)
             Call awinNeuZeichnenDiagramme(8)
@@ -29,7 +44,7 @@ Public Class clsEventsPrcCharts
 
         Dim chtobj As xlNS.ChartObject
         Dim IDKennung As String
-        Dim foundDiagram As clsDiagramm
+        Dim foundDiagram As clsDiagramm = Nothing
 
 
         Cancel = True
@@ -38,13 +53,16 @@ Public Class clsEventsPrcCharts
             chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
 
             IDKennung = chtobj.Name
-            foundDiagram = DiagramList.getDiagramm(IDKennung)
-            With foundDiagram
-                .top = chtobj.Top
-                .left = chtobj.Left
-                .width = chtobj.Width
-                .height = chtobj.Height
-            End With
+            If DiagramList.contains(IDKennung) Then
+                foundDiagram = DiagramList.getDiagramm(IDKennung)
+                With foundDiagram
+                    .top = chtobj.Top
+                    .left = chtobj.Left
+                    .width = chtobj.Width
+                    .height = chtobj.Height
+                End With
+            End If
+            
         Catch ex As Exception
             'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
         End Try
@@ -86,12 +104,15 @@ Public Class clsEventsPrcCharts
             chtobj = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             IDkennung = chtobj.Name
             foundDiagramm = DiagramList.getDiagramm(IDkennung)
-            found = True
-            With foundDiagramm
-                diagrammTyp = .diagrammTyp
-                myCollection = .gsCollection
-                isCC = .isCockpitChart
-            End With
+            If Not IsNothing(foundDiagramm) Then
+                found = True
+                With foundDiagramm
+                    diagrammTyp = .diagrammTyp
+                    myCollection = .gsCollection
+                    isCC = .isCockpitChart
+                End With
+            End If
+            
 
 
             If IsNothing(myCollection) Then
@@ -293,6 +314,63 @@ Public Class clsEventsPrcCharts
 
 
     End Sub
+
+    ''' <summary>
+    ''' wird aufgerufen, wenn ein Chart De-Activiert wird, sei es durch Selektieren eines anderen Charts, einer Zelle oder eines Shapes 
+    ''' auf alle Fälle wird selectedCharts dadurch auf Null gesetzt 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub PrcChartEvents_Deactivate() Handles PrcChartEvents.Deactivate
+
+        'Dim chtobj As xlNS.ChartObject
+
+
+        Try
+            selectedCharts.Clear()
+            'chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+            'Call MsgBox("De-Activate ! " & chtobj.Name)
+            'chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+            'If Not IsNothing(chtobj) Then
+            '    If selectedCharts.Contains(chtobj.Name) Then
+            '        ' löschen ... 
+            '        selectedCharts.Remove(chtobj.Name)
+            '    Else
+            '        ' prüfen, ob überhaupt alle in selectedCharts referenzierten Charts noch existieren ? 
+            '        If selectedCharts.Count > 0 Then
+
+            '            For Each tmpChtName As String In selectedCharts
+            '                ' gibt es das Chart noch ? 
+
+            '                Try
+            '                    If CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects.count > 0 Then
+            '                        Dim tmpChtObj As Excel.ChartObject = CType(CType(CType(appInstance.ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Item(tmpChtName), Excel.ChartObject)
+            '                        If Not IsNothing(tmpChtObj) Then
+            '                            ' alles ok
+            '                        Else
+            '                            ' rausnehmen 
+            '                            selectedCharts.Remove(tmpChtName)
+            '                        End If
+            '                    Else
+            '                        ' es ist nicht mehr da ...
+            '                        selectedCharts.Remove(tmpChtName)
+            '                    End If
+            '                Catch ex As Exception
+            '                    selectedCharts.Remove(tmpChtName)
+            '                End Try
+
+            '            Next tmpChtName
+
+            '        End If
+
+            '    End If
+            'End If
+
+        Catch ex As Exception
+            Call MsgBox("De-Activate: no Object found any more")
+        End Try
+
+    End Sub
+
 
 
     Private Sub PrcChartEvents_MouseUp(Button As Integer, Shift As Integer, x As Integer, y As Integer) Handles PrcChartEvents.MouseUp

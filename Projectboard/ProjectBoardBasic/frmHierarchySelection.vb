@@ -3246,67 +3246,6 @@ Public Class frmHierarchySelection
 
             Call pickupCheckedProjStructItems(hryTreeView, selectedPhases, selectedMilestones)
 
-            ' ''Dim anzahlKnoten As Integer
-            ' ''Dim tmpNode As TreeNode
-            ' ''Dim element As String
-            ' ''Dim type As Integer = -1
-            ' ''Dim pvName As String = ""
-
-            '' '' Merken der aktuell selektierten Phasen und Meilensteine
-            ' ''selectedPhases.Clear()
-            ' ''selectedMilestones.Clear()
-
-            ' ''anzahlKnoten = hryTreeView.Nodes.Count
-
-            ' ''With hryTreeView
-
-            ' ''    Dim hry As clsHierarchy = Nothing
-            ' ''    For px As Integer = 1 To anzahlKnoten
-
-            ' ''        tmpNode = .Nodes.Item(px - 1)
-
-            ' ''        ' jetzt muss das Projekt, die Projekt-Vorlage ermittelt werden 
-            ' ''        ' und daraus die Hierarchie 
-            ' ''        If tmpNode.Level = 0 Then
-            ' ''            hry = getHryFromNode(tmpNode)
-            ' ''            type = getTypeFromNode(tmpNode)
-            ' ''            pvName = getPVnameFromNode(tmpNode)
-            ' ''        End If
-
-
-            ' ''        If tmpNode.Checked And Not IsNothing(hry) And tmpNode.Level > 0 Then
-            ' ''            ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
-            ' ''            Dim filterbyLevel0 As Boolean = topNodeIsSelected(tmpNode)
-            ' ''            Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
-            ' ''            Dim elemName As String = elemNameOfElemID(tmpNode.Name)
-            ' ''            If filterbyLevel0 Then
-            ' ''                element = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
-            ' ''            Else
-            ' ''                element = calcHryFullname(elemName, tmpBreadcrumb)
-            ' ''            End If
-
-
-            ' ''            If elemIDIstMeilenstein(tmpNode.Name) Then
-            ' ''                If Not selectedMilestones.Contains(element) Then
-            ' ''                    selectedMilestones.Add(element, element)
-            ' ''                End If
-            ' ''            Else
-            ' ''                If Not selectedPhases.Contains(element) Then
-            ' ''                    selectedPhases.Add(element, element)
-            ' ''                End If
-
-            ' ''            End If
-
-            ' ''        End If
-
-            ' ''        If tmpNode.Nodes.Count > 0 Then
-            ' ''            Call pickupCheckedItems(tmpNode, hry)
-            ' ''        End If
-
-            ' ''    Next
-
-            ' ''End With
-
         End If
 
     End Sub
