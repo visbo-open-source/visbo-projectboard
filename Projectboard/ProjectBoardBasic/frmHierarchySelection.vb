@@ -76,6 +76,9 @@ Public Class frmHierarchySelection
             .hryStufen.Visible = False
             .hryStufen.Value = 50
 
+            filterBox.Enabled = False
+            filterBox.Visible = False
+
 
             If .menuOption = PTmenue.filterdefinieren Then
 
@@ -1401,28 +1404,44 @@ Public Class frmHierarchySelection
                         topLevel = .Nodes.Add(kvp.Key)
                         topLevel.Name = kennung & kvp.Key
                         topLevel.Text = kvp.Key
+
                         hry = kvp.Value.hierarchy
 
-                        ' nachsehen, ob in selectedPhases oder selectedMilestones dieses Projekt erwähnt wurde
-                        Dim i As Integer = 1
-                        Do While Not checkProj And i < selectedPhases.Count
-                            Dim element As String = selectedPhases.Item(i)
-                            Dim hstr() As String = Split(element, topLevel.Name, , )
-                            checkProj = hstr.Length > 1
-                            i = i + 1
-                        Loop
+                        Dim projVorlage As clsProjektvorlage = Projektvorlagen.getProject(kvp.Key)
+                        Dim nodeToCheck As Boolean = False
 
-                        i = 1
-                        Do While Not checkProj And i < selectedMilestones.Count
-                            Dim element As String = selectedMilestones.Item(i)
-                            Dim hstr() As String = Split(element, topLevel.Name, , )
-                            checkProj = hstr.Length > 1
-                            i = i + 1
-                        Loop
-                        If checkProj Then
-                            topLevel.Checked = True
-                            checkProj = False
+                        If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
+
+                            nodeToCheck = projVorlage.containsAnyPhasesOfCollection(selectedPhases) _
+                                Or projVorlage.containsAnyMilestonesOfCollection(selectedMilestones)
+
+                            If nodeToCheck Then
+                                topLevel.Checked = True
+                            End If
                         End If
+
+
+
+                        ' '' nachsehen, ob in selectedPhases oder selectedMilestones dieses Projekt erwähnt wurde
+                        ''Dim i As Integer = 1
+                        ''Do While Not checkProj And i < selectedPhases.Count
+                        ''    Dim element As String = selectedPhases.Item(i)
+                        ''    Dim hstr() As String = Split(element, topLevel.Name, , )
+                        ''    checkProj = hstr.Length > 1
+                        ''    i = i + 1
+                        ''Loop
+
+                        ''i = 1
+                        ''Do While Not checkProj And i < selectedMilestones.Count
+                        ''    Dim element As String = selectedMilestones.Item(i)
+                        ''    Dim hstr() As String = Split(element, topLevel.Name, , )
+                        ''    checkProj = hstr.Length > 1
+                        ''    i = i + 1
+                        ''Loop
+                        ''If checkProj Then
+                        ''    topLevel.Checked = True
+                        ''    checkProj = False
+                        ''End If
 
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
@@ -1442,26 +1461,37 @@ Public Class frmHierarchySelection
                             topLevel.Text = kvp.Key
                             hry = kvp.Value.hierarchy
 
-                            ' nachsehen, ob in selectedPhases oder selectedMilestones dieses Projekt erwähnt wurde
-                            Dim i As Integer = 1
-                            Do While Not checkProj And i < selectedPhases.Count
-                                Dim element As String = selectedPhases.Item(i)
-                                Dim hstr() As String = Split(element, topLevel.Name, , )
-                                checkProj = hstr.Length > 1
-                                i = i + 1
-                            Loop
-
-                            i = 1
-                            Do While Not checkProj And i < selectedMilestones.Count
-                                Dim element As String = selectedMilestones.Item(i)
-                                Dim hstr() As String = Split(element, topLevel.Name, , )
-                                checkProj = hstr.Length > 1
-                                i = i + 1
-                            Loop
-                            If checkProj Then
-                                topLevel.Checked = True
-                                checkProj = False
+                            If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
+                                ' überprüfen, ob das Projekt irgend eine der selektierten Phasen oder Meilensteine enthält
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Key)
+                                Dim tmpcollection As New Collection
+                                Dim newFil As New clsFilter("tmp", tmpcollection, tmpcollection, _
+                                                            selectedPhases, selectedMilestones, tmpcollection, tmpcollection)
+                                If newFil.doesNotBlock(hproj) Then
+                                    topLevel.Checked = True
+                                End If
                             End If
+
+                            '' nachsehen, ob in selectedPhases oder selectedMilestones dieses Projekt erwähnt wurde
+                            'Dim i As Integer = 1
+                            'Do While Not checkProj And i < selectedPhases.Count
+                            '    Dim element As String = selectedPhases.Item(i)
+                            '    Dim hstr() As String = Split(element, topLevel.Name, , )
+                            '    checkProj = hstr.Length > 1
+                            '    i = i + 1
+                            'Loop
+
+                            'i = 1
+                            'Do While Not checkProj And i < selectedMilestones.Count
+                            '    Dim element As String = selectedMilestones.Item(i)
+                            '    Dim hstr() As String = Split(element, topLevel.Name, , )
+                            '    checkProj = hstr.Length > 1
+                            '    i = i + 1
+                            'Loop
+                            'If checkProj Then
+                            '    topLevel.Checked = True
+                            '    checkProj = False
+                            'End If
 
 
                             Call buildProjectSubTreeView(topLevel, hry)
@@ -1542,20 +1572,8 @@ Public Class frmHierarchySelection
 
                     End If
 
-
                     Call rebuildFormerState(PTauswahlTyp.phase)
 
-
-                    ' Merken welches die selektierten Phasen waren 
-                    selectedPhases.Clear()
-                    For Each tN As TreeNode In hryTreeView.Nodes
-                        If tN.Checked Then
-                            selectedPhases.Add(tN.Name, tN.Name)
-                        End If
-                    Next
-
-
-                   
                 ElseIf Me.rdbMilestones.Checked Then
 
                     'alle Meilensteine der selektierten Projekte zeigen, je nach menuOption
@@ -1615,14 +1633,6 @@ Public Class frmHierarchySelection
                     End If
 
                     Call rebuildFormerState(PTauswahlTyp.meilenstein)
-
-                    ' Merken welches die selektierten Meilensteine waren 
-                    selectedMilestones.Clear()
-                    For Each tN As TreeNode In hryTreeView.Nodes
-                        If tN.Checked Then
-                            selectedMilestones.Add(tN.Name, tN.Name)
-                        End If
-                    Next
 
                 Else
                     ' hier müssen noch Rollen, Kosten, Bu, Typ bearbeitet werden
@@ -1715,6 +1725,71 @@ Public Class frmHierarchySelection
         End If
     End Sub
 
+    Private Sub pickupCheckedProjStructItems(ByVal treeView As TreeView, ByRef selphases As Collection, ByRef selMilestones As Collection)
+
+        Dim anzahlKnoten As Integer
+        Dim tmpNode As TreeNode
+        Dim element As String
+        Dim type As Integer = -1
+        Dim pvName As String = ""
+
+        ' Merken der aktuell selektierten Phasen und Meilensteine
+        selphases.Clear()
+        selMilestones.Clear()
+
+        anzahlKnoten = treeView.Nodes.Count
+
+        With hryTreeView
+
+            Dim hry As clsHierarchy = Nothing
+            For px As Integer = 1 To anzahlKnoten
+
+                tmpNode = .Nodes.Item(px - 1)
+
+                ' jetzt muss das Projekt, die Projekt-Vorlage ermittelt werden 
+                ' und daraus die Hierarchie 
+                If tmpNode.Level = 0 Then
+                    hry = getHryFromNode(tmpNode)
+                    type = getTypeFromNode(tmpNode)
+                    pvName = getPVnameFromNode(tmpNode)
+                End If
+
+
+                If tmpNode.Checked And Not IsNothing(hry) And tmpNode.Level > 0 Then
+                    ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
+                    Dim filterbyLevel0 As Boolean = topNodeIsSelected(tmpNode)
+                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                    Dim elemName As String = elemNameOfElemID(tmpNode.Name)
+                    If filterbyLevel0 Then
+                        element = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
+                    Else
+                        element = calcHryFullname(elemName, tmpBreadcrumb)
+                    End If
+
+
+                    If elemIDIstMeilenstein(tmpNode.Name) Then
+                        If Not selMilestones.Contains(element) Then
+                            selMilestones.Add(element, element)
+                        End If
+                    Else
+                        If Not selphases.Contains(element) Then
+                            selphases.Add(element, element)
+                        End If
+
+                    End If
+
+                End If
+
+                If tmpNode.Nodes.Count > 0 Then
+                    Call pickupCheckedItems(tmpNode, hry)
+                End If
+
+            Next
+
+        End With
+    End Sub
+
+
     ''' <summary>
     ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der nameList zurück  
     ''' wird rekursiv aufgerufen 
@@ -1777,7 +1852,24 @@ Public Class frmHierarchySelection
         End If
 
     End Sub
+    ''' <summary>
+    ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der selectedElems zurück   
+    ''' </summary>
+    ''' <param name="tree"></param>
+    ''' <param name="selectedElems"></param>
+    ''' <remarks></remarks>
+    Private Sub pickupCheckedListItems(ByVal tree As TreeView, ByRef selectedElems As Collection)
 
+        ' Merken welches die selektierten Phasen waren 
+        selectedElems.Clear()
+        For Each tN As TreeNode In tree.Nodes
+            If tN.Checked Then
+                If Not selectedElems.Contains(tN.Name) Then
+                    selectedElems.Add(tN.Name, tN.Name)
+                End If
+            End If
+        Next
+    End Sub
 
 
     Private Sub hryTreeView_KeyPress(sender As Object, e As KeyPressEventArgs) Handles hryTreeView.KeyPress
@@ -2904,16 +2996,20 @@ Public Class frmHierarchySelection
             End If
 
 
-            ' ''If rdbProjStruktTyp.Checked Or rdbProjStruktProj.Checked Then
-
-            ' ''    ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-            ' ''    If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-            ' ''        hryTreeView.ExpandAll()
-            ' ''    End If
-
-            ' ''End If
         Else
             lastAuswahl = PTProjektType.nameList
+
+            If rdbPhases.Checked Then
+
+                ' Merken welches die selektierten Phasen waren 
+                Call pickupCheckedListItems(hryTreeView, selectedPhases)
+
+            ElseIf rdbMilestones.Checked Then
+
+                ' Merken welches die selektierten Meilensteine waren 
+                Call pickupCheckedListItems(hryTreeView, selectedMilestones)
+
+            End If
 
         End If
 
@@ -3006,7 +3102,7 @@ Public Class frmHierarchySelection
             Else
                 Me.statusLabel.Text = "nur für Projekt-Sturktur (Projekt) geeignet"
             End If
-           
+
         End With
 
     End Sub
@@ -3022,6 +3118,16 @@ Public Class frmHierarchySelection
             Me.pictureMilestones.Visible = False
             Me.picturePhasen.Visible = False
 
+            ' clear Listbox1 
+            If awinSettings.englishLanguage Then
+                headerLine.Text = "Phases/Milestones"
+            Else
+                headerLine.Text = "Phasen/Meilensteine"
+            End If
+
+            filterBox.Visible = False
+            filterBox.Text = ""
+
             If selectedBUs.Count = 0 And _
                 selectedTyps.Count = 0 And _
                 selectedPhases.Count = 0 And _
@@ -3036,27 +3142,15 @@ Public Class frmHierarchySelection
             Select Case auswahl
                 Case PTProjektType.nameList
 
-                    'Me.rdbProjStruktProj.Checked = True
-
                     Call buildHryTreeViewNew(PTProjektType.projekt)
-
 
                 Case PTProjektType.vorlage
 
-                    'Me.rdbProjStruktProj.Checked = True
-
                     Call buildHryTreeViewNew(PTProjektType.projekt)
-
 
                 Case PTProjektType.projekt
 
-                    'Me.rdbProjStruktProj.Checked = True
-
                     Call buildHryTreeViewNew(auswahl)
-                    ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                    'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                    '    hryTreeView.ExpandAll()
-                    'End If
 
                 Case Else
                     selectedPhases.Clear()
@@ -3066,13 +3160,13 @@ Public Class frmHierarchySelection
                     selectedRoles.Clear()
                     selectedCosts.Clear()
 
-                    'Me.rdbNameList.Checked = True
-                    'Me.rdbPhases.Checked = True
-
                     Call buildHryTreeViewNew(PTProjektType.projekt)
 
             End Select
 
+        Else
+            ' Merken der Projekte/Phasen und Meilensteine
+            Call pickupCheckedProjStructItems(hryTreeView, selectedPhases, selectedMilestones)
         End If
 
     End Sub
@@ -3088,6 +3182,16 @@ Public Class frmHierarchySelection
             Me.pictureMilestones.Visible = False
             Me.picturePhasen.Visible = False
 
+            ' clear Listbox1 
+            If awinSettings.englishLanguage Then
+                headerLine.Text = "Phases/Milestones"
+            Else
+                headerLine.Text = "Phasen/Meilensteine"
+            End If
+
+            filterBox.Visible = False
+            filterBox.Text = ""
+
             If selectedBUs.Count = 0 And _
                  selectedTyps.Count = 0 And _
                  selectedPhases.Count = 0 And _
@@ -3102,20 +3206,13 @@ Public Class frmHierarchySelection
             Select Case auswahl
                 Case PTProjektType.nameList
 
-                    'Me.rdbProjStruktTyp.Checked = True
-
                     Call buildHryTreeViewNew(PTProjektType.vorlage)
 
 
                 Case PTProjektType.vorlage
 
-                    'Me.rdbProjStruktTyp.Checked = True
-
                     Call buildHryTreeViewNew(auswahl)
-                    ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                    'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                    '    hryTreeView.ExpandAll()
-                    'End If
+                   
 
                 Case PTProjektType.projekt
 
@@ -3129,13 +3226,10 @@ Public Class frmHierarchySelection
                         statusLabel.Text = "Elemente können nur in Projekt-Struktur angezeigt werden"
                     End If
 
-                    '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                    'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                    '    hryTreeView.ExpandAll()
-                    'End If
+              
                 Case Else
 
-                    Call MsgBox("Fehler !!!")
+                    Call MsgBox("eigentlich Fehler !!!")
                     selectedPhases.Clear()
                     selectedMilestones.Clear()
                     selectedBUs.Clear()
@@ -3143,12 +3237,75 @@ Public Class frmHierarchySelection
                     selectedRoles.Clear()
                     selectedCosts.Clear()
 
-                    'Me.rdbNameList.Checked = True
-                    'Me.rdbPhases.Checked = True
 
                     Call buildHryTreeViewNew(PTProjektType.vorlage)
 
             End Select
+
+        Else
+
+            Call pickupCheckedProjStructItems(hryTreeView, selectedPhases, selectedMilestones)
+
+            ' ''Dim anzahlKnoten As Integer
+            ' ''Dim tmpNode As TreeNode
+            ' ''Dim element As String
+            ' ''Dim type As Integer = -1
+            ' ''Dim pvName As String = ""
+
+            '' '' Merken der aktuell selektierten Phasen und Meilensteine
+            ' ''selectedPhases.Clear()
+            ' ''selectedMilestones.Clear()
+
+            ' ''anzahlKnoten = hryTreeView.Nodes.Count
+
+            ' ''With hryTreeView
+
+            ' ''    Dim hry As clsHierarchy = Nothing
+            ' ''    For px As Integer = 1 To anzahlKnoten
+
+            ' ''        tmpNode = .Nodes.Item(px - 1)
+
+            ' ''        ' jetzt muss das Projekt, die Projekt-Vorlage ermittelt werden 
+            ' ''        ' und daraus die Hierarchie 
+            ' ''        If tmpNode.Level = 0 Then
+            ' ''            hry = getHryFromNode(tmpNode)
+            ' ''            type = getTypeFromNode(tmpNode)
+            ' ''            pvName = getPVnameFromNode(tmpNode)
+            ' ''        End If
+
+
+            ' ''        If tmpNode.Checked And Not IsNothing(hry) And tmpNode.Level > 0 Then
+            ' ''            ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
+            ' ''            Dim filterbyLevel0 As Boolean = topNodeIsSelected(tmpNode)
+            ' ''            Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+            ' ''            Dim elemName As String = elemNameOfElemID(tmpNode.Name)
+            ' ''            If filterbyLevel0 Then
+            ' ''                element = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
+            ' ''            Else
+            ' ''                element = calcHryFullname(elemName, tmpBreadcrumb)
+            ' ''            End If
+
+
+            ' ''            If elemIDIstMeilenstein(tmpNode.Name) Then
+            ' ''                If Not selectedMilestones.Contains(element) Then
+            ' ''                    selectedMilestones.Add(element, element)
+            ' ''                End If
+            ' ''            Else
+            ' ''                If Not selectedPhases.Contains(element) Then
+            ' ''                    selectedPhases.Add(element, element)
+            ' ''                End If
+
+            ' ''            End If
+
+            ' ''        End If
+
+            ' ''        If tmpNode.Nodes.Count > 0 Then
+            ' ''            Call pickupCheckedItems(tmpNode, hry)
+            ' ''        End If
+
+            ' ''    Next
+
+            ' ''End With
 
         End If
 
@@ -3294,12 +3451,14 @@ Public Class frmHierarchySelection
             Else
 
                 ' Merken welches die selektierten Phasen waren 
-                selectedPhases.Clear()
-                For Each tN As TreeNode In hryTreeView.Nodes
-                    If tN.Checked Then
-                        selectedPhases.Add(tN.Name, tN.Name)
-                    End If
-                Next
+                Call pickupCheckedListItems(hryTreeView, selectedPhases)
+
+                ' ''selectedPhases.Clear()
+                ' ''For Each tN As TreeNode In hryTreeView.Nodes
+                ' ''    If tN.Checked Then
+                ' ''        selectedPhases.Add(tN.Name, tN.Name)
+                ' ''    End If
+                ' ''Next
 
             End If
 
@@ -3371,78 +3530,15 @@ Public Class frmHierarchySelection
 
             Else
 
-
                 ' Merken welches die selektierten Meilensteine waren 
-                selectedMilestones.Clear()
-                For Each tN As TreeNode In hryTreeView.Nodes
-                    If tN.Checked Then
-                        selectedMilestones.Add(tN.Name, tN.Name)
-                    End If
-                Next
+                Call pickupCheckedListItems(hryTreeView, selectedMilestones)
 
-
-                ''ElseIf Me.rdbPhases.Checked Then
-                ''    ' clear Listbox1 
-                ''    If awinSettings.englishLanguage Then
-                ''        headerLine.Text = "Phases"
-                ''    Else
-                ''        headerLine.Text = "Phasen"
-                ''    End If
-
-                ''    filterBox.Text = ""
-
-                ''    If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                ''        ' immer die AlleProjekte hernehmen 
-                ''        If selectedProjekte.Count > 0 Then
-                ''            allPhases = selectedProjekte.getPhaseNames
-                ''        ElseIf AlleProjekte.Count > 0 Then
-                ''            allPhases = AlleProjekte.getPhaseNames
-                ''        Else
-                ''            ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
-                ''            allPhases.Clear()
-                ''        End If
-
-                ''    ElseIf Me.menuOption = PTmenue.filterdefinieren Then
-                ''        ' 
-                ''        If selectedProjekte.Count > 0 Then
-                ''            allPhases = selectedProjekte.getPhaseNames
-                ''        Else
-                ''            ' eigentlich sollten hier alle Meilensteine der Datenbank stehen ... 
-                ''            For i As Integer = 1 To PhaseDefinitions.Count
-                ''                Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                ''                If Not allPhases.Contains(tmpName) Then
-                ''                    allPhases.Add(tmpName, tmpName)
-                ''                End If
-                ''            Next
-                ''        End If
-
-                ''    Else
-                ''        ' alle anderen Optionen
-                ''        If selectedProjekte.Count > 0 Then
-                ''            allPhases = selectedProjekte.getPhaseNames
-                ''        ElseIf ShowProjekte.Count > 0 Then
-                ''            allPhases = ShowProjekte.getPhaseNames
-                ''        Else
-                ''            For i As Integer = 1 To PhaseDefinitions.Count
-                ''                Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                ''                If Not allPhases.Contains(tmpName) Then
-                ''                    allPhases.Add(tmpName, tmpName)
-                ''                End If
-                ''            Next
-                ''        End If
-
-                ''    End If
-
-                ''    Call rebuildFormerState(PTauswahlTyp.meilenstein)
-
-                ''    ' Merken welches die selektierten Meilensteine waren 
-                ''    selectedPhases.Clear()
-                ''    For Each tN As TreeNode In hryTreeView.Nodes
-                ''        If tN.Checked Then
-                ''            selectedPhases.Add(tN.Name, tN.Name)
-                ''        End If
-                ''    Next
-
+                ' ''selectedMilestones.Clear()
+                ' ''For Each tN As TreeNode In hryTreeView.Nodes
+                ' ''    If tN.Checked Then
+                ' ''        selectedMilestones.Add(tN.Name, tN.Name)
+                ' ''    End If
+                ' ''Next
 
             End If
 

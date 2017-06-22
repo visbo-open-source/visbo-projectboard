@@ -15552,7 +15552,7 @@ Public Module Projekte
                 todoListe = realNameList
             Else
                 'bringt eine List von Phasen ElemIDs zurück, die den angegebenen Zeitraum berühren / überdecken
-                todoListe = hproj.withinTimeFrame(False, vonMonth, bisMonth, realNameList)
+                todoListe = hproj.phaseWithinTimeFrame(False, vonMonth, bisMonth, realNameList)
             End If
 
 

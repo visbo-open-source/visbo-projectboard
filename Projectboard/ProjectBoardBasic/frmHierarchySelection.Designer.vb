@@ -282,12 +282,14 @@ Partial Class frmHierarchySelection
         '
         'filterBox
         '
+        Me.filterBox.Enabled = False
         Me.filterBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.filterBox.HideSelection = False
         Me.filterBox.Location = New System.Drawing.Point(125, 118)
         Me.filterBox.Name = "filterBox"
         Me.filterBox.Size = New System.Drawing.Size(150, 22)
         Me.filterBox.TabIndex = 54
+        Me.filterBox.Visible = False
         '
         'picturePhasen
         '
