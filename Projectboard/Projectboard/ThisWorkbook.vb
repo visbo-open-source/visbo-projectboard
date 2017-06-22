@@ -442,14 +442,6 @@ Public Class ThisWorkbook
             .Visible = False
         End With
 
-        ' Ribbon ausblenden:  windowNames(4): Charts
-        ' jetzt die verbleibenden arrangieren ...
-
-        If appInstance.Version <> "14.0" Then
-            Call Workbook_WindowActivate(projectboardWindows(PTwindows.mptpr))
-            Call Workbook_WindowActivate(projectboardWindows(PTwindows.mptpf))
-        End If
-
 
         ' jetzt das Sheet Multiprojekt-Tafel aktivieren
         visboWorkbook.Worksheets.Item(arrWsNames(ptTables.MPT)).activate()
@@ -481,11 +473,15 @@ Public Class ThisWorkbook
 
     Private bIShrankTheRibbon As Boolean
     Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
-        If Wn.Caption = windowNames(4) Then
-            bIShrankTheRibbon = False
-            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
-            bIShrankTheRibbon = True
+
+        If appInstance.Version <> "14.0" Then
+            If Wn.Caption = windowNames(4) Then
+                bIShrankTheRibbon = False
+                appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
+                bIShrankTheRibbon = True
+            End If
         End If
+        
     End Sub
 
     Private Sub ThisWorkbook_WindowResize(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowResize
