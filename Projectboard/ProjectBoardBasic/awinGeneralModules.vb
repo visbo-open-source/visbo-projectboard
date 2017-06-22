@@ -21004,23 +21004,5 @@ Public Module awinGeneralModules
 
     End Function
 
-    Public bIShrankTheRibbon As Boolean
-    Public Sub Workbook_WindowActivate(ByVal Wn As Window)
-        If Wn.Caption <> bestimmeWindowCaption(PTwindows.mpt) And _
-            Wn.Caption <> bestimmeWindowCaption(PTwindows.massEdit) Then
-            bIShrankTheRibbon = False
-            appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
-            bIShrankTheRibbon = True
-        End If
-    End Sub
-
-    Public Sub Workbook_WindowDeactivate(ByVal Wn As Window)
-        If Wn.Caption <> bestimmeWindowCaption(PTwindows.mpt) And _
-            Wn.Caption <> bestimmeWindowCaption(PTwindows.massEdit) Then
-            If bIShrankTheRibbon Then
-                appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
-            End If
-        End If
-    End Sub
 
 End Module
