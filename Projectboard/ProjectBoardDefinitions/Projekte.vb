@@ -1608,20 +1608,20 @@ Public Module Projekte
                             Case 0
                                 '"Ampel nicht bewertet"
                                 'colorValues(anzBubbles) = awinSettings.AmpelNichtBewertet
-                                colorValues(anzBubbles) = System.Drawing.Color.Gray.ToArgb
+                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbGray
 
                             Case 1
                                 '"Ampel Grün"
                                 'colorValues(anzBubbles) = awinSettings.AmpelGruen
-                                colorValues(anzBubbles) = System.Drawing.Color.Green.ToArgb
+                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbGreen
                             Case 2
                                 '"Ampel Gelb"
                                 'colorValues(anzBubbles) = awinSettings.AmpelGelb
-                                colorValues(anzBubbles) = System.Drawing.Color.Yellow
+                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbYellow
                             Case 3
                                 '"Ampel Rot"
                                 'colorValues(anzBubbles) = awinSettings.AmpelRot
-                                colorValues(anzBubbles) = System.Drawing.Color.Red
+                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbRed
                         End Select
                     End If
 
@@ -8563,6 +8563,148 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
+    ''' aktualisiert eine Smart PPT Komponenten, das sind Felder 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="pptShape"></param>
+    ''' <param name="detailID"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePPTComponent(ByVal hproj As clsProjekt, ByRef pptShape As PowerPoint.Shape, _
+                                      ByVal detailID As Integer)
+        Try
+            Select Case detailID
+
+                Case ptReportComponents.prName
+
+                    If Not IsNothing(hproj) Then
+                        pptShape.TextFrame2.TextRange.Text = hproj.getShapeText
+                    End If
+
+                Case ptReportComponents.prCustomField
+                    Dim qualifier As String = pptShape.Tags.Item("Q1")
+                    If Not IsNothing(qualifier) Then
+                        If qualifier.Length > 0 Then
+                            Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
+
+                            If uid <> -1 Then
+                                Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
+
+                                Select Case cftype
+                                    Case ptCustomFields.Str
+                                        Dim wert As String = hproj.getCustomSField(uid)
+                                        If Not IsNothing(wert) Then
+                                            pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert
+                                        Else
+                                            pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                        End If
+
+                                    Case ptCustomFields.Dbl
+                                        Dim wert As Double = hproj.getCustomDField(uid)
+                                        If Not IsNothing(wert) Then
+                                            pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
+                                        Else
+                                            pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                        End If
+
+                                    Case ptCustomFields.bool
+                                        Dim wert As Boolean = hproj.getCustomBField(uid)
+
+                                        If Not IsNothing(wert) Then
+                                            If wert Then
+                                                ' Sprache !
+                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                            Else
+                                                ' Sprache !
+                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": No"
+                                            End If
+
+                                        Else
+                                            pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                        End If
+
+                                End Select
+
+                            Else
+                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                            End If
+                        End If
+                    End If
+
+                Case ptReportComponents.prAmpel
+                    If Not IsNothing(hproj) Then
+                        Select Case hproj.ampelStatus
+                            Case 0
+                                'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Gray.ToArgb
+                                pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGray
+                            Case 1
+                                'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Green.ToArgb
+                                pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGreen
+                            Case 2
+                                'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Yellow.ToArgb
+                                pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbYellow
+                            Case 3
+                                'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Red.ToArgb
+                                pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbRed
+                            Case Else
+                        End Select
+                    End If
+
+                Case ptReportComponents.prAmpelText
+                    If Not IsNothing(hproj) Then
+                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
+                    End If
+
+                Case ptReportComponents.prBusinessUnit
+                    If Not IsNothing(hproj) Then
+                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.businessUnit
+                    End If
+
+                Case ptReportComponents.prStand
+                    If Not IsNothing(hproj) Then
+                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
+                    End If
+
+                Case ptReportComponents.prDescription
+                    If Not IsNothing(hproj) Then
+                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        Dim initialText As String = qualifier2 & ": " & hproj.description
+                        pptShape.TextFrame2.TextRange.Text = initialText
+
+                        If hproj.variantDescription.Length > 0 Then
+                            pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf & _
+                                "Varianten-Beschreibung: " & hproj.variantDescription
+                        End If
+                    End If
+
+                Case ptReportComponents.prLaufzeit
+                    If Not IsNothing(hproj) Then
+                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & textZeitraum(hproj.startDate, hproj.endeDate)
+
+                    End If
+
+                Case ptReportComponents.prVerantwortlich
+                    If Not IsNothing(hproj) Then
+                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.leadPerson
+
+                    End If
+                Case Else
+
+                    Call MsgBox("nicht abgedeckt: " & detailID.ToString)
+
+            End Select
+        Catch ex As Exception
+
+        End Try
+        
+
+    End Sub
+
+    ''' <summary>
     ''' aktualisiert das Projekt Ergebnis Chart in einer PPT Datei  
     ''' </summary>
     ''' <param name="hproj"></param>
@@ -8625,7 +8767,7 @@ Public Module Projekte
             'Xdatenreihe(2) = repMessages.getmsg(52)
             Xdatenreihe(2) = "sonstige Kosten"
             'Xdatenreihe(3) = repMessages.getmsg(53)
-            Xdatenreihe(3) = "Gewinn/Verlust"
+            'Xdatenreihe(3) = "Gewinn/Verlust"
 
         Else
             'Xdatenreihe(0) = repMessages.getmsg(49)
@@ -8635,7 +8777,7 @@ Public Module Projekte
             'Xdatenreihe(2) = repMessages.getmsg(52)
             Xdatenreihe(2) = "other Cost"
             'Xdatenreihe(3) = repMessages.getmsg(53)
-            Xdatenreihe(3) = "Profit/Loss"
+            'Xdatenreihe(3) = "Profit/Loss"
         End If
 
 
@@ -8646,22 +8788,32 @@ Public Module Projekte
             .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
 
             itemValue(0) = projektErloes
-            itemColor(0) = ergebnisfarbe1
+            'itemColor(0) = ergebnisfarbe1
 
             'itemValue(1) = projektRisikoKosten
             'itemColor(1) = iProjektFarbe
 
             itemValue(1) = projektPersKosten
-            itemColor(1) = farbeExterne
+            'itemColor(1) = farbeExterne
 
             itemValue(2) = projektSonstKosten
-            itemColor(2) = farbeExterne
+            'itemColor(2) = farbeExterne
 
             itemValue(3) = projektErgebnis
-            If projektErgebnis > 0 Then
-                itemColor(3) = ergebnisfarbe2
+            If projektErgebnis >= 0 Then
+                If languageIsGerman Then
+                    Xdatenreihe(3) = "Gewinn"
+                Else
+                    Xdatenreihe(3) = "Profit"
+                End If
+                'itemColor(3) = ergebnisfarbe2
             Else
-                itemColor(3) = farbeExterne
+                If languageIsGerman Then
+                    Xdatenreihe(3) = "Verlust"
+                Else
+                    Xdatenreihe(3) = "Loss"
+                End If
+                'itemColor(3) = farbeExterne
             End If
         End With
 
@@ -8700,15 +8852,16 @@ Public Module Projekte
             End Try
 
             ' remove old series
-            Try
-                Dim anz As Integer = CInt(CType(.SeriesCollection, pptNS.SeriesCollection).Count)
-                Do While anz > 0
-                    .SeriesCollection(1).Delete()
-                    anz = anz - 1
-                Loop
-            Catch ex As Exception
+            ' die old series darf nicht gelöscht werden, weil sonst die Farb- uind  sonstige Info weg ist ... 
+            'Try
+            '    Dim anz As Integer = CInt(CType(.SeriesCollection, pptNS.SeriesCollection).Count)
+            '    Do While anz > 0
+            '        .SeriesCollection(1).Delete()
+            '        anz = anz - 1
+            '    Loop
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
             Dim crossindex As Integer = -1
 
@@ -8754,6 +8907,21 @@ Public Module Projekte
             valueDatenreihe1(iv) = 0
             valueDatenreihe2(iv) = itemValue(iv)
 
+            ' bestimmen der Farben 
+            With .SeriesCollection(2)
+                For iv = 0 To 2
+
+                    With .Points(iv + 1)
+                        itemColor(iv) = .Interior.color
+                    End With
+                    
+                Next
+                If projektErgebnis >= 0 Then
+                    itemColor(3) = itemColor(0)
+                Else
+                    itemColor(3) = itemColor(1)
+                End If
+            End With
 
 
             'series
@@ -8795,41 +8963,49 @@ Public Module Projekte
 
             End With
 
-            With .Axes(Excel.XlAxisType.xlCategory)
-                .HasTitle = False
-                If minscale < 0 Then
-                    .TickLabelPosition = Excel.Constants.xlLow
-                End If
+            'With .Axes(Excel.XlAxisType.xlCategory)
+            '    .HasTitle = False
+            '    If minscale < 0 Then
+            '        .TickLabelPosition = Excel.Constants.xlLow
+            '    End If
 
 
-            End With
+            'End With
 
+
+            'Try
+            '    With .Axes(Excel.XlAxisType.xlValue)
+            '        .HasTitle = False
+            '        .HasMajorGridlines = False
+            '        .hasminorgridlines = False
+            '    End With
+            'Catch ex As Exception
+
+            'End Try
 
             Try
-                With .Axes(Excel.XlAxisType.xlValue)
-                    .HasTitle = False
-                    .HasMajorGridlines = False
-                    .hasminorgridlines = False
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+
+                    If Not .MaximumScaleIsAuto Then
+                        If (minscale < .MinimumScale) And (minscale < 0) Then
+                            .MinimumScale = minscale
+                        End If
+                    End If
+                    
+
+                    If Not .MinimumScaleIsAuto Then
+                        If itemValue(0) > .MaximumScale Then
+                            .MaximumScale = itemValue(0)
+                        End If
+                    End If
+                    
+
+
                 End With
             Catch ex As Exception
 
             End Try
-
-
-            With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
-
-
-                If (minscale < .MinimumScale) And (minscale < 0) Then
-                    .MinimumScale = minscale
-                End If
-
-
-                If itemValue(0) > .MaximumScale + 10 Then
-                    .MaximumScale = itemValue(0) + 10
-                End If
-
-
-            End With
+           
 
             'If .HasTitle Then
             '    .ChartTitle.Text = diagramTitle
@@ -9065,7 +9241,7 @@ Public Module Projekte
 
             'series
             'With .SeriesCollection.NewSeries
-            With .SeriesCollection(1)
+            With .SeriesCollection.NewSeries
                 .name = "Bottom"
                 .HasDataLabels = False
                 .Interior.colorindex = -4142
@@ -9083,7 +9259,7 @@ Public Module Projekte
 
 
             'With .SeriesCollection.NewSeries
-            With .SeriesCollection(2)
+            With .SeriesCollection.NewSeries
                 .name = "Top"
                 .HasDataLabels = True
                 .Values = valueDatenreihe2
@@ -20328,7 +20504,27 @@ Public Module Projekte
 
     'End Sub
 
+    ''' <summary>
+    ''' gibt einen String zurück, z.Bsp Jan 16 - Dez 16
+    ''' Inout sind zwei Datumsangaben 
+    ''' </summary>
+    ''' <param name="start"></param>
+    ''' <param name="ende"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function textZeitraum(ByVal start As Date, ByVal ende As Date) As String
+        Dim tmpResult As String = ""
+        If start < ende Then
+            tmpResult = start.ToString("MMM yy", repCult) & " - " & ende.ToString("MMM yy", repCult)
+        ElseIf start = ende Then
+            tmpResult = start.ToString("MMM yy", repCult)
+        Else
+            tmpResult = ende.ToString("MMM yy", repCult) & " - " & start.ToString("MMM yy", repCult)
+        End If
 
+        textZeitraum = tmpResult
+
+    End Function
 
     Public Function textZeitraum(start As Integer, ende As Integer) As String
         Dim htxt As String = " "

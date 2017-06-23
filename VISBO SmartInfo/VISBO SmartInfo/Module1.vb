@@ -24,6 +24,7 @@ Module Module1
 
     ' was ist der aktuelle Timestamp der Slide 
     Friend currentTimestamp As Date = Date.MinValue
+    Friend previousTimeStamp As Date = Date.MinValue
     ' der Key ist der Name des Referenz-Shapes, zu dem der Marker gezeichnet wird , der Value ist der Name des Marker-Shapes 
     Friend markerShpNames As New SortedList(Of String, String)
 
@@ -428,15 +429,7 @@ Module Module1
 
     Private Sub pptAPP_PresentationCloseFinal(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationCloseFinal
 
-        If Not IsNothing(xlApp) Then
-            For Each tmpWB As Excel.Workbook In CType(xlApp.Workbooks, Excel.Workbooks)
-                tmpWB.Close(SaveChanges:=False)
-            Next
-            xlApp.Quit()
-        End If
-
-        updateWorkbook = Nothing
-
+        Call closeExcelAPP()
 
     End Sub
 
@@ -615,7 +608,7 @@ Module Module1
                         tmpShape.Visible = True
                     End If
 
-                ElseIf isVISBOReportingElement(tmpShape) Then
+                ElseIf isVISBOChartElement(tmpShape) Then
                     If protectionSolved And tmpShape.Visible = False Then
                         tmpShape.Visible = True
                     End If
@@ -669,7 +662,7 @@ Module Module1
 
             If Not IsNothing(shpRange) And slideHasSmartElements Then
 
-                
+
                 ' es sind ein oder mehrere Shapes selektiert worden 
                 Dim i As Integer = 0
                 If shpRange.Count = 1 Then
@@ -940,7 +933,7 @@ Module Module1
                 End If
             End If
         End If
-        
+
     End Sub
 
     ''' <summary>
@@ -964,7 +957,7 @@ Module Module1
                 smartSlideLists.addProject(pvName)
             End If
         End If
-        
+
 
         If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or _
             tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine Then
@@ -1179,7 +1172,7 @@ Module Module1
                                     End If
                                     .Tags.Add("MVE", defaultExplanation)
                                 End If
-                                
+
                             Else
                                 .Tags.Add("MVD", pptDate.ToString)
                                 If .Tags.Item("MVE").Length > 0 Then
@@ -1236,7 +1229,7 @@ Module Module1
 
                             End If
 
-                            
+
                         End With
 
                         Call smartSlideLists.addMV(tmpShape.Name)
@@ -1439,7 +1432,7 @@ Module Module1
             End If
 
         End If
-        
+
 
     End Sub
 
@@ -1447,9 +1440,10 @@ Module Module1
     ''' aktualisiert alle VISBO Charts, VISBO Platzhalter und VISBO Tabellen ...
     ''' </summary>
     ''' <param name="pptShape"></param>
-    ''' <param name="timeStamp"></param>
+    ''' <param name="curTimeStamp">der aktuelle TimeStamp</param>
+    ''' <param name="prevTimeStamp">der vorherig gültige TimeStamp</param>
     ''' <remarks></remarks>
-    Friend Sub updateVisboComponent(ByRef pptShape As PowerPoint.Shape, ByVal timeStamp As Date)
+    Friend Sub updateVisboComponent(ByRef pptShape As PowerPoint.Shape, ByVal curTimeStamp As Date, ByVal prevTimeStamp As Date)
         Dim chtObjName As String = ""
         Dim bigType As Integer = -1
         Dim detailID As Integer = -1
@@ -1468,6 +1462,7 @@ Module Module1
 
                     If pptShape.Tags.Item("CHON").Length > 0 Then
                         ' es handelt sich um ein Projekt- oder Portfolio Chart 
+
 
                         If pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue Then
                             Dim pptChart As PowerPoint.Chart = pptShape.Chart
@@ -1490,7 +1485,7 @@ Module Module1
                                 Dim pvName As String = calcProjektKey(pName, vName)
 
                                 ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                                Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timeStamp)
+                                Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, curTimeStamp)
                                 ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
                                 If Not IsNothing(tsProj) Then
 
@@ -1622,12 +1617,25 @@ Module Module1
 
                 ElseIf bigType = ptReportBigTypes.components Then
 
+                    Dim pName As String = pptShape.Tags.Item("PNM")
+                    Dim vName As String = pptShape.Tags.Item("VNM")
+                    If pName <> "" Then
+                        Dim pvName As String = calcProjektKey(pName, vName)
 
-                Else
-                    ' kein zu aktualisierendes Shape ... 
+                        ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                        Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, curTimeStamp)
+
+                        If Not IsNothing(tsProj) Then
+                            Call updatePPTComponent(tsProj, pptShape, detailID)
+                        End If
+
+
+                    Else
+                        ' kein zu aktualisierendes Shape ... 
+                    End If
+
+
                 End If
-
-
             End If
 
         Catch ex As Exception
@@ -1662,6 +1670,7 @@ Module Module1
                 xlApp.Workbooks.Open("visboupdate.xlsx")
             Else
                 xlApp.Workbooks.Add()
+                xlApp.ActiveWorkbook.SaveAs("visboupdate.xlsx")
             End If
             updateWorkbook = xlApp.ActiveWorkbook
         Else
@@ -1990,13 +1999,22 @@ Module Module1
                 .Left = x1Pos
                 .Width = x2Pos - tmpShape.Left
 
+                With .Glow
+                    .Radius = 9
+                    .Color.RGB = PowerPoint.XlRgbColor.rgbBeige
+                End With
+
                 diff = .Left - oldLeft
                 'Dim mvdString As String = tsStartdate.ToString & "#" & tsEndDate.ToString
                 '.Tags.Add("MVD", mvdString)
                 '.Tags.Add("MVE", expla)
 
             End With
-
+        Else
+            With tmpShape.Glow
+                .Radius = 0
+                .Color.RGB = .Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+            End With
         End If
 
         mvPhaseToTimestampPosition = diff
@@ -2028,12 +2046,24 @@ Module Module1
                 .Left = x1Pos - tmpShape.Width / 2
                 diff = .Left - oldLeft
 
+                With .Glow
+                    .Radius = 9
+                    .Color.RGB = PowerPoint.XlRgbColor.rgbBeige
+                End With
+
+
                 ' jetzt muss überprüft werden, ob es Text- oder Datums-Annotations gibt; wenn ja, dann werden die um diff verschoben
                 ' wenn das zu langsam geht; hinterher einen Annotation Korrektur Lauf machen ... 
                 'Dim mvdString As String = msDate.ToString
 
                 '.Tags.Add("MVD", mvdString)
                 '.Tags.Add("MVE", expla)
+
+            End With
+        Else
+            With tmpShape.Glow
+                .Radius = 0
+                .Color.RGB = PowerPoint.XlRgbColor.rgbWhite
 
             End With
         End If
@@ -2904,7 +2934,7 @@ Module Module1
 
         Try
             isOtherVisboComponent = (curShape.Tags.Item("CHON").Length > 0) Or _
-                (curShape.Tags.Item("BID").Length > 0 And curShape.Tags.Item("DID").Length > 0) 
+                (curShape.Tags.Item("BID").Length > 0 And curShape.Tags.Item("DID").Length > 0)
         Catch ex As Exception
             isOtherVisboComponent = False
         End Try
@@ -2937,12 +2967,26 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt true zurück wenn es sich um ein Visbo Shape handelt, also entweder ein Plan-Element ist, ein Chart oder eine Komponente
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isVisboShape(ByVal curShape As PowerPoint.Shape) As Boolean
+        If isRelevantShape(curShape) Or isCommentShape(curShape) Or isOtherVisboComponent(curShape) Then
+            isVisboShape = True
+        Else
+            isVisboShape = False
+        End If
+    End Function
+
+    ''' <summary>
     ''' true, wenn es ein VISBO Chart, später dann auch ganz allgemein Reporting Element ist ..
     ''' </summary>
     ''' <param name="curShape"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function isVISBOReportingElement(ByVal curShape As PowerPoint.Shape) As Boolean
+    Public Function isVISBOChartElement(ByVal curShape As PowerPoint.Shape) As Boolean
         Dim tmpStr As String = ""
         Try
             tmpStr = curShape.Tags.Item("CHON")
@@ -2951,9 +2995,9 @@ Module Module1
         End Try
 
         If tmpStr.Length > 0 Then
-            isVISBOReportingElement = True
+            isVISBOChartElement = True
         Else
-            isVISBOReportingElement = False
+            isVISBOChartElement = False
         End If
     End Function
 
@@ -3651,5 +3695,54 @@ Module Module1
             End If
         Next
 
+    End Sub
+
+    ''' <summary>
+    ''' setzt die Markierung zurück, dass Elemente über Time-Machine verschoben wurden 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub resetGlowOfShapes()
+
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+            If isVisboShape(tmpShape) Then
+
+                With tmpShape
+                    If .Glow.Radius > 0 Then
+                        .Glow.Radius = 0
+                        .Glow.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+
+                        If .Tags.Item("MVD").Length > 0 Then
+                            ' nichts machen 
+                        Else
+                            If .Tags.Item("MVE").Length > 0 Then
+                                .Tags.Delete("MVE")
+                            End If
+                        End If
+
+                    End If
+
+                End With
+
+            End If
+        Next
+
+    End Sub
+
+    Friend Sub closeExcelAPP()
+        Try
+            If Not IsNothing(xlApp) Then
+                For Each tmpWB As Excel.Workbook In CType(xlApp.Workbooks, Excel.Workbooks)
+                    tmpWB.Close(SaveChanges:=False)
+                Next
+                xlApp.Quit()
+            End If
+
+            updateWorkbook = Nothing
+            Call Sleep(300)
+            xlApp = Nothing
+        Catch ex As Exception
+
+        End Try
+        
     End Sub
 End Module

@@ -3532,6 +3532,12 @@ Public Module Module1
                                      ByVal kennzeichnung As String, ByVal qualifier As String, ByVal qualifier2 As String, _
                                      ByVal bigType As Integer, ByVal detailID As Integer)
 
+        If IsNothing(hproj) Then
+            Exit Sub
+        End If
+
+        Dim pName As String = hproj.name
+        Dim vName As String = hproj.variantName
         Dim chtObjName As String = ""
         Try
 
@@ -3539,6 +3545,14 @@ Public Module Module1
 
                 ' das bekommen alle ...
                 With pptShape
+                    If Not IsNothing(pName) Then
+                        .Tags.Add("PNM", pName)
+                    End If
+
+                    If Not IsNothing(vName) Then
+                        .Tags.Add("VNM", vName)
+                    End If
+
                     If Not IsNothing(qualifier) Then
                         .Tags.Add("Q1", qualifier)
                     End If
@@ -3566,16 +3580,17 @@ Public Module Module1
 
                         Dim auswahl As Integer = -1
                         Dim prpfTyp As Integer = -1
-                        Dim pName As String = ""
-                        Dim vName As String = ""
                         Dim chartTyp As Integer = -1
                         Dim prcTyp As Integer = -1
 
 
                         ' der Chart-ObjectName enthält sehr viel ..
                         'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
-                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pName, vName, chartTyp, auswahl)
-
+                        Dim pNameChk As String = "", vNameChk As String = ""
+                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pNameChk, vNameChk, chartTyp, auswahl)
+                        If pName <> pNameChk Or vName <> vNameChk Then
+                            Call MsgBox("PName , vName in hproj bzw. chtobjname unterschiedlich ! ")
+                        End If
 
                         With pptShape
 
@@ -3586,14 +3601,6 @@ Public Module Module1
 
                             If Not IsNothing(prpfTyp) Then
                                 .Tags.Add("PRPF", CStr(prpfTyp))
-                            End If
-
-                            If Not IsNothing(pName) Then
-                                .Tags.Add("PNM", pName)
-                            End If
-
-                            If Not IsNothing(vName) Then
-                                .Tags.Add("VNM", vName)
                             End If
 
                             If Not IsNothing(chartTyp) Then

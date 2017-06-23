@@ -22,6 +22,8 @@
         Dim diffMvList As New SortedList(Of String, Double)
         Dim oldProgressValue = 0
 
+        Dim toDoList As New Collection
+
         For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
             ix = ix + 1
 
@@ -35,16 +37,43 @@
 
             ElseIf isOtherVisboComponent(tmpShape) Then
 
-                Call updateVisboComponent(tmpShape, currentTimestamp)
+                toDoList.Add(tmpShape.Name)
+                'Call updateVisboComponent(tmpShape, currentTimestamp, previousTimeStamp)
 
             End If
 
-            If CInt(10 * ix / anzahlShapesOnSlide) > oldProgressValue Then
-                oldProgressValue = CInt(10 * ix / anzahlShapesOnSlide)
-                ProgressBarNavigate.Value = oldProgressValue
-            End If
+            'If CInt(10 * ix / anzahlShapesOnSlide) > oldProgressValue Then
+            '    oldProgressValue = CInt(10 * ix / anzahlShapesOnSlide)
+            '    ProgressBarNavigate.Value = oldProgressValue
+            'End If
 
         Next
+
+        ' jetzt muss die todolist noch extra abgearbeitet werden , wenn Charts drin waren, dürfen die nicht in der oberen Schleife behandelt werden, weil 
+        ' bei de rchart Behandlung Charts gelöscht udn kopiert werden 
+        For Each tmpShpName As String In toDoList
+            Try
+                Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
+                If Not IsNothing(tmpShape) Then
+                    Call updateVisboComponent(tmpShape, currentTimestamp, previousTimeStamp)
+                Else
+                    Call MsgBox("Error in Update ...")
+                End If
+            Catch ex As Exception
+                Call MsgBox("Error in Update ...")
+            End Try
+
+        Next
+
+        ' wenn visboUpdate noch offen ist, soll das jetzt geschlossen werden ..
+        Try
+            If Not IsNothing(updateWorkbook) Then
+                updateWorkbook.Close(SaveChanges:=False)
+                updateWorkbook = Nothing
+            End If
+        Catch ex As Exception
+
+        End Try
 
         ' jetzt muss hier die Text- bzw Datums-Verschiebung laufen ... 
         ' die Diff-Werte stehen in der entsprechenden diffMvList
@@ -227,13 +256,17 @@
 
             If timeStamps.Count > 0 Then
 
-                currentTimestamp = timeStamps.Last.Key
+                If timeStamps.Last.Key <> currentTimestamp Then
+                    previousTimeStamp = currentTimestamp
+                    currentTimestamp = timeStamps.Last.Key
 
-                currentDate.Text = currentTimestamp.ToString
+                    currentDate.Text = currentTimestamp.ToString
 
-                Call moveAllShapes()
+                    Call moveAllShapes()
 
-                Call showTSMessage(currentTimestamp)
+                    Call showTSMessage(currentTimestamp)
+                End If
+                
 
             End If
         End If
@@ -242,21 +275,28 @@
     End Sub
 
     Private Sub btnFastForward_Click(sender As Object, e As EventArgs) Handles btnFastForward.Click
+        Dim newDate As Date
 
         If Not IsNothing(timeStamps) Then
             If timeStamps.Count > 0 Then
 
                 If currentTimestamp.AddMonths(1) < Date.Now Then
-                    currentTimestamp = currentTimestamp.AddMonths(1)
+                    newDate = currentTimestamp.AddMonths(1)
                 Else
-                    currentTimestamp = Date.Now
+                    newDate = Date.Now
                 End If
 
-                currentDate.Text = currentTimestamp.ToString
+                If newDate <> currentTimestamp Then
+                    previousTimeStamp = currentTimestamp
+                    currentTimestamp = newDate
 
-                Call moveAllShapes()
+                    currentDate.Text = currentTimestamp.ToString
 
-                Call showTSMessage(currentTimestamp)
+                    Call moveAllShapes()
+
+                    Call showTSMessage(currentTimestamp)
+                End If
+                
 
             End If
         End If
@@ -271,17 +311,24 @@
         If Not IsNothing(timeStamps) Then
             If timeStamps.Count > 0 Then
 
+                Dim newDate As Date
+                
                 If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
-                    currentTimestamp = currentTimestamp.AddMonths(-1)
+                    newDate = currentTimestamp.AddMonths(-1)
                 Else
-                    currentTimestamp = timeStamps.First.Key
+                    newDate = timeStamps.First.Key
                 End If
 
-                currentDate.Text = currentTimestamp.ToString
+                If newDate <> currentTimestamp Then
+                    previousTimeStamp = currentTimestamp
+                    currentTimestamp = newDate
+                    currentDate.Text = currentTimestamp.ToString
 
-                Call moveAllShapes()
+                    Call moveAllShapes()
 
-                Call showTSMessage(currentTimestamp)
+                    Call showTSMessage(currentTimestamp)
+                End If
+                
 
             End If
         End If
@@ -293,16 +340,20 @@
         If Not IsNothing(timeStamps) Then
             If timeStamps.Count > 0 Then
 
-                currentTimestamp = timeStamps.First.Key
+                If timeStamps.First.Key <> currentTimestamp Then
+                    previousTimeStamp = currentTimestamp
+                    currentTimestamp = timeStamps.First.Key
 
-                currentDate.Text = currentTimestamp.ToString
+                    currentDate.Text = currentTimestamp.ToString
 
-                Call moveAllShapes()
+                    Call moveAllShapes()
 
-                Call showTSMessage(currentTimestamp)
+                    Call showTSMessage(currentTimestamp)
+                End If
+                
             End If
         End If
-        
+
     End Sub
 
 
@@ -405,19 +456,25 @@
                             eingabe = timeStamps.First.Key.Date.AddHours(23).AddMinutes(50)
                         End If
 
-                        currentTimestamp = eingabe
-                        
+
+
                     Catch ex As Exception
                         Dim a As Integer = 0
                     End Try
 
-                    noDateValueCheck = True
-                    currentDate.Text = currentTimestamp.ToString
-                    noDateValueCheck = False
+                    If eingabe <> currentTimestamp Then
 
-                    Call moveAllShapes()
+                        previousTimeStamp = currentTimestamp
+                        currentTimestamp = eingabe
+                        noDateValueCheck = True
+                        currentDate.Text = currentTimestamp.ToString
+                        noDateValueCheck = False
 
-                    Call showTSMessage(currentTimestamp)
+                        Call moveAllShapes()
+                        Call showTSMessage(currentTimestamp)
+
+                    End If
+
 
                 End If
             End If
