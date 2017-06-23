@@ -1213,6 +1213,7 @@ Public Class frmHierarchySelection
         getPVkennungFromNode = tmpResult
     End Function
 
+
     Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
 
         Dim node As TreeNode
@@ -1225,6 +1226,7 @@ Public Class frmHierarchySelection
         Dim PVname As String = getPVnameFromNode(e.Node)
         Dim type As Integer = getTypeFromNode(e.Node)
         Dim curHry As clsHierarchy
+        Dim vorlElem As String = ""
 
         node = e.Node
         elemID = node.Name
@@ -1271,13 +1273,26 @@ Public Class frmHierarchySelection
                         Loop
                         Dim pvElem As String = "[" & topNode.Name & "]" & ele
 
+                        If Projektvorlagen.Contains(topNode.Text) Then
+                            Dim vproj As clsProjektvorlage = Projektvorlagen.getProject(topNode.Text)
+                        End If
+
+                        If ShowProjekte.contains(topNode.Text) Then
+
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(topNode.Text)
+                            vorlElem = "[V:" & hproj.VorlagenName & "]" & ele
+                        End If
+
+
                         If elemIDIstMeilenstein(childNameID) Then
                             childNode.BackColor = System.Drawing.Color.Azure
-                            If selectedMilestones.Contains(ele) Or selectedMilestones.Contains(pvElem) Or selectedMilestones.Contains(elemName) Then
+                            If selectedMilestones.Contains(ele) Or selectedMilestones.Contains(pvElem) _
+                                Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Then
                                 childNode.Checked = True
                             End If
                         Else
-                            If selectedPhases.Contains(ele) Or selectedPhases.Contains(pvElem) Or selectedPhases.Contains(elemName) Then
+                            If selectedPhases.Contains(ele) Or selectedPhases.Contains(pvElem) _
+                               Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Then
                                 childNode.Checked = True
                             End If
                         End If
@@ -1676,6 +1691,8 @@ Public Class frmHierarchySelection
         Dim nodeLevel0 As TreeNode
         Dim nodeLevel1 As TreeNode
 
+        Dim vorlElem As String = ""
+
         If hry.count >= 1 Then
             hryNode = hry.nodeItem(rootPhaseName)
 
@@ -1694,14 +1711,26 @@ Public Class frmHierarchySelection
                     Dim element As String = calcHryFullname(elemName, tmpBreadcrumb)
                     Dim projElem As String = "[" & topNode.Name & "]" & element
 
+                    If Projektvorlagen.Contains(topNode.Text) Then
+                        Dim vproj As clsProjektvorlage = Projektvorlagen.getProject(topNode.Text)
+                    End If
+
+                    If ShowProjekte.contains(topNode.Text) Then
+
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(topNode.Text)
+                        vorlElem = "[V:" & hproj.VorlagenName & "]" & element
+                    End If
+
                     If elemIDIstMeilenstein(childNameID) Then
                         nodeLevel0.BackColor = System.Drawing.Color.Azure
-                        If selectedMilestones.Contains(element) Or selectedMilestones.Contains(projElem) Or selectedMilestones.Contains(elemName) Then
+                        If selectedMilestones.Contains(element) Or selectedMilestones.Contains(projElem) _
+                            Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Then
                             nodeLevel0.Checked = True
                         End If
                     Else
 
-                        If selectedPhases.Contains(element) Or selectedPhases.Contains(projElem) Or selectedPhases.Contains(elemName) Then
+                        If selectedPhases.Contains(element) Or selectedPhases.Contains(projElem) _
+                            Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Then
                             nodeLevel0.Checked = True
                         End If
                     End If
@@ -1709,6 +1738,8 @@ Public Class frmHierarchySelection
 
                     If hry.nodeItem(childNameID).childCount > 0 Then
                         nodeLevel0.Tag = "P"
+
+
                         nodeLevel1 = nodeLevel0.Nodes.Add("-")
                         nodeLevel1.Tag = "P"
                     Else
