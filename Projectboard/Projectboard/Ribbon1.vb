@@ -8591,7 +8591,7 @@ Imports System.Windows
             chWidth = stdBreite
             Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
- 
+
         Else
             ' sie sind schon da 
 
