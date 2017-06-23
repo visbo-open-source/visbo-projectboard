@@ -789,8 +789,8 @@ Public Module awinGeneralModules
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
 
-                Call MsgBox("Operating System: " & My.Computer.Info.OSVersion)
-                Call MsgBox("Excel-Verison: " & appInstance.Version)
+                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+                            "Excel-Version: " & appInstance.Version, vbInformation, "Info")
             End If
 
 
@@ -21003,6 +21003,5 @@ Public Module awinGeneralModules
         isMissingDefinitionOK = checkResult
 
     End Function
-
 
 End Module
