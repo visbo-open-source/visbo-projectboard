@@ -456,9 +456,12 @@ Public Class frmHierarchySelection
                     Throw New ArgumentException("Fehler beim Lesen des áusgewählten ReportProfils")
                 End If
             Else
-
-                Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, _
-                                        selectedMilestones, selectedRoles, selectedCosts)
+                ' ur: 23.06.2017
+                ' hier soll immer mit leeren Selektionen begonnen werden
+                selectedMilestones.Clear()
+                selectedPhases.Clear()
+                'Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, _
+                '                        selectedMilestones, selectedRoles, selectedCosts)
                 ' tk 8.4.17
                 ' hier werden nur Phasen und Meilensteine selektiert: deswegen dürfen hier die anderen Collections nicht zählen
                 selectedBUs.Clear()
@@ -1212,6 +1215,86 @@ Public Class frmHierarchySelection
 
         getPVkennungFromNode = tmpResult
     End Function
+    Private Function subNodesSelected(ByVal tmpNode As TreeNode) As Boolean
+        Dim curNode As TreeNode
+        Dim i As Integer = 1
+        Dim erg As Boolean = False
+
+
+        With tmpNode
+
+            While i <= .Nodes.Count And Not erg
+
+                curNode = .Nodes.Item(i - 1)
+                If curNode.Checked Then
+                    erg = True
+                Else
+                    erg = subNodesSelected(curNode)
+                End If
+                i = i + 1
+
+            End While
+        End With
+        subNodesSelected = erg
+
+    End Function
+
+    Private Sub hryTreeView_AfterCheck(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterCheck
+        Dim oNode As TreeNode
+        Dim hnode As TreeNode
+        Dim anzCheckedNodes As Integer = 0
+
+        oNode = e.Node
+
+
+        If Not rdbNameList.Checked Then
+
+            If oNode.Level = 0 Then
+
+                If Not oNode.Checked Then
+                    Call unCheck(oNode)
+                End If
+
+            Else
+                hnode = oNode
+
+                ' finde den obersten Node
+                While Not IsNothing(hnode.Parent)
+                    hnode = hnode.Parent
+                End While
+
+                If oNode.Checked Then
+
+                    ' Wenn oberster Node nicht gecheckt, dann check ihn
+                    If hnode.Level = 0 And Not hnode.Checked Then
+                        hnode.Checked = True
+                    End If
+
+                Else ' not oNode.checked 
+
+                    Dim allUnselected As Boolean
+
+                    If hnode.Level = 0 And hnode.Checked Then
+
+                        allUnselected = Not subNodesSelected(hnode)
+
+                        'If Not subNodesSelected(hnode) Then
+                        If allUnselected Then
+                            hnode.Checked = False
+                        End If
+                    End If
+
+                End If
+
+            End If
+
+        End If
+
+    End Sub
+
+    Private Sub hryTreeView_BeforeCheck(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeCheck
+      
+    End Sub
 
 
     Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
@@ -1425,38 +1508,21 @@ Public Class frmHierarchySelection
                         Dim projVorlage As clsProjektvorlage = Projektvorlagen.getProject(kvp.Key)
                         Dim nodeToCheck As Boolean = False
 
-                        If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
-
-                            nodeToCheck = projVorlage.containsAnyPhasesOfCollection(selectedPhases) _
-                                Or projVorlage.containsAnyMilestonesOfCollection(selectedMilestones)
-
-                            If nodeToCheck Then
-                                topLevel.Checked = True
-                            End If
+                        If selectedPhases.Count > 0 Then
+                            nodeToCheck = projVorlage.containsAnyPhasesOfCollection(selectedPhases)
+                        Else
+                            nodeToCheck = False
                         End If
 
+                        If selectedMilestones.Count > 0 Then
+                            nodeToCheck = nodeToCheck Or projVorlage.containsAnyMilestonesOfCollection(selectedMilestones)
+                        Else
+                            nodeToCheck = nodeToCheck Or False
+                        End If
 
-
-                        ' '' nachsehen, ob in selectedPhases oder selectedMilestones dieses Projekt erwähnt wurde
-                        ''Dim i As Integer = 1
-                        ''Do While Not checkProj And i < selectedPhases.Count
-                        ''    Dim element As String = selectedPhases.Item(i)
-                        ''    Dim hstr() As String = Split(element, topLevel.Name, , )
-                        ''    checkProj = hstr.Length > 1
-                        ''    i = i + 1
-                        ''Loop
-
-                        ''i = 1
-                        ''Do While Not checkProj And i < selectedMilestones.Count
-                        ''    Dim element As String = selectedMilestones.Item(i)
-                        ''    Dim hstr() As String = Split(element, topLevel.Name, , )
-                        ''    checkProj = hstr.Length > 1
-                        ''    i = i + 1
-                        ''Loop
-                        ''If checkProj Then
-                        ''    topLevel.Checked = True
-                        ''    checkProj = False
-                        ''End If
+                        If nodeToCheck Then
+                            topLevel.Checked = True
+                        End If
 
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
@@ -1486,27 +1552,6 @@ Public Class frmHierarchySelection
                                     topLevel.Checked = True
                                 End If
                             End If
-
-                            '' nachsehen, ob in selectedPhases oder selectedMilestones dieses Projekt erwähnt wurde
-                            'Dim i As Integer = 1
-                            'Do While Not checkProj And i < selectedPhases.Count
-                            '    Dim element As String = selectedPhases.Item(i)
-                            '    Dim hstr() As String = Split(element, topLevel.Name, , )
-                            '    checkProj = hstr.Length > 1
-                            '    i = i + 1
-                            'Loop
-
-                            'i = 1
-                            'Do While Not checkProj And i < selectedMilestones.Count
-                            '    Dim element As String = selectedMilestones.Item(i)
-                            '    Dim hstr() As String = Split(element, topLevel.Name, , )
-                            '    checkProj = hstr.Length > 1
-                            '    i = i + 1
-                            'Loop
-                            'If checkProj Then
-                            '    topLevel.Checked = True
-                            '    checkProj = False
-                            'End If
 
 
                             Call buildProjectSubTreeView(topLevel, hry)
@@ -1751,6 +1796,8 @@ Public Class frmHierarchySelection
 
             End With
 
+
+
         Else
             ' nichts tun ...
         End If
@@ -1764,7 +1811,7 @@ Public Class frmHierarchySelection
         Dim type As Integer = -1
         Dim pvName As String = ""
 
-        ' Merken der aktuell selektierten Phasen und Meilensteine
+        ' löschen der aktuell selektierten Phasen und Meilensteine und neu einlesen vom Treeview
         selphases.Clear()
         selMilestones.Clear()
 
@@ -3532,5 +3579,6 @@ Public Class frmHierarchySelection
     Private Sub rdbTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbTyp.CheckedChanged
 
     End Sub
+
 
 End Class
