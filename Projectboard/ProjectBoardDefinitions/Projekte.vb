@@ -3,7 +3,7 @@
 Imports System.Windows.Forms
 Imports core = Microsoft.Office.Core
 Imports xlNS = Microsoft.Office.Interop.Excel
-Imports pptNS = Microsoft.Office.Interop.PowerPoint
+'Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports System.ComponentModel
 Imports Microsoft.VisualBasic.Constants
 
@@ -1522,9 +1522,10 @@ Public Module Projekte
 
     End Sub
 
-    Sub updatePPTProjectPfDiagram(ByVal hproj As clsProjekt, ByRef pptChart As pptNS.Chart, _
+    Sub updatePPTProjectPfDiagram(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
                                   ByVal chartTyp As Integer, ByVal auswahl As Integer)
 
+        Dim xlsChart As Excel.Chart = chtobj.Chart
         Dim i As Integer
         Dim pName As String
         Dim anzBubbles As Integer
@@ -1537,7 +1538,7 @@ Public Module Projekte
         Dim showNegativeValues As Boolean = False
         Dim projektListe As New Collection
         Dim tmpstr(5) As String
-        
+
         Dim bubbleColor As Integer = 0
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
@@ -1608,20 +1609,20 @@ Public Module Projekte
                             Case 0
                                 '"Ampel nicht bewertet"
                                 'colorValues(anzBubbles) = awinSettings.AmpelNichtBewertet
-                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbGray
+                                colorValues(anzBubbles) = Excel.XlRgbColor.rgbGray
 
                             Case 1
                                 '"Ampel Grün"
                                 'colorValues(anzBubbles) = awinSettings.AmpelGruen
-                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbGreen
+                                colorValues(anzBubbles) = Excel.XlRgbColor.rgbGreen
                             Case 2
                                 '"Ampel Gelb"
                                 'colorValues(anzBubbles) = awinSettings.AmpelGelb
-                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbYellow
+                                colorValues(anzBubbles) = Excel.XlRgbColor.rgbYellow
                             Case 3
                                 '"Ampel Rot"
                                 'colorValues(anzBubbles) = awinSettings.AmpelRot
-                                colorValues(anzBubbles) = PowerPoint.XlRgbColor.rgbRed
+                                colorValues(anzBubbles) = Excel.XlRgbColor.rgbRed
                         End Select
                     End If
 
@@ -1705,7 +1706,7 @@ Public Module Projekte
 
         If projektListe.Count > 0 Then
 
-            With pptChart
+            With xlsChart
 
                 '' bestimmen der Fontsize Größen 
                 'Try
@@ -1722,7 +1723,7 @@ Public Module Projekte
 
                 ' Einstellungen der vorhandenen SeriesCollection merken
 
-                Dim pts As PowerPoint.Points = CType(.SeriesCollection(1).Points, PowerPoint.Points)
+                Dim pts As Excel.Points = CType(.SeriesCollection(1).Points, Excel.Points)
                 Dim dlFontSize As Double
                 Dim dlFontBackground As Double
                 Dim dlFontBold As Boolean
@@ -1773,7 +1774,7 @@ Public Module Projekte
 
                 ' remove old series
                 Try
-                    Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+                    Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                     Do While anz > 0
                         .SeriesCollection(1).Delete()
                         anz = anz - 1
@@ -1785,11 +1786,11 @@ Public Module Projekte
 
 
                 .SeriesCollection.NewSeries()
-                With CType(.SeriesCollection(1), PowerPoint.Series)
+                With CType(.SeriesCollection(1), Excel.Series)
                     .Name = "projectdiagram"
-                    .ChartType = core.XlChartType.xlBubble3DEffect
+                    .ChartType = Excel.XlChartType.xlBubble3DEffect
                 End With
-                
+
 
                 For i = 1 To anzBubbles
                     tempArray(i - 1) = xAchsenValues(i - 1)
@@ -1815,21 +1816,21 @@ Public Module Projekte
 
                 .SeriesCollection(1).BubbleSizes = tempArray
 
-                Dim series1 As PowerPoint.Series = _
+                Dim series1 As Excel.Series = _
                         CType(.SeriesCollection(1),  _
-                                PowerPoint.Series)
+                                Excel.Series)
 
-                Dim point1 As PowerPoint.Point = _
-                            CType(series1.Points(1), PowerPoint.Point)
+                Dim point1 As Excel.Point = _
+                            CType(series1.Points(1), Excel.Point)
 
                 'Dim testName As String
 
-                Dim bubblePoint As PowerPoint.Point
+                Dim bubblePoint As Excel.Point
                 For i = 1 To anzBubbles
 
-                    bubblePoint = CType(.SeriesCollection(1).Points(i), PowerPoint.Point)
+                    bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
 
-                    With CType(.SeriesCollection(1).Points(i), PowerPoint.Point)
+                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
                         If showLabels Then
                             Try
                                 .HasDataLabel = True
@@ -1859,15 +1860,15 @@ Public Module Projekte
                                     End If
                                     Select Case positionValues(i - 1)
                                         Case labelPosition(0)
-                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionAbove
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
                                         Case labelPosition(1)
-                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionRight
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionRight
                                         Case labelPosition(2)
-                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionBelow
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionBelow
                                         Case labelPosition(3)
-                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionLeft
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionLeft
                                         Case Else
-                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionCenter
+                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
                                     End Select
                                 End With
                             Catch ex As Exception
@@ -1882,13 +1883,13 @@ Public Module Projekte
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
                             '.DataLabel.Font.Color = awinSettings.AmpelRot
-                            .DataLabel.Font.Color = PowerPoint.XlRgbColor.rgbRed
+                            .DataLabel.Font.Color = Excel.XlRgbColor.rgbRed
                         ElseIf bubbleValues(i - 1) > 0 Then
                             '.DataLabel.Font.Color = awinSettings.AmpelGruen
-                            .DataLabel.Font.Color = PowerPoint.XlRgbColor.rgbGreen
+                            .DataLabel.Font.Color = Excel.XlRgbColor.rgbGreen
                         Else
                             '.DataLabel.Font.Color = System.Drawing.Color.Black
-                            .DataLabel.Font.Color = PowerPoint.XlRgbColor.rgbBlack
+                            .DataLabel.Font.Color = Excel.XlRgbColor.rgbBlack
                         End If
 
                     End With
@@ -1900,7 +1901,7 @@ Public Module Projekte
                 With .ChartGroups(1)
 
                     .BubbleScale = 20
-                    .SizeRepresents = Microsoft.Office.Interop.PowerPoint.XlSizeRepresents.xlSizeIsArea
+                    .SizeRepresents = Microsoft.Office.Interop.Excel.XlSizeRepresents.xlSizeIsArea
 
                     If showNegativeValues Then
                         .shownegativeBubbles = True
@@ -4567,14 +4568,14 @@ Public Module Projekte
     ''' aktualisiert in PPT die Balken Diagramme Rollen (PT oder T€) bzw. Kostenarten (T€)
     ''' </summary>
     ''' <param name="hproj"></param>
-    ''' <param name="pptChart"></param>
+    ''' <param name="chtobj"></param>
     ''' <param name="prcTyp"></param>
     ''' <param name="auswahl"></param>
     ''' <remarks></remarks>
-    Public Sub updatePPTBalkenOfProject(ByVal hproj As clsProjekt, ByRef pptChart As pptNS.Chart, _
+    Public Sub updatePPTBalkenOfProject(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
                                              ByVal prcTyp As Integer, ByVal auswahl As Integer)
 
-
+        Dim xlsChart As Excel.Chart = chtobj.Chart
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
         Dim plen As Integer
@@ -4594,12 +4595,12 @@ Public Module Projekte
         Dim tmpCollection As New Collection
         Dim maxlenTitle1 As Integer = 20
 
-        Dim chartType As core.XlChartType
+        Dim chartType As Excel.XlChartType
         Dim curmaxScale As Double
 
 
         ' die ganzen Vor-Klärungen machen ...
-        With pptChart
+        With xlsChart
             chartType = .ChartType
 
             'Dim refName As String = CStr(myChartData.Workbook.name)
@@ -4608,9 +4609,9 @@ Public Module Projekte
             'refName = CStr(myChartData.Workbook.name)
 
 
-            If CBool(.HasAxis(pptNS.XlAxisType.xlValue)) Then
+            If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
-                With CType(.Axes(pptNS.XlAxisType.xlValue), pptNS.Axis)
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
                     curmaxScale = .MaximumScale
@@ -4659,11 +4660,11 @@ Public Module Projekte
 
 
 
-        With CType(pptChart, pptNS.Chart)
+        With CType(xlsChart, Excel.Chart)
 
             ' remove old series
             Try
-                Dim anz As Integer = CInt(CType(.SeriesCollection, pptNS.SeriesCollection).Count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1
@@ -4691,7 +4692,7 @@ Public Module Projekte
 
 
                 'series
-                With CType(CType(.SeriesCollection, pptNS.SeriesCollection).NewSeries, pptNS.Series)
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .Name = roleCostName
                     If prcTyp = ptElementTypen.roles Then
                         .Interior.Color = RoleDefinitions.getRoledef(roleCostName).farbe
@@ -4706,9 +4707,9 @@ Public Module Projekte
 
             Next r
 
-            If CBool(.HasAxis(pptNS.XlAxisType.xlValue)) Then
+            If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
-                With CType(.Axes(pptNS.XlAxisType.xlValue), pptNS.Axis)
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
 
@@ -4758,13 +4759,6 @@ Public Module Projekte
 
 
         End With
-
-
-        Try
-            CType(pptChart.ChartData, pptNS.ChartData).Activate()
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Update: " & ex.Message)
-        End Try
 
 
 
@@ -8711,11 +8705,11 @@ Public Module Projekte
     ''' aktualisiert das Projekt Ergebnis Chart in einer PPT Datei  
     ''' </summary>
     ''' <param name="hproj"></param>
-    ''' <param name="pptChart"></param>
+    ''' <param name="chtobj"></param>
     ''' <remarks></remarks>
-    Public Sub updatePPTProjektErgebnis(ByVal hproj As clsProjekt, ByRef pptChart As PowerPoint.Chart)
+    Public Sub updatePPTProjektErgebnis(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject)
 
-
+        Dim xlsChart As Excel.Chart = chtobj.Chart
         'Dim diagramTitle As String
         Dim languageIsGerman As Boolean = False
         Dim plen As Integer
@@ -8739,7 +8733,7 @@ Public Module Projekte
 
 
         ' bestimme die Sprache  ...
-        With pptChart.ChartTitle.Format.TextFrame2
+        With xlsChart.ChartTitle.Format.TextFrame2
             If .HasText = core.MsoTriState.msoTrue Then
                 If .TextRange.Text.Contains("Ergebnis") Then
                     languageIsGerman = True
@@ -8825,7 +8819,7 @@ Public Module Projekte
         ' finde den aktuellen Scale heraus 
         ' damit nachher entschieden werden kann, ob Minimum bzw MaximumScale angepasst werden muss 
         Try
-            With CType(pptChart.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+            With CType(xlsChart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
 
                 curMinScale = .MinimumScale
                 curMaxScale = .MaximumScale
@@ -8859,7 +8853,7 @@ Public Module Projekte
 
         Dim valueCrossesNull As Boolean = False
 
-        With pptChart
+        With xlsChart
 
             ' bestimmen der Fontsize Größen 
             Try
@@ -8935,7 +8929,7 @@ Public Module Projekte
                     With .Points(iv + 1)
                         itemColor(iv) = .Interior.color
                     End With
-                    
+
                 Next
                 If projektErgebnis >= 0 Then
                     itemColor(3) = itemColor(0)
@@ -8953,7 +8947,7 @@ Public Module Projekte
                 .Interior.colorindex = -4142
                 .Values = valueDatenreihe1
                 .XValues = Xdatenreihe
-                '.ChartType = PowerPoint.XlChartType.xlColumnStacked
+
                 If crossindex > 0 Then
                     ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
                     With .Points(crossindex)
@@ -8986,7 +8980,7 @@ Public Module Projekte
 
 
             Try
-                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
 
                     ' hier muss sichergestellt werden, dass die Skalierung nur verändert wird, wenn notwendg
                     ' es muss für den Anwender ja vergleichbar sein .. 
@@ -9004,7 +8998,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-           
+
 
             'If .HasTitle Then
             '    .ChartTitle.Text = diagramTitle
@@ -9183,7 +9177,7 @@ Public Module Projekte
 
             ' remove old series
             Try
-                Dim anz As Integer = CInt(CType(.SeriesCollection, pptNS.SeriesCollection).Count)
+                Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
                 Do While anz > 0
                     .SeriesCollection(1).Delete()
                     anz = anz - 1

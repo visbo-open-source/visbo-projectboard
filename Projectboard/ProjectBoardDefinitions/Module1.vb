@@ -238,6 +238,7 @@ Public Module Module1
         prBusinessUnit = 6
         prLaufzeit = 7
         prVerantwortlich = 8
+        pfStand = 11
     End Enum
 
     Public Enum ptPRPFType
