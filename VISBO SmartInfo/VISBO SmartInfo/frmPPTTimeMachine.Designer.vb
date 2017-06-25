@@ -121,6 +121,7 @@ Partial Class frmPPTTimeMachine
         Me.Controls.Add(Me.btnFastForward)
         Me.Name = "frmPPTTimeMachine"
         Me.Text = "VISBO Time Machine"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

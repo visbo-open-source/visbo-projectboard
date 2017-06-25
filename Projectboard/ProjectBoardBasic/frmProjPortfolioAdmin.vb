@@ -716,9 +716,9 @@ Public Class frmProjPortfolioAdmin
         'Dim selCollection As SortedList(Of Date, String)
         'Dim timeStamp As Date
         Dim treeLevel As Integer
-        Dim i As Integer, j As Integer
-        Dim childNode As TreeNode
-        Dim parentNode As TreeNode
+        'Dim i As Integer, j As Integer
+        'Dim childNode As TreeNode
+        'Dim parentNode As TreeNode
         Dim currentIndex As Integer
         Dim shiftKeywasPressed As Boolean = False
 

@@ -222,6 +222,12 @@
     <Compile Include="frmPassword.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmSelectVariant.Designer.vb">
+      <DependentUpon>frmSelectVariant.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectVariant.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmSettings.Designer.vb">
       <DependentUpon>frmSettings.vb</DependentUpon>
     </Compile>
@@ -249,6 +255,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmPassword.resx">
       <DependentUpon>frmPassword.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectVariant.resx">
+      <DependentUpon>frmSelectVariant.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSettings.resx">
       <DependentUpon>frmSettings.vb</DependentUpon>
@@ -400,6 +409,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Calendar-icon 128x128 Last.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Ribbon1.xml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

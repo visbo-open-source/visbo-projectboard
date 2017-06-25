@@ -1722,7 +1722,7 @@ Public Module Projekte
 
                 ' Einstellungen der vorhandenen SeriesCollection merken
 
-                Dim pts As Excel.Points = CType(.SeriesCollection(1).Points, Excel.Points)
+                Dim pts As PowerPoint.Points = CType(.SeriesCollection(1).Points, PowerPoint.Points)
                 Dim dlFontSize As Double
                 Dim dlFontBackground As Double
                 Dim dlFontBold As Boolean
@@ -1773,7 +1773,7 @@ Public Module Projekte
 
                 ' remove old series
                 Try
-                    Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
+                    Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
                     Do While anz > 0
                         .SeriesCollection(1).Delete()
                         anz = anz - 1
@@ -1785,8 +1785,11 @@ Public Module Projekte
 
 
                 .SeriesCollection.NewSeries()
-                .SeriesCollection(1).name = "projectdiagram"
-                .SeriesCollection(1).ChartType = Excel.XlChartType.xlBubble3DEffect
+                With CType(.SeriesCollection(1), PowerPoint.Series)
+                    .Name = "projectdiagram"
+                    .ChartType = core.XlChartType.xlBubble3DEffect
+                End With
+                
 
                 For i = 1 To anzBubbles
                     tempArray(i - 1) = xAchsenValues(i - 1)
@@ -1812,20 +1815,21 @@ Public Module Projekte
 
                 .SeriesCollection(1).BubbleSizes = tempArray
 
-                Dim series1 As Excel.Series = _
+                Dim series1 As PowerPoint.Series = _
                         CType(.SeriesCollection(1),  _
-                                Excel.Series)
-                Dim point1 As Excel.Point = _
-                            CType(series1.Points(1), Excel.Point)
+                                PowerPoint.Series)
+
+                Dim point1 As PowerPoint.Point = _
+                            CType(series1.Points(1), PowerPoint.Point)
 
                 'Dim testName As String
 
-                Dim bubblePoint As Excel.Point
+                Dim bubblePoint As PowerPoint.Point
                 For i = 1 To anzBubbles
 
-                    bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
+                    bubblePoint = CType(.SeriesCollection(1).Points(i), PowerPoint.Point)
 
-                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
+                    With CType(.SeriesCollection(1).Points(i), PowerPoint.Point)
                         If showLabels Then
                             Try
                                 .HasDataLabel = True
@@ -1855,15 +1859,15 @@ Public Module Projekte
                                     End If
                                     Select Case positionValues(i - 1)
                                         Case labelPosition(0)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionAbove
                                         Case labelPosition(1)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionRight
+                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionRight
                                         Case labelPosition(2)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionBelow
+                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionBelow
                                         Case labelPosition(3)
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionLeft
+                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionLeft
                                         Case Else
-                                            .Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
+                                            .Position = PowerPoint.XlDataLabelPosition.xlLabelPositionCenter
                                     End Select
                                 End With
                             Catch ex As Exception
@@ -1878,13 +1882,13 @@ Public Module Projekte
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
                             '.DataLabel.Font.Color = awinSettings.AmpelRot
-                            .DataLabel.Font.Color = System.Drawing.Color.Red.ToArgb
+                            .DataLabel.Font.Color = PowerPoint.XlRgbColor.rgbRed
                         ElseIf bubbleValues(i - 1) > 0 Then
                             '.DataLabel.Font.Color = awinSettings.AmpelGruen
-                            .DataLabel.Font.Color = System.Drawing.Color.Green.ToArgb
+                            .DataLabel.Font.Color = PowerPoint.XlRgbColor.rgbGreen
                         Else
                             '.DataLabel.Font.Color = System.Drawing.Color.Black
-                            .DataLabel.Font.Color = System.Drawing.Color.Black.ToArgb
+                            .DataLabel.Font.Color = PowerPoint.XlRgbColor.rgbBlack
                         End If
 
                     End With
@@ -1896,7 +1900,7 @@ Public Module Projekte
                 With .ChartGroups(1)
 
                     .BubbleScale = 20
-                    .SizeRepresents = Microsoft.Office.Interop.Excel.XlSizeRepresents.xlSizeIsArea
+                    .SizeRepresents = Microsoft.Office.Interop.PowerPoint.XlSizeRepresents.xlSizeIsArea
 
                     If showNegativeValues Then
                         .shownegativeBubbles = True
@@ -4591,7 +4595,8 @@ Public Module Projekte
         Dim maxlenTitle1 As Integer = 20
 
         Dim chartType As core.XlChartType
-        Dim maxScale As Double
+        Dim curmaxScale As Double
+
 
         ' die ganzen Vor-Klärungen machen ...
         With pptChart
@@ -4608,7 +4613,7 @@ Public Module Projekte
                 With CType(.Axes(pptNS.XlAxisType.xlValue), pptNS.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
-                    maxScale = .MaximumScale
+                    curmaxScale = .MaximumScale
                     .MaximumScaleIsAuto = False
                 End With
 
@@ -4707,11 +4712,9 @@ Public Module Projekte
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
 
-                    If sumdatenreihe.Max > maxScale * 1.07 Then
-                        .MaximumScale = sumdatenreihe.Max * 1.07
+                    If sumdatenreihe.Max > curmaxScale Then
+                        .MaximumScale = sumdatenreihe.Max
                     End If
-
-                    ' alt
 
                 End With
 
@@ -8817,6 +8820,24 @@ Public Module Projekte
             End If
         End With
 
+        Dim curMinScale As Double
+        Dim curMaxScale As Double
+        ' finde den aktuellen Scale heraus 
+        ' damit nachher entschieden werden kann, ob Minimum bzw MaximumScale angepasst werden muss 
+        Try
+            With CType(pptChart.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+
+                curMinScale = .MinimumScale
+                curMaxScale = .MaximumScale
+
+                .MaximumScaleIsAuto = False
+                .MinimumScaleIsAuto = False
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
 
         If projektErgebnis < 0 Then
             minscale = System.Math.Round(projektErgebnis - 5, mode:=MidpointRounding.ToEven)
@@ -8932,7 +8953,7 @@ Public Module Projekte
                 .Interior.colorindex = -4142
                 .Values = valueDatenreihe1
                 .XValues = Xdatenreihe
-                .ChartType = Excel.XlChartType.xlColumnStacked
+                '.ChartType = PowerPoint.XlChartType.xlColumnStacked
                 If crossindex > 0 Then
                     ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
                     With .Points(crossindex)
@@ -8949,7 +8970,7 @@ Public Module Projekte
                 .HasDataLabels = True
                 .Values = valueDatenreihe2
                 .XValues = Xdatenreihe
-                .ChartType = Excel.XlChartType.xlColumnStacked
+                '.ChartType = PowerPoint.XlChartType.xlColumnStacked
 
                 For iv = 0 To 3
 
@@ -8963,42 +8984,20 @@ Public Module Projekte
 
             End With
 
-            'With .Axes(Excel.XlAxisType.xlCategory)
-            '    .HasTitle = False
-            '    If minscale < 0 Then
-            '        .TickLabelPosition = Excel.Constants.xlLow
-            '    End If
-
-
-            'End With
-
-
-            'Try
-            '    With .Axes(Excel.XlAxisType.xlValue)
-            '        .HasTitle = False
-            '        .HasMajorGridlines = False
-            '        .hasminorgridlines = False
-            '    End With
-            'Catch ex As Exception
-
-            'End Try
 
             Try
-                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
 
-                    If Not .MaximumScaleIsAuto Then
-                        If (minscale < .MinimumScale) And (minscale < 0) Then
-                            .MinimumScale = minscale
-                        End If
-                    End If
-                    
+                    ' hier muss sichergestellt werden, dass die Skalierung nur verändert wird, wenn notwendg
+                    ' es muss für den Anwender ja vergleichbar sein .. 
 
-                    If Not .MinimumScaleIsAuto Then
-                        If itemValue(0) > .MaximumScale Then
-                            .MaximumScale = itemValue(0)
-                        End If
+                    If itemValue(0) > curMaxScale Then
+                        .MaximumScale = itemValue(0)
                     End If
-                    
+
+                    If itemValue(3) < curMinScale Then
+                        .MinimumScale = itemValue(3)
+                    End If
 
 
                 End With

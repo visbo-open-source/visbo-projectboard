@@ -5,130 +5,6 @@
     Private anzahlShapesOnSlide As Integer = currentSlide.Shapes.Count
 
 
-    ''' <summary>
-    ''' bewegt alle Shapes an 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Private Sub moveAllShapes()
-
-        ' Progress-Bar anzeigen 
-        ProgressBarNavigate.Value = 0
-        ProgressBarNavigate.Visible = True
-
-        Dim ix As Integer = 0
-
-        ' alle Shapes zur Time-Stamp Position schicken ...
-        ' in diffMvList wird gemerkt, um wieviel sich ein Shape verändert hat und ob überhaupt ...  
-        Dim diffMvList As New SortedList(Of String, Double)
-        Dim oldProgressValue = 0
-
-        Dim toDoList As New Collection
-
-        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-            ix = ix + 1
-
-            If isRelevantShape(tmpShape) Then
-
-                Call sendToTimeStampPosition(tmpShape, currentTimestamp, diffMvList)
-
-            ElseIf isCommentShape(tmpShape) Then
-
-                Call modifyComment(tmpShape, currentTimestamp)
-
-            ElseIf isOtherVisboComponent(tmpShape) Then
-
-                toDoList.Add(tmpShape.Name)
-                'Call updateVisboComponent(tmpShape, currentTimestamp, previousTimeStamp)
-
-            End If
-
-            'If CInt(10 * ix / anzahlShapesOnSlide) > oldProgressValue Then
-            '    oldProgressValue = CInt(10 * ix / anzahlShapesOnSlide)
-            '    ProgressBarNavigate.Value = oldProgressValue
-            'End If
-
-        Next
-
-        ' jetzt muss die todolist noch extra abgearbeitet werden , wenn Charts drin waren, dürfen die nicht in der oberen Schleife behandelt werden, weil 
-        ' bei de rchart Behandlung Charts gelöscht udn kopiert werden 
-        For Each tmpShpName As String In toDoList
-            Try
-                Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
-                If Not IsNothing(tmpShape) Then
-                    Call updateVisboComponent(tmpShape, currentTimestamp, previousTimeStamp)
-                Else
-                    Call MsgBox("Error in Update ...")
-                End If
-            Catch ex As Exception
-                Call MsgBox("Error in Update ...")
-            End Try
-
-        Next
-
-        ' wenn visboUpdate noch offen ist, soll das jetzt geschlossen werden ..
-        Try
-            If Not IsNothing(updateWorkbook) Then
-                updateWorkbook.Close(SaveChanges:=False)
-                updateWorkbook = Nothing
-            End If
-        Catch ex As Exception
-
-        End Try
-
-        ' jetzt muss hier die Text- bzw Datums-Verschiebung laufen ... 
-        ' die Diff-Werte stehen in der entsprechenden diffMvList
-
-        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-
-            Try
-
-                If isAnnotationShape(tmpShape) Then
-
-                    If tmpShape.Name.Substring(tmpShape.Name.Length - 1, 1) = pptAnnotationType.text Then
-
-                        ' es handelt sich um den Text, also nur verschieben 
-                        Dim refName As String = tmpShape.Name.Substring(0, tmpShape.Name.Length - 1)
-
-                        If diffMvList.ContainsKey(refName) Then
-                            Dim diff As Double = diffMvList.Item(refName)
-                            With tmpShape
-                                .Left = .Left + diff
-                            End With
-                        End If
-
-
-                    ElseIf tmpShape.Name.Substring(tmpShape.Name.Length - 1, 1) = pptAnnotationType.datum Then
-
-                        ' es handelt sich um das Datum, also verschieben und Text ändern 
-                        Dim refName As String = tmpShape.Name.Substring(0, tmpShape.Name.Length - 1)
-                        Dim refShape As PowerPoint.Shape = currentSlide.Shapes.Item(refName)
-                        Dim tmpShort As Boolean = (tmpShape.TextFrame2.TextRange.Text.Length < 8)
-                        Dim descriptionText As String = bestimmeElemDateText(refShape, tmpShort)
-
-                        If diffMvList.ContainsKey(refName) Then
-                            Dim diff As Double = diffMvList.Item(refName)
-                            With tmpShape
-                                .Left = .Left + diff
-                                .TextFrame2.TextRange.Text = descriptionText
-                            End With
-                        End If
-
-                    End If
-
-                End If
-
-            Catch ex As Exception
-                Call MsgBox("Fehler : " & ex.Message)
-            End Try
-
-        Next
-
-        Call buildSmartSlideLists()
-
-        Call setBtnEnablements()
-
-        ProgressBarNavigate.Visible = False
-    End Sub
 
     Private Sub setBtnEnablements()
 
@@ -257,6 +133,8 @@
             If timeStamps.Count > 0 Then
 
                 If timeStamps.Last.Key <> currentTimestamp Then
+
+                    previousVariantName = currentVariantname
                     previousTimeStamp = currentTimestamp
                     currentTimestamp = timeStamps.Last.Key
 
@@ -264,7 +142,8 @@
 
                     Call moveAllShapes()
 
-                    Call showTSMessage(currentTimestamp)
+                    Call setBtnEnablements()
+
                 End If
                 
 
@@ -287,6 +166,7 @@
                 End If
 
                 If newDate <> currentTimestamp Then
+                    previousVariantName = currentVariantname
                     previousTimeStamp = currentTimestamp
                     currentTimestamp = newDate
 
@@ -294,7 +174,8 @@
 
                     Call moveAllShapes()
 
-                    Call showTSMessage(currentTimestamp)
+                    Call setBtnEnablements()
+
                 End If
                 
 
@@ -320,13 +201,15 @@
                 End If
 
                 If newDate <> currentTimestamp Then
+                    previousVariantName = currentVariantname
                     previousTimeStamp = currentTimestamp
                     currentTimestamp = newDate
                     currentDate.Text = currentTimestamp.ToString
 
                     Call moveAllShapes()
 
-                    Call showTSMessage(currentTimestamp)
+                    Call setBtnEnablements()
+
                 End If
                 
 
@@ -341,6 +224,7 @@
             If timeStamps.Count > 0 Then
 
                 If timeStamps.First.Key <> currentTimestamp Then
+                    previousVariantName = currentVariantname
                     previousTimeStamp = currentTimestamp
                     currentTimestamp = timeStamps.First.Key
 
@@ -348,7 +232,8 @@
 
                     Call moveAllShapes()
 
-                    Call showTSMessage(currentTimestamp)
+                    Call setBtnEnablements()
+
                 End If
                 
             End If
@@ -464,6 +349,7 @@
 
                     If eingabe <> currentTimestamp Then
 
+                        previousVariantName = currentVariantname
                         previousTimeStamp = currentTimestamp
                         currentTimestamp = eingabe
                         noDateValueCheck = True
@@ -471,7 +357,8 @@
                         noDateValueCheck = False
 
                         Call moveAllShapes()
-                        Call showTSMessage(currentTimestamp)
+                        Call setBtnEnablements()
+
 
                     End If
 

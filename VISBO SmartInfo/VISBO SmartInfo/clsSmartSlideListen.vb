@@ -344,6 +344,18 @@ Public Class clsSmartSlideListen
 
     End Sub
 
+    ''' <summary>
+    ''' diese Methode setzt die History Einträge mit den Timestamps zurück; muss gemacht werden, wenn eine Variante geladen wird ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub resetHistory(ByVal pName)
+        If _projectTimeStamps.Count > 0 Then
+            _projectTimeStamps.Clear()
+
+
+        End If
+    End Sub
+
     Public ReadOnly Property historiesExist() As Boolean
         Get
             Dim tmpResult As Boolean
@@ -525,7 +537,7 @@ Public Class clsSmartSlideListen
 
         Dim uid As Integer = Me.getUID(shapeName)
 
-        Dim fullbCrumb As String = "(" & getPnameFromShpName(shapeName) & ")" & _
+        Dim fullbCrumb As String = "(" & getPVnameFromShpName(shapeName) & ")" & _
             bCrumb.Replace("#", " - ") & " - " & getElemNameFromShpName(shapeName)
 
 
