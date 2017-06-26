@@ -22,6 +22,7 @@ Partial Class frmSelectVariant
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSelectVariant))
         Me.variantNamesListBox = New System.Windows.Forms.ListBox()
         Me.showButton = New System.Windows.Forms.Button()
         Me.SuspendLayout()
@@ -45,11 +46,12 @@ Partial Class frmSelectVariant
         '
         'frmSelectVariant
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(348, 302)
         Me.Controls.Add(Me.showButton)
         Me.Controls.Add(Me.variantNamesListBox)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectVariant"
         Me.Text = "Variante anzeigen"
         Me.ResumeLayout(False)

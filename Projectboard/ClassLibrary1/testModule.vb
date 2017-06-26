@@ -12490,7 +12490,8 @@ Public Module testModule
                 .Top = rds.calendarLineShape.Top
                 .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
 
-                .Name = .Name & .Id
+                '.Name = .Name & .Id
+                .Name = "todayLine"
                 .AlternativeText = ""
                 .Title = ""
 

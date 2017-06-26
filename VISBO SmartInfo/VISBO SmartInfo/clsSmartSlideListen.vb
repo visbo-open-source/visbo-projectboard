@@ -436,7 +436,7 @@ Public Class clsSmartSlideListen
     ''' <param name="cName"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addCN(ByVal cName As String, shapeName As String)
+    Public Sub addCN(ByVal cName As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
 
         Dim uid As Integer = Me.getUID(shapeName)
 
@@ -448,12 +448,12 @@ Public Class clsSmartSlideListen
                 ' nichts tun , ist schon drin ...
             Else
                 ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
-                listOfShapeNames.Add(uid, True)
+                listOfShapeNames.Add(uid, isMilestone)
             End If
         Else
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
-            listOfShapeNames.Add(uid, True)
+            listOfShapeNames.Add(uid, isMilestone)
             _cNList.Add(cName, listOfShapeNames)
         End If
 
@@ -466,7 +466,7 @@ Public Class clsSmartSlideListen
     ''' <param name="oName">original Name</param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addON(ByVal oName As String, shapeName As String)
+    Public Sub addON(ByVal oName As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
 
         Dim uid As Integer = Me.getUID(shapeName)
 
@@ -478,12 +478,12 @@ Public Class clsSmartSlideListen
                 ' nichts tun , ist schon drin ...
             Else
                 ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
-                listOfShapeNames.Add(uid, True)
+                listOfShapeNames.Add(uid, isMilestone)
             End If
         Else
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
-            listOfShapeNames.Add(uid, True)
+            listOfShapeNames.Add(uid, isMilestone)
             _oNList.Add(oName, listOfShapeNames)
         End If
 
@@ -497,7 +497,7 @@ Public Class clsSmartSlideListen
     ''' <param name="sName"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addSN(ByVal sName As String, shapeName As String)
+    Public Sub addSN(ByVal sName As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
 
 
         Dim uid As Integer = Me.getUID(shapeName)
@@ -515,12 +515,12 @@ Public Class clsSmartSlideListen
                 ' nichts tun , ist schon drin ...
             Else
                 ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
-                listOfShapeNames.Add(uid, True)
+                listOfShapeNames.Add(uid, isMilestone)
             End If
         Else
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
-            listOfShapeNames.Add(uid, True)
+            listOfShapeNames.Add(uid, isMilestone)
             _sNList.Add(sName, listOfShapeNames)
         End If
 
@@ -533,7 +533,7 @@ Public Class clsSmartSlideListen
     ''' <param name="bCrumb"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addBC(ByVal bCrumb As String, shapeName As String)
+    Public Sub addBC(ByVal bCrumb As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
 
         Dim uid As Integer = Me.getUID(shapeName)
 
@@ -549,12 +549,12 @@ Public Class clsSmartSlideListen
                 ' nichts tun , ist schon drin ...
             Else
                 ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
-                listOfShapeNames.Add(uid, True)
+                listOfShapeNames.Add(uid, isMilestone)
             End If
         Else
             ' dann muss das erste aufgenommen werden 
             listOfShapeNames = New SortedList(Of Integer, Boolean)
-            listOfShapeNames.Add(uid, True)
+            listOfShapeNames.Add(uid, isMilestone)
             _bCList.Add(fullbCrumb, listOfShapeNames)
         End If
 
@@ -567,7 +567,7 @@ Public Class clsSmartSlideListen
     ''' <param name="lieferumfaenge"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addLU(ByVal lieferumfaenge As String, shapeName As String)
+    Public Sub addLU(ByVal lieferumfaenge As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
 
         Dim uid As Integer = Me.getUID(shapeName)
         Dim lieferumfang As String
@@ -585,12 +585,12 @@ Public Class clsSmartSlideListen
                     ' nichts tun , ist schon drin ...
                 Else
                     ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
-                    listOfShapeIDs.Add(uid, True)
+                    listOfShapeIDs.Add(uid, isMilestone)
                 End If
             Else
                 ' dann muss das erste aufgenommen werden 
                 listOfShapeIDs = New SortedList(Of Integer, Boolean)
-                listOfShapeIDs.Add(uid, True)
+                listOfShapeIDs.Add(uid, isMilestone)
                 _LUList.Add(lieferumfang, listOfShapeIDs)
             End If
         Next
@@ -611,7 +611,8 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public Sub addRoleAndCostInfos(ByVal roleInfos As SortedList(Of String, Double), _
                                        ByVal costInfos As SortedList(Of String, Double), _
-                                       ByVal shapeName As String)
+                                       ByVal shapeName As String, _
+                                       ByVal isMilestone As Boolean)
 
         Dim uid As Integer = Me.getUID(shapeName)
         Dim listPV As SortedList(Of Integer, Boolean)
@@ -623,15 +624,15 @@ Public Class clsSmartSlideListen
                     listPV = _resourceList.Item(kvp.Key)
                     If Not listPV.ContainsKey(uid) Then
                         ' einen neuen Eintrag hinzufügen 
-                        listPV.Add(uid, True)
+                        listPV.Add(uid, isMilestone)
                     End If
                 Else
                     listPV = New SortedList(Of Integer, Boolean)
-                    listPV.Add(uid, True)
+                    listPV.Add(uid, isMilestone)
                     _resourceList.Add(kvp.Key, listPV)
                 End If
             End If
-            
+
         Next
 
         ' jetzt die Kosten ...
@@ -642,15 +643,15 @@ Public Class clsSmartSlideListen
                     listPV = _costList.Item(kvp.Key)
                     If Not listPV.ContainsKey(uid) Then
                         ' einen neuen Eintrag hinzufügen 
-                        listPV.Add(uid, True)
+                        listPV.Add(uid, isMilestone)
                     End If
                 Else
                     listPV = New SortedList(Of Integer, Boolean)
-                    listPV.Add(uid, True)
+                    listPV.Add(uid, isMilestone)
                     _costList.Add(kvp.Key, listPV)
                 End If
             End If
-            
+
         Next
 
     End Sub
@@ -660,12 +661,12 @@ Public Class clsSmartSlideListen
     ''' </summary>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addMV(ByVal shapeName As String)
+    Public Sub addMV(ByVal shapeName As String, ByVal isMilestone As Boolean)
         Dim uid As Integer = Me.getUID(shapeName)
         If _mVList.ContainsKey(uid) Then
             ' nichts tun , ist schon drin
         Else
-            _mVList.Add(uid, True)
+            _mVList.Add(uid, isMilestone)
         End If
     End Sub
 
@@ -676,7 +677,7 @@ Public Class clsSmartSlideListen
     ''' <param name="ampelColor"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addAC(ByVal ampelColor As Integer, shapeName As String)
+    Public Sub addAC(ByVal ampelColor As Integer, ByVal shapeName As String, ByVal isMilestone As Boolean)
 
         Dim uid As Integer = Me.getUID(shapeName)
 
@@ -692,12 +693,12 @@ Public Class clsSmartSlideListen
                     ' nichts tun , ist schon drin ...
                 Else
                     ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
-                    listOfShapeNames.Add(uid, True)
+                    listOfShapeNames.Add(uid, isMilestone)
                 End If
             Else
                 ' dann muss das erste aufgenommen werden 
                 listOfShapeNames = New SortedList(Of Integer, Boolean)
-                listOfShapeNames.Add(uid, True)
+                listOfShapeNames.Add(uid, isMilestone)
                 _aCList.Add(ampelColor, listOfShapeNames)
             End If
         End If

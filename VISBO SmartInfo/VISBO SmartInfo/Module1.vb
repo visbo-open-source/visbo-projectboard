@@ -995,7 +995,7 @@ Module Module1
     Private Sub aktualisiereSortedLists(ByVal tmpShape As PowerPoint.Shape)
         Dim shapeName As String = tmpShape.Name
         Dim checkIT As Boolean = False
-
+        Dim isMilestone As Boolean
 
         Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
         If pvName <> "" Then
@@ -1014,9 +1014,11 @@ Module Module1
             ' es werden nur die aufgebaut, die Meilensteine oder Phasen sind ...  
             If pptShapeIsMilestone(tmpShape) Then
                 checkIT = True
+                isMilestone = True
                 ' nichts tun 
             ElseIf pptShapeIsPhase(tmpShape) Then
                 checkIT = True
+                isMilestone = False
             Else
                 ' nichts tun 
                 checkIT = False
@@ -1033,12 +1035,12 @@ Module Module1
                 Exit Sub
             End If
 
-            Call smartSlideLists.addCN(tmpName, shapeName)
+            Call smartSlideLists.addCN(tmpName, shapeName, isMilestone)
 
             ' den original Name behandeln ...
             tmpName = tmpShape.Tags.Item("ON")
             If tmpName.Trim.Length > 0 Then
-                Call smartSlideLists.addON(tmpName, shapeName)
+                Call smartSlideLists.addON(tmpName, shapeName, isMilestone)
             End If
 
             ' den Short Name behandeln ...
@@ -1047,12 +1049,12 @@ Module Module1
                 ' es gibt keinen Short-Name, also soll einer aufgrund der laufenden Nummer erzeugt werden ...
                 tmpName = smartSlideLists.getUID(shapeName).ToString
             End If
-            Call smartSlideLists.addSN(tmpName, shapeName)
+            Call smartSlideLists.addSN(tmpName, shapeName, isMilestone)
 
             ' den BreadCrumb behandeln 
             tmpName = tmpShape.Tags.Item("BC")
             If tmpName.Trim.Length > 0 Then
-                Call smartSlideLists.addBC(tmpName, shapeName)
+                Call smartSlideLists.addBC(tmpName, shapeName, isMilestone)
             End If
 
             ' AmpelColor behandeln
@@ -1062,7 +1064,7 @@ Module Module1
                 Try
                     If IsNumeric(tmpName) Then
                         ampelColor = CInt(tmpName)
-                        Call smartSlideLists.addAC(ampelColor, shapeName)
+                        Call smartSlideLists.addAC(ampelColor, shapeName, isMilestone)
                     End If
 
                 Catch ex As Exception
@@ -1075,7 +1077,7 @@ Module Module1
             tmpName = tmpShape.Tags.Item("LU")
             If tmpName.Trim.Length > 0 Then
                 Try
-                    Call smartSlideLists.addLU(tmpName, shapeName)
+                    Call smartSlideLists.addLU(tmpName, shapeName, isMilestone)
                 Catch ex As Exception
 
                 End Try
@@ -1124,7 +1126,7 @@ Module Module1
     Private Sub aktualisiereRoleCostLists(ByVal tmpShape As PowerPoint.Shape)
         Dim shapeName As String = tmpShape.Name
         Dim checkIT As Boolean = False
-
+        Dim isMilestone As Boolean
 
         Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
 
@@ -1136,9 +1138,11 @@ Module Module1
             ' es werden nur die aufgebaut, die Meilensteine oder Phasen sind ...  
             If pptShapeIsMilestone(tmpShape) Then
                 checkIT = True
+                isMilestone = True
                 ' nichts tun 
             ElseIf pptShapeIsPhase(tmpShape) Then
                 checkIT = True
+                isMilestone = False
             Else
                 ' nichts tun 
                 checkIT = False
@@ -1150,7 +1154,7 @@ Module Module1
 
             ' wenn Datenbank Zugang vorliegt und es sich um eine Phase handelt, 
             ' denn nur die können Resourcen und Kostenbedarfe haben 
-            If Not noDBAccessInPPT And pptShapeIsPhase(tmpShape) Then
+            If Not noDBAccessInPPT And Not isMilestone Then
 
                 Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
                 Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
@@ -1161,7 +1165,8 @@ Module Module1
                 Try
                     Call smartSlideLists.addRoleAndCostInfos(roleInformations, _
                                                              costInformations, _
-                                                             shapeName)
+                                                             shapeName, _
+                                                             isMilestone)
                 Catch ex As Exception
 
                 End Try
@@ -1185,6 +1190,7 @@ Module Module1
 
         Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes(shapeName)
         Dim defaultExplanation As String = "manuell verschoben durch " & My.Computer.Name
+        Dim isMilestone As Boolean
 
         If englishLanguage Then
             defaultExplanation = "moved manually by " & My.Computer.Name
@@ -1199,6 +1205,7 @@ Module Module1
             Else
                 If pptShapeIsMilestone(tmpShape) Then
 
+                    isMilestone = True
                     If isMovedElement(tmpShape) Then
 
                         homeButtonRelevance = True
@@ -1231,7 +1238,7 @@ Module Module1
 
                         End With
 
-                        Call smartSlideLists.addMV(tmpShape.Name)
+                        Call smartSlideLists.addMV(tmpShape.Name, isMilestone)
                     Else
                         ' das Shape wurde nicht verschoben, aber hat es einen MVD Teil ? 
                         ' dann muss der ChangedButton gezeigt werden 
@@ -1242,7 +1249,7 @@ Module Module1
 
 
                 Else
-
+                    isMilestone = False
                     If isMovedElement(tmpShape) Then
 
                         homeButtonRelevance = True
@@ -1280,7 +1287,7 @@ Module Module1
 
                         End With
 
-                        Call smartSlideLists.addMV(tmpShape.Name)
+                        Call smartSlideLists.addMV(tmpShape.Name, isMilestone)
                     Else
                         ' das Shape wurde nicht verschoben, aber hat es einen MVD Teil ? 
                         ' dann muss der ChangedButton gezeigt werden 
@@ -1960,6 +1967,16 @@ Module Module1
             End Try
 
         Next
+
+        ' und schließlich muss noch nachgesehen werden, ob es eine todayLine gibt 
+        Try
+            Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
+            If Not IsNothing(todayLineShape) Then
+                Call sendTodayLinetoNewPosition(todayLineShape)
+            End If
+        Catch ex As Exception
+
+        End Try
 
         Call buildSmartSlideLists()
 
@@ -3148,6 +3165,23 @@ Module Module1
 
     End Function
 
+    Public Sub sendTodayLinetoNewPosition(ByRef curShape As PowerPoint.Shape)
+
+        Dim x1Pos As Double, x2Pos As Double
+
+        With curShape
+
+            Call slideCoordInfo.calculatePPTx1x2(currentTimestamp, currentTimestamp, x1Pos, x2Pos)
+
+            ' Positionieren auf Home Position und aktualisieren des Info-Formulars..
+            If .Left <> CSng(x1Pos) - .Width / 2 Then
+                .Left = CSng(x1Pos) - .Width / 2
+            End If
+
+        End With
+
+    End Sub
+
     ''' <summary>
     ''' gibt true zurück wenn es sich um ein Visbo Shape handelt, also entweder ein Plan-Element ist, ein Chart oder eine Komponente
     ''' </summary>
@@ -3927,6 +3961,6 @@ Module Module1
         Catch ex As Exception
 
         End Try
-        
+
     End Sub
 End Module

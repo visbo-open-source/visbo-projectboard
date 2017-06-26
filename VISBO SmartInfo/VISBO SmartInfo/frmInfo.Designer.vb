@@ -23,6 +23,7 @@ Partial Class frmInfo
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmInfo))
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
         Me.deleteAmpel = New System.Windows.Forms.Button()
@@ -443,8 +444,8 @@ Partial Class frmInfo
         '
         'frmInfo
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(566, 446)
         Me.Controls.Add(Me.rdbCosts)
@@ -468,6 +469,7 @@ Partial Class frmInfo
         Me.Controls.Add(Me.shwOhneLight)
         Me.Controls.Add(Me.lblAmpeln)
         Me.Controls.Add(Me.TabControl1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmInfo"
         Me.Text = "VISBO Smart-Info"
         Me.TopMost = True

@@ -23,6 +23,7 @@ Partial Class frmPPTTimeMachine
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmPPTTimeMachine))
         Me.lblMessage = New System.Windows.Forms.Label()
         Me.ProgressBarNavigate = New System.Windows.Forms.ProgressBar()
         Me.ToolTipTS = New System.Windows.Forms.ToolTip(Me.components)
@@ -108,8 +109,8 @@ Partial Class frmPPTTimeMachine
         '
         'frmPPTTimeMachine
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(494, 177)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.currentDate)
@@ -119,6 +120,7 @@ Partial Class frmPPTTimeMachine
         Me.Controls.Add(Me.btnStart)
         Me.Controls.Add(Me.btnEnd)
         Me.Controls.Add(Me.btnFastForward)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmPPTTimeMachine"
         Me.Text = "VISBO Time Machine"
         Me.TopMost = True
