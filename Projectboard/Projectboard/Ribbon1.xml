@@ -396,7 +396,20 @@
         <group id ="PTXG1" > 
         </group>
       </tab>
-      <!--label="Lizenzen"-->
+       <tab id ="PTTestfunktionen" getVisible="chckVisibility" label ="Testfunktionen">
+         <!--label="Testfunktionen"-->
+         <group id ="pt6g5" label ="testfunktionen">
+           <!--<button id="pt6g5b0" label="enable event aktiv?" onAction="pttestfunktion1" />
+           <button id="pt6g5b1" label="aktuelle test funktion"  onAction="pttestfunktion2" />
+           <button id="pt6g5b2" label="check hierarchien korrekt ? "  onAction ="pttestfunktion3" />
+           <button id="pt6g5b3" label="demo-funktion ampel"  onAction ="pttestfunktion4" />-->
+           <button id="pt6g5b4" label="demo-funktion historie"  onAction ="pttestfunktion5" />
+           <!--<button id="pt4g5b6" label="import alte projekt-steckbriefe vor pt113" onAction="tom2g4m1importold" supertip ="alle projekte, die als visbo steckbrief beschrieben im folder projectfiles liegen, werden importiert; achtung: struktur von feature pt113, spalte summe"/>
+           <button id="pt4g5b7" label="neue rollen/kosten-struktur" onAction="pttestfunktion7" supertip ="test der optimierten rollen-/kosten verweise"/>
+           <button id="pt6g5b5" label="Test WriteProtection"  onAction ="pttestWriteProtect" supertip ="Test der Funktion WriteProtect"/>-->
+         </group>
+       </tab>
+       <!--label="Lizenzen"-->
       <tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
             <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
@@ -441,8 +454,8 @@
           <!--label="Sortierung ermöglichen"-->
           <checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
         </group>
-      </tab>  
-     </tabs>
+      </tab>
+    </tabs>
   </ribbon>
    <backstage>
     <button idMso ="FileSave" visible ="false"/>

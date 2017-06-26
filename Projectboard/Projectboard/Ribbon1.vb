@@ -2787,6 +2787,8 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PThelp"
                     chckVisibility = False
+                Case "PTTestfunktionen"
+                    chckVisibility = False
                 Case "PTlizenz"
                     chckVisibility = False
 
