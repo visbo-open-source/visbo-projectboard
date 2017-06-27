@@ -4038,7 +4038,6 @@ Public Module awinGeneralModules
                             .Status = pStatus
                             .tfZeile = tafelZeile
                             .timeStamp = importDate
-                            .UID = cproj.UID
 
                         End With
 
@@ -19322,6 +19321,8 @@ Public Module awinGeneralModules
                         Dim phaseName As String = cphase.name
                         Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
+                        Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
+
                         If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                             ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
 
@@ -19377,6 +19378,9 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
 
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
@@ -19546,6 +19550,9 @@ Public Module awinGeneralModules
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
 
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
+
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
                                         CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
@@ -19706,6 +19713,9 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
 
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
 

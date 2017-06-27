@@ -41,9 +41,8 @@ Partial Class frmAuthentication
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label1.Location = New System.Drawing.Point(234, 74)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(118, 24)
+        Me.Label1.Size = New System.Drawing.Size(0, 24)
         Me.Label1.TabIndex = 0
-        Me.Label1.Text = "ProjectBoard"
         '
         'Label2
         '

@@ -58,7 +58,17 @@ Public Class frmSelectVariant
             previousVariantName = currentVariantname
             currentVariantname = selectedVariantName
 
-            'Call moveAllShapes()
+            ' wenn das Projekt noch nicht in der Liste verzeichnet ist ... 
+            Dim pvName As String = calcProjektKey(pName, selectedVariantName)
+            If pvName <> "" Then
+                If smartSlideLists.containsProject(pvName) Then
+                    ' nichts tun, ist schon drin ..
+                Else
+                    smartSlideLists.addProject(pvName)
+                End If
+            End If
+
+            Call moveAllShapes(True)
 
         Else
             Call MsgBox("wird bereits angezeigt ...")

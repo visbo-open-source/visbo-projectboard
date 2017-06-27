@@ -779,190 +779,8 @@ Public Class frmProjPortfolioAdmin
 
 
                     ' prüfen, ob Mauskey gedrückt war ...
-                    If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
-                        If lastIndexChecked < 0 Then
-                            lastIndexChecked = 0
-                        End If
-
-                        Dim lb As Integer = lastIndexChecked
-                        Dim ub As Integer = currentIndex
-                        If lastIndexChecked > currentIndex Then
-                            lb = currentIndex
-                            ub = lastIndexChecked
-                        End If
-
-                        For h = lb To ub
-                            Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
-
-                            If tmpNode.Level = treeLevel Then
-                                ' Aktion nur durchführen, wenn auf der gleichen Ebene 
-                                tmpNode.Checked = checkMode
-                                Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
-                            End If
-
-                        Next
-                    Else
-
-                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
-
-                    End If
-
-
-                    
-
-                Case 1 ' Variante ist selektiert / nicht selektiert
-
-                    ' prüfen, ob Mauskey gedrückt war ...
-                    If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
-                        If lastIndexChecked < 0 Then
-                            lastIndexChecked = 0
-                        End If
-
-                        Dim lb As Integer = lastIndexChecked
-                        Dim ub As Integer = currentIndex
-                        If lastIndexChecked > currentIndex Then
-                            lb = currentIndex
-                            ub = lastIndexChecked
-                        End If
-
-                        For h = lb To ub
-                            Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
-
-                            If tmpNode.Level = treeLevel Then
-                                ' Aktion nur durchführen, wenn auf der gleichen Ebene 
-                                tmpNode.Checked = checkMode
-                                Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
-                            End If
-
-                        Next
-                    Else
-
-                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
-
-                    End If
-
-                Case 2 ' Snapshot ist selektiert / nicht selektiert 
-
-                    ' prüfen, ob Mauskey gedrückt war ...
-                    If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
-                        If lastIndexChecked < 0 Then
-                            lastIndexChecked = 0
-                        End If
-
-                        Dim lb As Integer = lastIndexChecked
-                        Dim ub As Integer = currentIndex
-                        If lastIndexChecked > currentIndex Then
-                            lb = currentIndex
-                            ub = lastIndexChecked
-                        End If
-
-                        For h = lb To ub
-                            Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
-
-                            If tmpNode.Level = treeLevel Then
-                                ' Aktion nur durchführen, wenn auf der gleichen Ebene 
-                                tmpNode.Checked = checkMode
-                                Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
-                            End If
-
-                        Next
-                    Else
-
-                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
-
-                    End If
-
-            End Select
-
-            stopRecursion = False
-
-
-        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
-              aKtionskennung = PTTvActions.deleteV Then
-
-            stopRecursion = True
-
-            Select Case treeLevel
-
-                Case 0 ' Projekt ist selektiert / nicht selektiert 
-
-                    ' prüfen, ob Mauskey gedrückt war ...
-                    If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
-                        If lastIndexChecked < 0 Then
-                            lastIndexChecked = 0
-                        End If
-
-                        Dim lb As Integer = lastIndexChecked
-                        Dim ub As Integer = currentIndex
-                        If lastIndexChecked > currentIndex Then
-                            lb = currentIndex
-                            ub = lastIndexChecked
-                        End If
-
-                        For h = lb To ub
-                            Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
-
-                            If tmpNode.Level = treeLevel Then
-                                ' Aktion nur durchführen, wenn auf der gleichen Ebene 
-                                tmpNode.Checked = checkMode
-                                Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
-                            End If
-
-                        Next
-                    Else
-
-                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
-
-                    End If
-
-                Case 1 ' Variante ist selektiert / nicht selektiert
-
-                    ' prüfen, ob Mauskey gedrückt war ...
-                    If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
-                        If lastIndexChecked < 0 Then
-                            lastIndexChecked = 0
-                        End If
-
-                        Dim lb As Integer = lastIndexChecked
-                        Dim ub As Integer = currentIndex
-                        If lastIndexChecked > currentIndex Then
-                            lb = currentIndex
-                            ub = lastIndexChecked
-                        End If
-
-                        For h = lb To ub
-                            Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
-
-                            If tmpNode.Level = treeLevel Then
-                                ' Aktion nur durchführen, wenn auf der gleichen Ebene 
-                                tmpNode.Checked = checkMode
-                                Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
-                            End If
-
-                        Next
-                    Else
-
-                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
-
-                    End If
-
-
-            End Select
-
-            stopRecursion = False
-
-        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
-
-            stopRecursion = True
-
-            If Not noDB Then
-
-                Select Case treeLevel
-
-                    Case 0 ' Projekt ist selektiert / nicht selektiert 
-
-                        ' prüfen, ob Mauskey gedrückt war ...
-                        If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
                             If lastIndexChecked < 0 Then
                                 lastIndexChecked = 0
                             End If
@@ -985,16 +803,23 @@ Public Class frmProjPortfolioAdmin
 
                             Next
                         Else
-
                             Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
-
                         End If
 
+                    Else
 
-                    Case 1 ' Variante ist selektiert / nicht selektiert
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
 
-                        ' prüfen, ob Mauskey gedrückt war ...
-                        If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
+                    End If
+
+
+
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
                             If lastIndexChecked < 0 Then
                                 lastIndexChecked = 0
                             End If
@@ -1016,6 +841,216 @@ Public Class frmProjPortfolioAdmin
                                 End If
 
                             Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                    End If
+
+                Case 2 ' Snapshot ist selektiert / nicht selektiert 
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+            End Select
+
+            stopRecursion = False
+
+
+        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+              aKtionskennung = PTTvActions.deleteV Then
+
+            stopRecursion = True
+
+            Select Case treeLevel
+
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+
+            End Select
+
+            stopRecursion = False
+
+        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+            stopRecursion = True
+
+            If Not noDB Then
+
+                Select Case treeLevel
+
+                    Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                        ' prüfen, ob Mauskey gedrückt war ...
+                        If shiftKeywasPressed Then
+                            If validMultiSelection(lastIndexChecked, currentIndex) Then
+                                If lastIndexChecked < 0 Then
+                                    lastIndexChecked = 0
+                                End If
+
+                                Dim lb As Integer = lastIndexChecked
+                                Dim ub As Integer = currentIndex
+                                If lastIndexChecked > currentIndex Then
+                                    lb = currentIndex
+                                    ub = lastIndexChecked
+                                End If
+
+                                For h = lb To ub
+                                    Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                    If tmpNode.Level = treeLevel Then
+                                        ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                        tmpNode.Checked = checkMode
+                                        Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                    End If
+
+                                Next
+                            Else
+                                Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                            End If
+
+                        Else
+
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                        End If
+
+
+                    Case 1 ' Variante ist selektiert / nicht selektiert
+
+                        ' prüfen, ob Mauskey gedrückt war ...
+                        If shiftKeywasPressed Then
+                            If validMultiSelection(lastIndexChecked, currentIndex) Then
+                                If lastIndexChecked < 0 Then
+                                    lastIndexChecked = 0
+                                End If
+
+                                Dim lb As Integer = lastIndexChecked
+                                Dim ub As Integer = currentIndex
+                                If lastIndexChecked > currentIndex Then
+                                    lb = currentIndex
+                                    ub = lastIndexChecked
+                                End If
+
+                                For h = lb To ub
+                                    Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                    If tmpNode.Level = treeLevel Then
+                                        ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                        tmpNode.Checked = checkMode
+                                        Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                    End If
+
+                                Next
+                            Else
+                                Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                            End If
+
                         Else
 
                             Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
@@ -1069,28 +1104,33 @@ Public Class frmProjPortfolioAdmin
                 Case 0 ' Projekt ist selektiert / nicht selektiert 
 
                     ' prüfen, ob Mauskey gedrückt war ...
-                    If shiftKeywasPressed And validMultiSelection(lastIndexChecked, currentIndex) Then
-                        If lastIndexChecked < 0 Then
-                            lastIndexChecked = 0
-                        End If
-
-                        Dim lb As Integer = lastIndexChecked
-                        Dim ub As Integer = currentIndex
-                        If lastIndexChecked > currentIndex Then
-                            lb = currentIndex
-                            ub = lastIndexChecked
-                        End If
-
-                        For h = lb To ub
-                            Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
-
-                            If tmpNode.Level = treeLevel Then
-                                ' Aktion nur durchführen, wenn auf der gleichen Ebene 
-                                tmpNode.Checked = checkMode
-                                Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
                             End If
 
-                        Next
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
                     Else
 
                         Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
@@ -1797,6 +1837,9 @@ Public Class frmProjPortfolioAdmin
                 Else
                     If hproj.description.Length > 0 Then
                         tmpText = hproj.description
+                        If tmpText.Length > 50 Then
+                            tmpText = tmpText.Substring(0, 70) & "..."
+                        End If
                     End If
                 End If
 
@@ -1834,6 +1877,9 @@ Public Class frmProjPortfolioAdmin
                 Else
                     If hproj.variantDescription.Length > 0 Then
                         tmpText = hproj.variantDescription
+                        If tmpText.Length > 50 Then
+                            tmpText = tmpText.Substring(0, 70) & "..."
+                        End If
                     End If
                 End If
 

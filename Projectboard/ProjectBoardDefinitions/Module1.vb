@@ -2765,7 +2765,7 @@ Public Module Module1
     End Function
 
     ''' <summary>
-    ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstin oder eine Phase 
+    ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstein oder eine Phase 
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <param name="elemID"></param>
@@ -3459,39 +3459,60 @@ Public Module Module1
 
 
                 If Not IsNothing(fullBreadCrumb) Then
+                    If .Tags.Item("BC").Length > 0 Then
+                        .Tags.Delete("BC")
+                    End If
                     .Tags.Add("BC", fullBreadCrumb)
                 End If
 
                 If Not IsNothing(classifiedName) Then
+                    If .Tags.Item("CN").Length > 0 Then
+                        .Tags.Delete("CN")
+                    End If
                     .Tags.Add("CN", classifiedName)
                 End If
 
                 If Not IsNothing(shortName) Then
                     If shortName <> classifiedName And shortName <> "" Then
+                        If .Tags.Item("SN").Length > 0 Then
+                            .Tags.Delete("SN")
+                        End If
                         .Tags.Add("SN", shortName)
                     End If
                 End If
 
                 If Not IsNothing(originalName) Then
                     If originalName <> classifiedName And originalName <> "" Then
+                        If .Tags.Item("ON").Length > 0 Then
+                            .Tags.Delete("ON")
+                        End If
                         .Tags.Add("ON", originalName)
                     End If
                 End If
 
                 If Not IsNothing(startDate) Then
                     If Not startDate = nullDate Then
+                        If .Tags.Item("SD").Length > 0 Then
+                            .Tags.Delete("SD")
+                        End If
                         .Tags.Add("SD", startDate.ToShortDateString)
                     End If
                 End If
 
                 If Not IsNothing(endDate) Then
                     If Not endDate = nullDate Then
+                        If .Tags.Item("ED").Length > 0 Then
+                            .Tags.Delete("ED")
+                        End If
                         .Tags.Add("ED", endDate.ToShortDateString)
                     End If
 
                 End If
 
                 If Not IsNothing(ampelColor) Then
+                    If .Tags.Item("AC").Length > 0 Then
+                        .Tags.Delete("AC")
+                    End If
                     If ampelColor >= 0 And ampelColor <= 3 Then
                         .Tags.Add("AC", ampelColor.ToString)
                     Else
@@ -3499,6 +3520,9 @@ Public Module Module1
                     End If
 
                     If Not IsNothing(ampelErlaeuterung) Then
+                        If .Tags.Item("AE").Length > 0 Then
+                            .Tags.Delete("AE")
+                        End If
                         If ampelErlaeuterung.Length > 0 Then
                             .Tags.Add("AE", ampelErlaeuterung)
                         End If
@@ -3509,6 +3533,9 @@ Public Module Module1
 
                 If Not IsNothing(lieferumfaenge) Then
                     If lieferumfaenge.Length > 0 Then
+                        If .Tags.Item("LU").Length > 0 Then
+                            .Tags.Delete("LU")
+                        End If
                         .Tags.Add("LU", lieferumfaenge)
                     End If
 
@@ -3547,26 +3574,44 @@ Public Module Module1
                 ' das bekommen alle ...
                 With pptShape
                     If Not IsNothing(pName) Then
+                        If .Tags.Item("PNM").Length > 0 Then
+                            .Tags.Delete("PNM")
+                        End If
                         .Tags.Add("PNM", pName)
                     End If
 
                     If Not IsNothing(vName) Then
+                        If .Tags.Item("VNM").Length > 0 Then
+                            .Tags.Delete("VNM")
+                        End If
                         .Tags.Add("VNM", vName)
                     End If
 
                     If Not IsNothing(qualifier) Then
+                        If .Tags.Item("Q1").Length > 0 Then
+                            .Tags.Delete("Q1")
+                        End If
                         .Tags.Add("Q1", qualifier)
                     End If
 
                     If Not IsNothing(qualifier2) Then
+                        If .Tags.Item("Q2").Length > 0 Then
+                            .Tags.Delete("Q2")
+                        End If
                         .Tags.Add("Q2", qualifier2)
                     End If
 
                     If Not IsNothing(bigType) Then
+                        If .Tags.Item("BID").Length > 0 Then
+                            .Tags.Delete("BID")
+                        End If
                         .Tags.Add("BID", bigType.ToString)
                     End If
 
                     If Not IsNothing(detailID) Then
+                        If .Tags.Item("DID").Length > 0 Then
+                            .Tags.Delete("DID")
+                        End If
                         .Tags.Add("DID", detailID.ToString)
                     End If
 
@@ -3597,22 +3642,39 @@ Public Module Module1
 
                             
                             If Not IsNothing(chtObjName) Then
+                                If .Tags.Item("CHON").Length > 0 Then
+                                    .Tags.Delete("CHON")
+                                End If
                                 .Tags.Add("CHON", chtObjName)
                             End If
 
                             If Not IsNothing(prpfTyp) Then
+                                If .Tags.Item("PRPF").Length > 0 Then
+                                    .Tags.Delete("PRPF")
+                                End If
                                 .Tags.Add("PRPF", CStr(prpfTyp))
                             End If
 
                             If Not IsNothing(chartTyp) Then
+                                If .Tags.Item("CHT").Length > 0 Then
+                                    .Tags.Delete("CHT")
+                                End If
                                 .Tags.Add("CHT", CStr(chartTyp))
                             End If
 
                             If Not IsNothing(auswahl) Then
+                                If .Tags.Item("ASW").Length > 0 Then
+                                    .Tags.Delete("ASW")
+                                End If
                                 .Tags.Add("ASW", CStr(auswahl))
                             End If
 
-                            .Tags.Add("COL", "")
+
+                            If .Tags.Item("COL").Length > 0 Then
+                                .Tags.Delete("COL")
+                            End If
+                            .Tags.Add("COL", CStr(auswahl))
+
 
                         End With
                     End If

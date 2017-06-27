@@ -1097,7 +1097,7 @@ Public Class frmInfo
             If Not IsNothing(selectedPlanShapes) Then
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
 
-                    If isRelevantShape(tmpShape) Then
+                    If isRelevantMSPHShape(tmpShape) Then
                         If pptShapeIsMilestone(tmpShape) Then
                             Call annotatePlanShape(tmpShape, type, positionIndexMT)
                         Else
@@ -1202,8 +1202,8 @@ Public Class frmInfo
             If selectedPlanShapes.Count > 0 Then
                 ' alle selektierten Elemente zur Home-Position schicken 
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
-                    If isRelevantShape(tmpShape) Then
-                        Call sentToHomePosition(tmpShape)
+                    If isRelevantMSPHShape(tmpShape) Then
+                        Call sentToHomePosition(tmpShape.Name)
                     End If
                 Next
             Else
@@ -1215,11 +1215,25 @@ Public Class frmInfo
 
         If doItAll Then
             ' alle zur Home-Position schicken ...
+            Dim bigTodoList As New Collection
             For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-                If isRelevantShape(tmpShape) Then
-                    Call sentToHomePosition(tmpShape)
-                End If
+                bigTodoList.Add(tmpShape.Name)
             Next
+
+            For Each tmpShpName As String In bigTodoList
+                Try
+                    Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
+                    If Not IsNothing(tmpShape) Then
+                        If isRelevantMSPHShape(tmpShape) Then
+                            Call sentToHomePosition(tmpShape.Name)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+            
+
         End If
 
         ' jetzt ist Home nicht mehr notwendig ... 
@@ -1245,7 +1259,7 @@ Public Class frmInfo
                 ' alle selektierten Elemente zur Home-Position schicken 
                 For Each tmpShape As PowerPoint.Shape In selectedPlanShapes
 
-                    If isRelevantShape(tmpShape) Then
+                    If isRelevantMSPHShape(tmpShape) Then
                         Call sentToChangedPosition(tmpShape.Name)
                     End If
 
@@ -1259,11 +1273,23 @@ Public Class frmInfo
         End If
 
         If doItAll Then
-            ' alle zur Changed-Position schicken ...
+
+            Dim bigTodoList As New Collection
             For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-                If isRelevantShape(tmpShape) Then
-                    Call sentToChangedPosition(tmpShape.Name)
-                End If
+                bigTodoList.Add(tmpShape.Name)
+            Next
+
+            For Each tmpShpName As String In bigTodoList
+                Try
+                    Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
+                    If Not IsNothing(tmpShape) Then
+                        If isRelevantMSPHShape(tmpShape) Then
+                            Call sentToChangedPosition(tmpShape.Name)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
             Next
 
         End If

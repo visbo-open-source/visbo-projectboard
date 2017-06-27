@@ -147,7 +147,7 @@ Public Class clsSmartSlideListen
                             tmpDateVon = _listOfTimeStamps.First.Key
                         End If
                     End If
-                    timeStamps.liste = request.retrieveProjectHistoryFromDB(pName, vName, _listOfTimeStamps.First.Key, Date.Now)
+                    timeStamps.liste = request.retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now)
                     _projectTimeStamps.Item(pvName) = timeStamps
 
                     tmpProject = timeStamps.ElementAtorBefore(tsDate)
