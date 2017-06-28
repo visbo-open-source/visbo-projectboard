@@ -4038,7 +4038,6 @@ Public Module awinGeneralModules
                             .Status = pStatus
                             .tfZeile = tafelZeile
                             .timeStamp = importDate
-                            .UID = cproj.UID
 
                         End With
 
