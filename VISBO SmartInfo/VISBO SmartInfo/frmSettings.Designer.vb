@@ -22,6 +22,7 @@ Partial Class frmSettings
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSettings))
         Me.frmExtendedSearch = New System.Windows.Forms.CheckBox()
         Me.frmShowInfoBC = New System.Windows.Forms.CheckBox()
         Me.rdbPWD = New System.Windows.Forms.RadioButton()
@@ -299,10 +300,11 @@ Partial Class frmSettings
         '
         'frmSettings
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(323, 202)
         Me.Controls.Add(Me.TabControl1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSettings"
         Me.Text = "Einstellungen"
         Me.TabControl1.ResumeLayout(False)

@@ -47,6 +47,7 @@
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.activateTab = Me.Factory.CreateRibbonButton
         Me.timeMachineTab = Me.Factory.CreateRibbonButton
+        Me.variantTab_Click = Me.Factory.CreateRibbonButton
         Me.settingsTab = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
@@ -74,6 +75,7 @@
         '
         Me.SmartInfo.Items.Add(Me.activateTab)
         Me.SmartInfo.Items.Add(Me.timeMachineTab)
+        Me.SmartInfo.Items.Add(Me.variantTab_Click)
         Me.SmartInfo.Items.Add(Me.settingsTab)
         Me.SmartInfo.Label = "Smart-Info"
         Me.SmartInfo.Name = "SmartInfo"
@@ -87,6 +89,11 @@
         '
         Me.timeMachineTab.Label = "Time-Machine"
         Me.timeMachineTab.Name = "timeMachineTab"
+        '
+        'variantTab_Click
+        '
+        Me.variantTab_Click.Label = "Varianten"
+        Me.variantTab_Click.Name = "variantTab_Click"
         '
         'settingsTab
         '
@@ -115,6 +122,7 @@
     Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents settingsTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents timeMachineTab As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents variantTab_Click As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection
