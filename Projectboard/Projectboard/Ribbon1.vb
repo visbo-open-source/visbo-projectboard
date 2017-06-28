@@ -6113,11 +6113,13 @@ Imports System.Windows
                         ' Rollen-Balken
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
 
+                        auswahl = 1 ' zeige Personalbedarfe
                         Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                         ' Kosten-Balken
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
 
+                        auswahl = 1 ' zeige Sonstige Kosten
                         Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                         ' Strategie / Risiko / Marge

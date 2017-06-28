@@ -4038,7 +4038,6 @@ Public Module awinGeneralModules
                             .Status = pStatus
                             .tfZeile = tafelZeile
                             .timeStamp = importDate
-                            .UID = cproj.UID
 
                         End With
 
@@ -7762,26 +7761,24 @@ Public Module awinGeneralModules
                                                     Call logfileSchreiben("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
                                                     Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                                 Else
-                                                    Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " & _
+                                                    Dim exMsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " & _
                                                                         "Offset= " & offset.ToString & _
-                                                                        ", Duration= " & duration.ToString), hproj.name, anzFehler)
-                                                    Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " & _
-                                                                        "Offset= " & offset.ToString & _
-                                                                        ", Duration= " & duration.ToString)
+                                                                        ", Duration= " & duration.ToString & " " & objectName & "; "
+
+                                                    Call logfileSchreiben(exMsg, hproj.name, anzFehler)
+                                                    Throw New Exception(exMsg)
                                                 End If
                                             End If
 
                                             ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
                                             If duration <> ProjektdauerIndays Or offset <> 0 Then
 
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase " & _
+                                                Dim exMsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase " & _
                                                                         "Offset= " & offset.ToString & _
-                                                                        ", Duration=" & duration.ToString & _
-                                                                        ", ProjektDauer=" & ProjektdauerIndays.ToString), hproj.name, anzFehler)
-                                                Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase " & _
-                                                                        "Offset= " & offset.ToString & _
-                                                                        ", Duration=" & duration.ToString & _
-                                                                        ", ProjektDauer=" & ProjektdauerIndays.ToString)
+                                                                        ", Duration=" & duration.ToString & " " & objectName & "; " & _
+                                                                        ", ProjektDauer=" & ProjektdauerIndays.ToString
+                                                Call logfileSchreiben(exMsg, hproj.name, anzFehler)
+                                                Throw New Exception(exMsg)
                                             Else
                                                 Dim startOffset As Integer = 0
                                                 .changeStartandDauer(startOffset, ProjektdauerIndays)
@@ -7827,10 +7824,11 @@ Public Module awinGeneralModules
                                                 Call logfileSchreiben(("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!"), hproj.name, anzFehler)
                                                 Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                             Else
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
-                                                                    offset.ToString & ", " & duration.ToString), hproj.name, anzFehler)
-                                                Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
-                                                                    offset.ToString & ", " & duration.ToString)
+                                                Dim exmsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
+                                                                    offset.ToString & ", " & duration.ToString & ": " & objectName
+
+                                                Call logfileSchreiben(exmsg, hproj.name, anzFehler)
+                                                Throw New Exception(exmsg)
                                             End If
                                         End If
 
@@ -19323,6 +19321,8 @@ Public Module awinGeneralModules
                         Dim phaseName As String = cphase.name
                         Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
+                        Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
+
                         If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                             ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
 
@@ -19378,6 +19378,9 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
 
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
@@ -19547,6 +19550,9 @@ Public Module awinGeneralModules
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
 
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
+
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
                                         CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
@@ -19707,6 +19713,9 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
 
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
 

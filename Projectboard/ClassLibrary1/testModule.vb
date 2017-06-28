@@ -1826,11 +1826,14 @@ Public Module testModule
                                     If qualifier.Length > 0 Then
                                         If qualifier.Trim <> "Balken" Then
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalPie
                                         Else
                                             Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalBalken
                                         End If
                                     Else
                                         Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.PersonalPie
                                     End If
 
 
@@ -1841,7 +1844,7 @@ Public Module testModule
                                     reportObj = obj
                                     notYetDone = True
                                     bigType = ptReportBigTypes.charts
-                                    compID = PTprdk.PersonalBalken
+
 
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
@@ -2640,6 +2643,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prAmpelText
+                                qualifier2 = boxName
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
                                                           bigType, compID)
 
@@ -2652,6 +2656,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prBusinessUnit
+                                qualifier2 = boxName
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
                                                           bigType, compID)
 
@@ -2673,6 +2678,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prDescription
+                                qualifier2 = boxName
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
                                                           bigType, compID)
 
@@ -2694,7 +2700,7 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(228)
                                 End If
-                                .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.Start, hproj.Start + hproj.anzahlRasterElemente - 1)
+                                .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.startDate, hproj.endeDate)
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prLaufzeit
@@ -2710,6 +2716,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prVerantwortlich
+                                qualifier2 = boxName
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
                                                           bigType, compID)
                             Case Else
@@ -12483,7 +12490,8 @@ Public Module testModule
                 .Top = rds.calendarLineShape.Top
                 .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
 
-                .Name = .Name & .Id
+                '.Name = .Name & .Id
+                .Name = "todayLine"
                 .AlternativeText = ""
                 .Title = ""
 
