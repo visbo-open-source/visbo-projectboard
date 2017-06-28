@@ -18,6 +18,7 @@ Module Module1
     Friend xlApp As xlNS.Application = Nothing
     Friend updateWorkbook As xlNS.Workbook = Nothing
 
+    Friend Const changeColor As Integer = PowerPoint.XlRgbColor.rgbSteelBlue
     Friend currentSlide As PowerPoint.Slide
     Friend VisboProtected As Boolean = False
     Friend protectionSolved As Boolean = False
@@ -498,6 +499,9 @@ Module Module1
                     End If
                 End If
 
+                Call deleteMarkerShapes()
+
+
             Catch ex As Exception
 
             End Try
@@ -586,9 +590,15 @@ Module Module1
             If .Tags.Item("DBURL").Length > 0 And _
                 .Tags.Item("DBNAME").Length > 0 Then
 
+                If .Tags.Item("DBURL") = awinSettings.databaseURL And _
+                    .Tags.Item("DBNAME") = awinSettings.databaseName And Not noDBAccessInPPT Then
+                    ' nichts machen, user ist schon berechtigt ...
+                Else
                     noDBAccessInPPT = True
                     awinSettings.databaseURL = .Tags.Item("DBURL")
                     awinSettings.databaseName = .Tags.Item("DBNAME")
+                End If
+                
 
             End If
         End With
@@ -664,6 +674,22 @@ Module Module1
                         Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
                         If Not (bigID = ptReportBigTypes.components And (detailID = ptReportComponents.prStand Or detailID = ptReportComponents.pfStand)) Then
                             thereIsNoVersionFieldOnSlide = False
+                        End If
+
+                        Dim pvName As String = ""
+                        If tmpShape.Tags.Item("PNM").Length > 0 Then
+                            Dim pName As String = tmpShape.Tags.Item("PNM")
+                            Dim vName As String = tmpShape.Tags.Item("VNM")
+                            pvName = calcProjektKey(pName, vName)
+                        End If
+                        ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
+
+                        If pvName <> "" Then
+                            If smartSlideLists.containsProject(pvName) Then
+                                ' nichts tun, ist schon drin ..
+                            Else
+                                smartSlideLists.addProject(pvName)
+                            End If
                         End If
 
                     End If
@@ -1623,42 +1649,41 @@ Module Module1
                                                 newchtobj = CType(ws.ChartObjects(anzCharts), Excel.ChartObject)
 
                                                 If Not IsNothing(newchtobj) Then
-                                                    If Not IsNothing(newchtobj.Chart) Then
 
-                                                        ' jetzt muss das chtobj aktualisiert werden ... 
-                                                        Try
+                                                    ' jetzt muss das chtobj aktualisiert werden ... 
+                                                    Try
 
-                                                            If prpfTyp = ptPRPFType.project Then
+                                                        If prpfTyp = ptPRPFType.project Then
 
-                                                                If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
-                                                                    Call updatePPTBalkenOfProject(tsProj, newchtobj, prcTyp, auswahl)
+                                                            If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
+                                                                Call updatePPTBalkenOfProject(tsProj, newchtobj, prcTyp, auswahl)
 
-                                                                ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
-                                                                    ' Aktualisieren der Personal- bzw. Kosten-Pies ...
+                                                            ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
+                                                                ' Aktualisieren der Personal- bzw. Kosten-Pies ...
 
-                                                                ElseIf chartTyp = PTprdk.Ergebnis Then
-                                                                    ' Aktualisieren des Ergebnis Charts 
-                                                                    Call updatePPTProjektErgebnis(tsProj, newchtobj)
+                                                            ElseIf chartTyp = PTprdk.Ergebnis Then
+                                                                ' Aktualisieren des Ergebnis Charts 
+                                                                Call updatePPTProjektErgebnis(tsProj, newchtobj)
 
-                                                                ElseIf chartTyp = PTprdk.StrategieRisiko Or _
-                                                                    chartTyp = PTprdk.ZeitRisiko Or _
-                                                                    chartTyp = PTprdk.FitRisikoVol Or _
-                                                                    chartTyp = PTprdk.ComplexRisiko Then
-                                                                    ' Aktualisieren der Strategie-Charts
+                                                            ElseIf chartTyp = PTprdk.StrategieRisiko Or _
+                                                                chartTyp = PTprdk.ZeitRisiko Or _
+                                                                chartTyp = PTprdk.FitRisikoVol Or _
+                                                                chartTyp = PTprdk.ComplexRisiko Then
+                                                                ' Aktualisieren der Strategie-Charts
 
-                                                                    Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
-
-                                                                End If
-
-                                                            ElseIf prpfTyp = ptPRPFType.portfolio Then
+                                                                Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
 
                                                             End If
 
-                                                        Catch ex As Exception
+                                                        ElseIf prpfTyp = ptPRPFType.portfolio Then
 
-                                                        End Try
+                                                        End If
 
-                                                    End If
+                                                    Catch ex As Exception
+
+                                                    End Try
+
+
                                                 End If
 
                                                 ' jetzt wird das aktualisierte Excel-Chart kopiert
@@ -2157,7 +2182,7 @@ Module Module1
             If pvName <> "" Then
                 ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
                 Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
-                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kliensten datumswert aller Projekte ....
+                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
                 If Not IsNothing(tsProj) Then
                     Dim elemName As String = tmpShape.Tags.Item("CN")
                     Dim elemBC As String = tmpShape.Tags.Item("BC")
@@ -2363,8 +2388,8 @@ Module Module1
                 .Width = x2Pos - tmpShape.Left
 
                 With .Glow
-                    .Radius = 9
-                    .Color.RGB = PowerPoint.XlRgbColor.rgbBeige
+                    .Radius = 5
+                    .Color.RGB = changeColor
                 End With
 
                 diff = .Left - oldLeft
@@ -2410,17 +2435,9 @@ Module Module1
                 diff = .Left - oldLeft
 
                 With .Glow
-                    .Radius = 9
-                    .Color.RGB = PowerPoint.XlRgbColor.rgbBeige
+                    .Radius = 5
+                    .Color.RGB = changeColor
                 End With
-
-
-                ' jetzt muss überprüft werden, ob es Text- oder Datums-Annotations gibt; wenn ja, dann werden die um diff verschoben
-                ' wenn das zu langsam geht; hinterher einen Annotation Korrektur Lauf machen ... 
-                'Dim mvdString As String = msDate.ToString
-
-                '.Tags.Add("MVD", mvdString)
-                '.Tags.Add("MVE", expla)
 
             End With
         Else
@@ -3637,14 +3654,25 @@ Module Module1
                     descriptionType = pptAnnotationType.lieferumfang Or _
                     descriptionType = pptAnnotationType.resourceCost Then
 
-                newShape = currentSlide.Shapes.AddComment()
-                'newShape = currentSlide.Shapes.AddCallout(Microsoft.Office.Core.MsoCalloutType.msoCalloutOne, _
-                '                      txtShpLeft, txtShpTop, txtShpWidth, txtShpHeight)
+                'newShape = currentSlide.Shapes.AddComment()
+                newShape = currentSlide.Shapes.AddCallout(Microsoft.Office.Core.MsoCalloutType.msoCalloutOne, _
+                                      txtShpLeft, txtShpTop, txtShpWidth, txtShpHeight)
                 With newShape
                     ' das Shape als Comment Shape kennzeichnen ... 
                     .Tags.Add("CMT", descriptionType.ToString)
 
                     .Fill.ForeColor.RGB = RGB(240, 240, 240)
+                    
+
+                    .Shadow.Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                    .Shadow.Blur = 4
+                    .Shadow.Size = 100
+                    .Shadow.Transparency = 0.66
+                    .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                    .Shadow.OffsetX = 2
+                    .Shadow.OffsetY = 3.4641016151
+                    .Line.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+
                     If ampelFarbe = 1 Then
                         .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGreen
                     ElseIf ampelFarbe = 2 Then
@@ -3652,13 +3680,14 @@ Module Module1
                     ElseIf ampelFarbe = 3 Then
                         .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbRed
                     ElseIf ampelFarbe = 4 Then
-                        .Shadow.ForeColor.RGB = visboFarbeOrange
+                        .Shadow.ForeColor.RGB = changeColor
                     Else
                         .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGrey
                     End If
-                    '.Line.Weight = 3
+
                     .TextFrame2.TextRange.Text = descriptionText
-                    .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
+                    '.TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
+                    .TextFrame2.TextRange.Font.Size = 12
                     .TextFrame2.MarginBottom = 3
                     .TextFrame2.MarginLeft = 3
                     .TextFrame2.MarginRight = 3

@@ -132,6 +132,9 @@ Public Class Ribbon1
 
                 If Not noDBAccessInPPT Then
 
+                    ' die MArker, falls welche sichtbar sind , wegmachen ... 
+                    Call deleteMarkerShapes()
+
                     ' aktuell nur für ein Projekt implementiert 
                     If anzahlProjekte = 1 Then
                         Dim tmpName As String = smartSlideLists.getPVName(1)

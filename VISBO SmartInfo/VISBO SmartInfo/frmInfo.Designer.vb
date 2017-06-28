@@ -79,6 +79,7 @@ Partial Class frmInfo
         '
         'TabPage1
         '
+        Me.TabPage1.BackColor = System.Drawing.SystemColors.Control
         Me.TabPage1.Controls.Add(Me.deleteAmpel)
         Me.TabPage1.Controls.Add(Me.writeAmpel)
         Me.TabPage1.Controls.Add(Me.aLuTvText)
@@ -99,7 +100,6 @@ Partial Class frmInfo
         Me.TabPage1.Size = New System.Drawing.Size(534, 160)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Information"
-        Me.TabPage1.UseVisualStyleBackColor = True
         '
         'deleteAmpel
         '

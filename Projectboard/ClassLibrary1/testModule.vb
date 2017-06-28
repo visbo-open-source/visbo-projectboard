@@ -675,6 +675,9 @@ Public Module testModule
             'pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides + folieIX)
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
+            ' jetzt muss die Slide als SmartPPTSlide gekennzeichnet werden 
+            Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp)
+
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
             Dim newShapeRange As pptNS.ShapeRange
@@ -3119,6 +3122,9 @@ Public Module testModule
 
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
+
+            ' jetzt muss die Slide als smartSlide gekennzeichnet werden 
+            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -17497,7 +17503,7 @@ Public Module testModule
             End Try
             
 
-            Call addSmartPPTSlideInfo(pptslide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
+            Call addSmartPPTSlideCalInfo(pptslide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
 
             Try
 
@@ -18130,7 +18136,7 @@ Public Module testModule
 
                 ' 
                 ' jetzt wird das Slide gekennzeichnet als Smart Slide 
-                Call addSmartPPTSlideInfo(rds.pptSlide, "TimeComponent", rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
+                Call addSmartPPTSlideCalInfo(rds.pptSlide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
 
                 'ur: 25.03.2015: sichern der im Format veränderten Folie
                 rds.pptSlide.Copy()
@@ -18205,7 +18211,7 @@ Public Module testModule
                         End If
 
 
-                    ' Zwischenbericht abgeben ...
+                        ' Zwischenbericht abgeben ...
                         msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
                         If awinSettings.englishLanguage Then
                             msgTxt = "Drawing Swimlane '" & elemNameOfElemID(curSwl.nameID) & "'  ...."

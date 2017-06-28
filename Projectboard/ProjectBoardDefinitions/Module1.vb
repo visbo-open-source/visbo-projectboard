@@ -3384,46 +3384,36 @@ Public Module Module1
     ''' </summary>
     ''' <param name="pptSlide"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
-                                    ByVal type As String, _
-                                    ByVal calendarLeft As Date, _
-                                    ByVal calendarRight As Date, _
-                                    Optional ByVal projectTimeStamp As Date = Nothing)
+    Public Sub addSmartPPTSlideCalInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                       ByVal calendarLeft As Date, _
+                                       ByVal calendarRight As Date, _
+                                       Optional ByVal projectTimeStamp As Date = Nothing)
 
         If Not IsNothing(pptSlide) Then
             With pptSlide
 
-                If Not IsNothing(type) Then
-                    .Tags.Add("SMART", type)
-                    .Tags.Add("SOC", StartofCalendar.ToShortDateString)
-                    If IsNothing(projectTimeStamp) Then
-                        .Tags.Add("CRD", Date.Now.ToString)
-                    Else
-                        Try
-                            If projectTimeStamp > StartofCalendar Then
-                                .Tags.Add("CRD", projectTimeStamp.ToString)
-                            Else
-                                .Tags.Add("CRD", Date.Now.ToString)
-                            End If
-                        Catch ex As Exception
-                            .Tags.Add("CRD", Date.Now.ToString)
-                        End Try
 
-                    End If
-
-                    .Tags.Add("CALL", calendarLeft.ToShortDateString)
-                    .Tags.Add("CALR", calendarRight.ToShortDateString)
-
-                    If Not noDB Then
-                        If awinSettings.databaseURL.Length > 0 Then
-                            .Tags.Add("DBURL", awinSettings.databaseURL)
-                        End If
-                        If awinSettings.databaseName.Length > 0 Then
-                            .Tags.Add("DBNAME", awinSettings.databaseName)
-                        End If
-
-                    End If
+                If .Tags.Item("SMART").Length > 0 Then
+                    ' es muss nichts mehr gemacht werden, es ist bereoits gekennzeichnet 
+                    '.Tags.Delete("SMART")
+                Else
+                    .Tags.Add("SMART", "visbo")
                 End If
+
+                If .Tags.Item("SOC").Length > 0 Then
+                    .Tags.Delete("SOC")
+                End If
+                .Tags.Add("SOC", StartofCalendar.ToShortDateString)
+
+                If .Tags.Item("CALL").Length > 0 Then
+                    .Tags.Delete("CALL")
+                End If
+                .Tags.Add("CALL", calendarLeft.ToShortDateString)
+
+                If .Tags.Item("CALR").Length > 0 Then
+                    .Tags.Delete("CALR")
+                End If
+                .Tags.Add("CALR", calendarRight.ToShortDateString)
 
 
             End With
@@ -3432,6 +3422,64 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' kennzeichnet die Seite als Smart VISBO Seite 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <param name="projectTimeStamp"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTSlideBaseInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                            ByVal projectTimeStamp As Date)
+
+        If Not IsNothing(pptSlide) Then
+            With pptSlide
+
+
+                If .Tags.Item("SMART").Length > 0 Then
+                    ' es muss nichts mehr gemacht werden, es ist bereits gekennzeichnet 
+                    '.Tags.Delete("SMART")
+                Else
+                    .Tags.Add("SMART", "visbo")
+                End If
+
+                If IsNothing(projectTimeStamp) Then
+
+                    projectTimeStamp = Date.Now
+                ElseIf projectTimeStamp = Date.MinValue Then
+                    projectTimeStamp = Date.Now
+                End If
+
+
+                If .Tags.Item("CRD").Length > 0 Then
+                    .Tags.Delete("CRD")
+                End If
+                .Tags.Add("CRD", projectTimeStamp.ToString)
+
+
+                If Not noDB Then
+                    If awinSettings.databaseURL.Length > 0 Then
+                        If .Tags.Item("DBURL").Length > 0 Then
+                            .Tags.Delete("DBURL")
+                        End If
+                        .Tags.Add("DBURL", awinSettings.databaseURL)
+                    End If
+
+                    If awinSettings.databaseName.Length > 0 Then
+                        If .Tags.Item("DBNAME").Length > 0 Then
+                            .Tags.Delete("DBNAME")
+                        End If
+                        .Tags.Add("DBNAME", awinSettings.databaseName)
+                    End If
+
+                End If
+
+
+
+            End With
+        End If
+
+
+    End Sub
 
     ''' <summary>
     ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können
