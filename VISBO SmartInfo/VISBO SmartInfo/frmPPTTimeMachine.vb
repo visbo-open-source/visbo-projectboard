@@ -5,7 +5,12 @@
     Private noDateValueCheck As Boolean = True
     Private anzahlShapesOnSlide As Integer = currentSlide.Shapes.Count
 
-
+    Private Enum ptNavigationButtons
+        letzter = 0
+        erster = 1
+        nachher = 2
+        vorher = 3
+    End Enum
 
     Private Sub setBtnEnablements()
 
@@ -95,9 +100,8 @@
     ''' <remarks></remarks>
     Private Sub frmPPTTimeMachine_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        ' Progress-Bar visible ausschalten 
-        ProgressBarNavigate.Visible = False
-        ProgressBarNavigate.Value = 0
+        ' die MArker, falls welche sichtbar sind , wegmachen ... 
+        Call deleteMarkerShapes()
 
         'currentTSIndex = -1
         ' gibt es ein Creation Date ?
@@ -168,9 +172,9 @@
 
             If timeStamps.Count > 0 Then
 
-                timeStampsIndex = timeStamps.Count - 1
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
 
-                If timeStamps.Last.Key <> currentTimestamp Then
+                If newDate <> currentTimestamp Then
 
                     previousVariantName = currentVariantname
                     previousTimeStamp = currentTimestamp
@@ -182,7 +186,7 @@
 
                     Call setBtnEnablements()
 
-                    Call setCurrentTimeStampInSlide(currentTimestamp)
+                    Call setCurrentTimestampInSlide(currentTimestamp)
 
                     If thereIsNoVersionFieldOnSlide Then
                         Call showTSMessage(currentTimestamp)
@@ -206,21 +210,7 @@
         If Not IsNothing(timeStamps) Then
             If timeStamps.Count > 0 Then
 
-                timeStampsIndex = timeStampsIndex + 1
-                If timeStampsIndex > timeStamps.Count - 1 Then
-                    timeStampsIndex = timeStamps.Count - 1
-                End If
-
-                If smartSlideLists.countProjects = 1 Then
-                    newDate = timeStamps.ElementAt(timeStampsIndex).Key
-                Else
-                    If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
-                        newDate = currentTimestamp.AddMonths(-1)
-                    Else
-                        newDate = timeStamps.First.Key
-                    End If
-                End If
-
+                newDate = getNextNavigationDate(ptNavigationButtons.nachher)
 
                 If newDate <> currentTimestamp Then
                     previousVariantName = currentVariantname
@@ -253,22 +243,7 @@
         If Not IsNothing(timeStamps) Then
             If timeStamps.Count > 0 Then
 
-                Dim newDate As Date
-                timeStampsIndex = timeStampsIndex - 1
-                If timeStampsIndex < 0 Then
-                    timeStampsIndex = 0
-                End If
-
-                If smartSlideLists.countProjects = 1 Then
-                    newDate = timeStamps.ElementAt(timeStampsIndex).Key
-                Else
-                    If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
-                        newDate = currentTimestamp.AddMonths(-1)
-                    Else
-                        newDate = timeStamps.First.Key
-                    End If
-                End If
-                
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
 
                 If newDate <> currentTimestamp Then
                     previousVariantName = currentVariantname
@@ -327,69 +302,34 @@
 
     Private Sub btnFastForward_MouseHover(sender As Object, e As EventArgs) Handles btnFastForward.MouseHover
 
-        If Not IsNothing(timeStamps) Then
-            If timeStamps.Count > 0 Then
-                Dim tmpDate As Date = CDate(currentDate.Text).AddMonths(1)
-
-                If tmpDate < timeStamps.Last.Key Then
-                    ' alles ok 
-                    ToolTipTS.Show("Stand: " & _
-                               tmpDate.ToString, btnFastForward, 2000)
-                Else
-                    tmpDate = timeStamps.Last.Key
-                    ToolTipTS.Show("letzter Stand: " & _
-                               tmpDate.ToString, btnFastForward, 2000)
-                End If
-            End If
-        End If
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.nachher)
+        ToolTipTS.Show(tmpDate.ToString, btnFastForward, 2000)
 
         
     End Sub
 
     Private Sub btnEnd_MouseHover(sender As Object, e As EventArgs) Handles btnEnd.MouseHover
-        If Not IsNothing(timeStamps) Then
-            If timeStamps.Count > 0 Then
 
-                Dim tmpDate As Date = timeStamps.Last.Key
-                ToolTipTS.Show("letzter Stand: " & _
-                               tmpDate.ToString, btnEnd, 2000)
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+        ToolTipTS.Show(tmpDate.ToString, btnEnd, 2000)
 
-            End If
-        End If
-
-       
     End Sub
 
     
 
     Private Sub btnStart_MouseHover(sender As Object, e As EventArgs) Handles btnStart.MouseHover
-        If Not IsNothing(timeStamps) Then
-            If timeStamps.Count > 0 Then
 
-                Dim tmpDate As Date = timeStamps.First.Key
-                ToolTipTS.Show("erster Stand: " & _
-                               tmpDate.ToString, btnStart, 2000)
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
+        ToolTipTS.Show(tmpDate.ToString, btnStart, 2000)
 
-            End If
-        End If
-       
     End Sub
 
 
     Private Sub btnFastBack_MouseHover(sender As Object, e As EventArgs) Handles btnFastBack.MouseHover
-        Dim tmpDate As Date = CDate(currentDate.Text).AddMonths(-1)
 
-
-        If tmpDate > timeStamps.First.Key Then
-            ' alles ok 
-            ToolTipTS.Show("Stand: " & _
-                       tmpDate.ToString, btnFastBack, 2000)
-        Else
-            tmpDate = timeStamps.First.Key
-            ToolTipTS.Show("erster Stand: " & _
-                       tmpDate.ToString, btnFastBack, 2000)
-        End If
-
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
+        ToolTipTS.Show(tmpDate.ToString, btnFastBack, 2000)
+        
     End Sub
 
     Private Sub currentDate_GotFocus(sender As Object, e As EventArgs) Handles currentDate.GotFocus
@@ -400,6 +340,84 @@
         noDateValueCheck = True
     End Sub
 
+    ''' <summary>
+    ''' gibt das Datum zurück, das eingestellt wird, wenn der Button gedrückt wird ... 
+    ''' wenn irgendwas schief get 
+    ''' </summary>
+    ''' <param name="kennung"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getNextNavigationDate(ByVal kennung As Integer, Optional ByVal justForInformation As Boolean = False) As Date
+        Dim tmpDate As Date = Date.Now
+        Dim tmpIndex As Integer = timeStampsIndex
+
+        Select Case kennung
+            Case ptNavigationButtons.nachher
+
+
+                If timeStamps.Count > 0 Then
+                    tmpIndex = tmpIndex + 1
+
+                    If tmpIndex > timeStamps.Count - 1 Then
+                        tmpIndex = timeStamps.Count - 1
+                    End If
+
+                    If smartSlideLists.countProjects = 1 Then
+                        tmpDate = timeStamps.ElementAt(tmpIndex).Key
+                    Else
+                        If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
+                            tmpDate = currentTimestamp.AddMonths(-1)
+                        Else
+                            tmpDate = timeStamps.First.Key
+                        End If
+                    End If
+                End If
+
+            Case ptNavigationButtons.vorher
+
+                If timeStamps.Count > 0 Then
+                    tmpIndex = tmpIndex - 1
+
+                    If tmpIndex < 0 Then
+                        tmpIndex = 0
+                    End If
+
+                    If smartSlideLists.countProjects = 1 Then
+                        tmpDate = timeStamps.ElementAt(tmpIndex).Key
+                    Else
+                        If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
+                            tmpDate = currentTimestamp.AddMonths(-1)
+                        Else
+                            tmpDate = timeStamps.First.Key
+                        End If
+                    End If
+                End If
+
+
+            Case ptNavigationButtons.erster
+
+                If timeStamps.Count > 0 Then
+                    tmpIndex = 0
+                    tmpDate = timeStamps.First.Key
+                End If
+
+            Case ptNavigationButtons.letzter
+
+
+                If timeStamps.Count > 0 Then
+                    tmpIndex = timeStamps.Count - 1
+                    tmpDate = timeStamps.Last.Key
+                End If
+
+
+        End Select
+
+        If Not justForInformation Then
+            timeStampsIndex = tmpIndex
+        End If
+
+        getNextNavigationDate = tmpDate
+    End Function
 
     Private Sub currentDate_ValueChanged(sender As Object, e As EventArgs) Handles currentDate.ValueChanged
 

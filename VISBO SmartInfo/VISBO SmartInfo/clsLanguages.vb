@@ -45,35 +45,45 @@ Imports System.Xml.Schema
 
     ''' <summary>
     ''' übersetzt den String anhand der languageTabellen in die gewählte Sprache
+    ''' wenn ein isCombinedName angegeben wird, wird der in seine Bestandteile zerlegt, überstezt und wieder zusammengesetzt ... 
     ''' </summary>
     ''' <param name="tmpText"></param>
     ''' <param name="selectedLanguage"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property translate(ByVal tmpText As String, ByVal selectedLanguage As String)
+    Public ReadOnly Property translate(ByVal tmpText As String, ByVal selectedLanguage As String, _
+                                       Optional ByVal elemName As String = "", Optional ByVal isCombinedName As Boolean = False) As String
         Get
             Dim newText As String = tmpText
 
-            If _languageItems.ContainsKey(selectedLanguage) Then
+            If isCombinedName And elemName.Length > 0 Then
+                Dim newLength As Integer = tmpText.Length - (elemName.Length + 1)
+                Dim tmpText1 As String = tmpText.Substring(0, newLength)
+                Dim tmpText2 As String = elemName
+                newText = translate(tmpText1, selectedLanguage) & "-" & translate(tmpText2, selectedLanguage)
+            Else
+                If _languageItems.ContainsKey(selectedLanguage) Then
 
-                Dim origItems As List(Of String) = _languageItems.Item(defaultSprache)
-                If origItems.Contains(tmpText) Then
-                    Dim found As Boolean = False
-                    Dim index As Integer = 0
-                    Do While index <= origItems.Count - 1 And Not found
-                        If CStr(origItems.Item(index)) = tmpText Then
-                            found = True
-                        Else
-                            index = index + 1
+                    Dim origItems As List(Of String) = _languageItems.Item(defaultSprache)
+                    If origItems.Contains(tmpText) Then
+                        Dim found As Boolean = False
+                        Dim index As Integer = 0
+                        Do While index <= origItems.Count - 1 And Not found
+                            If CStr(origItems.Item(index)) = tmpText Then
+                                found = True
+                            Else
+                                index = index + 1
+                            End If
+                        Loop
+                        If found Then
+                            Dim newLangItems As List(Of String) = _languageItems.Item(selectedLanguage)
+                            newText = CStr(newLangItems.Item(index))
                         End If
-                    Loop
-                    If found Then
-                        Dim newLangItems As List(Of String) = _languageItems.Item(selectedLanguage)
-                        newText = CStr(newLangItems.Item(index))
                     End If
                 End If
             End If
+            
 
             translate = newText
         End Get
@@ -87,7 +97,7 @@ Imports System.Xml.Schema
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property backtranslate(ByVal tmpText As String, ByVal selectedLanguage As String)
+    Public ReadOnly Property backtranslate(ByVal tmpText As String, ByVal selectedLanguage As String) As String
         Get
             Dim newText As String = tmpText
 
