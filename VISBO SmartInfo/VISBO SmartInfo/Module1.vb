@@ -1041,8 +1041,10 @@ Module Module1
                 Else
                     ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
-                    CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                    'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                    'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                    RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                    CostDefinitions = request.retrieveCostsFromDB(Date.Now)
                 End If
             Else
                 If englishLanguage Then
@@ -1658,6 +1660,7 @@ Module Module1
                                                         If prpfTyp = ptPRPFType.project Then
 
                                                             If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
+                                                                Dim a As Integer = tsProj.dauerInDays
                                                                 Call updatePPTBalkenOfProject(tsProj, newchtobj, prcTyp, auswahl)
 
                                                             ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
