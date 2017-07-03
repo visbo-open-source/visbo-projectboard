@@ -2209,10 +2209,12 @@ Module Module1
                                 tmpShape.Visible = True
                             End If
 
+                            Dim bsn As String = tmpShape.Tags.Item("BSN")
+                            Dim bln As String = tmpShape.Tags.Item("BLN")
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
-                                                         ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
-                                                         Nothing)
+                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, _
+                                                      bsn, bln, ph.getStartDate, ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
+                                                      Nothing)
                         End If
 
 
@@ -2240,8 +2242,11 @@ Module Module1
                                 Dim ampelFarbe As Integer = ms.getBewertung(1).colorIndex
                                 Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
 
+                                Dim bsn As String = tmpShape.Tags.Item("BSN")
+                                Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, Nothing, _
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, _
+                                                          bsn, bln, Nothing, _
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
                                                           ms.getAllDeliverables("#"))
                             End If
@@ -2269,8 +2274,10 @@ Module Module1
                                 Dim ampelFarbe As Integer = ph.getBewertung(1).colorIndex
                                 Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
 
+                                Dim bsn As String = tmpShape.Tags.Item("BSN")
+                                Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate, _
                                                              ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
                                                              Nothing)
                             End If
@@ -4198,8 +4205,5 @@ Module Module1
 
     End Sub
 
-    Private Sub addSmartPPTShapeInfo(tmpShape As Microsoft.Office.Interop.PowerPoint.Shape, elemBC As String, elemName As String, p4 As String, p5 As String, p6 As Date, p7 As Date, p8 As Integer, p9 As String, p10 As Object)
-        Throw New NotImplementedException
-    End Sub
 
 End Module

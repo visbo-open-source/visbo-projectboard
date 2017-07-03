@@ -15826,10 +15826,11 @@ Public Module awinGeneralModules
                             '    hproj.VorlagenName = vorlagenName & "*"
                             'End If
 
-                            If Projektvorlagen.Count >= 1 Then
-                                vorlagenName = Projektvorlagen.getProject(0).VorlagenName
-                                hproj.VorlagenName = vorlagenName
-                            End If
+                            vorlagenName = ""
+                            'If Projektvorlagen.Count >= 1 Then
+                            '    vorlagenName = Projektvorlagen.getProject(0).VorlagenName
+                            '    hproj.VorlagenName = vorlagenName
+                            'End If
 
                         End If
 
