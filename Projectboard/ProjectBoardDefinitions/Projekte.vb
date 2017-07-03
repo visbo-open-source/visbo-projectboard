@@ -1522,8 +1522,128 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' aktualisiert die Tabelle ProjektTabelleZiele 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+    Sub updatePPTProjektTabelleZiele(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt)
+
+        Dim heute As Date = Date.Now
+        Dim anzSpalten As Integer = 0
+        Dim index As Integer = 0
+        Dim tabelle As PowerPoint.Table
+        Dim ampelColor(3) As Integer
+        Dim todoCollection As New Collection
+        If pptShape.Tags.Item("NIDS").Length > 0 Then
+            ' es gibt was zu tun 
+            Dim tmpStr() As String = pptShape.Tags.Item("NIDS").Split(New Char() {CChar("#")})
+            For i As Integer = 0 To tmpStr.Length - 1
+                todoCollection.Add(tmpStr(i))
+            Next
+        End If
+
+        ampelColor(0) = PowerPoint.XlRgbColor.rgbGray
+        ampelColor(1) = PowerPoint.XlRgbColor.rgbGreen
+        ampelColor(2) = PowerPoint.XlRgbColor.rgbYellow
+        ampelColor(3) = PowerPoint.XlRgbColor.rgbRed
+
+        Try
+            If todoCollection.Count > 0 And CBool(pptShape.HasTable) Then
+                tabelle = pptShape.Table
+                anzSpalten = tabelle.Columns.Count
+
+                If anzSpalten >= 5 Then
+
+                    pptShape.Title = ""
+
+                    Dim msNumber As Integer = 1
+
+                    ' jetzt wird die todoListe abgearbeitet 
+                    Dim tabellenzeile As Integer = 2
+                    Dim rowCount As Integer = tabelle.Rows.Count
+
+                    Try
+
+                        For m = 1 To todoCollection.Count
+                            Dim milestoneID As String = CStr(todoCollection.Item(m))
+                            Dim cellNameID As String = calcPPTShapeName(hproj, milestoneID)
+
+                            Dim cResult As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
+                            Dim cBewertung As clsBewertung = cResult.getBewertung(1)
+
+                            With tabelle
+                                ' Farbe und laufende Nummer eintragen 
+                                Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape
+                                tableCell.TextFrame2.TextRange.Text = msNumber.ToString
+
+
+
+                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.Fill.ForeColor.RGB = ampelColor(cBewertung.colorIndex)
+
+
+                                ' Name eintragen 
+                                Dim bestName As String = hproj.getBestNameOfID(milestoneID, True, False)
+                                tableCell = CType(.Cell(tabellenzeile, 2), PowerPoint.Cell).Shape
+                                tableCell.TextFrame2.TextRange.Text = bestName
+
+                                ' Datum eintragen 
+                                tableCell = CType(.Cell(tabellenzeile, 3), PowerPoint.Cell).Shape
+                                tableCell.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
+
+                                ' Lieferumfänge eintragen 
+                                tableCell = CType(.Cell(tabellenzeile, 4), PowerPoint.Cell).Shape
+                                tableCell.TextFrame2.TextRange.Text = cResult.getAllDeliverables
+
+                                ' Ampelbewertungen eintragen
+                                If anzSpalten >= 5 Then
+                                    tableCell = CType(.Cell(tabellenzeile, 5), PowerPoint.Cell).Shape
+                                    tableCell.TextFrame2.TextRange.Text = cBewertung.description
+                                End If
+
+
+                            End With
+
+                            msNumber = msNumber + 1
+                            tabellenzeile = tabellenzeile + 1
+
+                            If tabellenzeile > rowCount And m < todoCollection.Count Then
+                                tabelle.Rows.Add()
+                                rowCount = rowCount + 1
+                            End If
+
+
+                        Next
+
+
+                    Catch ex As Exception
+                        'Throw New Exception("Tabelle Projektziele hat evtl unzulässige Anzahl Zeilen / Spalten ...")
+                        Throw New Exception(repMessages.getmsg(30))
+                    End Try
+
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' diese Methode wird aus smartInfo Powerpoint Add-In aufgerufen. sie aktualisiert ein Projekt Strategie/Risiko Diagramm 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="chtobj"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="auswahl"></param>
+    ''' <remarks></remarks>
     Sub updatePPTProjectPfDiagram(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
-                                  ByVal chartTyp As Integer, ByVal auswahl As Integer)
+                                      ByVal chartTyp As Integer, ByVal auswahl As Integer)
 
         Dim xlsChart As Excel.Chart = chtobj.Chart
         Dim i As Integer

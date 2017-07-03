@@ -32,12 +32,14 @@ Partial Class frmSelectVariant
         Me.variantNamesListBox.FormattingEnabled = True
         Me.variantNamesListBox.Location = New System.Drawing.Point(12, 25)
         Me.variantNamesListBox.Name = "variantNamesListBox"
-        Me.variantNamesListBox.Size = New System.Drawing.Size(324, 225)
+        Me.variantNamesListBox.Size = New System.Drawing.Size(253, 186)
         Me.variantNamesListBox.TabIndex = 0
         '
         'showButton
         '
-        Me.showButton.Location = New System.Drawing.Point(120, 267)
+        Me.showButton.DialogResult = System.Windows.Forms.DialogResult.OK
+        Me.showButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.showButton.Location = New System.Drawing.Point(74, 229)
         Me.showButton.Name = "showButton"
         Me.showButton.Size = New System.Drawing.Size(121, 23)
         Me.showButton.TabIndex = 1
@@ -48,12 +50,13 @@ Partial Class frmSelectVariant
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(348, 302)
+        Me.ClientSize = New System.Drawing.Size(284, 268)
         Me.Controls.Add(Me.showButton)
         Me.Controls.Add(Me.variantNamesListBox)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectVariant"
         Me.Text = "Variante anzeigen"
+        Me.TopMost = True
         Me.ResumeLayout(False)
 
     End Sub

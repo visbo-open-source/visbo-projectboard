@@ -79,6 +79,7 @@ Partial Class frmInfo
         '
         'TabPage1
         '
+        Me.TabPage1.BackColor = System.Drawing.SystemColors.Control
         Me.TabPage1.Controls.Add(Me.deleteAmpel)
         Me.TabPage1.Controls.Add(Me.writeAmpel)
         Me.TabPage1.Controls.Add(Me.aLuTvText)
@@ -99,7 +100,6 @@ Partial Class frmInfo
         Me.TabPage1.Size = New System.Drawing.Size(534, 160)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Information"
-        Me.TabPage1.UseVisualStyleBackColor = True
         '
         'deleteAmpel
         '
@@ -121,6 +121,7 @@ Partial Class frmInfo
         '
         'aLuTvText
         '
+        Me.aLuTvText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.aLuTvText.Enabled = False
         Me.aLuTvText.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.aLuTvText.Location = New System.Drawing.Point(14, 102)
@@ -133,6 +134,7 @@ Partial Class frmInfo
         'fullBreadCrumb
         '
         Me.fullBreadCrumb.BackColor = System.Drawing.SystemColors.Window
+        Me.fullBreadCrumb.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.fullBreadCrumb.Enabled = False
         Me.fullBreadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.fullBreadCrumb.Location = New System.Drawing.Point(14, 55)
@@ -172,6 +174,7 @@ Partial Class frmInfo
         '
         'elemDate
         '
+        Me.elemDate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.elemDate.Enabled = False
         Me.elemDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.elemDate.Location = New System.Drawing.Point(14, 77)
@@ -210,6 +213,7 @@ Partial Class frmInfo
         '
         'elemName
         '
+        Me.elemName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.elemName.Enabled = False
         Me.elemName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.elemName.Location = New System.Drawing.Point(14, 31)
@@ -308,6 +312,7 @@ Partial Class frmInfo
         '
         'filterText
         '
+        Me.filterText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.filterText.Location = New System.Drawing.Point(12, 206)
         Me.filterText.Name = "filterText"
         Me.filterText.Size = New System.Drawing.Size(425, 20)
