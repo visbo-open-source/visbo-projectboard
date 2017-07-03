@@ -1,4 +1,8 @@
-﻿''' <summary>
+﻿Imports ProjectBoardDefinitions
+Imports MongoDbAccess
+Imports ProjectBoardBasic
+Imports xlNS = Microsoft.Office.Interop.Excel
+''' <summary>
 ''' das Form Info wird in variabler Größe angezeigt: mit / ohne Ampel-Block, mit /ohne Search-Block
 ''' es gibt zwei Methoden ampelblockVisibible und searchblockVisible, die die Elemente dann entsprechend positionieren und sichtbar machen 
 ''' </summary>
@@ -616,7 +620,7 @@ Public Class frmInfo
 
     Private Sub shwOhneLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwOhneLight.CheckedChanged
 
-        Dim ampelColor As Integer = 0
+        Dim ampelColor As Integer = PTfarbe.none
         showTrafficLights(ampelColor) = shwOhneLight.Checked
 
         If shwOhneLight.Checked Then
@@ -639,7 +643,7 @@ Public Class frmInfo
 
     Private Sub shwGreenLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwGreenLight.CheckedChanged
 
-        Dim ampelColor As Integer = 1
+        Dim ampelColor As Integer = PTfarbe.green
         showTrafficLights(ampelColor) = shwGreenLight.Checked
 
         If shwGreenLight.Checked Then
@@ -661,7 +665,8 @@ Public Class frmInfo
     End Sub
 
     Private Sub shwYellowLight_CheckedChanged_1(sender As Object, e As EventArgs) Handles shwYellowLight.CheckedChanged
-        Dim ampelColor As Integer = 2
+
+        Dim ampelColor As Integer = PTfarbe.yellow
         showTrafficLights(ampelColor) = shwYellowLight.Checked
 
         If shwYellowLight.Checked Then
@@ -683,7 +688,8 @@ Public Class frmInfo
     End Sub
 
     Private Sub shwRedLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwRedLight.CheckedChanged
-        Dim ampelColor As Integer = 3
+
+        Dim ampelColor As Integer = PTfarbe.red
         showTrafficLights(ampelColor) = shwRedLight.Checked
 
         If shwRedLight.Checked Then

@@ -2,6 +2,8 @@
 Imports MongoDbAccess
 Imports ProjectBoardBasic
 Imports xlNS = Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Core.MsoThemeColorIndex
+
 Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -1995,6 +1997,8 @@ Module Module1
         ' in diffMvList wird gemerkt, um wieviel sich ein Shape verändert hat und ob überhaupt ...  
         Dim diffMvList As New SortedList(Of String, Double)
         Dim oldProgressValue = 0
+
+       
         ' nimmt die Shape-Namen auf, um darüber dann die Schleife laufen zu lassen. 
         ' also kein in currentSlide.Shapes mehr !!
 
@@ -2003,6 +2007,12 @@ Module Module1
         For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
             bigToDoList.Add(tmpShape.Name)
         Next
+
+        ' ur: 03.07.2017: lösche alle Ampelfarben
+        Call faerbeShapes(PTfarbe.none, False)
+        Call faerbeShapes(PTfarbe.green, False)
+        Call faerbeShapes(PTfarbe.yellow, False)
+        Call faerbeShapes(PTfarbe.red, False)
 
 
         Dim toDoList As New Collection
@@ -2017,6 +2027,7 @@ Module Module1
 
                     If isRelevantMSPHShape(tmpShape) Then
 
+
                         If showOtherVariant Then
                             ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
                             namesToBeRenamed.Add(tmpShape.Name)
@@ -2025,7 +2036,7 @@ Module Module1
                             Call sendToNewPosition(tmpShape.Name, currentTimestamp, diffMvList, showOtherVariant)
                         End If
 
-
+                  
                     ElseIf isCommentShape(tmpShape) Then
 
                         If showOtherVariant Then
@@ -2049,7 +2060,7 @@ Module Module1
                     '    ProgressBarNavigate.Value = oldProgressValue
                     'End If
                 End If
-                
+
             Catch ex As Exception
 
             End Try
@@ -2164,6 +2175,13 @@ Module Module1
 
         Call buildSmartSlideLists()
 
+        ' ur: 03.07.2017: setze alle Ampelfarben
+        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+
+
     End Sub
 
     ''' <summary>
@@ -2209,10 +2227,12 @@ Module Module1
                                 tmpShape.Visible = True
                             End If
 
+                            Dim bsn As String = tmpShape.Tags.Item("BSN")
+                            Dim bln As String = tmpShape.Tags.Item("BLN")
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
-                                                         ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
-                                                         Nothing)
+                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
+                                                      ph.getStartDate, ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
+                                                      Nothing)
                         End If
 
 
@@ -2235,13 +2255,16 @@ Module Module1
                                 If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
-
+                                '
+                                'ur:3.7.2017: soll nun nach MoveAllShapes erfolgen für alle Elemente gemäß gemerkten ShowTrafficligths
                                 ' jetzt muss ggf die Farbe gesetzt werden 
-                                Dim ampelFarbe As Integer = ms.getBewertung(1).colorIndex
-                                Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
+                                ''Dim ampelFarbe As Integer = ms.getBewertung(1).colorIndex
+                                ''Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
 
+                                Dim bsn As String = tmpShape.Tags.Item("BSN")
+                                Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, Nothing, _
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing, _
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
                                                           ms.getAllDeliverables("#"))
                             End If
@@ -2264,13 +2287,16 @@ Module Module1
                                 If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
+                                '
+                                'ur:3.7.2017: soll nun nach MoveAllShapes erfolgen für alle Elemente gemäß gemerkten ShowTrafficligths
+                                ' '' jetzt muss ggf die Farbe gesetzt werden 
+                                ''Dim ampelFarbe As Integer = ph.getBewertung(1).colorIndex
+                                ''Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
 
-                                ' jetzt muss ggf die Farbe gesetzt werden 
-                                Dim ampelFarbe As Integer = ph.getBewertung(1).colorIndex
-                                Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
-
+                                Dim bsn As String = tmpShape.Tags.Item("BSN")
+                                Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, ph.getStartDate, _
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate, _
                                                              ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
                                                              Nothing)
                             End If
@@ -2411,7 +2437,7 @@ Module Module1
         Else
             With tmpShape.Glow
                 .Radius = 0
-                .Color.RGB = .Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+                '.Color.RGB = .Color.RGB = PowerPoint.XlRgbColor.rgbWhite
             End With
         End If
 
@@ -2453,7 +2479,7 @@ Module Module1
         Else
             With tmpShape.Glow
                 .Radius = 0
-                .Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+                '.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
 
             End With
         End If
@@ -4154,8 +4180,8 @@ Module Module1
 
                         With tmpShape
                             If .Glow.Radius > 0 Then
-                                .Glow.Radius = 0
-                                .Glow.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+                                tmpShape.Glow.Radius = 0.0
+                                'tmpShape.Glow.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
 
                                 If .Tags.Item("MVD").Length > 0 Then
                                     ' nichts machen 
@@ -4176,6 +4202,11 @@ Module Module1
             End Try
         Next
 
+        ' ur: 03.07.2017: setze alle Ampelfarben
+        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
 
 
     End Sub
@@ -4198,8 +4229,5 @@ Module Module1
 
     End Sub
 
-    Private Sub addSmartPPTShapeInfo(tmpShape As Microsoft.Office.Interop.PowerPoint.Shape, elemBC As String, elemName As String, p4 As String, p5 As String, p6 As Date, p7 As Date, p8 As Integer, p9 As String, p10 As Object)
-        Throw New NotImplementedException
-    End Sub
 
 End Module
