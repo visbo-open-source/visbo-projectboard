@@ -18651,13 +18651,12 @@ Public Module testModule
                         srcChartobj.Copy()
                         ok2 = True
                     Catch ex As Exception
-                        'Call MsgBox("chartCopy" & ex.Message)
-                        Exit While
+                        ' nochmal versuchen ... 
                     End Try
                     j = j + 1
                 End While
                 If Not ok2 Then
-                    Call MsgBox("chartCopy timeout oder j=" & j.ToString)
+                    'Call MsgBox("chartCopy timeout oder j=" & j.ToString)
                     If Not ok2 Then
                         Throw New ArgumentException("chartCopy timeout")
                     End If
