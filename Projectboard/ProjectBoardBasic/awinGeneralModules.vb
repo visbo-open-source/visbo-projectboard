@@ -15771,58 +15771,64 @@ Public Module awinGeneralModules
 
                         If Not isVorlage Then
 
-                            Try
-                                Dim sopDate As Date = hproj.getMilestone("SOP").getDate
+                            ' das ist BMW spezifisch und wird jetzt de-aktiviert .... 
+                            'Try
+                            '    Dim sopDate As Date = hproj.getMilestone("SOP").getDate
 
-                                If DateDiff(DateInterval.Month, StartofCalendar, sopDate) > 0 Then
-                                    Dim sopMonth As Integer = sopDate.Month
-                                    If sopMonth >= 3 And sopMonth <= 6 Then
-                                        anlaufKennung = "03"
-                                    ElseIf sopMonth >= 7 And sopMonth <= 10 Then
-                                        anlaufKennung = "07"
-                                    Else
-                                        anlaufKennung = "11"
-                                    End If
-                                Else
-                                    anlaufKennung = "?"
-                                End If
+                            '    If DateDiff(DateInterval.Month, StartofCalendar, sopDate) > 0 Then
+                            '        Dim sopMonth As Integer = sopDate.Month
+                            '        If sopMonth >= 3 And sopMonth <= 6 Then
+                            '            anlaufKennung = "03"
+                            '        ElseIf sopMonth >= 7 And sopMonth <= 10 Then
+                            '            anlaufKennung = "07"
+                            '        Else
+                            '            anlaufKennung = "11"
+                            '        End If
+                            '    Else
+                            '        anlaufKennung = "?"
+                            '    End If
 
-                            Catch ex As Exception
-                                anlaufKennung = "?"
-                            End Try
+                            'Catch ex As Exception
+                            '    anlaufKennung = "?"
+                            'End Try
 
                             ' jetzt wird die Vorlagen Kennung bestimmt 
-                            Dim tstphase As clsPhase = Nothing
-                            Dim relNr As String
-                            tstphase = hproj.getPhase("Systemgestaltung")
+                            'Dim tstphase As clsPhase = Nothing
+                            'Dim relNr As String
+                            'tstphase = hproj.getPhase("Systemgestaltung")
 
-                            If IsNothing(tstphase) Then
-                                tstphase = hproj.getPhase("I500")
-                                If IsNothing(tstphase) Then
-                                    tstphase = hproj.getPhase("I300")
-                                    If IsNothing(tstphase) Then
-                                        relNr = "rel 4 "
-                                    Else
-                                        relNr = "rel 5 "
-                                    End If
-                                Else
-                                    relNr = "rel 5 "
-                                End If
-                            Else
-                                relNr = "rel 5 "
-                            End If
+                            'If IsNothing(tstphase) Then
+                            '    tstphase = hproj.getPhase("I500")
+                            '    If IsNothing(tstphase) Then
+                            '        tstphase = hproj.getPhase("I300")
+                            '        If IsNothing(tstphase) Then
+                            '            relNr = "rel 4 "
+                            '        Else
+                            '            relNr = "rel 5 "
+                            '        End If
+                            '    Else
+                            '        relNr = "rel 5 "
+                            '    End If
+                            'Else
+                            '    relNr = "rel 5 "
+                            'End If
 
-                            vorlagenName = relNr & typKennung & "-" & anlaufKennung
-                            Try
-                                vorlagenName = vorlagenName.Trim
-                            Catch ex As Exception
-                                vorlagenName = "unknown"
-                            End Try
+                            'vorlagenName = relNr & typKennung & "-" & anlaufKennung
+                            'Try
+                            '    vorlagenName = vorlagenName.Trim
+                            'Catch ex As Exception
+                            '    vorlagenName = "unknown"
+                            'End Try
 
-                            If Projektvorlagen.Contains(vorlagenName) Then
+                            'If Projektvorlagen.Contains(vorlagenName) Then
+                            '    hproj.VorlagenName = vorlagenName
+                            'Else
+                            '    hproj.VorlagenName = vorlagenName & "*"
+                            'End If
+
+                            If Projektvorlagen.Count >= 1 Then
+                                vorlagenName = Projektvorlagen.getProject(0).VorlagenName
                                 hproj.VorlagenName = vorlagenName
-                            Else
-                                hproj.VorlagenName = vorlagenName & "*"
                             End If
 
                         End If

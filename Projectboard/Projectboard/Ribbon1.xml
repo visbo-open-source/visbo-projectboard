@@ -113,7 +113,7 @@
               <!--label="Export VISBO Open XML"-->
               <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
               <!--label="Export Excel"-->
-              <button id="PT4G1M1B1" imageMso="ExportFile" getLabel ="bestimmeLabel" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
+              <button id="PT4G1M1B1" imageMso="ExportFile" getLabel ="bestimmeLabel" onAction="planExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
               <!--label="exportieren in MSProject Projekte-->
               <!--<button id="PT4G1M2B2" label="MSProject Projekte" onAction="Tom2G4M2ExportMSProject" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>-->
               <menuSeparator id="menuSeparator3"/>
