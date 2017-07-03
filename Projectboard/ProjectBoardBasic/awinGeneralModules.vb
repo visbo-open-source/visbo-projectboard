@@ -325,6 +325,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
     ''' das Customization File 
+    ''' ausserdem werden Auswahl Validation Dropboxes gesetzt 
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub awinWritePhaseMilestoneDefinitions(Optional ByVal writeMappings As Boolean = False)
@@ -502,20 +503,21 @@ Public Module awinGeneralModules
 
         Dim darstellungsKlasse As String
 
-        Dim wsName4 As Excel.Worksheet 
+        Dim wsName4 As Excel.Worksheet
+        
 
         ' beim Starten der Projekt-Tafel wird sichergestellt, dass auch das Worksheet MissingDefinitions = arrwsnames(15) existiert ...
         ' inkl der Namen der Phase- und MilestoneDefinitions
         If writeMissingDefinitions Then
             Try
-                wsName4 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(15)), _
                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
             Catch ex As Exception
                 Exit Sub
             End Try
             
         Else
-            wsName4 = CType(appInstance.Worksheets(arrWsNames(4)), _
+            wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
         End If
 
@@ -568,7 +570,34 @@ Public Module awinGeneralModules
 
         ' jetzt können erst die PhaseDefinitions, dann die MilestoneDefinitions geschrieben werden 
 
+        ' hier werden die Validation-String aufgebaut 
+        ' hier muss jetzt noch die Validierung rein .... damit der Anwender in einem nächsten Schritt sehr bequem die verschiedenen Darstellungsklassen zuweisen kann 
+        Dim milestoneAppearanceClasses As String = ""
+        Dim phaseAppearanceClasses As String = ""
+        Dim msAppearanceRng As Excel.Range = Nothing
+        Dim phAppearanceRng As Excel.Range = Nothing
+        Try
+            Dim wsAppearances As Excel.Worksheet = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(7)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
 
+            For Each cl As Excel.Range In wsAppearances.Range("MeilensteinKlassen")
+                If milestoneAppearanceClasses = "" Then
+                    milestoneAppearanceClasses = cl.Value
+                Else
+                    milestoneAppearanceClasses = milestoneAppearanceClasses & ";" & cl.Value
+                End If
+            Next
+
+            For Each cl As Excel.Range In wsAppearances.Range("PhasenKlassen")
+                If phaseAppearanceClasses = "" Then
+                    phaseAppearanceClasses = cl.Value
+                Else
+                    phaseAppearanceClasses = phaseAppearanceClasses & ";" & cl.Value
+                End If
+            Next
+        Catch ex As Exception
+
+        End Try
 
         ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
         ' anzZeilen muss immer um 2 größer sein als die Anzahl der Definitionen ; 
@@ -633,6 +662,19 @@ Public Module awinGeneralModules
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
 
+            Try
+                If phaseAppearanceClasses.Length > 0 Then
+                    With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                                                               Formula1:=phaseAppearanceClasses)
+                    End With
+                End If
+                
+            Catch ex As Exception
+
+            End Try
+            
+            
 
         Next ix
 
@@ -717,6 +759,17 @@ Public Module awinGeneralModules
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
 
+            Try
+                If milestoneAppearanceClasses.Length > 0 Then
+                    With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                                                               Formula1:=milestoneAppearanceClasses)
+                    End With
+                End If
+                
+            Catch ex As Exception
+
+            End Try
 
         Next ix
 
@@ -12736,6 +12789,7 @@ Public Module awinGeneralModules
 
             returnValue = loginDialog.ShowDialog
             i = i + 1
+
         End While
 
         If returnValue = DialogResult.Abort Or i >= 5 Then

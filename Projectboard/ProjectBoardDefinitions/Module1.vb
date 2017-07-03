@@ -509,6 +509,22 @@ Public Module Module1
     Public Enum PTpptAnnotationType
         text = 0
         datum = 1
+        calloutAmpel = 2
+        calloutLU = 3
+        calloutRC = 4
+        calloutMV = 5
+    End Enum
+
+    Public Enum PTpptTableTypes
+        prZiele = 0
+    End Enum
+    Public Enum PTpptTableCellType
+        name = 0
+        lfdNr = 1
+        ampelColor = 2
+        ampelText = 3
+        lieferumfang = 4
+        datum = 5
     End Enum
 
     ''' <summary>
@@ -3496,6 +3512,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
+                                          ByVal bestShortName As String, ByVal bestLongName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
                                           ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
                                           ByVal lieferumfaenge As String)
@@ -3535,6 +3552,24 @@ Public Module Module1
                             .Tags.Delete("ON")
                         End If
                         .Tags.Add("ON", originalName)
+                    End If
+                End If
+
+                If Not IsNothing(bestShortName) Then
+                    If bestShortName <> shortName Then
+                        If .Tags.Item("BSN").Length > 0 Then
+                            .Tags.Delete("BSN")
+                        End If
+                        .Tags.Add("BSN", bestShortName)
+                    End If
+                End If
+
+                If Not IsNothing(bestLongName) Then
+                    If bestLongName <> classifiedName Then
+                        If .Tags.Item("BLN").Length > 0 Then
+                            .Tags.Delete("BLN")
+                        End If
+                        .Tags.Add("BLN", bestLongName)
                     End If
                 End If
 
@@ -3601,11 +3636,11 @@ Public Module Module1
     ''' der Powerpoint Add-In das Chart selbstständig aktualisieren kann 
     ''' </summary>
     ''' <param name="pptShape"></param>
-    ''' <param name="kennzeichnung"></param>
+    ''' <param name="prpf"></param>
     ''' <param name="qualifier"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, _
-                                     ByVal kennzeichnung As String, ByVal qualifier As String, ByVal qualifier2 As String, _
+                                     ByVal prpf As Integer, ByVal qualifier As String, ByVal qualifier2 As String, _
                                      ByVal bigType As Integer, ByVal detailID As Integer)
 
         If IsNothing(hproj) Then
@@ -3621,6 +3656,14 @@ Public Module Module1
 
                 ' das bekommen alle ...
                 With pptShape
+
+                    If Not IsNothing(prpf) Then
+                        If .Tags.Item("PRPF").Length > 0 Then
+                            .Tags.Delete("PRPF")
+                        End If
+                        .Tags.Add("PRPF", prpf.ToString)
+                    End If
+
                     If Not IsNothing(pName) Then
                         If .Tags.Item("PNM").Length > 0 Then
                             .Tags.Delete("PNM")
@@ -3682,13 +3725,13 @@ Public Module Module1
                         'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
                         Dim pNameChk As String = "", vNameChk As String = ""
                         Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pNameChk, vNameChk, chartTyp, auswahl)
-                        If pName <> pNameChk Or vName <> vNameChk Then
-                            Call MsgBox("PName , vName in hproj bzw. chtobjname unterschiedlich ! ")
-                        End If
+                        'If pName <> pNameChk Or vName <> vNameChk Then
+                        '    Call MsgBox("PName , vName in hproj bzw. chtobjname unterschiedlich ! ")
+                        'End If
 
                         With pptShape
 
-                            
+
                             If Not IsNothing(chtObjName) Then
                                 If .Tags.Item("CHON").Length > 0 Then
                                     .Tags.Delete("CHON")
@@ -3696,12 +3739,13 @@ Public Module Module1
                                 .Tags.Add("CHON", chtObjName)
                             End If
 
-                            If Not IsNothing(prpfTyp) Then
-                                If .Tags.Item("PRPF").Length > 0 Then
-                                    .Tags.Delete("PRPF")
-                                End If
-                                .Tags.Add("PRPF", CStr(prpfTyp))
-                            End If
+                            ' ist schon gesetzt ...
+                            'If Not IsNothing(prpfTyp) Then
+                            '    If .Tags.Item("PRPF").Length > 0 Then
+                            '        .Tags.Delete("PRPF")
+                            '    End If
+                            '    .Tags.Add("PRPF", CStr(prpfTyp))
+                            'End If
 
                             If Not IsNothing(chartTyp) Then
                                 If .Tags.Item("CHT").Length > 0 Then
@@ -3728,7 +3772,7 @@ Public Module Module1
                     End If
 
                 ElseIf bigType = ptReportBigTypes.tables Then
-                    ' sonst keine weiteren Dinge ... 
+                    ' sonst keine weiteren Dinge ... das wird in der eigenen MEthode addSmartPPTTableInfo gemacht 
 
                 ElseIf bigType = ptReportBigTypes.components Then
                     ' sonst keine weiteren Dinge 
@@ -3737,6 +3781,110 @@ Public Module Module1
                     ' noch nicht implementiert 
                 End If
 
+
+            End If
+
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' fügt der Tabelle die Smart Table Info hinzu 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="prpf"></param>
+    ''' <param name="pnm"></param>
+    ''' <param name="vnm"></param>
+    ''' <param name="q1"></param>
+    ''' <param name="q2"></param>
+    ''' <param name="bigtype"></param>
+    ''' <param name="detailID"></param>
+    ''' <param name="nameIDS"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTTableInfo(ByRef pptShape As PowerPoint.Shape, _
+                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String, _
+                                        ByVal q1 As String, ByVal q2 As String, _
+                                        ByVal bigtype As Integer, ByVal detailID As Integer, _
+                                        ByVal nameIDS As Collection)
+
+        If nameIDS.Count = 0 Then
+            Exit Sub
+        End If
+
+        Dim nameIDString As String = ""
+        For Each tmpID As String In nameIDS
+            If nameIDString = "" Then
+                nameIDString = tmpID
+            Else
+                nameIDString = nameIDString & "#" & tmpID
+            End If
+        Next
+
+        Try
+
+            If Not IsNothing(pptShape) Then
+
+                ' das bekommen alle ...
+                With pptShape
+                    If Not IsNothing(prpf) Then
+                        If .Tags.Item("PRPF").Length > 0 Then
+                            .Tags.Delete("PRPF")
+                        End If
+                        .Tags.Add("PRPF", prpf.ToString)
+                    End If
+
+                    If Not IsNothing(pnm) Then
+                        If .Tags.Item("PNM").Length > 0 Then
+                            .Tags.Delete("PNM")
+                        End If
+                        .Tags.Add("PNM", pnm)
+                    End If
+
+                    If Not IsNothing(vnm) Then
+                        If .Tags.Item("VNM").Length > 0 Then
+                            .Tags.Delete("VNM")
+                        End If
+                        .Tags.Add("VNM", vnm)
+                    End If
+
+                    If Not IsNothing(q1) Then
+                        If .Tags.Item("Q1").Length > 0 Then
+                            .Tags.Delete("Q1")
+                        End If
+                        .Tags.Add("Q1", q1)
+                    End If
+
+                    If Not IsNothing(q2) Then
+                        If .Tags.Item("Q2").Length > 0 Then
+                            .Tags.Delete("Q2")
+                        End If
+                        .Tags.Add("Q2", q2)
+                    End If
+
+                    If Not IsNothing(bigtype) Then
+                        If .Tags.Item("BID").Length > 0 Then
+                            .Tags.Delete("BID")
+                        End If
+                        .Tags.Add("BID", bigtype.ToString)
+                    End If
+
+                    If Not IsNothing(detailID) Then
+                        If .Tags.Item("DID").Length > 0 Then
+                            .Tags.Delete("DID")
+                        End If
+                        .Tags.Add("DID", detailID.ToString)
+                    End If
+
+                    If Not IsNothing(nameIDString) Then
+                        If .Tags.Item("NIDS").Length > 0 Then
+                            .Tags.Delete("NIDS")
+                        End If
+                        .Tags.Add("NIDS", nameIDString)
+                    End If
+
+                End With
 
             End If
 

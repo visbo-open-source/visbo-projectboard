@@ -1744,10 +1744,9 @@ Module Module1
 
 
 
-                ElseIf bigType = ptReportBigTypes.tables Then
-                    ' noch nicht implementiert .. 
 
-                ElseIf bigType = ptReportBigTypes.components Then
+                ElseIf bigType = ptReportBigTypes.components Or _
+                       bigType = ptReportBigTypes.tables Then
 
                     Dim pName As String = pptShape.Tags.Item("PNM")
                     Dim vName As String = pptShape.Tags.Item("VNM")
@@ -1768,7 +1767,18 @@ Module Module1
                         Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, curTimeStamp)
 
                         If Not IsNothing(tsProj) Then
-                            Call updatePPTComponent(tsProj, pptShape, detailID)
+
+                            If bigType = ptReportBigTypes.components Then
+                                Call updatePPTComponent(tsProj, pptShape, detailID)
+
+                            ElseIf bigType = ptReportBigTypes.tables Then
+
+                                If detailID = ptReportTables.prMilestones Then
+                                    Call updatePPTProjektTabelleZiele(pptShape, tsProj)
+                                End If
+
+                            End If
+
                         End If
 
 
@@ -3087,6 +3097,11 @@ Module Module1
 
         Dim tmpText As String = ""
         Dim translationNecessary As Boolean = False
+        ' im Falle eines Namens , der öfter vorkommt und zu Zwecken der Eindeutigkeit durch den Bestname erstezt werden muss 
+        Dim isCombinedName As Boolean = False
+        Dim elemName As String = ""
+        Dim bestShortName As String = curShape.Tags.Item("BSN")
+        Dim bestLongName As String = curShape.Tags.Item("BLN")
 
         If isRelevantMSPHShape(curShape) Then
             If showOriginalName Then
@@ -3105,17 +3120,32 @@ Module Module1
                     End If
                 Else
                     tmpText = curShape.Tags.Item("SN")
+                    If bestShortName.Length > 0 And tmpText <> bestShortName Then
+                        tmpText = bestShortName
+                    End If
+
                 End If
 
             ElseIf curShape.Tags.Item("CN").Length > 0 Then
                 tmpText = curShape.Tags.Item("CN")
+
+                If bestLongName.Length > 0 And bestLongName <> tmpText Then
+                    elemName = tmpText
+                    tmpText = bestLongName
+                    isCombinedName = True
+                End If
                 translationNecessary = (selectedLanguage <> defaultSprache)
             End If
         End If
 
         If translationNecessary Then
             ' jetzt den Text ersetzen 
-            tmpText = languages.translate(tmpText, selectedLanguage)
+            If isCombinedName Then
+                tmpText = languages.translate(tmpText, selectedLanguage, elemName, isCombinedName)
+            Else
+                tmpText = languages.translate(tmpText, selectedLanguage)
+            End If
+
         End If
 
         bestimmeElemText = tmpText
@@ -4167,4 +4197,9 @@ Module Module1
         End Try
 
     End Sub
+
+    Private Sub addSmartPPTShapeInfo(tmpShape As Microsoft.Office.Interop.PowerPoint.Shape, elemBC As String, elemName As String, p4 As String, p5 As String, p6 As Date, p7 As Date, p8 As Integer, p9 As String, p10 As Object)
+        Throw New NotImplementedException
+    End Sub
+
 End Module

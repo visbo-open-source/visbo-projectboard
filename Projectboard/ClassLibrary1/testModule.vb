@@ -865,7 +865,7 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = fullName
                                 End If
 
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                            ptReportBigTypes.components, ptReportComponents.prName)
 
                             Case "Custom-Field"
@@ -911,7 +911,7 @@ Public Module testModule
 
                                         End Select
 
-                                        Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                        Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                            ptReportBigTypes.components, ptReportComponents.prCustomField)
                                     Else
                                         .TextFrame2.TextRange.Text = "Custom-Field " & qualifier & _
@@ -1656,8 +1656,10 @@ Public Module testModule
 
                                 Try
 
-                                    Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones)
+                                    ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ... 
+                                    Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
 
+                                   
                                 Catch ex As Exception
 
                                 End Try
@@ -2633,7 +2635,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prAmpel
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
 
 
@@ -2647,7 +2649,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prAmpelText
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
 
                             Case "Business-Unit:"
@@ -2660,7 +2662,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prBusinessUnit
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
 
                             Case "Beschreibung"
@@ -2682,7 +2684,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prDescription
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
 
 
@@ -2695,7 +2697,7 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prStand
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
 
                             Case "Laufzeit:"
@@ -2707,7 +2709,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prLaufzeit
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
 
                             Case "Verantwortlich:"
@@ -2720,7 +2722,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prVerantwortlich
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
                             Case Else
                         End Select
@@ -2754,7 +2756,7 @@ Public Module testModule
                                         .Height = CSng(height * 0.96)
                                     End With
 
-                                    Call addSmartPPTShapeInfo2(newShape, hproj, kennzeichnung, qualifier, qualifier2, _
+                                    Call addSmartPPTShapeInfo2(newShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                                bigType, compID)
 
                                     reportObj.Delete()
@@ -8576,13 +8578,17 @@ Public Module testModule
     ''' <param name="hproj"></param>
     ''' <param name="selectedItems"></param>
     ''' <remarks></remarks>
-    Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, Optional ByVal selectedItems As Collection = Nothing)
+    Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal selectedItems As Collection, _
+                                   ByVal q1 As String, ByVal q2 As String)
 
         Dim heute As Date = Date.Now
         Dim anzSpalten As Integer = 0
         Dim index As Integer = 0
         Dim tabelle As pptNS.Table
         Dim todoCollection As Collection = hproj.getAllElemIDs(True)
+
+        Dim bigType As Integer = ptReportBigTypes.tables
+        Dim compID As Integer = PTpptTableTypes.prZiele
 
         If IsNothing(selectedItems) Then
             todoCollection = hproj.getAllElemIDs(True)
@@ -8599,6 +8605,12 @@ Public Module testModule
             todoCollection = hproj.filterbyZeitraum(todoCollection)
 
         End If
+
+        ' jetzt wird die SmartTableInfo gesetzt 
+        Call addSmartPPTTableInfo(pptShape, _
+                                  ptPRPFType.project, hproj.name, hproj.variantName, _
+                                  q1, q2, bigType, compID, _
+                                  todoCollection)
 
         Try
             tabelle = pptShape.Table
@@ -8623,20 +8635,39 @@ Public Module testModule
             Try
 
                 For m = 1 To todoCollection.Count
-                    Dim cResult As clsMeilenstein = hproj.getMilestoneByID(CStr(todoCollection.Item(m)))
+                    Dim milestoneID As String = CStr(todoCollection.Item(m))
+                    Dim cellNameID As String = calcPPTShapeName(hproj, milestoneID)
+
+                    Dim cResult As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
                     Dim cBewertung As clsBewertung = cResult.getBewertung(1)
 
                     With tabelle
+                        ' Farbe und laufende Nummer eintragen 
+                        Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape
+                        tableCell.TextFrame2.TextRange.Text = msNumber.ToString
 
-                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = msNumber.ToString
+
+
                         CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
                         CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
 
-                        CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
-                        CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
-                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getAllDeliverables
+                        ' Name eintragen 
+                        Dim bestName As String = hproj.getBestNameOfID(milestoneID, True, False)
+                        tableCell = CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape
+                        tableCell.TextFrame2.TextRange.Text = bestName
+
+                        ' Datum eintragen 
+                        tableCell = CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape
+                        tableCell.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
+
+                        ' Lieferumfänge eintragen 
+                        tableCell = CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape
+                        tableCell.TextFrame2.TextRange.Text = cResult.getAllDeliverables
+
+                        ' Ampelbewertungen eintragen
                         If anzSpalten >= 5 Then
-                            CType(.Cell(tabellenzeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.description
+                            tableCell = CType(.Cell(tabellenzeile, 5), pptNS.Cell).Shape
+                            tableCell.TextFrame2.TextRange.Text = cBewertung.description
                         End If
 
 
@@ -8666,7 +8697,6 @@ Public Module testModule
 
 
     End Sub
-
 
     ''' <summary>
     ''' zeichnet aus der Multiprojektsicht eine tabellarische Übersicht aller Projekte inkl ihrer Veränderungen bezogen auf 
@@ -11737,9 +11767,8 @@ Public Module testModule
     ''' wenn die dritte Zeile nicht mehr gezeichnet werden kann, soll si eweggelassen werden ... 
     ''' </summary>
     ''' <param name="rds">die Powerpoint Klasse, die das Slide und alle Hilfsshapes enthält; mit deren Hilfe wird dann gezeichnet</param>
-    ''' <param name="calendargroup">die Kalendergruppe, die zurückgegeben wird</param>
     ''' <remarks></remarks>
-    Sub zeichne3RowsCalendar(ByRef rds As clsPPTShapes, ByRef calendargroup As pptNS.Shape)
+    Sub zeichne3RowsCalendar(ByRef rds As clsPPTShapes)
 
         'Sub zeichne3RowsCalendar(ByRef pptslide As pptNS.Slide, ByRef calendargroup As pptNS.Shape, _
         '                               ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
@@ -11767,8 +11796,11 @@ Public Module testModule
 
         Dim newShapes As pptNS.ShapeRange
 
-        ' nimmt die Namen aller erzeugten Shapes auf: daraus wird später die Gruppe erzeugt 
-        Dim nameCollection As New Collection
+        ' nimmt die Namen aller erzeugten Shapes des Kalenders auf: daraus wird später eine Gruppe erzeugt 
+        Dim namesOfCalItemsCollection As New Collection
+        ' nimmt die Namen aller erzeugten Vertical Line-Shapes und ggf. todayline auf: daraus wird später eine Gruppe erzeugt
+        ' das dient dazu, dass man später sehr einfach die erzeugten Shapes verkürzen kann .. 
+        Dim namesOfLineItemsCollection As New Collection
 
         ' wieviele Tage auf dem Kalender?
         Dim anzahlTage As Integer = DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
@@ -11809,7 +11841,7 @@ Public Module testModule
             .Name = .Name & .Id
             .AlternativeText = ""
             .Title = ""
-            nameCollection.Add(.Name, .Name)
+            namesOfCalItemsCollection.Add(.Name, .Name)
         End With
 
         ' ... die oberste horizontale Line zeichnen
@@ -11823,7 +11855,7 @@ Public Module testModule
             .AlternativeText = ""
             .Title = ""
             .Name = .Name & .Id
-            nameCollection.Add(.Name, .Name)
+            namesOfCalItemsCollection.Add(.Name, .Name)
         End With
 
         ' ... die Trennlinie1 (Jahre) zeichnen
@@ -11843,7 +11875,7 @@ Public Module testModule
             rds.calendarStepShape.PickUp()
             .Apply()
 
-            nameCollection.Add(.Name, .Name)
+            namesOfCalItemsCollection.Add(.Name, .Name)
         End With
 
         ' ... die Trennlinie2 (Q/M) zeichnen
@@ -11863,7 +11895,7 @@ Public Module testModule
             rds.calendarStepShape.PickUp()
             .Apply()
 
-            nameCollection.Add(.Name, .Name)
+            namesOfCalItemsCollection.Add(.Name, .Name)
         End With
 
         ' den linken und den rechten Rand zeichnen 
@@ -11879,7 +11911,7 @@ Public Module testModule
             .AlternativeText = ""
             .Title = ""
 
-            nameCollection.Add(.Name, .Name)
+            namesOfCalItemsCollection.Add(.Name, .Name)
         End With
 
         ''rds.calendarHeightShape.Copy()
@@ -11895,7 +11927,7 @@ Public Module testModule
             .AlternativeText = ""
             .Title = ""
 
-            nameCollection.Add(.Name, .Name)
+            namesOfCalItemsCollection.Add(.Name, .Name)
         End With
 
         ' Ende Aussen-Box für KAlender schreiben 
@@ -11942,7 +11974,7 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                nameCollection.Add(.Name, .Name)
+                namesOfCalItemsCollection.Add(.Name, .Name)
             End With
 
             ' jetzt die Jahreszahl schreiben 
@@ -11961,7 +11993,7 @@ Public Module testModule
                     .Title = ""
 
                     .TextFrame2.TextRange.Text = beschriftung
-                    nameCollection.Add(.Name, .Name)
+                    namesOfCalItemsCollection.Add(.Name, .Name)
                 End With
 
             End If
@@ -11988,7 +12020,7 @@ Public Module testModule
                 .Title = ""
 
                 .TextFrame2.TextRange.Text = beschriftung
-                nameCollection.Add(.Name, .Name)
+                namesOfCalItemsCollection.Add(.Name, .Name)
             End With
 
         End If
@@ -12073,7 +12105,7 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                nameCollection.Add(.Name, .Name)
+                namesOfCalItemsCollection.Add(.Name, .Name)
             End With
 
 
@@ -12098,7 +12130,7 @@ Public Module testModule
                     .Title = ""
 
                     .TextFrame2.TextRange.Text = beschriftung
-                    nameCollection.Add(.Name, .Name)
+                    namesOfCalItemsCollection.Add(.Name, .Name)
                 End With
 
             Else
@@ -12150,7 +12182,7 @@ Public Module testModule
                     .Title = ""
 
                     .TextFrame2.TextRange.Text = beschriftung
-                    nameCollection.Add(.Name, .Name)
+                    namesOfCalItemsCollection.Add(.Name, .Name)
                 End With
 
             Else
@@ -12248,7 +12280,7 @@ Public Module testModule
                         .AlternativeText = ""
                         .Title = ""
 
-                        nameCollection.Add(.Name, .Name)
+                        namesOfCalItemsCollection.Add(.Name, .Name)
                     End With
                 End If
 
@@ -12281,7 +12313,7 @@ Public Module testModule
                     .Title = ""
 
                     .TextFrame2.TextRange.Text = beschriftung
-                    nameCollection.Add(.Name, .Name)
+                    namesOfCalItemsCollection.Add(.Name, .Name)
                 End With
 
 
@@ -12326,7 +12358,7 @@ Public Module testModule
                     .Title = ""
 
                     .TextFrame2.TextRange.Text = beschriftung
-                    nameCollection.Add(.Name, .Name)
+                    namesOfCalItemsCollection.Add(.Name, .Name)
                 End With
 
 
@@ -12359,7 +12391,7 @@ Public Module testModule
                     .Name = .Name & .Id
                     .AlternativeText = ""
                     .Title = ""
-                    nameCollection.Add(.Name, .Name)
+                    namesOfCalItemsCollection.Add(.Name, .Name)
                 End With
 
             End If
@@ -12389,7 +12421,7 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                nameCollection.Add(.Name, .Name)
+                namesOfLineItemsCollection.Add(.Name, .Name)
             End With
 
 
@@ -12407,7 +12439,7 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                nameCollection.Add(.Name, .Name)
+                namesOfLineItemsCollection.Add(.Name, .Name)
             End With
 
 
@@ -12427,7 +12459,7 @@ Public Module testModule
                         .AlternativeText = ""
                         .Title = ""
 
-                        nameCollection.Add(.Name, .Name)
+                        namesOfLineItemsCollection.Add(.Name, .Name)
                     End With
 
                 Next
@@ -12448,7 +12480,7 @@ Public Module testModule
                         .AlternativeText = ""
                         .Title = ""
 
-                        nameCollection.Add(.Name, .Name)
+                        namesOfLineItemsCollection.Add(.Name, .Name)
                     End With
 
                 Next
@@ -12472,7 +12504,7 @@ Public Module testModule
                     .AlternativeText = ""
                     .Title = ""
 
-                    nameCollection.Add(.Name, .Name)
+                    namesOfLineItemsCollection.Add(.Name, .Name)
                 End With
 
             Next
@@ -12501,7 +12533,7 @@ Public Module testModule
                 .AlternativeText = ""
                 .Title = ""
 
-                nameCollection.Add(.Name, .Name)
+                namesOfLineItemsCollection.Add(.Name, .Name)
             End With
 
         End If
@@ -12510,32 +12542,69 @@ Public Module testModule
         Dim shapeGruppe As pptNS.ShapeRange
         Dim slideShapes As pptNS.Shapes = rds.pptSlide.Shapes
 
+        Dim calendargroup As pptNS.Shape = Nothing
+        Dim verticalLinegroup As pptNS.Shape = Nothing
+
         Dim arrayOFNames() As String
 
 
-        Dim anzElements As Integer = nameCollection.Count
-        If anzElements = 0 Then
+        Dim anzCalElements As Integer = namesOfCalItemsCollection.Count
+        Dim anzLineElements As Integer = namesOfLineItemsCollection.Count
+        ' Kalender-Items gruppieren ...
+        Try
+            If anzCalElements = 0 Then
 
-            calendargroup = Nothing
+                calendargroup = Nothing
 
-        ElseIf anzElements = 1 Then
+            ElseIf anzCalElements = 1 Then
 
-            calendargroup = rds.pptSlide.Shapes.Item(nameCollection.Item(1))
+                calendargroup = rds.pptSlide.Shapes.Item(namesOfCalItemsCollection.Item(1))
 
-        Else
+            ElseIf anzCalElements > 1 Then
 
-            ReDim arrayOFNames(anzElements - 1)
+                ReDim arrayOFNames(anzCalElements - 1)
 
-            For i = 1 To anzElements
-                arrayOFNames(i - 1) = CStr(nameCollection.Item(i))
-            Next
+                For i = 1 To anzCalElements
+                    arrayOFNames(i - 1) = CStr(namesOfCalItemsCollection.Item(i))
+                Next
 
-            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
-            calendargroup = shapeGruppe.Group
+                shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+                calendargroup = shapeGruppe.Group
 
 
-        End If
+            End If
+        Catch ex As Exception
 
+        End Try
+
+
+        ' Vertical Line -Items gruppieren ...
+        Try
+            If anzLineElements = 0 Then
+
+                verticalLinegroup = Nothing
+
+            ElseIf anzLineElements = 1 Then
+
+                verticalLinegroup = rds.pptSlide.Shapes.Item(namesOfLineItemsCollection.Item(1))
+
+            ElseIf anzLineElements > 1 Then
+
+                ReDim arrayOFNames(anzLineElements - 1)
+
+                For i = 1 To anzLineElements
+                    arrayOFNames(i - 1) = CStr(namesOfLineItemsCollection.Item(i))
+                Next
+
+                shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+                verticalLinegroup = shapeGruppe.Group
+
+
+            End If
+        Catch ex As Exception
+
+        End Try
+        
 
     End Sub
 
@@ -12642,6 +12711,8 @@ Public Module testModule
                 Dim shortText As String = cphase.shortName
                 Dim originalName As String = cphase.originalName
 
+                Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+                Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
 
                 If originalName = cphase.name Then
                     originalName = Nothing
@@ -12650,6 +12721,7 @@ Public Module testModule
 
                 Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
+                                            bestShortName, bestLongName, _
                                             cphase.getStartDate, cphase.getEndDate, _
                                             Nothing, Nothing, Nothing)
 
@@ -12710,6 +12782,8 @@ Public Module testModule
                     Dim shortText As String = cphase.shortName
                     Dim originalName As String = cphase.originalName
 
+                    Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+                    Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
 
                     If originalName = cphase.name Then
                         originalName = Nothing
@@ -12717,6 +12791,7 @@ Public Module testModule
 
                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
+                                                bestShortName, bestLongName, _
                                                 cphase.getStartDate, cphase.getEndDate, _
                                                 Nothing, Nothing, Nothing)
 
@@ -14498,6 +14573,7 @@ Public Module testModule
 
                             Call addSmartPPTShapeInfo(copiedShape(1), _
                                                         Nothing, hproj.getShapeText, Nothing, Nothing, _
+                                                        Nothing, Nothing, _
                                                         hproj.startDate, hproj.endeDate, _
                                                         hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
 
@@ -14522,6 +14598,7 @@ Public Module testModule
 
                             Call addSmartPPTShapeInfo(copiedShape(1), _
                                                         Nothing, hproj.getShapeText, Nothing, Nothing, _
+                                                        Nothing, Nothing, _
                                                         hproj.startDate, hproj.endeDate, _
                                                         hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
 
@@ -14610,6 +14687,7 @@ Public Module testModule
 
                             Call addSmartPPTShapeInfo(copiedShape(1), _
                                                    Nothing, hproj.getShapeText, Nothing, Nothing, _
+                                                   Nothing, Nothing, _
                                                    hproj.startDate, hproj.endeDate, _
                                                    hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
 
@@ -14960,12 +15038,16 @@ Public Module testModule
                                     Dim shortText As String = cphase.shortName
                                     Dim originalName As String = cphase.originalName
 
+                                    Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+                                    Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
+
                                     If originalName = cphase.name Then
                                         originalName = Nothing
                                     End If
 
                                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
+                                                                bestShortName, bestLongName, _
                                                                 phaseStart, phaseEnd, _
                                                                 Nothing, Nothing, Nothing)
                                 End If
@@ -15635,6 +15717,9 @@ Public Module testModule
             Dim shortText As String = MS.shortName
             Dim originalName As String = MS.originalName
 
+            Dim bestShortName As String = hproj.getBestNameOfID(MS.nameID, True, True)
+            Dim bestLongName As String = hproj.getBestNameOfID(MS.nameID, True, False)
+
             If originalName = MS.name Then
                 originalName = Nothing
             End If
@@ -15642,6 +15727,7 @@ Public Module testModule
             Dim lieferumfaenge As String = MS.getAllDeliverables("#")
             Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                         fullBreadCrumb, MS.name, shortText, originalName, _
+                                        bestShortName, bestLongName, _
                                         Nothing, msdate, _
                                         MS.getBewertung(1).colorIndex, MS.getBewertung(1).description, _
                                         lieferumfaenge)
@@ -15873,12 +15959,16 @@ Public Module testModule
                 Dim shortText As String = cphase.shortName
                 Dim originalName As String = cphase.originalName
 
+                Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+                Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
+
                 If originalName = cphase.name Then
                     originalName = Nothing
                 End If
 
                 Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
+                                            bestShortName, bestLongName, _
                                             phStartDate, phEndDate, _
                                             Nothing, Nothing, Nothing)
             End If
@@ -16054,6 +16144,9 @@ Public Module testModule
                     Dim shortText As String = cMilestone.shortName
                     Dim originalName As String = cMilestone.originalName
 
+                    Dim bestShortName As String = hproj.getBestNameOfID(cMilestone.nameID, True, True)
+                    Dim bestLongName As String = hproj.getBestNameOfID(cMilestone.nameID, True, False)
+
                     If originalName = cMilestone.name Then
                         originalName = Nothing
                     End If
@@ -16061,6 +16154,7 @@ Public Module testModule
                     Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
                                                 fullBreadCrumb, cMilestone.name, shortText, originalName, _
+                                                bestShortName, bestLongName, _
                                                 Nothing, msDate, _
                                                 cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
                                                 lieferumfaenge)
@@ -17456,7 +17550,7 @@ Public Module testModule
             End If
 
             ' zeichne den Kalender
-            Dim calendargroup As pptNS.Shape = Nothing
+            'Dim calendargroup As pptNS.Shape = Nothing
 
             Try
 
@@ -17464,7 +17558,8 @@ Public Module testModule
 
 
                     ' das demnächst abändern auf 
-                    Call zeichne3RowsCalendar(rds, calendargroup)
+                    Call zeichne3RowsCalendar(rds)
+                    'Call zeichne3RowsCalendar(rds, calendargroup)
 
 
                     'Call zeichnePPTCalendar(pptslide, calendargroup, _
@@ -18007,13 +18102,13 @@ Public Module testModule
 
                 ' jetzt erst mal den Kalender zeichnen 
                 ' zeichne den Kalender
-                Dim calendargroup As pptNS.Shape = Nothing
+                'Dim calendargroup As pptNS.Shape = Nothing
 
                 Try
 
                     With rds
 
-                        Call zeichne3RowsCalendar(rds, calendargroup)
+                        Call zeichne3RowsCalendar(rds)
 
                     End With
 

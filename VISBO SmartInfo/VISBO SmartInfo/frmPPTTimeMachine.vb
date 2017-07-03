@@ -347,21 +347,23 @@
     ''' <param name="kennung"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function getNextNavigationDate(ByVal kennung As Integer) As Date
+    Private Function getNextNavigationDate(ByVal kennung As Integer, Optional ByVal justForInformation As Boolean = False) As Date
         Dim tmpDate As Date = Date.Now
+        Dim tmpIndex As Integer = timeStampsIndex
+
         Select Case kennung
             Case ptNavigationButtons.nachher
 
 
                 If timeStamps.Count > 0 Then
-                    timeStampsIndex = timeStampsIndex + 1
+                    tmpIndex = tmpIndex + 1
 
-                    If timeStampsIndex > timeStamps.Count - 1 Then
-                        timeStampsIndex = timeStamps.Count - 1
+                    If tmpIndex > timeStamps.Count - 1 Then
+                        tmpIndex = timeStamps.Count - 1
                     End If
 
                     If smartSlideLists.countProjects = 1 Then
-                        tmpDate = timeStamps.ElementAt(timeStampsIndex).Key
+                        tmpDate = timeStamps.ElementAt(tmpIndex).Key
                     Else
                         If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
                             tmpDate = currentTimestamp.AddMonths(-1)
@@ -370,18 +372,18 @@
                         End If
                     End If
                 End If
-                
+
             Case ptNavigationButtons.vorher
 
                 If timeStamps.Count > 0 Then
-                    timeStampsIndex = timeStampsIndex - 1
+                    tmpIndex = tmpIndex - 1
 
-                    If timeStampsIndex < 0 Then
-                        timeStampsIndex = 0
+                    If tmpIndex < 0 Then
+                        tmpIndex = 0
                     End If
 
                     If smartSlideLists.countProjects = 1 Then
-                        tmpDate = timeStamps.ElementAt(timeStampsIndex).Key
+                        tmpDate = timeStamps.ElementAt(tmpIndex).Key
                     Else
                         If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
                             tmpDate = currentTimestamp.AddMonths(-1)
@@ -390,12 +392,12 @@
                         End If
                     End If
                 End If
-                
+
 
             Case ptNavigationButtons.erster
 
                 If timeStamps.Count > 0 Then
-                    timeStampsIndex = 0
+                    tmpIndex = 0
                     tmpDate = timeStamps.First.Key
                 End If
 
@@ -403,12 +405,16 @@
 
 
                 If timeStamps.Count > 0 Then
-                    timeStampsIndex = timeStamps.Count - 1
+                    tmpIndex = timeStamps.Count - 1
                     tmpDate = timeStamps.Last.Key
                 End If
 
 
         End Select
+
+        If Not justForInformation Then
+            timeStampsIndex = tmpIndex
+        End If
 
         getNextNavigationDate = tmpDate
     End Function
