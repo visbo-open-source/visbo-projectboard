@@ -4166,6 +4166,7 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub resetMovedGlowOfShapes()
 
+        Dim visboCollection As New Collection
         Dim bigTodoList As New Collection
 
         For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
@@ -4178,10 +4179,14 @@ Module Module1
                 If Not IsNothing(tmpShape) Then
                     If isVisboShape(tmpShape) Then
 
+                        If Not visboCollection.Contains(tmpShape.Name) Then
+                            visboCollection.Add(tmpShape.Name, tmpShape.Name)
+                        End If
+
                         With tmpShape
                             If .Glow.Radius > 0 Then
-                                tmpShape.Glow.Radius = 0.0
-                                'tmpShape.Glow.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+                                'tmpShape.Glow.Radius = 0.0
+                                ''tmpShape.Glow.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
 
                                 If .Tags.Item("MVD").Length > 0 Then
                                     ' nichts machen 
@@ -4202,6 +4207,39 @@ Module Module1
             End Try
         Next
 
+        ' ur:4.7.2017: Code um den Glow zu eliminieren und trotzdem die Meilenstein-Ampelfarben darzustellen
+        '
+        Dim anzSelected As Integer = visboCollection.Count
+        Dim nameArray() As String
+        Dim shapesToBeReset As PowerPoint.ShapeRange
+
+        If anzSelected >= 1 Then
+            ReDim nameArray(anzSelected - 1)
+
+            For i As Integer = 0 To anzSelected - 1
+                nameArray(i) = CStr(visboCollection.Item(i + 1))
+            Next
+
+            Try
+                shapesToBeReset = currentSlide.Shapes.Range(nameArray)
+                With shapesToBeReset
+
+                    '    ' Glow wegnehmen
+                    With .Glow
+                        .Color.ObjectThemeColor = msoThemeColorAccent1
+                        .Transparency = 0
+                        .Radius = 0
+                    End With
+
+                    '   ' Schatten wegnehmen
+                    .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+        End If
         ' ur: 03.07.2017: setze alle Ampelfarben
         Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
         Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
