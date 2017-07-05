@@ -302,7 +302,7 @@
 
     Private Sub btnFastForward_MouseHover(sender As Object, e As EventArgs) Handles btnFastForward.MouseHover
 
-        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.nachher)
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.nachher, True)
         ToolTipTS.Show(tmpDate.ToString, btnFastForward, 2000)
 
         
@@ -310,7 +310,7 @@
 
     Private Sub btnEnd_MouseHover(sender As Object, e As EventArgs) Handles btnEnd.MouseHover
 
-        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.letzter, True)
         ToolTipTS.Show(tmpDate.ToString, btnEnd, 2000)
 
     End Sub
@@ -319,7 +319,7 @@
 
     Private Sub btnStart_MouseHover(sender As Object, e As EventArgs) Handles btnStart.MouseHover
 
-        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.erster, True)
         ToolTipTS.Show(tmpDate.ToString, btnStart, 2000)
 
     End Sub
@@ -327,7 +327,7 @@
 
     Private Sub btnFastBack_MouseHover(sender As Object, e As EventArgs) Handles btnFastBack.MouseHover
 
-        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.vorher, True)
         ToolTipTS.Show(tmpDate.ToString, btnFastBack, 2000)
         
     End Sub
