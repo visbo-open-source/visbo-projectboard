@@ -8526,12 +8526,12 @@ Imports System.Windows
             '.Caption = windowNames(PTwindows.meChart)
         End With
 
-        'jetzt das Ursprungs-Window ausblenden ...
-        For Each tmpWindow As Excel.Window In visboWorkbook.Windows
-            If (CStr(tmpWindow.Caption) <> windowNames(4)) And (CStr(tmpWindow.Caption) <> windowNames(1)) Then
-                tmpWindow.Visible = False
-            End If
-        Next
+        ''jetzt das Ursprungs-Window ausblenden ...
+        'For Each tmpWindow As Excel.Window In visboWorkbook.Windows
+        '    If (CStr(tmpWindow.Caption) <> windowNames(4)) And (CStr(tmpWindow.Caption) <> windowNames(1)) Then
+        '        tmpWindow.Visible = False
+        '    End If
+        'Next
 
 
         visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
@@ -8606,7 +8606,7 @@ Imports System.Windows
         enableOnUpdate = True
 
         ' jetzt das Chart-Window aktivieren (sonst bleibt Ribbon stehen)
-        projectboardWindows(2).Activate()
+        projectboardWindows(PTwindows.meChart).Activate()
 
 
     End Sub
