@@ -23,8 +23,8 @@ Partial Class frmPPTTimeMachine
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmPPTTimeMachine))
         Me.lblMessage = New System.Windows.Forms.Label()
-        Me.ProgressBarNavigate = New System.Windows.Forms.ProgressBar()
         Me.ToolTipTS = New System.Windows.Forms.ToolTip(Me.components)
         Me.currentDate = New System.Windows.Forms.DateTimePicker()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -42,14 +42,6 @@ Partial Class frmPPTTimeMachine
         Me.lblMessage.Size = New System.Drawing.Size(50, 13)
         Me.lblMessage.TabIndex = 24
         Me.lblMessage.Text = "Message"
-        '
-        'ProgressBarNavigate
-        '
-        Me.ProgressBarNavigate.Location = New System.Drawing.Point(210, 155)
-        Me.ProgressBarNavigate.Name = "ProgressBarNavigate"
-        Me.ProgressBarNavigate.Size = New System.Drawing.Size(73, 10)
-        Me.ProgressBarNavigate.TabIndex = 25
-        Me.ProgressBarNavigate.UseWaitCursor = True
         '
         'currentDate
         '
@@ -108,19 +100,20 @@ Partial Class frmPPTTimeMachine
         '
         'frmPPTTimeMachine
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(494, 177)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.currentDate)
-        Me.Controls.Add(Me.ProgressBarNavigate)
         Me.Controls.Add(Me.lblMessage)
         Me.Controls.Add(Me.btnFastBack)
         Me.Controls.Add(Me.btnStart)
         Me.Controls.Add(Me.btnEnd)
         Me.Controls.Add(Me.btnFastForward)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmPPTTimeMachine"
         Me.Text = "VISBO Time Machine"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -130,7 +123,6 @@ Partial Class frmPPTTimeMachine
     Friend WithEvents btnEnd As System.Windows.Forms.Button
     Friend WithEvents btnFastForward As System.Windows.Forms.Button
     Friend WithEvents lblMessage As System.Windows.Forms.Label
-    Friend WithEvents ProgressBarNavigate As System.Windows.Forms.ProgressBar
     Friend WithEvents ToolTipTS As System.Windows.Forms.ToolTip
     Friend WithEvents currentDate As System.Windows.Forms.DateTimePicker
     Friend WithEvents Label1 As System.Windows.Forms.Label

@@ -325,6 +325,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
     ''' das Customization File 
+    ''' ausserdem werden Auswahl Validation Dropboxes gesetzt 
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub awinWritePhaseMilestoneDefinitions(Optional ByVal writeMappings As Boolean = False)
@@ -502,20 +503,21 @@ Public Module awinGeneralModules
 
         Dim darstellungsKlasse As String
 
-        Dim wsName4 As Excel.Worksheet 
+        Dim wsName4 As Excel.Worksheet
+        
 
         ' beim Starten der Projekt-Tafel wird sichergestellt, dass auch das Worksheet MissingDefinitions = arrwsnames(15) existiert ...
         ' inkl der Namen der Phase- und MilestoneDefinitions
         If writeMissingDefinitions Then
             Try
-                wsName4 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(15)), _
                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
             Catch ex As Exception
                 Exit Sub
             End Try
             
         Else
-            wsName4 = CType(appInstance.Worksheets(arrWsNames(4)), _
+            wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
         End If
 
@@ -568,7 +570,34 @@ Public Module awinGeneralModules
 
         ' jetzt können erst die PhaseDefinitions, dann die MilestoneDefinitions geschrieben werden 
 
+        ' hier werden die Validation-String aufgebaut 
+        ' hier muss jetzt noch die Validierung rein .... damit der Anwender in einem nächsten Schritt sehr bequem die verschiedenen Darstellungsklassen zuweisen kann 
+        Dim milestoneAppearanceClasses As String = ""
+        Dim phaseAppearanceClasses As String = ""
+        Dim msAppearanceRng As Excel.Range = Nothing
+        Dim phAppearanceRng As Excel.Range = Nothing
+        Try
+            Dim wsAppearances As Excel.Worksheet = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(7)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
 
+            For Each cl As Excel.Range In wsAppearances.Range("MeilensteinKlassen")
+                If milestoneAppearanceClasses = "" Then
+                    milestoneAppearanceClasses = cl.Value
+                Else
+                    milestoneAppearanceClasses = milestoneAppearanceClasses & ";" & cl.Value
+                End If
+            Next
+
+            For Each cl As Excel.Range In wsAppearances.Range("PhasenKlassen")
+                If phaseAppearanceClasses = "" Then
+                    phaseAppearanceClasses = cl.Value
+                Else
+                    phaseAppearanceClasses = phaseAppearanceClasses & ";" & cl.Value
+                End If
+            Next
+        Catch ex As Exception
+
+        End Try
 
         ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
         ' anzZeilen muss immer um 2 größer sein als die Anzahl der Definitionen ; 
@@ -633,6 +662,19 @@ Public Module awinGeneralModules
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
 
+            Try
+                If phaseAppearanceClasses.Length > 0 Then
+                    With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                                                               Formula1:=phaseAppearanceClasses)
+                    End With
+                End If
+                
+            Catch ex As Exception
+
+            End Try
+            
+            
 
         Next ix
 
@@ -717,6 +759,17 @@ Public Module awinGeneralModules
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
 
+            Try
+                If milestoneAppearanceClasses.Length > 0 Then
+                    With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                                                                               Formula1:=milestoneAppearanceClasses)
+                    End With
+                End If
+                
+            Catch ex As Exception
+
+            End Try
 
         Next ix
 
@@ -4038,7 +4091,6 @@ Public Module awinGeneralModules
                             .Status = pStatus
                             .tfZeile = tafelZeile
                             .timeStamp = importDate
-                            .UID = cproj.UID
 
                         End With
 
@@ -7762,26 +7814,24 @@ Public Module awinGeneralModules
                                                     Call logfileSchreiben("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
                                                     Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                                 Else
-                                                    Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " & _
+                                                    Dim exMsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " & _
                                                                         "Offset= " & offset.ToString & _
-                                                                        ", Duration= " & duration.ToString), hproj.name, anzFehler)
-                                                    Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " & _
-                                                                        "Offset= " & offset.ToString & _
-                                                                        ", Duration= " & duration.ToString)
+                                                                        ", Duration= " & duration.ToString & " " & objectName & "; "
+
+                                                    Call logfileSchreiben(exMsg, hproj.name, anzFehler)
+                                                    Throw New Exception(exMsg)
                                                 End If
                                             End If
 
                                             ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
                                             If duration <> ProjektdauerIndays Or offset <> 0 Then
 
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase " & _
+                                                Dim exMsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase " & _
                                                                         "Offset= " & offset.ToString & _
-                                                                        ", Duration=" & duration.ToString & _
-                                                                        ", ProjektDauer=" & ProjektdauerIndays.ToString), hproj.name, anzFehler)
-                                                Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase " & _
-                                                                        "Offset= " & offset.ToString & _
-                                                                        ", Duration=" & duration.ToString & _
-                                                                        ", ProjektDauer=" & ProjektdauerIndays.ToString)
+                                                                        ", Duration=" & duration.ToString & " " & objectName & "; " & _
+                                                                        ", ProjektDauer=" & ProjektdauerIndays.ToString
+                                                Call logfileSchreiben(exMsg, hproj.name, anzFehler)
+                                                Throw New Exception(exMsg)
                                             Else
                                                 Dim startOffset As Integer = 0
                                                 .changeStartandDauer(startOffset, ProjektdauerIndays)
@@ -7827,10 +7877,11 @@ Public Module awinGeneralModules
                                                 Call logfileSchreiben(("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!"), hproj.name, anzFehler)
                                                 Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                             Else
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
-                                                                    offset.ToString & ", " & duration.ToString), hproj.name, anzFehler)
-                                                Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
-                                                                    offset.ToString & ", " & duration.ToString)
+                                                Dim exmsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
+                                                                    offset.ToString & ", " & duration.ToString & ": " & objectName
+
+                                                Call logfileSchreiben(exmsg, hproj.name, anzFehler)
+                                                Throw New Exception(exmsg)
                                             End If
                                         End If
 
@@ -12738,6 +12789,7 @@ Public Module awinGeneralModules
 
             returnValue = loginDialog.ShowDialog
             i = i + 1
+
         End While
 
         If returnValue = DialogResult.Abort Or i >= 5 Then
@@ -15720,59 +15772,66 @@ Public Module awinGeneralModules
 
                         If Not isVorlage Then
 
-                            Try
-                                Dim sopDate As Date = hproj.getMilestone("SOP").getDate
+                            ' das ist BMW spezifisch und wird jetzt de-aktiviert .... 
+                            'Try
+                            '    Dim sopDate As Date = hproj.getMilestone("SOP").getDate
 
-                                If DateDiff(DateInterval.Month, StartofCalendar, sopDate) > 0 Then
-                                    Dim sopMonth As Integer = sopDate.Month
-                                    If sopMonth >= 3 And sopMonth <= 6 Then
-                                        anlaufKennung = "03"
-                                    ElseIf sopMonth >= 7 And sopMonth <= 10 Then
-                                        anlaufKennung = "07"
-                                    Else
-                                        anlaufKennung = "11"
-                                    End If
-                                Else
-                                    anlaufKennung = "?"
-                                End If
+                            '    If DateDiff(DateInterval.Month, StartofCalendar, sopDate) > 0 Then
+                            '        Dim sopMonth As Integer = sopDate.Month
+                            '        If sopMonth >= 3 And sopMonth <= 6 Then
+                            '            anlaufKennung = "03"
+                            '        ElseIf sopMonth >= 7 And sopMonth <= 10 Then
+                            '            anlaufKennung = "07"
+                            '        Else
+                            '            anlaufKennung = "11"
+                            '        End If
+                            '    Else
+                            '        anlaufKennung = "?"
+                            '    End If
 
-                            Catch ex As Exception
-                                anlaufKennung = "?"
-                            End Try
+                            'Catch ex As Exception
+                            '    anlaufKennung = "?"
+                            'End Try
 
                             ' jetzt wird die Vorlagen Kennung bestimmt 
-                            Dim tstphase As clsPhase = Nothing
-                            Dim relNr As String
-                            tstphase = hproj.getPhase("Systemgestaltung")
+                            'Dim tstphase As clsPhase = Nothing
+                            'Dim relNr As String
+                            'tstphase = hproj.getPhase("Systemgestaltung")
 
-                            If IsNothing(tstphase) Then
-                                tstphase = hproj.getPhase("I500")
-                                If IsNothing(tstphase) Then
-                                    tstphase = hproj.getPhase("I300")
-                                    If IsNothing(tstphase) Then
-                                        relNr = "rel 4 "
-                                    Else
-                                        relNr = "rel 5 "
-                                    End If
-                                Else
-                                    relNr = "rel 5 "
-                                End If
-                            Else
-                                relNr = "rel 5 "
-                            End If
+                            'If IsNothing(tstphase) Then
+                            '    tstphase = hproj.getPhase("I500")
+                            '    If IsNothing(tstphase) Then
+                            '        tstphase = hproj.getPhase("I300")
+                            '        If IsNothing(tstphase) Then
+                            '            relNr = "rel 4 "
+                            '        Else
+                            '            relNr = "rel 5 "
+                            '        End If
+                            '    Else
+                            '        relNr = "rel 5 "
+                            '    End If
+                            'Else
+                            '    relNr = "rel 5 "
+                            'End If
 
-                            vorlagenName = relNr & typKennung & "-" & anlaufKennung
-                            Try
-                                vorlagenName = vorlagenName.Trim
-                            Catch ex As Exception
-                                vorlagenName = "unknown"
-                            End Try
+                            'vorlagenName = relNr & typKennung & "-" & anlaufKennung
+                            'Try
+                            '    vorlagenName = vorlagenName.Trim
+                            'Catch ex As Exception
+                            '    vorlagenName = "unknown"
+                            'End Try
 
-                            If Projektvorlagen.Contains(vorlagenName) Then
-                                hproj.VorlagenName = vorlagenName
-                            Else
-                                hproj.VorlagenName = vorlagenName & "*"
-                            End If
+                            'If Projektvorlagen.Contains(vorlagenName) Then
+                            '    hproj.VorlagenName = vorlagenName
+                            'Else
+                            '    hproj.VorlagenName = vorlagenName & "*"
+                            'End If
+
+                            vorlagenName = ""
+                            'If Projektvorlagen.Count >= 1 Then
+                            '    vorlagenName = Projektvorlagen.getProject(0).VorlagenName
+                            '    hproj.VorlagenName = vorlagenName
+                            'End If
 
                         End If
 
@@ -19324,6 +19383,8 @@ Public Module awinGeneralModules
                         Dim phaseName As String = cphase.name
                         Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
+                        Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
+
                         If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                             ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
 
@@ -19379,6 +19440,9 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
 
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
@@ -19548,6 +19612,9 @@ Public Module awinGeneralModules
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
 
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
+
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
                                     If Not IsNothing(cellComment) Then
                                         CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
@@ -19708,6 +19775,9 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                     CType(.Cells(zeile, 4), Excel.Range).Value = cphase.name
+
+                                    ' Den Indent schreiben 
+                                    CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentlevel
 
                                     cellComment = CType(.Cells(zeile, 4), Excel.Range).Comment
 

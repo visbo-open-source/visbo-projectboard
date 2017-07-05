@@ -102,7 +102,7 @@ Public Class Ribbon1
                     ' jetzt wird das Formular TimeStamps aufgerufen ...
                     Dim tmFormular As New frmPPTTimeMachine
                     Dim dgRes As Windows.Forms.DialogResult = tmFormular.ShowDialog
-
+                    'tmFormular.Show()
                 End If
 
             Else
@@ -112,6 +112,56 @@ Public Class Ribbon1
             Call MsgBox(msg)
         End If
 
+    End Sub
+    
+   
+    Private Sub variantTab_Click_Click(sender As Object, e As RibbonControlEventArgs) Handles variantTab_Click.Click
+        Dim msg As String = ""
+
+        If userIsEntitled(msg) Then
+            Dim anzahlProjekte As Integer = smartSlideLists.countProjects
+            ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
+            If anzahlProjekte > 0 Then
+
+                ' muss noch eingeloggt werden ? 
+                If noDBAccessInPPT Then
+
+                    Call logInToMongoDB()
+
+                End If
+
+                If Not noDBAccessInPPT Then
+
+                    ' die MArker, falls welche sichtbar sind , wegmachen ... 
+                    Call deleteMarkerShapes()
+
+                    ' aktuell nur für ein Projekt implementiert 
+                    If anzahlProjekte = 1 Then
+                        Dim tmpName As String = smartSlideLists.getPVName(1)
+
+                        ' jetzt wird das Formular Varianten  aufgerufen ...
+                        Dim variantFormular As New frmSelectVariant
+                        With variantFormular
+                            .pName = getPnameFromKey(tmpName)
+                            .vName = getVariantnameFromKey(tmpName)
+                        End With
+
+                        Dim dgRes As Windows.Forms.DialogResult = variantFormular.ShowDialog
+
+                    Else
+                        Call MsgBox("method not yet implemented ...")
+
+                    End If
+
+
+                End If
+
+            Else
+                Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
+            End If
+        Else
+            Call MsgBox(msg)
+        End If
     End Sub
     
 End Class
