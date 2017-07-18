@@ -1,14 +1,14 @@
 ﻿''' <summary>
 ''' Die Rollen müssen immer in der customization file in der ursprünglichen Reihenfolge aufgeführt sein; 
-''' ein Name kann umbenannt werden , aber er darf auf keinen Fall an eine andere Psoiton verchoben werden 
-''' neue Rolle müssen immer ans Ende gestellt werden - alte Rollen müssen immer mitgeschrieben werden ... 
+''' ein Name kann umbenannt werden , aber er darf auf keinen Fall an eine andere Psoiton verschoben werden 
+''' neue Rollen müssen immer ans Ende gestellt werden - alte Rollen müssen immer mitgeschrieben werden ... 
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsRollen
 
 
     Private _allRollen As SortedList(Of Integer, clsRollenDefinition)
-
+    Public hierarchy As clsroleHrchy
 
 
     Public Sub Add(roledef As clsRollenDefinition)
@@ -457,7 +457,85 @@ Public Class clsRollen
     Public Sub New()
 
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
+        hierarchy = New clsroleHrchy
+    End Sub
 
+    ''' <summary>
+    ''' baut die Hierarchie aller Rollen auf
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub buildRoleHierary()
+        ' TopKnoten aufbauen
+        Dim i As Integer = 1
+        Dim hNode As New clsroleNode
+        Dim topRoleDef As clsRollenDefinition
+        Dim hroleDef As clsRollenDefinition
+        Dim hparent As New clsRollenDefinition
+
+        'For i = 1 To _allRollen.Count
+
+        While (i <= _allRollen.Count) And _
+              (hierarchy.count < _allRollen.Count)
+
+            ' Level 0 Knoten
+            hroleDef = _allRollen.Item(i)
+            Dim parentName As String = getParentRoleOf(hroleDef.name)
+            While parentName.Length > 0
+                hparent = getRoledef(parentName)
+                If Not IsNothing(hparent) Then
+                    parentName = getParentRoleOf(hparent.name)
+                End If
+            End While
+
+            ' toplevel gefunden
+            topRoleDef = getRoledef(hparent.name)
+            hNode.roleId = topRoleDef.UID
+            hNode.level = 0
+            hNode.roleParent = 0
+            ' childs aufbauen
+            For Each kvp As KeyValuePair(Of Integer, String) In topRoleDef.getSubRoleIDs
+                If Not hNode.childs.Contains(kvp.Key) Then
+                    hNode.childs.Add(kvp.Key)
+                End If
+            Next
+            hierarchy.add(hNode)
+
+            ' Level x Knoten dazu aufbauen
+            Call buildSubRoleHrchy(hNode)
+
+            i = i + 1
+
+            'If _allRollen.Count = hierarchy.count Then
+            '    Exit For
+            'End If
+        End While
+
+    End Sub
+
+    Public Sub buildSubRoleHrchy(ByVal node As clsroleNode)
+
+        Dim roledef As clsRollenDefinition
+        'Dim childdef As clsRollenDefinition
+        'Dim childNode As clsroleNode
+        Dim id As Integer
+
+        For Each id In node.childs
+            Dim hNode As New clsroleNode
+            hNode.level = node.level + 1
+            hNode.roleId = id
+            hNode.roleParent = node.roleId
+            roledef = getRoledef(hNode.roleId)
+            For Each kvp As KeyValuePair(Of Integer, String) In roledef.getSubRoleIDs
+                If Not hNode.childs.Contains(kvp.Key) Then
+                    hNode.childs.Add(kvp.Key)
+                End If
+            Next
+            hierarchy.add(hNode)
+
+            ' Level x Knoten dazu aufbauen
+            Call buildSubRoleHrchy(hNode)
+        Next
+  
     End Sub
 
 End Class

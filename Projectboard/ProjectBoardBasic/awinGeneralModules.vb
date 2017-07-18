@@ -1319,6 +1319,7 @@ Public Module awinGeneralModules
 
                     End If
 
+                    RoleDefinitions.buildRoleHierary()
 
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
                     Call readVorlagen(True)
@@ -11736,7 +11737,7 @@ Public Module awinGeneralModules
                                     ' es ist eine Sub-Rolle
 
                                     hrole.addSubRole(subRole.UID, subRoleName, RoleDefinitions.Count)
-
+ 
                                     spalte = 2
                                     tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 

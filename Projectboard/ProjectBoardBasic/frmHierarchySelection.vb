@@ -91,7 +91,62 @@ Public Class frmHierarchySelection
                     .OKButton.Text = "Speichern"
                     .filterLabel.Text = "Name des Filters"
                 End If
+                '.rdbNameList.Enabled = False
+                '.rdbNameList.Visible = False
+                '.rdbNameList.Checked = False
 
+                .rdbNameList.Enabled = True
+                .rdbNameList.Visible = True
+                .rdbNameList.Checked = True
+
+
+                '.rdbProjStruktProj.Enabled = False
+                '.rdbProjStruktProj.Visible = False
+                '.rdbProjStruktProj.Checked = False
+
+                '.rdbProjStruktTyp.Enabled = False
+                '.rdbProjStruktTyp.Visible = False
+                '.rdbProjStruktTyp.Checked = False
+
+                .rdbProjStruktProj.Enabled = True
+                .rdbProjStruktProj.Visible = True
+                .rdbProjStruktProj.Checked = False
+
+                .rdbProjStruktTyp.Enabled = True
+                .rdbProjStruktTyp.Visible = True
+                .rdbProjStruktTyp.Checked = False
+
+                '.rdbPhases.Visible = False
+                '.rdbPhases.Checked = False
+                '.picturePhasen.Visible = False
+                .rdbPhases.Visible = True
+                .rdbPhases.Checked = True
+                .picturePhasen.Visible = True
+
+                '.rdbPhaseMilest.Visible = True
+                .rdbPhaseMilest.Visible = False
+                .rdbPhaseMilest.Checked = False
+
+                '.picturePhaseMilest.Visible = True
+                .picturePhaseMilest.Visible = False
+
+                .rdbMilestones.Visible = True
+                .rdbMilestones.Checked = False
+                .pictureMilestones.Visible = True
+
+                .rdbRoles.Visible = True
+                .rdbRoles.Checked = False
+                .pictureRoles.Visible = True
+
+                .rdbCosts.Visible = True
+                .rdbCosts.Checked = False
+                .pictureCosts.Visible = True
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -179,6 +234,9 @@ Public Class frmHierarchySelection
                 .rdbCosts.Visible = False
                 .pictureCosts.Visible = False
 
+                .rdbPhaseMilest.Visible = False
+                .picturePhaseMilest.Visible = False
+
                 .AbbrButton.Visible = False
                 .AbbrButton.Enabled = False
                 .statusLabel.Text = ""
@@ -211,6 +269,63 @@ Public Class frmHierarchySelection
                     .OKButton.Text = "Charts erstellen"
                 End If
 
+                
+                '.rdbNameList.Enabled = False
+                '.rdbNameList.Visible = False
+                '.rdbNameList.Checked = False
+
+                .rdbNameList.Enabled = True
+                .rdbNameList.Visible = True
+                .rdbNameList.Checked = True
+
+
+                '.rdbProjStruktProj.Enabled = False
+                '.rdbProjStruktProj.Visible = False
+                '.rdbProjStruktProj.Checked = False
+
+                '.rdbProjStruktTyp.Enabled = False
+                '.rdbProjStruktTyp.Visible = False
+                '.rdbProjStruktTyp.Checked = False
+
+                .rdbProjStruktProj.Enabled = True
+                .rdbProjStruktProj.Visible = True
+                .rdbProjStruktProj.Checked = False
+
+                .rdbProjStruktTyp.Enabled = True
+                .rdbProjStruktTyp.Visible = True
+                .rdbProjStruktTyp.Checked = False
+
+                '.rdbPhases.Visible = False
+                '.rdbPhases.Checked = False
+                '.picturePhasen.Visible = False
+                .rdbPhases.Visible = True
+                .rdbPhases.Checked = True
+                .picturePhasen.Visible = True
+
+                '.rdbPhaseMilest.Visible = True
+                .rdbPhaseMilest.Visible = False
+                .rdbPhaseMilest.Checked = False
+
+                '.picturePhaseMilest.Visible = True
+                .picturePhaseMilest.Visible = False
+
+                .rdbMilestones.Visible = True
+                .rdbMilestones.Checked = False
+                .pictureMilestones.Visible = True
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .rdbRoles.Visible = True
+                .rdbRoles.Checked = False
+                .pictureRoles.Visible = True
+
+                .rdbCosts.Visible = True
+                .rdbCosts.Checked = False
+                .pictureCosts.Visible = True
 
                 .AbbrButton.Visible = False
                 .AbbrButton.Enabled = False
@@ -273,6 +388,63 @@ Public Class frmHierarchySelection
                     .OKButton.Text = "Bericht erstellen"
                     .filterLabel.Text = "Auswahl"
                 End If
+
+                '.rdbNameList.Enabled = False
+                '.rdbNameList.Visible = False
+                '.rdbNameList.Checked = False
+
+                .rdbNameList.Enabled = True
+                .rdbNameList.Visible = True
+                .rdbNameList.Checked = True
+
+
+                '.rdbProjStruktProj.Enabled = False
+                '.rdbProjStruktProj.Visible = False
+                '.rdbProjStruktProj.Checked = False
+
+                '.rdbProjStruktTyp.Enabled = False
+                '.rdbProjStruktTyp.Visible = False
+                '.rdbProjStruktTyp.Checked = False
+
+                .rdbProjStruktProj.Enabled = True
+                .rdbProjStruktProj.Visible = True
+                .rdbProjStruktProj.Checked = False
+
+                .rdbProjStruktTyp.Enabled = True
+                .rdbProjStruktTyp.Visible = True
+                .rdbProjStruktTyp.Checked = False
+
+                '.rdbPhases.Visible = False
+                '.rdbPhases.Checked = False
+                '.picturePhasen.Visible = False
+                .rdbPhases.Visible = True
+                .rdbPhases.Checked = True
+                .picturePhasen.Visible = True
+
+                '.rdbPhaseMilest.Visible = True
+                .rdbPhaseMilest.Visible = False
+                .rdbPhaseMilest.Checked = False
+
+                '.picturePhaseMilest.Visible = True
+                .picturePhaseMilest.Visible = False
+
+                .rdbMilestones.Visible = True
+                .rdbMilestones.Checked = False
+                .pictureMilestones.Visible = True
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .rdbRoles.Visible = True
+                .rdbRoles.Checked = False
+                .pictureRoles.Visible = True
+
+                .rdbCosts.Visible = True
+                .rdbCosts.Checked = False
+                .pictureCosts.Visible = True
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -473,57 +645,72 @@ Public Class frmHierarchySelection
 
         End If
 
-        auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+        Select Case Me.menuOption
 
-        Select Case auswahl
-            Case PTProjektType.nameList
+            Case PTmenue.leistbarkeitsAnalyse
 
-                Me.rdbNameList.Checked = True
-                Me.rdbPhases.Checked = True
+                'Me.rdbRoles.Checked = True
+                'Me.rdbCosts.Checked = False
+                '' Rollen oder Kosten hierarchisch darstellen
 
-                Call buildHryTreeViewNew(auswahl)
+                Dim topNodes As List(Of Integer) = RoleDefinitions.hierarchy.toplevelNodes
+
+            Case PTmenue.visualisieren
+
+                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+
+                Select Case auswahl
+                    Case PTProjektType.nameList
+
+                        Me.rdbNameList.Checked = True
+                        Me.rdbPhases.Checked = True
+
+                        Call buildHryTreeViewNew(auswahl)
 
 
-            Case PTProjektType.vorlage
+                    Case PTProjektType.vorlage
 
-                Me.rdbProjStruktTyp.Checked = True
+                        Me.rdbProjStruktTyp.Checked = True
 
-                Call buildHryTreeViewNew(auswahl)
-                '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                '    hryTreeView.ExpandAll()
-                'End If
+                        Call buildHryTreeViewNew(auswahl)
+                        '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                        'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                        '    hryTreeView.ExpandAll()
+                        'End If
 
-            Case PTProjektType.projekt
+                    Case PTProjektType.projekt
 
-                Me.rdbProjStruktProj.Checked = True
+                        Me.rdbProjStruktProj.Checked = True
 
-                Call buildHryTreeViewNew(auswahl)
-                '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                '    hryTreeView.ExpandAll()
-                'End If
+                        Call buildHryTreeViewNew(auswahl)
+                        '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                        'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                        '    hryTreeView.ExpandAll()
+                        'End If
 
-            Case Else
-                selectedPhases.Clear()
-                selectedMilestones.Clear()
-                selectedBUs.Clear()
-                selectedTyps.Clear()
-                selectedRoles.Clear()
-                selectedCosts.Clear()
+                    Case Else
+                        selectedPhases.Clear()
+                        selectedMilestones.Clear()
+                        selectedBUs.Clear()
+                        selectedTyps.Clear()
+                        selectedRoles.Clear()
+                        selectedCosts.Clear()
 
-                Me.rdbNameList.Checked = True
-                Me.rdbPhases.Checked = True
+                        Me.rdbNameList.Checked = True
+                        Me.rdbPhases.Checked = True
 
-                Call buildHryTreeViewNew(PTProjektType.nameList)
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
+
+                End Select
+
+                ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                    hryTreeView.ExpandAll()
+                End If
 
         End Select
 
-        ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-        If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-            hryTreeView.ExpandAll()
-        End If
-
+   
         Cursor = Cursors.Default
 
         ' die Vorlagen  einlesen
@@ -645,13 +832,6 @@ Public Class frmHierarchySelection
                 End With
 
 
-                'selectedPhases.Clear()
-                'For Each element As String In selNameListBox.Items
-                '    If Not selectedPhases.Contains(element) Then
-                '        selectedPhases.Add(element, element)
-                '    End If
-                'Next
-
 
             ElseIf Me.rdbMilestones.Checked = True Then
 
@@ -667,44 +847,8 @@ Public Class frmHierarchySelection
                         End If
                     Next
                 End With
-
-
-            ElseIf rdbRoles.Checked = True Then
-
-                selectedRoles.Clear()
-                'For Each element As String In selNameListBox.Items
-                '    If Not selectedRoles.Contains(element) Then
-                '        selectedRoles.Add(element, element)
-                '    End If
-                'Next
-
-            ElseIf rdbCosts.Checked = True Then
-
-                selectedCosts.Clear()
-                'For Each element As String In selNameListBox.Items
-                '    If Not selectedCosts.Contains(element) Then
-                '        selectedCosts.Add(element, element)
-                '    End If
-                'Next
-
-            ElseIf rdbBU.Checked = True Then
-
-                selectedBUs.Clear()
-                'For Each element As String In selNameListBox.Items
-                '    If Not selectedBUs.Contains(element) Then
-                '        selectedBUs.Add(element, element)
-                '    End If
-                'Next
-
-            ElseIf rdbTyp.Checked = True Then
-
-                selectedTyps.Clear()
-                'For Each element As String In selNameListBox.Items
-                '    If Not selectedTyps.Contains(element) Then
-                '        selectedTyps.Add(element, element)
-                '    End If
-                'Next
             End If
+
 
         ElseIf Me.rdbProjStruktProj.Checked Or Me.rdbProjStruktTyp.Checked Then
 
@@ -763,8 +907,102 @@ Public Class frmHierarchySelection
 
             End With
 
+        ElseIf rdbRoles.Checked = True Then '?????
+
+            ' Radiobutton Rollen wurde geklickt
+
+            selectedRoles.Clear()
+        
+            With hryTreeView
+
+                For px As Integer = 1 To anzahlKnoten
+
+                    tmpNode = .Nodes.Item(px - 1)
+
+                    If tmpNode.Checked 
+
+                        If Not selectedRoles.Contains(tmpNode.Text) Then
+                            selectedRoles.Add(tmpNode.Text, tmpNode.Text)
+                        End If
+
+                    End If
+
+
+                    If tmpNode.Nodes.Count > 0 Then
+                        Call pickupCheckedRoleItems(tmpNode)
+                    End If
+
+                Next
+
+            End With
+
+
+            'selectedRoles.Clear()
+            'With hryTreeView
+            '    For px As Integer = 1 To anzahlKnoten
+            '        tmpNode = .Nodes.Item(px - 1)
+            '        If tmpNode.Checked Then
+            '            ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
+            '            If Not selectedRoles.Contains(tmpNode.Text) Then
+            '                ' im Rollen-Treeview sind in tmpNode.Name die RollenUIDs enthalten
+            '                selectedRoles.Add(tmpNode.Text, tmpNode.Text)
+            '            End If
+            '        End If
+            '    Next
+            'End With
+
+
+        ElseIf rdbCosts.Checked = True Then
+
+
+            selectedCosts.Clear()
+            With hryTreeView
+                For px As Integer = 1 To anzahlKnoten
+                    tmpNode = .Nodes.Item(px - 1)
+                    If tmpNode.Checked Then
+                        ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
+                        If Not selectedCosts.Contains(tmpNode.Name) Then
+                            selectedCosts.Add(tmpNode.Name, tmpNode.Name)
+                        End If
+                    End If
+                Next
+            End With
+
+
+        ElseIf rdbBU.Checked = True Then
+
+            selectedBUs.Clear()
+            With hryTreeView
+                For px As Integer = 1 To anzahlKnoten
+                    tmpNode = .Nodes.Item(px - 1)
+                    If tmpNode.Checked Then
+                        ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
+                        If Not selectedBUs.Contains(tmpNode.Name) Then
+                            selectedBUs.Add(tmpNode.Name, tmpNode.Name)
+                        End If
+                    End If
+                Next
+            End With
+
+
+        ElseIf rdbTyp.Checked = True Then
+
+            selectedTyps.Clear()
+            With hryTreeView
+                For px As Integer = 1 To anzahlKnoten
+                    tmpNode = .Nodes.Item(px - 1)
+                    If tmpNode.Checked Then
+                        ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
+                        If Not selectedTyps.Contains(tmpNode.Name) Then
+                            selectedTyps.Add(tmpNode.Name, tmpNode.Name)
+                        End If
+                    End If
+                Next
+            End With
+
         End If
 
+     
 
         If Me.menuOption = PTmenue.filterdefinieren Then
 
@@ -984,12 +1222,10 @@ Public Class frmHierarchySelection
 
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 
 
-        'If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Or Me.menuOption = PTmenue.reportBHTC Then
-        'If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
-
         If Me.menuOption = PTmenue.excelExport Or _
             menuOption = PTmenue.filterdefinieren Or _
             menuOption = PTmenue.sessionFilterDefinieren Or _
+            menuOption = PTmenue.leistbarkeitsAnalyse Or _
             (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
             Me.DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
@@ -1321,94 +1557,158 @@ Public Class frmHierarchySelection
         Dim curHry As clsHierarchy
         Dim vorlElem As String = ""
 
+        Dim child As clsRollenDefinition
+
         node = e.Node
         elemID = node.Name
 
-        If type = PTProjektType.vorlage Then
-            curHry = Projektvorlagen.getProject(PVname).hierarchy
-        Else
-            curHry = ShowProjekte.getProject(PVname).hierarchy
-        End If
+        If rdbRoles.Checked Then
+            ' Rollen expandieren
+
+            If Not IsNothing(node.Tag) Then
+
+                ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
+                If node.Tag = "P" Then
+
+                    node.Tag = "X"
+
+                    ' Löschen von Platzhalter
+                    node.Nodes.Clear()
+
+                    Dim nodelist As List(Of Integer) = RoleDefinitions.hierarchy.nodeItem(CInt(node.Name)).childs
 
 
-        If Not IsNothing(node.Tag) Then
+                    anzChilds = nodelist.Count
 
-            ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
-            If node.Tag = "P" Then
+                    With hryTreeView
+                        .CheckBoxes = True
 
-                node.Tag = "X"
+                        For i As Integer = 0 To anzChilds - 1
+                            child = RoleDefinitions.getRoledef(nodelist(i))
+                            Dim childName As String = child.name
+                            Dim childID As Integer = child.UID
 
-                ' Löschen von Platzhalter
-                node.Nodes.Clear()
+                            If allRoles.Contains(childName) Then
 
-                hryNode = curHry.nodeItem(elemID)
-
-                anzChilds = hryNode.childCount
-
-                With hryTreeView
-                    .CheckBoxes = True
-
-                    For i As Integer = 1 To anzChilds
-
-                        childNameID = hryNode.getChild(i)
-                        childNode = node.Nodes.Add(elemNameOfElemID(childNameID))
-                        childNode.Name = childNameID
+                                childNode = node.Nodes.Add(childName)
+                                childNode.Name = childID.ToString
+                                childNode.Text = childName
 
 
-                        Dim tmpBreadcrumb As String = curHry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
-                        Dim elemName As String = elemNameOfElemID(childNameID)
-                        Dim ele As String = calcHryFullname(elemName, tmpBreadcrumb)
-
-                        ' gehe auf den root-Knoten
-                        Dim topNode As TreeNode = node
-                        Do While Not IsNothing(topNode.Parent)
-                            topNode = topNode.Parent
-                        Loop
-                        Dim pvElem As String = "[" & topNode.Name & "]" & ele
-
-                        If Projektvorlagen.Contains(topNode.Text) Then
-                            Dim vproj As clsProjektvorlage = Projektvorlagen.getProject(topNode.Text)
-                        End If
-
-                        If ShowProjekte.contains(topNode.Text) Then
-
-                            Dim hproj As clsProjekt = ShowProjekte.getProject(topNode.Text)
-                            vorlElem = "[V:" & hproj.VorlagenName & "]" & ele
-                        End If
+                                If selectedRoles.Contains(childName) Then
+                                    childNode.Checked = True
+                                End If
 
 
-                        If elemIDIstMeilenstein(childNameID) Then
-                            childNode.BackColor = System.Drawing.Color.Azure
-                            If selectedMilestones.Contains(ele) Or selectedMilestones.Contains(pvElem) _
-                                Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Then
-                                childNode.Checked = True
+                                If RoleDefinitions.hierarchy.nodeItem(childID).childs.Count > 0 Then
+                                    childNode.Tag = "P"
+
+
+                                    placeholder = childNode.Nodes.Add("-")
+                                    placeholder.Tag = "P"
+                                Else
+                                    childNode.Tag = "X"
+                                End If
+
                             End If
-                        Else
-                            If selectedPhases.Contains(ele) Or selectedPhases.Contains(pvElem) _
-                               Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Then
-                                childNode.Checked = True
-                            End If
-                        End If
+                        Next
 
 
-
-                        If curHry.nodeItem(childNameID).childCount > 0 Then
-                            childNode.Tag = "P"
-                            placeholder = childNode.Nodes.Add("-")
-                            placeholder.Tag = "P"
-                        Else
-                            childNode.Tag = "X"
-                        End If
-
-
-                    Next
-
-                End With
-
-
+                    End With
+                End If
             End If
 
+
+        Else
+            ' Projekte expandieren
+            If type = PTProjektType.vorlage Then
+                curHry = Projektvorlagen.getProject(PVname).hierarchy
+            Else
+                curHry = ShowProjekte.getProject(PVname).hierarchy
+            End If
+
+
+            If Not IsNothing(node.Tag) Then
+
+                ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
+                If node.Tag = "P" Then
+
+                    node.Tag = "X"
+
+                    ' Löschen von Platzhalter
+                    node.Nodes.Clear()
+
+                    hryNode = curHry.nodeItem(elemID)
+
+                    anzChilds = hryNode.childCount
+
+                    With hryTreeView
+                        .CheckBoxes = True
+
+                        For i As Integer = 1 To anzChilds
+
+                            childNameID = hryNode.getChild(i)
+                            childNode = node.Nodes.Add(elemNameOfElemID(childNameID))
+                            childNode.Name = childNameID
+
+
+                            Dim tmpBreadcrumb As String = curHry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
+                            Dim elemName As String = elemNameOfElemID(childNameID)
+                            Dim ele As String = calcHryFullname(elemName, tmpBreadcrumb)
+
+                            ' gehe auf den root-Knoten
+                            Dim topNode As TreeNode = node
+                            Do While Not IsNothing(topNode.Parent)
+                                topNode = topNode.Parent
+                            Loop
+                            Dim pvElem As String = "[" & topNode.Name & "]" & ele
+
+                            If Projektvorlagen.Contains(topNode.Text) Then
+                                Dim vproj As clsProjektvorlage = Projektvorlagen.getProject(topNode.Text)
+                            End If
+
+                            If ShowProjekte.contains(topNode.Text) Then
+
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(topNode.Text)
+                                vorlElem = "[V:" & hproj.VorlagenName & "]" & ele
+                            End If
+
+
+                            If elemIDIstMeilenstein(childNameID) Then
+                                childNode.BackColor = System.Drawing.Color.Azure
+                                If selectedMilestones.Contains(ele) Or selectedMilestones.Contains(pvElem) _
+                                    Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Then
+                                    childNode.Checked = True
+                                End If
+                            Else
+                                If selectedPhases.Contains(ele) Or selectedPhases.Contains(pvElem) _
+                                   Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Then
+                                    childNode.Checked = True
+                                End If
+                            End If
+
+
+
+                            If curHry.nodeItem(childNameID).childCount > 0 Then
+                                childNode.Tag = "P"
+                                placeholder = childNode.Nodes.Add("-")
+                                placeholder.Tag = "P"
+                            Else
+                                childNode.Tag = "X"
+                            End If
+
+
+                        Next
+
+                    End With
+
+
+                End If
+
+            End If
         End If
+
+
 
 
     End Sub
@@ -1496,6 +1796,9 @@ Public Class frmHierarchySelection
         Dim kennung As String ' V: für Vorlagen, P: für Projekte
         Dim hry As clsHierarchy
         Dim checkProj As Boolean = False
+
+
+
 
         With hryTreeView
             .Nodes.Clear()
@@ -1947,6 +2250,51 @@ Public Class frmHierarchySelection
 
         End If
 
+    End Sub
+
+    ''' <summary>
+    ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der selectedRoles-Liste zurück  
+    ''' wird rekursiv aufgerufen 
+    ''' Achtung: wenn es Endlos Zyklen gibt, dann ist hier eine Endlos-Schleife ! 
+    ''' </summary>
+    ''' <param name="node"></param>
+    ''' <remarks></remarks>
+    Public Sub pickupCheckedRoleItems(ByVal node As TreeNode)
+        Dim tmpNode As TreeNode
+        Dim element As String
+
+        If IsNothing(node) Then
+            ' nichts tun
+        Else
+
+            Dim anzahlKnoten As Integer = node.Nodes.Count
+
+            With node
+
+                For px As Integer = 1 To anzahlKnoten
+
+                    tmpNode = .Nodes.Item(px - 1)
+
+                    If tmpNode.Checked Then
+
+                        element = tmpNode.Text
+                        If Not selectedRoles.Contains(element) Then
+                            selectedRoles.Add(element, element)
+                        End If
+
+
+                    End If
+
+
+                    If tmpNode.Nodes.Count > 0 Then
+                        Call pickupCheckedRoleItems(tmpNode)
+                    End If
+
+                Next
+
+            End With
+
+        End If
     End Sub
     ''' <summary>
     ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der selectedElems zurück   
@@ -2746,32 +3094,40 @@ Public Class frmHierarchySelection
                                         selectedPhases, selectedMilestones, _
                                         selectedRoles, selectedCosts)
 
-                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
-                                       selectedRoles, selectedCosts)
+                If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
 
-                missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
-                                                    selectedRoles, selectedCosts)
 
-                If auswahl = PTProjektType.nameList Then
-                    Me.rdbNameList.Checked = True
+                    auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
+                                           selectedRoles, selectedCosts)
 
-                ElseIf auswahl = PTProjektType.projekt Then
-                    Me.rdbProjStruktProj.Checked = True
+                    missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
+                                                        selectedRoles, selectedCosts)
 
-                ElseIf auswahl = PTProjektType.vorlage Then
-                    Me.rdbProjStruktTyp.Checked = True
-                Else
-                    Me.rdbProjStruktProj.Checked = True
-                End If
+                    If auswahl = PTProjektType.nameList Then
+                        Me.rdbNameList.Checked = True
 
-                Call buildHryTreeViewNew(auswahl)
+                    ElseIf auswahl = PTProjektType.projekt Then
+                        Me.rdbProjStruktProj.Checked = True
 
-                If auswahl = PTProjektType.projekt Or auswahl = PTProjektType.vorlage Then
-
-                    ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                    If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                        hryTreeView.ExpandAll()
+                    ElseIf auswahl = PTProjektType.vorlage Then
+                        Me.rdbProjStruktTyp.Checked = True
+                    Else
+                        Me.rdbProjStruktProj.Checked = True
                     End If
+
+                    Call buildHryTreeViewNew(auswahl)
+
+                    If auswahl = PTProjektType.projekt Or auswahl = PTProjektType.vorlage Then
+
+                        ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                        If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                            hryTreeView.ExpandAll()
+                        End If
+
+                    End If
+                ElseIf selectedRoles.Count > 0 Then
+
+                ElseIf selectedCosts.Count > 0 Then
 
                 End If
 
@@ -3349,6 +3705,19 @@ Public Class frmHierarchySelection
 
     End Sub
 
+    ''' <summary>
+    '''  Klick auf das Bild soll auch den Radiobutton setzen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub picturePhaseMilest_Click(sender As Object, e As EventArgs) Handles picturePhaseMilest.Click
+        If Me.rdbPhaseMilest.Checked = False Then
+            rdbPhaseMilest.Checked = True
+        Else
+            rdbPhaseMilest.Checked = False
+        End If
+    End Sub
 
     ''' <summary>
     ''' Klick auf das Bild soll auch den Radiobutton setzen
@@ -3587,10 +3956,225 @@ Public Class frmHierarchySelection
 
     Private Sub rdbRoles_CheckedChanged(sender As Object, e As EventArgs) Handles rdbRoles.CheckedChanged
 
+        statusLabel.Text = ""
+        filterBox.Enabled = True
+
+        If RoleDefinitions.Count = 0 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no roles types defined! ")
+            Else
+                Call MsgBox("es sind keine Rollen definiert !")
+            End If
+
+        Else
+            If Me.rdbRoles.Checked Then
+
+                With Me
+
+                    'Anzeigen der erforderlichen Buttons
+                    .rdbPhaseMilest.Visible = True
+                    .rdbPhaseMilest.Checked = False
+                    .picturePhaseMilest.Visible = True
+
+                    ' Ausblenden der nicht clickbaren Buttons
+                    .rdbNameList.Enabled = False
+                    .rdbNameList.Visible = False
+                    .rdbNameList.Checked = False
+
+                    .rdbProjStruktProj.Enabled = False
+                    .rdbProjStruktProj.Visible = False
+                    .rdbProjStruktProj.Checked = False
+
+                    .rdbProjStruktTyp.Enabled = False
+                    .rdbProjStruktTyp.Visible = False
+                    .rdbProjStruktTyp.Checked = False
+
+                    .rdbPhases.Visible = False
+                    .rdbPhases.Checked = False
+                    .picturePhasen.Visible = False
+
+                    .rdbMilestones.Visible = False
+                    .rdbMilestones.Checked = False
+                    .pictureMilestones.Visible = False
+
+                End With
+
+
+                ' clear Listbox1 
+                If awinSettings.englishLanguage Then
+                    headerLine.Text = "Roles/Names"
+                Else
+                    headerLine.Text = "Rollen/Namen"
+                End If
+
+                filterBox.Text = ""
+
+
+                ' jetzt nur die Rollen anbieten, die auch vorkommen 
+                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                    ' immer die AlleProjekte hernehmen 
+                    If selectedProjekte.Count > 0 Then
+                        allRoles = selectedProjekte.getRoleNames
+                    ElseIf AlleProjekte.Count > 0 Then
+                        allRoles = AlleProjekte.getRoleNames
+                    Else
+                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                        allRoles.Clear()
+                    End If
+
+                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                    ' 
+                    If selectedProjekte.Count > 0 Then
+                        allRoles = selectedProjekte.getRoleNames
+                    Else
+                        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                        For i As Integer = 1 To RoleDefinitions.Count
+                            Dim tmpName As String = RoleDefinitions.getRoledef(i).name
+                            If Not allRoles.Contains(tmpName) Then
+                                allRoles.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                Else
+                    ' alle anderen Optionen
+                    If selectedProjekte.Count > 0 Then
+                        allRoles = selectedProjekte.getRoleNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allRoles = ShowProjekte.getRoleNames
+                    Else
+                        For i As Integer = 1 To RoleDefinitions.Count
+                            Dim tmpName As String = RoleDefinitions.getRoledef(i).name
+                            If Not allRoles.Contains(tmpName) Then
+                                allRoles.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                End If
+
+                Call buildTreeViewRolle()
+                'Call rebuildFormerState(PTauswahlTyp.Rolle)
+
+            Else
+                ' Merken, was ggf. das Filterkriterium war 
+                'sKeyRoles = filterBox.Text
+
+                ' Merken welches die selektierten Rollen waren 
+                Call pickupCheckedListItems(hryTreeView, selectedRoles)
+
+            End If
+        End If
     End Sub
 
     Private Sub rdbCosts_CheckedChanged(sender As Object, e As EventArgs) Handles rdbCosts.CheckedChanged
 
+        statusLabel.Text = ""
+        filterBox.Enabled = True
+
+        If CostDefinitions.Count = 0 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no cost types defined!")
+            Else
+                Call MsgBox("es sind keine Kostenarten definiert !")
+            End If
+
+        Else
+            If Me.rdbCosts.Checked Then
+
+
+                With Me
+
+                    'Anzeigen der erforderlichen Buttons
+                    .rdbPhaseMilest.Visible = True
+                    .rdbPhaseMilest.Checked = False
+                    .picturePhaseMilest.Visible = True
+
+                    ' Ausblenden der nicht clickbaren Buttons
+                    .rdbNameList.Enabled = False
+                    .rdbNameList.Visible = False
+                    .rdbNameList.Checked = False
+
+                    .rdbProjStruktProj.Enabled = False
+                    .rdbProjStruktProj.Visible = False
+                    .rdbProjStruktProj.Checked = False
+
+                    .rdbProjStruktTyp.Enabled = False
+                    .rdbProjStruktTyp.Visible = False
+                    .rdbProjStruktTyp.Checked = False
+
+                    .rdbPhases.Visible = False
+                    .rdbPhases.Checked = False
+                    .picturePhasen.Visible = False
+
+                    .rdbMilestones.Visible = False
+                    .rdbMilestones.Checked = False
+                    .pictureMilestones.Visible = False
+
+                End With
+
+                ' clear Listbox1 
+                If awinSettings.englishLanguage Then
+                    headerLine.Text = "Cost Types"
+                Else
+                    headerLine.Text = "Kostenarten"
+                End If
+
+                filterBox.Text = ""
+
+                ' jetzt nur die Kosten anbieten, die auch vorkommen 
+                If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                    ' immer die AlleProjekte hernehmen 
+                    If selectedProjekte.Count > 0 Then
+                        allCosts = selectedProjekte.getCostNames
+                    ElseIf AlleProjekte.Count > 0 Then
+                        allCosts = AlleProjekte.getCostNames()
+                    Else
+                        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                        allCosts.Clear()
+                    End If
+
+                ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                    ' 
+                    If selectedProjekte.Count > 0 Then
+                        allCosts = selectedProjekte.getCostNames
+                    Else
+                        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                        For i As Integer = 1 To CostDefinitions.Count - 1
+                            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                            If Not allCosts.Contains(tmpName) Then
+                                allCosts.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                Else
+                    ' alle anderen Optionen
+                    If selectedProjekte.Count > 0 Then
+                        allCosts = selectedProjekte.getCostNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allCosts = ShowProjekte.getCostNames
+                    Else
+                        For i As Integer = 1 To CostDefinitions.Count - 1
+                            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                            If Not allCosts.Contains(tmpName) Then
+                                allCosts.Add(tmpName, tmpName)
+                            End If
+                        Next
+                    End If
+
+                End If
+
+
+                Call rebuildFormerState(PTauswahlTyp.Kostenart)
+
+            Else
+
+                ' Merken welches die selektierten Kosten waren 
+                Call pickupCheckedListItems(hryTreeView, selectedCosts)
+
+            End If
+        End If
     End Sub
 
     Private Sub rdbBU_CheckedChanged(sender As Object, e As EventArgs) Handles rdbBU.CheckedChanged
@@ -3601,5 +4185,150 @@ Public Class frmHierarchySelection
 
     End Sub
 
+    Private Sub rdbPhaseMilest_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPhaseMilest.CheckedChanged
+        If rdbPhaseMilest.Checked Then
 
+            ' Visibility der Buttons anpassen an die Auswahl
+            With Me
+                .rdbNameList.Enabled = True
+                .rdbNameList.Visible = True
+                .rdbNameList.Checked = True
+
+                .rdbProjStruktProj.Enabled = True
+                .rdbProjStruktProj.Visible = True
+                .rdbProjStruktProj.Checked = False
+
+                .rdbProjStruktTyp.Enabled = True
+                .rdbProjStruktTyp.Visible = True
+                .rdbProjStruktTyp.Checked = False
+
+                .rdbPhases.Visible = True
+                .rdbPhases.Checked = True
+                .picturePhasen.Visible = True
+
+                .rdbMilestones.Visible = True
+                .rdbMilestones.Checked = False
+                .pictureMilestones.Visible = True
+
+                '.rdbBU.Visible = False
+                '.pictureBU.Visible = False
+
+                '.rdbTyp.Visible = False
+                '.pictureTyp.Visible = False
+
+                '.rdbRoles.Visible = True
+                '.pictureRoles.Visible = True
+
+                '.rdbCosts.Visible = True
+                '.pictureCosts.Visible = True
+
+                .rdbPhaseMilest.Visible = False
+                .picturePhaseMilest.Visible = False
+
+            End With
+
+
+            auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+
+            Call buildHryTreeViewNew(auswahl)
+
+        Else
+
+        End If
+    End Sub
+
+    Public Sub buildTreeViewRolle()
+
+
+        Dim topLevel As TreeNode
+        Dim roleHry As clsroleHrchy = RoleDefinitions.hierarchy
+        Dim checkProj As Boolean = False
+
+        With hryTreeView
+
+            .Nodes.Clear()
+            .CheckBoxes = True
+
+
+            ' alle Rollen in geladenen Projekte zeigen 
+
+            If allRoles.Count > 0 Then
+                Dim topNodes As List(Of Integer) = roleHry.toplevelNodes
+                Dim htops As Collection = roleHry.nodes(0)
+
+
+                For i = 0 To topNodes.Count - 1
+                    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(topNodes.Item(i))
+                    topLevel = .Nodes.Add(role.name)
+                    topLevel.Name = role.UID.ToString
+                    topLevel.Text = role.name
+
+                    Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
+                Next
+            End If
+
+
+        End With
+    End Sub
+    Public Sub buildRoleSubTreeView(ByRef topNode As TreeNode, ByRef nodeList As List(Of Integer))
+
+        Dim anzChilds As Integer
+        Dim child As clsRollenDefinition
+        Dim childChildList As New List(Of Integer)
+        Dim childChildExist As Boolean = False
+
+        Dim nodeLevel0 As TreeNode
+        Dim nodeLevel1 As TreeNode
+
+
+        anzChilds = nodeList.Count
+
+        With topNode
+
+            For i As Integer = 0 To anzChilds - 1
+
+                child = RoleDefinitions.getRoledef(nodeList(i))
+                Dim childName As String = child.name
+                Dim childID As Integer = child.UID
+
+                If allRoles.Contains(childName) Then
+
+                    nodeLevel0 = .Nodes.Add(childName)
+                    nodeLevel0.Name = childID.ToString
+                    nodeLevel0.Text = childName
+
+
+                    If selectedRoles.Contains(childName) Then
+                        nodeLevel0.Checked = True
+                    End If
+
+
+                    If RoleDefinitions.hierarchy.nodeItem(childID).childs.Count > 0 Then
+
+                        childChildList = RoleDefinitions.hierarchy.nodeItem(childID).childs
+                        ' prüfen, ob role childName ein Kind hat, das in allRoles enthalten ist
+                        Dim k As Integer = 0
+                        While (k <= childChildList.Count - 1) And Not childChildExist
+                            childChildExist = childChildExist Or allRoles.Contains(RoleDefinitions.getRoledef(childChildList(k)).name)
+                            k = k + 1
+                        End While
+                        If childChildExist Then
+                            nodeLevel0.Tag = "P"
+
+
+                            nodeLevel1 = nodeLevel0.Nodes.Add("-")
+                            nodeLevel1.Tag = "P"
+                        Else
+                            nodeLevel0.Tag = "X"
+                        End If
+
+                    End If
+                End If
+
+            Next
+
+        End With
+
+      
+    End Sub
 End Class

@@ -240,7 +240,8 @@
       <tab id="PTfilter" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT0G1" >
           <!--label="Auswahl über Namen"-->
-          <button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
+          <!--<button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>-->
+          <button id="PT0G1B9" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
         </group>
       </tab>
       <!--label="Sortieren"-->

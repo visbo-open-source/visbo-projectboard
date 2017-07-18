@@ -60,6 +60,8 @@ Partial Class frmHierarchySelection
         Me.rdbProjStruktProj = New System.Windows.Forms.RadioButton()
         Me.rdbProjStruktTyp = New System.Windows.Forms.RadioButton()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.rdbPhaseMilest = New System.Windows.Forms.RadioButton()
+        Me.picturePhaseMilest = New System.Windows.Forms.PictureBox()
         Me.Panel2 = New System.Windows.Forms.Panel()
         Me.auswLaden = New System.Windows.Forms.Button()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -74,6 +76,7 @@ Partial Class frmHierarchySelection
         CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
+        CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel2.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -264,10 +267,12 @@ Partial Class frmHierarchySelection
         'rdbPhases
         '
         Me.rdbPhases.AutoSize = True
+        Me.rdbPhases.Checked = True
         Me.rdbPhases.Location = New System.Drawing.Point(6, 16)
         Me.rdbPhases.Name = "rdbPhases"
         Me.rdbPhases.Size = New System.Drawing.Size(14, 13)
         Me.rdbPhases.TabIndex = 52
+        Me.rdbPhases.TabStop = True
         Me.rdbPhases.UseVisualStyleBackColor = True
         '
         'headerLine
@@ -321,7 +326,7 @@ Partial Class frmHierarchySelection
         'rdbRoles
         '
         Me.rdbRoles.AutoSize = True
-        Me.rdbRoles.Location = New System.Drawing.Point(203, 16)
+        Me.rdbRoles.Location = New System.Drawing.Point(247, 16)
         Me.rdbRoles.Name = "rdbRoles"
         Me.rdbRoles.Size = New System.Drawing.Size(14, 13)
         Me.rdbRoles.TabIndex = 58
@@ -330,7 +335,7 @@ Partial Class frmHierarchySelection
         'pictureRoles
         '
         Me.pictureRoles.Image = CType(resources.GetObject("pictureRoles.Image"), System.Drawing.Image)
-        Me.pictureRoles.Location = New System.Drawing.Point(223, 5)
+        Me.pictureRoles.Location = New System.Drawing.Point(267, 3)
         Me.pictureRoles.Name = "pictureRoles"
         Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
         Me.pictureRoles.TabIndex = 59
@@ -339,7 +344,7 @@ Partial Class frmHierarchySelection
         'rdbCosts
         '
         Me.rdbCosts.AutoSize = True
-        Me.rdbCosts.Location = New System.Drawing.Point(307, 16)
+        Me.rdbCosts.Location = New System.Drawing.Point(319, 16)
         Me.rdbCosts.Name = "rdbCosts"
         Me.rdbCosts.Size = New System.Drawing.Size(14, 13)
         Me.rdbCosts.TabIndex = 60
@@ -348,7 +353,7 @@ Partial Class frmHierarchySelection
         'pictureCosts
         '
         Me.pictureCosts.Image = CType(resources.GetObject("pictureCosts.Image"), System.Drawing.Image)
-        Me.pictureCosts.Location = New System.Drawing.Point(327, 3)
+        Me.pictureCosts.Location = New System.Drawing.Point(339, 3)
         Me.pictureCosts.Name = "pictureCosts"
         Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
         Me.pictureCosts.TabIndex = 61
@@ -362,6 +367,7 @@ Partial Class frmHierarchySelection
         Me.rdbBU.Size = New System.Drawing.Size(14, 13)
         Me.rdbBU.TabIndex = 62
         Me.rdbBU.UseVisualStyleBackColor = True
+        Me.rdbBU.Visible = False
         '
         'pictureBU
         '
@@ -371,6 +377,7 @@ Partial Class frmHierarchySelection
         Me.pictureBU.Size = New System.Drawing.Size(33, 33)
         Me.pictureBU.TabIndex = 63
         Me.pictureBU.TabStop = False
+        Me.pictureBU.Visible = False
         '
         'rdbTyp
         '
@@ -380,6 +387,7 @@ Partial Class frmHierarchySelection
         Me.rdbTyp.Size = New System.Drawing.Size(14, 13)
         Me.rdbTyp.TabIndex = 64
         Me.rdbTyp.UseVisualStyleBackColor = True
+        Me.rdbTyp.Visible = False
         '
         'pictureTyp
         '
@@ -389,6 +397,7 @@ Partial Class frmHierarchySelection
         Me.pictureTyp.Size = New System.Drawing.Size(33, 33)
         Me.pictureTyp.TabIndex = 65
         Me.pictureTyp.TabStop = False
+        Me.pictureTyp.Visible = False
         '
         'rdbNameList
         '
@@ -424,6 +433,8 @@ Partial Class frmHierarchySelection
         '
         'Panel1
         '
+        Me.Panel1.Controls.Add(Me.rdbPhaseMilest)
+        Me.Panel1.Controls.Add(Me.picturePhaseMilest)
         Me.Panel1.Controls.Add(Me.rdbPhases)
         Me.Panel1.Controls.Add(Me.picturePhasen)
         Me.Panel1.Controls.Add(Me.pictureTyp)
@@ -440,6 +451,27 @@ Partial Class frmHierarchySelection
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(540, 41)
         Me.Panel1.TabIndex = 70
+        '
+        'rdbPhaseMilest
+        '
+        Me.rdbPhaseMilest.AutoSize = True
+        Me.rdbPhaseMilest.Location = New System.Drawing.Point(173, 16)
+        Me.rdbPhaseMilest.Name = "rdbPhaseMilest"
+        Me.rdbPhaseMilest.Size = New System.Drawing.Size(14, 13)
+        Me.rdbPhaseMilest.TabIndex = 67
+        Me.rdbPhaseMilest.UseVisualStyleBackColor = True
+        Me.rdbPhaseMilest.Visible = False
+        '
+        'picturePhaseMilest
+        '
+        Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.gear
+        Me.picturePhaseMilest.Location = New System.Drawing.Point(193, 5)
+        Me.picturePhaseMilest.Name = "picturePhaseMilest"
+        Me.picturePhaseMilest.Size = New System.Drawing.Size(33, 33)
+        Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
+        Me.picturePhaseMilest.TabIndex = 66
+        Me.picturePhaseMilest.TabStop = False
+        Me.picturePhaseMilest.Visible = False
         '
         'Panel2
         '
@@ -504,6 +536,7 @@ Partial Class frmHierarchySelection
         CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
+        CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
         Me.ResumeLayout(False)
@@ -549,4 +582,6 @@ Partial Class frmHierarchySelection
     Friend WithEvents Panel1 As System.Windows.Forms.Panel
     Friend WithEvents Panel2 As System.Windows.Forms.Panel
     Friend WithEvents auswLaden As System.Windows.Forms.Button
+    Friend WithEvents rdbPhaseMilest As System.Windows.Forms.RadioButton
+    Friend WithEvents picturePhaseMilest As System.Windows.Forms.PictureBox
 End Class

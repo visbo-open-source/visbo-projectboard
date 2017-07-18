@@ -114,6 +114,7 @@ Public Module Module1
 
     Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
     Public RoleDefinitions As New clsRollen
+    Public RoleHierarchy As New clsroleHrchy
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
 
