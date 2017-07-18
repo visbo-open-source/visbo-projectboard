@@ -489,10 +489,6 @@ Public Class ThisWorkbook
 
     End Sub
 
-    Private Sub ThisWorkbook_WindowResize(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowResize
-        'Dim anz As Integer = appInstance.Windows.Count
-        'Call MsgBox("Re-Size Window: " & CType(Wn.ActiveSheet, Excel.Worksheet).Name & "; Anzahl Fenster: " & anz)
-    End Sub
 
     Private Sub ThisWorkbook_WindowDeactivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowDeactivate
         If appInstance.Version <> "14.0" Then

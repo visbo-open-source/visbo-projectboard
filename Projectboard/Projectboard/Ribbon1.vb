@@ -2602,9 +2602,9 @@ Imports System.Windows
 
             Case "PT6G1B3"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Strategie-Profit-Risiko"
+                    tmpLabel = "Strategie-Risiko-Profit"
                 Else
-                    tmpLabel = "by Strategy-Profit-Risk"
+                    tmpLabel = "by Strategy-Risk-Profit"
                 End If
 
             Case "PT6G1B4"
@@ -2952,7 +2952,6 @@ Imports System.Windows
 
                     With projectboardWindows(PTwindows.massEdit)
                         .WindowState = Excel.XlWindowState.xlMaximized
-
                         .SplitRow = 1
                         .FreezePanes = True
                         .DisplayFormulas = False
@@ -3713,8 +3712,8 @@ Imports System.Windows
                 ' Business Unit StartDate Name
                 sortType = ptSortCriteria.buStartName
             ElseIf control.Id = "PT6G1B3" Then
-                ' Strategy-Profit-Risk
-                sortType = ptSortCriteria.strategyProfitLossRisk
+                ' Strategy-Risk-Profit
+                sortType = ptSortCriteria.strategyRiskProfitLoss
             ElseIf control.Id = "PT6G1B4" Then
                 ' sort by individual criterias
                 sortType = ptSortCriteria.customListe
@@ -8606,7 +8605,7 @@ Imports System.Windows
         enableOnUpdate = True
 
         ' jetzt das Chart-Window aktivieren (sonst bleibt Ribbon stehen)
-        projectboardWindows(2).Activate()
+        projectboardWindows(PTwindows.meChart).Activate()
 
 
     End Sub

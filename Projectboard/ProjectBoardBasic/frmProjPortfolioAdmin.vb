@@ -1812,6 +1812,7 @@ Public Class frmProjPortfolioAdmin
                                      ByVal level As Integer, ByVal anzahlVariants As Integer) As String
 
         Dim tmpText As String = ""
+        Dim allowedLength As Integer = 70
 
         If Not IsNothing(hproj) Then
 
@@ -1837,8 +1838,8 @@ Public Class frmProjPortfolioAdmin
                 Else
                     If hproj.description.Length > 0 Then
                         tmpText = hproj.description
-                        If tmpText.Length > 50 Then
-                            tmpText = tmpText.Substring(0, 70) & "..."
+                        If tmpText.Length > allowedLength Then
+                            tmpText = tmpText.Substring(0, allowedLength) & "..."
                         End If
                     End If
                 End If
@@ -1877,8 +1878,8 @@ Public Class frmProjPortfolioAdmin
                 Else
                     If hproj.variantDescription.Length > 0 Then
                         tmpText = hproj.variantDescription
-                        If tmpText.Length > 50 Then
-                            tmpText = tmpText.Substring(0, 70) & "..."
+                        If tmpText.Length > allowedLength Then
+                            tmpText = tmpText.Substring(0, allowedLength) & "..."
                         End If
                     End If
                 End If
