@@ -275,6 +275,7 @@ Public Module Module1
         customFields12 = 4
         buStartName = 5
         formel = 6
+        strategyRiskProfitLoss = 7
     End Enum
 
     Public Enum ptTables
@@ -4212,9 +4213,9 @@ Public Module Module1
 
             Case PTwindows.mpt
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Multiproject-Board '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
+                    tmpResult = "Visual Board '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
                 Else
-                    tmpResult = "Multiprojekt-Tafel '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
+                    tmpResult = "Visual Board '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
                 End If
 
             Case PTwindows.massEdit

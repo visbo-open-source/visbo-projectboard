@@ -247,14 +247,14 @@
       <tab id="PTsort" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT6G1" >
           <!--label="alphabetisch"-->
-          <button id ="PT6G1B1" imageMso="SortUp" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <button id ="PT6G1B1" imageMso="SortUp" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation" supertip="alle dargestellten Projekte werden nach Ihrem Namen alphabetisch in aufsteigender Reihenfolge sortiert"/>
           <!--label="Business Unit StartDate Name"-->
-          <button id ="PT6G1B2" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
-          <!--label="Strategy Profit Risk"-->
-          <button id ="PT6G1B3" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <button id ="PT6G1B2" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation" supertip="alle dargestellten Projekte werden nach Business Unit, dann Startdatum, dann Name in aufsteigender Reihenfolge sortiert"/>
+          <!--label="Strategy Risk Profit"-->
+          <button id ="PT6G1B3" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation" supertip="alle dargestellten Projekte werden nach Strategie, dann Risiko dann Profit in aufsteigender Reihenfolge sortiert"/>
           <!--label="sort by individual criterias"-->
-          <button id ="PT6G1B4" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
-          <button id ="PT6G1B5" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>      
+          <button id ="PT6G1B4" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <!--<button id ="PT6G1B5" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>-->      
         </group>
       </tab>
       <!--label="Charts"-->
@@ -281,11 +281,11 @@
               <!--label="Plan/Aktuell"-->
               <menu id="PT7G1M2" getLabel ="bestimmeLabel">
                 <!--label="Personalkosten"-->
-                <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  enabled ="false" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  enabled ="true" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
                 <!--label="Sonstige Kosten"-->
-                <button id="PT7G1M2B2" getLabel ="bestimmeLabel"  enabled ="false" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <button id="PT7G1M2B2" getLabel ="bestimmeLabel"  enabled ="true" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
                 <!--label="Gesamt Kosten"-->
-                <button id="PT7G1M2B3" getLabel ="bestimmeLabel" enabled="false" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <button id="PT7G1M2B3" getLabel ="bestimmeLabel" enabled="true" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
               </menu>
             </menu>
           </splitButton>
