@@ -4243,20 +4243,63 @@ Public Module Module1
             Exit Sub
         End If
 
-        ' alle Windows schliessen, bis auf das MPT Window 
-        For Each tmpWindow In CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows
-            If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = vglName Then
-                ' nichts tun ...
-            Else
-                tmpWindow.Close()
+        '' '' alle Windows schliessen, bis auf das MPT Window 
+        ' ''For Each tmpWindow In CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows
+        ' ''    tmpWindow.Activate()
+
+        ' ''    If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = vglName Then
+        ' ''        ' nichts tun ...
+        ' ''    Else
+
+        ' ''        tmpWindow.Close(SaveChanges:=False)
+        ' ''    End If
+        ' ''Next
+
+        If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+            appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+        End If
+
+        Try
+            ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
+            If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
+                projectboardWindows(PTwindows.massEdit).Close()
+                projectboardWindows(PTwindows.massEdit) = Nothing
             End If
-        Next
+
+            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                projectboardWindows(PTwindows.meChart).Close()
+                projectboardWindows(PTwindows.meChart) = Nothing
+            End If
+            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+
+                'projectboardWindows(PTwindows.mptpf).Activate()
+                If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+                End If
+
+                projectboardWindows(PTwindows.mptpf).Close()
+                projectboardWindows(PTwindows.mptpf) = Nothing
+            End If
+            If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
+                projectboardWindows(PTwindows.mptpr).Close()
+                projectboardWindows(PTwindows.mptpr) = Nothing
+            End If
+        Catch ex As Exception
+
+            ' make MPT Window great again ...
+            With projectboardWindows(PTwindows.mpt)
+                .Visible = True
+                .WindowState = XlWindowState.xlMaximized
+            End With
+
+        End Try
+
 
         ' jetzt die projectboardWindows = Nothing setzen 
-        projectboardWindows(PTwindows.massEdit) = Nothing
-        projectboardWindows(PTwindows.meChart) = Nothing
-        projectboardWindows(PTwindows.mptpf) = Nothing
-        projectboardWindows(PTwindows.mptpr) = Nothing
+        'projectboardWindows(PTwindows.massEdit) = Nothing
+        'projectboardWindows(PTwindows.meChart) = Nothing
+        'projectboardWindows(PTwindows.mptpf) = Nothing
+        'projectboardWindows(PTwindows.mptpr) = Nothing
 
         ' make MPT Window great again ...
         With projectboardWindows(PTwindows.mpt)

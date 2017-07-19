@@ -561,7 +561,7 @@ Imports System.Windows
             If visboZustaende.projectBoardMode = ptModus.graficboard Then
                 Call deleteChartsInSheet(arrWsNames(ptTables.mptPfCharts))
                 Call deleteChartsInSheet(arrWsNames(ptTables.mptPrCharts))
-
+                Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
                 ' jetzt müssen alle Windows bis auf Window(0) = Multiprojekt-Tafel geschlossen werden 
                 ' und mache ProjectboardWindows(mpt) great again ...
                 Call closeAllWindowsExceptMPT()
@@ -1751,12 +1751,23 @@ Imports System.Windows
                 Else
                     tmpLabel = "Project Filter..."
                 End If
-
             Case "PT0G1B9" ' Auswahl über Projekt-Struktur
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Auswahl über Projekt-Struktur..."
                 Else
                     tmpLabel = "Select by Structure..."
+                End If
+            Case "PT0G1B10" ' Anzeige der Projekte mit roter ProjektAmpel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte mit Ampel -rot-"
+                Else
+                    tmpLabel = "Projects with -red- Light"
+                End If
+            Case "PT0G1B11" ' Anzeige der Projektemit ungedeckter Budget-Finanzierung
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte unterfinanziert"
+                Else
+                    tmpLabel = "Projects not fully financed"
                 End If
 
             Case "PT3G1B5" ' Zeit-Maschine
@@ -2125,11 +2136,11 @@ Imports System.Windows
                     tmpLabel = "Modify monthly Resource and Cost Needs"
                 End If
 
-            Case "PT2G1M2B2" ' Strategie/Risiko/Budget
+            Case "PT2G1M2B2" ' Phasen Meilensteine ändern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Strategie/Risiko/Budget"
+                    tmpLabel = "Ändern von Terminen"
                 Else
-                    tmpLabel = "Strategy/Risk/Budget"
+                    tmpLabel = "Modify monthly Phases and Milestones"
                 End If
 
             Case "PT2G1M2B3" ' Modify Attributes
@@ -2719,6 +2730,12 @@ Imports System.Windows
                     tmpLabel = "Wörterbuch editieren"
                 Else
                     tmpLabel = "Edit Synonyms"
+                End If
+            Case "PTeinstG1B1" ' Einstellungen für VISBO-Board; MassEdit, Ampel, PropAnpass,Report Sprache
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO Einstellungen"
+                Else
+                    tmpLabel = "VISBO Settings"
                 End If
 
             Case Else
@@ -11294,6 +11311,11 @@ Imports System.Windows
     End Sub
 
 
+    ''' <summary>
+    ''' Spracheinstellungen für die Reports
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
     Public Sub PTSpracheinstellung(control As IRibbonControl)
 
         Call projektTafelInit()
@@ -11305,6 +11327,28 @@ Imports System.Windows
         Dim returnValue As DialogResult
         returnValue = frmReportSprache.ShowDialog
 
+
+        enableOnUpdate = True
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' Einstellungen zum Visual Board von VISBO
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub PTVisboSettings(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        Dim frmVisboEinst As New frmEinstellungen
+        Dim returnValue As DialogResult
+        returnValue = frmVisboEinst.ShowDialog
 
         enableOnUpdate = True
 
