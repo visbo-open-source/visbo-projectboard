@@ -8140,7 +8140,7 @@ Imports System.Windows
         'Dim top As Double, left As Double, width As Double, height As Double
         Dim future As Integer = 0
         Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
-        awinSettings.mppShowAmpel = True
+        'awinSettings.mppShowAmpel = True
 
 
         Dim myCollection As New Collection
