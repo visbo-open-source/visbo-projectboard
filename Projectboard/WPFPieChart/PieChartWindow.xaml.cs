@@ -17,6 +17,7 @@ using ScottLogic.Shapes;
 using ScottLogic.Controls.PieChart;
 using ScottLogic;
 using System.Windows.Markup;
+using ProjectBoardBasic;
 using ProjectBoardDefinitions;
 
 namespace WPFPieChart
@@ -29,6 +30,8 @@ namespace WPFPieChart
     public partial class PieChartWindow : Window
     {
         public bool isFuture;
+        public bool formerSetting = Module1.awinSettings.mppShowAmpel;
+       
         public Dictionary<string, clsWPFPieValues> piechartInput;
 
         private ObservableCollection<AssetClass> classes;
@@ -65,7 +68,7 @@ namespace WPFPieChart
             this.Top = Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.top];
             this.Left = Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.left];
             InitializeComponent();
-
+            Module1.awinSettings.mppShowAmpel = true;
             // wird hier zwar gesetzt, aber komischerweise nicht berücksichtigt 
             //this.Top = Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.top];
             //this.Left = Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.left];
@@ -83,7 +86,9 @@ namespace WPFPieChart
             
             Window parent = Window.GetWindow(this);
             CheckBox checkbox = (CheckBox)parent.FindName("keepSymbols");
-
+            Module1.awinSettings.mppShowAmpel = formerSetting;
+           
+            
             Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.top] = this.Top;
             Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.left] = this.Left;
 
@@ -93,7 +98,7 @@ namespace WPFPieChart
                 // Symbole löschen
                 Module1.awinDeleteProjectChildShapes(1);
             }
-            
+           
            
         }
 
@@ -101,6 +106,7 @@ namespace WPFPieChart
         {
             //this.Top = Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.top];
             //this.Left = Module1.frmCoord[(int)Module1.PTfrm.ziele, (int)Module1.PTpinfo.left];
+
         }
 
     }

@@ -148,7 +148,7 @@
             </menu>
           </splitButton>
           <!--label="neue Variante anlegen"-->
-          <button id="PT2G1M1B0" getLabel ="bestimmeLabel" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden."/>
+          <button id="PT2G1M1B0" getLabel ="bestimmeLabel" size ="large" imageMso="Copy" onAction="PT2VarianteNeu" supertip="beim Anlegen einer neuen Variante wird zunächst eine exakte Kopie des Projektes mit all seinen Terminen, Rollen und Kostenbedarfen angelegt. Diese Variante kann dann beliebig verändert werden."/>
         </group>
         <!--<group id ="PT9G1" >-->
         <group id="PT2G3" getVisible="chckVisibility">
@@ -179,14 +179,14 @@
               <!--label="Modify Ressourcen und Kosten"-->
               <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
               <!--label="Modify Dates of Phases & MIlestones"-->
-              <button id="PT2G1M2B2" label="Modify Dates of Phases and Milestones (fehlt)" />            
+              <button id="PT2G1M2B2" getLabel="bestimmeLabel" enabled="false" />
               <!--label="Modify Attributes"-->
               <button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Business Unit, Budget, strateg. Fit und Risiko Einschätzung."/>
               <menuSeparator id="separator1" />
               <!--label=" Projekt Umbenennen"-->
               <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
               <!--label=" Variante Umbenennen"-->
-              <button id="PT2G1B3" getVisible="chckVisibility" label="Rename Variant (fehlt)" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>
+              <button id="PT2G1B3" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled="false" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>
               <menuSeparator id="separator2" />
               <!--label="Schutz setzen / aufheben"-->
               <button id="PT2G2B5" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
@@ -240,8 +240,12 @@
       <tab id="PTfilter" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT0G1" >
           <!--label="Auswahl über Namen"-->
-          <!--<button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>-->
-          <button id="PT0G1B9" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
+          <button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
+          <!--label="Projekte mit Ampel=rot"-->
+          <button id="PT0G1B10"  getLabel ="bestimmeLabel" enabled="false" supertip="Alle Projekte mit roter ProjektAmpel visualisieren"/>
+          <!--label="Projekte mit ungedeckter Finanzierung"-->
+          <button id="PT0G1B11"  getLabel ="bestimmeLabel" enabled="false" supertip="Alle Projekte, dessen Finanzierung nicht vollständig geklärt ist, visualisieren"/>
+          <!--<button id="PT0G1B9" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>-->
         </group>
       </tab>
       <!--label="Sortieren"-->
@@ -282,11 +286,11 @@
               <!--label="Plan/Aktuell"-->
               <menu id="PT7G1M2" getLabel ="bestimmeLabel">
                 <!--label="Personalkosten"-->
-                <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  enabled ="false" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  enabled ="true" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
                 <!--label="Sonstige Kosten"-->
-                <button id="PT7G1M2B2" getLabel ="bestimmeLabel"  enabled ="false" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <button id="PT7G1M2B2" getLabel ="bestimmeLabel"  enabled ="true" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
                 <!--label="Gesamt Kosten"-->
-                <button id="PT7G1M2B3" getLabel ="bestimmeLabel" enabled="false" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
+                <button id="PT7G1M2B3" getLabel ="bestimmeLabel" enabled="true" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
               </menu>
             </menu>
           </splitButton>
@@ -313,8 +317,10 @@
               <button id="PTXG1B8" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
               <!--label="Budget/Kosten/Auslastung"--><!--
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
+              <!--label="Meilenstein-Ampeln"-->
+              <button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
               <!--label="Custom"-->
-              <button id="PTcustom" label ="Custom"/>
+              <button id="PTcustom" label ="Custom" enabled="false"/>
               <menuSeparator id="PTXG1s4"/>
               <!--label="größter Engpass"
               <button id="PTXG1B10" getLabel ="bestimmeLabel" onAction="PTXShowEngpass" supertip="es wird die Rolle dargestellt, die die größte Überlastung aufweist - berechnet über den gesamten Zeitraum"/>--> 
@@ -391,6 +397,10 @@
       </tab>
       <!--label="Einstellungen"-->
       <tab id="PTeinst" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+        <group id ="PTeinstG1" >
+          <!--label="Report Sprache"-->
+          <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
+        </group>
       </tab>
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">

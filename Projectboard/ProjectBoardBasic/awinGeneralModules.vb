@@ -15857,7 +15857,12 @@ Public Module awinGeneralModules
                                     '    vproj = Projektvorlagen.getProject("unknown")
                                 Else
                                     'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
-                                    hproj.farbe = awinSettings.AmpelNichtBewertet
+                                    'hproj.farbe = awinSettings.AmpelNichtBewertet
+                                    Try
+                                        hproj.farbe = CInt(iProjektFarbe)
+                                    Catch ex As Exception
+                                        hproj.farbe = awinSettings.AmpelNichtBewertet
+                                    End Try
                                     hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                                     hproj.Schriftfarbe = RGB(10, 10, 10)
                                     hproj.earliestStart = 0

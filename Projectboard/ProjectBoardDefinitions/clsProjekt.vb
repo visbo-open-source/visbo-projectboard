@@ -2193,7 +2193,13 @@ Public Class clsProjekt
                 Case ptSortCriteria.strategyProfitLossRisk
                     Dim tmp(4) As Double
                     Call Me.calculateRoundedKPI(tmp(0), tmp(1), tmp(2), tmp(3), tmp(4))
-                    tmpResult = CInt(Me.StrategicFit * 1000 + tmp(4) * 60 - Me.Risiko * 800).ToString(formatStr) & Me.name
+                    tmpResult = CInt(Me.StrategicFit * 10000 + tmp(4) * 1000 - Me.Risiko * 800).ToString(formatStr) & Me.name
+
+                Case ptSortCriteria.strategyRiskProfitLoss
+                    Dim tmp(4) As Double
+                    Call Me.calculateRoundedKPI(tmp(0), tmp(1), tmp(2), tmp(3), tmp(4))
+                    tmpResult = CInt(Me.StrategicFit * 10000 - Me.Risiko * 1000 + tmp(4) * 10).ToString(formatStr) & Me.name
+
 
                 Case Else
                     ' nimm die Default- Lösung 

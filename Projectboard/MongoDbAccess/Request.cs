@@ -334,6 +334,7 @@ namespace MongoDbAccess
             {
                 var projekt = new clsProjekt();
                 result.copyto(ref projekt);
+                int a = projekt.dauerInDays;
                 return projekt;
             }
             
@@ -1104,7 +1105,8 @@ namespace MongoDbAccess
                         clsProjektDB projektDB = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
                         var projekt = new clsProjekt();
                         projektDB.copyto(ref projekt);
-
+                        // nötig, um die Dauer in Monaten zu aktualisieren 
+                        int a = projekt.dauerInDays; 
                         string schluessel = Projekte.calcProjektKey(projekt);
 
                         result.Add(schluessel, projekt);
@@ -1141,6 +1143,7 @@ namespace MongoDbAccess
                     //TODO: rückumwandeln
                     var projekt = new clsProjekt();
                     p.copyto(ref projekt);
+                    int a = projekt.dauerInDays;
                     // wichtig: in p steht das timestamp in utc format, in projekt in localtime
                     string schluessel = projekt.timeStamp.ToString();
                     //result.Add(projekt.Id, projekt);
@@ -1282,7 +1285,9 @@ namespace MongoDbAccess
                     //TODO: rückumwandeln
                     var projekt = new clsProjekt();
                     p.copyto(ref projekt);
-                    
+
+                    int a = projekt.dauerInDays;
+
                     DateTime schluessel = projekt.timeStamp;
                     result.Add(schluessel, projekt);
                 }
