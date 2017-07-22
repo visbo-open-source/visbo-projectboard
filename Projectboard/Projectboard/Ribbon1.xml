@@ -415,8 +415,8 @@
           <button id="PTMEC1" getLabel ="bestimmeLabel" onAction="PTMEShowCharts"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>
           <!--label="Budget/Kosten"-->
           <!--<button id="PTMEC2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>-->
-          <!--label="Info Gewinn/Verlust"-->
-          <button id="PTMEC3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
+          <!--label="Info Vergleich mit früherem Stand"-->
+          <button id="PTMEC3" getLabel ="bestimmeLabel"  enabled ="true" onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
         </group>
       </tab>
       <tab id="PTmassEdit" getVisible="chckVisibility" getLabel ="bestimmeLabel">

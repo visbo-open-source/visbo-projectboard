@@ -2090,7 +2090,7 @@ Public Module Module1
     ''' 
     ''' </summary>
     ''' <remarks></remarks>
-    Sub awinDeSelect()
+    Sub awinDeSelect(Optional ByVal selectDummyCell As Boolean = False)
         Dim srow As Integer = 1
         'Dim hziel As Integer
         'Dim vziel As Integer
@@ -2098,6 +2098,7 @@ Public Module Module1
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
+
 
         ' Selektierte Projekte auf Null setzen 
 

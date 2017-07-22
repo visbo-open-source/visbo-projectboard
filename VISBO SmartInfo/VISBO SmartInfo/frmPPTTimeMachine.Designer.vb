@@ -27,7 +27,6 @@ Partial Class frmPPTTimeMachine
         Me.lblMessage = New System.Windows.Forms.Label()
         Me.ToolTipTS = New System.Windows.Forms.ToolTip(Me.components)
         Me.currentDate = New System.Windows.Forms.DateTimePicker()
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.btnFastBack = New System.Windows.Forms.Button()
         Me.btnStart = New System.Windows.Forms.Button()
         Me.btnEnd = New System.Windows.Forms.Button()
@@ -37,7 +36,7 @@ Partial Class frmPPTTimeMachine
         'lblMessage
         '
         Me.lblMessage.AutoSize = True
-        Me.lblMessage.Location = New System.Drawing.Point(12, 154)
+        Me.lblMessage.Location = New System.Drawing.Point(28, 236)
         Me.lblMessage.Name = "lblMessage"
         Me.lblMessage.Size = New System.Drawing.Size(50, 13)
         Me.lblMessage.TabIndex = 24
@@ -47,25 +46,15 @@ Partial Class frmPPTTimeMachine
         '
         Me.currentDate.CausesValidation = False
         Me.currentDate.Checked = False
-        Me.currentDate.Location = New System.Drawing.Point(149, 69)
+        Me.currentDate.Location = New System.Drawing.Point(30, 171)
         Me.currentDate.Name = "currentDate"
-        Me.currentDate.Size = New System.Drawing.Size(195, 20)
+        Me.currentDate.Size = New System.Drawing.Size(192, 20)
         Me.currentDate.TabIndex = 26
-        '
-        'Label1
-        '
-        Me.Label1.AutoSize = True
-        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(191, 47)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(110, 15)
-        Me.Label1.TabIndex = 27
-        Me.Label1.Text = "Current Version:"
         '
         'btnFastBack
         '
         Me.btnFastBack.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_left
-        Me.btnFastBack.Location = New System.Drawing.Point(211, 100)
+        Me.btnFastBack.Location = New System.Drawing.Point(110, 197)
         Me.btnFastBack.Name = "btnFastBack"
         Me.btnFastBack.Size = New System.Drawing.Size(32, 32)
         Me.btnFastBack.TabIndex = 20
@@ -73,26 +62,26 @@ Partial Class frmPPTTimeMachine
         '
         'btnStart
         '
-        Me.btnStart.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Calendar_icon_128x128_First
-        Me.btnStart.Location = New System.Drawing.Point(12, 15)
+        Me.btnStart.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_beginning1
+        Me.btnStart.Location = New System.Drawing.Point(30, 197)
         Me.btnStart.Name = "btnStart"
-        Me.btnStart.Size = New System.Drawing.Size(128, 128)
+        Me.btnStart.Size = New System.Drawing.Size(32, 32)
         Me.btnStart.TabIndex = 19
         Me.btnStart.UseVisualStyleBackColor = True
         '
         'btnEnd
         '
         Me.btnEnd.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Calendar_icon_128x128_Last
-        Me.btnEnd.Location = New System.Drawing.Point(353, 15)
+        Me.btnEnd.Location = New System.Drawing.Point(30, 12)
         Me.btnEnd.Name = "btnEnd"
-        Me.btnEnd.Size = New System.Drawing.Size(128, 128)
+        Me.btnEnd.Size = New System.Drawing.Size(192, 152)
         Me.btnEnd.TabIndex = 18
         Me.btnEnd.UseVisualStyleBackColor = True
         '
         'btnFastForward
         '
         Me.btnFastForward.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_right
-        Me.btnFastForward.Location = New System.Drawing.Point(252, 100)
+        Me.btnFastForward.Location = New System.Drawing.Point(190, 197)
         Me.btnFastForward.Name = "btnFastForward"
         Me.btnFastForward.Size = New System.Drawing.Size(32, 32)
         Me.btnFastForward.TabIndex = 17
@@ -102,8 +91,7 @@ Partial Class frmPPTTimeMachine
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(494, 177)
-        Me.Controls.Add(Me.Label1)
+        Me.ClientSize = New System.Drawing.Size(260, 258)
         Me.Controls.Add(Me.currentDate)
         Me.Controls.Add(Me.lblMessage)
         Me.Controls.Add(Me.btnFastBack)
@@ -125,5 +113,4 @@ Partial Class frmPPTTimeMachine
     Friend WithEvents lblMessage As System.Windows.Forms.Label
     Friend WithEvents ToolTipTS As System.Windows.Forms.ToolTip
     Friend WithEvents currentDate As System.Windows.Forms.DateTimePicker
-    Friend WithEvents Label1 As System.Windows.Forms.Label
 End Class

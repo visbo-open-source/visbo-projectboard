@@ -1187,6 +1187,7 @@ Public Module PBBModules
 
         Dim changePortfolio As New frmProjPortfolioAdmin
 
+        Call awinDeSelect(True)
 
         If AlleProjekte.Count > 0 Then
             ' das letzte Portfolio speichern 
@@ -1226,8 +1227,12 @@ Public Module PBBModules
                 Call MsgBox(ex.Message)
             End Try
         Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no projects loaded ...")
+            Else
+                Call MsgBox("keine Projekte geladen ...")
+            End If
 
-            Call MsgBox("keine Projekte geladen ...")
         End If
         
 

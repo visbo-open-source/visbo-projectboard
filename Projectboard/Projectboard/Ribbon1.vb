@@ -1587,9 +1587,9 @@ Imports System.Windows
 
             Case "PTMEC3" ' Formular Forecast Gegenüberstellung 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Gewinn/Verlust"
+                    tmpLabel = "Vergleich mit letzter Version"
                 Else
-                    tmpLabel = "Profit/Loss"
+                    tmpLabel = "Comparison with last version"
                 End If
             Case "PTX" ' Multiprojekt-Info
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3157,8 +3157,6 @@ Imports System.Windows
         End Try
        
 
-
-
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
@@ -3169,6 +3167,17 @@ Imports System.Windows
         End With
 
         appInstance.ScreenUpdating = True
+
+        ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                If projectboardWindows(PTwindows.mptpf).Visible = True Then
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
+            End If
+        Catch ex As Exception
+            projectboardWindows(PTwindows.mptpr) = Nothing
+        End Try
 
     End Sub
 
@@ -8429,6 +8438,14 @@ Imports System.Windows
     Sub PTMEShowCharts(control As IRibbonControl)
 
 
+        ' das Ganze nur machen, wenn das Chart nicht ohnehin schon gezeigt wird ... 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                Exit Sub
+            End If
+        Catch ex As Exception
+        End Try
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -8440,7 +8457,7 @@ Imports System.Windows
         Dim hproj As clsProjekt = Nothing
 
 
-        ' das MArkieren der selektierten Projekte einschalten ..
+        ' das Markieren der selektierten Projekte einschalten ..
         awinSettings.showValuesOfSelected = True
 
 
@@ -8507,7 +8524,7 @@ Imports System.Windows
             ''.Caption = windowNames(PTwindows.massEdit)
         End With
 
-        ' Aufbau des Windows windowNames(4): Charts
+
         projectboardWindows(PTwindows.meChart) = appInstance.ActiveWindow.NewWindow
 
         visboWorkbook.Worksheets.Item(arrWsNames(ptTables.meCharts)).activate()
