@@ -385,6 +385,9 @@ Public Module Module1
         FitRisikoVol = 15
         Dependencies = 16
         MilestoneTrendanalysis = 17
+        SollIstPersonalkosten = 18
+        SollIstSonstKosten = 19
+        SollIstGesamtkosten = 20
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
