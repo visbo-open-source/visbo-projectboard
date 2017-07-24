@@ -5849,6 +5849,7 @@ Public Module awinDiagrams
                 Next i
 
                 ' wenn das ActiveSheet ungleich dem currentSheetName war, muss jetzt zurück gewechselt werden ... 
+                Dim xName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
                 If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> formerActiveSheet.Name Then
                     CType(formerActiveSheet, Excel.Worksheet).Activate()
                     If appInstance.EnableEvents <> formerEE Then
