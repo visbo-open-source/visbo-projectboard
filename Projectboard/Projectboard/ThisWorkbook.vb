@@ -366,109 +366,109 @@ Public Class ThisWorkbook
     End Sub
 
 
-    ''' <summary>
-    ''' definiert die Windows und Views, die benötigt werden 
-    ''' es ist die Tabelle1=mpt aktiviert 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Private Sub defineVisboWindowViews()
+    ' ''' <summary>
+    ' ''' definiert die Windows und Views, die benötigt werden 
+    ' ''' es ist die Tabelle1=mpt aktiviert 
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    'Private Sub defineVisboWindowViews()
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim formereOU As Boolean = enableOnUpdate
+    '    Dim formerEE As Boolean = appInstance.EnableEvents
+    '    Dim formerSU As Boolean = appInstance.ScreenUpdating
+    '    Dim formereOU As Boolean = enableOnUpdate
 
-        If enableOnUpdate Then
-            enableOnUpdate = False
-        End If
+    '    If enableOnUpdate Then
+    '        enableOnUpdate = False
+    '    End If
 
-        If appInstance.EnableEvents Then
-            appInstance.EnableEvents = False
-        End If
+    '    If appInstance.EnableEvents Then
+    '        appInstance.EnableEvents = False
+    '    End If
 
-        If appInstance.ScreenUpdating Then
-            appInstance.ScreenUpdating = False
-        End If
+    '    If appInstance.ScreenUpdating Then
+    '        appInstance.ScreenUpdating = False
+    '    End If
 
-        ' jetzt werden die Windows aufgebaut ...
+    '    ' jetzt werden die Windows aufgebaut ...
 
-        ' dann werden alle auf invisible gesetzt , bis auf projectboardWindows(mpt)
-       
-
-        Dim visboWorkbook As Excel.Workbook = appInstance.Workbooks.Item(myProjektTafel)
+    '    ' dann werden alle auf invisible gesetzt , bis auf projectboardWindows(mpt)
 
 
-        'projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow.NewWindow
-        projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
+    '    Dim visboWorkbook As Excel.Workbook = appInstance.Workbooks.Item(myProjektTafel)
 
 
-        ' Aus dem aktuellen Window ein benanntes Window machen 
-
-        projectboardWindows(PTwindows.mptpr) = appInstance.ActiveWindow.NewWindow
-
-        ' jetzt auf das Worksheet positionieren ...
-        CType(visboWorkbook.Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).Activate()
-
-        With projectboardWindows(PTwindows.mptpr)
-            .WindowState = Excel.XlWindowState.xlNormal
-            .EnableResize = True
-            .DisplayHorizontalScrollBar = True
-            .DisplayVerticalScrollBar = True
-            .DisplayFormulas = False
-            .DisplayHeadings = False
-            .DisplayGridlines = False
-            .GridlineColor = RGB(255, 255, 255)
-            .DisplayWorkbookTabs = False
-            .Caption = bestimmeWindowCaption(PTwindows.mptpr)
-            .Visible = False
-        End With
-
-        ' Aufbau des Windows windowNames(4): Charts
-        projectboardWindows(PTwindows.mptpf) = appInstance.ActiveWindow.NewWindow
-
-        ' jetzt das Worksheet aktivieren ...
-        visboWorkbook.Worksheets.Item(arrWsNames(ptTables.mptPfCharts)).activate()
-
-        With projectboardWindows(PTwindows.mptpf)
-            .WindowState = Excel.XlWindowState.xlNormal
-            .EnableResize = True
-            .DisplayHorizontalScrollBar = True
-            .DisplayVerticalScrollBar = True
-            .DisplayGridlines = False
-            .DisplayHeadings = False
-            .DisplayRuler = False
-            .DisplayOutline = False
-            .DisplayWorkbookTabs = False
-            .Caption = bestimmeWindowCaption(PTwindows.mptpf)
-            .Visible = False
-        End With
+    '    'projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow.NewWindow
+    '    projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
 
 
-        ' jetzt das Sheet Multiprojekt-Tafel aktivieren
-        visboWorkbook.Worksheets.Item(arrWsNames(ptTables.MPT)).activate()
+    '    ' Aus dem aktuellen Window ein benanntes Window machen 
 
-        'jetzt das MPT Sheet wieder holen 
-        With projectboardWindows(PTwindows.mpt)
-            .WindowState = XlWindowState.xlMaximized
-            .Activate()
-        End With
+    '    projectboardWindows(PTwindows.mptpr) = appInstance.ActiveWindow.NewWindow
 
-        ' wieder auf den Ausgangszustand setzen ... 
-        With appInstance
-            If .EnableEvents <> formerEE Then
-                .EnableEvents = formerEE
-            End If
+    '    ' jetzt auf das Worksheet positionieren ...
+    '    CType(visboWorkbook.Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).Activate()
 
-            If .ScreenUpdating <> formerSU Then
-                .ScreenUpdating = formerSU
-            End If
+    '    With projectboardWindows(PTwindows.mptpr)
+    '        .WindowState = Excel.XlWindowState.xlNormal
+    '        .EnableResize = True
+    '        .DisplayHorizontalScrollBar = True
+    '        .DisplayVerticalScrollBar = True
+    '        .DisplayFormulas = False
+    '        .DisplayHeadings = False
+    '        .DisplayGridlines = False
+    '        .GridlineColor = RGB(255, 255, 255)
+    '        .DisplayWorkbookTabs = False
+    '        .Caption = bestimmeWindowCaption(PTwindows.mptpr)
+    '        .Visible = False
+    '    End With
 
-            If enableOnUpdate <> formereOU Then
-                enableOnUpdate = formereOU
-            End If
-        End With
+    '    ' Aufbau des Windows windowNames(4): Charts
+    '    projectboardWindows(PTwindows.mptpf) = appInstance.ActiveWindow.NewWindow
+
+    '    ' jetzt das Worksheet aktivieren ...
+    '    visboWorkbook.Worksheets.Item(arrWsNames(ptTables.mptPfCharts)).activate()
+
+    '    With projectboardWindows(PTwindows.mptpf)
+    '        .WindowState = Excel.XlWindowState.xlNormal
+    '        .EnableResize = True
+    '        .DisplayHorizontalScrollBar = True
+    '        .DisplayVerticalScrollBar = True
+    '        .DisplayGridlines = False
+    '        .DisplayHeadings = False
+    '        .DisplayRuler = False
+    '        .DisplayOutline = False
+    '        .DisplayWorkbookTabs = False
+    '        .Caption = bestimmeWindowCaption(PTwindows.mptpf)
+    '        .Visible = False
+    '    End With
 
 
-    End Sub
+    '    ' jetzt das Sheet Multiprojekt-Tafel aktivieren
+    '    visboWorkbook.Worksheets.Item(arrWsNames(ptTables.MPT)).activate()
+
+    '    'jetzt das MPT Sheet wieder holen 
+    '    With projectboardWindows(PTwindows.mpt)
+    '        .WindowState = XlWindowState.xlMaximized
+    '        .Activate()
+    '    End With
+
+    '    ' wieder auf den Ausgangszustand setzen ... 
+    '    With appInstance
+    '        If .EnableEvents <> formerEE Then
+    '            .EnableEvents = formerEE
+    '        End If
+
+    '        If .ScreenUpdating <> formerSU Then
+    '            .ScreenUpdating = formerSU
+    '        End If
+
+    '        If enableOnUpdate <> formereOU Then
+    '            enableOnUpdate = formereOU
+    '        End If
+    '    End With
+
+
+    'End Sub
   
 
   
@@ -478,8 +478,7 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
 
         If appInstance.Version <> "14.0" Then
-            'If CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.mpt) And _
-            '    CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.massEdit) Then
+        
             If CStr(Wn.Caption).Contains("Chart") Then
                 bIShrankTheRibbon = False
                 appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
@@ -492,11 +491,11 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_WindowDeactivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowDeactivate
         If appInstance.Version <> "14.0" Then
-            'If CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.mpt) And _
-            'CStr(Wn.Caption) <> bestimmeWindowCaption(PTwindows.massEdit) Then
+
             If CStr(Wn.Caption).Contains("Chart") Then
                 If bIShrankTheRibbon Then
-                    appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+                    'appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",True)")
+                    appInstance.ActiveWindow.WindowState = XlWindowState.xlNormal
                 End If
             End If
         End If
