@@ -377,8 +377,10 @@ Public Class clsCommandBarEvents
 
                         ' Änderung 8.6.14 hier werden jetzt die Projekt Charts aktualisiert, sofern welche da sind und die Time Machine nicht aktiv ist
                         If Not timeMachineIsOn Then
+                            ' Änderung tk , Charts ollen jetzt nicht mehr mit Selektion geupdated werden , sondern 
+                            ' nur mit Selektion aus Portfolio Browser
                             Call aktualisierePMSForms(hproj)
-                            Call aktualisiereCharts(hproj, True)
+                            'Call aktualisiereCharts(hproj, True)
                         End If
 
 

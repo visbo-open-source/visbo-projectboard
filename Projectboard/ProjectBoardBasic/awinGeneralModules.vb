@@ -21079,4 +21079,195 @@ Public Module awinGeneralModules
 
     End Function
 
+
+    ''' <summary>
+    ''' setzt die Projekt-Historie für das angegebene Projekt
+    ''' wenn nicht existiert, wird Projekt-Historie auf Nothing gesetzt 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <remarks></remarks>
+    Public Sub setProjektHistorie(ByVal pName As String, ByVal vName As String)
+
+        Dim holeHistory As Boolean = True
+        Dim vglProj As clsProjekt = Nothing
+
+        If Not projekthistorie Is Nothing Then
+            If projekthistorie.Count > 0 Then
+                vglProj = projekthistorie.First
+            End If
+        End If
+
+        If Not noDB Then
+
+            If vglProj.name = pName And vglProj.variantName = vName Then
+                holeHistory = False
+            End If
+
+            If holeHistory Then
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If Request.pingMongoDb() Then
+                    Try
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName, _
+                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                    Catch ex As Exception
+                        projekthistorie.clear()
+                    End Try
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Database Connection failed ...")
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+
+                End If
+            End If
+
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert mit dem selektierten Projekt die evtl angezeigten Projekt-Info Charts
+    ''' replaceProj = false, wenn die Skalierung nicht angepasst werden soll; also z.Bsp bei Aufruf aus Time-Machine 
+    ''' </summary>
+    ''' <param name="hproj">das selektierte Projekt</param>
+    ''' <remarks></remarks>
+    Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean)
+        Dim chtobj As Excel.ChartObject
+
+        Dim vglName As String = hproj.name.Trim
+        Dim founddiagram As New clsDiagramm
+        ' ''Dim IDkennung As String
+
+        Dim currentWsName As String
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            currentWsName = arrWsNames(ptTables.mptPrCharts)
+        Else
+            currentWsName = arrWsNames(ptTables.meCharts)
+        End If
+
+        ' aktualisieren der Window Caption ...
+        Try
+            If visboWindowExists(PTwindows.mptpr) Then
+                Dim tmpmsg As String = "Charts: " & hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                projectboardWindows(PTwindows.mptpr).Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+        If Not (hproj Is Nothing) Then
+
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentWsName), Excel.Worksheet)
+                Dim tmpArray() As String
+                Dim anzDiagrams As Integer
+                anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+
+                If anzDiagrams > 0 Then
+                    For i = 1 To anzDiagrams
+                        chtobj = CType(.ChartObjects(i), Excel.ChartObject)
+                        If chtobj.Name <> "" Then
+                            tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
+                            ' chtobj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
+                            If tmpArray(0) = "pr" Then
+
+                                Dim chartTyp As String = ""
+                                Dim typID As Integer = -1
+                                Dim auswahl As Integer = -1
+                                Dim chartPname As String = ""
+                                Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, chartPname)
+
+                                If replaceProj Or (chartPname.Trim = vglName) Then
+                                    Select Case typID
+
+
+                                        ' replaceProj sorgt in den nachfolgenden Sequenzen dafür, daß das Chart im Falle eines Aufrufes aus der 
+                                        ' Time-Machine (replaceProj = false) nicht in der Skalierung angepasst wird; das geschieht initial beim Laden der Time-Machine
+                                        ' wenn es aus dem Selektieren von Projekten aus aufgerufen wird, dann wird die optimal passende Skalierung schon jedesmal berechnet 
+
+                                        Case PTprdk.Phasen
+                                            ' Update Phasen Diagramm
+
+                                            If CInt(tmpArray(3)) = PThis.current Then
+                                                ' nur dann muss aktualisiert werden ...
+                                                Call updatePhasesBalken(hproj, chtobj, auswahl, replaceProj)
+                                            End If
+
+
+                                        Case PTprdk.PersonalBalken
+
+                                            Call updateRessBalkenOfProject(hproj, chtobj, auswahl, replaceProj)
+
+
+                                        Case PTprdk.PersonalPie
+
+
+                                            ' Update Pie-Diagramm
+                                            Call updateRessPieOfProject(hproj, chtobj, auswahl)
+
+
+                                        Case PTprdk.KostenBalken
+
+
+                                            Call updateCostBalkenOfProject(hproj, chtobj, auswahl, replaceProj)
+
+
+                                        Case PTprdk.KostenPie
+
+
+                                            Call updateCostPieOfProject(hproj, chtobj, auswahl)
+
+
+                                        Case PTprdk.StrategieRisiko
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, auswahl)
+
+                                        Case PTprdk.FitRisikoVol
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, auswahl)
+
+                                        Case PTprdk.ComplexRisiko
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, auswahl)
+
+                                        Case PTprdk.Ergebnis
+                                            ' Update Ergebnis Diagramm
+                                            Call updateProjektErgebnisCharakteristik2(hproj, chtobj, auswahl, replaceProj)
+
+                                        Case PTprdk.SollIstGesamtkosten
+
+                                            Call setProjektHistorie(hproj.name, hproj.variantName)
+                                            Call updateSollIstOfProject(hproj, chtobj, Date.Now, auswahl, "", True, False)
+
+                                        Case PTprdk.SollIstPersonalkosten
+
+                                            Call setProjektHistorie(hproj.name, hproj.variantName)
+                                            Call updateSollIstOfProject(hproj, chtobj, Date.Now, auswahl, "", True, False)
+
+                                        Case PTprdk.SollIstSonstKosten
+
+                                            Call setProjektHistorie(hproj.name, hproj.variantName)
+                                            Call updateSollIstOfProject(hproj, chtobj, Date.Now, auswahl, "", True, False)
+
+                                        Case Else
+
+
+                                    End Select
+
+                                End If
+
+                            End If
+
+                        End If
+
+                    Next
+                End If
+
+            End With
+
+        End If
+
+    End Sub
+
 End Module
