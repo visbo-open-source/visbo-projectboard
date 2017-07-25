@@ -54,7 +54,7 @@
                         searchName = pName
                     End If
                     If _allItems.ContainsKey(searchName) Then
-                        If _allItems.Item(pName).show = showAttribute Then
+                        If _allItems.Item(searchName).show = showAttribute Then
                             tmpPosition = tmpPosition + 1
                         End If
                     End If
