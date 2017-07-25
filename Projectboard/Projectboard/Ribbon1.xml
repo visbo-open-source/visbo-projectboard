@@ -162,7 +162,7 @@
             <!--label="einzelne Projekte und Varianten"-->
             <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
-          <button id="PTExit" size="large" imageMso="PrintPreviewClose" getLabel ="bestimmeLabel" onAction="PTexit" />
+          <!--<button id="PTExit" size="large" imageMso="PrintPreviewClose" getLabel ="bestimmeLabel" onAction="PTexit" />-->
         </group>
         <!--</group>-->
       </tab>
@@ -258,7 +258,7 @@
           <!--label="Strategy Profit Risk"-->
           <button id ="PT6G1B3" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
           <!--label="sort by individual criterias"-->
-          <button id ="PT6G1B4" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <button id ="PT6G1B4" imageMso="SortDialog"  enabled ="false" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
           <button id ="PT6G1B5" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>      
         </group>
       </tab>
