@@ -4180,7 +4180,7 @@ Module Module1
             Try
                 Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
                 If Not IsNothing(tmpShape) Then
-                    If isVisboShape(tmpShape) Then
+                    If isRelevantMSPHShape(tmpShape) Then
 
                         If Not visboCollection.Contains(tmpShape.Name) Then
                             visboCollection.Add(tmpShape.Name, tmpShape.Name)

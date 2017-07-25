@@ -1604,9 +1604,9 @@ Imports System.Windows
 
             Case "PTMEC3" ' Formular Forecast Gegenüberstellung 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Gewinn/Verlust"
+                    tmpLabel = "Vergleich mit letzter Version"
                 Else
-                    tmpLabel = "Profit/Loss"
+                    tmpLabel = "Comparison with last version"
                 End If
             Case "PTX" ' Multiprojekt-Info
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3191,8 +3191,6 @@ Imports System.Windows
         End Try
 
 
-
-
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
@@ -3203,6 +3201,17 @@ Imports System.Windows
         End With
 
         appInstance.ScreenUpdating = True
+
+        ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                If projectboardWindows(PTwindows.mptpf).Visible = True Then
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
+            End If
+        Catch ex As Exception
+            projectboardWindows(PTwindows.mptpr) = Nothing
+        End Try
 
     End Sub
 
@@ -6737,16 +6746,16 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub Tom2G2M2M1B2SollIstPKosten(control As IRibbonControl)
 
+
+        ' alt ....
         Call projektTafelInit()
         ' auswahl steuert , dass die Personal-Kosten angezeigt werden 
         Dim auswahl As Integer = 1
-
         Dim vglBaseline As Boolean = True
-
         ' typ steuert, ob Summenbetrachtung oder Curve angezeigt wird
         Dim typ As String = " "
-
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+
 
     End Sub
 
@@ -6846,12 +6855,6 @@ Imports System.Windows
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                With singleShp
-                    top = .Top + boxHeight + 5
-                    left = .Left - 5
-                End With
-                height = 300
-                width = 400
 
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
@@ -6902,10 +6905,13 @@ Imports System.Windows
                 Dim qualifier As String = " "
 
                 Try
+
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
                     If typ = "Curve" Then
                         Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
-                        Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width, False)
                     End If
                 Catch ex As Exception
 
@@ -8463,6 +8469,14 @@ Imports System.Windows
     Sub PTMEShowCharts(control As IRibbonControl)
 
 
+        ' das Ganze nur machen, wenn das Chart nicht ohnehin schon gezeigt wird ... 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                Exit Sub
+            End If
+        Catch ex As Exception
+        End Try
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -8474,7 +8488,7 @@ Imports System.Windows
         Dim hproj As clsProjekt = Nothing
 
 
-        ' das MArkieren der selektierten Projekte einschalten ..
+        ' das Markieren der selektierten Projekte einschalten ..
         awinSettings.showValuesOfSelected = True
 
 
@@ -8541,7 +8555,7 @@ Imports System.Windows
             ''.Caption = windowNames(PTwindows.massEdit)
         End With
 
-        ' Aufbau des Windows windowNames(4): Charts
+
         projectboardWindows(PTwindows.meChart) = appInstance.ActiveWindow.NewWindow
 
         visboWorkbook.Worksheets.Item(arrWsNames(ptTables.meCharts)).activate()
