@@ -31,6 +31,49 @@
     Private _constellationName As String = "Last"
 
     ''' <summary>
+    ''' gibt den Projekt-Namen zurück, der an der entsprechenden Position in der Sort-Liste steht, allerdings zählen nur die PRojekte mit entsprchenden ShowAttribute
+    ''' Position kann Werte zwischen 1 und count annehmen 
+    ''' showAttribute gibt an, ob das x.te sichtbare Element oder das x.te unsichtbare Element zurückgegeben 
+    ''' werdne soll  
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProjectAtSortPosition(ByVal position As Integer, ByVal showAttribute As Boolean) As String
+        Get
+
+            Dim tmpPosition As Integer = 0
+            Dim laufIndex As Integer = 0
+            Dim pName As String = ""
+            Dim searchName As String = ""
+            If position <= _sortList.Count And position > 0 Then
+                Do While tmpPosition < position And laufIndex < _sortList.Count
+                    pName = _sortList.ElementAt(laufIndex).Value
+
+                    If Not pName.Contains("#") Then
+                        searchName = calcProjektKey(pName, "")
+                    Else
+                        searchName = pName
+                    End If
+                    If _allItems.ContainsKey(searchName) Then
+                        If _allItems.Item(pName).show = showAttribute Then
+                            tmpPosition = tmpPosition + 1
+                        End If
+                    End If
+                    
+                    laufIndex = laufIndex + 1
+                Loop
+            End If
+
+            If laufIndex = _sortList.Count Then
+                ' es wurde nicht gefunden 
+                pName = ""
+            End If
+
+            getProjectAtSortPosition = pName
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Zeile zurück, auf der dieses Projekt gezeichnet werden soll 
     ''' im Fall customTF gibt die Tahl im Key die Zeile wieder ...
     ''' </summary>
