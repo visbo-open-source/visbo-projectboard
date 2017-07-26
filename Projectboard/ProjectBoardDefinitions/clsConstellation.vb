@@ -63,7 +63,7 @@
                 Loop
             End If
 
-            If laufIndex = _sortList.Count Then
+            If tmpPosition <> position Then
                 ' es wurde nicht gefunden 
                 pName = ""
             End If

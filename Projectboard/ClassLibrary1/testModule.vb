@@ -9200,11 +9200,10 @@ Public Module testModule
                 zeile = zeile + 1
                 If zeile > anzahlZeilen Then
                     endOfPage = True
-                Else
-                    zaehler = zaehler + 1
                 End If
             End If
 
+            zaehler = zaehler + 1
 
         Loop
 
