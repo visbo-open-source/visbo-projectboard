@@ -8847,7 +8847,7 @@ Public Module testModule
 
             ' falls im folgenden ein Fehler auftritt , dann muss für die aufrufende Routine klar sein, wo objectsDone stand ...
             objectsDone = zaehler
-            Dim pname As String = currentSessionConstellation.getProjectAtSortPosition(zaehler, True)
+            Dim pname As String = currentSessionConstellation.getProjectAtSortPosition(zaehler)
             If ShowProjekte.contains(pname) Then
                 hproj = ShowProjekte.getProject(pname)
                 'hproj = ShowProjekte.getProject(zaehler)

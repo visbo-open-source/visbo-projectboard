@@ -1480,6 +1480,24 @@ Public Module awinGeneralModules
         ''Call readInitConstellations()
 
 
+        ' Löschen der Charts
+
+        Try
+            If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                Call deleteChartsInSheet(arrWsNames(ptTables.mptPfCharts))
+                Call deleteChartsInSheet(arrWsNames(ptTables.mptPrCharts))
+                Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
+                ' jetzt müssen alle Windows bis auf Window(0) = Multiprojekt-Tafel geschlossen werden 
+                ' und mache ProjectboardWindows(mpt) great again ...
+                Call closeAllWindowsExceptMPT()
+
+            Else
+                Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
+            End If
+        Catch ex As Exception
+            Dim a As String = ex.Message
+        End Try
+
         ' Session gelöscht
 
         appInstance.EnableEvents = True

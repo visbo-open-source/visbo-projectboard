@@ -79,7 +79,7 @@
               <!--label="VISBO-Steckbriefe"-->
               <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
               <!--label ="VISBO Open XML-->
-              <button id="PT4G1B6" imageMso="DataFromXmlFile" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
+              <button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
               <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
               <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
               <!--<separator id="PT4G1s1"/>-->
@@ -144,7 +144,7 @@
             <menu id="PT2G1M" getVisible="chckVisibility">
               <!--label="Neu auf Basis Vorlage"-->
               <button id="PT2G1M0B0" getLabel ="bestimmeLabel" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
-              <button id="PT2G1M0B1" label="Neu auf Basis Projekt(fehlt)" onAction="PT2ProjektNeuBasisProjekt" />
+              <button id="PT2G1M0B1" getLabel="bestimmeLabel" enabled="false" onAction="PT2ProjektNeuBasisProjekt" />
             </menu>
           </splitButton>
           <!--label="neue Variante anlegen"-->
