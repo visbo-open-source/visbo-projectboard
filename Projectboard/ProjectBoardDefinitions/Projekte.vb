@@ -3178,12 +3178,12 @@ Public Module Projekte
                 If isMinMax Or Not vglBaseline Then
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
-                            .Name = repMessages.getmsg(198) & " (" & ersteVersion.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(198) & " (" & ersteVersion.timeStamp.ToString("d", repCult) & ")"
                             '.Name = "Maximum (" & letzteVersion.timeStamp.ToString("d") & ")"
 
                         Else
                             '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .Name = repMessages.getmsg(197) & " (" & ersteVersion.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(197) & " (" & ersteVersion.timeStamp.ToString("d", repCult) & ")"
                             '.Name = "letzte Version: " & letzteVersion.timeStamp.ToString("d") & ")"
 
                         End If
@@ -11233,137 +11233,47 @@ Public Module Projekte
 
                 End Try
 
-            End If
 
-            ' Merken des aktuell gesetzten sichtbaren Bereich in der ProjektTafel
-            With appInstance.ActiveWindow
-                sichtbarerBereich = .VisibleRange
-            End With
+                ' Merken des aktuell gesetzten sichtbaren Bereich in der ProjektTafel
+                With appInstance.ActiveWindow
+                    sichtbarerBereich = .VisibleRange
+                End With
 
-            wsPrCharts = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
-            With wsPrCharts
-                ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
-                maxRows = .Rows.Count
-                maxColumns = .Columns.Count
-                ' Anzahl Diagramme, die gespeichert werden zu diesem Cockpit
-                anzPrDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
-
-
-                If anzPrDiagrams > 0 Then
-
-                    ' Tabellenblatt muss neu hinzugefügt werden
-
-                    wsSheet = CType(xlsCockpits.Worksheets.Add(), Excel.Worksheet)
-                    wsSheet.Name = cockpitname
-
-                    ' Tabellenblatt existiert jetzt sicher
-
-                    ' alle Projekt-Charts durchgehen und in "Project Board Cockpits.xlsx" Tabelle "cockpitname" am linken Rand speichern
-
-                    While k <= anzPrDiagrams
-
-                        wsPrCharts.Activate()
-
-                        chtobj = CType(wsPrCharts.ChartObjects(k), Excel.ChartObject)
-
-                        oldchtobj = chtobj
-
-                        '  Top/Left Position für Portfolio bestimmen
-                        If oldchtobj.Top < maxTop Then
-                            maxTop = oldchtobj.Top
-                        End If
-                        If oldchtobj.Left + oldchtobj.Width > maxLeft Then
-                            maxLeft = oldchtobj.Left + oldchtobj.Width
-                        End If
-
-                        chtobj.Copy()
-
-                        ' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
-
-                        found = False
-                        i = 1
-                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
-                        While i <= anzChartsInCockpit And Not found
-                            hchtobj = CType(wsSheet.ChartObjects(i), Excel.ChartObject)
-                            ' an awinLoadCockpit anpassen
-                            If hchtobj.Name = chtobj.Name Then
-                                hchtobj.Delete()
-                                found = True
-                            Else
-                                i = i + 1
-                            End If
-                        End While
-
-                        wsSheet.Activate()
-
-                        ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
-                        wsSheet.Paste()
-                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
-
-                        ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
-                        newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
-
-                        newchtobj.Top = oldchtobj.Top
-                        newchtobj.Left = oldchtobj.Left
+                wsPrCharts = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
+                With wsPrCharts
+                    ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
+                    maxRows = .Rows.Count
+                    maxColumns = .Columns.Count
+                    ' Anzahl Diagramme, die gespeichert werden zu diesem Cockpit
+                    anzPrDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
 
-                        ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
-                        Dim hdiagramm As clsDiagramm
-                        i = 1
-                        found = False
+                    If anzPrDiagrams > 0 Then
 
-                        While i <= DiagramList.Count And Not found
+                        ' Tabellenblatt muss neu hinzugefügt werden
 
-                            hdiagramm = DiagramList.getDiagramm(i)
-                            If hdiagramm.kennung = newchtobj.Name Then
-                                'newchtobj.Chart.Name = hdiagramm.diagrammTyp
-                                found = True
-                                hshape = chtobj2shape(newchtobj)
-                                hshape.Title = hdiagramm.diagrammTyp
-                                Try
-                                    If Not IsNothing(hdiagramm.gsCollection) Then
-                                        For hi = 1 To hdiagramm.gsCollection.Count
-                                            If hi = 1 Then
-                                                hshape.AlternativeText = CStr(hdiagramm.gsCollection.Item(hi))
-                                            Else
-                                                hshape.AlternativeText = hshape.AlternativeText & ";" & CStr(hdiagramm.gsCollection.Item(hi))
-                                            End If
-                                        Next hi
-                                    End If
-                                Catch ex As Exception
-                                    Throw New Exception("Fehler  Projekt-Cockpits '" & cockpitname & vbLf & ex.Message)
-                                End Try
+                        wsSheet = CType(xlsCockpits.Worksheets.Add(), Excel.Worksheet)
+                        wsSheet.Name = cockpitname
 
-                            End If
-                            i = i + 1
+                        ' Tabellenblatt existiert jetzt sicher
 
-                        End While
+                        ' alle Projekt-Charts durchgehen und in "Project Board Cockpits.xlsx" Tabelle "cockpitname" am linken Rand speichern
 
-                        ' aus der DiagrammList noch Collection herausholen und in das Chart bei Beschreibung eintragen
-                        k = k + 1
+                        While k <= anzPrDiagrams
 
-                    End While
+                            wsPrCharts.Activate()
 
-                    ' alle Portfolio-Charts durchgehen und in "Project Board Cockpits.xlsx" Tabelle "cockpitname" am linken Rand speichern
-
-                    wsPfCharts = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
-
-                    With wsPfCharts
-                        ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
-                        maxRows = .Rows.Count
-                        maxColumns = .Columns.Count
-                        ' Anzahl Diagramme, die gespeichert werden zu diesem Cockpit
-                        anzPfDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
-
-
-                        k = 1
-                        While k <= anzPfDiagrams
-
-                            wsPfCharts.Activate()
-
-                            chtobj = CType(wsPfCharts.ChartObjects(k), Excel.ChartObject)
+                            chtobj = CType(wsPrCharts.ChartObjects(k), Excel.ChartObject)
 
                             oldchtobj = chtobj
+
+                            '  Top/Left Position für Portfolio bestimmen
+                            If oldchtobj.Top < maxTop Then
+                                maxTop = oldchtobj.Top
+                            End If
+                            If oldchtobj.Left + oldchtobj.Width > maxLeft Then
+                                maxLeft = oldchtobj.Left + oldchtobj.Width
+                            End If
 
                             chtobj.Copy()
 
@@ -11392,8 +11302,8 @@ Public Module Projekte
                             ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
                             newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
 
-                            newchtobj.Top = oldchtobj.Top + maxTop '???
-                            newchtobj.Left = oldchtobj.Left + maxLeft
+                            newchtobj.Top = oldchtobj.Top
+                            newchtobj.Left = oldchtobj.Left
 
 
                             ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
@@ -11420,7 +11330,7 @@ Public Module Projekte
                                             Next hi
                                         End If
                                     Catch ex As Exception
-                                        Throw New Exception("Fehler Portfolio Cockpits '" & cockpitname & vbLf & ex.Message)
+                                        Throw New Exception("Fehler  Projekt-Cockpits '" & cockpitname & vbLf & ex.Message)
                                     End Try
 
                                 End If
@@ -11428,38 +11338,135 @@ Public Module Projekte
 
                             End While
 
-
                             ' aus der DiagrammList noch Collection herausholen und in das Chart bei Beschreibung eintragen
                             k = k + 1
 
                         End While
-                    End With
 
-
-                    'appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                    xlsCockpits.Close(SaveChanges:=True)
-
-                    CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Activate()
-                    projectboardWindows(PTwindows.mpt).Activate()
-
-                    enableOnUpdate = formerEO
-                    appInstance.EnableEvents = formerEE
-                    appInstance.ScreenUpdating = True
-
-                    If Not cockpitname = "_Last" Then
-                        Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                     End If
 
-                    'xlsCockpits.Close(SaveChanges:=True)
+                End With
 
-                Else
-                    Call MsgBox("Es sind keine Charts vorhanden")
+
+                ' alle Portfolio-Charts durchgehen und in "Project Board Cockpits.xlsx" Tabelle "cockpitname" am linken Rand speichern
+
+                wsPfCharts = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
+
+                With wsPfCharts
+                    ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
+                    maxRows = .Rows.Count
+                    maxColumns = .Columns.Count
+                    ' Anzahl Diagramme, die gespeichert werden zu diesem Cockpit
+                    anzPfDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+
+                    k = 1
+                    While k <= anzPfDiagrams
+
+                        wsPfCharts.Activate()
+
+                        chtobj = CType(wsPfCharts.ChartObjects(k), Excel.ChartObject)
+
+                        oldchtobj = chtobj
+
+                        chtobj.Copy()
+
+                        ' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
+
+                        found = False
+                        i = 1
+                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
+                        While i <= anzChartsInCockpit And Not found
+                            hchtobj = CType(wsSheet.ChartObjects(i), Excel.ChartObject)
+                            ' an awinLoadCockpit anpassen
+                            If hchtobj.Name = chtobj.Name Then
+                                hchtobj.Delete()
+                                found = True
+                            Else
+                                i = i + 1
+                            End If
+                        End While
+
+                        wsSheet.Activate()
+
+                        ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
+                        wsSheet.Paste()
+                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
+
+                        ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
+                        newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
+
+                        newchtobj.Top = oldchtobj.Top + maxTop '???
+                        newchtobj.Left = oldchtobj.Left + maxLeft
+
+
+                        ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
+                        Dim hdiagramm As clsDiagramm
+                        i = 1
+                        found = False
+
+                        While i <= DiagramList.Count And Not found
+
+                            hdiagramm = DiagramList.getDiagramm(i)
+                            If hdiagramm.kennung = newchtobj.Name Then
+                                'newchtobj.Chart.Name = hdiagramm.diagrammTyp
+                                found = True
+                                hshape = chtobj2shape(newchtobj)
+                                hshape.Title = hdiagramm.diagrammTyp
+                                Try
+                                    If Not IsNothing(hdiagramm.gsCollection) Then
+                                        For hi = 1 To hdiagramm.gsCollection.Count
+                                            If hi = 1 Then
+                                                hshape.AlternativeText = CStr(hdiagramm.gsCollection.Item(hi))
+                                            Else
+                                                hshape.AlternativeText = hshape.AlternativeText & ";" & CStr(hdiagramm.gsCollection.Item(hi))
+                                            End If
+                                        Next hi
+                                    End If
+                                Catch ex As Exception
+                                    Throw New Exception("Fehler Portfolio Cockpits '" & cockpitname & vbLf & ex.Message)
+                                End Try
+
+                            End If
+                            i = i + 1
+
+                        End While
+
+
+                        ' aus der DiagrammList noch Collection herausholen und in das Chart bei Beschreibung eintragen
+                        k = k + 1
+
+                    End While
+                End With
+
+
+                'appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                xlsCockpits.Close(SaveChanges:=True)
+
+                CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Activate()
+                projectboardWindows(PTwindows.mpt).Activate()
+
+                enableOnUpdate = formerEO
+                appInstance.EnableEvents = formerEE
+                appInstance.ScreenUpdating = True
+
+                If Not cockpitname = "_Last" Then
+                    Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                 End If
-            End With
+
+                'xlsCockpits.Close(SaveChanges:=True)
+
+            Else
+                Call MsgBox("Es sind keine Charts vorhanden")
+                enableOnUpdate = formerEO
+                appInstance.EnableEvents = formerEE
+                appInstance.ScreenUpdating = True
+            End If
+
 
         Catch ex As Exception
             enableOnUpdate = formerEO
             appInstance.EnableEvents = formerEE
+            appInstance.ScreenUpdating = True
             Throw New Exception("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf & ex.Message)
         End Try
 
