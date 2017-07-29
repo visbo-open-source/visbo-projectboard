@@ -4216,10 +4216,18 @@ Public Module Module1
                 End If
 
             Case PTwindows.mpt
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Visual Board '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
+                Dim outputmsg As String = ""
+
+                If currentConstellationName = "" Then
+                    outputmsg = " : " & ShowProjekte.Count & " "
                 Else
-                    tmpResult = "Visual Board '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
+                    outputmsg = " '" & currentConstellationName & "' : " & ShowProjekte.Count & " "
+                End If
+
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Visual Board" & outputmsg & "projects"
+                Else
+                    tmpResult = "Visual Board" & outputmsg & "Projekte"
                 End If
 
             Case PTwindows.massEdit
