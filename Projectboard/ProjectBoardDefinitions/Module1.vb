@@ -4290,20 +4290,20 @@ Public Module Module1
             End If
         Catch ex As Exception
 
-            ' make MPT Window great again ...
-            With projectboardWindows(PTwindows.mpt)
-                .Visible = True
-                .WindowState = XlWindowState.xlMaximized
-            End With
+            ' '' make MPT Window great again ...
+            ''With projectboardWindows(PTwindows.mpt)
+            ''    .Visible = True
+            ''    .WindowState = XlWindowState.xlMaximized
+            ''End With
 
         End Try
 
 
         ' jetzt die projectboardWindows = Nothing setzen 
-        'projectboardWindows(PTwindows.massEdit) = Nothing
-        'projectboardWindows(PTwindows.meChart) = Nothing
-        'projectboardWindows(PTwindows.mptpf) = Nothing
-        'projectboardWindows(PTwindows.mptpr) = Nothing
+        projectboardWindows(PTwindows.massEdit) = Nothing
+        projectboardWindows(PTwindows.meChart) = Nothing
+        projectboardWindows(PTwindows.mptpf) = Nothing
+        projectboardWindows(PTwindows.mptpr) = Nothing
 
         ' make MPT Window great again ...
         With projectboardWindows(PTwindows.mpt)

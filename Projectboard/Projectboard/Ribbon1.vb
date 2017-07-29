@@ -711,6 +711,8 @@ Imports System.Windows
                         Call deleteChartsInSheet(currentWsName)
                     End If
 
+                    Call closeAllWindowsExceptMPT()
+
                 End If
 
                 Try
