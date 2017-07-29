@@ -11434,21 +11434,21 @@ Public Module Projekte
                 End With
 
 
-                'appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                xlsCockpits.Close(SaveChanges:=True)
-
+             
                 CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Activate()
                 projectboardWindows(PTwindows.mpt).Activate()
 
-                enableOnUpdate = formerEO
-                appInstance.EnableEvents = formerEE
-                appInstance.ScreenUpdating = True
+                'enableOnUpdate = formerEO
+                'appInstance.EnableEvents = formerEE
+
 
                 If Not cockpitname = "_Last" Then
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                 End If
 
-                'xlsCockpits.Close(SaveChanges:=True)
+                'appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                xlsCockpits.Close(SaveChanges:=True)
+
 
             Else
                 enableOnUpdate = formerEO
@@ -11457,6 +11457,9 @@ Public Module Projekte
                 Call MsgBox("Es sind keine Charts vorhanden")
             End If
 
+            enableOnUpdate = formerEO
+            appInstance.EnableEvents = formerEE
+            appInstance.ScreenUpdating = True
 
         Catch ex As Exception
             enableOnUpdate = formerEO
@@ -11466,6 +11469,12 @@ Public Module Projekte
         End Try
 
     End Sub
+
+    ''' <summary>
+    ''' Es wird ein Cockpit (=Ansammlung von Charts) geladen und angezeigt
+    ''' </summary>
+    ''' <param name="cockpitname"></param>
+    ''' <remarks></remarks>
     Public Sub awinLoadCockpit(ByVal cockpitname As String)
         'Dim kennung As String
 
@@ -11510,13 +11519,13 @@ Public Module Projekte
             currentWSpf = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
             currentWSpr = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
 
-   
+
             ' TOP/Left - Position der Portfolio-Cockpits-Charts bestimmen
             Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, minPfTop, minPfLeft, pfwidth, pfheight)
             ' TOP/Left - Position der Projekt-Cockpits-Charts bestimmen
             Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, minPrTop, minPrLeft, prwidth, prheight)
 
-           
+
             fileName = awinPath & cockpitsFile
 
             If My.Computer.FileSystem.FileExists(fileName) Then
