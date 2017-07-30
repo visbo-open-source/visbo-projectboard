@@ -4244,10 +4244,18 @@ Public Module Module1
                 End If
 
             Case PTwindows.mpt
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Visual Board '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
+                Dim outputmsg As String = ""
+
+                If currentConstellationName = "" Then
+                    outputmsg = " : " & ShowProjekte.Count & " "
                 Else
-                    tmpResult = "Visual Board '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
+                    outputmsg = " '" & currentConstellationName & "' : " & ShowProjekte.Count & " "
+                End If
+
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Visual Board" & outputmsg & "projects"
+                Else
+                    tmpResult = "Visual Board" & outputmsg & "Projekte"
                 End If
 
             Case PTwindows.massEdit
@@ -4318,20 +4326,20 @@ Public Module Module1
             End If
         Catch ex As Exception
 
-            ' make MPT Window great again ...
-            With projectboardWindows(PTwindows.mpt)
-                .Visible = True
-                .WindowState = XlWindowState.xlMaximized
-            End With
+            ' '' make MPT Window great again ...
+            ''With projectboardWindows(PTwindows.mpt)
+            ''    .Visible = True
+            ''    .WindowState = XlWindowState.xlMaximized
+            ''End With
 
         End Try
 
 
         ' jetzt die projectboardWindows = Nothing setzen 
-        'projectboardWindows(PTwindows.massEdit) = Nothing
-        'projectboardWindows(PTwindows.meChart) = Nothing
-        'projectboardWindows(PTwindows.mptpf) = Nothing
-        'projectboardWindows(PTwindows.mptpr) = Nothing
+        projectboardWindows(PTwindows.massEdit) = Nothing
+        projectboardWindows(PTwindows.meChart) = Nothing
+        projectboardWindows(PTwindows.mptpf) = Nothing
+        projectboardWindows(PTwindows.mptpr) = Nothing
 
         ' make MPT Window great again ...
         With projectboardWindows(PTwindows.mpt)
