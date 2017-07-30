@@ -8243,7 +8243,6 @@ Imports System.Windows
                 End With
                 wpfInput.Add(valueItem.name, valueItem)
 
-
                 Dim pieChartZieleV As New PieChartWindow(wpfInput)
 
                 With pieChartZieleV
