@@ -2949,21 +2949,20 @@ Public Module awinGeneralModules
 
                     tmpStr = aktuelleZeile.Trim.Split(New Char() {CChar("["), CChar("]")}, 5)
 
+
+                    nameSopTyp = tmpStr(0).Trim
+                    If Not isValidProjectName(nameSopTyp) Then
+                        nameSopTyp = makeValidProjectName(nameSopTyp)
+                    End If
+                    pName = nameSopTyp
                     Try
-                        nameSopTyp = tmpStr(0).Trim
-                        pName = nameSopTyp
-                        Try
-                            nameBU = tmpStr(1)
-                            tmpStr = nameBU.Split(New Char() {CChar(" ")}, 3)
-                            nameBU = tmpStr(0)
-                        Catch ex1 As Exception
-                            nameBU = ""
-                        End Try
-
-
-                    Catch ex As Exception
-                        Throw New Exception("Name, SOP, Typ kann nicht bestimmt werden " & vbLf & nameSopTyp)
+                        nameBU = tmpStr(1)
+                        tmpStr = nameBU.Split(New Char() {CChar(" ")}, 3)
+                        nameBU = tmpStr(0)
+                    Catch ex1 As Exception
+                        nameBU = ""
                     End Try
+
 
                     Dim foundIX As Integer = -1
 
@@ -2993,235 +2992,235 @@ Public Module awinGeneralModules
                         End If
                     Loop
 
-                    If foundIX < 0 Then
-                        ' SOP Date konnte nicht bestimmt werden 
-                        sopDate = endDate
-                        tmpStartSop = sopDate.AddDays(-28)
-                        foundIX = tmpStr.Length - 1
-                    End If
+        If foundIX < 0 Then
+            ' SOP Date konnte nicht bestimmt werden 
+            sopDate = endDate
+            tmpStartSop = sopDate.AddDays(-28)
+            foundIX = tmpStr.Length - 1
+        End If
 
-                    Select Case tmpStr(foundIX).Trim
-                        Case "eA"
-                            vorlagenName = "Enge Ableitung"
-                        Case "wA"
-                            vorlagenName = "Weite Ableitung"
-                        Case "E"
-                            vorlagenName = "Erstanläufer"
-                        Case Else
-                            vorlagenName = "Erstanläufer"
-                    End Select
+        Select Case tmpStr(foundIX).Trim
+            Case "eA"
+                vorlagenName = "Enge Ableitung"
+            Case "wA"
+                vorlagenName = "Weite Ableitung"
+            Case "E"
+                vorlagenName = "Erstanläufer"
+            Case Else
+                vorlagenName = "Erstanläufer"
+        End Select
 
-                    '
-                    ' jetzt wird das Projekt angelegt 
-                    '
-                    hproj = New clsProjekt
+        '
+        ' jetzt wird das Projekt angelegt 
+        '
+        hproj = New clsProjekt
 
-                    Try
-                        vproj = Projektvorlagen.getProject(vorlagenName)
-
-
-                        hproj.farbe = vproj.farbe
-                        hproj.Schrift = vproj.Schrift
-                        hproj.Schriftfarbe = vproj.Schriftfarbe
-                        hproj.name = ""
-                        hproj.VorlagenName = vorlagenName
-                        hproj.earliestStart = vproj.earliestStart
-                        hproj.latestStart = vproj.latestStart
-                        hproj.ampelStatus = farbKennung
-                        hproj.leadPerson = responsible
-
-                    Catch ex As Exception
-                        Throw New Exception("es gibt keine entsprechende Vorlage mit Namen  " & vorlagenName & vbLf & ex.Message)
-                    End Try
+        Try
+            vproj = Projektvorlagen.getProject(vorlagenName)
 
 
-                    Try
+            hproj.farbe = vproj.farbe
+            hproj.Schrift = vproj.Schrift
+            hproj.Schriftfarbe = vproj.Schriftfarbe
+            hproj.name = ""
+            hproj.VorlagenName = vorlagenName
+            hproj.earliestStart = vproj.earliestStart
+            hproj.latestStart = vproj.latestStart
+            hproj.ampelStatus = farbKennung
+            hproj.leadPerson = responsible
 
-                        hproj.name = pName
-                        hproj.startDate = startDate
-                        hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
-                        hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
-                        ' immer als beauftragtes PRojekt importieren 
-                        hproj.Status = ProjektStatus(1)
-                        'If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
-                        '    hproj.Status = ProjektStatus(0)
-                        'Else
-                        '    hproj.Status = ProjektStatus(1)
-                        'End If
-
-                        hproj.StrategicFit = zufall.NextDouble * 10
-                        hproj.Risiko = zufall.NextDouble * 10
-                        hproj.volume = zufall.NextDouble * 1000000
-                        hproj.complexity = zufall.NextDouble
-                        hproj.businessUnit = nameBU
-                        hproj.description = nameSopTyp
-
-                        hproj.Erloes = 0.0
+        Catch ex As Exception
+            Throw New Exception("es gibt keine entsprechende Vorlage mit Namen  " & vorlagenName & vbLf & ex.Message)
+        End Try
 
 
-                    Catch ex As Exception
-                        Throw New Exception("in erstelle InventurProjekte: " & vbLf & ex.Message)
-                    End Try
+        Try
 
-                    ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
+            hproj.name = pName
+            hproj.startDate = startDate
+            hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
+            hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
+            ' immer als beauftragtes PRojekt importieren 
+            hproj.Status = ProjektStatus(1)
+            'If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
+            '    hproj.Status = ProjektStatus(0)
+            'Else
+            '    hproj.Status = ProjektStatus(1)
+            'End If
+
+            hproj.StrategicFit = zufall.NextDouble * 10
+            hproj.Risiko = zufall.NextDouble * 10
+            hproj.volume = zufall.NextDouble * 1000000
+            hproj.complexity = zufall.NextDouble
+            hproj.businessUnit = nameBU
+            hproj.description = nameSopTyp
+
+            hproj.Erloes = 0.0
+
+
+        Catch ex As Exception
+            Throw New Exception("in erstelle InventurProjekte: " & vbLf & ex.Message)
+        End Try
+
+        ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
+        cphase = New clsPhase(parent:=hproj)
+        cphase.nameID = rootPhaseName
+        startoffset = 0
+        duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
+        cphase.changeStartandDauer(startoffset, duration)
+
+        cresult = New clsMeilenstein(parent:=cphase)
+        cresult.nameID = calcHryElemKey("SOP", True)
+        cresult.setDate = sopDate
+
+        cbewertung = New clsBewertung
+        cbewertung.colorIndex = farbKennung
+        cbewertung.description = " .. es wurde  keine Erläuterung abgegeben .. "
+        cresult.addBewertung(cbewertung)
+
+        Try
+            cphase.addMilestone(cresult)
+        Catch ex As Exception
+
+        End Try
+
+
+        hproj.AddPhase(cphase)
+
+
+        Dim phaseIX As Integer = PhaseDefinitions.Count + 1
+
+
+        Dim pStartDate As Date
+        Dim pEndDate As Date
+        Dim ok As Boolean = True
+        Dim lastPhaseName As String = cphase.nameID
+
+        Dim i As Integer
+        For i = anfang To ende
+
+            Try
+                itemName = CStr(CType(.Cells(i, 2), Excel.Range).Value).Trim
+            Catch ex As Exception
+                itemName = ""
+                ok = False
+            End Try
+
+            If ok Then
+
+                pStartDate = CDate(CType(.Cells(i, 3), Excel.Range).Value)
+                pEndDate = CDate(CType(.Cells(i, 4), Excel.Range).Value)
+                startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
+                duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
+
+                If duration > 1 Then
+                    ' es handelt sich um eine Phase 
+                    phaseName = itemName
                     cphase = New clsPhase(parent:=hproj)
-                    cphase.nameID = rootPhaseName
-                    startoffset = 0
-                    duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
-                    cphase.changeStartandDauer(startoffset, duration)
+                    cphase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
 
-                    cresult = New clsMeilenstein(parent:=cphase)
-                    cresult.nameID = calcHryElemKey("SOP", True)
-                    cresult.setDate = sopDate
+                    If PhaseDefinitions.Contains(phaseName) Then
+                        ' nichts tun 
+                    Else
+                        ' in die Phase-Definitions aufnehmen 
 
-                    cbewertung = New clsBewertung
-                    cbewertung.colorIndex = farbKennung
-                    cbewertung.description = " .. es wurde  keine Erläuterung abgegeben .. "
-                    cresult.addBewertung(cbewertung)
+                        Dim hphase As clsPhasenDefinition
+                        hphase = New clsPhasenDefinition
 
-                    Try
-                        cphase.addMilestone(cresult)
-                    Catch ex As Exception
-
-                    End Try
-
-
-                    hproj.AddPhase(cphase)
-
-
-                    Dim phaseIX As Integer = PhaseDefinitions.Count + 1
-
-
-                    Dim pStartDate As Date
-                    Dim pEndDate As Date
-                    Dim ok As Boolean = True
-                    Dim lastPhaseName As String = cphase.nameID
-
-                    Dim i As Integer
-                    For i = anfang To ende
+                        'hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
+                        hphase.name = phaseName
+                        hphase.UID = phaseIX
+                        phaseIX = phaseIX + 1
 
                         Try
-                            itemName = CStr(CType(.Cells(i, 2), Excel.Range).Value).Trim
+                            PhaseDefinitions.Add(hphase)
                         Catch ex As Exception
-                            itemName = ""
-                            ok = False
+
                         End Try
 
-                        If ok Then
+                    End If
 
-                            pStartDate = CDate(CType(.Cells(i, 3), Excel.Range).Value)
-                            pEndDate = CDate(CType(.Cells(i, 4), Excel.Range).Value)
-                            startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
-                            duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
+                    cphase.changeStartandDauer(startoffset, duration)
+                    hproj.AddPhase(cphase)
+                    lastPhaseName = cphase.nameID
 
-                            If duration > 1 Then
-                                ' es handelt sich um eine Phase 
-                                phaseName = itemName
-                                cphase = New clsPhase(parent:=hproj)
-                                cphase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+                ElseIf duration = 1 Then
 
-                                If PhaseDefinitions.Contains(phaseName) Then
-                                    ' nichts tun 
-                                Else
-                                    ' in die Phase-Definitions aufnehmen 
+                    Try
+                        ' es handelt sich um einen Meilenstein 
 
-                                    Dim hphase As clsPhasenDefinition
-                                    hphase = New clsPhasenDefinition
+                        Dim bewertungsAmpel As Integer
+                        Dim explanation As String
 
-                                    'hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
-                                    hphase.name = phaseName
-                                    hphase.UID = phaseIX
-                                    phaseIX = phaseIX + 1
+                        bewertungsAmpel = CInt(CType(.Cells(i, 12), Excel.Range).Value)
+                        explanation = CStr(CType(.Cells(i, 1), Excel.Range).Value)
 
-                                    Try
-                                        PhaseDefinitions.Add(hphase)
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                End If
-
-                                cphase.changeStartandDauer(startoffset, duration)
-                                hproj.AddPhase(cphase)
-                                lastPhaseName = cphase.nameID
-
-                            ElseIf duration = 1 Then
-
-                                Try
-                                    ' es handelt sich um einen Meilenstein 
-
-                                    Dim bewertungsAmpel As Integer
-                                    Dim explanation As String
-
-                                    bewertungsAmpel = CInt(CType(.Cells(i, 12), Excel.Range).Value)
-                                    explanation = CStr(CType(.Cells(i, 1), Excel.Range).Value)
-
-                                    cphase = hproj.getPhaseByID(lastPhaseName)
-                                    cresult = New clsMeilenstein(parent:=cphase)
-                                    cbewertung = New clsBewertung
+                        cphase = hproj.getPhaseByID(lastPhaseName)
+                        cresult = New clsMeilenstein(parent:=cphase)
+                        cbewertung = New clsBewertung
 
 
 
-                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                        ' es gibt keine Bewertung
-                                        bewertungsAmpel = 0
-                                    End If
-
-                                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                                    With cbewertung
-                                        '.bewerterName = resultVerantwortlich
-                                        .colorIndex = bewertungsAmpel
-                                        .datum = Date.Now
-                                        .description = explanation
-                                    End With
-
-                                    With cresult
-                                        .nameID = hproj.hierarchy.findUniqueElemKey(itemName, True)
-                                        .setDate = pEndDate
-                                        If Not cbewertung Is Nothing Then
-                                            .addBewertung(cbewertung)
-                                        End If
-                                    End With
-
-                                    Try
-                                        With cphase
-                                            .addMilestone(cresult)
-                                        End With
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                Catch ex As Exception
-
-                                End Try
-
-
-
-
-                            End If
-
-
-
-
-                            ' handelt es sich um eine Phase oder um einen Meilenstein ? 
-
-
+                        If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                            ' es gibt keine Bewertung
+                            bewertungsAmpel = 0
                         End If
 
+                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                        With cbewertung
+                            '.bewerterName = resultVerantwortlich
+                            .colorIndex = bewertungsAmpel
+                            .datum = Date.Now
+                            .description = explanation
+                        End With
 
-                    Next
+                        With cresult
+                            .nameID = hproj.hierarchy.findUniqueElemKey(itemName, True)
+                            .setDate = pEndDate
+                            If Not cbewertung Is Nothing Then
+                                .addBewertung(cbewertung)
+                            End If
+                        End With
+
+                        Try
+                            With cphase
+                                .addMilestone(cresult)
+                            End With
+                        Catch ex As Exception
+
+                        End Try
+
+                    Catch ex As Exception
+
+                    End Try
 
 
-                    ' jetzt muss das Projekt eingetragen werden 
-                    ImportProjekte.Add(hproj, False)
-                    myCollection.Add(hproj.name)
 
 
-                    zeile = ende + 1
+                End If
 
-                    Do While CBool(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color IsNot projektFarbe) And zeile <= lastRow
-                        zeile = zeile + 1
-                    Loop
+
+
+
+                ' handelt es sich um eine Phase oder um einen Meilenstein ? 
+
+
+            End If
+
+
+        Next
+
+
+        ' jetzt muss das Projekt eingetragen werden 
+        ImportProjekte.Add(hproj, False)
+        myCollection.Add(hproj.name)
+
+
+        zeile = ende + 1
+
+        Do While CBool(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color IsNot projektFarbe) And zeile <= lastRow
+            zeile = zeile + 1
+        Loop
 
                 End While
 
@@ -3347,7 +3346,8 @@ Public Module awinGeneralModules
                 ' Projektname ohne "."
                 Dim hhstr() As String
                 hhstr = Split(msproj.Name, ".", -1)
-                hproj.name = hhstr(0)
+                ' alle evtl auftretenden #, (, ) werden ersetzt durch unkritische Zeichen ... 
+                hproj.name = makeValidProjectName(hhstr(0))
                 'hproj.idauer = DateDiff(DateInterval.Month, CType(msproj.DefaultFinishTime, Date), CType(msproj.DefaultStartTime, Date))
 
                 '' '' merken für BHTC, da hier der Report für das aktive Projekt gemacht werden soll 
@@ -5105,7 +5105,13 @@ Public Module awinGeneralModules
 
                         End Try
 
+                    ElseIf Not isValidProjectName(pName) And Not pName.Contains("#") Then
+                        Try
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine ( oder ) Zeichen enthalten ..")
+                        Catch ex As Exception
 
+                        End Try
                     Else
                         variantName = ""
                         custFields.Clear()
@@ -5115,7 +5121,7 @@ Public Module awinGeneralModules
                         Try
                             Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
                             If tmpStr.Length > 1 Then
-                                pName = tmpStr(0)
+                                pName = makeValidProjectName(tmpStr(0))
                                 variantName = tmpStr(1).Trim
                             End If
                         Catch ex As Exception
@@ -5421,7 +5427,7 @@ Public Module awinGeneralModules
 
 
                                 If Not IsNothing(hproj) Then
-                                    
+
                                     ' immer als Fixiertes Projekt darstellen ..
                                     hproj.Status = ProjektStatus(1)
 
@@ -5463,7 +5469,7 @@ Public Module awinGeneralModules
                                                 If Not listOfpNames.ContainsValue(hproj.name) Then
                                                     hproj.tfZeile = tfZeile
                                                     Dim tmpKey As String = calcSortKeyCustomTF(tfZeile)
-                                                    listOfpNames.Add(tmpkey, hproj.name)
+                                                    listOfpNames.Add(tmpKey, hproj.name)
                                                     tfZeile = tfZeile + 1
                                                 Else
                                                     hproj.tfZeile = CInt(listOfpNames.ElementAt(listOfpNames.IndexOfValue(hproj.name)).Key)
@@ -5615,12 +5621,11 @@ Public Module awinGeneralModules
     ''' <param name="pName"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function isValidProjectName(ByVal pName As String) As Boolean
+    Public Function isValidProjectName(ByVal pName As String) As Boolean
         Dim ergebnis As Boolean = False
         If pName.Contains("#") Or _
             pName.Contains("(") Or _
             pName.Contains(")") Or _
-            pName.Contains(".") Or _
             pName.Contains(vbCr) Or _
             pName.Contains(vbLf) Then
             ergebnis = False
@@ -5629,6 +5634,28 @@ Public Module awinGeneralModules
         End If
 
         isValidProjectName = ergebnis
+
+    End Function
+
+    ''' <summary>
+    ''' macht aus einem evtl ungültigen Namen einen gültigen Projekt-NAmen 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function makeValidProjectName(ByVal pName As String) As String
+
+        If pName.Contains("#") Then
+            pName = pName.Replace("#", "-")
+        End If
+        If pName.Contains("(") Then
+            pName = pName.Replace("(", "/")
+        End If
+        If pName.Contains(")") Then
+            pName = pName.Replace(")", "/")
+        End If
+
+        makeValidProjectName = pName
 
     End Function
 
@@ -6628,7 +6655,7 @@ Public Module awinGeneralModules
                 .Unprotect(Password:="x")       ' Blattschutz aufheben
 
                 ' Projekt-Name auslesen
-                hproj.name = CType(.Range("Projekt_Name").Value, String)
+                hproj.name = makeValidProjectName(CType(.Range("Projekt_Name").Value, String))
                 hproj.farbe = .Range("Projekt_Name").Interior.Color
                 hproj.Schriftfarbe = .Range("Projekt_Name").Font.Color
                 hproj.Schrift = CInt(.Range("Projekt_Name").Font.Size)
@@ -7499,7 +7526,7 @@ Public Module awinGeneralModules
                     .Unprotect(Password:="x")       ' Blattschutz aufheben
 
                     ' Projekt-Name auslesen
-                    hproj.name = CType(.Range("Projekt_Name").Value, String)
+                    hproj.name = makeValidProjectName(CType(.Range("Projekt_Name").Value, String))
                     hproj.farbe = .Range("Projekt_Name").Interior.Color
                     hproj.Schriftfarbe = .Range("Projekt_Name").Font.Color
                     hproj.Schrift = CInt(.Range("Projekt_Name").Font.Size)

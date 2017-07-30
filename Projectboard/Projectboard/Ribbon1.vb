@@ -6107,8 +6107,9 @@ Imports System.Windows
     Sub TomMostImportantProjectCharts(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
+        Dim ok As Boolean = True
         'Dim SID As String
-        Dim hproj As clsProjekt
+        Dim hproj As clsProjekt = Nothing
         Dim awinSelection As Excel.ShapeRange
         Dim auswahl As Integer = 1
         Dim top As Double, left As Double, width As Double, height As Double
@@ -6126,70 +6127,86 @@ Imports System.Windows
 
         If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                Dim ok As Boolean = True
-                singleShp = awinSelection.Item(1)
+            singleShp = awinSelection.Item(1)
 
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    myCollection.Add(hproj.name)
-                Catch ex As Exception
+            Try
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
+                If IsNothing(hproj) Then
                     ok = False
-                    hproj = Nothing
-                End Try
-
-                If ok Then
-
-                    Dim repObj As Excel.ChartObject
-                    appInstance.EnableEvents = False
-                    appInstance.ScreenUpdating = False
-
-                    repObj = Nothing
-
-                    Try
-                        ' Projekt-Ergebnis
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
-                                                                 top, left, width, height, False)
-
-                        ' Rollen-Balken
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        auswahl = 1 ' zeige Personalbedarfe
-                        Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
-
-                        ' Kosten-Balken
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        auswahl = 1 ' zeige Sonstige Kosten
-                        Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
-
-                        ' Strategie / Risiko / Marge
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
-
-                        If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
-                        End If
-
-                    Catch ex As Exception
-                        Call MsgBox(ex.Message)
-                    End Try
-
+                Else
+                    myCollection.Add(hproj.name)
                 End If
 
+            Catch ex As Exception
+                ok = False
+                hproj = Nothing
+            End Try
 
-                appInstance.EnableEvents = True
-                appInstance.ScreenUpdating = True
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
 
-            End If
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            If ShowProjekte.Count > 0 Then
+                hproj = ShowProjekte.getProject(1)
+                If IsNothing(hproj) Then
+                    ok = False
+                Else
+                    ok = True
+                    myCollection.Add(hproj.name)
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects loaded ...")
+                Else
+                    Call MsgBox("es sind keine Projekte geladen ...")
+                End If
+
+                ok = False
+            End If
+
+        End If
+
+        If ok And Not IsNothing(hproj) Then
+
+            Dim repObj As Excel.ChartObject
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+
+            repObj = Nothing
+
+            Try
+                ' Projekt-Ergebnis
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
+                                                         top, left, width, height, False)
+
+                ' Rollen-Balken
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                auswahl = 1 ' zeige Personalbedarfe
+                Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                ' Kosten-Balken
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                auswahl = 1 ' zeige Sonstige Kosten
+                Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                ' Strategie / Risiko / Marge
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
+
+                If thereAreAnyCharts(PTwindows.mptpr) Then
+                    Call showVisboWindow(PTwindows.mptpr)
+                End If
+
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
         End If
 
         enableOnUpdate = True
@@ -8225,7 +8242,6 @@ Imports System.Windows
                     .color = CType(awinSettings.AmpelRot, UInt32)
                 End With
                 wpfInput.Add(valueItem.name, valueItem)
-
 
                 Dim pieChartZieleV As New PieChartWindow(wpfInput)
 

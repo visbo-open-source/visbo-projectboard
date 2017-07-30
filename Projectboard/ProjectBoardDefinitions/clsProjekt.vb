@@ -911,8 +911,17 @@ Public Class clsProjekt
 
             Try
                 If value.Trim.Length > 0 Then
-                    _name = value.Trim
-
+                    If isValidProjectName(value.Trim) Then
+                        _name = value.Trim
+                    Else
+                        Dim msgTxt As String = ""
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "name must not contain any #, (, or )-characters"
+                        Else
+                            msgTxt = "Name darf keine #, (, or )-Zeichen enthalten"
+                        End If
+                        Throw New ArgumentException(msgTxt)
+                    End If
                 Else
                     _name = ""
                 End If

@@ -2956,6 +2956,34 @@ Public Module Module1
 
     End Function
 
+    ''' <summary>
+    ''' gibt zurück, ob ein Projekt-NAme gültig ist oder nicht 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isValidProjectName(ByVal pName As String) As Boolean
+
+        If IsNothing(pName) Then
+            isValidProjectName = False
+        Else
+            pName = pName.Trim
+            If pName.Length >= 1 Then
+                If pName.Contains("#") Or _
+                    pName.Contains("(") Or pName.Contains(")") Or _
+                    pName.Contains(vbLf) Or pName.Contains(vbCr) Then
+                    isValidProjectName = False
+                Else
+                    isValidProjectName = True
+                End If
+            Else
+                isValidProjectName = False
+            End If
+        End If
+
+
+    End Function
+
 
     Public Function istElemID(ByVal itemName As String) As Boolean
 

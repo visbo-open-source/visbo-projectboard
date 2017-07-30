@@ -7,14 +7,39 @@ Public Class frmRenameProject
 
         ' es ist wichtig, dass keine führenden Blanks zugelassen sind ... 
         ' das ist in lostFocus_newName geregelt 
+        Dim msgtxt As String = ""
 
         If IsNothing(newName.Text) Then
-            Call MsgBox("bitte Namen eingeben")
+            If awinSettings.englishLanguage Then
+                msgtxt = "please input non-empty name"
+            Else
+                msgtxt = "bitte Namen eingeben"
+            End If
+            Call MsgBox(msgtxt)
         Else
             If newName.Text = oldName.Text Then
-                Call MsgBox("keine Unterschiede ...")
+                If awinSettings.englishLanguage Then
+                    msgtxt = "no differences in name ..."
+                Else
+                    msgtxt = "keine Unterschiede ..."
+                End If
+                Call MsgBox(msgtxt)
             ElseIf newName.Text.Trim.Length < 2 Then
-                Call MsgBox("Name muss mindestens 2 Zeichen lang sein ...")
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Name has to be at least 2 characters ..."
+                Else
+                    msgtxt = "Name muss mindestens 2 Zeichen lang sein ..."
+                End If
+                Call MsgBox(msgtxt)
+
+            ElseIf Not isValidProjectName(newName.Text.Trim) Then
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Name must not contain any #, (, ) characters ..."
+                Else
+                    msgtxt = "Name darf keine #, (, ) Zeichen enthalten  ..."
+                End If
+                Call MsgBox(msgtxt)
+
             Else
                 Try
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -25,12 +50,22 @@ Public Class frmRenameProject
 
                     If projExist Or listOfVariants.Count > 0 Then
                         ' es existiert bereits .. 
-                        Call MsgBox("Name existiert bereits in der Datenbank")
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Name does already exist in database ..."
+                        Else
+                            msgtxt = "Name existiert bereits in der Datenbank"
+                        End If
+                        Call MsgBox(msgtxt)
                     Else
                         DialogResult = System.Windows.Forms.DialogResult.OK
                     End If
                 Catch ex As Exception
-                    Call MsgBox("Fehler bei Rename: " & ex.Message)
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "Error when renaming: " & ex.Message
+                    Else
+                        msgtxt = "Fehler bei Rename: " & ex.Message
+                    End If
+                    Call MsgBox(msgtxt)
                     DialogResult = System.Windows.Forms.DialogResult.Cancel
                 End Try
 

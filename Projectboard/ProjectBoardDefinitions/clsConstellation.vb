@@ -46,13 +46,6 @@
                 Do While tmpPosition < position And laufIndex < _sortList.Count
                     pName = _sortList.ElementAt(laufIndex).Value
 
-                    'If Not pName.Contains("#") Then
-                    '    searchName = calcProjektKey(pName, "")
-                    'Else
-                    '    searchName = pName
-                    'End If
-
-                    'If _allItems.ContainsKey(searchName) Then
                     If ShowProjekte.contains(pName) Then
                         'If _allItems.Item(searchName).show = showAttribute Then
                         tmpPosition = tmpPosition + 1
