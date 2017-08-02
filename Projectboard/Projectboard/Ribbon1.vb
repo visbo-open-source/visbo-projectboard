@@ -609,6 +609,8 @@ Imports System.Windows
 
                     cockpitName = storeCockpitFrm.ComboBox1.Text
 
+                    'ClearClipboard()
+
                     Call awinStoreCockpit(cockpitName)
 
                 Else

@@ -791,10 +791,16 @@ Public Module Module1
     Public fehlerBeimLoad As Boolean = False
 
 
+    Private Declare Function OpenClipboard& Lib "user32" (ByVal hwnd As Long)
+    Private Declare Function EmptyClipboard Lib "user32" () As Long
+    Private Declare Function CloseClipboard& Lib "user32" ()
 
 
-
-
+    Public Sub ClearClipboard()
+        OpenClipboard(0&)
+        EmptyClipboard()
+        CloseClipboard()
+    End Sub
 
 
 
