@@ -5105,35 +5105,38 @@ Public Module testModule
                     ' jetzt werden alle definierten Constellations weggeschrieben
                     For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
-                        Try
-                            If request.storeConstellationToDB(kvp.Value) Then
-                                If awinSettings.englishLanguage Then
-                                    outputline = "Portfolio stored: " & kvp.Key
-                                    outPutCollection.Add(outputline)
+                        If kvp.Key <> "Sort Result" And kvp.Key <> "Filter Result" Then
+                            Try
+                                If request.storeConstellationToDB(kvp.Value) Then
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "Portfolio stored: " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "Portfolio gespeichert: " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    End If
                                 Else
-                                    outputline = "Portfolio gespeichert: " & kvp.Key
-                                    outPutCollection.Add(outputline)
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "Error when writing portfolio " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "Fehler in Schreiben Portfolio " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    End If
+
                                 End If
-                            Else
+                            Catch ex As Exception
                                 If awinSettings.englishLanguage Then
                                     outputline = "Error when writing portfolio " & kvp.Key
-                                    outPutCollection.Add(outputline)
                                 Else
                                     outputline = "Fehler in Schreiben Portfolio " & kvp.Key
-                                    outPutCollection.Add(outputline)
                                 End If
-
-                            End If
-                        Catch ex As Exception
-                            If awinSettings.englishLanguage Then
-                                outputline = "Error when writing portfolio " & kvp.Key
-                            Else
-                                outputline = "Fehler in Schreiben Portfolio " & kvp.Key
-                            End If
-                            Throw New ArgumentException(outputline)
-                            'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
-                            'Exit Sub
-                        End Try
+                                Throw New ArgumentException(outputline)
+                                'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
+                                'Exit Sub
+                            End Try
+                        End If
+                        
 
                     Next
 
