@@ -340,7 +340,7 @@
           <button id="PT0G1B"  imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
             <menu id="PT0G1M">
               <!--label="Save Cockpit"-->
-              <button id="PT0G1M3B2" imageMso="ChartSaveTemplates" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
+              <button id="PT0G1M3B2" imageMso="ChartSaveTemplates" enabled ="true" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
               <!--label="Load Cockpit"-->
               <button id="PT0G1M3B1" imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
             </menu>
@@ -400,6 +400,7 @@
         <group id ="PTeinstG1" >
           <!--label="Report Sprache"-->
           <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
+          <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
           <!--<button id="PTDemoHistory" label="demo-funktion historie"  onAction ="pttestfunktion5" />-->
         </group>
       </tab>

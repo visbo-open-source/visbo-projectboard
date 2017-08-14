@@ -11154,7 +11154,7 @@ Public Module Projekte
         Dim maxRows As Integer
         Dim maxColumns As Integer
         Dim logMessage As String = " "
-        Dim newchtobj As Excel.ChartObject
+        Dim newchtobj As Excel.ChartObject = Nothing
         Dim oldchtobj As Excel.ChartObject
         Dim chtobj As Excel.ChartObject
         Dim hchtobj As Excel.ChartObject
@@ -11174,7 +11174,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
         enableOnUpdate = False
-
+        Dim tmpwindow As Excel.Window = appInstance.ActiveWindow.NewWindow
         Try
 
 
@@ -11257,7 +11257,7 @@ Public Module Projekte
                     k = 1
                     While k <= anzPrDiagrams
 
-                        wsPrCharts.Activate()
+                        'wsPrCharts.Activate()
 
                         chtobj = CType(wsPrCharts.ChartObjects(k), Excel.ChartObject)
 
@@ -11273,23 +11273,23 @@ Public Module Projekte
 
                         chtobj.Copy()
 
-                        ' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
+                        ' '' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
 
-                        found = False
-                        i = 1
-                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
-                        While i <= anzChartsInCockpit And Not found
-                            hchtobj = CType(wsSheet.ChartObjects(i), Excel.ChartObject)
-                            ' an awinLoadCockpit anpassen
-                            If hchtobj.Name = chtobj.Name Then
-                                hchtobj.Delete()
-                                found = True
-                            Else
-                                i = i + 1
-                            End If
-                        End While
+                        ''found = False
+                        ''i = 1
+                        ''anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
+                        ''While i <= anzChartsInCockpit And Not found
+                        ''    hchtobj = CType(wsSheet.ChartObjects(i), Excel.ChartObject)
+                        ''    ' an awinLoadCockpit anpassen
+                        ''    If hchtobj.Name = chtobj.Name Then
+                        ''        hchtobj.Delete()
+                        ''        found = True
+                        ''    Else
+                        ''        i = i + 1
+                        ''    End If
+                        ''End While
 
-                        wsSheet.Activate()
+                        'wsSheet.Activate()
 
                         ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
                         wsSheet.Paste()
@@ -11353,38 +11353,48 @@ Public Module Projekte
                     ' Anzahl Diagramme, die gespeichert werden zu diesem Cockpit
                     anzPfDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
+                    ' löschen der Zwischenablage
+                    'Call ClearClipboard()
+
 
                     k = 1
                     While k <= anzPfDiagrams
 
-                        wsPfCharts.Activate()
+                        'wsPfCharts.Activate()
+                        Dim anz As Integer = CType(.ChartObjects, Excel.ChartObjects).Count
 
                         chtobj = CType(wsPfCharts.ChartObjects(k), Excel.ChartObject)
+                        chtobj.Activate()
+
+                        Try
+                            chtobj.Copy()
+                        Catch ex As Exception
+                            chtobj.Copy()
+                        End Try
 
                         oldchtobj = chtobj
 
-                        chtobj.Copy()
+                        ' '' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
 
-                        ' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
+                        ''found = False
+                        ''i = 1
+                        ''anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
+                        ''While i <= anzChartsInCockpit And Not found
+                        ''    hchtobj = CType(wsSheet.ChartObjects(i), Excel.ChartObject)
+                        ''    ' an awinLoadCockpit anpassen
+                        ''    If hchtobj.Name = chtobj.Name Then
+                        ''        hchtobj.Delete()
+                        ''        found = True
+                        ''    Else
+                        ''        i = i + 1
+                        ''    End If
+                        ''End While
 
-                        found = False
-                        i = 1
-                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
-                        While i <= anzChartsInCockpit And Not found
-                            hchtobj = CType(wsSheet.ChartObjects(i), Excel.ChartObject)
-                            ' an awinLoadCockpit anpassen
-                            If hchtobj.Name = chtobj.Name Then
-                                hchtobj.Delete()
-                                found = True
-                            Else
-                                i = i + 1
-                            End If
-                        End While
-
-                        wsSheet.Activate()
+                        ' wsSheet.Activate()
 
                         ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
                         wsSheet.Paste()
+
                         anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
 
                         ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
@@ -11392,44 +11402,51 @@ Public Module Projekte
 
                         newchtobj.Top = oldchtobj.Top + maxTop '???
                         newchtobj.Left = oldchtobj.Left + maxLeft
-
-
                         ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
+
                         Dim hdiagramm As clsDiagramm
                         i = 1
                         found = False
+                        Try
 
-                        While i <= DiagramList.Count And Not found
+                            While i <= DiagramList.Count And Not found
 
-                            hdiagramm = DiagramList.getDiagramm(i)
-                            If hdiagramm.kennung = newchtobj.Name Then
-                                'newchtobj.Chart.Name = hdiagramm.diagrammTyp
-                                found = True
-                                hshape = chtobj2shape(newchtobj)
-                                hshape.Title = hdiagramm.diagrammTyp
-                                Try
-                                    If Not IsNothing(hdiagramm.gsCollection) Then
-                                        For hi = 1 To hdiagramm.gsCollection.Count
-                                            If hi = 1 Then
-                                                hshape.AlternativeText = CStr(hdiagramm.gsCollection.Item(hi))
-                                            Else
-                                                hshape.AlternativeText = hshape.AlternativeText & ";" & CStr(hdiagramm.gsCollection.Item(hi))
-                                            End If
-                                        Next hi
-                                    End If
-                                Catch ex As Exception
-                                    Throw New Exception("Fehler Portfolio Cockpits '" & cockpitname & vbLf & ex.Message)
-                                End Try
+                                hdiagramm = DiagramList.getDiagramm(i)
+                                If hdiagramm.kennung = newchtobj.Name Then
+                                    'newchtobj.Chart.Name = hdiagramm.diagrammTyp
+                                    found = True
+                                    hshape = chtobj2shape(newchtobj)
+                                    hshape.Title = hdiagramm.diagrammTyp
+                                    Try
+                                        If Not IsNothing(hdiagramm.gsCollection) Then
+                                            For hi = 1 To hdiagramm.gsCollection.Count
+                                                If hi = 1 Then
+                                                    hshape.AlternativeText = CStr(hdiagramm.gsCollection.Item(hi))
+                                                Else
+                                                    hshape.AlternativeText = hshape.AlternativeText & ";" & CStr(hdiagramm.gsCollection.Item(hi))
+                                                End If
+                                            Next hi
+                                        End If
+                                    Catch ex As Exception
+                                        Call MsgBox("Fehler Portfolio Cockpits '" & cockpitname & vbLf & ex.Message)
+                                        Throw New Exception("Fehler Portfolio Cockpits '" & cockpitname & vbLf & ex.Message)
+                                    End Try
 
-                            End If
-                            i = i + 1
+                                End If
+                                i = i + 1
 
-                        End While
+                            End While
+
+                        Catch ex As Exception
+                            Call MsgBox(" in Diagrammlist Schleife")
+                        End Try
 
 
                         ' aus der DiagrammList noch Collection herausholen und in das Chart bei Beschreibung eintragen
                         k = k + 1
 
+                        ' löschen der Zwischenablage
+                        My.Computer.Clipboard.Clear()
                     End While
                 End With
 
@@ -11441,13 +11458,21 @@ Public Module Projekte
                 'enableOnUpdate = formerEO
                 'appInstance.EnableEvents = formerEE
 
+                'appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                xlsCockpits.Close(SaveChanges:=True)
+
+                Try
+                    tmpwindow.Close()
+                Catch ex As Exception
+                    Call MsgBox("Schließen tmpwindow")
+                End Try
+
 
                 If Not cockpitname = "_Last" Then
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                 End If
 
-                'appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                xlsCockpits.Close(SaveChanges:=True)
+             
 
 
             Else
@@ -11465,7 +11490,7 @@ Public Module Projekte
             enableOnUpdate = formerEO
             appInstance.EnableEvents = formerEE
             appInstance.ScreenUpdating = True
-            Throw New Exception("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf & ex.Message)
+            Throw New Exception("Fehler beim Speichern des Cockpits; k= '" & k & " i= '" & i & " '" & cockpitname & vbLf & ex.Message)
         End Try
 
     End Sub
@@ -11709,6 +11734,7 @@ Public Module Projekte
                         Dim chtTop As Double = chtobj.Top
                         Dim chtLeft As Double = chtobj.Left
 
+                        chtobj.Activate()
                         chtobj.Cut()
 
                         If isPfDiagramm Then

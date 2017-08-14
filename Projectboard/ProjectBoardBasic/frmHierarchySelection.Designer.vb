@@ -189,6 +189,7 @@ Partial Class frmHierarchySelection
         Me.SelectionSet.Location = New System.Drawing.Point(12, 349)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionSet.TabIndex = 51
         Me.SelectionSet.TabStop = False
         '
@@ -199,6 +200,7 @@ Partial Class frmHierarchySelection
         Me.collapseCompletely.Location = New System.Drawing.Point(68, 349)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.collapseCompletely.TabIndex = 47
         Me.collapseCompletely.TabStop = False
         '
@@ -209,6 +211,7 @@ Partial Class frmHierarchySelection
         Me.expandCompletely.Location = New System.Drawing.Point(90, 349)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.expandCompletely.TabIndex = 46
         Me.expandCompletely.TabStop = False
         '
@@ -220,6 +223,7 @@ Partial Class frmHierarchySelection
         Me.SelectionReset.Location = New System.Drawing.Point(32, 349)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionReset.TabIndex = 45
         Me.SelectionReset.TabStop = False
         '
