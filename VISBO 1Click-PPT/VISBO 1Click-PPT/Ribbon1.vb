@@ -93,7 +93,6 @@ Public Class Ribbon1
 
                 Dim reportAuswahl As New frmReportProfil
                 Dim hierarchiefenster As New frmHierarchySelection
-                Dim returnvalue As DialogResult
                 Dim hproj As New clsProjekt
                 Dim aktuellesDatum = Date.Now
                 Dim validDatum As Date = "29.Feb.2016"
@@ -136,16 +135,24 @@ Public Class Ribbon1
                                     If Not loginErfolgreich Then
                                         Call logfileSchreiben("LOGIN cancelled ...", "", -1)
                                         Call MsgBox("LOGIN cancelled ...")
-
                                     Else
-                                        Dim speichernInDBOk As Boolean
+                                        Dim speichernInDBOk As Boolean = False
+                                        Dim identical As Boolean = False
                                         Try
-                                            speichernInDBOk = storeSingleProjectToDB(hproj)
+                                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
                                             If speichernInDBOk Then
-                                                Call MsgBox("Projekt " & hproj.name & " wurde erfolgreich in der Datenbank gespeichert")
+                                                If Not identical Then
+                                                    Call MsgBox("Projekt '" & hproj.name & "' wurde erfolgreich in der Datenbank gespeichert")
+                                                Else
+                                                    Call MsgBox("Projekt '" & hproj.name & "' ist identisch mit der aktuellen Version in der DB")
+                                                End If
+                                            Else
+                                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
                                             End If
+
+
                                         Catch ex As Exception
-                                            Call MsgBox("Fehler beim Speichern von Projekt: " & hproj.name)
+                                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
                                         End Try
 
                                     End If
@@ -154,13 +161,20 @@ Public Class Ribbon1
 
                                     If testLoginInfo_OK(dbUsername, dbPasswort) Then
                                         Dim speichernInDBOk As Boolean
+                                        Dim identical As Boolean = False
                                         Try
-                                            speichernInDBOk = storeSingleProjectToDB(hproj)
+                                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
                                             If speichernInDBOk Then
-                                                Call MsgBox("Projekt " & hproj.name & " wurde erfolgreich in der Datenbank gespeichert")
+                                                If Not identical Then
+                                                    Call MsgBox("Projekt '" & hproj.name & "' wurde erfolgreich in der Datenbank gespeichert")
+                                                Else
+                                                    Call MsgBox("Projekt '" & hproj.name & "' ist identisch mit der aktuellen Version in der DB")
+                                                End If
+                                            Else
+                                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
                                             End If
                                         Catch ex As Exception
-                                            Call MsgBox("Fehler beim Speichern von Projekt: " & hproj.name)
+                                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
                                         End Try
                                     Else
                                         Call MsgBox("LOGIN fehlerhaft ...")
@@ -173,7 +187,7 @@ Public Class Ribbon1
 
 
                         Catch ex As Exception
-
+                            Call MsgBox(ex.Message)
                         End Try
                       
                     End If

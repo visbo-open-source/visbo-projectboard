@@ -21330,7 +21330,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt) As Boolean
+    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, Optional ByRef identical As Boolean = False) As Boolean
 
         Dim jetzt As Date = Now
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -21405,6 +21405,7 @@ Public Module awinGeneralModules
                     End If
                 Else
                     ' storeNeeded ist false, Kein Speichern erforderlich
+                    identical = True
                     storeSingleProjectToDB = True
                 End If
             Else
