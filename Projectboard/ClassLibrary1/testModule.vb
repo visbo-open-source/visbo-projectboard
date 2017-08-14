@@ -5458,8 +5458,11 @@ Public Module testModule
             zeitStempel = AlleProjekte.First.timeStamp
         End If
 
-
-        Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+        If awinSettings.englishLanguage Then
+            Call MsgBox("ok, " & anzStoredProj & " projects and variants are stored now!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+        Else
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+        End If
         Return anzStoredProj
 
     End Function
@@ -18882,6 +18885,6 @@ Public Module testModule
         ' Ende neu 
 
     End Sub
-
+ 
 
 End Module

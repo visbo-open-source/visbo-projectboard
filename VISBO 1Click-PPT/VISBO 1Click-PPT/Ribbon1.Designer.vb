@@ -46,6 +46,7 @@
         Me.VISBO = Me.Factory.CreateRibbonGroup
         Me.EinzelprojektReport = Me.Factory.CreateRibbonButton
         Me.Einstellung = Me.Factory.CreateRibbonButton
+        Me.DBspeichern = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.oneClickPPT.SuspendLayout()
         Me.VISBO.SuspendLayout()
@@ -66,6 +67,7 @@
         '
         Me.VISBO.Items.Add(Me.EinzelprojektReport)
         Me.VISBO.Items.Add(Me.Einstellung)
+        Me.VISBO.Items.Add(Me.DBspeichern)
         Me.VISBO.Label = "VISBO"
         Me.VISBO.Name = "VISBO"
         '
@@ -79,6 +81,11 @@
         Me.Einstellung.Label = "Einstellungen"
         Me.Einstellung.Name = "Einstellung"
         Me.Einstellung.ScreenTip = "Einstellu"
+        '
+        'DBspeichern
+        '
+        Me.DBspeichern.Label = "Speichern in DB"
+        Me.DBspeichern.Name = "DBspeichern"
         '
         'Ribbon1
         '
@@ -100,6 +107,7 @@
     Friend WithEvents VISBO As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents EinzelprojektReport As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Einstellung As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents DBspeichern As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

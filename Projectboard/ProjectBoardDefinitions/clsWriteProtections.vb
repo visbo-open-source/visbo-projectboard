@@ -39,14 +39,14 @@
     ''' </summary>
     ''' <value></value>
     ''' <remarks></remarks>
-    Public WriteOnly Property adjustListe As SortedList(Of String, clsWriteProtectionItem)
+    Public WriteOnly Property adjustListe(Optional ByVal show As Boolean = True) As SortedList(Of String, clsWriteProtectionItem)
 
         Set(value As SortedList(Of String, clsWriteProtectionItem))
             If Not IsNothing(value) Then
                 ' sicherstellen, dass die Projekt-Bezeichner in der richtigen Farbe / Font dargestellt werden 
                 For Each kvp As KeyValuePair(Of String, clsWriteProtectionItem) In value
                     ' das aktualisiert jetzt ggf auch die Namen der Projekte auf der Multiprojekt-Tafel 
-                    Call Me.upsert(kvp.Value)
+                    Call Me.upsert(kvp.Value, show)
                 Next
                 ' dieser Befehl darf nicht ausgeführt werden, weil sonst alle nur in der Session vorhandenen 
                 ' Projekte in der Liste verloren gehen 
@@ -151,7 +151,7 @@
     ''' </summary>
     ''' <param name="wpItem"></param>
     ''' <remarks></remarks>
-    Public Sub upsert(ByVal wpItem As clsWriteProtectionItem)
+    Public Sub upsert(ByVal wpItem As clsWriteProtectionItem, Optional ByVal show As Boolean = True)
 
         If Not IsNothing(wpItem) Then
             ' prüfen, ob sich der Protect status ändert , wenn ja, soll auch gleich die Projekt-Namen Änderung angestossen werden 
@@ -169,7 +169,7 @@
                     ' auf der Multiprojekt-Tafel muss der Name aktualisiert werden  
                     Dim pName As String = getPnameFromKey(wpItem.pvName)
                     Dim vName As String = getVariantnameFromKey(wpItem.pvName)
-                    If ShowProjekte.contains(pName) Then
+                    If ShowProjekte.contains(pName) And show Then
                         Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                         Call zeichneNameInProjekt(hproj)
                     End If
@@ -182,7 +182,7 @@
                 ' muss die Darstellung auf der Multiprojekt-Tafel upgedated werden ? 
                 Dim pName As String = getPnameFromKey(wpItem.pvName)
                 Dim vName As String = getVariantnameFromKey(wpItem.pvName)
-                If ShowProjekte.contains(pName) Then
+                If ShowProjekte.contains(pName) And show Then
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                     Call zeichneNameInProjekt(hproj)
                 End If

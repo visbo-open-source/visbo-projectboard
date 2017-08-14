@@ -12851,6 +12851,21 @@ Public Module awinGeneralModules
     End Function
 
     ''' <summary>
+    ''' Funktion testet die vorhandene Datenbank-authorisierungsinfog
+    ''' </summary>
+    ''' <param name="user"></param>
+    ''' <param name="pwd"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Function testLoginInfo_OK(ByVal user As String, ByVal pwd As String) As Boolean
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+        Dim ok As Boolean = request.createIndicesOnce()
+
+        testLoginInfo_OK = ok
+    End Function
+
+    ''' <summary>
     ''' übergebenene ProjektListe wird um die Projekte reduziert, die nicht zu dem Filter passen
     ''' das wird nur aufgerufen, wenn der Filter angewendet werden soll 
     ''' </summary>
@@ -21314,5 +21329,102 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
+    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt) As Boolean
+
+        Dim jetzt As Date = Now
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        enableOnUpdate = False
+
+        Dim outPutCollection As New Collection
+        Dim outputline As String = ""
+
+        Try
+
+            ' die aktuelle WriteProtection holen 
+            writeProtections.adjustListe(False) = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+
+            ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
+            'Call storeSessionConstellation("Last")
+
+            If request.pingMongoDb() And Not noDB Then
+
+                ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+
+                If demoModusHistory Then
+                    hproj.timeStamp = historicDate
+                Else
+                    hproj.timeStamp = jetzt
+                End If
+
+                Dim storeNeeded As Boolean
+                If request.projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                    ' prüfen, ob es Unterschied gibt 
+                    Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                    If Not IsNothing(standInDB) Then
+                        ' prüfe, ob es Unterschiede gibt
+                        storeNeeded = Not hproj.isIdenticalTo(standInDB)
+                    Else
+                        ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                        storeNeeded = True
+                    End If
+                Else
+                    storeNeeded = True
+                End If
+
+                If storeNeeded Then
+                    If request.storeProjectToDB(hproj, dbUsername) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputline = "stored: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputline)
+                        Else
+                            outputline = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputline)
+                        End If
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem, False)
+
+                        storeSingleProjectToDB = True
+                        'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputline = "project protected: " & hproj.name
+                        Else
+                            outputline = "geschütztes Projekt: " & hproj.name
+                        End If
+
+                        outPutCollection.Add(outputline)
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem, False)
+
+                        storeSingleProjectToDB = False
+
+                    End If
+                Else
+                    ' storeNeeded ist false, Kein Speichern erforderlich
+                    storeSingleProjectToDB = True
+                End If
+            Else
+
+                storeSingleProjectToDB = False
+                If awinSettings.englishLanguage Then
+                    Throw New ArgumentException("No Database reachable!")
+                Else
+                    Throw New ArgumentException("Datenbank ist nicht aktiviert!")
+                End If
+            End If
+
+        Catch ex As Exception
+
+            storeSingleProjectToDB = False
+
+            ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
+            Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+            'Exit Sub
+        End Try
+    End Function
 
 End Module
