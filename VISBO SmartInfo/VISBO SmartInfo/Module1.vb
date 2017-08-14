@@ -428,7 +428,8 @@ Module Module1
 
         If Not IsNothing(currentSlide) Then
             If currentSlide.Tags.Item("SMART").Length > 0 Then
-                Call resetMovedGlowOfShapes()
+                ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
+                'Call resetMovedGlowOfShapes()
             End If
         End If
 
@@ -497,7 +498,8 @@ Module Module1
             Try
                 If Not IsNothing(currentSlide) Then
                     If currentSlide.Tags.Item("SMART").Length > 0 Then
-                        Call resetMovedGlowOfShapes()
+                        ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
+                        'Call resetMovedGlowOfShapes()
                     End If
                 End If
 
@@ -1988,13 +1990,15 @@ Module Module1
     End Sub
 
     ''' <summary>
-    ''' bewegt alle Shapes an 
+    ''' wird aufgerufen von ShowVariant oder TimeStamp Formular
+    ''' bewegt alle Shaes, die in der Variante bzw. im TimeStamp ein anderes Datum haben, auf das neue Datum
+    '''   
     ''' </summary>
     ''' <remarks></remarks>
     Friend Sub moveAllShapes(Optional ByVal showOtherVariant As Boolean = False)
 
         Dim namesToBeRenamed As New Collection
-        Dim ix As Integer = 0
+        'Dim ix As Integer = 0
 
         ' alle Shapes zur Time-Stamp Position schicken ...
         ' in diffMvList wird gemerkt, um wieviel sich ein Shape verändert hat und ob überhaupt ...  
@@ -2026,10 +2030,10 @@ Module Module1
 
                 Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
                 If Not IsNothing(tmpShape) Then
-                    ix = ix + 1
+                    'ix = ix + 1
 
                     If isRelevantMSPHShape(tmpShape) Then
-
+                        ' es ist ein Meilenstein oder eine Phase
 
                         If showOtherVariant Then
                             ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
@@ -2093,14 +2097,15 @@ Module Module1
 
         Next
 
-
+        ' Behandlung der NAmens- und Datumsbeschriftungen 
         For Each tmpShpName As String In bigToDoList
 
             Try
                 Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
                 If Not IsNothing(tmpShape) Then
-                    If isAnnotationShape(tmpShape) Then
 
+                    If isAnnotationShape(tmpShape) Then
+                        ' hier müssen alle Annotations entsprechend verschoben werden, wie ihr Meilenstein / Phase verschoben wurde 
                         If tmpShape.Name.Substring(tmpShape.Name.Length - 1, 1) = pptAnnotationType.text Then
 
                             namesToBeRenamed.Add(tmpShape.Name)
@@ -2170,26 +2175,35 @@ Module Module1
 
                 End Try
 
-
-
-
             Next
         End If
 
         Call buildSmartSlideLists()
 
-        ' ur: 03.07.2017: setze alle Ampelfarben
-        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
-        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
-        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+        ' ur: 03.07.2017: setze alle Ampelfarben, aber nur wenn das auch angezeigt werden soll 
+        If showTrafficLights(PTfarbe.none) Then
+            Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        End If
+
+        If showTrafficLights(PTfarbe.green) Then
+            Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        End If
+
+        If showTrafficLights(PTfarbe.yellow) Then
+            Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        End If
+
+        If showTrafficLights(PTfarbe.red) Then
+            Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+        End If
+
 
 
     End Sub
 
     ''' <summary>
     ''' aktualisiert das Shape mit den Daten aus dem entsprechenden TimeStamp Projekt; 
-    ''' es wird keine Aktion mit MV gemacht, das ist manually moved Information
+    ''' es wird eine Aktion mit Moved Information gemacht ... denn wenn was manuell verändert wurde, muss es jetzt wieder auf die DB Position gebracht werden, sonst macht es überhaupt keinen Sinn
     ''' wenn es aufgerufen wird mit ShowOtherVariant werden die Werte der anderen Variante gezeigt, sonst einfach der andere TimeStamp derselben Projekt-Variante 
     ''' </summary>
     ''' <param name="tmpShapeName"></param>
@@ -2211,7 +2225,7 @@ Module Module1
             End If
 
             If pvName <> "" Then
-                ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                ' wenn das Projekt noch nicht geladen wurde, wird es aus der DB geholt und angelegt  ... 
                 Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
                 ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
                 If Not IsNothing(tsProj) Then
@@ -2219,7 +2233,7 @@ Module Module1
                     Dim elemBC As String = tmpShape.Tags.Item("BC")
 
                     If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
-                        ' Swimlane Name oder Segment Name: kein Verschieben , aber das das Setzen der Tags ist notwendig  
+                        ' es handelt sich um einen Swimlane Namen oder Segment Name: kein Verschieben , aber das das Setzen der Tags ist notwendig  
                         '
                         Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                         If IsNothing(ph) Then
@@ -2240,16 +2254,18 @@ Module Module1
 
 
                     Else
-
+                        ' es handelt sich um einen echten Meilenstein oder Phase 
                         If pptShapeIsMilestone(tmpShape) Then
 
-                            'Call resetMVInfo(tmpShape)
+                            ' hier wird in der SmartList für dieses Element der Eintrag gelöscht, dass es verschoben wurde .. 
+                            Call resetMVInfo(tmpShape)
 
                             Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
                             If IsNothing(ms) Then
+                                ' wenn es diesen Meilenstein in der Varianten oder TimeStamp Version gar nicht gibt, wird er auf invisible gesetzt 
                                 tmpShape.Visible = False
                             Else
-
+                                ' falls der in einer anderen TimeStamp- / Varianten Versin existierte, wird er wieder auf visible gesetzt 
                                 If Not tmpShape.Visible Then
                                     tmpShape.Visible = True
                                 End If
@@ -2259,10 +2275,6 @@ Module Module1
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
                                 '
-                                'ur:3.7.2017: soll nun nach MoveAllShapes erfolgen für alle Elemente gemäß gemerkten ShowTrafficligths
-                                ' jetzt muss ggf die Farbe gesetzt werden 
-                                ''Dim ampelFarbe As Integer = ms.getBewertung(1).colorIndex
-                                ''Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
 
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
@@ -2276,7 +2288,7 @@ Module Module1
 
                         ElseIf pptShapeIsPhase(tmpShape) Then
 
-                            'Call resetMVInfo(tmpShape)
+                            Call resetMVInfo(tmpShape)
 
                             Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                             If IsNothing(ph) Then
@@ -2291,11 +2303,7 @@ Module Module1
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
                                 '
-                                'ur:3.7.2017: soll nun nach MoveAllShapes erfolgen für alle Elemente gemäß gemerkten ShowTrafficligths
-                                ' '' jetzt muss ggf die Farbe gesetzt werden 
-                                ''Dim ampelFarbe As Integer = ph.getBewertung(1).colorIndex
-                                ''Call faerbeShape(tmpShape, ampelFarbe, showTrafficLights(ampelFarbe))
-
+                               
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
@@ -2426,10 +2434,11 @@ Module Module1
                 .Left = x1Pos
                 .Width = x2Pos - tmpShape.Left
 
-                With .Glow
-                    .Radius = 5
-                    .Color.RGB = changeColor
-                End With
+                ' Änderung tk 13.8.17 keine Markierung mehr, wird zu unübersichtlich ... 
+                'With .Glow
+                '    .Radius = 5
+                '    .Color.RGB = changeColor
+                'End With
 
                 diff = .Left - oldLeft
                 'Dim mvdString As String = tsStartdate.ToString & "#" & tsEndDate.ToString
@@ -2438,10 +2447,12 @@ Module Module1
 
             End With
         Else
-            With tmpShape.Glow
-                .Radius = 0
-                '.Color.RGB = .Color.RGB = PowerPoint.XlRgbColor.rgbWhite
-            End With
+
+            ' Änderung tk 13.8.17 keine Markierung mehr, wird zu unübersichtlich ... 
+            'With tmpShape.Glow
+            '    .Radius = 0
+            '    '.Color.RGB = .Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+            'End With
         End If
 
         mvPhaseToTimestampPosition = diff
@@ -2473,18 +2484,20 @@ Module Module1
                 .Left = x1Pos - tmpShape.Width / 2
                 diff = .Left - oldLeft
 
-                With .Glow
-                    .Radius = 5
-                    .Color.RGB = changeColor
-                End With
+                ' Änderung tk 13.8.17: keine Markierung mehr, es soll in einer Liste verzeichnet werden 
+                'With .Glow
+                '    .Radius = 5
+                '    .Color.RGB = changeColor
+                'End With
 
             End With
         Else
-            With tmpShape.Glow
-                .Radius = 0
-                '.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+            ' Änderung tk 13.8.17: das Element soll unverändert bleiben ... 
+            'With tmpShape.Glow
+            '    .Radius = 0
+            '    '.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
 
-            End With
+            'End With
         End If
 
         mvMilestoneToTimestampPosition = diff
@@ -4165,6 +4178,7 @@ Module Module1
 
     ''' <summary>
     ''' setzt die Markierung zurück, dass Elemente über Time-Machine / andere Variante  verschoben wurden 
+    ''' deprecated - wird nicht mehr aufgerufen, da die durch Variante / TimeStamp veränderten Meilensteine und Phasen nicht mehr markiert werden 
     ''' </summary>
     ''' <remarks></remarks>
     Friend Sub resetMovedGlowOfShapes()

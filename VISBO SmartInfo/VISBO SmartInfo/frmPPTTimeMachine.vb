@@ -29,19 +29,24 @@
 
                 If currentTimestamp < timeStamps.Last.Key Then
 
-                    If smartSlideLists.countProjects = 1 Then
-                        
-                        btnEnd.Enabled = True
-                        btnFastForward.Enabled = True
+                    ' Änderung tk 13.8.17 , btnEnd und btnFastforward immer enablen ... 
+                    btnEnd.Enabled = True
+                    btnFastForward.Enabled = True
 
-                    Else
-                        If currentTimestamp.AddMonths(1) <= timeStamps.Last.Key Then
-                            btnFastForward.Enabled = True
-                        Else
-                            btnFastForward.Enabled = False
-                        End If
-                        btnEnd.Enabled = True
-                    End If
+                    ''If smartSlideLists.countProjects = 1 Then
+
+                    ''    btnEnd.Enabled = True
+                    ''    btnFastForward.Enabled = True
+
+                    ''Else
+                    ''    'If currentTimestamp.AddMonths(1) <= timeStamps.Last.Key Then
+                    ''    '    btnFastForward.Enabled = True
+                    ''    'Else
+                    ''    '    btnFastForward.Enabled = False
+                    ''    'End If
+                    ''    btnFastForward.Enabled = True
+                    ''    btnEnd.Enabled = True
+                    ''End If
                     
 
                 Else
@@ -52,20 +57,24 @@
 
                 If currentTimestamp > timeStamps.First.Key Then
 
-                    If smartSlideLists.countProjects = 1 Then
-                        btnStart.Enabled = True
-                        btnFastBack.Enabled = True
+                    ' Änderung tk 13.8.17 , btnStart und btnFastBack immer enablen ... 
+                    btnStart.Enabled = True
+                    btnFastBack.Enabled = True
 
-                    Else
-                        If currentTimestamp.AddMonths(-1) >= timeStamps.First.Key Then
-                            btnFastBack.Enabled = True
-                        Else
-                            btnFastBack.Enabled = False
-                        End If
+                    ''If smartSlideLists.countProjects = 1 Then
+                    ''    btnStart.Enabled = True
+                    ''    btnFastBack.Enabled = True
 
-                        btnStart.Enabled = True
+                    ''Else
+                    ''    If currentTimestamp.AddMonths(-1) >= timeStamps.First.Key Then
+                    ''        btnFastBack.Enabled = True
+                    ''    Else
+                    ''        btnFastBack.Enabled = False
+                    ''    End If
 
-                    End If
+                    ''    btnStart.Enabled = True
+
+                    ''End If
                     
                 Else
 
@@ -365,10 +374,10 @@
                     If smartSlideLists.countProjects = 1 Then
                         tmpDate = timeStamps.ElementAt(tmpIndex).Key
                     Else
-                        If currentTimestamp.AddMonths(-1) > timeStamps.First.Key Then
-                            tmpDate = currentTimestamp.AddMonths(-1)
+                        If currentTimestamp.AddMonths(1) < timeStamps.Last.Key Then
+                            tmpDate = currentTimestamp.AddMonths(1)
                         Else
-                            tmpDate = timeStamps.First.Key
+                            tmpDate = timeStamps.Last.Key
                         End If
                     End If
                 End If
