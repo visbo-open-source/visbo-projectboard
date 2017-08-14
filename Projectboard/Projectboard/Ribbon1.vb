@@ -6775,7 +6775,13 @@ Imports System.Windows
         Dim vglBaseline As Boolean = True
         ' typ steuert, ob Summenbetrachtung oder Curve angezeigt wird
         Dim typ As String = " "
-        Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+        Try
+            Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+            Call showVisboWindow(PTwindows.mptpr)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
 
 
     End Sub
@@ -6796,6 +6802,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+        Call showVisboWindow(PTwindows.mptpr)
 
     End Sub
 
@@ -6812,6 +6819,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+        Call showVisboWindow(PTwindows.mptpr)
 
     End Sub
 
@@ -6942,11 +6950,14 @@ Imports System.Windows
                 appInstance.ScreenUpdating = True
 
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-
+                enableOnUpdate = True
+                'Call MsgBox("bitte nur ein Projekt selektieren")
+                Throw New ArgumentException("bitte nur ein Projekt selektieren")
             End If
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            enableOnUpdate = True
+            'Call MsgBox("vorher Projekt selektieren ...")
+            Throw New ArgumentException("vorher Projekt selektieren ...")
         End If
 
         enableOnUpdate = True

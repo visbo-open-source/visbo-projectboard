@@ -9,7 +9,8 @@
 
     Sub copyfrom(ByVal c As clsConstellation)
 
-        
+        Dim sortElem As String = ""
+
         Me.constellationName = c.constellationName
 
         For Each item In c.Liste
@@ -20,7 +21,7 @@
 
         ' jetzt muss die Sortier-Reihenfolge und der Sortier-Typ gespeichert werden 
         ' dabei wird auch der Me.sortType gesetzt  
-        
+
         If c.sortCriteria >= 0 Then
             Me.sortType = c.sortCriteria
         Else
@@ -30,14 +31,22 @@
         ' Kopieren der Sort-Liste 
         If Not IsNothing(c.sortListe) Then
             For Each kvp As KeyValuePair(Of String, String) In c.sortListe
-                Me.sortList.Add(kvp.Key, kvp.Value)
+                sortElem = kvp.Key
+                If sortElem.Contains(punktName) Then
+                    sortElem = sortElem.Replace(punktName, punktNameDB)
+                End If
+                Me.sortList.Add(sortElem, kvp.Value)
             Next
         End If
 
         If Not IsNothing(c.lastCustomList) Then
             ' die lastCustomList kopieren 
             For Each kvp As KeyValuePair(Of String, String) In c.lastCustomList
-                Me.lastCustomList.Add(kvp.Key, kvp.Value)
+                sortElem = kvp.Key
+                If sortElem.Contains(punktName) Then
+                    sortElem = sortElem.Replace(punktName, punktNameDB)
+                End If
+                Me.lastCustomList.Add(sortElem, kvp.Value)
             Next
 
         End If
@@ -51,6 +60,7 @@
     ''' <remarks></remarks>
     Sub copyto(ByRef c As clsConstellation)
         Dim key As String
+        Dim sortElem As String
 
         c.constellationName = Me.constellationName
 
@@ -79,15 +89,29 @@
             Else
                 ' hier wird die existierende Liste übernommen 
                 If Not IsNothing(Me.sortList) Then
-                    c.sortListe(Me.sortType) = Me.sortList
+                    
+                    'c.sortListe(Me.sortType) = Me.sortList
+                    For Each kvp As KeyValuePair(Of String, String) In Me.sortList
+                        sortElem = kvp.Key
+                        If sortElem.Contains(punktNameDB) Then
+                            sortElem = sortElem.Replace(punktNameDB, punktName)
+                        End If
+                        c.sortListe(Me.sortType).Add(sortElem, kvp.Value)
+                    Next
                 End If
 
             End If
 
             If Not IsNothing(Me.lastCustomList) Then
                 ' die lastCustomList kopieren 
+
                 For Each kvp As KeyValuePair(Of String, String) In Me.lastCustomList
-                    c.lastCustomList.Add(kvp.Key, kvp.Value)
+                    'c.lastCustomList.Add(kvp.Key, kvp.Value)
+                    sortElem = kvp.Key
+                    If sortElem.Contains(punktNameDB) Then
+                        sortElem = sortElem.Replace(punktNameDB, punktName)
+                    End If
+                    c.lastCustomList.Add(sortElem, kvp.Value)
                 Next
 
             End If

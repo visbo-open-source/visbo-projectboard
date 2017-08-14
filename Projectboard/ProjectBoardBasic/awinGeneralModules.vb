@@ -10428,7 +10428,7 @@ Public Module awinGeneralModules
                 If awinSettings.englishLanguage Then
                     outputLine = "Error when writing scenario: " & currentConstellation.constellationName
                 Else
-                    outputLine = "Fehler beim Schreiben Szanario: " & currentConstellation.constellationName
+                    outputLine = "Fehler beim Schreiben Szenario: " & currentConstellation.constellationName
                 End If
                 outPutCollection.Add(outputLine)
 
@@ -10437,7 +10437,7 @@ Public Module awinGeneralModules
             If awinSettings.englishLanguage Then
                 outputLine = "Error when writing scenario - Database active?"
             Else
-                outputLine = "Fehler beim Schreiben Szanario - Datenbank läuft?"
+                outputLine = "Fehler beim Schreiben Szenario - Datenbank läuft?"
             End If
             Throw New ArgumentException(outputLine)
         End Try

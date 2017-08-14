@@ -526,12 +526,18 @@ Public Module awinDiagrams
 
                         Else
                             Dim legendName As String = ""
-                            If awinSettings.englishLanguage Then
-                                legendName = "Sum over all projects"
-                            Else
-                                legendName = "Summe über alle Projekte"
-                            End If
+                            If Not calledfromReporting Then
+                                If awinSettings.englishLanguage Then
+                                    legendName = "Sum over all projects"
+                                Else
+                                    legendName = "Summe über alle Projekte"
+                                End If
 
+                            Else
+                                'legendName = "Summe über alle Projekte"
+                                legendName = repMessages.getmsg(275)
+                            End If
+                         
                             If prcTyp = DiagrammTypen(5) Then
 
                                 ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
@@ -561,11 +567,17 @@ Public Module awinDiagrams
 
                                     If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                         ' repmsg!
-                                        If awinSettings.englishLanguage Then
-                                            .Name = legendName & ": placeholder"
+                                        If Not calledfromReporting Then
+                                            If awinSettings.englishLanguage Then
+                                                .Name = legendName & ": placeholder"
+                                            Else
+                                                .Name = legendName & ": Platzhalter"
+                                            End If
                                         Else
-                                            .Name = legendName & ": Platzhalter"
+                                            '.Name = legendName & ": Platzhalter"
+                                            .Name = legendName & ": " & repMessages.getmsg(276)
                                         End If
+                                        
                                     Else
                                         .Name = legendName
                                     End If
@@ -589,10 +601,15 @@ Public Module awinDiagrams
                                     ' alle anderen zeigen 
                                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                                        If awinSettings.englishLanguage Then
-                                            .Name = legendName & ": assigned"
+                                        If calledfromReporting Then
+                                            '.Name = legendName & ": zugeordnet"
+                                            .Name = legendName & ": " & repMessages.getmsg(277)
                                         Else
-                                            .Name = legendName & ": zugeordnet"
+                                            If awinSettings.englishLanguage Then
+                                                .Name = legendName & ": assigned"
+                                            Else
+                                                .Name = legendName & ": zugeordnet"
+                                            End If
                                         End If
 
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -1392,6 +1409,7 @@ Public Module awinDiagrams
                                     If selectedProjekte.Count = 1 Then
                                         .Name = selectedProjekte.getProject(1).name
                                     Else
+
                                         If awinSettings.englishLanguage Then
                                             .Name = "selected projects"
                                         Else
@@ -1417,7 +1435,6 @@ Public Module awinDiagrams
                         With CType(CType(chtobj.Chart.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                             If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
-                                ' repmsg!
                                 If awinSettings.englishLanguage Then
                                     .Name = legendName & ": placeholder"
                                 Else
