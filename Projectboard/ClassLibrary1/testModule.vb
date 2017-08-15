@@ -5453,13 +5453,13 @@ Public Module testModule
 
 
         enableOnUpdate = True
-
-        If AlleProjekte.Count > 0 Then
-            zeitStempel = AlleProjekte.First.timeStamp
+        If demoModusHistory Then
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
+        Else
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
         End If
 
 
-        Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
         Return anzStoredProj
 
     End Function
