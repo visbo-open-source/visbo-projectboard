@@ -92,6 +92,13 @@ Module Module1
     ' diese Listen enthalten die Infos welche Shapes Ampel grün, gelb etc haben
     ' welche welchen Namen tragen, ...
     Friend smartSlideLists As New clsSmartSlideListen
+
+    ' diese Liste enthält die Veränderungen nach einem TimeStamp oder Varianten Wechsel 
+    Friend changeListe As New clsChangeListe
+
+    ' dieses Formular gibt die Changes, die sich bei den Elementen ergeben haben 
+    Friend changeFrm As frmChanges = Nothing
+
     Friend languages As New clsLanguages
 
     ' diese Variablen geben an, ob es irgendwo Shapes gibt, die verschoben wurden 
@@ -2270,7 +2277,7 @@ Module Module1
                                     tmpShape.Visible = True
                                 End If
 
-                                Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, timestamp)
+                                Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, showOtherVariant)
                                 If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
@@ -2298,7 +2305,7 @@ Module Module1
                                     tmpShape.Visible = True
                                 End If
 
-                                Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, timestamp)
+                                Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, showOtherVariant)
                                 If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
@@ -2395,20 +2402,23 @@ Module Module1
 
 
     ''' <summary>
-    ''' diese MEthode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
+    ''' diese Methode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
     ''' auch eine HomeButtonRelevance besetht nicht mehr; das neue Home ist mit dem TimeStamp erreicht 
+    ''' Der Wert von Diff wird dafür verwendet, um den zugehörigen Datums- oder Annotation Text des Elements zu verschieben ...er orientiert sich deshalb immer am left des Elements 
     ''' </summary>
     ''' <param name="tmpShape"></param>
     ''' <param name="tsStartdate"></param>
     ''' <param name="tsEndDate"></param>
-    ''' <param name="timeStamp"></param>
     ''' <remarks></remarks>
     Friend Function mvPhaseToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal tsStartdate As Date, ByVal tsEndDate As Date, _
-                                              ByVal timeStamp As Date) As Double
+                                               ByVal showOtherVariant As Boolean) As Double
 
         Dim x1Pos As Double, x2Pos As Double
+        Dim diffEnde As Double = 0.0
+        Dim diffDuration As Double = 0.0
         Dim diff As Double = 0.0
-        Dim oldLeft As Double
+
+        Dim oldLeft As Double, oldWidth As Double
         'Dim expla As String = "Version: " & timeStamp.ToShortDateString
 
         ' wenn der Phasen start oder das Phasen-Ende vor bzw. hinter dem pptStart bzw. EndOfCalendar liegt ...
@@ -2420,32 +2430,56 @@ Module Module1
             tsEndDate = slideCoordInfo.PPTEndOFCalendar
         End If
 
+        Dim oldStartdate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left)
+        Dim oldEndDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width)
 
-        If tsStartdate <> slideCoordInfo.calcXtoDate(tmpShape.Left) Or _
-            tsEndDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width) Then
+        If tsStartdate <> oldStartdate Or tsEndDate <> oldEndDate Then
+            '
             ' es hat sich was geändert ... 
+            diffEnde = DateDiff(DateInterval.Day, oldEndDate, tsEndDate)
+            diffDuration = DateDiff(DateInterval.Day, tsStartdate, tsEndDate) + 1 - (DateDiff(DateInterval.Day, oldStartdate, oldEndDate) + 1)
+
+            If previousTimeStamp > currentTimestamp Then
+                diffEnde = -1 * diffEnde
+                diffDuration = -1 * diffDuration
+            End If
 
             'homeButtonRelevance = True
             Call slideCoordInfo.calculatePPTx1x2(tsStartdate, tsEndDate, x1Pos, x2Pos)
 
             With tmpShape
                 oldLeft = .Left
+                oldWidth = .Width
 
                 .Left = x1Pos
-                .Width = x2Pos - tmpShape.Left
+                .Width = x2Pos - x1Pos
 
-                ' Änderung tk 13.8.17 keine Markierung mehr, wird zu unübersichtlich ... 
-                'With .Glow
-                '    .Radius = 5
-                '    .Color.RGB = changeColor
-                'End With
+                Dim expPvName As String = getPVnameFromShpName(tmpShape.Name)
+                Dim newShapeName As String = tmpShape.Name
+                If showOtherVariant Then
+                    Dim pName As String = getPnameFromKey(expPvName)
+                    Dim vName As String = currentVariantname
+                    expPvName = calcProjektKey(pName, vName)
+                    newShapeName = calcPPTShapeNameOVariant(pName, vName, tmpShape.Name)
+                End If
+                Dim expElemName As String = tmpShape.Tags.Item("CN")
+                Dim oldValue As String = bestimmeChangeDateOfPh(oldStartdate, oldEndDate, False)
+                Dim newValue As String = bestimmeChangeDateOfPh(tsStartdate, tsEndDate, False)
 
-                diff = .Left - oldLeft
-                'Dim mvdString As String = tsStartdate.ToString & "#" & tsEndDate.ToString
-                '.Tags.Add("MVD", mvdString)
-                '.Tags.Add("MVE", expla)
+                Dim chgExplanation As clsChangeItem = buildChangeExplanation(expPvName, expElemName, oldValue, newValue, CInt(diffEnde))
+
+                If showOtherVariant Then
+                    Call changeListe.addToChangeList(newShapeName, chgExplanation)
+                Else
+                    Call changeListe.addToChangeList(tmpShape.Name, chgExplanation)
+                End If
+
 
             End With
+
+            ' diff dient dazu , um das ggf angezeigte Annotation-Feld Name / Datum zu verschieben 
+            diff = tmpShape.Left + tmpShape.Width / 2 - (oldLeft + oldWidth / 2)
+
         Else
 
             ' Änderung tk 13.8.17 keine Markierung mehr, wird zu unübersichtlich ... 
@@ -2455,40 +2489,67 @@ Module Module1
             'End With
         End If
 
+
         mvPhaseToTimestampPosition = diff
     End Function
 
     ''' <summary>
-    ''' diese MEthode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
+    ''' diese Methode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
     ''' auch eine HomeButtonRelevance besetht nicht mehr; das neue Home ist mit dem TimeStamp erreicht  
     ''' </summary>
     ''' <param name="tmpShape"></param>
     ''' <param name="msDate"></param>
-    ''' <param name="timeStamp"></param>
+    ''' <param name="showOtherVariant"></param>
     ''' <remarks></remarks>
-    Friend Function mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal timeStamp As Date) As Double
+    Friend Function mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal showOtherVariant As Boolean) As Double
         Dim x1Pos As Double, x2Pos As Double
         Dim diff As Double = 0.0
-        Dim oldLeft As Double = 0.0
+        Dim diffInDays As Integer
+
+
+        Dim chgExplanation As clsChangeItem
+        Dim oldLeft As Double = tmpShape.Left
+        Dim oldDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2).Date
         'Dim expla As String = "Version: " & timeStamp.ToShortDateString
 
-        If msDate <> slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2) Then
+        msDate = msDate.Date
+
+        If msDate <> oldDate Then
             ' es hat sich was geändert ... 
-            'homeButtonRelevance = True
 
             Call slideCoordInfo.calculatePPTx1x2(msDate, msDate, x1Pos, x2Pos)
 
+
             ' jetzt die Shape-Info 
             With tmpShape
-                oldLeft = .Left
                 .Left = x1Pos - tmpShape.Width / 2
                 diff = .Left - oldLeft
+                diffInDays = DateDiff(DateInterval.Day, oldDate, msDate)
+                If previousTimeStamp > currentTimestamp Then
+                    diffInDays = -1 * diffInDays
+                End If
+                ' jetzt wird ggf die smartlists.changeList aufgebaut ... 
 
-                ' Änderung tk 13.8.17: keine Markierung mehr, es soll in einer Liste verzeichnet werden 
-                'With .Glow
-                '    .Radius = 5
-                '    .Color.RGB = changeColor
-                'End With
+                Dim expPvName As String = getPVnameFromShpName(tmpShape.Name)
+                Dim newShapeName As String = tmpShape.Name
+                If showOtherVariant Then
+                    Dim pName As String = getPnameFromKey(expPvName)
+                    Dim vName As String = currentVariantname
+                    expPvName = calcProjektKey(pName, vName)
+                    newShapeName = calcPPTShapeNameOVariant(pName, vName, tmpShape.Name)
+                End If
+                Dim expElemName As String = tmpShape.Tags.Item("CN")
+                Dim oldValue As String = bestimmeChangeDateOfMs(oldDate, False)
+                Dim newValue As String = bestimmeChangeDateOfMs(msDate, False)
+
+                chgExplanation = buildChangeExplanation(expPvName, expElemName, oldValue, newValue, diffInDays)
+
+                If showOtherVariant Then
+                    Call changeListe.addToChangeList(newShapeName, chgExplanation)
+                Else
+                    Call changeListe.addToChangeList(tmpShape.Name, chgExplanation)
+                End If
+
 
             End With
         Else
@@ -2503,6 +2564,35 @@ Module Module1
         mvMilestoneToTimestampPosition = diff
 
     End Function
+
+    ''' <summary>
+    ''' baut den Explanation String auf, der erklärt, was sich am Element geändert hat 
+    ''' </summary>
+    ''' <param name="expPvName"></param>
+    ''' <param name="expElemName"></param>
+    ''' <param name="oldValue"></param>
+    ''' <param name="newValue"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Friend Function buildChangeExplanation(ByVal expPvName As String, ByVal expElemName As String, _
+                                           ByVal oldValue As String, ByVal newValue As String, _
+                                           ByVal diffInDays As Integer) As clsChangeItem
+
+        Dim tmpChangeItem As New clsChangeItem
+
+        With tmpChangeItem
+            .pName = getPnameFromKey(expPvName)
+            .vName = getVariantnameFromKey(expPvName)
+            .bestElemName = expElemName
+            .oldValue = oldValue
+            .newValue = newValue
+            .diffInDays = diffInDays
+        End With
+
+        buildChangeExplanation = tmpChangeItem
+
+    End Function
+
 
     ''' <summary>
     ''' aktualisiert die Info Form mit den Feldern ElemName, ElemDate, BreadCrumb und aLuTv-Text 
@@ -3194,6 +3284,50 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' bestimmt den ChangeDate String für das Meilenstein-Element
+    ''' </summary>
+    ''' <param name="msDate"></param>
+    ''' <param name="showShort"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeChangeDateOfMs(ByVal msDate As Date, ByVal showShort As Boolean) As String
+        Dim tmpText As String = ""
+        If Not showShort Then
+            'tmpText = msDate.ToString("d")
+            tmpText = msDate.ToShortDateString
+        Else
+            tmpText = msDate.Day.ToString & "." & msDate.Month.ToString
+        End If
+        bestimmeChangeDateOfMs = tmpText
+    End Function
+
+    ''' <summary>
+    ''' bestimmt den ChangeDate String für das Phase-Element
+    ''' </summary>
+    ''' <param name="startDate"></param>
+    ''' <param name="endDate"></param>
+    ''' <param name="showShort"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeChangeDateOfPh(ByVal startDate As Date, ByVal endDate As Date, ByVal showShort As Boolean) As String
+        Dim tmpText As String = ""
+
+        If Not showShort Then
+            tmpText = startDate.ToShortDateString & "-" & endDate.ToShortDateString
+        Else
+            Try
+
+                tmpText = startDate.Day.ToString & "." & startDate.Month.ToString & "-" & _
+                            endDate.Day.ToString & "." & endDate.Month.ToString
+            Catch ex As Exception
+                tmpText = "? - ?"
+            End Try
+
+        End If
+        bestimmeChangeDateOfPh = tmpText
+    End Function
+
+    ''' <summary>
     ''' bestimmt den Datums-String, für einen MEilenstein nur das Ende-Datum; 
     ''' 
     ''' </summary>
@@ -3734,7 +3868,7 @@ Module Module1
                     .Tags.Add("CMT", descriptionType.ToString)
 
                     .Fill.ForeColor.RGB = RGB(240, 240, 240)
-                    
+
 
                     .Shadow.Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
                     .Shadow.Blur = 4
@@ -3984,7 +4118,7 @@ Module Module1
 
             End Try
         Next
-        
+
 
 
 

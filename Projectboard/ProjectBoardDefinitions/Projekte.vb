@@ -1577,10 +1577,14 @@ Public Module Projekte
                                 ' Farbe und laufende Nummer eintragen 
                                 Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape
                                 tableCell.TextFrame2.TextRange.Text = msNumber.ToString
+                                ' wenn das jetzt die gelbe Farbe hat, dann soll der Text schwarz sein, in allen anderen weiss
 
+                                If cBewertung.colorIndex = 2 Then
+                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(0, 0, 0)
+                                Else
+                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                                End If
 
-
-                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
                                 CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.Fill.ForeColor.RGB = ampelColor(cBewertung.colorIndex)
 
 
@@ -11157,7 +11161,7 @@ Public Module Projekte
         Dim newchtobj As Excel.ChartObject = Nothing
         Dim oldchtobj As Excel.ChartObject
         Dim chtobj As Excel.ChartObject
-        Dim hchtobj As Excel.ChartObject
+        'Dim hchtobj As Excel.ChartObject
         Dim hshape As Excel.Shape
         Dim xlsCockpits As xlNS.Workbook = Nothing
         Dim wsSheet As xlNS.Worksheet = Nothing

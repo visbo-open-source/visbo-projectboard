@@ -5,15 +5,16 @@
     Private noDateValueCheck As Boolean = True
     Private anzahlShapesOnSlide As Integer = currentSlide.Shapes.Count
 
+
     Private Enum ptNavigationButtons
         letzter = 0
         erster = 1
         nachher = 2
         vorher = 3
+        individual = 4
     End Enum
 
     Private Sub setBtnEnablements()
-
 
         ' alle Buttons erst mal auf enabled = false setzen  
 
@@ -47,11 +48,11 @@
                     ''    btnFastForward.Enabled = True
                     ''    btnEnd.Enabled = True
                     ''End If
-                    
+
 
                 Else
-                    btnFastForward.Enabled = False
                     btnEnd.Enabled = False
+                    btnFastForward.Enabled = False
                 End If
 
 
@@ -75,11 +76,12 @@
                     ''    btnStart.Enabled = True
 
                     ''End If
-                    
+
                 Else
 
-                    btnFastBack.Enabled = False
                     btnStart.Enabled = False
+                    btnFastBack.Enabled = False
+
                 End If
 
             End If
@@ -174,7 +176,51 @@
         End If
 
     End Sub
+    ''' <summary>
+    ''' führt die Button Action der Time-Machine aus 
+    ''' </summary>
+    ''' <param name="newdate"></param>
+    ''' <remarks></remarks>
+    Private Sub performBtnAction(ByVal newdate As Date)
 
+        If newdate <> currentTimestamp Then
+
+            Me.UseWaitCursor = True
+            ' clear changelist 
+            Call changeListe.clearChangeList()
+
+            previousVariantName = currentVariantname
+            previousTimeStamp = currentTimestamp
+            currentTimestamp = newdate
+
+            currentDate.Text = currentTimestamp.ToString
+
+            Call moveAllShapes()
+
+            Call setBtnEnablements()
+
+            Call setCurrentTimestampInSlide(currentTimestamp)
+
+            If thereIsNoVersionFieldOnSlide Then
+                Call showTSMessage(currentTimestamp)
+            End If
+
+            ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
+            If showChangeList.Checked = True Then
+                ' das Formular aufschalten 
+                If IsNothing(changeFrm) Then
+                    changeFrm = New frmChanges
+                    changeFrm.Show()
+                Else
+                    changeFrm.neuAufbau()
+                End If
+            End If
+
+            Me.UseWaitCursor = False
+
+        End If
+
+    End Sub
     Private Sub btnEnd_Click(sender As Object, e As EventArgs) Handles btnEnd.Click
 
         If Not IsNothing(timeStamps) Then
@@ -185,27 +231,12 @@
 
                 If newDate <> currentTimestamp Then
 
-                    previousVariantName = currentVariantname
-                    previousTimeStamp = currentTimestamp
-                    currentTimestamp = timeStamps.Last.Key
-
-                    currentDate.Text = currentTimestamp.ToString
-
-                    Call moveAllShapes()
-
-                    Call setBtnEnablements()
-
-                    Call setCurrentTimestampInSlide(currentTimestamp)
-
-                    If thereIsNoVersionFieldOnSlide Then
-                        Call showTSMessage(currentTimestamp)
-                    End If
+                    Call performBtnAction(newDate)
 
                 End If
-
-
             End If
         End If
+
 
 
     End Sub
@@ -222,20 +253,8 @@
                 newDate = getNextNavigationDate(ptNavigationButtons.nachher)
 
                 If newDate <> currentTimestamp Then
-                    previousVariantName = currentVariantname
-                    previousTimeStamp = currentTimestamp
-                    currentTimestamp = newDate
-                    currentDate.Text = currentTimestamp.ToString
 
-                    Call moveAllShapes()
-
-                    Call setBtnEnablements()
-
-                    Call setCurrentTimestampInSlide(currentTimestamp)
-
-                    If thereIsNoVersionFieldOnSlide Then
-                        Call showTSMessage(currentTimestamp)
-                    End If
+                    Call performBtnAction(newDate)
 
                 End If
 
@@ -255,27 +274,15 @@
                 Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
 
                 If newDate <> currentTimestamp Then
-                    previousVariantName = currentVariantname
-                    previousTimeStamp = currentTimestamp
-                    currentTimestamp = newDate
-                    currentDate.Text = currentTimestamp.ToString
 
-                    Call moveAllShapes()
-
-                    Call setBtnEnablements()
-
-                    Call setCurrentTimestampInSlide(currentTimestamp)
-
-                    If thereIsNoVersionFieldOnSlide Then
-                        Call showTSMessage(currentTimestamp)
-                    End If
+                    Call performBtnAction(newDate)
 
                 End If
-                
+
 
             End If
         End If
-        
+
     End Sub
 
     Private Sub btnStart_Click(sender As Object, e As EventArgs) Handles btnStart.Click
@@ -283,26 +290,14 @@
         If Not IsNothing(timeStamps) Then
             If timeStamps.Count > 0 Then
 
-                timeStampsIndex = 0
-                If timeStamps.First.Key <> currentTimestamp Then
-                    previousVariantName = currentVariantname
-                    previousTimeStamp = currentTimestamp
-                    currentTimestamp = timeStamps.First.Key
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
 
-                    currentDate.Text = currentTimestamp.ToString
+                If newDate <> currentTimestamp Then
 
-                    Call moveAllShapes()
-
-                    Call setBtnEnablements()
-
-                    Call setCurrentTimestampInSlide(currentTimestamp)
-
-                    If thereIsNoVersionFieldOnSlide Then
-                        Call showTSMessage(currentTimestamp)
-                    End If
+                    Call performBtnAction(newDate)
 
                 End If
-                
+
             End If
         End If
 
@@ -314,7 +309,7 @@
         Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.nachher, True)
         ToolTipTS.Show(tmpDate.ToString, btnFastForward, 2000)
 
-        
+
     End Sub
 
     Private Sub btnEnd_MouseHover(sender As Object, e As EventArgs) Handles btnEnd.MouseHover
@@ -324,7 +319,7 @@
 
     End Sub
 
-    
+
 
     Private Sub btnStart_MouseHover(sender As Object, e As EventArgs) Handles btnStart.MouseHover
 
@@ -338,7 +333,7 @@
 
         Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.vorher, True)
         ToolTipTS.Show(tmpDate.ToString, btnFastBack, 2000)
-        
+
     End Sub
 
     Private Sub currentDate_GotFocus(sender As Object, e As EventArgs) Handles currentDate.GotFocus
@@ -483,6 +478,9 @@
 
                     If eingabe <> currentTimestamp Then
 
+                        ' clear changelist 
+                        Call changeListe.clearChangeList()
+
                         previousVariantName = currentVariantname
                         previousTimeStamp = currentTimestamp
                         currentTimestamp = eingabe
@@ -499,14 +497,34 @@
                             Call showTSMessage(currentTimestamp)
                         End If
 
+                        ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
+                        If showChangeList.Checked = True Then
+                            ' das Formular aufschalten 
+                            If IsNothing(changeFrm) Then
+                                changeFrm = New frmChanges
+                                changeFrm.Show()
+                            Else
+                                changeFrm.neuAufbau()
+                            End If
+                        End If
+
                     End If
 
 
                 End If
             End If
         End If
-        
 
+
+
+    End Sub
+
+    Private Sub showChangeList_CheckedChanged(sender As Object, e As EventArgs) Handles showChangeList.CheckedChanged
+
+        If Not IsNothing(changeFrm) Then
+            changeFrm.Close()
+            changeFrm = Nothing
+        End If
 
     End Sub
 End Class
