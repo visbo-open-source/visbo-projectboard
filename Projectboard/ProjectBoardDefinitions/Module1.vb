@@ -979,7 +979,6 @@ Public Module Module1
         Dim chtobjName As String = ""
         Dim userSelectedSomething As Boolean = False
 
-        'Dim testActiveWindow As String
 
         ' Exit, wenn nicht im PRojekt-Tafel-Modus 
         If visboZustaende.projectBoardMode <> ptModus.graficboard Then
