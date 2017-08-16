@@ -11404,7 +11404,7 @@ Public Module Projekte
                         ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
                         newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
 
-                        newchtobj.Top = oldchtobj.Top + maxTop '???
+                        newchtobj.Top = oldchtobj.Top + maxTop
                         newchtobj.Left = oldchtobj.Left + maxLeft
                         ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
 
@@ -17988,7 +17988,12 @@ Public Module Projekte
                         .ForeColor.RGB = CInt(pcolor)
                         .Transparency = 0
                         .Weight = 4.0
-                        .DashStyle = core.MsoLineDashStyle.msoLineDash
+                        If status = ProjektStatus(0) Then
+                            .DashStyle = core.MsoLineDashStyle.msoLineDash
+                        Else
+                            .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                        End If
+
                     End With
                 Catch ex As Exception
 
