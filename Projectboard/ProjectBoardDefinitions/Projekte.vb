@@ -11157,7 +11157,6 @@ Public Module Projekte
         Dim newchtobj As Excel.ChartObject = Nothing
         Dim oldchtobj As Excel.ChartObject
         Dim chtobj As Excel.ChartObject
-        Dim hchtobj As Excel.ChartObject
         Dim hshape As Excel.Shape
         Dim xlsCockpits As xlNS.Workbook = Nothing
         Dim wsSheet As xlNS.Worksheet = Nothing
