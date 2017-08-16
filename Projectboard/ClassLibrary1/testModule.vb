@@ -5315,7 +5315,6 @@ Public Module testModule
         Dim hproj As clsProjekt
         Dim hilfshproj As clsProjekt
         Dim jetzt As Date = Now
-        Dim zeitStempel As Date
         Dim anzSelectedProj As Integer = 0
         Dim anzStoredProj As Integer = 0
         Dim variantCollection As Collection
@@ -5453,6 +5452,12 @@ Public Module testModule
 
 
         enableOnUpdate = True
+        If demoModusHistory Then
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
+        Else
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
+        End If
+
         If demoModusHistory Then
             Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
         Else
