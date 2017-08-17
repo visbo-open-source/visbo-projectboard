@@ -21145,16 +21145,24 @@ Public Module awinGeneralModules
 
         If Not noDB Then
 
-            If vglProj.name = pName And vglProj.variantName = vName Then
-                holeHistory = False
+            If Not IsNothing(vglProj) Then
+                If vglProj.name = pName And vglProj.variantName = vName Then
+                    holeHistory = False
+                End If
             End If
+            
 
             If holeHistory Then
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 If Request.pingMongoDb() Then
                     Try
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName, _
+                        If request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName, _
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                        Else
+                            projekthistorie.clear()
+                        End If
+                        
                     Catch ex As Exception
                         projekthistorie.clear()
                     End Try

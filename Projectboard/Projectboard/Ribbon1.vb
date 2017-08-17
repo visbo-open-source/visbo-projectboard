@@ -2933,6 +2933,18 @@ Imports System.Windows
             ' neue Methode 
             todoListe = getProjectSelectionList(True)
 
+            ' check, ob wirklich alle Projekte editiert werden sollen ... 
+            If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
+                Dim yesNo As Integer
+                yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
+                If yesNo = MsgBoxResult.No Then
+                    enableOnUpdate = True
+                    Exit Sub
+                End If
+            End If
+
+            
+
             If todoListe.Count > 0 Then
 
                 ' jetzt aufbauen der dbCacheProjekte
@@ -2951,9 +2963,6 @@ Imports System.Windows
                     Call awinShowtimezone(showRangeLeft, showRangeRight, True)
                 End If
 
-
-
-                'Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
 
                 Call enableControls(ptModus.massEditRessCost)
 
@@ -3038,7 +3047,6 @@ Imports System.Windows
                 If appInstance.EnableEvents = False Then
                     appInstance.EnableEvents = True
                 End If
-
                 If awinSettings.englishLanguage Then
                     Call MsgBox("no projects apply to criterias ...")
                 Else
@@ -3047,26 +3055,26 @@ Imports System.Windows
             End If
 
 
-        Else
-            enableOnUpdate = True
-            If appInstance.EnableEvents = False Then
-                appInstance.EnableEvents = True
-            End If
-
-            If awinSettings.englishLanguage Then
-                Call MsgBox("no active projects ...")
             Else
-                Call MsgBox("Es gibt keine aktiven Projekte ...")
+                enableOnUpdate = True
+                If appInstance.EnableEvents = False Then
+                    appInstance.EnableEvents = True
+                End If
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no active projects ...")
+                Else
+                    Call MsgBox("Es gibt keine aktiven Projekte ...")
+                End If
+
             End If
 
-        End If
 
+            'Call MsgBox("ok, zurück ...")
 
-        'Call MsgBox("ok, zurück ...")
-
-        ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
-        'enableOnUpdate = True
-        'appInstance.EnableEvents = True
+            ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
+            'enableOnUpdate = True
+            'appInstance.EnableEvents = True
 
     End Sub
 
@@ -3142,6 +3150,10 @@ Imports System.Windows
         ' tk 12.6.17
         ' wenn nur ein Window gezeigt wird ; das ist hier notwendig, um zu verhindern, dass nachher die mpt, mptpf, mptpr Charts alle im 
         ' xlMaximized Mode dargestellt werden; das scheint eine Unschönheit von Microsoft zu sein ... 
+
+
+        ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
+        appInstance.EnableEvents = True
         If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
             appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
         End If
@@ -3150,12 +3162,22 @@ Imports System.Windows
 
             ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
             If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
-                projectboardWindows(PTwindows.massEdit).Close()
+                Try
+                    projectboardWindows(PTwindows.massEdit).Close()
+                Catch ex As Exception
+
+                End Try
+
                 projectboardWindows(PTwindows.massEdit) = Nothing
             End If
 
             If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
-                projectboardWindows(PTwindows.meChart).Close()
+                Try
+                    projectboardWindows(PTwindows.meChart).Close()
+                Catch ex As Exception
+
+                End Try
+
                 projectboardWindows(PTwindows.meChart) = Nothing
             End If
 
@@ -3174,6 +3196,9 @@ Imports System.Windows
                     Try
                         If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
                             projectboardWindows(PTwindows.mptpf).Visible = True
+                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
+                                .Activate()
+                            End With
                             'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
                         End If
                     Catch ex As Exception
@@ -3182,6 +3207,9 @@ Imports System.Windows
                     Try
                         If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
                             projectboardWindows(PTwindows.mptpr).Visible = True
+                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
+                                .Activate()
+                            End With
                             'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
                         End If
                     Catch ex As Exception
@@ -3191,7 +3219,7 @@ Imports System.Windows
 
             End With
         Catch ex As Exception
-
+            Dim a As Integer = 1
         End Try
 
 

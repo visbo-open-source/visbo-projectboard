@@ -979,7 +979,6 @@ Public Module Module1
         Dim chtobjName As String = ""
         Dim userSelectedSomething As Boolean = False
 
-        'Dim testActiveWindow As String
 
         ' Exit, wenn nicht im PRojekt-Tafel-Modus 
         If visboZustaende.projectBoardMode <> ptModus.graficboard Then
@@ -4308,12 +4307,22 @@ Public Module Module1
         Try
             ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
             If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
-                projectboardWindows(PTwindows.massEdit).Close()
+                Try
+                    projectboardWindows(PTwindows.massEdit).Close()
+                Catch ex As Exception
+
+                End Try
+
                 projectboardWindows(PTwindows.massEdit) = Nothing
             End If
 
             If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
-                projectboardWindows(PTwindows.meChart).Close()
+                Try
+                    projectboardWindows(PTwindows.meChart).Close()
+                Catch ex As Exception
+
+                End Try
+
                 projectboardWindows(PTwindows.meChart) = Nothing
             End If
             If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
@@ -4322,12 +4331,20 @@ Public Module Module1
                 If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
                     appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
                 End If
+                Try
+                    projectboardWindows(PTwindows.mptpf).Close()
+                Catch ex As Exception
 
-                projectboardWindows(PTwindows.mptpf).Close()
+                End Try
                 projectboardWindows(PTwindows.mptpf) = Nothing
             End If
             If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-                projectboardWindows(PTwindows.mptpr).Close()
+                Try
+                    projectboardWindows(PTwindows.mptpr).Close()
+                Catch ex As Exception
+
+                End Try
+
                 projectboardWindows(PTwindows.mptpr) = Nothing
             End If
         Catch ex As Exception
@@ -4341,11 +4358,12 @@ Public Module Module1
         End Try
 
 
+        ' tk / ute jetzt eigentlich überflüssig
         ' jetzt die projectboardWindows = Nothing setzen 
-        projectboardWindows(PTwindows.massEdit) = Nothing
-        projectboardWindows(PTwindows.meChart) = Nothing
-        projectboardWindows(PTwindows.mptpf) = Nothing
-        projectboardWindows(PTwindows.mptpr) = Nothing
+        'projectboardWindows(PTwindows.massEdit) = Nothing
+        'projectboardWindows(PTwindows.meChart) = Nothing
+        'projectboardWindows(PTwindows.mptpf) = Nothing
+        'projectboardWindows(PTwindows.mptpr) = Nothing
 
         ' make MPT Window great again ...
         With projectboardWindows(PTwindows.mpt)
