@@ -2267,6 +2267,13 @@ Public Module awinGeneralModules
                 awinSettings.readWriteMissingDefinitions = False
             End Try
 
+            ' Einstellung, um das Lesen / Schreiben von MissingDefinitions zu steuern 
+            Try
+                awinSettings.meExtendedColumnsView = CBool(.Range("meExtendedView").Value)
+            Catch ex As Exception
+                awinSettings.meExtendedColumnsView = False
+            End Try
+
 
             StartofCalendar = awinSettings.kalenderStart
             StartofCalendar = StartofCalendar.ToLocalTime()
@@ -21202,7 +21209,7 @@ Public Module awinGeneralModules
         ' aktualisieren der Window Caption ...
         Try
             If visboWindowExists(PTwindows.mptpr) Then
-                Dim tmpmsg As String = "Charts: " & hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
                 projectboardWindows(PTwindows.mptpr).Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
             End If
         Catch ex As Exception
