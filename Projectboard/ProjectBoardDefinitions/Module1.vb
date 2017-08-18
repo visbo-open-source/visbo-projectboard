@@ -4238,7 +4238,7 @@ Public Module Module1
 
             Case PTwindows.mptpr
 
-                tmpResult = addOnMsg
+                tmpResult = "Charts: " & addOnMsg
 
 
             Case PTwindows.meChart
@@ -4519,10 +4519,11 @@ Public Module Module1
     End Sub
     ''' <summary>
     ''' zeigt das angegebene VISBO Window, wenn es nicht ohnehin schon angezeigt wird ...
+    ''' tmpmsg ist der optional Ergänzungs-String für den Caption Text im mptpr Window 
     ''' </summary>
     ''' <param name="visboWindowType"></param>
     ''' <remarks></remarks>
-    Public Sub showVisboWindow(ByVal visboWindowType As Integer)
+    Public Sub showVisboWindow(ByVal visboWindowType As Integer, Optional tmpmsg As String = "")
 
 
         ' Voraussetzungen schaffen: kein EnableEvents und kein Flackern und kein EnableOnUpdate ..
@@ -4706,7 +4707,7 @@ Public Module Module1
                         .DisplayRuler = False
                         .DisplayOutline = False
                         .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.mptpr)
+                        .Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
                     End With
 
                     If Not prWindowAlreadyExisting Then

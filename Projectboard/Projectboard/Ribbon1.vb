@@ -6227,7 +6227,8 @@ Imports System.Windows
                 Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
 
                 If thereAreAnyCharts(PTwindows.mptpr) Then
-                    Call showVisboWindow(PTwindows.mptpr)
+                    Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                    Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                 End If
 
             Catch ex As Exception
@@ -6304,7 +6305,8 @@ Imports System.Windows
 
 
                         If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                         End If
 
                     Catch ex As Exception
@@ -6388,7 +6390,8 @@ Imports System.Windows
                     Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                     If thereAreAnyCharts(PTwindows.mptpr) Then
-                        Call showVisboWindow(PTwindows.mptpr)
+                        Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                        Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                     End If
 
                 Catch ex As Exception
@@ -6469,7 +6472,8 @@ Imports System.Windows
                         Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
 
                         If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                         End If
 
                     Catch ex As Exception
@@ -9404,7 +9408,8 @@ Imports System.Windows
                                                                  top, left, width, height, False)
 
                         If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                         End If
 
                     Catch ex1 As Exception
