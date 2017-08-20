@@ -10735,8 +10735,9 @@ Public Module Projekte
                                            ByVal startdate As Date, ByVal endedate As Date, _
                                            ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
                                            ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
-                                           Optional ByVal listOfCustomFields As Collection = Nothing, _
-                                           Optional responsiblePerson As String = "") As clsProjekt
+                                           ByVal listOfCustomFields As Collection, _
+                                           ByVal responsiblePerson As String, _
+                                           ByVal profitUSerAskedFor As Double) As clsProjekt
 
         Dim newprojekt As New clsProjekt
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
@@ -10744,6 +10745,7 @@ Public Module Projekte
         Dim spalte As Integer = getColumnOfDate(startdate)
         Dim heute As Date = Now
         Dim key As String = pname & "#"
+        Dim referenceBudget As Double = 0.0
 
         'Const extCost As String = "Kosten Externe"
         Dim extCost As String
@@ -10765,8 +10767,16 @@ Public Module Projekte
         End If
 
         Try
-            Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate)
-            'Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
+            Dim zielrenditenVorgabe As Double
+            Dim budgetVorgabe As Double = erloes
+            referenceBudget = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+            If referenceBudget > 0 Then
+                zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUSerAskedFor) / 100)) / referenceBudget
+                Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate, zielrenditenVorgabe)
+            Else
+                Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate)
+            End If
+
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")
             erstelleInventurProjekt = Nothing
