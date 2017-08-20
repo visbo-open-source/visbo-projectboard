@@ -2267,6 +2267,13 @@ Public Module awinGeneralModules
                 awinSettings.readWriteMissingDefinitions = False
             End Try
 
+            ' Einstellung, um das Lesen / Schreiben von MissingDefinitions zu steuern 
+            Try
+                awinSettings.meExtendedColumnsView = CBool(.Range("meExtendedView").Value)
+            Catch ex As Exception
+                awinSettings.meExtendedColumnsView = False
+            End Try
+
 
             StartofCalendar = awinSettings.kalenderStart
             StartofCalendar = StartofCalendar.ToLocalTime()
@@ -21145,16 +21152,24 @@ Public Module awinGeneralModules
 
         If Not noDB Then
 
-            If vglProj.name = pName And vglProj.variantName = vName Then
-                holeHistory = False
+            If Not IsNothing(vglProj) Then
+                If vglProj.name = pName And vglProj.variantName = vName Then
+                    holeHistory = False
+                End If
             End If
+            
 
             If holeHistory Then
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 If Request.pingMongoDb() Then
                     Try
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName, _
+                        If request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName, _
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                        Else
+                            projekthistorie.clear()
+                        End If
+                        
                     Catch ex As Exception
                         projekthistorie.clear()
                     End Try
@@ -21194,7 +21209,7 @@ Public Module awinGeneralModules
         ' aktualisieren der Window Caption ...
         Try
             If visboWindowExists(PTwindows.mptpr) Then
-                Dim tmpmsg As String = "Charts: " & hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
                 projectboardWindows(PTwindows.mptpr).Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
             End If
         Catch ex As Exception

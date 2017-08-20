@@ -33,9 +33,31 @@ Public Class clsProjekt
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
 
+    ' ergänzt am 20.8.17 
+    ' Marker für Projekte, um anzuzeigen, dass es zu einer bestimmten Menge gehört ; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
+    Private _marker As Boolean = False
+    Public Property marker As Boolean
+        Get
+            marker = _marker
+        End Get
+        Set(value As Boolean)
+            _marker = value
+        End Set
+    End Property
+
+    ' Kennzeichnung, ob ein Projekt manuell verschoben werden kann; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
+    Private _movable As Boolean = False
+    Public Property movable As Boolean
+        Get
+            movable = _movable
+        End Get
+        Set(value As Boolean)
+            _movable = value
+        End Set
+    End Property
 
 
-    ' Deklarationen der Events 
+    ' die ShapeUID des Projektes  
     Private _shpUID As String = ""
     Public Property shpUID As String
         Get

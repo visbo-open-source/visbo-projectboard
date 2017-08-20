@@ -2933,6 +2933,18 @@ Imports System.Windows
             ' neue Methode 
             todoListe = getProjectSelectionList(True)
 
+            ' check, ob wirklich alle Projekte editiert werden sollen ... 
+            If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
+                Dim yesNo As Integer
+                yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
+                If yesNo = MsgBoxResult.No Then
+                    enableOnUpdate = True
+                    Exit Sub
+                End If
+            End If
+
+            
+
             If todoListe.Count > 0 Then
 
                 ' jetzt aufbauen der dbCacheProjekte
@@ -2951,9 +2963,6 @@ Imports System.Windows
                     Call awinShowtimezone(showRangeLeft, showRangeRight, True)
                 End If
 
-
-
-                'Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
 
                 Call enableControls(ptModus.massEditRessCost)
 
@@ -3038,7 +3047,6 @@ Imports System.Windows
                 If appInstance.EnableEvents = False Then
                     appInstance.EnableEvents = True
                 End If
-
                 If awinSettings.englishLanguage Then
                     Call MsgBox("no projects apply to criterias ...")
                 Else
@@ -3047,26 +3055,26 @@ Imports System.Windows
             End If
 
 
-        Else
-            enableOnUpdate = True
-            If appInstance.EnableEvents = False Then
-                appInstance.EnableEvents = True
-            End If
-
-            If awinSettings.englishLanguage Then
-                Call MsgBox("no active projects ...")
             Else
-                Call MsgBox("Es gibt keine aktiven Projekte ...")
+                enableOnUpdate = True
+                If appInstance.EnableEvents = False Then
+                    appInstance.EnableEvents = True
+                End If
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no active projects ...")
+                Else
+                    Call MsgBox("Es gibt keine aktiven Projekte ...")
+                End If
+
             End If
 
-        End If
 
+            'Call MsgBox("ok, zurück ...")
 
-        'Call MsgBox("ok, zurück ...")
-
-        ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
-        'enableOnUpdate = True
-        'appInstance.EnableEvents = True
+            ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
+            'enableOnUpdate = True
+            'appInstance.EnableEvents = True
 
     End Sub
 
@@ -6219,7 +6227,8 @@ Imports System.Windows
                 Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
 
                 If thereAreAnyCharts(PTwindows.mptpr) Then
-                    Call showVisboWindow(PTwindows.mptpr)
+                    Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                    Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                 End If
 
             Catch ex As Exception
@@ -6296,7 +6305,8 @@ Imports System.Windows
 
 
                         If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                         End If
 
                     Catch ex As Exception
@@ -6380,7 +6390,8 @@ Imports System.Windows
                     Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                     If thereAreAnyCharts(PTwindows.mptpr) Then
-                        Call showVisboWindow(PTwindows.mptpr)
+                        Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                        Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                     End If
 
                 Catch ex As Exception
@@ -6461,7 +6472,8 @@ Imports System.Windows
                         Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
 
                         If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                         End If
 
                     Catch ex As Exception
@@ -8638,13 +8650,17 @@ Imports System.Windows
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.massEdit)
             .Top = 0
+            .Left = 1.0
             .Height = 3 / 4 * maxScreenHeight
+            .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.meChart)
             .Top = 3 / 4 * maxScreenHeight + 3
+            .Left = 1.0
             .Height = 1 / 4 * maxScreenHeight - 3
+            .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 
 
@@ -9392,7 +9408,8 @@ Imports System.Windows
                                                                  top, left, width, height, False)
 
                         If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
                         End If
 
                     Catch ex1 As Exception

@@ -1577,14 +1577,10 @@ Public Module Projekte
                                 ' Farbe und laufende Nummer eintragen 
                                 Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape
                                 tableCell.TextFrame2.TextRange.Text = msNumber.ToString
-                                ' wenn das jetzt die gelbe Farbe hat, dann soll der Text schwarz sein, in allen anderen weiss
 
-                                If cBewertung.colorIndex = 2 Then
-                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(0, 0, 0)
-                                Else
-                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                                End If
 
+
+                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
                                 CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.Fill.ForeColor.RGB = ampelColor(cBewertung.colorIndex)
 
 
@@ -10735,9 +10731,8 @@ Public Module Projekte
                                            ByVal startdate As Date, ByVal endedate As Date, _
                                            ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
                                            ByVal capacityNeeded As String, ByVal externCostInput As String, ByVal businessUnit As String, ByVal description As String, _
-                                           ByVal listOfCustomFields As Collection, _
-                                           ByVal responsiblePerson As String, _
-                                           ByVal profitUSerAskedFor As Double) As clsProjekt
+                                           Optional ByVal listOfCustomFields As Collection = Nothing, _
+                                           Optional responsiblePerson As String = "") As clsProjekt
 
         Dim newprojekt As New clsProjekt
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
@@ -10745,7 +10740,6 @@ Public Module Projekte
         Dim spalte As Integer = getColumnOfDate(startdate)
         Dim heute As Date = Now
         Dim key As String = pname & "#"
-        Dim referenceBudget As Double = 0.0
 
         'Const extCost As String = "Kosten Externe"
         Dim extCost As String
@@ -10767,16 +10761,8 @@ Public Module Projekte
         End If
 
         Try
-            Dim zielrenditenVorgabe As Double
-            Dim budgetVorgabe As Double = erloes
-            referenceBudget = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-            If referenceBudget > 0 Then
-                zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUSerAskedFor) / 100)) / referenceBudget
-                Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate, zielrenditenVorgabe)
-            Else
-                Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate)
-            End If
-
+            Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate)
+            'Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")
             erstelleInventurProjekt = Nothing
@@ -11171,7 +11157,6 @@ Public Module Projekte
         Dim newchtobj As Excel.ChartObject = Nothing
         Dim oldchtobj As Excel.ChartObject
         Dim chtobj As Excel.ChartObject
-        'Dim hchtobj As Excel.ChartObject
         Dim hshape As Excel.Shape
         Dim xlsCockpits As xlNS.Workbook = Nothing
         Dim wsSheet As xlNS.Worksheet = Nothing
@@ -11414,7 +11399,7 @@ Public Module Projekte
                         ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
                         newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
 
-                        newchtobj.Top = oldchtobj.Top + maxTop
+                        newchtobj.Top = oldchtobj.Top + maxTop '???
                         newchtobj.Left = oldchtobj.Left + maxLeft
                         ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
 
@@ -17998,12 +17983,7 @@ Public Module Projekte
                         .ForeColor.RGB = CInt(pcolor)
                         .Transparency = 0
                         .Weight = 4.0
-                        If status = ProjektStatus(0) Then
-                            .DashStyle = core.MsoLineDashStyle.msoLineDash
-                        Else
-                            .DashStyle = core.MsoLineDashStyle.msoLineSolid
-                        End If
-
+                        .DashStyle = core.MsoLineDashStyle.msoLineDash
                     End With
                 Catch ex As Exception
 
