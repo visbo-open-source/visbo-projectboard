@@ -3578,13 +3578,13 @@ Public Module awinGeneralModules
 
                                                 ' OvertimeRate in Tagessatz umrechnen
                                                 Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
-                                                hoverstr = Split(hoverstr(0), "CHF", -1)
-                                                newRoleDef.tagessatzExtern = CType(hoverstr(1), Double) * msproj.HoursPerDay
+                                                hoverstr = Split(hoverstr(0), "€", -1)
+                                                newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
 
                                                 ' StandardRate in Tagessatz umrechnen
                                                 Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
-                                                hstdstr = Split(hstdstr(0), "CHF", -1)
-                                                newRoleDef.tagessatzIntern = CType(hstdstr(1), Double) * msproj.HoursPerDay
+                                                hstdstr = Split(hstdstr(0), "€", -1)
+                                                newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
 
                                                 newRoleDef.UID = RoleDefinitions.Count + 1
                                                 If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
