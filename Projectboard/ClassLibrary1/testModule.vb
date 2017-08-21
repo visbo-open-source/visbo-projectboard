@@ -5315,7 +5315,6 @@ Public Module testModule
         Dim hproj As clsProjekt
         Dim hilfshproj As clsProjekt
         Dim jetzt As Date = Now
-        Dim zeitStempel As Date
         Dim anzSelectedProj As Integer = 0
         Dim anzStoredProj As Integer = 0
         Dim variantCollection As Collection
@@ -5454,12 +5453,13 @@ Public Module testModule
 
         enableOnUpdate = True
 
-        If AlleProjekte.Count > 0 Then
-            zeitStempel = AlleProjekte.First.timeStamp
+        If demoModusHistory Then
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
+        Else
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
         End If
 
 
-        Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
         Return anzStoredProj
 
     End Function
@@ -8650,9 +8650,12 @@ Public Module testModule
                         Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape
                         tableCell.TextFrame2.TextRange.Text = msNumber.ToString
 
+                        If cBewertung.colorIndex = 2 Then
+                            CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(0, 0, 0)
+                        Else
+                            CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                        End If
 
-
-                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
                         CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
 
                         ' Name eintragen 

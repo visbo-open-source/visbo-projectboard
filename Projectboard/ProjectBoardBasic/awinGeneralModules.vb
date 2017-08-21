@@ -5423,7 +5423,7 @@ Public Module awinGeneralModules
                                 hproj = erstelleInventurProjekt(pName, vorlageName, variantName, _
                                                              start, ende, budget, zeile, sfit, risk, _
                                                              capacityNeeded, externCostInput, businessUnit, description, custFields, _
-                                                             responsiblePerson)
+                                                             responsiblePerson, 0.0)
 
 
                                 If Not IsNothing(hproj) Then
@@ -6019,7 +6019,7 @@ Public Module awinGeneralModules
                                 Dim capacityNeeded As String = ""
                                 hproj = erstelleInventurProjekt(pName, vorlagenName, scenarioName, _
                                                              start, ende, budget, zeile, sfit, risk, _
-                                                             capacityNeeded, Nothing, businessUnit, description)
+                                                             capacityNeeded, Nothing, businessUnit, description, Nothing, "", 0.0)
 
                                 If Not IsNothing(hproj) Then
                                     projectStartDate = start

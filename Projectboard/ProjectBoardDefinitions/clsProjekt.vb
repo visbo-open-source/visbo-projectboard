@@ -377,8 +377,8 @@ Public Class clsProjekt
                         Me.variantDescription = .variantDescription And _
                         Me.description = .description Then
 
-                        If Me.startDate = .startDate And _
-                            Me.endeDate = .endeDate Then
+                        If Me.startDate.Date = .startDate.Date And _
+                            Me.endeDate.Date = .endeDate.Date Then
 
                             If Me.ampelStatus = .ampelStatus And _
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then

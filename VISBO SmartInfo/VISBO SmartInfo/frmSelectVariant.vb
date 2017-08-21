@@ -54,6 +54,11 @@ Public Class frmSelectVariant
 
         If selectedVariantName <> vName Then
             ' die Aktion durchführen 
+
+            Me.UseWaitCursor = True
+            ' clear changelist 
+            Call changeListe.clearChangeList()
+
             previousTimeStamp = currentTimestamp
             previousVariantName = currentVariantname
             currentVariantname = selectedVariantName
@@ -69,6 +74,16 @@ Public Class frmSelectVariant
             End If
 
             Call moveAllShapes(True)
+
+            ' das Formular aufschalten 
+            If IsNothing(changeFrm) Then
+                changeFrm = New frmChanges
+                changeFrm.Show()
+            Else
+                changeFrm.neuAufbau()
+            End If
+
+            Me.UseWaitCursor = False
 
         Else
             Call MsgBox("wird bereits angezeigt ...")

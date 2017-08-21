@@ -46,11 +46,11 @@
         Me.Tab2 = Me.Factory.CreateRibbonTab
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.activateTab = Me.Factory.CreateRibbonButton
+        Me.Separator2 = Me.Factory.CreateRibbonSeparator
         Me.timeMachineTab = Me.Factory.CreateRibbonButton
         Me.variantTab_Click = Me.Factory.CreateRibbonButton
         Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.settingsTab = Me.Factory.CreateRibbonButton
-        Me.Separator2 = Me.Factory.CreateRibbonSeparator
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
         Me.SmartInfo.SuspendLayout()
@@ -89,6 +89,10 @@
         Me.activateTab.Label = "Search"
         Me.activateTab.Name = "activateTab"
         '
+        'Separator2
+        '
+        Me.Separator2.Name = "Separator2"
+        '
         'timeMachineTab
         '
         Me.timeMachineTab.Label = "Time-Machine"
@@ -107,10 +111,6 @@
         '
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
-        '
-        'Separator2
-        '
-        Me.Separator2.Name = "Separator2"
         '
         'Ribbon1
         '
