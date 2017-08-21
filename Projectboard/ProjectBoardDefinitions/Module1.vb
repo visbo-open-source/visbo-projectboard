@@ -148,8 +148,6 @@ Public Module Module1
     Public formProjectInfo1 As frmProjectInfo1 = Nothing
 
 
-    ' variable gibt an, zu welchem Objekt-Rolle (Rolle, Kostenart, Ergebnis, ..)  der Röntgen Blick gezeigt wird 
-    Public roentgenBlick As New clsBestFitObject
 
     ' diese beiden folgenden Variablen steuern im Sheet "Ressourcen", welcher Bereich in den Diagrammen angezeigt werden soll
     Public showRangeLeft As Integer
@@ -662,6 +660,14 @@ Public Module Module1
         SWkomp3 = 3
         SWkomp4 = 4
         Premium = 5
+    End Enum
+
+    Public Enum PTProjektStati
+        geplant = 0
+        beauftragt = 1
+        ChangeRequest = 2
+        abgebrochen = 3
+        abgeschlossen = 4
     End Enum
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 

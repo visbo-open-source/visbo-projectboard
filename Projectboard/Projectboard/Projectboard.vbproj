@@ -20,7 +20,7 @@
     <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.4.0.6</ApplicationVersion>
+    <ApplicationVersion>3.4.0.7</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -393,9 +393,9 @@
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="meTE" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
           <HostItem Name="Tabelle4" Code="Tabelle4.vb" CanonicalName="Tabelle4" PublishedHash="4EE7F2D35207B924053EE001939AA45C186FF267" DisplayName="meAT" Blueprint="Tabelle4.Designer.xml" GeneratedCode="Tabelle4.Designer.vb" />
           <HostItem Name="Tabelle5" Code="Tabelle5.vb" CanonicalName="Tabelle5" PublishedHash="E7B509583378FAE6D919392398062EB2C72A36F5" DisplayName="meCharts" Blueprint="Tabelle5.Designer.xml" GeneratedCode="Tabelle5.Designer.vb" />
-          <HostItem Name="Tabelle6" Code="Tabelle6.vb" CanonicalName="Tabelle6" DisplayName="mptPrCharts" Blueprint="Tabelle6.Designer.xml" GeneratedCode="Tabelle6.Designer.vb" PublishedHash="EAC24842994DF07EE1A990405A38250F4C14D032" />
-          <HostItem Name="Tabelle7" Code="Tabelle7.vb" CanonicalName="Tabelle7" DisplayName="mptPfCharts" Blueprint="Tabelle7.Designer.xml" GeneratedCode="Tabelle7.Designer.vb" PublishedHash="94B59114CF2041640665EF198FEE8E6175A95631" />
-          <HostItem Name="Tabelle8" Code="Tabelle8.vb" CanonicalName="Tabelle8" DisplayName="repCharts" Blueprint="Tabelle8.Designer.xml" GeneratedCode="Tabelle8.Designer.vb" PublishedHash="07EB2DB07CD7671DA48D4E05ADE599CCA93046D7" />
+          <HostItem Name="Tabelle6" Code="Tabelle6.vb" CanonicalName="Tabelle6" PublishedHash="EAC24842994DF07EE1A990405A38250F4C14D032" DisplayName="mptPrCharts" Blueprint="Tabelle6.Designer.xml" GeneratedCode="Tabelle6.Designer.vb" />
+          <HostItem Name="Tabelle7" Code="Tabelle7.vb" CanonicalName="Tabelle7" PublishedHash="94B59114CF2041640665EF198FEE8E6175A95631" DisplayName="mptPfCharts" Blueprint="Tabelle7.Designer.xml" GeneratedCode="Tabelle7.Designer.vb" />
+          <HostItem Name="Tabelle8" Code="Tabelle8.vb" CanonicalName="Tabelle8" PublishedHash="07EB2DB07CD7671DA48D4E05ADE599CCA93046D7" DisplayName="repCharts" Blueprint="Tabelle8.Designer.xml" GeneratedCode="Tabelle8.Designer.vb" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
         </Host>
       </FlavorProperties>

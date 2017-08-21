@@ -178,7 +178,7 @@
             <menu id="PT2G2M" getVisible="chckVisibility">
               <!--label="Modify Ressourcen und Kosten"-->
               <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
-              <!--label="Modify Dates of Phases & MIlestones"-->
+              <!--label="Modify Dates of Phases & Milestones"-->
               <button id="PT2G1M2B2" getLabel="bestimmeLabel" enabled="false" />
               <!--label="Modify Attributes"-->
               <button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Business Unit, Budget, strateg. Fit und Risiko Einschätzung."/>
@@ -192,12 +192,15 @@
               <button id="PT2G2B5" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
               <menuSeparator id="separator3" />
               <!--label="Freeze"-->
-              <button id="PTfreezeB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Beauftragen" supertip ="ein fixiertes Projekt kann nicht mehr durch Drag und Drop verschoben, verkürzt, verlängert werden."/>
+              <button id="PTfreezeB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTFreezeProject" supertip ="ein fixiertes Projekt kann nicht mehr durch Drag und Drop verschoben, verkürzt, verlängert werden."/>
               <!--label="De-Freeze for moving"-->
-              <button id="PTfreezeB2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2GXBeauftragen" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
+              <button id="PTfreezeB2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTDeFreezeProject" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
               <menuSeparator id="separator4" />
               <!--label="Variante zum Standard machen"-->
               <button id="PT2G1M1B3" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
+              <menuSeparator id="separator5" />
+              <!--label="den Status eines Projektes ändern"-->
+              <button id="PT2G1M1B4" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
             </menu>
           </splitButton>
         </group>

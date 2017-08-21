@@ -1384,52 +1384,78 @@ Imports System.Windows
                 singleShp = awinSelection.Item(i)
                 hproj = ShowProjekte.getProject(singleShp.Name, True)
 
-                ' jetzt prüfen : die Variante kann nur dann zur Standard-Variante gemacht werden, 
-                ' wenn die Standard-Variante nicht geschützt ist ..
+                ' jetzt prüfen: macht nur Sinn, wenn es nicht bereits die Base-Variant ist ... 
+                If hproj.variantName = "" Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("The project " & hproj.name & " is already the base-variant")
 
-
-                If tryToprotectProjectforMe(hproj.name, "") Then
-                    ' ist erlaubt ...
-                    ' das Projekt zur Standard Variante machen 
-
-
-                    Dim oldvName As String = hproj.variantName
-                    Dim newvName As String = ""
-
-                    ' die aktuelle Variante aus der AlleProjekte rausnehmen 
-                    key = calcProjektKey(hproj)
-                    AlleProjekte.Remove(key)
-
-                    ' das bisherige Standard Projekt aus der AlleProjekte rausnehmen 
-                    key = calcProjektKey(hproj.name, "")
-                    AlleProjekte.Remove(key)
-
-                    'jetzt die aktuelle Variante zur Standard Variante machen 
-                    hproj.variantName = ""
-                    hproj.timeStamp = Date.Now
-                    If hproj.Status = ProjektStatus(0) Then
-                        hproj.Status = ProjektStatus(1)
+                    Else
+                        Call MsgBox("Projekt " & hproj.name & " ist bereits die Standard-Variante")
                     End If
-
-                    ' die "neue" Standard Variante in AlleProjekte aufnehmen 
-                    AlleProjekte.Add(hproj)
-
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
-
-                    ' jetzt müssen noch alle Projekt-Constellationen aktualisiert werden 
-                    Call projectConstellations.updateVariantName(hproj.name, oldvName, newvName)
-
                 Else
-                    If hproj.variantName = "" Then
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("The project " & hproj.name & " is already the base-variant")
+                    If tryToprotectProjectforMe(hproj.name, "") Then
+                        ' ist erlaubt ...
+                        ' das Projekt zur Standard Variante machen 
 
-                        Else
-                            Call MsgBox("Projekt " & hproj.name & " ist bereits die Standard-Variante")
-                        End If
+
+                        Dim oldvName As String = hproj.variantName
+                        Dim newvName As String = ""
+
+                        Try
+                            Dim oldStatus As String = getStatusOfBaseVariant(hproj.name, hproj.Status)
+                            ' Plausibilitätsprüfung, es dürfen keine abgebrochenen / abgeschlossenen Projekte überschrieben werden   
+
+                            If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And _
+                                oldStatus <> ProjektStatus(PTProjektStati.abgeschlossen) Then
+
+                                ' nur dann darf die Variante übernommen werden ... 
+                                If oldStatus = ProjektStatus(PTProjektStati.beauftragt) Then
+                                    hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
+                                Else
+                                    hproj.Status = oldStatus
+                                End If
+
+                                ' die aktuelle Variante aus der AlleProjekte rausnehmen 
+                                key = calcProjektKey(hproj)
+                                AlleProjekte.Remove(key)
+
+                                ' das bisherige Standard Projekt aus der AlleProjekte rausnehmen 
+                                key = calcProjektKey(hproj.name, "")
+                                AlleProjekte.Remove(key)
+
+                                'jetzt die aktuelle Variante zur Standard Variante machen 
+                                ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
+                                hproj.variantName = ""
+                                hproj.timeStamp = Date.Now
+
+                                ' die "neue" Standard Variante in AlleProjekte aufnehmen 
+                                AlleProjekte.Add(hproj)
+
+                                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                                Dim tmpCollection As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                                ' jetzt müssen noch alle Projekt-Constellationen aktualisiert werden 
+                                Call projectConstellations.updateVariantName(hproj.name, oldvName, newvName)
+
+
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("no changes allowed with finalized / stopped project!")
+
+                                Else
+                                    Call MsgBox("an einem abgeschlossenen / abgebrochenen Projekt sind keine Änderungen möglich!")
+                                End If
+                            End If
+
+
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+
                     Else
                         ' ist nicht erlaubt ... 
                         If awinSettings.englishLanguage Then
@@ -1441,8 +1467,10 @@ Imports System.Windows
                                         "und kann daher nicht von einer anderen Variante überschrieben werden")
                         End If
                     End If
-
                 End If
+
+                ' jetzt prüfen : die Variante kann nur dann zur Standard-Variante gemacht werden, 
+                ' wenn die Standard-Variante nicht geschützt ist ..
 
             Next i
 
@@ -2211,6 +2239,13 @@ Imports System.Windows
                     tmpLabel = "Fixierung zum Bewegen aufheben"
                 Else
                     tmpLabel = "De-Freeze for moving"
+                End If
+
+            Case "PT2G1M1B4" ' Status ändern
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt-Status ändern"
+                Else
+                    tmpLabel = "Change Project-Status"
                 End If
 
             Case "PTzurück" ' zurück zur Multiprojekt-Tafel
@@ -3622,150 +3657,150 @@ Imports System.Windows
 
 
     End Sub
+    ' tk 21.8.17 wird nicht mehr aufgerufen 
+    '' ''' <summary>
+    '' ''' earliest und latest Start eines Projektes ändern 
+    '' ''' </summary>
+    '' ''' <param name="control"></param>
+    '' ''' <remarks></remarks>
+    ''Sub Tom2G1EarliestLatestStart(control As IRibbonControl)
 
-    ''' <summary>
-    ''' earliest und latest Start eines Projektes ändern 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G1EarliestLatestStart(control As IRibbonControl)
+    ''    Dim setStartEnd As New frmEarliestLatestStart
 
-        Dim setStartEnd As New frmEarliestLatestStart
+    ''    Dim returnValue As DialogResult
+    ''    Dim awinSelection As Excel.ShapeRange
+    ''    Dim i As Integer
+    ''    Dim hproj As clsProjekt
+    ''    Dim singleShp As Excel.Shape
+    ''    Dim pname As String
+    ''    Dim todoListe As New Collection
+    ''    Dim errMessage As String = ""
+    ''    Dim initMsg As String = "bitte erst eine Variante anlegen"
 
-        Dim returnValue As DialogResult
-        Dim awinSelection As Excel.ShapeRange
-        Dim i As Integer
-        Dim hproj As clsProjekt
-        Dim singleShp As Excel.Shape
-        Dim pname As String
-        Dim todoListe As New Collection
-        Dim errMessage As String = ""
-        Dim initMsg As String = "bitte erst eine Variante anlegen"
+    ''    Call projektTafelInit()
 
-        Call projektTafelInit()
+    ''    ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
+    ''    enableOnUpdate = False
 
-        ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
-        enableOnUpdate = False
+    ''    ' Änderung 2.7.14 tk : Vorbedingung sicherstellen: nur Projekte, die noch nicht beauftragt sind, können noch verschoben und 
+    ''    ' werden
+    ''    '
+    ''    Try
+    ''        'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+    ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+    ''    Catch ex As Exception
+    ''        awinSelection = Nothing
+    ''    End Try
 
-        ' Änderung 2.7.14 tk : Vorbedingung sicherstellen: nur Projekte, die noch nicht beauftragt sind, können noch verschoben und 
-        ' werden
-        '
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+    ''    If Not awinSelection Is Nothing Then
 
-        If Not awinSelection Is Nothing Then
+    ''        ' Es muss mindestens 1 Projekt selektiert sein
+    ''        For i = 1 To awinSelection.Count
 
-            ' Es muss mindestens 1 Projekt selektiert sein
-            For i = 1 To awinSelection.Count
+    ''            singleShp = awinSelection.Item(i)
 
-                singleShp = awinSelection.Item(i)
+    ''            Try
+    ''                hproj = ShowProjekte.getProject(singleShp.Name, True)
+    ''                pname = hproj.name
+    ''            Catch ex As Exception
+    ''                Call MsgBox(" Fehler! Projekt " & singleShp.Name & " nicht im Hauptspeicher")
+    ''                enableOnUpdate = True
+    ''                Exit Sub
+    ''            End Try
 
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    pname = hproj.name
-                Catch ex As Exception
-                    Call MsgBox(" Fehler! Projekt " & singleShp.Name & " nicht im Hauptspeicher")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
+    ''            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+    ''                ' nur dann macht das Setzen von earliest / latest Sinn ...
 
-                If hproj.Status = ProjektStatus(0) Then
-                    ' nur dann macht das Setzen von earliest / latest Sinn ...
+    ''                todoListe.Add(hproj.name)
 
-                    todoListe.Add(hproj.name)
+    ''                If i = 1 Then
 
-                    If i = 1 Then
+    ''                    ' jetzt die Aktion durchführen ...
 
-                        ' jetzt die Aktion durchführen ...
+    ''                    With setStartEnd
 
-                        With setStartEnd
+    ''                        .EarliestStart.Value = hproj.earliestStart
+    ''                        .LatestStart.Value = hproj.latestStart
 
-                            .EarliestStart.Value = hproj.earliestStart
-                            .LatestStart.Value = hproj.latestStart
-
-                        End With
-
-
-                    Else
-
-                        With setStartEnd
-
-                            If .EarliestStart.Value <> hproj.earliestStart Or .LatestStart.Value <> hproj.latestStart Then
-
-                                .EarliestStart.Value = 0
-                                .LatestStart.Value = 0
-
-                            End If
-
-                        End With
+    ''                    End With
 
 
-                    End If
-                Else
-                    errMessage = errMessage & vbLf & hproj.name
-                End If
+    ''                Else
 
-            Next i
+    ''                    With setStartEnd
 
-            If todoListe.Count > 0 Then
+    ''                        If .EarliestStart.Value <> hproj.earliestStart Or .LatestStart.Value <> hproj.latestStart Then
 
-                returnValue = setStartEnd.ShowDialog
+    ''                            .EarliestStart.Value = 0
+    ''                            .LatestStart.Value = 0
 
-                If returnValue = DialogResult.OK Then
+    ''                        End If
 
-                    For i = 1 To todoListe.Count
-
-                        pname = CStr(todoListe.Item(i))
-
-                        ' jetzt die Aktion durchführen ...
-                        Try
-                            hproj = ShowProjekte.getProject(pname)
-                            With setStartEnd
-
-                                hproj.earliestStart = .EarliestStart.Value
-                                hproj.latestStart = .LatestStart.Value
-                                hproj.earliestStartDate = hproj.startDate.AddMonths(.EarliestStart.Value)
-                                hproj.latestStartDate = hproj.startDate.AddMonths(.LatestStart.Value)
-
-                            End With
-                        Catch ex As Exception
-                            Call MsgBox(" Fehler! Projekt " & pname & " earliest/latest kann nicht gesetzt werden")
-                            enableOnUpdate = True
-                            Exit Sub
-                        End Try
-
-                    Next i
-
-                    Call MsgBox("ok, frühester und spätester Start gesetzt")
-
-                ElseIf returnValue = DialogResult.Cancel Then
-                    'Call MsgBox("Default soll gelten")
-
-                End If
-
-            End If
-
-            If errMessage.Length > 0 Then
-                Call MsgBox(initMsg & vbLf & errMessage)
-            End If
-
-        Else
-
-            Call MsgBox("Es muss mindestens ein Projekt selektiert sein")
-
-        End If
-
-        Call awinDeSelect()
-
-        'appInstance.ScreenUpdating = True
-        enableOnUpdate = True
+    ''                    End With
 
 
-    End Sub
+    ''                End If
+    ''            Else
+    ''                errMessage = errMessage & vbLf & hproj.name
+    ''            End If
+
+    ''        Next i
+
+    ''        If todoListe.Count > 0 Then
+
+    ''            returnValue = setStartEnd.ShowDialog
+
+    ''            If returnValue = DialogResult.OK Then
+
+    ''                For i = 1 To todoListe.Count
+
+    ''                    pname = CStr(todoListe.Item(i))
+
+    ''                    ' jetzt die Aktion durchführen ...
+    ''                    Try
+    ''                        hproj = ShowProjekte.getProject(pname)
+    ''                        With setStartEnd
+
+    ''                            hproj.earliestStart = .EarliestStart.Value
+    ''                            hproj.latestStart = .LatestStart.Value
+    ''                            hproj.earliestStartDate = hproj.startDate.AddMonths(.EarliestStart.Value)
+    ''                            hproj.latestStartDate = hproj.startDate.AddMonths(.LatestStart.Value)
+
+    ''                        End With
+    ''                    Catch ex As Exception
+    ''                        Call MsgBox(" Fehler! Projekt " & pname & " earliest/latest kann nicht gesetzt werden")
+    ''                        enableOnUpdate = True
+    ''                        Exit Sub
+    ''                    End Try
+
+    ''                Next i
+
+    ''                Call MsgBox("ok, frühester und spätester Start gesetzt")
+
+    ''            ElseIf returnValue = DialogResult.Cancel Then
+    ''                'Call MsgBox("Default soll gelten")
+
+    ''            End If
+
+    ''        End If
+
+    ''        If errMessage.Length > 0 Then
+    ''            Call MsgBox(initMsg & vbLf & errMessage)
+    ''        End If
+
+    ''    Else
+
+    ''        Call MsgBox("Es muss mindestens ein Projekt selektiert sein")
+
+    ''    End If
+
+    ''    Call awinDeSelect()
+
+    ''    'appInstance.ScreenUpdating = True
+    ''    enableOnUpdate = True
+
+
+    ''End Sub
 
     Sub sortCurrentConstellation(control As IRibbonControl)
 
@@ -3883,49 +3918,14 @@ Imports System.Windows
 
     End Sub
 
-    ' am 21.3.17 rausgenommen 
     ''' <summary>
-    ''' Projekt ins Show zurückholen 
+    ''' Projekt fixieren, d.h. vor dem Verschieben schützen
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    ''Sub Tom2G1Show(control As IRibbonControl)
-
-    ''    Dim getBackToShow As New frmGetProjectbackFromNoshow
-
-    ''    Dim returnValue As DialogResult
-
-    ''    Call projektTafelInit()
-
-    ''    enableOnUpdate = False
-    ''    appInstance.ScreenUpdating = False
-
-    ''    If AlleProjekte.Count > 0 And ShowProjekte.Count <> AlleProjekte.Count Then
-
-    ''        returnValue = getBackToShow.ShowDialog
-    ''    Else
-    ''        If AlleProjekte.Count = 0 Then
-    ''            Call MsgBox("Es sind keine Projekte geladen!  ")
-    ''        Else
-    ''            Call MsgBox("Es gibt keine Projekte in der Warteschlange !")
-    ''        End If
-    ''    End If
-
-
-
-    ''    appInstance.ScreenUpdating = True
-    ''    enableOnUpdate = True
-    ''End Sub
-    ''' <summary>
-    ''' Änderungen akzeptieren 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G1Accept(control As IRibbonControl)
+    Sub PTFreezeProject(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-
-
         Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
@@ -3953,7 +3953,33 @@ Imports System.Windows
 
                 With singleShp
                     If isProjectType(shapeArt) Then
-                        Call awinBeauftragung(pname:=.Name, type:=0)
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+
+                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+
+                                    hproj.movable = False
+                                    Dim tmpCollection As New Collection
+                                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                                    "and cannot be modified. You could instead create a variant.")
+                                    Else
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                                    "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                    End If
+                                End If
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+                            
+                        End If
+
                     End If
                 End With
             Next
@@ -3968,13 +3994,105 @@ Imports System.Windows
     End Sub
 
 
-
     ''' <summary>
-    ''' Projekt beauftragen
+    ''' Projekt-Fixierung aufheben, d.h. es kann verschoben werden 
+    ''' darf aber nur für Status = geplant, beauftragt und noch nicht begonnen, alle Stati mit Variante ausser abgebrochen oder abgeschlossen
+    ''' gemacht werden 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub Tom2G1Beauftragen(control As IRibbonControl)
+    Sub PTDeFreezeProject(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+
+                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or _
+                                    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And _
+                                     Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
+
+                                    If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+
+                                        hproj.movable = True
+                                        Dim tmpCollection As New Collection
+                                        Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                                    Else
+                                        If awinSettings.englishLanguage Then
+                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                                        "and cannot be modified. You could instead create a variant.")
+                                        Else
+                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                                        "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                        End If
+                                    End If
+
+                                Else
+                                    ' nicht erlaubt 
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " must not be moved protected.")
+                                    Else
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " darf nicht verschoben / verkürzt / verlängert werden.")
+                                    End If
+                                End If
+
+                                
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+
+    ''' <summary>
+    ''' den Status eines Projekts ändern, aktuell nur auf Projekt-status = 1 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2ProjektStatusChange(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
@@ -4009,7 +4127,7 @@ Imports System.Windows
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
                             If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
-                                Call awinBeauftragung(pname:=hproj.name, type:=1)
+                                Call changeProjectStatus(pname:=hproj.name, type:=1)
 
                             Else
                                 If awinSettings.englishLanguage Then
@@ -4034,84 +4152,6 @@ Imports System.Windows
         appInstance.EnableEvents = formerEE
 
     End Sub
-
-    ''' <summary>
-    ''' Beauftragung zurücknehmen 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2GXBeauftragen(control As IRibbonControl)
-
-        Dim singleShp As Excel.Shape
-        Dim awinSelection As Excel.ShapeRange
-
-        Call projektTafelInit()
-
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
-
-        enableOnUpdate = False
-
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-
-        If Not awinSelection Is Nothing Then
-
-            ' jetzt die Aktion durchführen ...
-
-            For Each singleShp In awinSelection
-                Dim shapeArt As Integer
-                shapeArt = kindOfShape(singleShp)
-
-                With singleShp
-                    If isProjectType(shapeArt) Then
-
-                        If ShowProjekte.contains(.Name) Then
-                            Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
-
-                            ' darf nur gemacht werden, wenn Varianten-NAme <> ""
-                            If hproj.variantName <> "" Then
-                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
-                                    Call awinCancelBeauftragung(hproj.name)
-                                Else
-                                    If awinSettings.englishLanguage Then
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
-                                                    "and cannot be modified. You could instead create a variant.")
-                                    Else
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
-                                                    "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
-                                    End If
-                                End If
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    Call MsgBox("Base-Variant must not be de-freezed ..." & vbLf & _
-                                                "please create a variant first ...")
-                                Else
-                                    Call MsgBox("die Fixierung der Standard Variante kann nicht aufgehoben werden ..." & vbLf & _
-                                                "bitte erstellen Sie zu diesem Zweck eine Variante ...")
-                                End If
-                            End If
-
-                        End If
-
-                    End If
-                End With
-            Next
-
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-
-    End Sub
-
-
 
     ''' <summary>
     ''' Projekt löschen
@@ -4570,7 +4610,7 @@ Imports System.Windows
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -4766,7 +4806,7 @@ Imports System.Windows
 
 
                     appInstance.ScreenUpdating = True
-                    Call importProjekteEintragen(importDate, ProjektStatus(1))
+                    Call importProjekteEintragen(importDate, True)
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -4884,7 +4924,7 @@ Imports System.Windows
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -5035,7 +5075,7 @@ Imports System.Windows
 
 
             Try
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -5154,7 +5194,7 @@ Imports System.Windows
 
             Try
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
             Catch ex As Exception
 
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -5485,184 +5525,186 @@ Imports System.Windows
 
     End Sub
 
+    ' tk 21.8.2017 wird nicht mehr verwendet 
     ''' <summary>
     ''' erstellt die Summary Zuordnungs-Datei 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub Tom2G4M2B1ZuordnungRP(control As IRibbonControl)
+    'Sub Tom2G4M2B1ZuordnungRP(control As IRibbonControl)
 
 
-        Dim fileName As String
-        Dim zeile As Integer = 2
-        Dim ok As Boolean
+    '    Dim fileName As String
+    '    Dim zeile As Integer = 2
+    '    Dim ok As Boolean
 
-        Call projektTafelInit()
+    '    Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-
-        fileName = "Vorlage Zuordnung.xlsx"
-
-        ' öffnen der Excel Datei 
-        Try
-            appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & fileName)
-        Catch ex As Exception
-            Call MsgBox("File " & fileName & " nicht gefunden ... Abbruch")
-            appInstance.EnableEvents = True
-            appInstance.ScreenUpdating = True
-            enableOnUpdate = True
-            Exit Sub
-        End Try
+    '    appInstance.EnableEvents = False
+    '    appInstance.ScreenUpdating = False
+    '    enableOnUpdate = False
 
 
+    '    fileName = "Vorlage Zuordnung.xlsx"
+
+    '    ' öffnen der Excel Datei 
+    '    Try
+    '        appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & fileName)
+    '    Catch ex As Exception
+    '        Call MsgBox("File " & fileName & " nicht gefunden ... Abbruch")
+    '        appInstance.EnableEvents = True
+    '        appInstance.ScreenUpdating = True
+    '        enableOnUpdate = True
+    '        Exit Sub
+    '    End Try
 
 
-        Call awinExportRessZuordnung(0, " ")
 
 
-        Try
-
-            appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\Summary.xlsx", _
-                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-            ok = True
-            appInstance.ActiveWorkbook.Close()
-
-        Catch ex As Exception
-            ok = False
-            appInstance.ActiveWorkbook.Close()
-        End Try
+    '    Call awinExportRessZuordnung(0, " ")
 
 
-        If ok Then
-            Call MsgBox("ok, Datei erstellt ...")
-        Else
-            Call MsgBox("Fehler bei Save as ..\summary.xlsx")
-        End If
+    '    Try
+
+    '        appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\Summary.xlsx", _
+    '                                  ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+    '        ok = True
+    '        appInstance.ActiveWorkbook.Close()
+
+    '    Catch ex As Exception
+    '        ok = False
+    '        appInstance.ActiveWorkbook.Close()
+    '    End Try
 
 
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
-        enableOnUpdate = True
+    '    If ok Then
+    '        Call MsgBox("ok, Datei erstellt ...")
+    '    Else
+    '        Call MsgBox("Fehler bei Save as ..\summary.xlsx")
+    '    End If
 
 
-    End Sub
+    '    appInstance.EnableEvents = True
+    '    appInstance.ScreenUpdating = True
+    '    enableOnUpdate = True
 
+
+    'End Sub
+
+    ' tk 21.8.17 wird nicht mehr verwendet 
     ''' <summary>
     ''' erstellt die Zuordnungs-Datei Ressourcen -> Projekt
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub Tom2G4M2B2ZuordnungRP(control As IRibbonControl)
+    'Sub Tom2G4M2B2ZuordnungRP(control As IRibbonControl)
 
-        Dim initialeVorlageName As String, kapaFileName As String
-        Dim zeile As Integer = 2
-        Dim anzRollen As Integer
-        Dim i As Integer
-        Dim initMessage As String = "bitte die Kapazitäten eintragen zu folgenden Rollen" & vbLf
-        Dim infoMessage As String = initMessage
-        Dim zuordnungsOrdner As String = projektRessOrdner & "\" & "Projekt Zuordnungen"
+    '    Dim initialeVorlageName As String, kapaFileName As String
+    '    Dim zeile As Integer = 2
+    '    Dim anzRollen As Integer
+    '    Dim i As Integer
+    '    Dim initMessage As String = "bitte die Kapazitäten eintragen zu folgenden Rollen" & vbLf
+    '    Dim infoMessage As String = initMessage
+    '    Dim zuordnungsOrdner As String = projektRessOrdner & "\" & "Projekt Zuordnungen"
 
-        Call projektTafelInit()
+    '    Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-
-
-        ' für jede Ressource eine eigene Datei machen
-        anzRollen = RoleDefinitions.Count
-
-        Dim ok As Boolean = True
-        Dim roleName As String
-
-        For i = 1 To anzRollen
-
-            roleName = RoleDefinitions.getRoledef(i).name.Trim
-            kapaFileName = roleName & " Kapazität.xlsx"
-
-            ' öffnen der Excel Datei 
-            Try
-
-                appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & kapaFileName)
-                ok = True
-
-            Catch ex As Exception
-
-                initialeVorlageName = "template Kapazität.xlsx"
-                ok = False
-
-                Try
-                    appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & initialeVorlageName)
-                    Try
-                        appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\" & kapaFileName, _
-                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-
-                        infoMessage = infoMessage & kapaFileName & vbLf
-                    Catch ex2 As Exception
-
-                    End Try
+    '    appInstance.EnableEvents = False
+    '    appInstance.ScreenUpdating = False
+    '    enableOnUpdate = False
 
 
 
-                Catch ex1 As Exception
-                    Call MsgBox("File " & initialeVorlageName & " nicht gefunden ... Abbruch" & vbLf & vbLf & _
-                                "dieses File muss im Ordner " & awinPath & projektRessOrdner & "abgelegt werden")
-                    appInstance.EnableEvents = True
-                    appInstance.ScreenUpdating = True
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
+    '    ' für jede Ressource eine eigene Datei machen
+    '    anzRollen = RoleDefinitions.Count
 
-            End Try
+    '    Dim ok As Boolean = True
+    '    Dim roleName As String
 
+    '    For i = 1 To anzRollen
 
-            If ok Then
+    '        roleName = RoleDefinitions.getRoledef(i).name.Trim
+    '        kapaFileName = roleName & " Kapazität.xlsx"
 
-                Dim curFilename As String = roleName & " Projekt-Zuordnung" & " " & Date.Now.ToString("MMM yy") & ".xlsx"
+    '        ' öffnen der Excel Datei 
+    '        Try
 
+    '            appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & kapaFileName)
+    '            ok = True
 
-                Try
-                    Call awinExportRessZuordnung(1, roleName)
-                    'appInstance.ActiveWorkbook.Save()
+    '        Catch ex As Exception
 
-                    appInstance.ActiveWorkbook.SaveAs(Filename:=awinPath & zuordnungsOrdner & "\" & curFilename, _
-                                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+    '            initialeVorlageName = "template Kapazität.xlsx"
+    '            ok = False
 
+    '            Try
+    '                appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & initialeVorlageName)
+    '                Try
+    '                    appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\" & kapaFileName, _
+    '                                  ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
 
-                Catch ex As Exception
+    '                    infoMessage = infoMessage & kapaFileName & vbLf
+    '                Catch ex2 As Exception
 
-                    Call MsgBox("Fehler bei Zuordnung " & roleName)
-                End Try
-
-            End If
-
-
-            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+    '                End Try
 
 
 
-        Next
+    '            Catch ex1 As Exception
+    '                Call MsgBox("File " & initialeVorlageName & " nicht gefunden ... Abbruch" & vbLf & vbLf & _
+    '                            "dieses File muss im Ordner " & awinPath & projektRessOrdner & "abgelegt werden")
+    '                appInstance.EnableEvents = True
+    '                appInstance.ScreenUpdating = True
+    '                enableOnUpdate = True
+    '                Exit Sub
+    '            End Try
 
-        If infoMessage.Length > initMessage.Length Then
-            ' in diesem Fall wurden  nur die Kapazität-Zuordnungs-Files erstellt 
-            infoMessage = infoMessage & vbLf & vbLf & "es wurden noch keine Zuordnungs-Dateien erstellt!"
-            Call MsgBox(infoMessage)
-        Else
-            Call MsgBox("ok, Dateien erstellt ...")
-        End If
-
-
-
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
-        enableOnUpdate = True
+    '        End Try
 
 
-    End Sub
+    '        If ok Then
+
+    '            Dim curFilename As String = roleName & " Projekt-Zuordnung" & " " & Date.Now.ToString("MMM yy") & ".xlsx"
+
+
+    '            Try
+    '                Call awinExportRessZuordnung(1, roleName)
+    '                'appInstance.ActiveWorkbook.Save()
+
+    '                appInstance.ActiveWorkbook.SaveAs(Filename:=awinPath & zuordnungsOrdner & "\" & curFilename, _
+    '                                                  ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+
+    '            Catch ex As Exception
+
+    '                Call MsgBox("Fehler bei Zuordnung " & roleName)
+    '            End Try
+
+    '        End If
+
+
+    '        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+
+
+    '    Next
+
+    '    If infoMessage.Length > initMessage.Length Then
+    '        ' in diesem Fall wurden  nur die Kapazität-Zuordnungs-Files erstellt 
+    '        infoMessage = infoMessage & vbLf & vbLf & "es wurden noch keine Zuordnungs-Dateien erstellt!"
+    '        Call MsgBox(infoMessage)
+    '    Else
+    '        Call MsgBox("ok, Dateien erstellt ...")
+    '    End If
+
+
+
+    '    appInstance.EnableEvents = True
+    '    appInstance.ScreenUpdating = True
+    '    enableOnUpdate = True
+
+
+    'End Sub
 
     Sub PTDemoModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
