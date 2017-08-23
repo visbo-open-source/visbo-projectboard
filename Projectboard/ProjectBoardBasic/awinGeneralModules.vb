@@ -3497,205 +3497,214 @@ Public Module awinGeneralModules
 
                             Dim ass As MSProject.Assignment
 
-                            For Each ass In msTask.Assignments
+                            If msproj.CurrencyCode = "EUR" And msTask.Assignments.Count > 0 Then
 
 
-                                Dim msRess As MSProject.Resource = ass.Resource
+                                For Each ass In msTask.Assignments
 
-                                Select Case ass.Resource.Type
-                                    Case MSProject.PjResourceTypes.pjResourceTypeMaterial To _
-                                       MSProject.PjResourceTypes.pjResourceTypeCost
-                                        Try
 
-                                            Dim k As Integer = 0
+                                    Dim msRess As MSProject.Resource = ass.Resource
 
-                                            If CostDefinitions.containsName(ass.ResourceName) Then
-                                                k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
-                                            Else
-                                                ' Kostenart existiert noch nicht
-                                                ' wird hier neu aufgenommen
-                                                Dim newCostDef As New clsKostenartDefinition
-                                                newCostDef.name = ass.ResourceName
-                                                newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
-                                                newCostDef.UID = CostDefinitions.Count + 1
-                                                If Not missingCostDefinitions.containsName(newCostDef.name) Then
-                                                    missingCostDefinitions.Add(newCostDef)
+                                    Select Case ass.Resource.Type
+                                        Case MSProject.PjResourceTypes.pjResourceTypeMaterial To _
+                                           MSProject.PjResourceTypes.pjResourceTypeCost
+                                            Try
+
+                                                Dim k As Integer = 0
+
+                                                If CostDefinitions.containsName(ass.ResourceName) Then
+                                                    k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                Else
+                                                    ' Kostenart existiert noch nicht
+                                                    ' wird hier neu aufgenommen
+                                                    Dim newCostDef As New clsKostenartDefinition
+                                                    newCostDef.name = ass.ResourceName
+                                                    newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
+                                                    newCostDef.UID = CostDefinitions.Count + 1
+                                                    If Not missingCostDefinitions.containsName(newCostDef.name) Then
+                                                        missingCostDefinitions.Add(newCostDef)
+                                                    End If
+
+                                                    CostDefinitions.Add(newCostDef)
+
+                                                    ' Änderung tk: muss auf costdefinitions gesetzt werden 
+                                                    ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                    k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
                                                 End If
 
-                                                CostDefinitions.Add(newCostDef)
+                                                Dim work As Double = CType(ass.Work, Double)
+                                                Dim cost As Double = CType(ass.Cost, Double)
 
-                                                ' Änderung tk: muss auf costdefinitions gesetzt werden 
-                                                ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
-                                                k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
-                                            End If
+                                                Dim startdate As Date = CDate(msTask.Start)
+                                                Dim endedate As Date = CDate(msTask.Finish)
 
-                                            Dim work As Double = CType(ass.Work, Double)
-                                            Dim cost As Double = CType(ass.Cost, Double)
+                                                Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                                Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                                Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
 
-                                            Dim startdate As Date = CDate(msTask.Start)
-                                            Dim endedate As Date = CDate(msTask.Finish)
-
-                                            Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                            Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                            Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
-
-                                            If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                anzdays = 1
-                                                anzmonth = 1
-                                            End If
-                                            If anzdays > 0 And anzmonth = 0 Then
-                                                anzmonth = 1
-                                            End If
-
-
-                                            ReDim Xwerte(anzmonth - 1)
-
-                                            Dim m As Integer
-                                            For m = 1 To anzmonth
-
-                                                Try
-                                                    Xwerte(m - 1) = CType(cost / anzmonth, Double)
-                                                Catch ex As Exception
-                                                    Xwerte(m - 1) = 0.0
-                                                End Try
-
-                                            Next m
-
-                                            ccost = New clsKostenart(anzmonth - 1)
-
-                                            With ccost
-                                                .KostenTyp = k
-                                                .Xwerte = Xwerte
-                                            End With
-
-
-                                            With cphase
-                                                .AddCost(ccost)
-                                            End With
-                                        Catch ex As Exception
-                                            '
-                                            ' handelt es sich um die Kostenart Definition?
-                                            '
-                                        End Try
-                                        'Call MsgBox("Kosten = " & ass.ResourceName)
-
-                                    Case MSProject.PjResourceTypes.pjResourceTypeWork
-
-                                        Try
-                                            Dim r As Integer = 0
-
-
-                                            If RoleDefinitions.containsName(ass.ResourceName) Then
-                                                r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                            Else
-                                                ' Rolle existiert noch nicht
-                                                ' wird hier neu aufgenommen
-
-                                                Dim newRoleDef As New clsRollenDefinition
-                                                newRoleDef.name = ass.ResourceName
-                                                newRoleDef.farbe = RGB(120, 120, 120)
-                                                newRoleDef.defaultKapa = 200000
-
-                                                ' OvertimeRate in Tagessatz umrechnen
-                                                Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
-                                                hoverstr = Split(hoverstr(0), "€", -1)
-                                                newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
-
-                                                ' StandardRate in Tagessatz umrechnen
-                                                Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
-                                                hstdstr = Split(hstdstr(0), "€", -1)
-                                                newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
-
-                                                newRoleDef.UID = RoleDefinitions.Count + 1
-                                                If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
-                                                    missingRoleDefinitions.Add(newRoleDef)
+                                                If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                    anzdays = 1
+                                                    anzmonth = 1
+                                                End If
+                                                If anzdays > 0 And anzmonth = 0 Then
+                                                    anzmonth = 1
                                                 End If
 
-                                                RoleDefinitions.Add(newRoleDef)
 
-                                                ' Änderung tk: das muss von roledefinitions geholt werden ...
-                                                ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                                r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                            End If
+                                                ReDim Xwerte(anzmonth - 1)
 
+                                                Dim m As Integer
+                                                For m = 1 To anzmonth
 
+                                                    Try
+                                                        Xwerte(m - 1) = CType(cost / anzmonth, Double)
+                                                    Catch ex As Exception
+                                                        Xwerte(m - 1) = 0.0
+                                                    End Try
 
-                                            Dim work As Double = CType(ass.Work, Double)
-                                            'Dim duration As Double = CType(ass.Duration, Double)
-                                            Dim unit As Double = CType(ass.Units, Double)
+                                                Next m
 
+                                                ccost = New clsKostenart(anzmonth - 1)
 
-                                            Dim startdate As Date = CDate(msTask.Start)
-                                            Dim endedate As Date = CDate(msTask.Finish)
-
-                                            ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
-                                            ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
-                                            ' die Berechnung Datediff ergibt aber nur 1 Monat '
-                                            'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                            'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                            'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
-
-                                            'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                            '    anzdays = 1
-                                            '    anzmonth = 1
-                                            'End If
-                                            'If anzdays > 0 And anzmonth = 0 Then
-                                            '    anzmonth = 1
-                                            'End If
+                                                With ccost
+                                                    .KostenTyp = k
+                                                    .Xwerte = Xwerte
+                                                End With
 
 
-                                            'ReDim Xwerte(anzmonth - 1)
-                                            ' Ende Auskommentierung tk  
+                                                With cphase
+                                                    .AddCost(ccost)
+                                                End With
+                                            Catch ex As Exception
+                                                '
+                                                ' handelt es sich um die Kostenart Definition?
+                                                '
+                                            End Try
+                                            'Call MsgBox("Kosten = " & ass.ResourceName)
 
-                                            ' tk Anpassung ...
-                                            Dim oldWerte(0) As Double
-                                            Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
-                                            oldWerte(0) = work
-                                            ReDim Xwerte(anzmonth - 1)
-                                            Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+                                        Case MSProject.PjResourceTypes.pjResourceTypeWork
 
-
-                                            For m As Integer = 1 To anzmonth
-                                                Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
-                                            Next
-
-                                            ' Ende tk Anpassung
+                                            Try
+                                                Dim r As Integer = 0
 
 
-                                            ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
-                                            'For m As Integer = 1 To anzmonth
+                                                If RoleDefinitions.containsName(ass.ResourceName) Then
+                                                    r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                Else
+                                                    ' Rolle existiert noch nicht
+                                                    ' wird hier neu aufgenommen
 
-                                            '    Try
-                                            '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
-                                            '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
+                                                    Dim newRoleDef As New clsRollenDefinition
+                                                    newRoleDef.name = ass.ResourceName
+                                                    newRoleDef.farbe = RGB(120, 120, 120)
+                                                    newRoleDef.defaultKapa = 200000
 
-                                            '    Catch ex As Exception
-                                            '        Xwerte(m - 1) = 0.0
-                                            '    End Try
+                                                    ' OvertimeRate in Tagessatz umrechnen
+                                                    Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
+                                                    hoverstr = Split(hoverstr(0), "€", -1)
+                                                    newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
 
-                                            'Next m
+                                                    ' StandardRate in Tagessatz umrechnen
+                                                    Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
+                                                    hstdstr = Split(hstdstr(0), "€", -1)
+                                                    newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
 
-                                            ' Check , um Unterschiede in der Summe herausfinden zu können
-                                            ' die waren immer 0 ... 
-                                            'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
+                                                    newRoleDef.UID = RoleDefinitions.Count + 1
+                                                    If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
+                                                        missingRoleDefinitions.Add(newRoleDef)
+                                                    End If
 
-                                            crole = New clsRolle(anzmonth - 1)
-                                            With crole
-                                                .RollenTyp = r
-                                                .Xwerte = Xwerte
-                                            End With
+                                                    RoleDefinitions.Add(newRoleDef)
 
-                                            With cphase
-                                                .addRole(crole)
-                                            End With
-                                        Catch ex As Exception
 
-                                        End Try
+                                                    ' Änderung tk: das muss von roledefinitions geholt werden ...
+                                                    ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                    r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
 
-                                        'Call MsgBox("Work = " & ass.ResourceName & " mit " & CStr(ass.Work) & "Arbeit")
-                                End Select
-                            Next ass
+                                                End If
 
+
+
+                                                Dim work As Double = CType(ass.Work, Double)
+                                                'Dim duration As Double = CType(ass.Duration, Double)
+                                                Dim unit As Double = CType(ass.Units, Double)
+
+
+                                                Dim startdate As Date = CDate(msTask.Start)
+                                                Dim endedate As Date = CDate(msTask.Finish)
+
+                                                ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
+                                                ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
+                                                ' die Berechnung Datediff ergibt aber nur 1 Monat '
+                                                'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                                'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                                'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+
+                                                'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                '    anzdays = 1
+                                                '    anzmonth = 1
+                                                'End If
+                                                'If anzdays > 0 And anzmonth = 0 Then
+                                                '    anzmonth = 1
+                                                'End If
+
+
+                                                'ReDim Xwerte(anzmonth - 1)
+                                                ' Ende Auskommentierung tk  
+
+                                                ' tk Anpassung ...
+                                                Dim oldWerte(0) As Double
+                                                Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+                                                oldWerte(0) = work
+                                                ReDim Xwerte(anzmonth - 1)
+                                                Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+
+
+                                                For m As Integer = 1 To anzmonth
+                                                    Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
+                                                Next
+
+                                                ' Ende tk Anpassung
+
+
+                                                ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
+                                                'For m As Integer = 1 To anzmonth
+
+                                                '    Try
+                                                '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
+                                                '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
+
+                                                '    Catch ex As Exception
+                                                '        Xwerte(m - 1) = 0.0
+                                                '    End Try
+
+                                                'Next m
+
+                                                ' Check , um Unterschiede in der Summe herausfinden zu können
+                                                ' die waren immer 0 ... 
+                                                'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
+
+                                                crole = New clsRolle(anzmonth - 1)
+                                                With crole
+                                                    .RollenTyp = r
+                                                    .Xwerte = Xwerte
+                                                End With
+
+                                                With cphase
+
+
+                                                    .addRole(crole)
+                                                End With
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                            'Call MsgBox("Work = " & ass.ResourceName & " mit " & CStr(ass.Work) & "Arbeit")
+                                    End Select
+                                Next ass
+
+                          
+                            End If
 
                             ' Hierarchie-Aufbau
                             Dim cphaseParent As Object = msTask.Parent
@@ -3953,6 +3962,10 @@ Public Module awinGeneralModules
                     'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
                 End If
 
+                ' Fehlermeldung: Falsche Währung vordefiniert.
+                If msproj.CurrencyCode <> "EUR" Then
+                    Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                End If
 
                 If modus <> "BHTC" Then
 
@@ -5423,7 +5436,7 @@ Public Module awinGeneralModules
                                 hproj = erstelleInventurProjekt(pName, vorlageName, variantName, _
                                                              start, ende, budget, zeile, sfit, risk, _
                                                              capacityNeeded, externCostInput, businessUnit, description, custFields, _
-                                                             responsiblePerson)
+                                                             responsiblePerson, 0.0)
 
 
                                 If Not IsNothing(hproj) Then
@@ -6019,7 +6032,7 @@ Public Module awinGeneralModules
                                 Dim capacityNeeded As String = ""
                                 hproj = erstelleInventurProjekt(pName, vorlagenName, scenarioName, _
                                                              start, ende, budget, zeile, sfit, risk, _
-                                                             capacityNeeded, Nothing, businessUnit, description)
+                                                             capacityNeeded, Nothing, businessUnit, description, Nothing, "", 0.0)
 
                                 If Not IsNothing(hproj) Then
                                     projectStartDate = start

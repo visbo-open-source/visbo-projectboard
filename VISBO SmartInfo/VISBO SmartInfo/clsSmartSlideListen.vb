@@ -27,7 +27,7 @@ Public Class clsSmartSlideListen
     Private _aCList As SortedList(Of Integer, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Lieferumfänge; ein Lieferumfang kann ggf in mehreren Elementen vorkommen 
     Private _LUList As SortedList(Of String, SortedList(Of Integer, Boolean))
-    ' enthält die Liste der Elemente, die manuell verschoben wurden ... 
+    ' enthält die Liste der Elemente, die manuell verschoben wurden, für die also ein Change Request erstellt wurde .. 
     Private _mVList As SortedList(Of Integer, Boolean)
     ' enthält die Liste an Projekt-Historien 
     Private _projectTimeStamps As SortedList(Of String, clsProjektHistorie)
@@ -39,13 +39,13 @@ Public Class clsSmartSlideListen
     ' enthält die Liste der Kosten -> ShapeID, Summe; erfordert Datenbank Access
     Private _costList As SortedList(Of String, SortedList(Of Integer, Boolean))
 
-
     Private _creationDate As Date
 
     Private _slideDBUrl As String
     Private _slideDBName As String
 
 
+    
     ''' <summary>
     ''' entfernt die Moved Information aus 
     ''' </summary>

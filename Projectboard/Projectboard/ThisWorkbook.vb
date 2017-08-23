@@ -500,4 +500,8 @@ Public Class ThisWorkbook
             End If
         End If
     End Sub
+
+    Private Sub ThisWorkbook_SheetDeactivate(Sh As Object) Handles Me.SheetDeactivate
+        Dim a As Integer = -1
+    End Sub
 End Class
