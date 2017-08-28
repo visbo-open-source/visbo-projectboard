@@ -4311,6 +4311,7 @@ Public Class frmHierarchySelection
         With parentNode
             newNode = .Nodes.Add(currentRole.name)
             newNode.Name = roleUid.ToString
+            newNode.Text = currentRole.name
         End With
 
         For i = 0 To childIds.Count - 1
