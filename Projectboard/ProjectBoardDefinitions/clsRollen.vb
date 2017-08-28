@@ -8,8 +8,7 @@ Public Class clsRollen
 
 
     Private _allRollen As SortedList(Of Integer, clsRollenDefinition)
-    Public hierarchy As clsroleHrchy
-
+    Private _topLevelNodeIDs As List(Of Integer)
 
     Public Sub Add(roledef As clsRollenDefinition)
 
@@ -20,9 +19,36 @@ Public Class clsRollen
             Throw New ArgumentException(roledef.UID.ToString & " existiert bereits")
         End If
 
-
-
     End Sub
+
+    ''' <summary>
+    ''' gibt den Standard TopNode Name zurück, das ist der erste vorkommende Top Node 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getDefaultTopNodeName() As String
+        Get
+            Dim tmpName As String = ""
+            If Not IsNothing(_topLevelNodeIDs) Then
+                If _topLevelNodeIDs.Count > 0 Then
+                    tmpName = _allRollen.Item(_topLevelNodeIDs.First).name
+                End If
+            End If
+            getDefaultTopNodeName = tmpName
+        End Get
+    End Property
+    ''' <summary>
+    ''' gibt die Toplevel NodeIds zurück ...
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTopLevelNodeIDs() As List(Of Integer)
+        Get
+            getTopLevelNodeIDs = _topLevelNodeIDs
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die eindeutige Liste an SammelRollen bzw. EinzelRollen wieder, die keiner Sammelrolle angehören 
@@ -139,35 +165,40 @@ Public Class clsRollen
     ''' gibt zu der angegebenen Rolle die "Sammel-Rolle" zurück, die die Rolle als direkte Sub-Role enthält 
     ''' leerer String, wenn keine Sammel-Rolle existiert, die die angegebene Rolle enthält  
     ''' </summary>
-    ''' <param name="roleName"></param>
+    ''' <param name="roleUID"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getParentRoleOf(ByVal roleName As String) As String
+    Public ReadOnly Property getParentRoleOf(ByVal roleUID As Integer) As clsRollenDefinition
         Get
 
             Dim sammelRollen As Collection = Me.getSummaryRoles
-            Dim myOwnID As Integer = Me.getRoledef(roleName).UID
             Dim found As Boolean = False
             Dim i As Integer = 1
-            Dim parentName As String = ""
+            Dim parentRole As clsRollenDefinition = Nothing
 
-            If Me.containsName(roleName) Then
+            If _allRollen.ContainsKey(roleUID) Then
                 While Not found And i <= sammelRollen.Count
-                    Dim tmpName As String = CStr(sammelRollen.Item(i))
-                    Dim subRoleIDs As SortedList(Of Integer, String) = Me.getRoledef(tmpName).getSubRoleIDs
-                    If subRoleIDs.ContainsKey(myOwnID) Then
-                        found = True
-                        parentName = tmpName
+
+                    Dim tmpRole As clsRollenDefinition = Me.getRoledef(CStr(sammelRollen.Item(i)))
+                    If Not IsNothing(tmpRole) Then
+                        Dim subRoleIDs As SortedList(Of Integer, String) = tmpRole.getSubRoleIDs
+                        If subRoleIDs.ContainsKey(roleUID) Then
+                            found = True
+                            parentRole = tmpRole
+                        Else
+                            i = i + 1
+                        End If
                     Else
                         i = i + 1
                     End If
+
                 End While
             Else
                 ' nichts tun ... 
             End If
 
-            getParentRoleOf = parentName
+            getParentRoleOf = parentRole
 
         End Get
     End Property
@@ -379,7 +410,7 @@ Public Class clsRollen
                     End If
                 Loop
             End If
-            
+
             containsName = found
         End Get
     End Property
@@ -454,88 +485,60 @@ Public Class clsRollen
 
     End Property
 
+    ''' <summary>
+    ''' gibt die Rolle mit der entsprechenden ID zurück ...
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleDefByID(ByVal uid As Integer) As clsRollenDefinition
+        Get
+            If _allRollen.ContainsKey(uid) Then
+                getRoleDefByID = _allRollen.Item(uid)
+            Else
+                getRoleDefByID = Nothing
+            End If
+        End Get
+    End Property
+
     Public Sub New()
 
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
-        hierarchy = New clsroleHrchy
+        _topLevelNodeIDs = New List(Of Integer)
+
     End Sub
 
     ''' <summary>
-    ''' baut die Hierarchie aller Rollen auf
+    ''' baut die Hierarchie der Rollen auf; dabei muss hier nur der bzw. die Top Nodes aufgenommen werden 
+    ''' in den clsRoleNode Elementen sind bereits die Kinder verzeichnet 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub buildRoleHierary()
+    Public Sub buildTopNodes()
         ' TopKnoten aufbauen
         Dim i As Integer = 1
         Dim hNode As New clsroleNode
-        Dim topRoleDef As clsRollenDefinition
-        Dim hroleDef As clsRollenDefinition
+        Dim currentRole As clsRollenDefinition
         Dim hparent As New clsRollenDefinition
 
         'For i = 1 To _allRollen.Count
 
-        While (i <= _allRollen.Count) And _
-              (hierarchy.count < _allRollen.Count)
+        While (i <= _allRollen.Count)
 
             ' Level 0 Knoten
-            hroleDef = _allRollen.Item(i)
-            Dim parentName As String = getParentRoleOf(hroleDef.name)
-            While parentName.Length > 0
-                hparent = getRoledef(parentName)
-                If Not IsNothing(hparent) Then
-                    parentName = getParentRoleOf(hparent.name)
-                End If
-            End While
+            currentRole = _allRollen.ElementAt(i - 1).Value
+            Dim parentRole As clsRollenDefinition = Me.getParentRoleOf(currentRole.UID)
 
-            ' toplevel gefunden
-            topRoleDef = getRoledef(hparent.name)
-            hNode.roleId = topRoleDef.UID
-            hNode.level = 0
-            hNode.roleParent = 0
-            ' childs aufbauen
-            For Each kvp As KeyValuePair(Of Integer, String) In topRoleDef.getSubRoleIDs
-                If Not hNode.childs.Contains(kvp.Key) Then
-                    hNode.childs.Add(kvp.Key)
-                End If
-            Next
-            hierarchy.add(hNode)
-
-            ' Level x Knoten dazu aufbauen
-            Call buildSubRoleHrchy(hNode)
+            If IsNothing(parentRole) Then
+                ' aufnehmen als Top Level Node ...
+                Me._topLevelNodeIDs.Add(currentRole.UID)
+            End If
 
             i = i + 1
 
-            'If _allRollen.Count = hierarchy.count Then
-            '    Exit For
-            'End If
         End While
 
     End Sub
 
-    Public Sub buildSubRoleHrchy(ByVal node As clsroleNode)
-
-        Dim roledef As clsRollenDefinition
-        'Dim childdef As clsRollenDefinition
-        'Dim childNode As clsroleNode
-        Dim id As Integer
-
-        For Each id In node.childs
-            Dim hNode As New clsroleNode
-            hNode.level = node.level + 1
-            hNode.roleId = id
-            hNode.roleParent = node.roleId
-            roledef = getRoledef(hNode.roleId)
-            For Each kvp As KeyValuePair(Of Integer, String) In roledef.getSubRoleIDs
-                If Not hNode.childs.Contains(kvp.Key) Then
-                    hNode.childs.Add(kvp.Key)
-                End If
-            Next
-            hierarchy.add(hNode)
-
-            ' Level x Knoten dazu aufbauen
-            Call buildSubRoleHrchy(hNode)
-        Next
-  
-    End Sub
 
 End Class

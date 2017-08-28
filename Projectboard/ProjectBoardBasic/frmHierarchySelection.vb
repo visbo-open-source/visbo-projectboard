@@ -653,7 +653,7 @@ Public Class frmHierarchySelection
                 'Me.rdbCosts.Checked = False
                 '' Rollen oder Kosten hierarchisch darstellen
 
-                Dim topNodes As List(Of Integer) = RoleDefinitions.hierarchy.toplevelNodes
+                Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
             Case PTmenue.visualisieren
 
@@ -1557,7 +1557,7 @@ Public Class frmHierarchySelection
         Dim curHry As clsHierarchy
         Dim vorlElem As String = ""
 
-        Dim child As clsRollenDefinition
+        Dim childRole As clsRollenDefinition
 
         node = e.Node
         elemID = node.Name
@@ -1575,18 +1575,23 @@ Public Class frmHierarchySelection
                     ' Löschen von Platzhalter
                     node.Nodes.Clear()
 
-                    Dim nodelist As List(Of Integer) = RoleDefinitions.hierarchy.nodeItem(CInt(node.Name)).childs
+                    Dim nodelist As New SortedList(Of Integer, String)
+                    Try
+                        nodelist = RoleDefinitions.getRoleDefByID(CInt(node.Name)).getSubRoleIDs
+                        anzChilds = nodelist.Count
+                    Catch ex As Exception
+                        anzChilds = 0
+                    End Try
 
 
-                    anzChilds = nodelist.Count
 
                     With hryTreeView
                         .CheckBoxes = True
 
                         For i As Integer = 0 To anzChilds - 1
-                            child = RoleDefinitions.getRoledef(nodelist(i))
-                            Dim childName As String = child.name
-                            Dim childID As Integer = child.UID
+                            childRole = RoleDefinitions.getRoleDefByID(nodelist.ElementAt(i).Key)
+                            Dim childName As String = childRole.name
+                            Dim childID As Integer = childRole.UID
 
                             If allRoles.Contains(childName) Then
 
@@ -1599,8 +1604,14 @@ Public Class frmHierarchySelection
                                     childNode.Checked = True
                                 End If
 
+                                Dim anzSubRolesOFChild As Integer
+                                Try
+                                    anzSubRolesOFChild = RoleDefinitions.getRoleDefByID(childID).getSubRoleIDs.Count
+                                Catch ex As Exception
+                                    anzSubRolesOFChild = 0
+                                End Try
 
-                                If RoleDefinitions.hierarchy.nodeItem(childID).childs.Count > 0 Then
+                                If anzSubRolesOFChild > 0 Then
                                     childNode.Tag = "P"
 
 
@@ -4240,8 +4251,7 @@ Public Class frmHierarchySelection
     Public Sub buildTreeViewRolle()
 
 
-        Dim topLevel As TreeNode
-        Dim roleHry As clsroleHrchy = RoleDefinitions.hierarchy
+        Dim topLevelNode As TreeNode
         Dim checkProj As Boolean = False
 
         With hryTreeView
@@ -4253,82 +4263,130 @@ Public Class frmHierarchySelection
             ' alle Rollen in geladenen Projekte zeigen 
 
             If allRoles.Count > 0 Then
-                Dim topNodes As List(Of Integer) = roleHry.toplevelNodes
-                Dim htops As Collection = roleHry.nodes(0)
+                Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
 
                 For i = 0 To topNodes.Count - 1
-                    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(topNodes.Item(i))
-                    topLevel = .Nodes.Add(role.name)
-                    topLevel.Name = role.UID.ToString
-                    topLevel.Text = role.name
+                    Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
+                    topLevelNode = .Nodes.Add(role.name)
+                    topLevelNode.Name = role.UID.ToString
+                    topLevelNode.Text = role.name
 
-                    Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
+                    Dim listOfChildIDs As New SortedList(Of Integer, String)
+                    Try
+                        listOfChildIDs = role.getSubRoleIDs
+                    Catch ex As Exception
+
+                    End Try
+
+                    If listOfChildIDs.Count > 0 Then
+                        For ii As Integer = 0 To listOfChildIDs.Count - 1
+                            Call buildRoleSubTreeView(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
+                        Next
+                    End If
+
+                    'Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
                 Next
             End If
 
 
         End With
     End Sub
-    Public Sub buildRoleSubTreeView(ByRef topNode As TreeNode, ByRef nodeList As List(Of Integer))
-
-        Dim anzChilds As Integer
-        Dim child As clsRollenDefinition
-        Dim childChildList As New List(Of Integer)
-        Dim childChildExist As Boolean = False
-
-        Dim nodeLevel0 As TreeNode
-        Dim nodeLevel1 As TreeNode
-
-
-        anzChilds = nodeList.Count
-
-        With topNode
-
-            For i As Integer = 0 To anzChilds - 1
-
-                child = RoleDefinitions.getRoledef(nodeList(i))
-                Dim childName As String = child.name
-                Dim childID As Integer = child.UID
-
-                If allRoles.Contains(childName) Then
-
-                    nodeLevel0 = .Nodes.Add(childName)
-                    nodeLevel0.Name = childID.ToString
-                    nodeLevel0.Text = childName
+    ''' <summary>
+    ''' baut den Rollen-SubtreeView für die Rolle mit der ID roleUID auf. 
+    ''' es wird ein neuer Knoten unterhalb des des parent-Knotens aufgebaut 
+    ''' wenn dieser Child-Node seinerseits Kinder enthält, wird wiederum buildRoleSubTreeView aufgerufen ... 
+    ''' </summary>
+    ''' <param name="parentNode"></param>
+    ''' <param name="roleUid"></param>
+    ''' <remarks></remarks>
+    Public Sub buildRoleSubTreeView(ByRef parentNode As TreeNode, ByVal roleUid As Integer)
 
 
-                    If selectedRoles.Contains(childName) Then
-                        nodeLevel0.Checked = True
-                    End If
+        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
+        Dim childIds As SortedList(Of Integer, String) = currentRole.getSubRoleIDs
 
+        Dim newNode As TreeNode
 
-                    If RoleDefinitions.hierarchy.nodeItem(childID).childs.Count > 0 Then
-
-                        childChildList = RoleDefinitions.hierarchy.nodeItem(childID).childs
-                        ' prüfen, ob role childName ein Kind hat, das in allRoles enthalten ist
-                        Dim k As Integer = 0
-                        While (k <= childChildList.Count - 1) And Not childChildExist
-                            childChildExist = childChildExist Or allRoles.Contains(RoleDefinitions.getRoledef(childChildList(k)).name)
-                            k = k + 1
-                        End While
-                        If childChildExist Then
-                            nodeLevel0.Tag = "P"
-
-
-                            nodeLevel1 = nodeLevel0.Nodes.Add("-")
-                            nodeLevel1.Tag = "P"
-                        Else
-                            nodeLevel0.Tag = "X"
-                        End If
-
-                    End If
-                End If
-
-            Next
-
+        With parentNode
+            newNode = .Nodes.Add(currentRole.name)
+            newNode.Name = roleUid.ToString
         End With
 
-      
+        For i = 0 To childIds.Count - 1
+
+            Call buildRoleSubTreeView(newNode, childIds.ElementAt(i).Key)
+
+        Next
+
+
     End Sub
+
+    ' ''' <summary>
+    ' ''' old _ deprecated
+    ' ''' </summary>
+    ' ''' <param name="topNode"></param>
+    ' ''' <param name="nodeList"></param>
+    ' ''' <remarks></remarks>
+    'Public Sub buildRoleSubTreeView(ByRef topNode As TreeNode, ByRef nodeList As List(Of Integer))
+
+    '    Dim anzChilds As Integer
+    '    Dim child As clsRollenDefinition
+    '    Dim childChildList As New List(Of Integer)
+    '    Dim childChildExist As Boolean = False
+
+    '    Dim nodeLevel0 As TreeNode
+    '    Dim nodeLevel1 As TreeNode
+
+
+    '    anzChilds = nodeList.Count
+
+    '    With topNode
+
+    '        For i As Integer = 0 To anzChilds - 1
+
+    '            child = RoleDefinitions.getRoledef(nodeList(i))
+    '            Dim childName As String = child.name
+    '            Dim childID As Integer = child.UID
+
+    '            If allRoles.Contains(childName) Then
+
+    '                nodeLevel0 = .Nodes.Add(childName)
+    '                nodeLevel0.Name = childID.ToString
+    '                nodeLevel0.Text = childName
+
+
+    '                If selectedRoles.Contains(childName) Then
+    '                    nodeLevel0.Checked = True
+    '                End If
+
+
+    '                If RoleDefinitions.hierarchy.nodeItem(childID).childs.Count > 0 Then
+
+    '                    childChildList = RoleDefinitions.hierarchy.nodeItem(childID).childs
+    '                    ' prüfen, ob role childName ein Kind hat, das in allRoles enthalten ist
+    '                    Dim k As Integer = 0
+    '                    While (k <= childChildList.Count - 1) And Not childChildExist
+    '                        childChildExist = childChildExist Or allRoles.Contains(RoleDefinitions.getRoledef(childChildList(k)).name)
+    '                        k = k + 1
+    '                    End While
+    '                    If childChildExist Then
+    '                        nodeLevel0.Tag = "P"
+
+
+    '                        nodeLevel1 = nodeLevel0.Nodes.Add("-")
+    '                        nodeLevel1.Tag = "P"
+    '                    Else
+    '                        nodeLevel0.Tag = "X"
+    '                    End If
+
+    '                End If
+    '            End If
+
+    '        Next
+
+    '    End With
+
+
+    'End Sub
 End Class

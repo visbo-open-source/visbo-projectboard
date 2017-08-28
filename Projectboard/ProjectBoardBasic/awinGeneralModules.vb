@@ -1319,7 +1319,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                    RoleDefinitions.buildRoleHierary()
+                    RoleDefinitions.buildTopNodes()
 
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
                     Call readVorlagen(True)
@@ -19145,12 +19145,13 @@ Public Module awinGeneralModules
                 If tmprole.isCombinedRole Then
                     rcValidation(i) = tmprole.name
                 Else
-                    Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.name)
-                    If parentName = "" Then
+                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
+                    If IsNothing(parentRole) Then
                         rcValidation(i) = "alleRollen"
                     Else
-                        rcValidation(i) = parentName
+                        rcValidation(i) = parentRole.name
                     End If
+
                 End If
             Next
 

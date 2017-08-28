@@ -8487,7 +8487,7 @@ Imports System.Windows
             currentRow = 2
             Try
                 prcTyp = DiagrammTypen(1)
-                rcName = RoleDefinitions.getRoledef(1).name
+                rcName = RoleDefinitions.getDefaultTopNodeName
             Catch ex As Exception
                 prcTyp = DiagrammTypen(1)
                 rcName = ""
@@ -8500,7 +8500,7 @@ Imports System.Windows
                 prcTyp = DiagrammTypen(2)
             Else
                 prcTyp = DiagrammTypen(1)
-                rcName = RoleDefinitions.getRoledef(1).name
+                rcName = RoleDefinitions.getDefaultTopNodeName
             End If
 
         End If
