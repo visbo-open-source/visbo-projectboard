@@ -32,7 +32,7 @@ Public Class ThisAddIn
             awinSettings.visboTaskClass = My.Settings.TaskClass
             awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
             awinSettings.visboAmpel = My.Settings.VISBOAmpel
-            awinSettings.visboDebug = False
+            awinSettings.visboDebug = My.Settings.VISBODebug
             awinSettings.databaseName = My.Settings.mongoDBname
             awinSettings.databaseURL = My.Settings.mongoDBURL
             dbUsername = ""

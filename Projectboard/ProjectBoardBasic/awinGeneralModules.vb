@@ -842,10 +842,11 @@ Public Module awinGeneralModules
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
 
-                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
-                            "Excel-Version: " & appInstance.Version, vbInformation, "Info")
             End If
-
+            If awinSettings.visboDebug And special <> "BHTC" Then
+                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+                           "Excel-Version: " & appInstance.Version, vbInformation, "Info")
+            End If
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
                 awinPath = globalPath
@@ -1121,6 +1122,11 @@ Public Module awinGeneralModules
 
                     Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Windows-User: " & myWindowsName)
+                    End If
+
+
                 Catch ex As Exception
                     Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
                 End Try
@@ -1146,6 +1152,10 @@ Public Module awinGeneralModules
             Dim wsName4 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(4)), _
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet
                                                     )
+            If awinSettings.visboDebug Then
+                Call MsgBox("wsName4 angesprochen")
+            End If
+
             If special = "ProjectBoard" Then
 
                 If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
@@ -1169,8 +1179,16 @@ Public Module awinGeneralModules
             End If 'if special="ProjectBoard"
 
 
-            Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+            ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+            ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            Dim wsName7810 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(7)), _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                    )
+
+            If awinSettings.visboDebug Then
+                Call MsgBox("wsName7810 angesprochen")
+            End If
 
             Try
                 ' Aufbauen der Darstellungsklassen  
@@ -1185,12 +1203,25 @@ Public Module awinGeneralModules
                 ' Auslesen der Meilenstein Definitionen 
                 Call readMilestoneDefinitions(wsName4)
 
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readMilestoneDefinitions")
+                End If
+
 
                 ' Auslesen der Rollen Definitionen 
                 Call readRoleDefinitions(wsName4)
 
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readRoleDefinitions")
+                End If
+
+
                 ' Auslesen der Kosten Definitionen 
                 Call readCostDefinitions(wsName4)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readCostDefinitions")
+                End If
 
 
                 ' Auslesen der Custom Field Definitions
@@ -1202,6 +1233,10 @@ Public Module awinGeneralModules
 
                 ' auslesen der anderen Informationen 
                 Call readOtherDefinitions(wsName4)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readOtherDefinitions")
+                End If
 
 
                 If special = "ProjectBoard" Then
@@ -1262,17 +1297,33 @@ Public Module awinGeneralModules
 
 
                 ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                        )
 
                 Call readNameMappings(wsName7810, phaseMappings)
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readNameMappings Phases")
+                End If
+
 
 
                 ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                'wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)), _
+                                                       Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                       )
 
                 Call readNameMappings(wsName7810, milestoneMappings)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readNameMappings Milestones")
+                End If
 
                 If special = "ProjectBoard" Then
 
@@ -1343,6 +1394,10 @@ Public Module awinGeneralModules
                         Call readInitConstellations()
 
                         currentSessionConstellation.constellationName = calcLastSessionScenarioName()
+
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("readInitConstellations , ok")
+                        End If
 
                     End If
 
@@ -3340,6 +3395,9 @@ Public Module awinGeneralModules
 
                 hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
 
+                hproj.Erloes = 0
+
+
                 Dim ProjektdauerIndays As Integer = calcDauerIndays(hproj.startDate, CDate(msproj.Finish))
                 Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
 
@@ -3391,7 +3449,8 @@ Public Module awinGeneralModules
 
                 Dim anzTasks As Integer = msproj.Tasks.Count
                 anzTasks = msproj.NumberOfTasks
-
+                Dim projSumTask As MSProject.Task = msproj.ProjectSummaryTask
+              
 
                 Dim resPool As MSProject.Resources = msproj.Resources
 
@@ -3409,8 +3468,6 @@ Public Module awinGeneralModules
 
 
                     msTask = msproj.Tasks.Item(i)
-
-
 
 
                     ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
@@ -3434,6 +3491,28 @@ Public Module awinGeneralModules
                         ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
                         Dim origPhName As String = msTask.Name
                         msTask.Name = phaseMappings.mapToStdName("", msTask.Name)
+
+                        '' '' Budgets Kosten und Work der SammelTasks aufsummieren
+                        '' '' ur: 25.08.2017: Testweise
+                        ' ''Dim co As Double = 0
+                        ' ''Dim wo As Double = 0
+                        ' ''If CType(msTask.Summary, Boolean) Then
+
+                        ' ''    Dim hstrco() As String = Split(msTask.BudgetCost, msproj.CurrencySymbol)
+                        ' ''    If hstrco.Length > 1 Then
+                        ' ''        'Dim co As Double = Val(msTask.BudgetCost)
+                        ' ''        co = Val(hstrco(1))
+                        ' ''    End If
+
+                        ' ''    Dim hstrwo() As String = Split(msTask.BudgetWork, msproj.CurrencySymbol)
+                        ' ''    If hstrwo.Length > 1 Then
+                        ' ''        wo = Val(hstrwo(1))
+                        ' ''        'Dim wo As Double = Val(msTask.BudgetWork)
+                        ' ''    End If
+
+                        ' ''    hproj.Erloes = hproj.Erloes + co + wo
+
+                        ' ''End If
 
                         ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
                         If Not PhaseDefinitions.Contains(msTask.Name) Then
@@ -3628,7 +3707,7 @@ Public Module awinGeneralModules
                                                 Dim work As Double = CType(ass.Work, Double)
                                                 'Dim duration As Double = CType(ass.Duration, Double)
                                                 Dim unit As Double = CType(ass.Units, Double)
-
+                                                Dim budgetWork As Double = CType(ass.BudgetWork, Double)
 
                                                 Dim startdate As Date = CDate(msTask.Start)
                                                 Dim endedate As Date = CDate(msTask.Finish)
@@ -3703,7 +3782,7 @@ Public Module awinGeneralModules
                                     End Select
                                 Next ass
 
-                          
+
                             End If
 
                             ' Hierarchie-Aufbau
