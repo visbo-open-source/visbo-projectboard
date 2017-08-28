@@ -1386,6 +1386,9 @@ Public Module awinGeneralModules
                     appInstance.EnableEvents = False
                     Call prepareProjektTafel()
 
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("prepareProjektTafel , ok")
+                    End If
 
                     projectBoardSheet.Activate()
                     appInstance.EnableEvents = True
