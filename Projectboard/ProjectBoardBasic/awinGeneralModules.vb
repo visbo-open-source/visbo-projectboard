@@ -1402,6 +1402,11 @@ Public Module awinGeneralModules
             Throw New ArgumentException(msg)
         End Try
 
+        ' english?
+        If awinSettings.englishLanguage Then
+            autoSzenarioNamen(0) = "before Optimization"
+        End If
+
 
     End Sub
 
@@ -1902,6 +1907,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' liest die Rollen Definitionen ein 
     ''' wird in der globalen Variablen RoleDefinitions abgelegt 
+    ''' in der Spalte 1 stehen jetzt ggf die ID der Rollen, dann berücksichtigen ...
     ''' </summary>
     ''' <param name="wsname"></param>
     ''' <remarks></remarks>
@@ -1913,8 +1919,8 @@ Public Module awinGeneralModules
         Dim index As Integer = 0
         Dim tmpStr As String
         Dim hrole As clsRollenDefinition
-
-
+        Dim roleUID As Integer = 0
+        Dim roleUidsDefined As Boolean = False
 
         Try
 
@@ -1925,56 +1931,108 @@ Public Module awinGeneralModules
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
 
-
+                ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
+                ' oder ob sie eine haben und ob keine Mehrfachnennungen vorkommen 
+                Dim anzWithID As Integer = 0
+                Dim anzWithoutID As Integer = 0
+                Dim IDCollection As New Collection
                 For i = 2 To anzZeilen - 1
+                    Try
+                        Dim tmpValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
+                        c = CType(rolesRange.Cells(i, 1), Excel.Range)
 
-                    c = CType(rolesRange.Cells(i, 1), Excel.Range)
-
-                    If CStr(c.Value) <> "" Then
-                        index = index + 1
-                        tmpStr = CType(c.Value, String)
-                        If index = 1 Then
-                            rollenKapaFarbe = c.Offset(0, 1).Interior.Color
-                        End If
-
-
-                        ' jetzt kommt die Rollen Definition 
-                        hrole = New clsRollenDefinition
-                        Dim cp As Integer
-                        With hrole
-                            .name = tmpStr.Trim
-                            .defaultKapa = CDbl(c.Offset(0, 1).Value)
-                            .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
-
-                            Try
-                                If CDbl(c.Offset(0, 3).Value) = 0.0 Then
-                                    .tagessatzExtern = .tagessatzIntern * 1.35
+                        If CStr(c.Value) <> "" Then
+                            If Not IsNothing(tmpValue) Then
+                                If tmpValue.Trim <> "" Then
+                                    If IsNumeric(tmpValue.Trim) Then
+                                        If CInt(tmpValue.Trim) > 0 Then
+                                            If Not IDCollection.Contains(tmpValue.Trim) Then
+                                                IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
+                                            Else
+                                                Throw New ArgumentException("roles with identical IDs are not allowed")
+                                            End If
+                                        Else
+                                            anzWithoutID = anzWithoutID + 1
+                                        End If
+                                    Else
+                                        anzWithoutID = anzWithoutID + 1
+                                    End If
                                 Else
-                                    .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
+                                    anzWithoutID = anzWithoutID + 1
                                 End If
-                            Catch ex As Exception
-                                .tagessatzExtern = .tagessatzIntern * 1.35
-                            End Try
-
-                            ' Auslesen der zukünftigen Kapazität
-                            ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
-                            For cp = 1 To 240
-
-                                .kapazitaet(cp) = .defaultKapa
-                                .externeKapazitaet(cp) = 0.0
-
-                            Next
-                            .farbe = c.Interior.Color
-                            .UID = index
-                        End With
-
-                        '
-                        RoleDefinitions.Add(hrole)
-                        'hrole = Nothing
-
-                    End If
+                            Else
+                                anzWithoutID = anzWithoutID + 1
+                            End If
+                        End If
+                        
+                    Catch ex As Exception
+                        anzWithoutID = anzWithoutID + 1
+                    End Try
 
                 Next
+
+                anzWithID = IDCollection.Count
+                If anzWithID > 0 And anzWithoutID > 0 Then
+                    Throw New ArgumentException("some roles do contain IDs, others not ...")
+                Else
+                    ' jetzt ist sichergestellt, dass 
+                    For i = 2 To anzZeilen - 1
+
+                        c = CType(rolesRange.Cells(i, 1), Excel.Range)
+
+                        If CStr(c.Value) <> "" Then
+
+                            index = index + 1
+                            If anzWithID > 0 Then
+                                roleUID = CInt(CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value)
+                            Else
+                                roleUID = index
+                            End If
+
+                            tmpStr = CType(c.Value, String)
+
+
+                            ' jetzt kommt die Rollen Definition 
+                            hrole = New clsRollenDefinition
+                            Dim cp As Integer
+                            With hrole
+                                .name = tmpStr.Trim
+                                .defaultKapa = CDbl(c.Offset(0, 1).Value)
+                                .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+
+                                Try
+                                    If CDbl(c.Offset(0, 3).Value) = 0.0 Then
+                                        .tagessatzExtern = .tagessatzIntern * 1.35
+                                    Else
+                                        .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
+                                    End If
+                                Catch ex As Exception
+                                    .tagessatzExtern = .tagessatzIntern * 1.35
+                                End Try
+
+                                ' Auslesen der zukünftigen Kapazität
+                                ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
+                                For cp = 1 To 240
+
+                                    .kapazitaet(cp) = .defaultKapa
+                                    .externeKapazitaet(cp) = 0.0
+
+                                Next
+                                .farbe = c.Interior.Color
+                                .UID = roleUID
+                            End With
+
+                            '
+                            RoleDefinitions.Add(hrole)
+                            'hrole = Nothing
+
+                        End If
+
+                    Next
+
+                End If
+
+                
 
             End With
 

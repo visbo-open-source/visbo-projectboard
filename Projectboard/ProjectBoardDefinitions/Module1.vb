@@ -738,8 +738,9 @@ Public Module Module1
     ' Variable nimmt die Namen der Ergebnis Charts auf  
     Public ergebnisChartName(3) As String
 
+    ' tk 25.8.17 Nonsense, wird nicht gebraucht 
     ' diese Variabe nimmt die Farbe der Kapa-Linie an
-    Public rollenKapaFarbe As Object
+    'Public rollenKapaFarbe As Object
 
     ' diese Variable nimmt die Farbe der internen Ressourcen, ohne Projekte an auf
     Public farbeInternOP As Object

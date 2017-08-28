@@ -831,13 +831,32 @@ Public Class clsProjekt
         End Set
     End Property
 
-
     ''' <summary>
-    ''' stellt sicher, daß variantName niemals Nothing sein kann
+    ''' gibt als Erläuterung die volle Description, Projekt- plus Varianten - Beschreibung zurück; 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    Public ReadOnly Property fullDescription As String
+        Get
+            If IsNothing(_description) Then
+                _description = ""
+            End If
+            If IsNothing(_variantDescription) Or _variantName = "" Then
+                fullDescription = _description
+            Else
+                fullDescription = _description & "; [" & _variantDescription & "]"
+            End If
+
+        End Get
+    End Property
+
+        ''' <summary>
+        ''' stellt sicher, daß variantName niemals Nothing sein kann
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
     Public Property variantName As String
         Get
             If IsNothing(_variantName) Then

@@ -768,7 +768,7 @@ Public Module awinDiagrams
                                 .Name = repMessages.getmsg(260)
                             End If
 
-                            .Border.Color = rollenKapaFarbe
+                            '.Border.Color = rollenKapaFarbe
                             .Values = kdatenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlLine
@@ -1571,7 +1571,7 @@ Public Module awinDiagrams
                         .Name = repMessages.getmsg(260)
                     End If
 
-                    .Border.Color = rollenKapaFarbe
+                    '.Border.Color = rollenKapaFarbe
                     .Values = kdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
