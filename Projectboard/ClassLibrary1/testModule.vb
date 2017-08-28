@@ -2254,7 +2254,7 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
@@ -2273,7 +2273,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = False
 
 
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
@@ -2328,7 +2328,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth, true)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
@@ -2346,7 +2346,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = False
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
@@ -2404,7 +2404,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
@@ -2422,7 +2422,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = False
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
@@ -2477,7 +2477,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
@@ -2495,7 +2495,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = False
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
@@ -2550,7 +2550,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke
@@ -2568,7 +2568,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = False
 
                                     reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke
@@ -5105,35 +5105,38 @@ Public Module testModule
                     ' jetzt werden alle definierten Constellations weggeschrieben
                     For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
-                        Try
-                            If request.storeConstellationToDB(kvp.Value) Then
-                                If awinSettings.englishLanguage Then
-                                    outputline = "Portfolio stored: " & kvp.Key
-                                    outPutCollection.Add(outputline)
+                        If kvp.Key <> "Sort Result" And kvp.Key <> "Filter Result" Then
+                            Try
+                                If request.storeConstellationToDB(kvp.Value) Then
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "Portfolio stored: " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "Portfolio gespeichert: " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    End If
                                 Else
-                                    outputline = "Portfolio gespeichert: " & kvp.Key
-                                    outPutCollection.Add(outputline)
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "Error when writing portfolio " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    Else
+                                        outputline = "Fehler in Schreiben Portfolio " & kvp.Key
+                                        outPutCollection.Add(outputline)
+                                    End If
+
                                 End If
-                            Else
+                            Catch ex As Exception
                                 If awinSettings.englishLanguage Then
                                     outputline = "Error when writing portfolio " & kvp.Key
-                                    outPutCollection.Add(outputline)
                                 Else
                                     outputline = "Fehler in Schreiben Portfolio " & kvp.Key
-                                    outPutCollection.Add(outputline)
                                 End If
-
-                            End If
-                        Catch ex As Exception
-                            If awinSettings.englishLanguage Then
-                                outputline = "Error when writing portfolio " & kvp.Key
-                            Else
-                                outputline = "Fehler in Schreiben Portfolio " & kvp.Key
-                            End If
-                            Throw New ArgumentException(outputline)
-                            'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
-                            'Exit Sub
-                        End Try
+                                Throw New ArgumentException(outputline)
+                                'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
+                                'Exit Sub
+                            End Try
+                        End If
+                        
 
                     Next
 
@@ -5312,7 +5315,6 @@ Public Module testModule
         Dim hproj As clsProjekt
         Dim hilfshproj As clsProjekt
         Dim jetzt As Date = Now
-        Dim zeitStempel As Date
         Dim anzSelectedProj As Integer = 0
         Dim anzStoredProj As Integer = 0
         Dim variantCollection As Collection
@@ -5451,12 +5453,16 @@ Public Module testModule
 
         enableOnUpdate = True
 
-        If AlleProjekte.Count > 0 Then
-            zeitStempel = AlleProjekte.First.timeStamp
+        If demoModusHistory Then
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("ok, " & anzStoredProj & " projects and variants are stored now!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
+            Else
+                Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
+            End If
         End If
 
-
-        Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
         Return anzStoredProj
 
     End Function
@@ -7756,7 +7762,8 @@ Public Module testModule
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
                     If Not IsNothing(vglproj) Then
-                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                        'CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToString("d", repCult)
                     Else
                         CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & repMessages.getmsg(32)
                     End If
@@ -8646,9 +8653,12 @@ Public Module testModule
                         Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape
                         tableCell.TextFrame2.TextRange.Text = msNumber.ToString
 
+                        If cBewertung.colorIndex = 2 Then
+                            CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(0, 0, 0)
+                        Else
+                            CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                        End If
 
-
-                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
                         CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
 
                         ' Name eintragen 
@@ -8832,6 +8842,7 @@ Public Module testModule
 
         objectsToDo = ShowProjekte.Count
 
+
         If objectsDone = 0 Then
             zaehler = 1
         Else
@@ -8846,360 +8857,363 @@ Public Module testModule
 
             ' falls im folgenden ein Fehler auftritt , dann muss für die aufrufende Routine klar sein, wo objectsDone stand ...
             objectsDone = zaehler
+            Dim pname As String = currentSessionConstellation.getProjectAtSortPosition(zaehler)
+            If ShowProjekte.contains(pname) Then
+                hproj = ShowProjekte.getProject(pname)
+                'hproj = ShowProjekte.getProject(zaehler)
+                ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
 
-            hproj = ShowProjekte.getProject(zaehler)
-            ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
+                ' das Vergleichsprojekt zurücksetzen ..
+                vproj = Nothing
 
-            ' das Vergleichsprojekt zurücksetzen ..
-            vproj = Nothing
+                ' Ermitteln der Kennzahlen 
+                'hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
+                ' sollte hier genauso aufgerufen, wie im CreateProjektErgebnisCharakteristik 
+                hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
 
-            ' Ermitteln der Kennzahlen 
-            'hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis, False)
-            ' sollte hier genauso aufgerufen, wie im CreateProjektErgebnisCharakteristik 
-            hproj.calculateRoundedKPI(hErloes, hPersKosten, hSonstKosten, hRisikoKosten, hErgebnis)
-
-            If showPersonalBedarf Then
-                hpersonalBedarf = hproj.getAlleRessourcen.Sum
-            End If
-
-
-            With tabelle
-                Select Case hproj.ampelStatus
-                    Case 0
-                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            CInt(awinSettings.AmpelNichtBewertet)
-                    Case 1
-                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            CInt(awinSettings.AmpelGruen)
-                    Case 2
-                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            CInt(awinSettings.AmpelGelb)
-                    Case 3
-                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            CInt(awinSettings.AmpelRot)
-                    Case Else
-                        CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            CInt(awinSettings.AmpelNichtBewertet)
-
-                End Select
-
-                CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
-                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
-                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
-
-            End With
-
-            Dim trendShapesAreDefined As Boolean
-            If vergleichstyp = PThis.current Then
-                ' es wird nichts verglichen ... 
-                trendShapesAreDefined = False
-
-            Else
-
-                ' Bestimmen, ob die Shapes auch vorhanden sind ... 
-
-                If Not IsNothing(steigendShape) And Not IsNothing(fallendShape) And Not IsNothing(gleichShape) Then
-                    trendShapesAreDefined = True
-                Else
-                    trendShapesAreDefined = False
+                If showPersonalBedarf Then
+                    hpersonalBedarf = hproj.getAlleRessourcen.Sum
                 End If
 
-                ' hat das Projekt bereits eine Historie ? 
-
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-                If awinSettings.compareWithStandardVariant Then
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
-                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                Else
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                End If
-
-                'If vergleichstyp = PThis.letzterStand Then
-                '    vproj = projekthistorie.Last
-
-                'ElseIf vergleichstyp = PThis.beauftragung Then
-                '    vproj = projekthistorie.beauftragung
-
-                'End If
-
-                If Not IsNothing(projekthistorie) Then
-                    If projekthistorie.Count > 0 Then
-                        If vergleichstyp = PThis.letzterStand Then
-                            vproj = projekthistorie.ElementAtorBefore(vglDate)
-                        Else
-                            vproj = projekthistorie.First
-                        End If
-                    End If
-                End If
-
-
-
-            End If
-
-            summenArray(0) = summenArray(0) + hErloes
-
-            If showPersonalBedarf Then
-                summenArray(1) = summenArray(1) + hpersonalBedarf
-            Else
-                summenArray(1) = summenArray(1) + hPersKosten
-            End If
-
-            summenArray(2) = summenArray(2) + hSonstKosten
-            summenArray(3) = summenArray(3) + hErgebnis
-
-
-
-            If IsNothing(vproj) Then
-                ' dieses Projekt hat noch keine Historie 
 
                 With tabelle
-                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
+                    Select Case hproj.ampelStatus
+                        Case 0
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CInt(awinSettings.AmpelNichtBewertet)
+                        Case 1
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CInt(awinSettings.AmpelGruen)
+                        Case 2
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CInt(awinSettings.AmpelGelb)
+                        Case 3
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CInt(awinSettings.AmpelRot)
+                        Case Else
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CInt(awinSettings.AmpelNichtBewertet)
 
-                    If showPersonalBedarf Then
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString(formatierung)
-                    Else
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString(formatierung)
-                    End If
+                    End Select
 
-                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
-                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
+                    CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
+                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
 
-                    CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
-                    CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
-                    CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
-                    CType(.Cell(zeile, 12), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                 End With
 
+                Dim trendShapesAreDefined As Boolean
+                If vergleichstyp = PThis.current Then
+                    ' es wird nichts verglichen ... 
+                    trendShapesAreDefined = False
 
-            Else
-                ' sollte genauso aufgerufen werden, wie sonst auch immer 
-                'vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis, False)
-                vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
+                Else
 
-                If showPersonalBedarf Then
-                    vPersonalBedarf = vproj.getAlleRessourcen.Sum
-                End If
+                    ' Bestimmen, ob die Shapes auch vorhanden sind ... 
 
-                ' hier werden die Symbole gezeichnet, die anzeigen wie sich der jeweilige Wert im Vergleich zum letzten / ersten Stand verändert hat 
-                ' angezeigt werden nur positive oder negative Abweichungen 
+                    If Not IsNothing(steigendShape) And Not IsNothing(fallendShape) And Not IsNothing(gleichShape) Then
+                        trendShapesAreDefined = True
+                    Else
+                        trendShapesAreDefined = False
+                    End If
 
-                If hErloes - vErloes <> 0 Then
+                    ' hat das Projekt bereits eine Historie ? 
 
-                    With tabelle
-                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString(formatierung) & "/" & _
-                                hErloes.ToString(formatierung)
-                        'CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
-                    End With
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    If trendShapesAreDefined Then
-                        If hErloes > vErloes Then
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, steigendShape, farbePositiv, True)
-                        Else
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, fallendShape, farbeNegativ, True)
+                    If awinSettings.compareWithStandardVariant Then
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                    Else
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                    End If
+
+                    'If vergleichstyp = PThis.letzterStand Then
+                    '    vproj = projekthistorie.Last
+
+                    'ElseIf vergleichstyp = PThis.beauftragung Then
+                    '    vproj = projekthistorie.beauftragung
+
+                    'End If
+
+                    If Not IsNothing(projekthistorie) Then
+                        If projekthistorie.Count > 0 Then
+                            If vergleichstyp = PThis.letzterStand Then
+                                vproj = projekthistorie.ElementAtorBefore(vglDate)
+                            Else
+                                vproj = projekthistorie.First
+                            End If
                         End If
                     End If
 
+
+
+                End If
+
+                summenArray(0) = summenArray(0) + hErloes
+
+                If showPersonalBedarf Then
+                    summenArray(1) = summenArray(1) + hpersonalBedarf
                 Else
+                    summenArray(1) = summenArray(1) + hPersKosten
+                End If
+
+                summenArray(2) = summenArray(2) + hSonstKosten
+                summenArray(3) = summenArray(3) + hErgebnis
+
+
+
+                If IsNothing(vproj) Then
+                    ' dieses Projekt hat noch keine Historie 
+
                     With tabelle
                         CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
-                    End With
 
-                End If
-
-                Dim hValue As Double, vValue As Double
-
-                If showPersonalBedarf Then
-                    hValue = hpersonalBedarf
-                    vValue = vPersonalBedarf
-                Else
-                    hValue = hPersKosten
-                    vValue = vPersKosten
-                End If
-
-                If hValue - vValue <> 0 Then
-
-                    With tabelle
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString(formatierung) & "/" & _
-                                hValue.ToString(formatierung)
-                        'CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
-                    End With
-
-                    If trendShapesAreDefined Then
-                        If hPersKosten > vPersKosten Then
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, steigendShape, farbeNegativ, True)
+                        If showPersonalBedarf Then
+                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString(formatierung)
                         Else
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, fallendShape, farbePositiv, True)
+                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString(formatierung)
                         End If
-                    End If
 
-                Else
-
-                    With tabelle
-                        CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString(formatierung)
-                    End With
-
-                End If
-
-                If hSonstKosten - vSonstKosten <> 0 Then
-
-                    With tabelle
-                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString(formatierung) & "/" & _
-                                hSonstKosten.ToString(formatierung)
-                        'CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
-                    End With
-
-                    If trendShapesAreDefined Then
-                        If hSonstKosten > vSonstKosten Then
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, steigendShape, farbeNegativ, True)
-                        Else
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, fallendShape, farbePositiv, True)
-                        End If
-                    End If
-
-                Else
-                    With tabelle
                         CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
-                    End With
-                End If
+                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
 
-                If hErgebnis - vErgebnis <> 0 Then
-
-                    With tabelle
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString(formatierung) & "/" & _
-                                hErgebnis.ToString(formatierung)
-                        'CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        CType(.Cell(zeile, 12), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                     End With
 
-                    If trendShapesAreDefined Then
-                        If hErgebnis > vErgebnis Then
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, steigendShape, farbePositiv, True)
-                        Else
-                            Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, fallendShape, farbeNegativ, True)
-                        End If
-                    End If
 
                 Else
+                    ' sollte genauso aufgerufen werden, wie sonst auch immer 
+                    'vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis, False)
+                    vproj.calculateRoundedKPI(vErloes, vPersKosten, vSonstKosten, vRisikoKosten, vErgebnis)
+
+                    If showPersonalBedarf Then
+                        vPersonalBedarf = vproj.getAlleRessourcen.Sum
+                    End If
+
+                    ' hier werden die Symbole gezeichnet, die anzeigen wie sich der jeweilige Wert im Vergleich zum letzten / ersten Stand verändert hat 
+                    ' angezeigt werden nur positive oder negative Abweichungen 
+
+                    If hErloes - vErloes <> 0 Then
+
+                        With tabelle
+                            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString(formatierung) & "/" & _
+                                    hErloes.ToString(formatierung)
+                            'CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        End With
+
+                        If trendShapesAreDefined Then
+                            If hErloes > vErloes Then
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, steigendShape, farbePositiv, True)
+                            Else
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, fallendShape, farbeNegativ, True)
+                            End If
+                        End If
+
+                    Else
+                        With tabelle
+                            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
+                        End With
+
+                    End If
+
+                    Dim hValue As Double, vValue As Double
+
+                    If showPersonalBedarf Then
+                        hValue = hpersonalBedarf
+                        vValue = vPersonalBedarf
+                    Else
+                        hValue = hPersKosten
+                        vValue = vPersKosten
+                    End If
+
+                    If hValue - vValue <> 0 Then
+
+                        With tabelle
+                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString(formatierung) & "/" & _
+                                    hValue.ToString(formatierung)
+                            'CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        End With
+
+                        If trendShapesAreDefined Then
+                            If hPersKosten > vPersKosten Then
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, steigendShape, farbeNegativ, True)
+                            Else
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, fallendShape, farbePositiv, True)
+                            End If
+                        End If
+
+                    Else
+
+                        With tabelle
+                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString(formatierung)
+                        End With
+
+                    End If
+
+                    If hSonstKosten - vSonstKosten <> 0 Then
+
+                        With tabelle
+                            CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString(formatierung) & "/" & _
+                                    hSonstKosten.ToString(formatierung)
+                            'CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        End With
+
+                        If trendShapesAreDefined Then
+                            If hSonstKosten > vSonstKosten Then
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, steigendShape, farbeNegativ, True)
+                            Else
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, fallendShape, farbePositiv, True)
+                            End If
+                        End If
+
+                    Else
+                        With tabelle
+                            CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
+                        End With
+                    End If
+
+                    If hErgebnis - vErgebnis <> 0 Then
+
+                        With tabelle
+                            CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString(formatierung) & "/" & _
+                                    hErgebnis.ToString(formatierung)
+                            'CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
+                        End With
+
+                        If trendShapesAreDefined Then
+                            If hErgebnis > vErgebnis Then
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, steigendShape, farbePositiv, True)
+                            Else
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, fallendShape, farbeNegativ, True)
+                            End If
+                        End If
+
+                    Else
+                        With tabelle
+                            CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
+                        End With
+                    End If
+
+
+
                     With tabelle
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
-                    End With
-                End If
+                        ' Ergebnis-Delta ? 
+                        spalte = 9
+                        deltaValue = hErgebnis - vErgebnis
 
+                        summenArray(4) = summenArray(4) + deltaValue
 
-
-                With tabelle
-                    ' Ergebnis-Delta ? 
-                    spalte = 9
-                    deltaValue = hErgebnis - vErgebnis
-
-                    summenArray(4) = summenArray(4) + deltaValue
-
-                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString(formatierung)
-
-                    If deltaValue > 0 Then
-                        If deltaValue > 0.1 * hErloes Then
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelGruen
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                                RGB(249, 249, 249)
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
-
-                        End If
-                    ElseIf deltaValue * -1 > 0.1 * hErloes Then
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelRot
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                                RGB(249, 249, 249)
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
-                    End If
-
-                    ' Termin-Delta? 
-                    spalte = 10
-                    deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
-                    CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
-
-                    summenArray(5) = summenArray(5) + deltaValue
-
-                    If deltaValue > 0 Then
-
-                        If deltaValue > 14 Then
-
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelRot
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                                RGB(249, 249, 249)
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
-
-                        End If
-
-                    ElseIf deltaValue * -1 > 14 Then
-
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelGruen
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                                RGB(249, 249, 249)
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
-
-                    End If
-
-
-                    ' Deliverables-Delta ?
-                    spalte = 11
-                    Dim hAnzahl As Integer = hproj.getDeliverables.Count
-                    Dim vAnzahl As Integer = vproj.getDeliverables.Count
-                    deltaValue = hAnzahl - vAnzahl
-
-                    summenArray(6) = summenArray(6) + deltaValue
-
-                    If hAnzahl > 0 Or vAnzahl > 0 Then
-                        ' nur was ausgeben, wenn wenigstens in einem Projekt Deliverables definiert sind
-                        atLeastOneDeliverable = True
-
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString(formatierung)
 
                         If deltaValue > 0 Then
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
-                            awinSettings.AmpelGruen
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                                RGB(249, 249, 249)
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
-                        ElseIf deltaValue = 0 Then
-                            ' nichts tun ...
-                        Else
+                            If deltaValue > 0.1 * hErloes Then
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                awinSettings.AmpelGruen
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                    RGB(249, 249, 249)
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+
+                            End If
+                        ElseIf deltaValue * -1 > 0.1 * hErloes Then
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
                                 awinSettings.AmpelRot
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
-                                RGB(249, 249, 249)
+                                    RGB(249, 249, 249)
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                         End If
 
-                    End If
+                        ' Termin-Delta? 
+                        spalte = 10
+                        deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
+                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
+
+                        summenArray(5) = summenArray(5) + deltaValue
+
+                        If deltaValue > 0 Then
+
+                            If deltaValue > 14 Then
+
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                awinSettings.AmpelRot
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                    RGB(249, 249, 249)
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+
+                            End If
+
+                        ElseIf deltaValue * -1 > 14 Then
+
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                awinSettings.AmpelGruen
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                    RGB(249, 249, 249)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+
+                        End If
 
 
-                    ' TimeStamp des Vergleichsprojektes
-                    spalte = 12
-                    If Not IsNothing(vproj) Then
-                        Dim timeStamp As Date = vproj.timeStamp
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
-                    Else
-                        CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
-                    End If
+                        ' Deliverables-Delta ?
+                        spalte = 11
+                        Dim hAnzahl As Integer = hproj.getDeliverables.Count
+                        Dim vAnzahl As Integer = vproj.getDeliverables.Count
+                        deltaValue = hAnzahl - vAnzahl
+
+                        summenArray(6) = summenArray(6) + deltaValue
+
+                        If hAnzahl > 0 Or vAnzahl > 0 Then
+                            ' nur was ausgeben, wenn wenigstens in einem Projekt Deliverables definiert sind
+                            atLeastOneDeliverable = True
+
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
+
+                            If deltaValue > 0 Then
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                awinSettings.AmpelGruen
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                    RGB(249, 249, 249)
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                            ElseIf deltaValue = 0 Then
+                                ' nichts tun ...
+                            Else
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                    awinSettings.AmpelRot
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                    RGB(249, 249, 249)
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                            End If
+
+                        End If
+
+
+                        ' TimeStamp des Vergleichsprojektes
+                        spalte = 12
+                        If Not IsNothing(vproj) Then
+                            Dim timeStamp As Date = vproj.timeStamp
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                        Else
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
+                        End If
 
 
 
-                End With
+                    End With
 
 
+                End If
+
+
+                zeile = zeile + 1
+                If zeile > anzahlZeilen Then
+                    endOfPage = True
+                End If
             End If
 
-
-            zeile = zeile + 1
-            If zeile > anzahlZeilen Then
-                endOfPage = True
-            Else
-                zaehler = zaehler + 1
-            End If
+            zaehler = zaehler + 1
 
         Loop
 
@@ -18874,6 +18888,6 @@ Public Module testModule
         ' Ende neu 
 
     End Sub
-
+ 
 
 End Module

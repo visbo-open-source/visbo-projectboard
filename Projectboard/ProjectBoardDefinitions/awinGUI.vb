@@ -126,7 +126,7 @@ Public Module awinGUI
         If isProjektCharakteristik And ProjektListe.Count = 1 Then
             pname = CStr(ProjektListe.Item(1))
             hproj = ShowProjekte.getProject(pname)
-            tmpCollection.Add(hproj.getShapeText & "#0")
+            tmpCollection.Add(hproj.name & "#0")
             ' ur: 21.07.2015: Versuch zur Korrektur:
             'kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
             kennung = calcChartKennung("pr", charttype, tmpCollection)

@@ -868,6 +868,8 @@ namespace MongoDbAccess
                         clsWriteProtectionItemDB wpItemDB = new clsWriteProtectionItemDB();
                         wpItemDB.copyFrom(wpItem);
                         CollectionWriteProtections.InsertOne(wpItemDB);
+                        
+                        return true;
                     }
                     else
                     {
@@ -884,7 +886,6 @@ namespace MongoDbAccess
                         return uresult.IsAcknowledged;
                     }
 
-                    return true;
 
                 }
                 else

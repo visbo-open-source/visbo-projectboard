@@ -377,8 +377,8 @@ Public Class clsProjekt
                         Me.variantDescription = .variantDescription And _
                         Me.description = .description Then
 
-                        If Me.startDate = .startDate And _
-                            Me.endeDate = .endeDate Then
+                        If Me.startDate.Date = .startDate.Date And _
+                            Me.endeDate.Date = .endeDate.Date Then
 
                             If Me.ampelStatus = .ampelStatus And _
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then
@@ -911,8 +911,17 @@ Public Class clsProjekt
 
             Try
                 If value.Trim.Length > 0 Then
-                    _name = value.Trim
-
+                    If isValidProjectName(value.Trim) Then
+                        _name = value.Trim
+                    Else
+                        Dim msgTxt As String = ""
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "name must not contain any #, (, or )-characters"
+                        Else
+                            msgTxt = "Name darf keine #, (, or )-Zeichen enthalten"
+                        End If
+                        Throw New ArgumentException(msgTxt)
+                    End If
                 Else
                     _name = ""
                 End If

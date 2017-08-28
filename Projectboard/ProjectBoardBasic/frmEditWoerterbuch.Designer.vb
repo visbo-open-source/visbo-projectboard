@@ -206,6 +206,7 @@ Partial Class frmEditWoerterbuch
         Me.clearUnknownList.Location = New System.Drawing.Point(344, 104)
         Me.clearUnknownList.Name = "clearUnknownList"
         Me.clearUnknownList.Size = New System.Drawing.Size(18, 16)
+        Me.clearUnknownList.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.clearUnknownList.TabIndex = 19
         Me.clearUnknownList.TabStop = False
         '
@@ -216,6 +217,7 @@ Partial Class frmEditWoerterbuch
         Me.setItemToBeUnknown.Location = New System.Drawing.Point(370, 268)
         Me.setItemToBeUnknown.Name = "setItemToBeUnknown"
         Me.setItemToBeUnknown.Size = New System.Drawing.Size(34, 34)
+        Me.setItemToBeUnknown.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.setItemToBeUnknown.TabIndex = 17
         Me.setItemToBeUnknown.TabStop = False
         '
@@ -226,6 +228,7 @@ Partial Class frmEditWoerterbuch
         Me.setItemToBeKnown.Location = New System.Drawing.Point(370, 176)
         Me.setItemToBeKnown.Name = "setItemToBeKnown"
         Me.setItemToBeKnown.Size = New System.Drawing.Size(34, 34)
+        Me.setItemToBeKnown.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.setItemToBeKnown.TabIndex = 16
         Me.setItemToBeKnown.TabStop = False
         '
@@ -235,6 +238,7 @@ Partial Class frmEditWoerterbuch
         Me.clearStandardList.Location = New System.Drawing.Point(733, 104)
         Me.clearStandardList.Name = "clearStandardList"
         Me.clearStandardList.Size = New System.Drawing.Size(18, 16)
+        Me.clearStandardList.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.clearStandardList.TabIndex = 20
         Me.clearStandardList.TabStop = False
         '

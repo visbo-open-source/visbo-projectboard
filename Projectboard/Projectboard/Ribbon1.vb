@@ -595,11 +595,11 @@ Imports System.Windows
 
             Call awinDeSelect()
 
-            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzPfDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPfCharts)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzPrDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPrCharts)).ChartObjects, Excel.ChartObjects).Count
 
 
-            If anzDiagrams > 0 Then
-
+            If anzPfDiagrams + anzPrDiagrams > 0 Then
 
                 ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
@@ -608,6 +608,8 @@ Imports System.Windows
                 If returnValue = DialogResult.OK Then
 
                     cockpitName = storeCockpitFrm.ComboBox1.Text
+
+                    'ClearClipboard()
 
                     Call awinStoreCockpit(cockpitName)
 
@@ -700,12 +702,19 @@ Imports System.Windows
                     ' erst alle anderen Charts löschen ... 
                     Dim currentWsName As String
                     If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                        currentWsName = arrWsNames(ptTables.mptPrCharts)
+                        Call deleteChartsInSheet(currentWsName)
+                        currentWsName = arrWsNames(ptTables.mptPfCharts)
+                        Call deleteChartsInSheet(currentWsName)
                         currentWsName = arrWsNames(ptTables.MPT)
+                        Call deleteChartsInSheet(currentWsName)
                     Else
                         currentWsName = arrWsNames(ptTables.meRC)
+                        Call deleteChartsInSheet(currentWsName)
                     End If
 
-                    Call deleteChartsInSheet(currentWsName)
+                    Call closeAllWindowsExceptMPT()
+
                 End If
 
                 Try
@@ -750,6 +759,18 @@ Imports System.Windows
 
                     Call awinNeuZeichnenDiagramme(9)
 
+                    '' ''Call defineVisboWindowViews()
+                    ' ''If thereAreAnyCharts(PTwindows.mpt) Then
+                    ' ''    Call showVisboWindow(PTwindows.mpt)
+                    ' ''End If
+
+                    '' ''If thereAreAnyCharts(PTwindows.mptpf) Then
+                    '' ''    Call showVisboWindow(PTwindows.mptpf)
+                    '' ''End If
+                    '' ''If thereAreAnyCharts(PTwindows.mptpr) Then
+                    '' ''    Call showVisboWindow(PTwindows.mptpr)
+                    '' ''End If
+               
                 Catch ex As Exception
                     appInstance.ScreenUpdating = True
                     Call MsgBox("Fehler beim Laden ..")
@@ -1587,9 +1608,9 @@ Imports System.Windows
 
             Case "PTMEC3" ' Formular Forecast Gegenüberstellung 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Gewinn/Verlust"
+                    tmpLabel = "Vergleich mit letzter Version"
                 Else
-                    tmpLabel = "Profit/Loss"
+                    tmpLabel = "Comparison with last version"
                 End If
             Case "PTX" ' Multiprojekt-Info
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3121,6 +3142,10 @@ Imports System.Windows
         ' tk 12.6.17
         ' wenn nur ein Window gezeigt wird ; das ist hier notwendig, um zu verhindern, dass nachher die mpt, mptpf, mptpr Charts alle im 
         ' xlMaximized Mode dargestellt werden; das scheint eine Unschönheit von Microsoft zu sein ... 
+
+
+        ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
+        appInstance.EnableEvents = True
         If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
             appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
         End If
@@ -3129,12 +3154,22 @@ Imports System.Windows
 
             ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
             If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
-                projectboardWindows(PTwindows.massEdit).Close()
+                Try
+                    projectboardWindows(PTwindows.massEdit).Close()
+                Catch ex As Exception
+
+                End Try
+
                 projectboardWindows(PTwindows.massEdit) = Nothing
             End If
 
             If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
-                projectboardWindows(PTwindows.meChart).Close()
+                Try
+                    projectboardWindows(PTwindows.meChart).Close()
+                Catch ex As Exception
+
+                End Try
+
                 projectboardWindows(PTwindows.meChart) = Nothing
             End If
 
@@ -3153,6 +3188,9 @@ Imports System.Windows
                     Try
                         If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
                             projectboardWindows(PTwindows.mptpf).Visible = True
+                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
+                                .Activate()
+                            End With
                             'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
                         End If
                     Catch ex As Exception
@@ -3161,6 +3199,9 @@ Imports System.Windows
                     Try
                         If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
                             projectboardWindows(PTwindows.mptpr).Visible = True
+                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
+                                .Activate()
+                            End With
                             'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
                         End If
                     Catch ex As Exception
@@ -3170,10 +3211,8 @@ Imports System.Windows
 
             End With
         Catch ex As Exception
-
+            Dim a As Integer = 1
         End Try
-
-
 
 
         enableOnUpdate = True
@@ -3186,6 +3225,17 @@ Imports System.Windows
         End With
 
         appInstance.ScreenUpdating = True
+
+        ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                If projectboardWindows(PTwindows.mptpf).Visible = True Then
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
+            End If
+        Catch ex As Exception
+            projectboardWindows(PTwindows.mptpr) = Nothing
+        End Try
 
     End Sub
 
@@ -6079,8 +6129,9 @@ Imports System.Windows
     Sub TomMostImportantProjectCharts(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
+        Dim ok As Boolean = True
         'Dim SID As String
-        Dim hproj As clsProjekt
+        Dim hproj As clsProjekt = Nothing
         Dim awinSelection As Excel.ShapeRange
         Dim auswahl As Integer = 1
         Dim top As Double, left As Double, width As Double, height As Double
@@ -6098,70 +6149,86 @@ Imports System.Windows
 
         If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                Dim ok As Boolean = True
-                singleShp = awinSelection.Item(1)
+            singleShp = awinSelection.Item(1)
 
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    myCollection.Add(hproj.name)
-                Catch ex As Exception
+            Try
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
+                If IsNothing(hproj) Then
                     ok = False
-                    hproj = Nothing
-                End Try
-
-                If ok Then
-
-                    Dim repObj As Excel.ChartObject
-                    appInstance.EnableEvents = False
-                    appInstance.ScreenUpdating = False
-
-                    repObj = Nothing
-
-                    Try
-                        ' Projekt-Ergebnis
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
-                                                                 top, left, width, height, False)
-
-                        ' Rollen-Balken
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        auswahl = 1 ' zeige Personalbedarfe
-                        Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
-
-                        ' Kosten-Balken
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        auswahl = 1 ' zeige Sonstige Kosten
-                        Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
-
-                        ' Strategie / Risiko / Marge
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
-
-                        Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
-
-                        If thereAreAnyCharts(PTwindows.mptpr) Then
-                            Call showVisboWindow(PTwindows.mptpr)
-                        End If
-
-                    Catch ex As Exception
-                        Call MsgBox(ex.Message)
-                    End Try
-
+                Else
+                    myCollection.Add(hproj.name)
                 End If
 
+            Catch ex As Exception
+                ok = False
+                hproj = Nothing
+            End Try
 
-                appInstance.EnableEvents = True
-                appInstance.ScreenUpdating = True
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
 
-            End If
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            If ShowProjekte.Count > 0 Then
+                hproj = ShowProjekte.getProject(1)
+                If IsNothing(hproj) Then
+                    ok = False
+                Else
+                    ok = True
+                    myCollection.Add(hproj.name)
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects loaded ...")
+                Else
+                    Call MsgBox("es sind keine Projekte geladen ...")
+                End If
+
+                ok = False
+            End If
+
+        End If
+
+        If ok And Not IsNothing(hproj) Then
+
+            Dim repObj As Excel.ChartObject
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+
+            repObj = Nothing
+
+            Try
+                ' Projekt-Ergebnis
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
+                                                         top, left, width, height, False)
+
+                ' Rollen-Balken
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                auswahl = 1 ' zeige Personalbedarfe
+                Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                ' Kosten-Balken
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                auswahl = 1 ' zeige Sonstige Kosten
+                Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                ' Strategie / Risiko / Marge
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
+                Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
+
+                If thereAreAnyCharts(PTwindows.mptpr) Then
+                    Call showVisboWindow(PTwindows.mptpr)
+                End If
+
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
         End If
 
         enableOnUpdate = True
@@ -6720,16 +6787,22 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub Tom2G2M2M1B2SollIstPKosten(control As IRibbonControl)
 
+
+        ' alt ....
         Call projektTafelInit()
         ' auswahl steuert , dass die Personal-Kosten angezeigt werden 
         Dim auswahl As Integer = 1
-
         Dim vglBaseline As Boolean = True
-
         ' typ steuert, ob Summenbetrachtung oder Curve angezeigt wird
         Dim typ As String = " "
+        Try
+            Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+            Call showVisboWindow(PTwindows.mptpr)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
 
-        Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+
 
     End Sub
 
@@ -6749,6 +6822,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+        Call showVisboWindow(PTwindows.mptpr)
 
     End Sub
 
@@ -6765,6 +6839,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+        Call showVisboWindow(PTwindows.mptpr)
 
     End Sub
 
@@ -6829,12 +6904,6 @@ Imports System.Windows
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                With singleShp
-                    top = .Top + boxHeight + 5
-                    left = .Left - 5
-                End With
-                height = 300
-                width = 400
 
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
@@ -6885,10 +6954,13 @@ Imports System.Windows
                 Dim qualifier As String = " "
 
                 Try
+
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+
                     If typ = "Curve" Then
                         Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
-                        Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width, False)
                     End If
                 Catch ex As Exception
 
@@ -6898,11 +6970,14 @@ Imports System.Windows
                 appInstance.ScreenUpdating = True
 
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-
+                enableOnUpdate = True
+                'Call MsgBox("bitte nur ein Projekt selektieren")
+                Throw New ArgumentException("bitte nur ein Projekt selektieren")
             End If
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            enableOnUpdate = True
+            'Call MsgBox("vorher Projekt selektieren ...")
+            Throw New ArgumentException("vorher Projekt selektieren ...")
         End If
 
         enableOnUpdate = True
@@ -8201,7 +8276,6 @@ Imports System.Windows
                 End With
                 wpfInput.Add(valueItem.name, valueItem)
 
-
                 Dim pieChartZieleV As New PieChartWindow(wpfInput)
 
                 With pieChartZieleV
@@ -8446,6 +8520,14 @@ Imports System.Windows
     Sub PTMEShowCharts(control As IRibbonControl)
 
 
+        ' das Ganze nur machen, wenn das Chart nicht ohnehin schon gezeigt wird ... 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                Exit Sub
+            End If
+        Catch ex As Exception
+        End Try
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -8457,7 +8539,7 @@ Imports System.Windows
         Dim hproj As clsProjekt = Nothing
 
 
-        ' das MArkieren der selektierten Projekte einschalten ..
+        ' das Markieren der selektierten Projekte einschalten ..
         awinSettings.showValuesOfSelected = True
 
 
@@ -8524,7 +8606,7 @@ Imports System.Windows
             ''.Caption = windowNames(PTwindows.massEdit)
         End With
 
-        ' Aufbau des Windows windowNames(4): Charts
+
         projectboardWindows(PTwindows.meChart) = appInstance.ActiveWindow.NewWindow
 
         visboWorkbook.Worksheets.Item(arrWsNames(ptTables.meCharts)).activate()
@@ -10431,256 +10513,7 @@ Imports System.Windows
 
     End Sub
 
-    ''' <summary>
-    ''' zeigt das angegebene VISBO Window, wenn es nicht ohnehin schon angezeigt wird ...
-    ''' </summary>
-    ''' <param name="visboWindowType"></param>
-    ''' <remarks></remarks>
-    Private Sub showVisboWindow(ByVal visboWindowType As Integer)
-
-
-        ' Voraussetzungen schaffen: kein EnableEvents und kein Flackern und kein EnableOnUpdate ..
-        '
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim formereOU As Boolean = enableOnUpdate
-
-        Dim stdPfPrWindowBreite As Double = maxScreenWidth / 5 - 10
-
-        If enableOnUpdate Then
-            enableOnUpdate = False
-        End If
-
-        If appInstance.EnableEvents Then
-            appInstance.EnableEvents = False
-        End If
-
-        If appInstance.ScreenUpdating Then
-            appInstance.ScreenUpdating = False
-        End If
-
-
-        ' Ende Voraussetzungen schaffen 
-        Dim pfWindowAlreadyExisting As Boolean = False
-        Dim prWindowAlreadyExisting As Boolean = False
-        Dim foundWindow As Excel.Window = Nothing
-        Dim visboWorkbook As Excel.Workbook = appInstance.Workbooks.Item(myProjektTafel)
-
-        ' 
-        For Each tmpWindow As Excel.Window In visboWorkbook.Windows
-
-            If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.mptPfCharts) Then
-
-                pfWindowAlreadyExisting = True
-                foundWindow = tmpWindow
-
-            End If
-
-            If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.mptPrCharts) Then
-
-                prWindowAlreadyExisting = True
-                foundWindow = tmpWindow
-
-            End If
-
-        Next
-
-
-
-        Select Case visboWindowType
-            Case PTwindows.mptpf
-                Try
-                    If Not pfWindowAlreadyExisting Then
-
-                        ' Aufbau des Windows PTwindows.mptpf Charts
-                        'projectboardWindows(PTwindows.mptpf) = appInstance.ActiveWindow.NewWindow
-                        projectboardWindows(PTwindows.mptpf) = projectboardWindows(PTwindows.mpt).NewWindow
-
-                        ' jetzt das Worksheet aktivieren ... dazu muss aber wahrscheinlich appinstance.EnableEvents = true sein ? 
-                        appInstance.EnableEvents = True
-                        CType(visboWorkbook.Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).Activate()
-                        appInstance.EnableEvents = False
-
-                        ' nur wenn ein neues erzeugt wurde, ist das Arragieren notwendig , damit die Größe verändert werdne kann 
-                        If Not prWindowAlreadyExisting Then
-                            appInstance.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleVertical)
-                        End If
-
-
-                        ' jetzt soll die Größe entsprechend eingestellt werden ..
-
-                        With projectboardWindows(PTwindows.mptpf)
-                            .Visible = True
-                            .WindowState = Excel.XlWindowState.xlNormal
-                            .EnableResize = True
-                            .Left = 4 * maxScreenWidth / 5
-                            .Width = stdPfPrWindowBreite
-                            ' wenn prWindows schon existert hat ..
-                            If prWindowAlreadyExisting Then
-                                .Top = projectboardWindows(PTwindows.mpt).Top
-                                .Height = projectboardWindows(PTwindows.mpt).Height
-                            End If
-                        End With
-
-                    Else
-                        projectboardWindows(PTwindows.mptpf) = foundWindow
-                        With projectboardWindows(PTwindows.mptpf)
-                            .Visible = True
-                            .WindowState = Excel.XlWindowState.xlNormal
-                            .EnableResize = True
-                        End With
-                    End If
-
-                    ' soll in allen Fällen gemacht werden 
-                    With projectboardWindows(PTwindows.mptpf)
-                        .DisplayHorizontalScrollBar = True
-                        .DisplayVerticalScrollBar = True
-                        .DisplayGridlines = False
-                        .DisplayHeadings = False
-                        .DisplayRuler = False
-                        .DisplayOutline = False
-                        .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.mptpf)
-                    End With
-
-                    ' jetzt muss das mpt Window in der Größe verändert werden, aber nur , wenn das nicht schon vorher existiert hat
-                    If Not pfWindowAlreadyExisting Then
-
-                        With projectboardWindows(PTwindows.mpt)
-                            If .WindowState = Excel.XlWindowState.xlMaximized Then
-                                .WindowState = Excel.XlWindowState.xlNormal
-                            End If
-
-                            If prWindowAlreadyExisting Then
-                                .Left = 1 + stdPfPrWindowBreite + 1
-                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1 - .Left
-                            Else
-                                .Left = 1
-                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1
-                            End If
-
-
-                        End With
-
-                        pfWindowAlreadyExisting = True
-
-                    End If
-
-                Catch ex As Exception
-
-                End Try
-            Case PTwindows.mptpr
-                Try
-                    If Not prWindowAlreadyExisting Then
-
-                        ' Aufbau des Windows PTwindows.mptpr Charts
-                        projectboardWindows(PTwindows.mptpr) = projectboardWindows(PTwindows.mpt).NewWindow
-
-                        ' jetzt das Worksheet aktivieren ... dazu muss aber wahrscheinlich appinstance.EnableEvents = true sein ? 
-                        appInstance.EnableEvents = True
-                        CType(visboWorkbook.Worksheets.Item(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).Activate()
-                        appInstance.EnableEvents = False
-
-                        ' nur wenn ein neues erzeugt wurde, ist das Arragieren notwendig , damit die Größe verändert werden kann 
-                        If Not pfWindowAlreadyExisting Then
-                            appInstance.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleVertical)
-                        End If
-
-
-                        ' jetzt soll die Größe entsprechend eingestellt werden ..
-
-                        With projectboardWindows(PTwindows.mptpr)
-                            .Visible = True
-                            .WindowState = Excel.XlWindowState.xlNormal
-                            .EnableResize = True
-                            .Left = 1
-                            .Width = stdPfPrWindowBreite
-                            ' wenn pfWindows schon existert hat ..
-                            If pfWindowAlreadyExisting Then
-                                .Top = projectboardWindows(PTwindows.mpt).Top
-                                .Height = projectboardWindows(PTwindows.mpt).Height
-                            End If
-                        End With
-
-                    Else
-                        projectboardWindows(PTwindows.mptpr) = foundWindow
-                        With projectboardWindows(PTwindows.mptpr)
-                            .Visible = True
-                            .WindowState = Excel.XlWindowState.xlNormal
-                            .EnableResize = True
-                        End With
-                    End If
-
-                    ' soll in allen Fällen gemacht werden 
-                    With projectboardWindows(PTwindows.mptpr)
-                        .DisplayHorizontalScrollBar = True
-                        .DisplayVerticalScrollBar = True
-                        .DisplayGridlines = False
-                        .DisplayHeadings = False
-                        .DisplayRuler = False
-                        .DisplayOutline = False
-                        .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.mptpr)
-                    End With
-
-                    If Not prWindowAlreadyExisting Then
-
-                        With projectboardWindows(PTwindows.mpt)
-                            If .WindowState = Excel.XlWindowState.xlMaximized Then
-                                .WindowState = Excel.XlWindowState.xlNormal
-                            End If
-
-                            .Left = projectboardWindows(PTwindows.mptpr).Left + _
-                                    projectboardWindows(PTwindows.mptpr).Width + 1
-
-                            If pfWindowAlreadyExisting Then
-                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1 - .Left
-                            Else
-                                .Width = maxScreenWidth - (projectboardWindows(PTwindows.mptpr).Width + 1)
-                            End If
-
-
-                        End With
-
-                        prWindowAlreadyExisting = True
-
-                    End If
-
-
-                Catch ex As Exception
-
-                End Try
-
-
-            Case PTwindows.mpt
-            Case Else
-                ' nichts tun 
-        End Select
-
-
-        ' alten Zustand bezgl enableEvents etc wieder herstellen ...
-        ' wieder auf den Ausgangszustand setzen ... 
-        '
-
-        ' jetzt wieder auf das Haupt-Window positionieren 
-        projectboardWindows(PTwindows.mpt).Activate()
-
-
-        With appInstance
-            If .EnableEvents <> formerEE Then
-                .EnableEvents = formerEE
-            End If
-
-            If .ScreenUpdating <> formerSU Then
-                .ScreenUpdating = formerSU
-            End If
-
-            If enableOnUpdate <> formereOU Then
-                enableOnUpdate = formereOU
-            End If
-        End With
-
-    End Sub
+  
     Sub PTTestFunktion1(control As IRibbonControl)
 
         Call MsgBox("Enable Events ist " & appInstance.EnableEvents.ToString)

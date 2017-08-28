@@ -32,13 +32,16 @@ Public Class ThisAddIn
             awinSettings.visboTaskClass = My.Settings.TaskClass
             awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
             awinSettings.visboAmpel = My.Settings.VISBOAmpel
-            awinSettings.visboDebug = True
+            awinSettings.visboDebug = My.Settings.VISBODebug
+            awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.databaseURL = My.Settings.mongoDBURL
+            dbUsername = ""
+            dbPasswort = ""
 
             '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
             Call awinsetTypen("BHTC")
 
             StartofCalendar = StartofCalendar.AddMonths(-12)
-
 
         Catch ex As Exception
 

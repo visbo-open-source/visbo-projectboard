@@ -137,6 +137,7 @@ Partial Class frmProjPortfolioAdmin
         Me.settingsBtn.Location = New System.Drawing.Point(427, 348)
         Me.settingsBtn.Name = "settingsBtn"
         Me.settingsBtn.Size = New System.Drawing.Size(16, 16)
+        Me.settingsBtn.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.settingsBtn.TabIndex = 69
         Me.settingsBtn.TabStop = False
         Me.settingsBtn.Visible = False
@@ -148,6 +149,7 @@ Partial Class frmProjPortfolioAdmin
         Me.backToInit.Location = New System.Drawing.Point(274, 347)
         Me.backToInit.Name = "backToInit"
         Me.backToInit.Size = New System.Drawing.Size(16, 16)
+        Me.backToInit.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.backToInit.TabIndex = 65
         Me.backToInit.TabStop = False
         '
@@ -158,6 +160,7 @@ Partial Class frmProjPortfolioAdmin
         Me.onlyInactive.Location = New System.Drawing.Point(252, 347)
         Me.onlyInactive.Name = "onlyInactive"
         Me.onlyInactive.Size = New System.Drawing.Size(16, 16)
+        Me.onlyInactive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.onlyInactive.TabIndex = 64
         Me.onlyInactive.TabStop = False
         '
@@ -168,6 +171,7 @@ Partial Class frmProjPortfolioAdmin
         Me.onlyActive.Location = New System.Drawing.Point(230, 347)
         Me.onlyActive.Name = "onlyActive"
         Me.onlyActive.Size = New System.Drawing.Size(16, 16)
+        Me.onlyActive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.onlyActive.TabIndex = 63
         Me.onlyActive.TabStop = False
         '
@@ -178,6 +182,7 @@ Partial Class frmProjPortfolioAdmin
         Me.deleteFilterIcon.Location = New System.Drawing.Point(152, 347)
         Me.deleteFilterIcon.Name = "deleteFilterIcon"
         Me.deleteFilterIcon.Size = New System.Drawing.Size(16, 16)
+        Me.deleteFilterIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.deleteFilterIcon.TabIndex = 59
         Me.deleteFilterIcon.TabStop = False
         '
@@ -188,6 +193,7 @@ Partial Class frmProjPortfolioAdmin
         Me.filterIcon.Location = New System.Drawing.Point(130, 347)
         Me.filterIcon.Name = "filterIcon"
         Me.filterIcon.Size = New System.Drawing.Size(16, 16)
+        Me.filterIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.filterIcon.TabIndex = 57
         Me.filterIcon.TabStop = False
         '
@@ -200,6 +206,7 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionSet.Location = New System.Drawing.Point(23, 348)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionSet.TabIndex = 55
         Me.SelectionSet.TabStop = False
         '
@@ -211,6 +218,7 @@ Partial Class frmProjPortfolioAdmin
         Me.collapseCompletely.Location = New System.Drawing.Point(68, 348)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.collapseCompletely.TabIndex = 54
         Me.collapseCompletely.TabStop = False
         '
@@ -221,6 +229,7 @@ Partial Class frmProjPortfolioAdmin
         Me.expandCompletely.Location = New System.Drawing.Point(90, 348)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.expandCompletely.TabIndex = 53
         Me.expandCompletely.TabStop = False
         '
@@ -232,6 +241,7 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset.Location = New System.Drawing.Point(42, 348)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionReset.TabIndex = 52
         Me.SelectionReset.TabStop = False
         '

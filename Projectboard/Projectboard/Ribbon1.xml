@@ -79,7 +79,7 @@
               <!--label="VISBO-Steckbriefe"-->
               <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
               <!--label ="VISBO Open XML-->
-              <button id="PT4G1B6" imageMso="DataFromXmlFile" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
+              <button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
               <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
               <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
               <!--<separator id="PT4G1s1"/>-->
@@ -144,7 +144,7 @@
             <menu id="PT2G1M" getVisible="chckVisibility">
               <!--label="Neu auf Basis Vorlage"-->
               <button id="PT2G1M0B0" getLabel ="bestimmeLabel" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
-              <button id="PT2G1M0B1" label="Neu auf Basis Projekt(fehlt)" onAction="PT2ProjektNeuBasisProjekt" />
+              <button id="PT2G1M0B1" getLabel="bestimmeLabel" enabled="false" onAction="PT2ProjektNeuBasisProjekt" />
             </menu>
           </splitButton>
           <!--label="neue Variante anlegen"-->
@@ -162,7 +162,7 @@
             <!--label="einzelne Projekte und Varianten"-->
             <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
-          <button id="PTExit" size="large" imageMso="PrintPreviewClose" getLabel ="bestimmeLabel" onAction="PTexit" />
+          <!--<button id="PTExit" size="large" imageMso="PrintPreviewClose" getLabel ="bestimmeLabel" onAction="PTexit" />-->
         </group>
         <!--</group>-->
       </tab>
@@ -258,7 +258,7 @@
           <!--label="Strategy Profit Risk"-->
           <button id ="PT6G1B3" imageMso="Grouping" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
           <!--label="sort by individual criterias"-->
-          <button id ="PT6G1B4" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
+          <button id ="PT6G1B4" imageMso="SortDialog"  enabled ="false" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>
           <button id ="PT6G1B5" enabled ="false" imageMso="SortDialog" getLabel ="bestimmeLabel" onAction="sortCurrentconstellation"/>      
         </group>
       </tab>
@@ -340,7 +340,7 @@
           <button id="PT0G1B"  imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
             <menu id="PT0G1M">
               <!--label="Save Cockpit"-->
-              <button id="PT0G1M3B2" imageMso="ChartSaveTemplates" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
+              <button id="PT0G1M3B2" imageMso="ChartSaveTemplates" enabled ="true" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
               <!--label="Load Cockpit"-->
               <button id="PT0G1M3B1" imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
             </menu>
@@ -400,6 +400,8 @@
         <group id ="PTeinstG1" >
           <!--label="Report Sprache"-->
           <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
+          <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
+          <!--<button id="PTDemoHistory" label="demo-funktion historie"  onAction ="pttestfunktion5" />-->
         </group>
       </tab>
       <!--label="Help"-->
@@ -407,8 +409,8 @@
         <group id ="PTXG1" > 
         </group>
       </tab>
-      <!--label="Lizenzen"-->
-      <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--label="Lizenzen"--><!--
+      <tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
             <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
             <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
@@ -426,8 +428,8 @@
           <button id="PTMEC1" getLabel ="bestimmeLabel" onAction="PTMEShowCharts"  supertip="Für eine oder mehrere Ressourcen können Auslastungs-Charts erstellt werden."/>
           <!--label="Budget/Kosten"-->
           <!--<button id="PTMEC2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten über alle Projekte im betrachteten Zeitraum."/>-->
-          <!--label="Info Gewinn/Verlust"-->
-          <button id="PTMEC3" getLabel ="bestimmeLabel"  onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
+          <!--label="Info Vergleich mit früherem Stand"-->
+          <button id="PTMEC3" getLabel ="bestimmeLabel"  enabled ="true" onAction="PT0ShowProjektInfo1" supertip="Gegenüberstellung aktueller Profit/Loss Forecast versus letzter Stand in DB"/>
         </group>
       </tab>
       <tab id="PTmassEdit" getVisible="chckVisibility" getLabel ="bestimmeLabel">

@@ -2611,6 +2611,15 @@ Public Class frmProjPortfolioAdmin
 
         End If
 
+        ' jetzt muss die Caption neu gesetzt werden ...
+        If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+            Try
+                projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt)
+            Catch ex As Exception
+
+            End Try
+        End If
+
         ' Cursor auf Normal-Cursor setzen ... 
         Me.Cursor = Cursors.Arrow
 

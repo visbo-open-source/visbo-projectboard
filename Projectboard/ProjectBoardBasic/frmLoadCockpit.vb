@@ -35,7 +35,7 @@ Public Class frmLoadCockpit
             DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
         Else
-            Call MsgBox("bitte einen Eintrag selektieren")
+            Call MsgBox("bitte einen Eintrag selektieren") '????'
         End If
 
     End Sub

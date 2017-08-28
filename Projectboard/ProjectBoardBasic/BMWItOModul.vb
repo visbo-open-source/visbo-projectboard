@@ -347,7 +347,7 @@ Public Module BMWItOModul
 
                         Try
 
-                            hproj.name = pName
+                            hproj.name = makeValidProjectName(pName)
                             hproj.startDate = startDate
                             ' Projekte sollten erstmal nicht verschoben werden können
                             ' dazu muss eine Variante erzeugt werden , die kann dann verschoben werden 

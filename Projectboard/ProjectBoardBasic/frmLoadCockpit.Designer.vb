@@ -71,6 +71,7 @@ Partial Class frmLoadCockpit
         Me.deleteOtherCharts.TabIndex = 5
         Me.deleteOtherCharts.Text = "andere Charts löschen"
         Me.deleteOtherCharts.UseVisualStyleBackColor = True
+        Me.deleteOtherCharts.Visible = False
         '
         'frmLoadCockpit
         '
