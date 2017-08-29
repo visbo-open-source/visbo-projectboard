@@ -2,7 +2,7 @@
 
     Private _subRoleIDs As SortedList(Of Integer, String)
 
-    Private uuid As Integer
+    Private _uuid As Integer
     'Private Kapa() As Double
 
 
@@ -89,18 +89,18 @@
     End Sub
 
 
-    
+
     Public Property UID() As Integer
 
         Get
 
-            UID = uuid
+            UID = _uuid
 
         End Get
 
         Set(value As Integer)
 
-            uuid = value
+            _uuid = value
 
         End Set
 
