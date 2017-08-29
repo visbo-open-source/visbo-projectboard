@@ -2123,6 +2123,7 @@ Public Module awinGeneralModules
                 'showRangeRight = CInt(.Range("Rechter_Rand_Ressourcen_Diagramme").Value)
                 showtimezone_color = .Range("Show_Time_Zone_Color").Interior.Color
                 noshowtimezone_color = .Range("NoShow_Time_Zone_Color").Interior.Color
+                calendarFontColor = .Range("NoShow_Time_Zone_Color").Font.Color
                 nrOfDaysMonth = CDbl(.Range("Arbeitstage_pro_Monat").Value)
                 farbeInternOP = .Range("Farbe_intern_ohne_Projekte").Interior.Color
                 farbeExterne = .Range("Farbe_externe_Ressourcen").Interior.Color
@@ -2151,7 +2152,11 @@ Public Module awinGeneralModules
                     Catch ex2 As Exception
                         ' ansonsten wird die Voreinstellung verwendet 
                     End Try
+                    Try
+                        awinSettings.gridLineColor = CLng(.Range("FarbeGridLine").Interior.Color)
+                    Catch ex As Exception
 
+                    End Try
 
                 Catch ex As Exception
                     Throw New ArgumentException("Customization File fehlerhaft - Farben fehlen ... " & vbLf & ex.Message)
@@ -2585,6 +2590,7 @@ Public Module awinGeneralModules
                         .ReadingOrder = Excel.Constants.xlContext
                         .MergeCells = False
                         .Interior.Color = noshowtimezone_color
+                        .Font.Color = calendarFontColor
                     End With
 
                     rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
@@ -2669,7 +2675,8 @@ Public Module awinGeneralModules
                 laenge = showRangeRight - showRangeLeft
 
                 If laenge > 0 And showRangeLeft > 0 Then
-                    .Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)).Interior.Color = showtimezone_color
+                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Interior.Color = showtimezone_color
+                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Font.Color = calendarFontColor
                 End If
 
             End With

@@ -15,6 +15,7 @@ Public Class clsawinSettings
     Public Property SollIstFarbeL As Long
     Public Property SollIstFarbeC As Long
     Public Property SollIstFarbeArea As Long
+    Public Property gridLineColor As Long
     Public Property timeSpanColor As Long
     Public Property missingDefinitionColor As Long
     Public Property showTimeSpanInPT As Boolean
@@ -235,6 +236,7 @@ Public Class clsawinSettings
         _SollIstFarbeC = RGB(80, 240, 80)
         _SollIstFarbeArea = RGB(200, 200, 200)
         _timeSpanColor = RGB(242, 242, 242)
+        _gridLineColor = RGB(220, 220, 220)
         _missingDefinitionColor = XlRgbColor.rgbCoral
         _showTimeSpanInPT = True
         _anzTopBottlenecks = 3

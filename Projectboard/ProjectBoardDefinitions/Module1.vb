@@ -157,7 +157,7 @@ Public Module Module1
     Public showRangeRight As Integer
 
     ' diese beiden Variablen nehmen die Farben auf für Showtimezone bzw. Noshowtimezone
-    Public showtimezone_color As Object, noshowtimezone_color As Object
+    Public showtimezone_color As Object, noshowtimezone_color As Object, calendarFontColor As Object
 
 
     ' maxScreenHeight, maxScreenWidth gibt die maximale Höhe/Breite des Bildschirms in Punkten an 
@@ -4385,7 +4385,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub closeAllWindowsExceptMPT()
 
-        Dim tmpWindow As Excel.Window
+        'Dim tmpWindow As Excel.Window
         Dim vglName As String = CType(projectboardWindows(PTwindows.mpt).ActiveSheet, Excel.Worksheet).Name
         If vglName <> arrWsNames(ptTables.MPT) Then
             Call MsgBox("Window 0 zeigt auf das falsche Sheet: " & vglName)
