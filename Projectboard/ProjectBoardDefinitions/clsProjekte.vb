@@ -498,18 +498,19 @@ Public Class clsProjekte
                     If Not tmpListe.Contains(tmpName) Then
                         tmpListe.Add(tmpName, tmpName)
                         If includingParentRoles Then
-                            Dim parentRole As String = RoleDefinitions.getParentRoleOf(tmpName)
-                            Dim grandparentRole As String = ""
-                            If parentRole <> "" Then
-                                If Not tmpListe.Contains(parentRole) Then
-                                    tmpListe.Add(parentRole, parentRole)
-                                    grandparentRole = RoleDefinitions.getParentRoleOf(parentRole)
-                                    Do While grandparentRole <> ""
-                                        If Not tmpListe.Contains(grandparentRole) Then
-                                            tmpListe.Add(grandparentRole, grandparentRole)
-                                            grandparentRole = RoleDefinitions.getParentRoleOf(grandparentRole)
+                            Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(tmpName)
+                            Dim parentRole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
+                            Dim grandparentRole As clsRollenDefinition = Nothing
+                            If Not IsNothing(parentRole) Then
+                                If Not tmpListe.Contains(parentRole.name) Then
+                                    tmpListe.Add(parentRole.name, parentRole.name)
+                                    grandparentRole = RoleDefinitions.getParentRoleOf(parentRole.UID)
+                                    Do While Not IsNothing(grandparentRole)
+                                        If Not tmpListe.Contains(grandparentRole.name) Then
+                                            tmpListe.Add(grandparentRole.name, grandparentRole.name)
+                                            grandparentRole = RoleDefinitions.getParentRoleOf(grandparentRole.UID)
                                         Else
-                                            grandparentRole = ""
+                                            grandparentRole = Nothing
                                         End If
                                     Loop
                                 End If
