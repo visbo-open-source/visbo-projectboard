@@ -1807,9 +1807,7 @@ Public Class frmHierarchySelection
         Dim kennung As String ' V: für Vorlagen, P: für Projekte
         Dim hry As clsHierarchy
         Dim checkProj As Boolean = False
-
-
-
+        Dim projekteToLook As clsProjekte = Nothing
 
         With hryTreeView
             .Nodes.Clear()
@@ -1820,37 +1818,60 @@ Public Class frmHierarchySelection
 
                 ' alle Templates zeigen 
                 kennung = "V:"
+
+                If selectedProjekte.Count > 0 And ShowProjekte.Count > 0 Then
+                    If menuOption = PTmenue.multiprojektReport Then
+                        projekteToLook = ShowProjekte
+                    ElseIf menuOption = PTmenue.einzelprojektReport Then
+                        projekteToLook = selectedProjekte
+                    ElseIf menuOption = PTmenue.leistbarkeitsAnalyse Then
+                        projekteToLook = ShowProjekte
+                    Else
+                        projekteToLook = ShowProjekte
+                    End If
+                Else
+                    If selectedProjekte.Count > 0 Then
+                        projekteToLook = selectedProjekte
+                    ElseIf ShowProjekte.Count > 0 Then
+                        projekteToLook = ShowProjekte
+
+                    End If
+                End If
+
+
                 For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
 
-                    If kvp.Value.hierarchy.count > 0 Then
-                        topLevel = .Nodes.Add(kvp.Key)
-                        topLevel.Name = kennung & kvp.Key
-                        topLevel.Text = kvp.Key
+                    If projekteToLook.getTypNames().Contains(kvp.Key) Then
 
-                        hry = kvp.Value.hierarchy
+                        If kvp.Value.hierarchy.count > 0 Then
+                            topLevel = .Nodes.Add(kvp.Key)
+                            topLevel.Name = kennung & kvp.Key
+                            topLevel.Text = kvp.Key
 
-                        Dim projVorlage As clsProjektvorlage = Projektvorlagen.getProject(kvp.Key)
-                        Dim nodeToCheck As Boolean = False
+                            hry = kvp.Value.hierarchy
 
-                        If selectedPhases.Count > 0 Then
-                            nodeToCheck = projVorlage.containsAnyPhasesOfCollection(selectedPhases)
-                        Else
-                            nodeToCheck = False
+                            Dim projVorlage As clsProjektvorlage = Projektvorlagen.getProject(kvp.Key)
+                            Dim nodeToCheck As Boolean = False
+
+                            If selectedPhases.Count > 0 Then
+                                nodeToCheck = projVorlage.containsAnyPhasesOfCollection(selectedPhases)
+                            Else
+                                nodeToCheck = False
+                            End If
+
+                            If selectedMilestones.Count > 0 Then
+                                nodeToCheck = nodeToCheck Or projVorlage.containsAnyMilestonesOfCollection(selectedMilestones)
+                            Else
+                                nodeToCheck = nodeToCheck Or False
+                            End If
+
+                            If nodeToCheck Then
+                                topLevel.Checked = True
+                            End If
+
+                            Call buildProjectSubTreeView(topLevel, hry)
                         End If
-
-                        If selectedMilestones.Count > 0 Then
-                            nodeToCheck = nodeToCheck Or projVorlage.containsAnyMilestonesOfCollection(selectedMilestones)
-                        Else
-                            nodeToCheck = nodeToCheck Or False
-                        End If
-
-                        If nodeToCheck Then
-                            topLevel.Checked = True
-                        End If
-
-                        Call buildProjectSubTreeView(topLevel, hry)
                     End If
-
 
                 Next
             ElseIf auswahl = PTProjektType.projekt Then
@@ -2541,13 +2562,13 @@ Public Class frmHierarchySelection
 
 
     End Sub
-
     ''' <summary>
     ''' uncheckt alle Selektionen im gesamten treeView
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
+    '''
     Private Sub SelectionReset_Click(sender As Object, e As EventArgs) Handles SelectionReset.Click
 
 
@@ -4065,7 +4086,7 @@ Public Class frmHierarchySelection
                 End If
 
                 Call buildTreeViewRolle()
-                'Call rebuildFormerState(PTauswahlTyp.Rolle)
+
 
             Else
                 ' Merken, was ggf. das Filterkriterium war 
@@ -4306,20 +4327,21 @@ Public Class frmHierarchySelection
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
         Dim childIds As SortedList(Of Integer, String) = currentRole.getSubRoleIDs
 
-        Dim newNode As TreeNode
+        If ShowProjekte.getRoleNames().Contains(currentRole.name) Then
 
-        With parentNode
-            newNode = .Nodes.Add(currentRole.name)
-            newNode.Name = roleUid.ToString
-            newNode.Text = currentRole.name
-        End With
+            Dim newNode As TreeNode
+            With parentNode
+                newNode = .Nodes.Add(currentRole.name)
+                newNode.Name = roleUid.ToString
+                newNode.Text = currentRole.name
+            End With
 
-        For i = 0 To childIds.Count - 1
+            For i = 0 To childIds.Count - 1
 
-            Call buildRoleSubTreeView(newNode, childIds.ElementAt(i).Key)
+                Call buildRoleSubTreeView(newNode, childIds.ElementAt(i).Key)
 
-        Next
-
+            Next
+        End If
 
     End Sub
 
