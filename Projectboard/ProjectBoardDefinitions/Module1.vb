@@ -91,6 +91,8 @@ Public Module Module1
     Public projectConstellations As New clsConstellations
     ' die currentSessionConstellation ist das Abbild der aktuellen Session 
     Public currentSessionConstellation As New clsConstellation
+    ' die beforeFilterConstellation ist das Abbild der aktuellen Session vor einer Filteraktion
+    Public beforeFilterConstellation As New clsConstellation
     Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes

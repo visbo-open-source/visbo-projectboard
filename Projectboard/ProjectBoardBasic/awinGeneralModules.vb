@@ -1394,6 +1394,10 @@ Public Module awinGeneralModules
                     appInstance.EnableEvents = True
 
                     If Not noDB Then
+
+                        ' ur: 31.08.2017: Initialisierung
+                        beforeFilterConstellation = Nothing
+
                         ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
                         Call readInitConstellations()
 

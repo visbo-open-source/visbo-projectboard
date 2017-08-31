@@ -13,7 +13,8 @@ Public Class frmProjPortfolioAdmin
 
     Private currentBrowserConstellation As New clsConstellation
     ' wenn Filter erstmalig aufgebaut wird , dann wird browserConstellationSav gemerkt ... 
-    Private browserConstellationSav As clsConstellation = Nothing
+    ' ur: 31.08.2017: Variable wird nun global defnieiert in Module.vb
+    ' Private beforeFilterConstellation As clsConstellation = Nothing
     ' PlusMinus Saving 
     Private browserConstellationSavPM As clsConstellation = Nothing
     ' wenn aus der Datenbank schnell gelesen werden soll ..
@@ -63,7 +64,7 @@ Public Class frmProjPortfolioAdmin
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Friend aKtionskennung As Integer
 
-   
+
 
     Private Sub frmProjPortfolioAdmin_Disposed(sender As Object, e As EventArgs) Handles Me.Disposed
 
@@ -87,7 +88,7 @@ Public Class frmProjPortfolioAdmin
             'projectConstellations.update(currentBrowserConstellation)
 
         End If
-        
+
 
         ' Maus auf Normalmodus zurücksetzen
         'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
@@ -97,7 +98,7 @@ Public Class frmProjPortfolioAdmin
     Private Sub defineButtonVisibility()
 
         Dim versionenOffset As Integer = 20
-        
+
 
         With Me
 
@@ -164,6 +165,18 @@ Public Class frmProjPortfolioAdmin
 
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
+                If Not IsNothing(beforeFilterConstellation) Then
+
+                    .deleteFilterIcon.Enabled = True
+
+                    ' Das DeleteFilterIcon mit Bild versehen 
+                    Me.deleteFilterIcon.Image = My.Resources.funnel_delete
+                    Me.deleteFilterIcon.Enabled = True
+                Else
+
+                End If
+
+
 
                 .dropboxScenarioNames.Visible = True
 
@@ -578,7 +591,7 @@ Public Class frmProjPortfolioAdmin
             End If
         End If
 
-        
+
 
 
         ' jetzt die Korrektheitsprüfung ...
@@ -705,6 +718,9 @@ Public Class frmProjPortfolioAdmin
 
         ' Fokus auf was unverdächtiges setzen 
         dropboxScenarioNames.Focus()
+
+
+        
 
     End Sub
 
@@ -1147,7 +1163,7 @@ Public Class frmProjPortfolioAdmin
                     Dim pName As String = getProjectNameOfTreeNode(projektNode.Text)
 
                     Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
-                    
+
 
                     ' jetzt muss das bisherige aus ShowProjekte rausgenommen werden 
                     If ShowProjekte.contains(pName) And projektNode.Checked Then
@@ -3248,8 +3264,8 @@ Public Class frmProjPortfolioAdmin
         End If
 
 
-        If IsNothing(browserConstellationSav) Then
-            browserConstellationSav = currentBrowserConstellation.copy
+        If IsNothing(beforeFilterConstellation) Then
+            beforeFilterConstellation = currentBrowserConstellation.copy()
         End If
 
         Dim storedAtOrBefore As Date
@@ -3443,9 +3459,9 @@ Public Class frmProjPortfolioAdmin
                             Call showConstellations(constellationsToShow:=tmpConstellation, _
                                                     clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
 
-                            If aKtionskennung = PTTvActions.chgInSession Then
-                                Call awinNeuZeichnenDiagramme(2)
-                            End If
+                            ''If aKtionskennung = PTTvActions.chgInSession Then
+                            ''    Call awinNeuZeichnenDiagramme(2)
+                            ''End If
 
                         End If
 
@@ -3537,9 +3553,10 @@ Public Class frmProjPortfolioAdmin
             stopRecursion = False
         Else
 
-            currentBrowserConstellation = browserConstellationSav.copy
+            currentBrowserConstellation = beforeFilterConstellation.copy
             'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
-            browserConstellationSav = Nothing
+
+            beforeFilterConstellation = Nothing
 
             ' jetzt das entzsprechende Szenario wieder laden 
             Dim tmpConstellation As New clsConstellations
@@ -3551,8 +3568,8 @@ Public Class frmProjPortfolioAdmin
             Call showConstellations(constellationsToShow:=tmpConstellation, _
                                     clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
 
-            ' neu Zeichnen der Diagramme
-            Call awinNeuZeichnenDiagramme(2)
+            '' neu Zeichnen der Diagramme
+            'Call awinNeuZeichnenDiagramme(2)
 
 
             ' jetzt muss der Last-Filter zurückgesetzt werden 
@@ -3844,10 +3861,10 @@ Public Class frmProjPortfolioAdmin
                                             aKtionskennung, quickList)
             stopRecursion = False
 
-            ' die Diagramme aktualisieren 
-            If aKtionskennung = PTTvActions.chgInSession Then
-                Call awinNeuZeichnenDiagramme(2)
-            End If
+            ' '' die Diagramme aktualisieren 
+            ''If aKtionskennung = PTTvActions.chgInSession Then
+            ''    Call awinNeuZeichnenDiagramme(2)
+            ''End If
 
         End If
 

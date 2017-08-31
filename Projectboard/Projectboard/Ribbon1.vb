@@ -1772,11 +1772,11 @@ Imports System.Windows
                 Else
                     tmpLabel = "Project Filter..."
                 End If
-            Case "PT0G1B9" ' Auswahl über Projekt-Struktur
+            Case "PT0G1B9" ' Filter zurücksetzen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur..."
+                    tmpLabel = "Filter zurücksetzen..."
                 Else
-                    tmpLabel = "Select by Structure..."
+                    tmpLabel = "Delete Filter..."
                 End If
             Case "PT0G1B10" ' Anzeige der Projekte mit roter ProjektAmpel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3810,11 +3810,11 @@ Imports System.Windows
                     Call showConstellations(constellationsToShow:=tmpConstellation, _
                                             clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
 
-                    If sortType = ptSortCriteria.customListe Then
-                        Call awinNeuZeichnenDiagramme(2)
-                    Else
-                        ' in allen anderen Fällen kann sich an der Zahl und Ressourcenbedrag nichts geändert haben 
-                    End If
+                    ''If sortType = ptSortCriteria.customListe Then
+                    ''    Call awinNeuZeichnenDiagramme(2)
+                    ''Else
+                    ''    ' in allen anderen Fällen kann sich an der Zahl und Ressourcenbedrag nichts geändert haben 
+                    ''End If
                 Catch ex As Exception
 
                 End Try

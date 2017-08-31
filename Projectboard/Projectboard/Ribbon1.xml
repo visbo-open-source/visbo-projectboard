@@ -241,6 +241,8 @@
         <group id ="PT0G1" >
           <!--label="Auswahl über Namen"-->
           <button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
+          <!--label="Filter zurücksetzen"-->
+          <button id="PT0G1B9" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Filter wird wieder zurückgesetzt"/>
           <!--label="Projekte mit Ampel=rot"-->
           <button id="PT0G1B10"  getLabel ="bestimmeLabel" enabled="false" supertip="Alle Projekte mit roter ProjektAmpel visualisieren"/>
           <!--label="Projekte mit ungedeckter Finanzierung"-->
