@@ -468,11 +468,11 @@ Partial Class frmHierarchySelection
         '
         'picturePhaseMilest
         '
-        Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.gear
+        Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.phases_und_milestones_248x248
         Me.picturePhaseMilest.Location = New System.Drawing.Point(193, 5)
         Me.picturePhaseMilest.Name = "picturePhaseMilest"
         Me.picturePhaseMilest.Size = New System.Drawing.Size(33, 33)
-        Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
+        Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.picturePhaseMilest.TabIndex = 66
         Me.picturePhaseMilest.TabStop = False
         Me.picturePhaseMilest.Visible = False

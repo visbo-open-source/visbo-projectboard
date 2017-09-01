@@ -270,44 +270,44 @@ Public Class frmHierarchySelection
                 End If
 
                 
-                '.rdbNameList.Enabled = False
-                '.rdbNameList.Visible = False
-                '.rdbNameList.Checked = False
+                .rdbNameList.Enabled = False
+                .rdbNameList.Visible = False
+                .rdbNameList.Checked = False
 
-                .rdbNameList.Enabled = True
-                .rdbNameList.Visible = True
-                .rdbNameList.Checked = True
+                '.rdbNameList.Enabled = True
+                '.rdbNameList.Visible = True
+                '.rdbNameList.Checked = True
 
 
-                '.rdbProjStruktProj.Enabled = False
-                '.rdbProjStruktProj.Visible = False
-                '.rdbProjStruktProj.Checked = False
-
-                '.rdbProjStruktTyp.Enabled = False
-                '.rdbProjStruktTyp.Visible = False
-                '.rdbProjStruktTyp.Checked = False
-
-                .rdbProjStruktProj.Enabled = True
-                .rdbProjStruktProj.Visible = True
+                .rdbProjStruktProj.Enabled = False
+                .rdbProjStruktProj.Visible = False
                 .rdbProjStruktProj.Checked = False
 
-                .rdbProjStruktTyp.Enabled = True
-                .rdbProjStruktTyp.Visible = True
+                .rdbProjStruktTyp.Enabled = False
+                .rdbProjStruktTyp.Visible = False
                 .rdbProjStruktTyp.Checked = False
 
-                '.rdbPhases.Visible = False
-                '.rdbPhases.Checked = False
-                '.picturePhasen.Visible = False
-                .rdbPhases.Visible = True
-                .rdbPhases.Checked = True
-                .picturePhasen.Visible = True
+                '.rdbProjStruktProj.Enabled = True
+                '.rdbProjStruktProj.Visible = True
+                '.rdbProjStruktProj.Checked = False
 
-                '.rdbPhaseMilest.Visible = True
-                .rdbPhaseMilest.Visible = False
+                '.rdbProjStruktTyp.Enabled = True
+                '.rdbProjStruktTyp.Visible = True
+                '.rdbProjStruktTyp.Checked = False
+
+                .rdbPhases.Visible = False
+                .rdbPhases.Checked = False
+                .picturePhasen.Visible = False
+                '.rdbPhases.Visible = True
+                '.rdbPhases.Checked = True
+                '.picturePhasen.Visible = True
+
+                .rdbPhaseMilest.Visible = True
+                '.rdbPhaseMilest.Visible = False
                 .rdbPhaseMilest.Checked = False
 
-                '.picturePhaseMilest.Visible = True
-                .picturePhaseMilest.Visible = False
+                .picturePhaseMilest.Visible = True
+                '.picturePhaseMilest.Visible = False
 
                 .rdbMilestones.Visible = True
                 .rdbMilestones.Checked = False
@@ -320,7 +320,7 @@ Public Class frmHierarchySelection
                 .pictureTyp.Visible = False
 
                 .rdbRoles.Visible = True
-                .rdbRoles.Checked = False
+                .rdbRoles.Checked = True
                 .pictureRoles.Visible = True
 
                 .rdbCosts.Visible = True
@@ -1492,49 +1492,56 @@ Public Class frmHierarchySelection
 
         oNode = e.Node
 
+        If rdbRoles.Checked Then
+            ' keine Sonderbehandlung der obersten Knoten bei Rollen-Hierarchie
+        Else
 
-        If Not rdbNameList.Checked Then
 
-            If oNode.Level = 0 Then
+            If Not rdbNameList.Checked Then
 
-                If Not oNode.Checked Then
-                    Call unCheck(oNode)
-                End If
+                If oNode.Level = 0 Then
 
-            Else
-                hnode = oNode
-
-                ' finde den obersten Node
-                While Not IsNothing(hnode.Parent)
-                    hnode = hnode.Parent
-                End While
-
-                If oNode.Checked Then
-
-                    ' Wenn oberster Node nicht gecheckt, dann check ihn
-                    If hnode.Level = 0 And Not hnode.Checked Then
-                        hnode.Checked = True
+                    If Not oNode.Checked Then
+                        Call unCheck(oNode)
                     End If
 
-                Else ' not oNode.checked 
+                Else
+                    hnode = oNode
 
-                    Dim allUnselected As Boolean
+                    ' finde den obersten Node
+                    While Not IsNothing(hnode.Parent)
+                        hnode = hnode.Parent
+                    End While
 
-                    If hnode.Level = 0 And hnode.Checked Then
+                    If oNode.Checked Then
 
-                        allUnselected = Not subNodesSelected(hnode)
-
-                        'If Not subNodesSelected(hnode) Then
-                        If allUnselected Then
-                            hnode.Checked = False
+                        ' Wenn oberster Node nicht gecheckt, dann check ihn
+                        If hnode.Level = 0 And Not hnode.Checked Then
+                            hnode.Checked = True
                         End If
+
+                    Else ' not oNode.checked 
+
+                        Dim allUnselected As Boolean
+
+                        If hnode.Level = 0 And hnode.Checked Then
+
+                            allUnselected = Not subNodesSelected(hnode)
+
+                            'If Not subNodesSelected(hnode) Then
+                            If allUnselected Then
+                                hnode.Checked = False
+                            End If
+                        End If
+
                     End If
 
                 End If
 
             End If
 
-        End If
+        End If    ' Ende von If rdbroles.checked
+
 
     End Sub
 

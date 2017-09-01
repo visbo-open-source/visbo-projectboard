@@ -295,20 +295,34 @@ Public Module PBBModules
             Dim filter As clsFilter = Nothing
 
             Try
+                If IsNothing(beforeFilterConstellation) Then
 
-                ' erst am Ende alle Diagramme neu machen ...
-                Dim tmpConstellations As New clsConstellations
-                tmpConstellations.Add(beforeFilterConstellation)
+                    If awinSettings.visboDebug Then
 
-                '' es in der Session Liste verfügbar machen
-                'If projectConstellations.Contains(beforeFilterConstellation.constellationName) Then
-                '    projectConstellations.Remove(beforeFilterConstellation.constellationName)
-                'End If
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("There is no active filter!")
+                        Else
+                            Call MsgBox("Es ist kein Filter gesetzt!")
+                        End If
 
-                'projectConstellations.Add(beforeFilterConstellation)
+                    End If
+                Else
 
-                Call showConstellations(constellationsToShow:=tmpConstellations, _
-                                        clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+                    ' erst am Ende alle Diagramme neu machen ...
+                    Dim tmpConstellations As New clsConstellations
+                    tmpConstellations.Add(beforeFilterConstellation)
+
+                    '' es in der Session Liste verfügbar machen
+                    'If projectConstellations.Contains(beforeFilterConstellation.constellationName) Then
+                    '    projectConstellations.Remove(beforeFilterConstellation.constellationName)
+                    'End If
+
+                    'projectConstellations.Add(beforeFilterConstellation)
+
+                    Call showConstellations(constellationsToShow:=tmpConstellations, _
+                                            clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                End If
 
             Catch ex As Exception
 

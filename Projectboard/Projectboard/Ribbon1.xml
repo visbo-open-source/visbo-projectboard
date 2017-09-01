@@ -242,7 +242,7 @@
           <!--label="Auswahl über Namen"-->
           <button id="PT0G1B8" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="die Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
           <!--label="Filter zurücksetzen"-->
-          <button id="PT0G1B9" imageMso="Filter" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Filter wird wieder zurückgesetzt"/>
+          <button id="PT0G1B9" imageMso="FilterClearAllFilters" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Filter wird wieder zurückgesetzt"/>
           <!--label="Projekte mit Ampel=rot"-->
           <button id="PT0G1B10"  getLabel ="bestimmeLabel" enabled="false" supertip="Alle Projekte mit roter ProjektAmpel visualisieren"/>
           <!--label="Projekte mit ungedeckter Finanzierung"-->
@@ -411,13 +411,13 @@
         <group id ="PTXG1" > 
         </group>
       </tab>
-      <!--label="Lizenzen"--><!--
+      <!--label="Lizenzen"-->
       <tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
             <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
             <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
           </group>
-      </tab>-->
+      </tab>
       <!--label="zurück zur Multiprojekt-Tafel"-->
       <tab id="PTzurück" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PTzurück1" getVisible="chckVisibility" >
