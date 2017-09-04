@@ -842,10 +842,11 @@ Public Module awinGeneralModules
                 Call MsgBox("awinPath:" & vbLf & awinPath)
                 Call MsgBox("globalPath:" & vbLf & globalPath)
 
-                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
-                            "Excel-Version: " & appInstance.Version, vbInformation, "Info")
             End If
-
+            If awinSettings.visboDebug And special <> "BHTC" Then
+                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+                           "Excel-Version: " & appInstance.Version, vbInformation, "Info")
+            End If
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
                 awinPath = globalPath
@@ -1121,6 +1122,11 @@ Public Module awinGeneralModules
 
                     Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Windows-User: " & myWindowsName)
+                    End If
+
+
                 Catch ex As Exception
                     Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
                 End Try
@@ -1146,6 +1152,10 @@ Public Module awinGeneralModules
             Dim wsName4 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(4)), _
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet
                                                     )
+            If awinSettings.visboDebug Then
+                Call MsgBox("wsName4 angesprochen")
+            End If
+
             If special = "ProjectBoard" Then
 
                 If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
@@ -1169,8 +1179,16 @@ Public Module awinGeneralModules
             End If 'if special="ProjectBoard"
 
 
-            Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+            ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+            ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            Dim wsName7810 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(7)), _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                    )
+
+            If awinSettings.visboDebug Then
+                Call MsgBox("wsName7810 angesprochen")
+            End If
 
             Try
                 ' Aufbauen der Darstellungsklassen  
@@ -1185,12 +1203,25 @@ Public Module awinGeneralModules
                 ' Auslesen der Meilenstein Definitionen 
                 Call readMilestoneDefinitions(wsName4)
 
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readMilestoneDefinitions")
+                End If
+
 
                 ' Auslesen der Rollen Definitionen 
                 Call readRoleDefinitions(wsName4)
 
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readRoleDefinitions")
+                End If
+
+
                 ' Auslesen der Kosten Definitionen 
                 Call readCostDefinitions(wsName4)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readCostDefinitions")
+                End If
 
 
                 ' Auslesen der Custom Field Definitions
@@ -1202,6 +1233,10 @@ Public Module awinGeneralModules
 
                 ' auslesen der anderen Informationen 
                 Call readOtherDefinitions(wsName4)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readOtherDefinitions")
+                End If
 
 
                 If special = "ProjectBoard" Then
@@ -1262,17 +1297,33 @@ Public Module awinGeneralModules
 
 
                 ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                        )
 
                 Call readNameMappings(wsName7810, phaseMappings)
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readNameMappings Phases")
+                End If
+
 
 
                 ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                'wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)), _
+                                                       Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                       )
 
                 Call readNameMappings(wsName7810, milestoneMappings)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readNameMappings Milestones")
+                End If
 
                 If special = "ProjectBoard" Then
 
@@ -1343,6 +1394,10 @@ Public Module awinGeneralModules
                         Call readInitConstellations()
 
                         currentSessionConstellation.constellationName = calcLastSessionScenarioName()
+
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("readInitConstellations , ok")
+                        End If
 
                     End If
 
@@ -3385,6 +3440,9 @@ Public Module awinGeneralModules
 
                 hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
 
+                hproj.Erloes = 0
+
+
                 Dim ProjektdauerIndays As Integer = calcDauerIndays(hproj.startDate, CDate(msproj.Finish))
                 Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
 
@@ -3436,7 +3494,8 @@ Public Module awinGeneralModules
 
                 Dim anzTasks As Integer = msproj.Tasks.Count
                 anzTasks = msproj.NumberOfTasks
-
+                Dim projSumTask As MSProject.Task = msproj.ProjectSummaryTask
+              
 
                 Dim resPool As MSProject.Resources = msproj.Resources
 
@@ -3454,8 +3513,6 @@ Public Module awinGeneralModules
 
 
                     msTask = msproj.Tasks.Item(i)
-
-
 
 
                     ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
@@ -3479,6 +3536,28 @@ Public Module awinGeneralModules
                         ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
                         Dim origPhName As String = msTask.Name
                         msTask.Name = phaseMappings.mapToStdName("", msTask.Name)
+
+                        '' '' Budgets Kosten und Work der SammelTasks aufsummieren
+                        '' '' ur: 25.08.2017: Testweise
+                        ' ''Dim co As Double = 0
+                        ' ''Dim wo As Double = 0
+                        ' ''If CType(msTask.Summary, Boolean) Then
+
+                        ' ''    Dim hstrco() As String = Split(msTask.BudgetCost, msproj.CurrencySymbol)
+                        ' ''    If hstrco.Length > 1 Then
+                        ' ''        'Dim co As Double = Val(msTask.BudgetCost)
+                        ' ''        co = Val(hstrco(1))
+                        ' ''    End If
+
+                        ' ''    Dim hstrwo() As String = Split(msTask.BudgetWork, msproj.CurrencySymbol)
+                        ' ''    If hstrwo.Length > 1 Then
+                        ' ''        wo = Val(hstrwo(1))
+                        ' ''        'Dim wo As Double = Val(msTask.BudgetWork)
+                        ' ''    End If
+
+                        ' ''    hproj.Erloes = hproj.Erloes + co + wo
+
+                        ' ''End If
 
                         ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
                         If Not PhaseDefinitions.Contains(msTask.Name) Then
@@ -3661,9 +3740,11 @@ Public Module awinGeneralModules
 
                                                     RoleDefinitions.Add(newRoleDef)
 
+
                                                     ' Änderung tk: das muss von roledefinitions geholt werden ...
                                                     ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
                                                     r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+
                                                 End If
 
 
@@ -3671,7 +3752,7 @@ Public Module awinGeneralModules
                                                 Dim work As Double = CType(ass.Work, Double)
                                                 'Dim duration As Double = CType(ass.Duration, Double)
                                                 Dim unit As Double = CType(ass.Units, Double)
-
+                                                Dim budgetWork As Double = CType(ass.BudgetWork, Double)
 
                                                 Dim startdate As Date = CDate(msTask.Start)
                                                 Dim endedate As Date = CDate(msTask.Finish)
@@ -3746,7 +3827,7 @@ Public Module awinGeneralModules
                                     End Select
                                 Next ass
 
-                          
+
                             End If
 
                             ' Hierarchie-Aufbau
@@ -12933,6 +13014,21 @@ Public Module awinGeneralModules
     End Function
 
     ''' <summary>
+    ''' Funktion testet die vorhandene Datenbank-authorisierungsinfog
+    ''' </summary>
+    ''' <param name="user"></param>
+    ''' <param name="pwd"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Function testLoginInfo_OK(ByVal user As String, ByVal pwd As String) As Boolean
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+        Dim ok As Boolean = request.createIndicesOnce()
+
+        testLoginInfo_OK = ok
+    End Function
+
+    ''' <summary>
     ''' übergebenene ProjektListe wird um die Projekte reduziert, die nicht zu dem Filter passen
     ''' das wird nur aufgerufen, wenn der Filter angewendet werden soll 
     ''' </summary>
@@ -21393,5 +21489,103 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
+    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, Optional ByRef identical As Boolean = False) As Boolean
+
+        Dim jetzt As Date = Now
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        enableOnUpdate = False
+
+        Dim outPutCollection As New Collection
+        Dim outputline As String = ""
+
+        Try
+
+            ' die aktuelle WriteProtection holen 
+            writeProtections.adjustListe(False) = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+
+            ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
+            'Call storeSessionConstellation("Last")
+
+            If request.pingMongoDb() And Not noDB Then
+
+                ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+
+                If demoModusHistory Then
+                    hproj.timeStamp = historicDate
+                Else
+                    hproj.timeStamp = jetzt
+                End If
+
+                Dim storeNeeded As Boolean
+                If request.projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                    ' prüfen, ob es Unterschied gibt 
+                    Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                    If Not IsNothing(standInDB) Then
+                        ' prüfe, ob es Unterschiede gibt
+                        storeNeeded = Not hproj.isIdenticalTo(standInDB)
+                    Else
+                        ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                        storeNeeded = True
+                    End If
+                Else
+                    storeNeeded = True
+                End If
+
+                If storeNeeded Then
+                    If request.storeProjectToDB(hproj, dbUsername) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputline = "stored: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputline)
+                        Else
+                            outputline = "gespeichert: " & hproj.name & ", " & hproj.variantName
+                            outPutCollection.Add(outputline)
+                        End If
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem, False)
+
+                        storeSingleProjectToDB = True
+                        'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputline = "project protected: " & hproj.name
+                        Else
+                            outputline = "geschütztes Projekt: " & hproj.name
+                        End If
+
+                        outPutCollection.Add(outputline)
+
+                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem, False)
+
+                        storeSingleProjectToDB = False
+
+                    End If
+                Else
+                    ' storeNeeded ist false, Kein Speichern erforderlich
+                    identical = True
+                    storeSingleProjectToDB = True
+                End If
+            Else
+
+                storeSingleProjectToDB = False
+                If awinSettings.englishLanguage Then
+                    Throw New ArgumentException("No Database reachable!")
+                Else
+                    Throw New ArgumentException("Datenbank ist nicht aktiviert!")
+                End If
+            End If
+
+        Catch ex As Exception
+
+            storeSingleProjectToDB = False
+
+            ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
+            Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+            'Exit Sub
+        End Try
+    End Function
 
 End Module
