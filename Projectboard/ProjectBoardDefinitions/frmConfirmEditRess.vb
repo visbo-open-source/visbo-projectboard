@@ -64,15 +64,6 @@ Public Class frmConfirmEditRess
                 shpElement = Nothing
             End Try
 
-            ' hier muss noch der Röntgenblick behandelt werden .. 
-            With roentgenBlick
-                If .isOn Then
-                    Call NoshowNeedsofProject(hproj.name)
-                    Call awinShowNeedsofProject1(.myCollection, .type, hproj.name)
-                End If
-            End With
-
-
 
         Catch ex As Exception
             enableOnUpdate = True

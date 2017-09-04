@@ -1577,14 +1577,10 @@ Public Module Projekte
                                 ' Farbe und laufende Nummer eintragen 
                                 Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape
                                 tableCell.TextFrame2.TextRange.Text = msNumber.ToString
-                                ' wenn das jetzt die gelbe Farbe hat, dann soll der Text schwarz sein, in allen anderen weiss
 
-                                If cBewertung.colorIndex = 2 Then
-                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(0, 0, 0)
-                                Else
-                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                                End If
 
+
+                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
                                 CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.Fill.ForeColor.RGB = ampelColor(cBewertung.colorIndex)
 
 
@@ -2573,7 +2569,7 @@ Public Module Projekte
 
         ' Änderung 18.6 : Unterscheidung zwischen Soll-/Ist Vergleichen und Min/Max Vergleichen 
 
-        If hproj.Status <> ProjektStatus(0) Then
+        If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
             ' Soll-Ist Vergleich
             isMinMax = False
 
@@ -3350,7 +3346,7 @@ Public Module Projekte
 
         ' Änderung 18.6 : Unterscheidung zwischen Soll-/Ist Vergleichen und Min/Max Vergleichen 
 
-        If hproj.Status <> ProjektStatus(0) Then
+        If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
             ' Soll-Ist Vergleich
             isMinMax = False
 
@@ -4032,7 +4028,7 @@ Public Module Projekte
         Dim lastPlan As clsProjekt
         Dim anzSnapshots As Integer = projekthistorie.Count
 
-        If hproj.Status <> ProjektStatus(0) Then
+        If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
             ' Soll-Ist Vergleich
             isMinMax = False
 
@@ -10626,7 +10622,7 @@ Public Module Projekte
                 .Erloes = budgetVorgabe
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
-                .Status = ProjektStatus(0)
+                .Status = ProjektStatus(PTProjektStati.geplant)
                 .description = kurzBeschreibung
 
                 .StrategicFit = sfit
@@ -10686,15 +10682,6 @@ Public Module Projekte
         Dim pZeile As Integer = projectboardShapes.getMaxZeile
         Call ZeichneProjektinPlanTafel(tmpCollection, pname, pZeile, tmpCollection, tmpCollection)
 
-
-        '
-        ' wenn Röntgen-Blick ein ist, dann müssen die Werte für dieses Projekt eingetragen  werden
-        '
-        If roentgenBlick.isOn Then
-            With roentgenBlick
-                Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
-            End With
-        End If
 
 
         ' ein Projekt wurde eingefügt  - typus = 2
@@ -10794,7 +10781,7 @@ Public Module Projekte
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
                 ' jedes Projekt zu Beginn als beauftragtes Projekt importieren
-                .Status = ProjektStatus(0)
+                .Status = ProjektStatus(PTProjektStati.geplant)
                 .StrategicFit = sfit
                 .Risiko = risk
 
@@ -11171,7 +11158,6 @@ Public Module Projekte
         Dim newchtobj As Excel.ChartObject = Nothing
         Dim oldchtobj As Excel.ChartObject
         Dim chtobj As Excel.ChartObject
-        'Dim hchtobj As Excel.ChartObject
         Dim hshape As Excel.Shape
         Dim xlsCockpits As xlNS.Workbook = Nothing
         Dim wsSheet As xlNS.Worksheet = Nothing
@@ -11414,7 +11400,7 @@ Public Module Projekte
                         ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
                         newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
 
-                        newchtobj.Top = oldchtobj.Top + maxTop
+                        newchtobj.Top = oldchtobj.Top + maxTop '???
                         newchtobj.Left = oldchtobj.Left + maxLeft
                         ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
 
@@ -11985,10 +11971,10 @@ Public Module Projekte
     ''' <param name="pname">Projektname</param>
     ''' <param name="type">0: Accept Changes; 1: Beauftragung </param>
     ''' <remarks></remarks>
-    Public Sub awinBeauftragung(ByVal pname As String, ByVal type As Integer)
+    Public Sub changeProjectStatus(ByVal pname As String, ByVal type As Integer)
         Dim hproj As clsProjekt
         Dim zeile As Integer
-
+        Dim errmsg As String
 
         ' prüfen, ob es in der ShowProjektListe ist ...
         If ShowProjekte.contains(pname) Then
@@ -11996,13 +11982,98 @@ Public Module Projekte
 
             Try
                 hproj = ShowProjekte.getProject(pname)
+                ' Sicherstellen, dass der Status Wechsel nur bei der Basis-Variante vorgenommen werden kann ...
+                If hproj.variantName <> "" Then
+                    If awinSettings.englishLanguage Then
+                        errmsg = hproj.getShapeText & " : status change of a project-variant is not possible!"
+                    Else
+                        errmsg = hproj.getShapeText & " : Status Wechsel ist für eine Variante nicht möglich!"
+                    End If
+                    Throw New ArgumentException(errmsg)
+                End If
 
                 With hproj
+                    Dim oldStatus As String = hproj.Status
+
+                    Select Case type
+                        Case PTProjektStati.geplant
+                            ' old darf beauftragt, aber noch nicht begonnen sein
+                            ' changerequest aber noch nicht begonnen 
+                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or _
+                                ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) And hproj.startDate > Date.Now)) Then
+                                hproj.Status = ProjektStatus(type)
+                            Else
+
+                                If awinSettings.englishLanguage Then
+                                    errmsg = hproj.name & " : status change not possible"
+                                Else
+                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
+                                End If
+                                Throw New ArgumentException(errmsg)
+                            End If
+
+                        Case PTProjektStati.beauftragt
+                            ' old darf nicht abgebrochen oder abgeschlossen sein 
+                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or _
+                                oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or _
+                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Then
+                                hproj.Status = ProjektStatus(type)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errmsg = hproj.name & " : status change not possible"
+                                Else
+                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
+                                End If
+                                Throw New ArgumentException(errmsg)
+                            End If
+
+                        Case PTProjektStati.ChangeRequest
+
+                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or _
+                                oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or _
+                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or _
+                                    oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
+                                hproj.Status = ProjektStatus(type)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errmsg = hproj.name & " : status change not possible"
+                                Else
+                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
+                                End If
+                                Throw New ArgumentException(errmsg)
+                            End If
+
+                        Case PTProjektStati.abgebrochen
+
+                            If ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or _
+                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest)) And hproj.startDate < Date.Now) Or _
+                                    oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
+                                hproj.Status = ProjektStatus(type)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errmsg = hproj.name & " : status change not possible"
+                                Else
+                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
+                                End If
+                                Throw New ArgumentException(errmsg)
+                            End If
+
+                        Case PTProjektStati.abgeschlossen
+
+                            If (oldStatus = ProjektStatus(PTProjektStati.beauftragt) And hproj.endeDate < Date.Now) Then
+                                hproj.Status = ProjektStatus(type)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errmsg = hproj.name & " : status change not possible"
+                                Else
+                                    errmsg = hproj.name & " : Status Wechsel nicht möglich"
+                                End If
+                                Throw New ArgumentException(errmsg)
+                            End If
+                    End Select
                     zeile = .tfZeile
-                    If type = 1 Then
-                        .Status = ProjektStatus(1)
-                    End If
-                    .diffToPrev = False
+
+                    .Status = ProjektStatus(type)
                     .timeStamp = Date.Now
                 End With
 
@@ -12024,45 +12095,6 @@ Public Module Projekte
     End Sub
 
 
-    ''' <summary>
-    ''' es ist sichergestellt, dass variantename nicht gleich dem leeren Stirng ist 
-    ''' </summary>
-    ''' <param name="pname"></param>
-    ''' <remarks></remarks>
-    Public Sub awinCancelBeauftragung(ByVal pname As String)
-        Dim hproj As clsProjekt
-        Dim zeile As Integer
-
-
-        ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.contains(pname) Then
-
-            Try
-                hproj = ShowProjekte.getProject(pname)
-
-                With hproj
-                    zeile = .tfZeile
-                    .Status = ProjektStatus(0)
-                    .timeStamp = Date.Now
-                End With
-
-                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
-
-
-            Catch ex As Exception
-                Call MsgBox(" Fehler in Fixierung aufheben " & pname & " , Modul: awinCancelBeauftragung")
-                Exit Sub
-            End Try
-
-
-        Else
-            Call MsgBox("Projekt " & pname & " wurde nicht gefunden")
-        End If
-
-    End Sub
     ''' <summary>
     ''' stellt das Projekt "pname" ims NoShow
     ''' </summary>
@@ -13633,14 +13665,6 @@ Public Module Projekte
 
         projectboardShapes.clear()
 
-        ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
-        If roentgenBlick.isOn Then
-
-            With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
-                .range(.cells(2, 1), .cells(1000, 200)).clearcontents()
-
-            End With
-        End If
 
         ' jetzt werden für alle Projekte in Showprojekte die Verweise auf die Shapes gelöscht 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -13848,7 +13872,7 @@ Public Module Projekte
                 With hproj
 
                     ' Änderung THOMAS Start 
-                    If .Status = ProjektStatus(0) Then
+                    If .Status = ProjektStatus(PTProjektStati.geplant) Then
                         .startDate = kvp.Value.start
                     ElseIf .startDate <> kvp.Value.start Then
                         ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
@@ -14767,7 +14791,7 @@ Public Module Projekte
 
             If elemID.Length = 0 Then
                 ' es soll das Projekt betrachtet werden 
-                If .Status = ProjektStatus(0) Then
+                If .Status = ProjektStatus(PTProjektStati.geplant) Then
 
                     ' nur dann darf das Projekt noch verschoben werden ...
 
@@ -14792,7 +14816,7 @@ Public Module Projekte
                     If IsNothing(cMilestone) Then
                         relevant = False
                     Else
-                        If .Status = ProjektStatus(0) Then
+                        If .Status = ProjektStatus(PTProjektStati.geplant) Then
 
                             bereichsAnfang = getColumnOfDate(cMilestone.getDate.AddDays(-15))
                             bereichsEnde = getColumnOfDate(cMilestone.getDate.AddDays(15))
@@ -14808,7 +14832,7 @@ Public Module Projekte
                     If IsNothing(cphase) Then
                         relevant = False
                     Else
-                        If .Status = ProjektStatus(0) Then
+                        If .Status = ProjektStatus(PTProjektStati.geplant) Then
 
                             bereichsAnfang = getColumnOfDate(cphase.getStartDate.AddDays(cphase.earliestStart))
                             bereichsEnde = getColumnOfDate(cphase.getEndDate.AddDays(cphase.latestStart))
@@ -14966,36 +14990,36 @@ Public Module Projekte
 
     End Sub
 
-    ''' <summary>
-    ''' zeichnet die Ressourcen- bzw. Kostenbedarfe in die Projekt-Tafel 
-    ''' </summary>
-    ''' <param name="nameList"></param>
-    ''' <param name="prcTyp"></param>
-    ''' <remarks></remarks>
-    Public Sub awinZeichneBedarfe(ByVal nameList As Collection, ByVal prcTyp As String)
+    ' ''' <summary>
+    ' ''' zeichnet die Ressourcen- bzw. Kostenbedarfe in die Projekt-Tafel 
+    ' ''' </summary>
+    ' ''' <param name="nameList"></param>
+    ' ''' <param name="prcTyp"></param>
+    ' ''' <remarks></remarks>
+    'Public Sub awinZeichneBedarfe(ByVal nameList As Collection, ByVal prcTyp As String)
 
-        Dim tmpName As String = ""
+    '    Dim tmpName As String = ""
 
-        If nameList.Count < 1 Then
-            tmpName = ""
-        ElseIf nameList.Count = 1 Then
-            tmpName = CStr(nameList.Item(1))
-        ElseIf nameList.Count > 1 Then
-            tmpName = "Collection"
+    '    If nameList.Count < 1 Then
+    '        tmpName = ""
+    '    ElseIf nameList.Count = 1 Then
+    '        tmpName = CStr(nameList.Item(1))
+    '    ElseIf nameList.Count > 1 Then
+    '        tmpName = "Collection"
 
-        End If
+    '    End If
 
-        With roentgenBlick
-            If .isOn Then
-                Call awinNoshowProjectNeeds()
-            End If
-            .isOn = True
-            .name = tmpName
-            .myCollection = nameList
-            .type = prcTyp
-            Call awinShowProjectNeeds1(nameList, prcTyp)
-        End With
-    End Sub
+    '    With roentgenBlick
+    '        If .isOn Then
+    '            'Call awinNoshowProjectNeeds()
+    '        End If
+    '        .isOn = True
+    '        .name = tmpName
+    '        .myCollection = nameList
+    '        .type = prcTyp
+    '        'Call awinShowProjectNeeds1(nameList, prcTyp)
+    '    End With
+    'End Sub
 
     ''' <summary>
     ''' zeichnet für interaktiven wie Report Modus die Milestones 
@@ -16229,11 +16253,11 @@ Public Module Projekte
         End If
 
 
-        If roentgenBlick.isOn Then
-            With roentgenBlick
-                Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
-            End With
-        End If
+        'If roentgenBlick.isOn Then
+        '    With roentgenBlick
+        '        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
+        '    End With
+        'End If
 
         If drawPhaseList.Count = 0 And drawMilestoneList.Count = 0 Then
             ' jetzt müssen die Charts, die vom Projekt evtl überdeckt werden in den Vordergrund geholt werden 
@@ -17767,11 +17791,11 @@ Public Module Projekte
                 .ForeColor.TintAndShade = 0
                 .ForeColor.Brightness = -0.25
 
-                If roentgenBlick.isOn Then
-                    .Transparency = 0.8
-                Else
-                    .Transparency = 0.0
-                End If
+                'If roentgenBlick.isOn Then
+                '    .Transparency = 0.8
+                'Else
+                '    .Transparency = 0.0
+                'End If
 
                 .Solid()
 
@@ -17783,7 +17807,7 @@ Public Module Projekte
                     .TextFrame2.TextRange.Text = ""
                 End If
 
-                If number > 0 And Not roentgenBlick.isOn Then
+                If number > 0 Then
 
                     With .TextFrame2
                         .MarginLeft = 3
@@ -17882,7 +17906,7 @@ Public Module Projekte
                     .TextFrame2.TextRange.Text = ""
                 End If
 
-                If number > 0 And Not roentgenBlick.isOn Then
+                If number > 0 Then
 
                     With .TextFrame2
                         .MarginLeft = 0
@@ -17925,7 +17949,7 @@ Public Module Projekte
         Dim status As String = ""
         Dim pMarge As Double
         Dim pname As String
-        Dim diffToPrev As Boolean
+        Dim markTheShape As Boolean
         Dim ampel As Integer
         Dim showAmpel As Boolean = False
         Dim showResults As Boolean = True
@@ -17962,7 +17986,7 @@ Public Module Projekte
                 pMarge = .ProjectMarge
                 pname = .name
                 ampel = .ampelStatus
-                diffToPrev = .diffToPrev
+                markTheShape = .marker
             End With
         Catch ex As Exception
 
@@ -17972,7 +17996,7 @@ Public Module Projekte
         With myshape
 
             Try
-                If status = ProjektStatus(2) Or diffToPrev Then
+                If markTheShape Then
                     ' beauftragt, aber noch nicht wieder freigegeben ... 
 
                     .Glow.Color.RGB = CInt(awinSettings.glowColor)
@@ -17998,7 +18022,8 @@ Public Module Projekte
                         .ForeColor.RGB = CInt(pcolor)
                         .Transparency = 0
                         .Weight = 4.0
-                        If status = ProjektStatus(0) Then
+                        If status = ProjektStatus(PTProjektStati.geplant) Or _
+                            status = ProjektStatus(PTProjektStati.abgebrochen) Then
                             .DashStyle = core.MsoLineDashStyle.msoLineDash
                         Else
                             .DashStyle = core.MsoLineDashStyle.msoLineSolid
@@ -18013,12 +18038,46 @@ Public Module Projekte
                 Try
 
                     With .Line
-                        If status = ProjektStatus(0) Then
-                            .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
-                            .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
-                        Else
-                            .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
-                            .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
+                        If status = ProjektStatus(PTProjektStati.geplant) Then
+
+                            If myproject.movable Then
+                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                            Else
+                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
+                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
+                            End If
+                            
+
+                        ElseIf status = ProjektStatus(PTProjektStati.beauftragt) Then
+
+                            If myproject.movable Then
+                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                            Else
+                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
+                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadDiamond
+                            End If
+
+                        ElseIf status = ProjektStatus(PTProjektStati.ChangeRequest) Then
+
+                            If myproject.movable Then
+                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOval
+                            Else
+                                .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
+                                .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadTriangle
+                            End If
+
+                        ElseIf status = ProjektStatus(PTProjektStati.abgebrochen) Then
+
+                            .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
+                            .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadStealth
+
+                        ElseIf status = ProjektStatus(PTProjektStati.abgeschlossen) Then
+
+                            .BeginArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen
+                            .EndArrowheadStyle = core.MsoArrowheadStyle.msoArrowheadOpen
                         End If
 
                     End With
@@ -18035,12 +18094,8 @@ Public Module Projekte
                         .ForeColor.RGB = CInt(pcolor)
                         .ForeColor.TintAndShade = 0
                         .ForeColor.Brightness = -0.25
+                        .Transparency = 0.0
 
-                        If roentgenBlick.isOn Then
-                            .Transparency = 0.8
-                        Else
-                            .Transparency = 0.0
-                        End If
 
                         .Solid()
 
@@ -18058,20 +18113,9 @@ Public Module Projekte
                         .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
                     End With
 
-                    If roentgenBlick.isOn Then
-
-                        .TextFrame2.TextRange.Text = ""
-
-
-                    Else
-                        ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
-
-                        .TextFrame2.TextRange.Text = myproject.getShapeText
-                        .TextFrame2.MarginLeft = 4
-                        .TextFrame2.MarginRight = 4
-
-                        ' Ende Änderung 13.10.14
-                    End If
+                    .TextFrame2.TextRange.Text = myproject.getShapeText
+                    .TextFrame2.MarginLeft = 4
+                    .TextFrame2.MarginRight = 4
                 Catch ex As Exception
 
                 End Try
@@ -18395,11 +18439,6 @@ Public Module Projekte
         Catch ex As Exception
 
         End Try
-
-        ' Änderung 26.7.13 
-        If roentgenBlick.isOn Then
-            Call NoshowNeedsofProject(pname)
-        End If
 
 
 
@@ -21717,7 +21756,7 @@ Public Module Projekte
         Dim anzSnapshots = pHistorie.Count
 
         ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
-        Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(1) And Not abbruch
+        Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
             If tmpIndex + 1 < anzSnapshots Then
                 tmpIndex = tmpIndex + 1
             Else
@@ -21746,7 +21785,7 @@ Public Module Projekte
             tmpIndex = -1
         Else
 
-            Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(1) And Not abbruch
+            Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
                 If tmpIndex > 0 Then
                     tmpIndex = tmpIndex - 1
                 Else
@@ -21771,7 +21810,7 @@ Public Module Projekte
             tmpIndex = -1
         Else
 
-            Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(1) And Not abbruch
+            Do While pHistorie.ElementAt(tmpIndex).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
                 If tmpIndex < pHistorie.Count - 1 Then
                     tmpIndex = tmpIndex + 1
                 Else
@@ -21808,8 +21847,8 @@ Public Module Projekte
             With hproj
                 If .Start <= getColumnOfDate(Date.Now) And
                     .Start + .anzahlRasterElemente - 1 >= getColumnOfDate(Date.Now) And _
-                    .Status <> ProjektStatus(3) And _
-                    .Status <> ProjektStatus(4) Then
+                    .Status <> ProjektStatus(PTProjektStati.abgebrochen) And _
+                    .Status <> ProjektStatus(PTProjektStati.abgeschlossen) Then
                     erg = True
                 End If
             End With

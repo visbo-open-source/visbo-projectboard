@@ -11,10 +11,11 @@
 
         Call listeAufbauen()
 
-        If changeListTable.Height < 260 Then
-            Me.Height = changeListTable.Height + 40
-        End If
+        'If Me.Height > changeListTable.Height + 38 Then
+        '    Me.Height = changeListTable.Height + 38
+        'End If
         
+
     End Sub
 
     ''' <summary>
@@ -108,18 +109,9 @@
 
     Private Sub frmChanges_ResizeEnd(sender As Object, e As EventArgs) Handles Me.ResizeEnd
 
-        ' verhindern, dass es zu klein wird ... 
-        If Me.Width < 150 Then
-            Me.Width = 150
-        End If
-        If Me.Height < 100 Then
-            Me.Height = 100
-        End If
-
-        With changeListTable
-            .Width = Me.Width - 30
-            .Height = Me.Height - 40
-        End With
+        'If Me.Height > changeListTable.Height + 38 Then
+        '    Me.Height = changeListTable.Height + 38
+        'End If
 
 
     End Sub
@@ -185,4 +177,7 @@
     End Sub
 
     
+    Private Sub changeListTable_CellContentClick(sender As Object, e As Windows.Forms.DataGridViewCellEventArgs) Handles changeListTable.CellContentClick
+
+    End Sub
 End Class

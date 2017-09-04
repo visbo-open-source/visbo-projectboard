@@ -148,8 +148,6 @@ Public Module Module1
     Public formProjectInfo1 As frmProjectInfo1 = Nothing
 
 
-    ' variable gibt an, zu welchem Objekt-Rolle (Rolle, Kostenart, Ergebnis, ..)  der Röntgen Blick gezeigt wird 
-    Public roentgenBlick As New clsBestFitObject
 
     ' diese beiden folgenden Variablen steuern im Sheet "Ressourcen", welcher Bereich in den Diagrammen angezeigt werden soll
     Public showRangeLeft As Integer
@@ -664,6 +662,14 @@ Public Module Module1
         Premium = 5
     End Enum
 
+    Public Enum PTProjektStati
+        geplant = 0
+        beauftragt = 1
+        ChangeRequest = 2
+        abgebrochen = 3
+        abgeschlossen = 4
+    End Enum
+
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
     Public StartofCalendar As Date = #1/1/2000#
@@ -732,8 +738,9 @@ Public Module Module1
     ' Variable nimmt die Namen der Ergebnis Charts auf  
     Public ergebnisChartName(3) As String
 
+    ' tk 25.8.17 Nonsense, wird nicht gebraucht 
     ' diese Variabe nimmt die Farbe der Kapa-Linie an
-    Public rollenKapaFarbe As Object
+    'Public rollenKapaFarbe As Object
 
     ' diese Variable nimmt die Farbe der internen Ressourcen, ohne Projekte an auf
     Public farbeInternOP As Object
@@ -979,7 +986,6 @@ Public Module Module1
         Dim chtobjName As String = ""
         Dim userSelectedSomething As Boolean = False
 
-        'Dim testActiveWindow As String
 
         ' Exit, wenn nicht im PRojekt-Tafel-Modus 
         If visboZustaende.projectBoardMode <> ptModus.graficboard Then
@@ -4239,7 +4245,7 @@ Public Module Module1
 
             Case PTwindows.mptpr
 
-                tmpResult = addOnMsg
+                tmpResult = "Charts: " & addOnMsg
 
 
             Case PTwindows.meChart
@@ -4520,10 +4526,11 @@ Public Module Module1
     End Sub
     ''' <summary>
     ''' zeigt das angegebene VISBO Window, wenn es nicht ohnehin schon angezeigt wird ...
+    ''' tmpmsg ist der optional Ergänzungs-String für den Caption Text im mptpr Window 
     ''' </summary>
     ''' <param name="visboWindowType"></param>
     ''' <remarks></remarks>
-    Public Sub showVisboWindow(ByVal visboWindowType As Integer)
+    Public Sub showVisboWindow(ByVal visboWindowType As Integer, Optional tmpmsg As String = "")
 
 
         ' Voraussetzungen schaffen: kein EnableEvents und kein Flackern und kein EnableOnUpdate ..
@@ -4707,7 +4714,7 @@ Public Module Module1
                         .DisplayRuler = False
                         .DisplayOutline = False
                         .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.mptpr)
+                        .Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
                     End With
 
                     If Not prWindowAlreadyExisting Then
