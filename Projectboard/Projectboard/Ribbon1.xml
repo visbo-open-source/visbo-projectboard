@@ -196,9 +196,12 @@
               <!--label="De-Freeze for moving"-->
               <button id="PTfreezeB2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTDeFreezeProject" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
               <menuSeparator id="separator4" />
+              <!--label="Unmark"-->
+              <button id="PTunmarkBT" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTUnMarkProject" supertip ="die Markierung eines Projektes aufheben."/>
+              <menuSeparator id="separator5" />
               <!--label="Variante zum Standard machen"-->
               <button id="PT2G1M1B3" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
-              <menuSeparator id="separator5" />
+              <menuSeparator id="separator6" />
               <!--label="den Status eines Projektes ändern"-->
               <button id="PT2G1M1B4" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
             </menu>

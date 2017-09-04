@@ -2241,6 +2241,13 @@ Imports System.Windows
                     tmpLabel = "De-Freeze for moving"
                 End If
 
+            Case "PTunmarkBT"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Reset Markierung"
+                Else
+                    tmpLabel = "Reset Marker"
+                End If
+
             Case "PT2G1M1B4" ' Status ändern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekt-Status ändern"
@@ -3993,6 +4000,74 @@ Imports System.Windows
 
     End Sub
 
+    ''' <summary>
+    ''' setzt die Markierungen der Projekte zurück ... 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTUnMarkProject(control As IRibbonControl)
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+                                hproj.marker = False
+                                Dim tmpCollection As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("select project(s first ...")
+            Else
+                Call MsgBox("vorher Projekt(e selektieren ...")
+            End If
+
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+
+    End Sub
 
     ''' <summary>
     ''' Projekt-Fixierung aufheben, d.h. es kann verschoben werden 
@@ -4078,7 +4153,12 @@ Imports System.Windows
             Next
 
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("select project(s first ...")
+            Else
+                Call MsgBox("vorher Projekt(e selektieren ...")
+            End If
+
         End If
 
         enableOnUpdate = True
@@ -4127,7 +4207,7 @@ Imports System.Windows
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
                             If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
-                                Call changeProjectStatus(pname:=hproj.name, type:=1)
+                                Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
 
                             Else
                                 If awinSettings.englishLanguage Then

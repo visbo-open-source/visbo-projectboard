@@ -3509,7 +3509,8 @@ Public Module testModule
 
                                 ' set back 
                                 With appInstance.ActiveWindow
-                                    .GridlineColor = RGB(220, 220, 220)
+                                    .GridlineColor = awinSettings.gridLineColor
+                                    '.GridlineColor = RGB(220, 220, 220)
                                 End With
 
 
@@ -3644,7 +3645,8 @@ Public Module testModule
 
                                     ' set back 
                                     With appInstance.ActiveWindow
-                                        .GridlineColor = RGB(220, 220, 220)
+                                        .GridlineColor = awinSettings.gridLineColor
+                                        '.GridlineColor = RGB(220, 220, 220)
                                     End With
 
                                     If ok Then
@@ -7426,7 +7428,8 @@ Public Module testModule
 
         ' set back 
         With appInstance.ActiveWindow
-            .GridlineColor = RGB(220, 220, 220)
+            .GridlineColor = awinSettings.gridLineColor
+            '.GridlineColor = RGB(220, 220, 220)
         End With
 
 

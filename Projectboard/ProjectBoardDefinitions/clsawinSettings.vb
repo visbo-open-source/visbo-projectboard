@@ -15,6 +15,7 @@ Public Class clsawinSettings
     Public Property SollIstFarbeL As Long
     Public Property SollIstFarbeC As Long
     Public Property SollIstFarbeArea As Long
+    Public Property gridLineColor As Long
     Public Property timeSpanColor As Long
     Public Property missingDefinitionColor As Long
     Public Property showTimeSpanInPT As Boolean
@@ -72,7 +73,7 @@ Public Class clsawinSettings
     Public Property propAnpassRess As Boolean
 
     ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
-    Public Property phasesProzentual As Boolean = False
+    Public Property phasesProzentual As Boolean
 
     
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
@@ -235,6 +236,7 @@ Public Class clsawinSettings
         _SollIstFarbeC = RGB(80, 240, 80)
         _SollIstFarbeArea = RGB(200, 200, 200)
         _timeSpanColor = RGB(242, 242, 242)
+        _gridLineColor = RGB(220, 220, 220)
         _missingDefinitionColor = XlRgbColor.rgbCoral
         _showTimeSpanInPT = True
         _anzTopBottlenecks = 3
@@ -261,7 +263,7 @@ Public Class clsawinSettings
         _milestoneFreeFloat = True
         _autoCorrectBedarfe = True
         _propAnpassRess = False
-        _phasesProzentual = False
+        _phasesProzentual = True
         _drawphases = False
         _showValuesOfSelected = False
         _applyFilter = False

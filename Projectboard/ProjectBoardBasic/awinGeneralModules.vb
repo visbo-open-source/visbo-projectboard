@@ -2198,6 +2198,7 @@ Public Module awinGeneralModules
                 'showRangeRight = CInt(.Range("Rechter_Rand_Ressourcen_Diagramme").Value)
                 showtimezone_color = .Range("Show_Time_Zone_Color").Interior.Color
                 noshowtimezone_color = .Range("NoShow_Time_Zone_Color").Interior.Color
+                calendarFontColor = .Range("NoShow_Time_Zone_Color").Font.Color
                 nrOfDaysMonth = CDbl(.Range("Arbeitstage_pro_Monat").Value)
                 farbeInternOP = .Range("Farbe_intern_ohne_Projekte").Interior.Color
                 farbeExterne = .Range("Farbe_externe_Ressourcen").Interior.Color
@@ -2226,7 +2227,11 @@ Public Module awinGeneralModules
                     Catch ex2 As Exception
                         ' ansonsten wird die Voreinstellung verwendet 
                     End Try
+                    Try
+                        awinSettings.gridLineColor = CLng(.Range("FarbeGridLine").Interior.Color)
+                    Catch ex As Exception
 
+                    End Try
 
                 Catch ex As Exception
                     Throw New ArgumentException("Customization File fehlerhaft - Farben fehlen ... " & vbLf & ex.Message)
@@ -2667,6 +2672,7 @@ Public Module awinGeneralModules
                         .ReadingOrder = Excel.Constants.xlContext
                         .MergeCells = False
                         .Interior.Color = noshowtimezone_color
+                        .Font.Color = calendarFontColor
                     End With
 
                     rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
@@ -2752,6 +2758,7 @@ Public Module awinGeneralModules
 
                 If laenge > 0 And showRangeLeft > 0 Then
                     .Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)).Interior.Color = showtimezone_color
+                    .Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)).Font.Color = calendarFontColor
                 End If
 
             End With
@@ -4118,6 +4125,16 @@ Public Module awinGeneralModules
                 ' ist es immer noch Nothing ? 
                 If IsNothing(cproj) Then
                     ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
+
+                    ' falls es sich um eine Variante handelt, muss jetzt geprüft werden, ob die Basis-Variante in Session oder DB existiert  
+                    Dim baseProj As clsProjekt = AlleProjekte.getProject(calcProjektKey(hproj.name, ""))
+                    If IsNothing(baseProj) Then
+                        ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
+                        If Not noDB Then
+                            baseProj = awinReadProjectFromDatabase(hproj.name, "", Date.Now)
+                        End If
+                    End If
+
                     If hproj.VorlagenName = "" Then
                         Try
                             Dim anzVorlagen = Projektvorlagen.Count
@@ -4155,7 +4172,12 @@ Public Module awinGeneralModules
                             ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
                             ' Inventur: erst mal auf geplant, sonst beauftragt 
                             '.Status = pStatus
-                            .Status = ProjektStatus(PTProjektStati.geplant)
+                            If IsNothing(baseProj) Then
+                                .Status = ProjektStatus(PTProjektStati.geplant)
+                            Else
+                                .Status = baseProj.Status
+                            End If
+
                             .tfZeile = tafelZeile
                             .timeStamp = importDate
 
