@@ -11992,6 +11992,9 @@ Public Module Projekte
                     Throw New ArgumentException(errmsg)
                 End If
 
+                ' jetzt soll auch der Marker zurückgesetzt werden ..
+                hproj.marker = False
+
                 With hproj
                     Dim oldStatus As String = hproj.Status
 

@@ -154,7 +154,7 @@ Public Module Module1
     Public showRangeRight As Integer
 
     ' diese beiden Variablen nehmen die Farben auf für Showtimezone bzw. Noshowtimezone
-    Public showtimezone_color As Object, noshowtimezone_color As Object
+    Public showtimezone_color As Object, noshowtimezone_color As Object, calendarFontColor As Object
 
 
     ' maxScreenHeight, maxScreenWidth gibt die maximale Höhe/Breite des Bildschirms in Punkten an 
