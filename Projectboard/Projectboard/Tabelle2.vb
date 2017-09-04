@@ -1048,7 +1048,7 @@ Public Class Tabelle2
         appInstance.EnableEvents = False
 
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
-        Dim pname As String
+        Dim pname As String = ""
         Dim rcName As String = ""
         Dim oldRCName As String = ""
         Try
@@ -1174,6 +1174,8 @@ Public Class Tabelle2
             If Not IsNothing(rcName) Then
                 If oldRCName <> rcName Then
                     If rcName <> "" And Not alreadyDone Then
+                        selectedProjekte.Clear(False)
+                        selectedProjekte.Add(.lastProject, False)
                         Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
                     End If
                 End If

@@ -49,7 +49,7 @@ Partial Class frmChanges
         Me.changeListTable.ShowCellToolTips = False
         Me.changeListTable.ShowEditingIcon = False
         Me.changeListTable.ShowRowErrors = False
-        Me.changeListTable.Size = New System.Drawing.Size(554, 133)
+        Me.changeListTable.Size = New System.Drawing.Size(480, 86)
         Me.changeListTable.TabIndex = 0
         '
         'colPname
@@ -100,8 +100,10 @@ Partial Class frmChanges
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(554, 133)
+        Me.AutoScroll = True
+        Me.ClientSize = New System.Drawing.Size(480, 86)
         Me.Controls.Add(Me.changeListTable)
+        Me.MaximizeBox = False
         Me.Name = "frmChanges"
         Me.Text = "Veränderungen"
         Me.TopMost = True

@@ -786,7 +786,7 @@ Public Class clsProjektShapes
             pName = extractName(shpElement.Name, PTshty.projektN)
             hproj = ShowProjekte.getProject(pName)
 
-            If hproj.Status = ProjektStatus(0) _
+            If hproj.movable _
                 And Not shapeType = PTshty.status _
                 And Not shapeType = PTshty.dependency _
                 And Not shapeType = PTshty.phase1 Then
@@ -918,6 +918,7 @@ Public Class clsProjektShapes
                         newProjekt.Status = .Status
                         newProjekt.shpUID = .shpUID
                         newProjekt.tfZeile = .tfZeile
+                        newProjekt.movable = .movable
 
                     End With
 
@@ -1079,7 +1080,7 @@ Public Class clsProjektShapes
                         End If
 
                         If cphase.nameID = rootPhaseName Then
-                            ' in diesem Fall wurde die Phase 1 verändert - wenn sich der line Rand der 
+                            ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
                             ' Phase 1 verändert hat, müssen die Pahsen 2 bis N ihren Startoffsets neu berechnet werden 
                             If curCoord(1) <> oldCoord(1) Then
                                 reDraw = True

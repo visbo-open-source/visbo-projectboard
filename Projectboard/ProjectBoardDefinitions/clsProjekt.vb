@@ -9,10 +9,10 @@ Public Class clsProjekt
 
 
     'Private AllPhases As List(Of clsPhase)
-    Private relStart As Integer
-    Private imarge As Double
-    Private uuid As Long
-    Private iDauer As Integer
+    Private _relStart As Integer
+    Private _imarge As Double
+    Private _uuid As Long
+    Private _iDauer As Integer
     Private _StartOffset As Integer
     Private _Start As Integer
     Private _earliestStart As Integer
@@ -33,9 +33,45 @@ Public Class clsProjekt
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
 
+    ' ergänzt am 20.8.17 
+    ' Marker für Projekte, um anzuzeigen, dass es zu einer bestimmten Menge gehört ; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
+    Private _marker As Boolean = False
+    Public Property marker As Boolean
+        Get
+            marker = _marker
+        End Get
+        Set(value As Boolean)
+            _marker = value
+        End Set
+    End Property
+
+    ' Kennzeichnung, ob ein Projekt manuell verschoben werden kann; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
+    Private _movable As Boolean = False
+    Public Property movable As Boolean
+        Get
+            movable = _movable
+        End Get
+        Set(value As Boolean)
+            If _Status = ProjektStatus(PTProjektStati.geplant) Or _
+                _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or _
+                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Then
+                _movable = value
+
+            Else
+                Dim errmsg As String
+                If awinSettings.englishLanguage Then
+                    errmsg = "project status does not allow movement!"
+                Else
+                    errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
+                End If
+                Throw New ArgumentException(errmsg)
+            End If
+
+        End Set
+    End Property
 
 
-    ' Deklarationen der Events 
+    ' die ShapeUID des Projektes  
     Private _shpUID As String = ""
     Public Property shpUID As String
         Get
@@ -319,23 +355,23 @@ Public Class clsProjekt
 
     ' ergänzt am 30.1.14 - diffToPrev , wird benutzt, um zu kennzeichnen , welches Projekt sich im Vergleich zu vorher verändert hat 
 
-    Private _diffToPrev As Boolean = False
-    Public Property diffToPrev As Boolean
-        Get
-            If Not IsNothing(_diffToPrev) Then
-                diffToPrev = _diffToPrev
-            Else
-                diffToPrev = False
-            End If
-        End Get
-        Set(value As Boolean)
-            If Not IsNothing(value) Then
-                _diffToPrev = value
-            Else
-                _diffToPrev = False
-            End If
-        End Set
-    End Property
+    'Private _diffToPrev As Boolean = False
+    'Public Property diffToPrev As Boolean
+    '    Get
+    '        If Not IsNothing(_diffToPrev) Then
+    '            diffToPrev = _diffToPrev
+    '        Else
+    '            diffToPrev = False
+    '        End If
+    '    End Get
+    '    Set(value As Boolean)
+    '        If Not IsNothing(value) Then
+    '            _diffToPrev = value
+    '        Else
+    '            _diffToPrev = False
+    '        End If
+    '    End Set
+    'End Property
 
     ' ergänzt am 16.09.2015 - extendedView , wird benutzt, um zu kennzeichnen , welches Projekt in extended View dargestellt werden soll
     Private _extendedView As Boolean = False
@@ -575,7 +611,7 @@ Public Class clsProjekt
                 Next
 
             End If
-            
+
 
         Next
 
@@ -795,13 +831,32 @@ Public Class clsProjekt
         End Set
     End Property
 
-
     ''' <summary>
-    ''' stellt sicher, daß variantName niemals Nothing sein kann
+    ''' gibt als Erläuterung die volle Description, Projekt- plus Varianten - Beschreibung zurück; 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    Public ReadOnly Property fullDescription As String
+        Get
+            If IsNothing(_description) Then
+                _description = ""
+            End If
+            If IsNothing(_variantDescription) Or _variantName = "" Then
+                fullDescription = _description
+            Else
+                fullDescription = _description & "; [" & _variantDescription & "]"
+            End If
+
+        End Get
+    End Property
+
+        ''' <summary>
+        ''' stellt sicher, daß variantName niemals Nothing sein kann
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
     Public Property variantName As String
         Get
             If IsNothing(_variantName) Then
@@ -3267,20 +3322,14 @@ Public Class clsProjekt
             Status = _Status
         End Get
         Set(value As String)
-            If value = ProjektStatus(0) Then
+            If value = ProjektStatus(0) Or _
+                value = ProjektStatus(1) Or _
+                value = ProjektStatus(2) Or _
+                value = ProjektStatus(3) Or _
+                value = ProjektStatus(4) Then
                 _Status = value
-            ElseIf value = ProjektStatus(1) Or value = ProjektStatus(2) Or _
-                                               value = ProjektStatus(3) Or _
-                                               value = ProjektStatus(4) Then
-                _Status = value
-                ' 2.5.2014 ur: Die nächsten Befehle sind auskommentiert, weil ein beauftragtes Projekt
-                ' nicht zwangsweise bereits gestartet wurde 
-                '_earliestStart = 0
-                '_latestStart = 0
-                '_earliestStartDate = _startDate
-                '_latestStartDate = _startDate
             Else
-                Call MsgBox("unzulässiger Wert für Status")
+                Call MsgBox("Wert als Status nicht zugelassen: " & value)
             End If
         End Set
     End Property
@@ -4686,17 +4735,16 @@ Public Class clsProjekt
     Public Sub New()
 
         AllPhases = New List(Of clsPhase)
-        diffToPrev = False
-        extendedView = False
-        relStart = 1
+        _extendedView = False
+        _relStart = 1
         _leadPerson = ""
-        iDauer = 0
+        _iDauer = 0
         _StartOffset = 0
         _Start = 0
         _startDate = NullDatum
         _earliestStart = 0
         _latestStart = 0
-        _Status = ProjektStatus(0)
+        _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
 
@@ -4711,17 +4759,15 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-
     End Sub
 
     Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
 
         AllPhases = New List(Of clsPhase)
-        diffToPrev = False
-        extendedView = False
-        relStart = 1
+        _extendedView = False
+        _relStart = 1
         _leadPerson = ""
-        iDauer = 0
+        _iDauer = 0
         _StartOffset = 0
 
         _Start = projektStart
@@ -4732,7 +4778,7 @@ Public Class clsProjekt
         _earliestStartDate = _startDate.AddMonths(_earliestStart)
         _latestStartDate = _startDate.AddMonths(_latestStart)
 
-        _Status = ProjektStatus(0)
+        _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
 
@@ -4750,11 +4796,10 @@ Public Class clsProjekt
     Public Sub New(ByVal startDate As Date, ByVal earliestStartdate As Date, ByVal latestStartdate As Date)
 
         AllPhases = New List(Of clsPhase)
-        diffToPrev = False
         extendedView = False
-        relStart = 1
+        _relStart = 1
         _leadPerson = ""
-        iDauer = 0
+        _iDauer = 0
         _StartOffset = 0
 
         _startDate = startDate
@@ -4765,7 +4810,7 @@ Public Class clsProjekt
         _earliestStart = CInt(DateDiff(DateInterval.Month, startDate, earliestStartdate))
         _latestStart = CInt(DateDiff(DateInterval.Month, startDate, latestStartdate))
 
-        _Status = ProjektStatus(0)
+        _Status = ProjektStatus(PTProjektStati.geplant)
         _timeStamp = Date.Now
 
         _variantName = ""

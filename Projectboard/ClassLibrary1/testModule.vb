@@ -3162,6 +3162,7 @@ Public Module testModule
                         kennzeichnung = "Multiprojektsicht" Or _
                         kennzeichnung = "Projekt-Tafel" Or _
                         kennzeichnung = "Tabelle Projektliste" Or _
+                        kennzeichnung = "Tabelle Portfolioliste" Or _
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
                         kennzeichnung = "Tabelle Zielerreichung" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
@@ -3508,7 +3509,8 @@ Public Module testModule
 
                                 ' set back 
                                 With appInstance.ActiveWindow
-                                    .GridlineColor = RGB(220, 220, 220)
+                                    .GridlineColor = awinSettings.gridLineColor
+                                    '.GridlineColor = RGB(220, 220, 220)
                                 End With
 
 
@@ -3643,7 +3645,8 @@ Public Module testModule
 
                                     ' set back 
                                     With appInstance.ActiveWindow
-                                        .GridlineColor = RGB(220, 220, 220)
+                                        .GridlineColor = awinSettings.gridLineColor
+                                        '.GridlineColor = RGB(220, 220, 220)
                                     End With
 
                                     If ok Then
@@ -3765,6 +3768,42 @@ Public Module testModule
 
                             End Try
 
+                        Case "Tabelle Portfolioliste"
+
+                            Try
+
+                                Call zeichneTabellePortfolioliste(pptSlide, pptShape, _
+                                                                gleichShape, steigendShape, fallendShape, _
+                                                                objectsToDo, objectsDone)
+
+                                ' jetzt ggf die Hilfs-Shapes löschen 
+                                Try
+                                    If Not IsNothing(gleichShape) Then
+                                        gleichShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(steigendShape) Then
+                                        steigendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    If Not IsNothing(fallendShape) Then
+                                        fallendShape.Delete()
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                            Catch ex As Exception
+
+                            End Try
 
 
                         Case "Fortschritt Personalkosten"
@@ -5452,6 +5491,11 @@ Public Module testModule
 
 
         enableOnUpdate = True
+        If demoModusHistory Then
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
+        Else
+            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
+        End If
 
         If demoModusHistory Then
             Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
@@ -7387,7 +7431,8 @@ Public Module testModule
 
         ' set back 
         With appInstance.ActiveWindow
-            .GridlineColor = RGB(220, 220, 220)
+            .GridlineColor = awinSettings.gridLineColor
+            '.GridlineColor = RGB(220, 220, 220)
         End With
 
 
@@ -9263,6 +9308,166 @@ Public Module testModule
             For i As Integer = 0 To summenArray.Length - 1
                 summenArray(i) = 0
             Next
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet die Tabelle Portfolioliste für alle Projekte des aktuellen Portfolios;
+    ''' die Reihenfolge bestimmt sich aus der Reihenfolge der Projekte im Portfolio 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <param name="pptShape"></param>
+    ''' <param name="gleichShape"></param>
+    ''' <param name="steigendShape"></param>
+    ''' <param name="fallendShape"></param>
+    ''' <param name="objectsToDo"></param>
+    ''' <param name="objectsDone"></param>
+    ''' <remarks></remarks>
+    Sub zeichneTabellePortfolioliste(ByVal pptSlide As pptNS.Slide, ByVal pptShape As pptNS.Shape, _
+                                       ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
+                                       ByRef objectsToDo As Integer, ByRef objectsDone As Integer)
+
+        Dim tabelle As pptNS.Table
+        Dim zaehler As Integer = 1
+        Dim startItem As Integer = 1, endeItem As Integer = ShowProjekte.Count
+
+        Dim hproj As clsProjekt
+
+        Dim pBudget As Double
+
+        Dim anzahlZeilen As Integer
+
+        Dim farbePositiv As Integer = awinSettings.AmpelGruen
+        Dim farbeNeutral As Integer = awinSettings.AmpelNichtBewertet
+        Dim farbeNegativ As Integer = awinSettings.AmpelRot
+
+        Dim zeile As Integer = 2
+        Dim spalte As Integer = 9
+
+        Dim customFieldNames() As String = Nothing
+        Dim anzCustomFieldNames As Integer = 0
+
+        'Dim formatierung As String = "#0.#"
+        Dim formatierung As String = "#,##0"
+
+
+        Try
+            tabelle = pptShape.Table
+            anzahlZeilen = tabelle.Rows.Count
+        Catch ex As Exception
+            'Throw New Exception("Shape hat keine Tabelle")
+            Throw New Exception(repMessages.getmsg(127))
+            Exit Sub
+        End Try
+
+        If tabelle.Columns.Count < 8 Then
+            Throw New Exception(repMessages.getmsg(127))
+        End If
+
+        ' auslesen der CustomField-Names
+        anzCustomFieldNames = tabelle.Columns.Count - 8
+        If anzCustomFieldNames > 0 Then
+            ReDim customFieldNames(anzCustomFieldNames - 1)
+
+            For i = 1 To anzCustomFieldNames
+                With tabelle
+                    customFieldNames(i - 1) = CType(.Cell(1, 8 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text
+                End With
+            Next
+        End If
+
+        ' jetzt werden die HeaderZeilen entsprechend gesetzt 
+        ' das muss noch erledigt werden ! wurde für Demo Jahresplanung enifach as-is gelassen 
+        'For i As Integer = 1 To 11
+        '    Dim tmpMsg As String = repMessages.getmsg(262 + i).TrimEnd
+        '    CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpMsg
+        '    If i >= 8 And i <= 10 Then
+        '        ' 1. Buchstabe muss WingDings sein
+        '        Try
+        '            Dim len As Integer = tmpMsg.Length
+        '            Dim oldName As String = CType(tabelle.Cell(1, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Name
+
+        '            CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Name = "Wingdings 3"
+        '            CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=2, Length:=len - 1).Font.Name = oldName
+        '        Catch ex As Exception
+
+        '        End Try
+
+        '    End If
+        'Next
+
+
+
+        objectsToDo = ShowProjekte.Count
+
+
+        If objectsDone = 0 Then
+            zaehler = 1
+        Else
+            zaehler = objectsDone + 1
+        End If
+
+        Dim endOfPage As Boolean = False
+        'zaehler = startItem
+        'Do While zaehler <= endeItem And zaehler <= ShowProjekte.Count
+
+        Do While Not endOfPage And zaehler <= objectsToDo
+
+            ' falls im folgenden ein Fehler auftritt , dann muss für die aufrufende Routine klar sein, wo objectsDone stand ...
+            objectsDone = zaehler
+            Dim pname As String = currentSessionConstellation.getProjectAtSortPosition(zaehler)
+            If ShowProjekte.contains(pname) Then
+                hproj = ShowProjekte.getProject(pname)
+                'hproj = ShowProjekte.getProject(zaehler)
+                ' Schreiben Name, Typ, Business Unit und Kosten / Ergebnis der Werte für das Projekt 
+
+
+                pBudget = hproj.Erloes
+
+
+                With tabelle
+
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = zaehler.ToString
+                    CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
+                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.fullDescription
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
+                    CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.Erloes.ToString(formatierung)
+                    CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.StrategicFit.ToString
+                    CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.Risiko.ToString
+                    Try
+                        If anzCustomFieldNames > 0 Then
+                            For i As Integer = 1 To anzCustomFieldNames
+                                CType(.Cell(zeile, 8 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getCustomSField(customFieldNames(i - 1))
+                            Next
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+                End With
+
+                If pptShape.Top + pptShape.Height > CType(pptSlide.Parent, pptNS.Presentation).PageSetup.SlideHeight - 70 Then
+                    endOfPage = True
+                Else
+                    zeile = zeile + 1
+                    tabelle.Rows.Add()
+                    zaehler = zaehler + 1
+                End If
+
+            End If
+
+        Loop
+
+        objectsDone = zaehler
+
+        If objectsDone >= objectsToDo Then
+
+            objectsDone = 0
+            objectsToDo = 0
+
         End If
 
     End Sub
