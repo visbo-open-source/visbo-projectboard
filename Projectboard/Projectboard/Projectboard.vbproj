@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <ProjectTypeGuids>{BAA0C2D2-18E2-41B9-852F-F413020CAA33};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
@@ -16,17 +16,11 @@
     <SolutionID>9c1e2ee7-a36c-4ca8-b8fd-97bdf04a0cd8</SolutionID>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <OldToolsVersion>4.0</OldToolsVersion>
-    <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.4.0.10</ApplicationVersion>
+    <ApplicationVersion>3.4.0.7</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -51,22 +45,7 @@
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Office.PIARedist.2007">
-      <Visible>False</Visible>
-      <ProductName>Microsoft Office 2007 Primary Interop Assemblies</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.VSTORuntime.4.0">
-      <Visible>False</Visible>
-      <ProductName>Microsoft Visual Studio 2010-Tools für Office-Laufzeit %28x86 und x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
+      <Install>false</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
       <Visible>False</Visible>
@@ -89,7 +68,7 @@
     </DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
+    <NoWarn>42017,42018,42019,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
     <Prefer32Bit>false</Prefer32Bit>
@@ -106,7 +85,7 @@
     </DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
+    <NoWarn>42017,42018,42019,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
     <Prefer32Bit>false</Prefer32Bit>
@@ -115,29 +94,14 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.Office.Tools.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.Vbe.Interop, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\14.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
@@ -149,6 +113,15 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.Office.Tools.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.Office.Tools.Excel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -371,6 +344,17 @@
     <None Include="Resources\move_left.ico" />
     <None Include="Resources\zoom_out.png" />
   </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="Microsoft.Office.Core">
+      <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>5</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -402,7 +386,7 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office15\Excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]Projectboard.xlsx&quot;" />
+        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="4CE1966EBBC6E22F558E7D1CF5A18A8064579582">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="MPT" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="meRC" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
