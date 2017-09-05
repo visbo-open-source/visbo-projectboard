@@ -8844,8 +8844,14 @@ Public Module testModule
                     vergleichstyp = PThis.ersterStand
                 ElseIf qualifier.Trim = "L" Or qualifier.Trim = "N" Then
                     vergleichstyp = PThis.letzterStand
+                    vglDate = Date.Now
                 Else
-                    vglDate = CDate(qualifier)
+                    Try
+                        vglDate = CDate(qualifier)
+                    Catch ex As Exception
+                        vglDate = Date.Now.AddMonths(-1)
+                    End Try
+
                     vergleichstyp = PThis.letzterStand
                 End If
 
