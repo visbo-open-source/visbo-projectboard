@@ -3517,7 +3517,7 @@ Public Module Module1
                 .Tags.Add("CRD", projectTimeStamp.ToString)
 
 
-                If Not noDB Then
+                If awinSettings.databaseURL.Length > 0 And awinSettings.databaseName.Length > 0 Then
                     If awinSettings.databaseURL.Length > 0 Then
                         If .Tags.Item("DBURL").Length > 0 Then
                             .Tags.Delete("DBURL")

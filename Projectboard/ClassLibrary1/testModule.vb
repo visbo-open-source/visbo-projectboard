@@ -8840,6 +8840,7 @@ Public Module testModule
 
         Dim vglDate As Date = Date.Now
         Dim vergleichstyp As Integer = PThis.current
+        Dim istVglMitKonkretemDatum As Boolean = False
 
         If Not IsNothing(qualifier) Then
             Try
@@ -8849,10 +8850,13 @@ Public Module testModule
                     vergleichstyp = PThis.letzterStand
                     vglDate = Date.Now
                 Else
+                    istVglMitKonkretemDatum = True
                     Try
                         vglDate = CDate(qualifier)
+
                     Catch ex As Exception
                         vglDate = Date.Now.AddMonths(-1)
+
                     End Try
 
                     vergleichstyp = PThis.letzterStand
@@ -9245,7 +9249,12 @@ Public Module testModule
                         spalte = 12
                         If Not IsNothing(vproj) Then
                             Dim timeStamp As Date = vproj.timeStamp
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                            If istVglMitKonkretemDatum Then
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglDate.ToShortDateString
+                            Else
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                            End If
+
                         Else
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                         End If

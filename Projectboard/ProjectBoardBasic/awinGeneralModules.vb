@@ -3600,8 +3600,8 @@ Public Module awinGeneralModules
                             ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                             Dim cphaseStartOffset As Long
                             Dim dauerIndays As Long
-                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start).Date)
-                            dauerIndays = calcDauerIndays(CDate(msTask.Start).Date, CDate(msTask.Finish).Date)
+                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
+                            dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
                             .changeStartandDauer(cphaseStartOffset, dauerIndays)
                             .offset = 0
 
@@ -3659,8 +3659,8 @@ Public Module awinGeneralModules
                                                 Dim work As Double = CType(ass.Work, Double)
                                                 Dim cost As Double = CType(ass.Cost, Double)
 
-                                                Dim startdate As Date = CDate(msTask.Start).Date
-                                                Dim endedate As Date = CDate(msTask.Finish).Date
+                                                Dim startdate As Date = CDate(msTask.Start)
+                                                Dim endedate As Date = CDate(msTask.Finish)
 
                                                 Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
                                                 Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
@@ -3754,8 +3754,8 @@ Public Module awinGeneralModules
                                                 Dim unit As Double = CType(ass.Units, Double)
                                                 Dim budgetWork As Double = CType(ass.BudgetWork, Double)
 
-                                                Dim startdate As Date = CDate(msTask.Start).Date
-                                                Dim endedate As Date = CDate(msTask.Finish).Date
+                                                Dim startdate As Date = CDate(msTask.Start)
+                                                Dim endedate As Date = CDate(msTask.Finish)
 
                                                 ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
                                                 ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
@@ -3950,7 +3950,7 @@ Public Module awinGeneralModules
                             Or missingMilestoneDefinitions.Contains(msTask.Name) Then
 
                             Dim msBewertung As New clsBewertung
-                            cmilestone.setDate = CType(msTask.Start, Date).Date
+                            cmilestone.setDate = CType(msTask.Start, Date)
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
                             msBewertung.description = msTask.Notes
                             If visbo_ampel <> 0 Then
@@ -4004,8 +4004,8 @@ Public Module awinGeneralModules
                     Dim anzNachfolger As Integer = msTask.SuccessorTasks.Count
                     Dim dependencies As MSProject.TaskDependencies = msTask.TaskDependencies
 
-                    Dim startTask As Date = CType(msTask.Start, Date).Date
-                    Dim endeTask As Date = CType(msTask.Finish, Date).Date
+                    Dim startTask As Date = CType(msTask.Start, Date)
+                    Dim endeTask As Date = CType(msTask.Finish, Date)
 
 
 
