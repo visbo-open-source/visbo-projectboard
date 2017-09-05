@@ -32,13 +32,16 @@ Public Class ThisAddIn
             awinSettings.visboTaskClass = My.Settings.TaskClass
             awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
             awinSettings.visboAmpel = My.Settings.VISBOAmpel
-            awinSettings.visboDebug = True
+            awinSettings.visboDebug = My.Settings.VISBODebug
+            awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.databaseURL = My.Settings.mongoDBURL
+            dbUsername = ""
+            dbPasswort = ""
 
             '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
             Call awinsetTypen("BHTC")
 
             StartofCalendar = StartofCalendar.AddMonths(-12)
-
 
         Catch ex As Exception
 
@@ -57,8 +60,12 @@ Public Class ThisAddIn
 
                 If Not IsNothing(appInstance.Workbooks(myCustomizationFile)) Then
                     ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-                    Call MsgBox("Anzahl Milestones: " & missingMilestoneDefinitions.Count & vbLf & _
-                                "Anzahl Phasen: " & missingPhaseDefinitions.Count)
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Anzahl Missing-Milestones: " & missingMilestoneDefinitions.Count & vbLf & _
+                               "Anzahl Missing-Phasen: " & missingPhaseDefinitions.Count)
+                    End If
+                   
                     appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
                 End If
                 appInstance.ScreenUpdating = True

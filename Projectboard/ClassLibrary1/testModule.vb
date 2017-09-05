@@ -5500,9 +5500,12 @@ Public Module testModule
         If demoModusHistory Then
             Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & historicDate.ToShortDateString & ", " & historicDate.ToShortTimeString)
         Else
-            Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
+            If awinSettings.englishLanguage Then
+                Call MsgBox("ok, " & anzStoredProj & " projects and variants are stored now!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
+            Else
+                Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & jetzt.ToShortDateString & ", " & jetzt.ToShortTimeString)
+            End If
         End If
-
 
         Return anzStoredProj
 
@@ -19096,6 +19099,6 @@ Public Module testModule
         ' Ende neu 
 
     End Sub
-
+ 
 
 End Module
