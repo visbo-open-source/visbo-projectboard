@@ -1668,12 +1668,12 @@ Imports System.Windows
                     tmpLabel = "Milestone Trafficlights"
                 End If
 
-            Case "PT3G1M1" ' Planelemente visualisieren
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Phasen/Meilensteine..."
-                Else
-                    tmpLabel = "Phases/Milestones..."
-                End If
+                'Case "PT3G1M1" ' Planelemente visualisieren
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Phasen/Meilensteine..."
+                '    Else
+                '        tmpLabel = "Phases/Milestones..."
+                '    End If
 
             Case "PTXG1B4" ' Auswahl über Namen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -1682,12 +1682,18 @@ Imports System.Windows
                     tmpLabel = "Select by Names..."
                 End If
 
-            Case "PTXG1B5" ' Auswahl über Projekt-Struktur
+            Case "PTXG1B5" ' Planelemente visualisieren
+                'Case "PT3G1M1" ' Planelemente visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur..."
+                    tmpLabel = "Phasen/Meilensteine..."
                 Else
-                    tmpLabel = "Select by Structure..."
+                    tmpLabel = "Phases/Milestones..."
                 End If
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
 
             Case "PTOPTB1" ' Optimieren 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -1703,26 +1709,31 @@ Imports System.Windows
                     tmpLabel = "Charts"
                 End If
 
-            Case "PTXG1M2" ' Engpass Analyse
+                'Case "PTXG1M2" ' Engpass Analyse
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Rollen/Kosten/Meilensteine/Phasen"
+                '    Else
+                '        tmpLabel = "Ressources/Costs/Milestones/Phases"
+                '    End If
+
+                'Case "PTXG1B6" ' Auswahl über Namen
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Auswahl über Namen..."
+                '    Else
+                '        tmpLabel = "Select by Names..."
+                '    End If
+
+            Case "PTXG1B7" ' Leistbarkeitscharts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Rollen/Kosten/Meilensteine/Phasen"
                 Else
                     tmpLabel = "Ressources/Costs/Milestones/Phases"
                 End If
-
-            Case "PTXG1B6" ' Auswahl über Namen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen..."
-                Else
-                    tmpLabel = "Select by Names..."
-                End If
-
-            Case "PTXG1B7" ' Auswahl über Hierarchie
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur..."
-                Else
-                    tmpLabel = "Select by Structure..."
-                End If
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
 
             Case "PTXG1B10" ' größter Engpass
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -1990,26 +2001,31 @@ Imports System.Windows
                     tmpLabel = "without element-selection"
                 End If
 
-            Case "PT1G1M1" ' Typ II
+                'Case "PT1G1M1" ' Typ II
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "mit Element-Auswahl"
+                '    Else
+                '        tmpLabel = "with element-selection"
+                '    End If
+
+                'Case "PT1G1M1B1" ' Auswahl über Namen
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Auswahl über Namen..."
+                '    Else
+                '        tmpLabel = "Select by Names..."
+                '    End If
+
+            Case "PT1G1M1B2" ' Auswahl über Hierarchie
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "mit Element-Auswahl"
                 Else
                     tmpLabel = "with element-selection"
                 End If
-
-            Case "PT1G1M1B1" ' Auswahl über Namen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen..."
-                Else
-                    tmpLabel = "Select by Names..."
-                End If
-
-            Case "PT1G1M1B2" ' Auswahl über Hierarchie
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur..."
-                Else
-                    tmpLabel = "Select by Structure..."
-                End If
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
 
             Case "PT1G1M02" ' Multiprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2025,26 +2041,32 @@ Imports System.Windows
                     tmpLabel = "without element-selection"
                 End If
 
-            Case "PT1G1M2" ' Typ II
+                'Case "PT1G1M2" ' Typ II
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "mit Element-Auswahl"
+                'Else
+                '    tmpLabel = "with element-selection"
+                'End If
+
+                'Case "PT1G1M2B1" ' Auswahl über Namen
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Auswahl über Namen..."
+                '    Else
+                '        tmpLabel = "Select by Names..."
+                '    End If
+
+            Case "PT1G1M2B2" ' Auswahl über Hierarchie
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "mit Element-Auswahl"
                 Else
                     tmpLabel = "with element-selection"
                 End If
 
-            Case "PT1G1M2B1" ' Auswahl über Namen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen..."
-                Else
-                    tmpLabel = "Select by Names..."
-                End If
-
-            Case "PT1G1M2B2" ' Auswahl über Hierarchie
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur..."
-                Else
-                    tmpLabel = "Select by Structure..."
-                End If
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
 
             Case "PT1G1B4" ' letztes Report-Profil speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then

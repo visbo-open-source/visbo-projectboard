@@ -358,6 +358,41 @@ Public Class frmHierarchySelection
                     .filterLabel.Text = "Auswahl"
                 End If
 
+                .rdbNameList.Enabled = True
+                .rdbNameList.Visible = True
+                .rdbNameList.Checked = True
+
+                .rdbProjStruktProj.Enabled = True
+                .rdbProjStruktProj.Visible = True
+                .rdbProjStruktProj.Checked = False
+
+                .rdbProjStruktTyp.Enabled = True
+                .rdbProjStruktTyp.Visible = True
+                .rdbProjStruktTyp.Checked = False
+
+                .rdbPhases.Visible = True
+                .rdbPhases.Checked = True
+                .picturePhasen.Visible = True
+
+                .rdbMilestones.Visible = True
+                .rdbMilestones.Checked = False
+                .pictureMilestones.Visible = True
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .rdbRoles.Visible = False
+                .pictureRoles.Visible = False
+
+                .rdbCosts.Visible = False
+                .pictureCosts.Visible = False
+
+                .rdbPhaseMilest.Visible = False
+                .picturePhaseMilest.Visible = False
+
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
 
@@ -3397,12 +3432,8 @@ Public Class frmHierarchySelection
 
         If Me.rdbNameList.Checked Then
 
-            If selectedBUs.Count = 0 And _
-               selectedTyps.Count = 0 And _
-               selectedPhases.Count = 0 And _
-               selectedMilestones.Count = 0 And _
-               selectedRoles.Count = 0 And _
-               selectedCosts.Count = 0 Then
+            If selectedPhases.Count = 0 And _
+               selectedMilestones.Count = 0 Then
 
                 auswahl = PTProjektType.nameList
             Else
@@ -3417,6 +3448,11 @@ Public Class frmHierarchySelection
                     Me.rdbPhases.Visible = True
                     Me.pictureMilestones.Visible = True
                     Me.picturePhasen.Visible = True
+                    If Not (Me.rdbMilestones.Checked Or Me.rdbPhases.Checked) Then
+                        Me.rdbPhases.Checked = True
+                    End If
+                    Me.rdbPhaseMilest.Visible = False
+                    Me.picturePhaseMilest.Visible = False
 
                     Call buildHryTreeViewNew(auswahl)
 
@@ -3427,15 +3463,48 @@ Public Class frmHierarchySelection
                     Me.rdbPhases.Visible = False
                     Me.pictureMilestones.Visible = False
                     Me.picturePhasen.Visible = False
+                    Me.rdbPhaseMilest.Visible = True
+                    Me.picturePhaseMilest.Visible = True
+                    If Not Me.rdbPhaseMilest.Checked Then
+                        Me.rdbPhaseMilest.Checked = True
+                    End If
 
-                    Me.rdbProjStruktTyp.Checked = True
-                    ' Call buildHryTreeViewNew(auswahl)
+                    Dim result As MsgBoxResult
 
                     If awinSettings.englishLanguage Then
-                        statusLabel.Text = "only as Project-Structur possible"
+                        result = MsgBox("You really want to deselect the elements?", MsgBoxStyle.YesNo, "Deselect the elements?")
                     Else
-                        statusLabel.Text = "Elemente können nur in der Projekt-Struktur angezeigt werden"
+                        result = MsgBox("Sollen die ausgewählten Elemente wirklich de-selektiert werden?", MsgBoxStyle.YesNo, "Elemente wirklich deselektieren?")
                     End If
+
+                    If result = MsgBoxResult.Yes Then
+
+                        selectedPhases.Clear()
+                        selectedMilestones.Clear()
+
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
+
+                        Me.rdbMilestones.Visible = True
+                        Me.rdbPhases.Visible = True
+                        Me.pictureMilestones.Visible = True
+                        Me.picturePhasen.Visible = True
+                        If Not (Me.rdbMilestones.Checked Or Me.rdbPhases.Checked) Then
+                            Me.rdbPhases.Checked = True
+                        End If
+                        Me.rdbPhaseMilest.Visible = False
+                        Me.picturePhaseMilest.Visible = False
+                        Me.rdbNameList.Checked = True
+                    Else
+                        Call buildHryTreeViewNew(PTProjektType.vorlage)
+                        Me.rdbProjStruktTyp.Checked = True
+
+                        'If awinSettings.englishLanguage Then
+                        '    statusLabel.Text = "only as Project-Structur possible"
+                        'Else
+                        '    statusLabel.Text = "Elemente können nur in der Projekt-Struktur angezeigt werden"
+                        'End If
+                    End If
+
 
 
                 Case PTProjektType.projekt
@@ -3444,15 +3513,49 @@ Public Class frmHierarchySelection
                     Me.rdbPhases.Visible = False
                     Me.pictureMilestones.Visible = False
                     Me.picturePhasen.Visible = False
+                    Me.rdbPhaseMilest.Visible = True
+                    Me.picturePhaseMilest.Visible = True
+                    If Not Me.rdbPhaseMilest.Checked Then
+                        Me.rdbPhaseMilest.Checked = True
+                    End If
 
-                    Me.rdbProjStruktProj.Checked = True
-                    'Call buildHryTreeViewNew(auswahl)
+
+                    Dim result As MsgBoxResult
 
                     If awinSettings.englishLanguage Then
-                        statusLabel.Text = "only as Project-Structur possible"
+                        result = MsgBox("You really want to deselect the elements?", MsgBoxStyle.YesNo, "Deselect the elements?")
                     Else
-                        statusLabel.Text = "Elemente können nur in der Projekt-Struktur angezeigt werden"
+                        result = MsgBox("Sollen die ausgewählten Elemente wirklich de-selektiert werden?", MsgBoxStyle.YesNo, "Elemente wirklich deselektieren?")
                     End If
+
+                    If result = MsgBoxResult.Yes Then
+
+                        selectedPhases.Clear()
+                        selectedMilestones.Clear()
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
+
+                        Me.rdbMilestones.Visible = True
+                        Me.rdbPhases.Visible = True
+                        Me.pictureMilestones.Visible = True
+                        Me.picturePhasen.Visible = True
+                        If Not (Me.rdbMilestones.Checked Or Me.rdbPhases.Checked) Then
+                            Me.rdbPhases.Checked = True
+                        End If
+                        Me.rdbPhaseMilest.Visible = False
+                        Me.picturePhaseMilest.Visible = False
+                        Me.rdbNameList.Checked = True
+                    Else
+                        Call buildHryTreeViewNew(PTProjektType.projekt)
+                        Me.rdbProjStruktProj.Checked = True
+
+                        If awinSettings.englishLanguage Then
+                            statusLabel.Text = "only as Project-Structur possible"
+                        Else
+                            statusLabel.Text = "Elemente können nur in der Projekt-Struktur angezeigt werden"
+                        End If
+                    End If
+
+
 
                 Case Else
                     selectedPhases.Clear()
@@ -3603,6 +3706,13 @@ Public Class frmHierarchySelection
             Me.pictureMilestones.Visible = False
             Me.picturePhasen.Visible = False
 
+            Me.rdbPhaseMilest.Visible = True
+            Me.picturePhaseMilest.Visible = True
+            If Not Me.rdbPhaseMilest.Checked Then
+                Me.rdbPhaseMilest.Checked = True
+            End If
+
+
             ' clear Listbox1 
             If awinSettings.englishLanguage Then
                 headerLine.Text = "Phases/Milestones"
@@ -3613,12 +3723,9 @@ Public Class frmHierarchySelection
             filterBox.Visible = False
             filterBox.Text = ""
 
-            If selectedBUs.Count = 0 And _
-                selectedTyps.Count = 0 And _
-                selectedPhases.Count = 0 And _
-                selectedMilestones.Count = 0 And _
-                selectedRoles.Count = 0 And _
-                selectedCosts.Count = 0 Then
+            If selectedPhases.Count = 0 And _
+                selectedMilestones.Count = 0 Then
+
                 auswahl = PTProjektType.projekt
             Else
                 auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
@@ -3671,6 +3778,11 @@ Public Class frmHierarchySelection
             Me.rdbPhases.Visible = False
             Me.pictureMilestones.Visible = False
             Me.picturePhasen.Visible = False
+            Me.rdbPhaseMilest.Visible = True
+            Me.picturePhaseMilest.Visible = True
+            If Not Me.rdbPhaseMilest.Checked Then
+                Me.rdbPhaseMilest.Checked = True
+            End If
 
             ' clear Listbox1 
             If awinSettings.englishLanguage Then
@@ -3682,12 +3794,8 @@ Public Class frmHierarchySelection
             filterBox.Visible = False
             filterBox.Text = ""
 
-            If selectedBUs.Count = 0 And _
-                 selectedTyps.Count = 0 And _
-                 selectedPhases.Count = 0 And _
-                 selectedMilestones.Count = 0 And _
-                 selectedRoles.Count = 0 And _
-                 selectedCosts.Count = 0 Then
+            If selectedPhases.Count = 0 And _
+                 selectedMilestones.Count = 0 Then
                 auswahl = PTProjektType.vorlage
             Else
                 auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
@@ -3702,21 +3810,40 @@ Public Class frmHierarchySelection
                 Case PTProjektType.vorlage
 
                     Call buildHryTreeViewNew(auswahl)
-                   
+
 
                 Case PTProjektType.projekt
 
                     Me.rdbProjStruktProj.Checked = True
 
                     'Call buildHryTreeViewNew(auswahl)
+                    Dim result As MsgBoxResult
 
                     If awinSettings.englishLanguage Then
-                        statusLabel.Text = "only as Project-Structur possible"
+                        result = MsgBox("You really want to deselct the elements?", MsgBoxStyle.YesNo, "Deselect the elements?")
                     Else
-                        statusLabel.Text = "Elemente können nur in Projekt-Struktur angezeigt werden"
+                        result = MsgBox("Sollen die ausgewählten Elemente wirklich de-selektiert werden?", MsgBoxStyle.YesNo, "Elemente wirklich deselektieren?")
                     End If
 
-              
+                    If result = MsgBoxResult.Yes Then
+                        selectedPhases.Clear()
+                        selectedMilestones.Clear()
+                       
+                        Call buildHryTreeViewNew(PTProjektType.vorlage)
+
+                        Me.rdbProjStruktTyp.Checked = True
+
+                    Else
+                        Call buildHryTreeViewNew(PTProjektType.projekt)
+                    End If
+
+                    'If awinSettings.englishLanguage Then
+                    '    statusLabel.Text = "only as Project-Structur possible"
+                    'Else
+                    '    statusLabel.Text = "Elemente können nur in Projekt-Struktur angezeigt werden"
+                    'End If
+
+
                 Case Else
 
                     Call MsgBox("eigentlich Fehler !!!")
@@ -4231,23 +4358,23 @@ Public Class frmHierarchySelection
             With Me
                 .rdbNameList.Enabled = True
                 .rdbNameList.Visible = True
-                .rdbNameList.Checked = True
+                .rdbNameList.Checked = False
 
                 .rdbProjStruktProj.Enabled = True
                 .rdbProjStruktProj.Visible = True
-                .rdbProjStruktProj.Checked = False
+                '.rdbProjStruktProj.Checked = True
 
                 .rdbProjStruktTyp.Enabled = True
                 .rdbProjStruktTyp.Visible = True
-                .rdbProjStruktTyp.Checked = False
+                ' .rdbProjStruktTyp.Checked = False
 
-                .rdbPhases.Visible = True
-                .rdbPhases.Checked = True
-                .picturePhasen.Visible = True
+                .rdbPhases.Visible = False
+                .rdbPhases.Checked = False
+                .picturePhasen.Visible = False
 
-                .rdbMilestones.Visible = True
+                .rdbMilestones.Visible = False
                 .rdbMilestones.Checked = False
-                .pictureMilestones.Visible = True
+                .pictureMilestones.Visible = False
 
                 '.rdbBU.Visible = False
                 '.pictureBU.Visible = False
@@ -4261,15 +4388,23 @@ Public Class frmHierarchySelection
                 '.rdbCosts.Visible = True
                 '.pictureCosts.Visible = True
 
-                .rdbPhaseMilest.Visible = False
-                .picturePhaseMilest.Visible = False
+                .rdbPhaseMilest.Visible = True
+                .picturePhaseMilest.Visible = True
 
             End With
 
 
-            auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+            ''ur: 20170905: nicht erforderlich
+            ''auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+            If Me.rdbProjStruktProj.Checked Then
+                Call buildHryTreeViewNew(PTProjektType.projekt)
+            ElseIf Me.rdbProjStruktTyp.Checked Then
+                Call buildHryTreeViewNew(PTProjektType.vorlage)
+            Else
+                Me.rdbProjStruktProj.Checked = True
+                'Call buildHryTreeViewNew(PTProjektType.projekt)
+            End If
 
-            Call buildHryTreeViewNew(auswahl)
 
         Else
 

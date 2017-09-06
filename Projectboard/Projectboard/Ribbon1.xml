@@ -214,12 +214,13 @@
           <!--label="Projekt-Ampeln"-->
           <button id="PT3G1B1" getLabel ="bestimmeLabel" onAction="Tom2G2M5M1B3ShowStatus" supertip="es werden die Projekt-Ampeln als farbige Symbole angezeigt."/>
           <!--label="Planelemente visualisieren"-->
-          <menu id="PT3G1M1" getLabel ="bestimmeLabel" supertip="Meilensteine und Vorgänge visualisieren">
-            <!--label="Auswahl über Namen"-->
+          <button id="PTXG1B5" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Meilensteine und Vorgänge visualisieren"/>
+          <!--<menu id="PT3G1M1" getLabel ="bestimmeLabel" supertip="Meilensteine und Vorgänge visualisieren">
+            --><!--label="Auswahl über Namen"--><!--
             <button id="PTXG1B4" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen."/>
-            <!--label="Auswahl über Hierarchie"-->
-            <button id="PTXG1B5" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie."/>
-          </menu>
+            --><!--label="Auswahl über Hierarchie"--><!--
+            <button id="PTXG1B5" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie."/>--><!--
+          </menu>-->
           <!--label="Beschriftungen-->
           <button id="PT3G1M2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTBeschriften" supertip ="alle angezeigten Meilensteine und Phasen werden auf der Multiprojekt-Tafel beschriftet."/>
           <separator id="PT2G1s1"/>
@@ -308,12 +309,13 @@
           <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="TomMostImportantPortfolioCharts" supertip="Anzeige der wichtigsten Portfolio Charts"/>
           <menu id="PT7G1M"  getVisible="chckVisibility" >
               <!--label="Ressource/Cost/Milestones/Phases"-->
-              <menu id="PTXG1M2" getLabel ="bestimmeLabel" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
-                <!--label="Auswahl über Namen"-->
+            <button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
+              <!--<menu id="PTXG1M2" getLabel ="bestimmeLabel" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
+                --><!--label="Auswahl über Namen"--><!--
                 <button id="PTXG1B6" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
-                <!--label="Auswahl über Hierarchie"-->
+                --><!--label="Auswahl über Hierarchie"--><!--
                 <button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
-              </menu>
+              </menu>-->
               <menuSeparator id="PTXG1s1"/>
               <!--label="Profit/Loss"-->
               <button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
@@ -375,24 +377,26 @@
                 <!--label="Typ I"-->
                 <button id="PT1G1M01B0" getLabel ="bestimmeLabel" onAction="Tom2G1Doku" supertip="zu den selektierten Projekten statische Einzelprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
                 <!--label="Typ II"-->
-                <menu id="PT1G1M1" imageMso="FindDialog" getLabel ="bestimmeLabel"  supertip ="Auswahl von Vorgängen und Meilensteinen, um bspweise alle Varianten eines Projektes zu zeigen">
-                  <!--label="Auswahl über Namen"-->
+                <button id="PT1G1M1B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
+                <!--<menu id="PT1G1M1" imageMso="FindDialog" getLabel ="bestimmeLabel"  supertip ="Auswahl von Vorgängen und Meilensteinen, um bspweise alle Varianten eines Projektes zu zeigen">
+                  --><!--label="Auswahl über Namen"--><!--
                   <button id="PT1G1M1B1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
-                  <!--label="Auswahl über Hierarchie"-->
+                  --><!--label="Auswahl über Hierarchie"--><!--
                   <button id="PT1G1M1B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu den selektierten Projekten und ausgewählten Elementen Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich."/>
-                </menu>
+                </menu>-->
               </menu>
               <!--label="Multiprojekt-Berichte"-->
               <menu id="PT1G1M02" getLabel ="bestimmeLabel">
                 <!--label="Typ I"-->
                 <button id="PT1G1B2" getLabel ="bestimmeLabel" onAction="awinAllprojectsReport" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum statische Multiprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
                 <!--label="Typ II"-->
-                <menu id="PT1G1M2" imageMso="FindDialog" getLabel ="bestimmeLabel" supertip="Auswahl von Vorgängen und Meilensteinen, um bspweise Multiprojekt Sichten zu erstellen">
-                  <!--label="Auswahl über Namen"-->
+                <button id="PT1G1M2B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
+                <!--<menu id="PT1G1M2" imageMso="FindDialog" getLabel ="bestimmeLabel" supertip="Auswahl von Vorgängen und Meilensteinen, um bspweise Multiprojekt Sichten zu erstellen">
+                  --><!--label="Auswahl über Namen"--><!--
                   <button id="PT1G1M2B1" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
-                  <!--label="Auswahl über Hierarchie"-->
+                  --><!--label="Auswahl über Hierarchie"--><!--
                   <button id="PT1G1M2B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Portfolio im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
-                </menu>
+                </menu>-->
               </menu>
               <!--label="letztes Report-Profil speichern"-->
               <button id="PT1G1B4" imageMso="SaveAsPowerPointPotx" getLabel ="bestimmeLabel" onAction="PTStoreCurReportProfil" supertip ="Es wird die zuletzt verwendete Report-Definition in der Datei mit angegebenen Namen gespeichert"/>
