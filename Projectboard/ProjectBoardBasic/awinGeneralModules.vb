@@ -1031,7 +1031,6 @@ Public Module awinGeneralModules
 
                 With appInstance.ActiveWindow
 
-
                     If .WindowState = Excel.XlWindowState.xlMaximized Then
                         'maxScreenHeight = .UsableHeight
                         maxScreenHeight = .Height

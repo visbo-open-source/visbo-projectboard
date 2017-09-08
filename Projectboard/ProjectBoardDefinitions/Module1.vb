@@ -4401,8 +4401,22 @@ Public Module Module1
 
         Dim tmpTop As Double = 2.0
         Dim tmpLeft As Double = 2
+
+        Dim korrfaktorH As Double = 1.0
+        Dim korrfaktorB As Double = 1.0
+
+        Try
+            If My.Computer.Screen.Bounds.Height < 1080 Then
+                korrfaktorH = 1.66
+            End If
+            'korrfaktorH = 1080 / My.Computer.Screen.Bounds.Height
+            'korrfaktorB = 1920 / My.Computer.Screen.Bounds.Width
+        Catch ex As Exception
+
+        End Try
         Dim tmpWidth As Double = maxScreenWidth / 5 - 29
-        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5
+        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH
+
 
         ' wenn schon Charts existieren: ein neues Chart wird immer als letztes  angehängt ..
         With currentWorksheet
